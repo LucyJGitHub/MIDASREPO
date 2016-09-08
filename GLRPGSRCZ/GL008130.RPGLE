@@ -56,8 +56,9 @@
       *  Called From: LEC0820, LEC0821, LEC0822, DLC0820, FTC0820     *
       *               SEC0820                                         *
       *                                                               *
-      *  Last Amend No. AR1084524          Date 13Feb13               *
-      *  Prev Amend No. AR1056323          Date 14Nov12               *
+      *  Last Amend No. MD037439           Date 21Mar16               *
+      *  Prev Amend No. AR1084524          Date 13Feb13               *
+      *                 AR1056323          Date 14Nov12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR942839A          Date 16Apr12               *
       *                 AR947998           Date 11Apr12               *
@@ -87,6 +88,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037439 - Truncation error on event amount in SE2450P3.     *
+      *             Recompiled due to changes in PF/SEKEYD.           *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *
       *              (Recompile)                                      *
       *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *

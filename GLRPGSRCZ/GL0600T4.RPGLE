@@ -13,12 +13,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD036707           Date 26Apr16               *
-      *  Prev Amend No. MD031057           Date 24Feb15               *
+      *  Last Amend No. MD038510           Date 20Jun16               *
+      *  Prev Amend No. MD036707           Date 26Apr16               *
+      *                 MD031057           Date 24Feb15               *
       *                 CGL142  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038510 - Statement for system generatd accounts not        *
+      *             produced. Rewrite processing STMTAH.              *
       *  MD036707 - GLC0600T4 fail. Correct the retrieval of CRE023   *
       *             Applied for MD037302.                             *
       *  MD031057 - REC002008 00001 failed due to FOOB                *
@@ -62,6 +65,10 @@
 
       ** Midas RE Outward Clearing File - Trailer Work file
      FGLOUTLPT  IF   E             DISK    INFSR(*PSSR)
+
+     FSTMTZX    UF   E             DISK    INFSR(*PSSR) COMMIT                              MD038510
+     F                                     PREFIX(ST_)                                      MD038510
+     FGLSTMTZX  IF   E             DISK    INFSR(*PSSR)
 
       ** Local data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
@@ -271,7 +278,25 @@
 
      C                   ENDIF
      C                   ENDIF
-
+      *                                                                                     MD038510
+      ** Process GLSTMTZX and update STMTZX                                                 MD038510
+      *                                                                                     MD038510
+     C                   Z-ADD     0             TotNore                                    MD038510
+     C                   READ      GLSTMTZX                               99                MD038510
+     C                   DOW       *IN99 = *OFF                                             MD038510
+     C     NORE1         ADD       TOTNORE       TOTNORE                                    MD038510
+     C                   READ      GLSTMTZX                               99                MD038510
+     C                   ENDDO                                                              MD038510
+                                                                                            MD038510
+     C     1             CHAIN     STMTZX                             99                    MD038510
+     C                   IF        *IN99 = *ON                                              MD038510
+     C                   MOVE      'STMTZX '     DBFILE                                     MD038510
+     C                   Z-ADD     005           DBASE                                      MD038510
+     C                   EXSR      *PSSR                                                    MD038510
+     C                   ELSE                                                               MD038510
+     C     TOTNORE       ADD       ST_NORE1      ST_NORE1                                   MD038510
+     C                   UPDATE    STMTZXF                                                  MD038510
+     C                   ENDIF                                                              MD038510
      C                   COMMIT
 
      C                   SETON                                        LR

@@ -1,16 +1,17 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
 /*EXI    TEXT('Midas RE Customer exchanges file creation')           */
-/********************************************************************/
-/*                                                                  */
-/*        Midas     - Retail Module                                 */
-/*                                                                  */
-/*        REC04 - CUSTOMER EXCHANGES FILE CREATION                  */
-/*                                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*        Midas     - Retail Module                                  */
+/*                                                                   */
+/*        REC04 - CUSTOMER EXCHANGES FILE CREATION                   */
+/*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
-/*                                                                  */
-/*       Last Amend No. MD031950           Date 17Jun15              */
-/*       Prev Amend No. CRE041             Date 28Sep12              */
+/*                                                                   */
+/*       Last Amend No. MD024663           Date 25Jul16              */
+/*       Prev Amend No. MD031950           Date 17Jun15              */
+/*                      CRE041             Date 28Sep12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -20,8 +21,12 @@
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408              Date 22Feb95             */
 /*                      S01194              Date 09Mar90             */
-/*                                                                  */
-/********************************************************************/
+/*                                                                   */
+/*********************************************************************/
+/*       MD024663 - Input Document already exist error displays on   */
+/*                  IC. Clear extension file when driving file is    */
+/*                  cleared.                                         */
+/*                - Applied for MD039114.                            */
 /*       MD031950 - Recompiled due to changed PF/CUSEXZ1.            */
 /*       CRE041 - Enhancements to Customer Exchanges                 */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
@@ -68,6 +73,8 @@
              CLRPFM FILE(CUSEXCE)
              ENDDO                                                                        /*CRE041*/
              CLRPFM FILE(CUSEXZ1)
+/** Clear Extension file to prevent input error on next IC           */                 /*MD024663*/
+             CLRPFM     FILE(RECUSXQD)                                                  /*MD024663*/
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,REC04MPS                                             /*S01408*/
              IF         COND(&ULX043 *EQ 'Y') THEN(DO)                                    /*CER001*/

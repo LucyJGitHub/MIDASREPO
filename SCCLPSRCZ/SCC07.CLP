@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD037757           Date 26Apr16              */
-/*       Prev Amend No. MD031644           Date 12Jan15              */
+/*       Last Amend No. LUC102             Date 17Dec14              */
+/*       Prev Amend No. MD037757           Date 26Apr16              */
+/*                      MD031644           Date 12Jan15              */
 /*                      MD023896           Date 06May14              */
 /*                      MD022394D          Date 23Apr14              */
 /*                      MD022112           Date 05Sep13              */
@@ -127,6 +128,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC102   - Re-Open Input Cycle Invocation of Bank's Program */
+/*                  (use existing copy members SCC07INT & SCC07005)  */
 /*       MD037757 - When running COB, component CBC022001 00296      */
 /*                  failed                                           */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */

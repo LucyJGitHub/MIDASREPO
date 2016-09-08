@@ -17,18 +17,20 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD035076           Date 21Jul15               *
-      *  Prev Amend No. CGL132  *CREATE    Date 01May13               *
+      *  Last Amend No. MD037883A          Date 31Mar16               *
+      *  Prev Amend No. MD035076           Date 21Jul15               *
+      *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037883A - Unable to Authorise Amendment on Customer Details*
       *  MD035076 - Unable to delete a customer where Creation Date   *
       *             is blank                                          *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
       *                                                               *
       *****************************************************************
- 
+
      FSDCUSXL1  IF   E           K DISK    PREFIX(X1_)
       *****************************************************************
       ** +--------------------------------------+
@@ -41,58 +43,58 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -107,16 +109,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
       *
       ** VALIDATION
       *
@@ -137,10 +139,10 @@
       ** VALIDATION - Creation Date
       *****************************************************************
      C     VCRDT         BEGSR
- 
+
       * Retrieve Customer Creation Date for reference
      C     DDCUSN        CHAIN     SDCUSTX0                           99
- 
+
       * On Insert Action - If Creation Date is left blank,
       * set the current run date as default value
      C                   IF        DDCRDT = *BLANKS and DDACTN = 'I'
@@ -151,14 +153,15 @@
      C                   MOVEL     ZDATE         DDCRDT
      C                   GOTO      EndVCRDT
      C                   ENDIF
- 
+
       * On Amendment - If Creation Date is displayed and left blank,
       * keep the value of 0, the take-on initial value for existing users
      C                   IF        DDACTN = 'A' and DDCRDT = *BLANKS
+     C                             OR DDACTN = 'D' and DDCRDT = *BLANKS                    MD037883A
      C                   IF        X1_XCCRDT = 0
      C                   Z-ADD     0             XCCRDT
      C                   GOTO      EndVCRDT
- 
+
       * If Creation Date has already been set previously, it cannot be reset.
      C                   ELSE
      C                   MOVE      'N'           DDCRDTOK
@@ -168,7 +171,7 @@
      C                   GOTO      EndVCRDT
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        DDCRDT <> *BLANKS                                        MD035076
       * Creation Date must be numeric
      C                   TESTN                   DDCRDT               98
@@ -179,7 +182,7 @@
      C                   MOVEL     'USS0301'     MsgIdXAr(Idx)
      C                   GOTO      EndVCRDT
      C                   ENDIF
- 
+
       * Creation Date must be a valid date
      C                   MOVE      DDCRDT        ZDATEA
      C                   EXSR      ZDATE1
@@ -191,7 +194,7 @@
      C                   GOTO      EndVCRDT
      C                   ENDIF
      C                   ENDIF                                                              MD035076
- 
+
       * Creation Date is only amendable when previous value is default (0)
      C     DDCUSN        CHAIN     SDCUSTX0                           99
      C                   IF        X1_XCCRDT <> 0
@@ -203,7 +206,7 @@
      C                   MOVEL     'USS0303'     MsgIdXAr(Idx)
      C                   GOTO      EndVCRDT
      C                   ENDIF
- 
+
       * Creation Date may not be later than run date
      C                   Z-ADD     ZDAYNO        XCCRDT
      C     XCCRDT        IFGT      RDNB
@@ -212,7 +215,7 @@
      C                   MOVEL     'DDCRDT'      FldNamXAr(Idx)
      C                   MOVEL     'USS0304'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
       *
      C     EndVCRDT      ENDSR
       *****************************************************************
@@ -223,13 +226,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    DFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -239,13 +242,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE1        BEGSR
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    ZDATEA            6
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    DFIN
      C                   PARM                    ErrorFlag         1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -253,7 +256,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -291,9 +294,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

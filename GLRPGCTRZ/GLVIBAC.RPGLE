@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD029037           Date 25Jul14               *
-      *  Prev Amend No. AR816838           Date 17Jul14               *
+      *  Last Amend No. MD037025           Date 10Feb16               *
+      *  Prev Amend No. LUC103             Date 17Dec14               *
+      *                 MD029037           Date 25Jul14               *
+      *                 AR816838           Date 17Jul14               *
       *                 MD000091           Date 07May13               *
       *                 AR740293           Date 31Mar11               *
       *                 AR582286           Date 26Jul10               *
@@ -45,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037025 - Recompiled due to changes in INPAYIB              *
+      *  LUC103   - IBAN Extra Validation                             *
+      *             (New copy members GLH01008, GLH01009, GLH01010)   *
       *  MD029037 - Unable to close acount due to IBAN error          *
       *             Partially applied MD023875/AR467536               *
       *  AR816838 - Error message RE72034 during account opening.     *
@@ -158,6 +163,7 @@
       ** ¦ =========================            ¦
       ** +--------------------------------------+
  
+     D/COPY WNCPYSRC,GLH01008                                                              LUC103
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -642,6 +648,7 @@
       *
       *
       *
+     C/COPY WNCPYSRC,GLH01009                                                             LUC103
       *
       ** If an error was found, set the return code appropriately
       *
@@ -714,6 +721,7 @@
  
      C/COPY ZACPYSRC,DBFIELDS
  
+     C/COPY WNCPYSRC,GLH01010                                                             LUC103
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

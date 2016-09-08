@@ -11,20 +11,23 @@
 /*                                                                 */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                 */
+/*       Last Amend No. MD037995           Date 04May16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  LAST AMEND NO. S01408             DATE  08NOV95                */
-/*  PREV AMEND NO. S01408             DATE  11APR95                */
+/*       Prev Amend No. S01408             Date  08Nov95             */
+/*                      S01408             Date  11Apr95             */
 /*                 E29170             DATE  07OCT91                */
 /*                 S01117             DATE  09JAN91                */
 /*                 S01179             DATE  16SEP88                */
 /*                                                                 */
 /*-----------------------------------------------------------------*/
 /*                                                                 */
+/*       MD037995 - Incorrect Security balance - SE0800P1. Report  */
+/*                  Repos without a book position.                 */
 /*  S01408 - Core Hook added SEC0701001                            */
 /*  S01408 - CORE HOOK ADDED SEC0701MPS                            */
 /*         - CORE HOOK ADDED SEC0701END                            */
@@ -80,9 +83,12 @@
                                                                      /*S01408*/
 /*/COPY WNCPYSRC,SEC0701001                                                  */
                                                                      /*S01408*/
+             CLRPFM     FILE(BKPBKD)                                                    /*MD037995*/
+             CPYF       FROMFILE(BKPBK) TOFILE(*LIBL/BKPBKD) MBROPT(*ADD)               /*MD037995*/
  
 /************CALL       PGM(SE0800)                                 * *S01117*/
              CALL       PGM(SE0800) PARM(&RSEQ &RENT)                /*S01117*/
+             CLRPFM     FILE(BKPBKD)                                                    /*MD037995*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0701MPS                                          */
                                                                       /*S01408*/

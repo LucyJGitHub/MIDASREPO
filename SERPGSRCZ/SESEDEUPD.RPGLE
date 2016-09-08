@@ -18,10 +18,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD037742           Date 03Apr16               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 247277             Date 24May07               *
+      *                 247277             Date 24May07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
@@ -42,6 +43,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037742 - Security diary events - pool factor reversal.     *
+      *             Additional fix to allow deletion of matured diary *
+      *             event with a live position settlement.            *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  247277 - Allow for native JDBC driver as well as toolbox.    *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -1059,7 +1063,8 @@
      C                   DOW       EndofFile = False
      C                   IF        S2SDED = F2PDUD AND
      C                             S2SDET = F2PEVT AND
-     C                             F2RECI = 'D'
+     C**********                   F2RECI = 'D'                                             MD037742
+     C                             F2RECI = 'D' AND S2RECI = 'D'                            MD037742
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   RETURN
      C                   ENDIF

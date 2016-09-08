@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD037869A          Date 28Mar16               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 MD030436           Date 01Oct14               *
       *                 MD027337A          Date 01Oct14               *
       *                 CDL094             Date 01Sep14               *
@@ -124,6 +125,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037869A - Unable to authorise deal in LDNI after updating  *
+      *              base rate.                                       *
       *  CGL165 - Dual Withholding Tax                                *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *  MD030436 - Enhance fix MD027337A to the cater defaulting of  *
@@ -1182,9 +1185,9 @@
  
       *  Validate Action Code
  
-     C                   IF        DDACTN <> 'X'                                             BUG6164
+     C**********         IF        DDACTN <> 'X'                                   BUG6164 MD037869A
      C                   EXSR      ValidateAc
-     C                   END                                                                 BUG6164
+     C**********         END                                                       BUG6164 MD037869A
  
       *  If error in validation of action code, fail this input
       *
@@ -1274,8 +1277,10 @@
                                                                                              BUG4482
      C                   WHEN      DDACTN = 'X'                                              BUG4482
       *  Processing for Authorises                                                           BUG4482
+     C                   EVAL      IKINTR = HKINTR                                         MD037869A
+     C                   EVAL      IKSPRD = HKSPRD                                         MD037869A
      C                   EXSR      ValidateTr                                                BUG4482
-     C                   EXSR      ValidateAc                                                BUG6164
+     C**********         EXSR      ValidateAc                                      BUG6164 MD037869A
      C                   EXSR      ValidateSt                                                BUG4482
      C                   EXSR      ValidateLP                                                BUG3992
      C                   IF        CDL033 = 'Y'                                               CDL033

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039203           Date 14Jun16               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. LUC104             Date 14Apr16               *
+      *  Prev Amend No. MD039203           Date 14Jun16               *
+      *                 CDL094             Date 01Sep14               *
       *                 AR720772           Date 19Aug14               *
       *                 CDL091             Date 12Dec12               *
       *                 CSW212             Date 03May12               *
@@ -87,6 +88,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC104 - KondorPlus Details on Deals                         *
+      *           Use hooks FXFXDLV004, FXFXDLV033.                   *
       *  MD039203 - When creating an FX Deal, the value of Forward    *
       *             points and sign were not save upon completion of  *
       *             the transaction                                   *

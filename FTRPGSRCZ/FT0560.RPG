@@ -1,4 +1,4 @@
-     H        1
+      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
 /*EXI *  TEXT('Midas FT Debit and credit advices i/c')                *
@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT134             Date 07Feb12               *
-      *  Prev Amend No. MD021958           Date 22Aug13               *
+      *  Last Amend No. AR858713           Date 17Jun16               *
+      *  Prev Amend No. CFT134             Date 07Feb12               *
+      *                 MD021958           Date 22Aug13               *
       *                 AR1096798          Date 27Mar13               *
       *                 AR1096783          Date 26Mar13               *
       *                 CFT122             Date 14Jan13               *
@@ -113,6 +114,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR858713 - DB Error 097 caused by ENDIF statement for fix    *
+      *             200924 being incorrectly incorporated resulting   *
+      *             in corrupted CNUM.                                *
+      *           - DB Error 097 recurs due to the IBAN being         *
+      *             truncated before executing subroutine SRALTN and  *
+      *             by leading '/' not being removed before calling   *
+      *             AOIBANRn. (Child: AR858714)                       *
+      *           - Applied for MD038463.                             * 
       *  CFT134 - Display IBAN in DR/CR Advices.                      *
       *           (Upgrade of ERZ130 to BFM - including SC261061,     *
       *           SC261561, and SC263429)                             *
@@ -2925,6 +2934,7 @@
      C*                                                                   S01408
       * Process first address ref from ACCNT file.                        CFT003
      C                     MOVELBNC1      @PTY                            CFT003
+     C                     MOVELBNC1      @PTY1  35                                         AR858713
      C           WTYPE     IFEQ 'P'                                       CFT003
      C                     MOVE PCCY      CCYY                            CFT003
      C                     ENDIF                                          CFT003
@@ -4436,6 +4446,7 @@
      C                     MOVELORC1      @PTY                            CFT003
      C                     ENDIF                                                              CFT032
       *                                                                                       CFT032
+     C                     MOVELORC1      @PTY1                                             AR858713
      C           WTYPE     IFEQ 'P'                                       CFT003
      C                     MOVE SMCY      CCYY                            CFT003
      C                     ENDIF                                          CFT003
@@ -9412,11 +9423,20 @@
      C                     SETON                     U7U8LR                                   200924
      C                     EXSR PRTP2                                                         200924
      C                     ENDIF                                                              200924
+      *                                                                                     AR858713
+     C                     MOVE ACNUM     CNUM                                              AR858713
+      *                                                                                     AR858713
+     C                     ENDIF                                                            AR858713
       *                                                                                       250600
       ** For IBAN                                                                             250600
       *                                                                                       250600
      C           WTYPE     IFEQ 'I'                                                           250600
-     C                     MOVEL@PTY      PIBAN  47                                           250600
+     C**********           MOVEL@PTY      PIBAN  47                                  250600 AR858713
+     C                     MOVEL@PTY1     PIBAN  47                                         AR858713
+     C                     MOVEL@PTY1     #001    1                                         AR858713
+     C           #001      IFEQ '/'                                                         AR858713
+     C           34        SUBST@PTY1:2   PIBAN     P                                       AR858713
+     C                     ENDIF                                                            AR858713
      C                     CALL 'AOIBANR3'                                                    250600
      C                     PARM *BLANKS   @RTCD                                               250600
      C                     PARM           PIBAN                                               250600
@@ -9441,9 +9461,9 @@
      C                     ENDIF                                                              250600
       *                                                                                       200924
      C**********           Z-ADDACNUM     CNUM                                         200924 CSD027
-     C                     MOVE ACNUM     CNUM                                                CSD027
-      *                                                                                       200924
-     C                     ENDIF                                                              200924
+     C**********           MOVE ACNUM     CNUM                                       CSD027 AR858713
+      **********                                                                     200924 AR858713
+     C**********           ENDIF                                                     200924 AR858713
       *                                                                   CFT003
      C                     MOVELADREF1    ADF1    1                       CFT003
       *                                                                   CFT003

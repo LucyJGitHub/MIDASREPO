@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD035554           Date 25May16               *
-      *  Prev Amend No. MD037046           Date 12Feb16               *
+      *  Last Amend No. 256758             Date 21Jun16               *
+      *  Prev Amend No. MD038510           Date 20Jun16               *
+      *                 MD035554           Date 25May16               *
+      *                 MD037046           Date 12Feb16               *
       *                 CRE095             Date 25Apr14               *
       *                 MD031057           Date 24Feb15             *
       *                 240699             Date 19Aug14               *
@@ -176,6 +178,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  256758 - Bit 0 of PRIN should not be checked when updating   *
+      *           Last Activity Date. Applied fix 232450.             *
+      *         - Applied for MD-38413.                               *
+      *  MD038510 - Statement for system generatd accounts not        *
+      *             produced. Rewrite processing STMTAH.              *
       *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
       *  MD037046 - MEMOS missing balances from CLEARPD of future     *
       *             dated posting. Modified validation of MD028392    *
@@ -626,6 +633,7 @@
      F                                     COMMIT
      FREOUTLPD  O    F   47        DISK    EXTIND(*INU4)
      F                                     COMMIT
+     FSTMTAH    UF A E             DISK    COMMIT                                           MD038510
      FGLOUTLPT  UF A E             DISK    COMMIT
      F                                     EXTIND(*INU4)
 
@@ -2022,10 +2030,12 @@
      C   05PSTA          DIV       1000          ZZAMT
      C   60
      CAN 05              EXSR      HASH
-     C                   TESTB     '0'           PRIN                     63
+     C**********         TESTB     '0'           PRIN                     63                  256758
+     C                   MOVE      '0'           *IN63                                        256758
 
-     C     *IN63         IFEQ      '0'
-     C     WCOIN         ANDEQ     'Y'
+     C******IN63         IFEQ      '0'                                                        256758
+     C*****WCOIN         ANDEQ     'Y'                                                        256758
+     C     WCOIN         IFEQ      'Y'                                                        256758
      C     *IN05         ANDEQ     '1'
      C                   MOVE      '1'           *IN63
      C                   ENDIF
@@ -2251,6 +2261,7 @@
 
      C                   IF        *IN03 = *ON
      C                   EXCEPT    EXCPT6
+     C                   EXSR      WRTSTMT                                                  MD038510
      C                   ELSE
 
      C                   IF        (AREC1O <> AREC3) or (AREC2O <> AREC4)
@@ -3150,6 +3161,20 @@
      C                   ENDIF
 
      C     LHEND         ENDSR
+      *****************************************************************                     MD038510
+      /EJECT                                                                                MD038510
+      *****************************************************************                     MD038510
+      *                                                               *                     MD038510
+      *  WRTSTMT - Write to statement file for system generated accnts*                     MD038510
+      *                                                               *                     MD038510
+      *****************************************************************                     MD038510
+     C     WRTSTMT       BEGSR                                                              MD038510
+     C                   MOVE      'D'           RECI                                       MD038510
+     C                   MOVE      'N'           MSFL                                       MD038510
+     C                   BITOFF    '01234567'    GLBT                                       MD038510
+     C                   BITON     '2'           GLBT                                       MD038510
+     C                   WRITE     STMTAHF                                                  MD038510
+     C                   ENDSR                                                              MD038510
       *****************************************************************
       /EJECT
       *****************************************************************

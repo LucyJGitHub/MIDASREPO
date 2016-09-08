@@ -12,15 +12,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. MD038430           Date 17May16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CSD003             Date 27OCT97               *
+      *                 CSD003             Date 27OCT97               *
       *                 122096             Date 22AUG97               *
       *                 S01461             DATE 14JAN94               *
       *                 S01459             DATE 14JAN94               *
@@ -29,6 +30,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD038430 - Unable to grant BFTC HKG user Company Codes.      *
+      *             Company codes should always be 3-char. Insert a   *
+      *             '0' in front if it is less than 3-char.           *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSD003 - Synon Closedown Project (SD):                       *
       *           - Program removed from SD model.                    *
@@ -95,6 +99,10 @@
       * ABO DEFINE LARGE STRING FOR CL CMD
      IYARTCM      DS                            512
      I                                        1   1 DUMMY1
+     I#1CMCD      DS                                                                        MD038430
+     I                                        1   1 CC1                                     MD038430
+     I                                        2   2 CC2                                     MD038430
+     I                                        3   3 CC3                                     MD038430
      IINFDS#    E DSY2I#DSP
       * Display file information data structure
       *
@@ -831,6 +839,11 @@
       * Create Company Codes - Company Codes  *
       *================================================================
      C                     MOVEL*BLANK    W0RTN   7
+     C           CC1       IFEQ ' '                                                         MD038430
+     C           CC2       OREQ ' '                                                         MD038430
+     C           CC3       OREQ ' '                                                         MD038430
+     C                     EXSR SRFMTC                                                      MD038430
+     C                     ENDIF                                                            MD038430
       * Move all fields to @APREB4
      C                     MOVEL#1CMCD    APCMCD           Company Code
      C                     Z-ADDWURDNB    APLCD            Last Change Dat
@@ -1450,6 +1463,57 @@
       *================================================================
      CSR         UAEXIT    ENDSR
       /EJECT
+     CSR         SRFMTC    BEGSR                                                            MD038430
+      *================================================================                     MD038430
+      * Format company code to be 3-char if not.                                            MD038430
+      *================================================================                     MD038430
+      *                                                                                     MD038430
+      ** '__X'                                                                              MD038430
+     C           CC1       IFEQ ' '                                                         MD038430
+     C           CC2       ANDEQ' '                                                         MD038430
+     C           CC3       ANDNE' '                                                         MD038430
+     C                     MOVEL'00'      #1CMCD                                            MD038430
+     C                     ENDIF                                                            MD038430
+      ** '_X_'                                                                              MD038430
+     C           CC1       IFEQ ' '                                                         MD038430
+     C           CC2       ANDNE' '                                                         MD038430
+     C           CC3       ANDEQ' '                                                         MD038430
+     C                     MOVELCC2       CC3                                               MD038430
+     C                     MOVEL'00'      #1CMCD                                            MD038430
+     C                     ENDIF                                                            MD038430
+      ** 'X__'                                                                              MD038430
+     C           CC1       IFNE ' '                                                         MD038430
+     C           CC2       ANDEQ' '                                                         MD038430
+     C           CC3       ANDEQ' '                                                         MD038430
+     C                     MOVELCC1       CC3                                               MD038430
+     C                     MOVEL'00'      #1CMCD                                            MD038430
+     C                     ENDIF                                                            MD038430
+      ** '_XX'                                                                              MD038430
+     C           CC1       IFEQ ' '                                                         MD038430
+     C           CC2       ANDNE' '                                                         MD038430
+     C           CC3       ANDNE' '                                                         MD038430
+     C                     MOVEL'0'       #1CMCD                                            MD038430
+     C                     ENDIF                                                            MD038430
+      ** 'XX_'                                                                              MD038430
+     C           CC1       IFNE ' '                                                         MD038430
+     C           CC2       ANDNE' '                                                         MD038430
+     C           CC3       ANDEQ' '                                                         MD038430
+     C                     MOVE CC2       CC23    2                                         MD038430
+     C                     MOVELCC1       CC23    2                                         MD038430
+     C                     MOVE CC23      #1CMCD                                            MD038430
+     C                     MOVEL'0'       #1CMCD                                            MD038430
+     C                     ENDIF                                                            MD038430
+      ** 'X_X'                                                                              MD038430
+     C           CC1       IFNE ' '                                                         MD038430
+     C           CC2       ANDEQ' '                                                         MD038430
+     C           CC3       ANDNE' '                                                         MD038430
+     C                     MOVELCC1       CC2                                               MD038430
+     C                     MOVEL'0'       #1CMCD                                            MD038430
+     C                     ENDIF                                                            MD038430
+      *                                                                                     MD038430
+      *================================================================                     MD038430
+     CSR         FMEXIT    ENDSR                                                            MD038430
+      /EJECT                                                                                MD038430
      CSR         Y0SET     BEGSR
       *================================================================
       * Set cursor by *SET CURSOR data

@@ -49,8 +49,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2005            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD040963           Date 06Sep16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE147             Date 30Sep11               *
       *                 CRE073             Date 06Dec10               *
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040963 - CLE106 initialisation program ended in error      *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -205,7 +207,8 @@
      F                                     COMMIT
 
       ** Midas LE Transaction References File
-     FLETREFPD  O    E             DISK    INFSR(*PSSR)
+     F***LETREFPD  O    E             DISK    INFSR(*PSSR)                                  MD040963
+     FLETREFL0  UF A E           K DISK    INFSR(*PSSR)                                     MD040963
      F                                     COMMIT
      F                                     PREFIX(TR)
 
@@ -1985,7 +1988,10 @@
      C                   EVAL      TRPRTR = FPRTR
 
      C                   IF        PMODE = 'U'
+     C     TRPCRF        CHAIN     LETREFL0                                                 MD040963
+     C                   IF        NOT %FOUND(LETREFL0)                                     MD040963
      C                   WRITE     LETREFD0
+     C                   ENDIF                                                              MD040963
      C                   ENDIF
 
      C                   ENDSR

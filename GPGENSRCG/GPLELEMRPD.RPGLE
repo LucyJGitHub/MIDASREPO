@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Generated Code')                                       *                             
+/*EXI *  TEXT('Generated Code')                                       *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,10 +11,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. CLE068   *CREATE   Date 03Aug16               *
+      *  Last Amend No. MD041012           Date 09Sep16               *
+      *  Prev Amend No. CLE068   *CREATE   Date 03Aug16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041012 - Component GOC0100 00244 failed during COB due to  *
+      *             The match field for file GZLELEMRL0 is out of seq.*
+      *           - Recompile only due to changes in GZLELEMRL1       *
       *  CLE068 - Loan Event Modeller                                 *
       *                                                               *
       *****************************************************************
@@ -25,6 +29,7 @@ O    FGZLELEMRPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     RENAME(LELEMRWF    :W_LELEMRWF     )
 O    F                                     USROPN
 O
+
 O    D Z_LELEMRWPD   E DS                  EXTNAME(GZLELEMRPD)
 O    D G_LELEMRWPD   E DS                  EXTNAME(GZLELEMRPD) PREFIX(G_)
 

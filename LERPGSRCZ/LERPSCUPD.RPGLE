@@ -16,8 +16,9 @@
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CLE154             Date 02Aug12               *
-      *  Prev Amend No. MD025467           Date 08May14               *
+      *  Last Amend No. MD040830           Date 14Sep16               *
+      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *                 MD025467           Date 08May14               *
       *                 MD024342B          Date 08May14               *
       *                 MD024342           Date 08May14               *
       *                 MD023787           Date 29Apr14               *
@@ -77,6 +78,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040830 - Amending the repayment type of a loan event of a  *
+      *             loan does not take effect after authorisation     *
       *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *  MD025467 - API locking issues Redesign Approach              *
       *  MD024342B - API issue. Trailer file allocation problem.      *
@@ -890,7 +893,7 @@
       *****************************************************************
       * MAIN - Main body                                              *
       *****************************************************************
- 
+
       ** Check whether user is a web browser user, if so overwrite                            CAP084
      C                   CALL      'SFC000026'                                                CAP084
      C                   PARM      *BLANKS       USER             10                          CAP084
@@ -1905,8 +1908,12 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   EVAL      PEXR = RPPEXR                                              CLE031
      C                   EVAL      PEXI = RPPEXI                                              CLE031
      C                   ENDIF                                                                CLE031
+
+     C                   IF        CLE154 = 'Y'                                             MD040830
+     C                   EVAL      REPT = RPREPT                                            MD040830
+     C                   ENDIF                                                              MD040830
       *
-      ***  System generated
+      ***  System geFerated
       *
      C     @Type         IFEQ      '0'
      C                   MOVE      'S'           MNSG
@@ -4588,7 +4595,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   EVAL      WPEAInd = 'Y'                                              CSC054
      C                   ENDIF                                                                CSC024
      C                   ENDIF                                                                CSC024
- 
+
      C                   EVAL      @RTCD = *BLANKS
       *                                                                                       CAS011
       ** Check if switchable feature CAS009 is installed                                      CAS011
@@ -4664,7 +4671,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   MOVEL     'N'           CLE134            1                        AR806351
      C                   ENDIF                                                              AR806351
                                                                                             AR806351
- 
+
       ** Check if Watch List Element (CSD083) is on                                           CSD083
                                                                                               CSD083
      C                   CALLB     'AOSARDR0'                                                 CSD083

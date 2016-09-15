@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD031089           Date 12Feb15               *
+      *  Last Amend No. MD041342           Date 15Sep16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD031089           Date 12Feb15               *
       *                 MD032052           Date 23Jan15               *
       *                 MD031225           Date 10Dec14               *
       *                 MD025521           Date 19Aug14               *
@@ -152,6 +153,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041342 - CBC022001 failed due to invalid character in file *
+      *             text description. (Recompile)                     *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions                                *
       *  MD031089 - Add validation on maturity date against fee start *

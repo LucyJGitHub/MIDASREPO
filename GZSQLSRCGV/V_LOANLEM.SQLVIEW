@@ -1,0 +1,37 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing                                             */
+/*                                                                             */
+/*       V_LOAN - Midas GZ Loan Details Listview                               */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2016                     */
+/*                                                                             */
+/*       Last Amend No. MD041378 *CREATE   Date 16Sep16                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD041378 - Current principal is multiplied by 100 when the user is in */
+/*                  LEM                                                        */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+   SELECT V_#LOAN.*,                                                            :
+   CASE WHEN PADPTYP IN ('66','67','69','72') THEN 'PS' WHEN PADPTYP IN         :
+   ('64','65','68','71')                                                        :
+   THEN 'PP' ELSE 'LN' END AS LOANCLASS,                                        :
+          (SELECT COUNT(*) FROM LELOANX0 EX                                     :
+          WHERE EX.PADLNRF=V_#LOAN.PADLNRF                                      :
+          AND EX.CUSTZONE=V_#LOAN.CUSTZONE)                                     :
+            AS PCLIP                                                            :
+   FROM V_#LOAN                                                                 :
+   WHERE EXISTS (SELECT 1 FROM GZSCSARDPD WHERE SARN = 'CLE068' AND             :
+          ZONE = V_#LOAN.CUSTZONE)                                              :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Loan details listview - V_#LOAN          ';                     :
+                                                                                :
+/*******************************************************************************/

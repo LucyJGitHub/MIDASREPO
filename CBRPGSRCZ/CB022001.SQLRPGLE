@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD024652            Date 07May14              *
-      *  Prev Amend No. MD024006A *CREATE   Date 08Jan14              *
+      *  Last Amend No. MD041010            Date 18Sep16              *
+      *  Prev Amend No. MD024652            Date 07May14              *
+      *                 MD024006A *CREATE   Date 08Jan14              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041010 - Component CBC022001 00686 failed during COB       *
       *  MD024652 - Missing members of REHIS* files.                  *
       *  MD024006A - Rewrite of generic component.                    *
       *                                                               *
@@ -74,7 +76,7 @@
      C                   WHEN      PMode = '*WRT'
      C                   IF        PMember = '*ALL'
      C                   EXSR      WriteAll
-     C                   EXSR      UpdateAll
+     C**********         EXSR      UpdateAll                                                MD041010
      C                   ELSE
      C                   EXSR      Write
      C                   EXSR      Update
@@ -316,12 +318,14 @@
      C+ into :FMBR
      C/end-exec
  
+     C     SQL_00081     IFEQ      '1'                                                      MD041010
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             '(' + MBBOF
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             ' (' + MBBOM
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             '))'
+     C                   ENDIF                                                              MD041010
       *
      C                   ENDDO
      C                   ENDIF
@@ -514,7 +518,8 @@
      C+ , :XMBNAME
      C+ , :XMBNOMB
      C+ , :XMBNSCM
-     C+ , :XMBMTXT
+     C***+*,*:XMBMTXT                                                                       MD041010
+     C+ , :XMBTXT                                                                           MD041010
      C+ , :XMBRSHR
      C+ , :XMBBOF
      C+ , :XMBBOM

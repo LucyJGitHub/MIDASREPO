@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. LUC104             Date 14Apr16               *
-      *  Prev Amend No. MD037869A          Date 28Mar16               *
+      *  Last Amend No. AR701789           Date 26Sep16               *
+      *  Prev Amend No. LUC104             Date 14Apr16               *
+      *                 MD037869A          Date 28Mar16               *
       *                 MD037869           Date 11Mar16               *
       *                 CGL165             Date 23Feb15               *
       *                 MD033488           Date 12Mar15               *
@@ -151,6 +152,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR701789 - Unable to reject a deal amendment. Add a new      *
+      *             parameter to indicate reject transaction.         *
+      *             Applied for MD041482                              *
       *  LUC104 - KondorPlus Details on Deals                         *
       *           Use hooks: MMLDNIV001, MMLDNIV092                   *
       *  MD037869A - Unable to authorise deal in LDNI after updating  *
@@ -1087,6 +1091,7 @@
       /COPY WNCPYSRC,MMLDNIV006
 
      C     MSG1          IFNE      *BLANK
+     C     ACTRJ         ANDNE     'Y'                                                      AR701789
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDBRCA'
      C                   EVAL      MsgIDArr(Idx) = MSG1
@@ -4230,6 +4235,7 @@
      C                   PARM                    RespMode
       * Transaction information (DS) from source system
      C                   PARM                    TranIn
+     C                   PARM                    ACTRJ             1                        AR701789
      C                   PARM                    InfData                        CDL007
       * Receive Settlement Ccy, Method & Nostro and  Pay Settlement Ccy,
       * Method & Nostro, from default or valid deal

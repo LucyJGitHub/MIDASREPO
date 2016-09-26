@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. AR316373           Date 03Jun15               *
+      *  Last Amend No. AR701789           Date 26Sep16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 AR316373           Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 AR702532           Date 13Jan15               *
       *                 CAP212             Date 15Sep14               *
@@ -197,6 +198,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR701789 - Unable to reject a deal amendment. Add a new      *
+      *             parameter to indicate reject transaction.         *
+      *             Applied for MD041482                              *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions                                *
       *  AR316373 - BOE @ MPlus - BOE cust dtls are not displayed in  *
@@ -714,6 +718,7 @@
      D DDFOID          S             20                                                       239400
      D PLATAK          S              1                                                      BUG3792
      D LONDEP          S              1                                                      BUG6534
+     D ACTRJ           S              1                                                     AR701789
      D DepData         S           4050                                                     BUG12213
      D FRNT            S             20                                                       261140
      D AFRT            S             20                                                       261140
@@ -1228,6 +1233,8 @@ RGC  D RPIF4LN         S              4  0                                      
       **  Send Placing/Taking indicator for JSP Block/Unblock conditioning.                  BUG3792
      C     1             SUBST     BUFFER:Bfp    PLATAK                                      BUG3792
      C                   ADD       1             Bfp                                         BUG3792
+     C     1             SUBST     BUFFER:Bfp    ACTRJ                                      AR701789
+     C                   ADD       1             Bfp                                        AR701789
      C     20            SUBST     BUFFER:Bfp    DDFOID                                       239400
      C                   ADD       20            Bfp                                          239400
      C     FSSRLn        SUBST     BUFFER:Bfp    #FRECS                                       CDL018
@@ -1337,6 +1344,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    @TimeStamp                                  BUG3986
      C                   PARM                    DDACTC                                      BUG3684
      C                   PARM                    PLATAK                                      BUG3792
+     C                   PARM                    ACTRJ                                      AR701789
      C                   PARM                    DDFOID                                       239400
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020

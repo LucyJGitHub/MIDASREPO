@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD037869A          Date 28Mar16               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. AR701789           Date 26Sep16               *
+      *  Prev Amend No. MD037869A          Date 28Mar16               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 MD030436           Date 01Oct14               *
       *                 MD027337A          Date 01Oct14               *
@@ -125,6 +126,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR701789 - Unable to reject a deal amendment. Add a new      *
+      *             parameter to indicate reject transaction.         *
+      *             Applied for MD041482                              *
       *  MD037869A - Unable to authorise deal in LDNI after updating  *
       *              base rate.                                       *
       *  CGL165 - Dual Withholding Tax                                *
@@ -1356,6 +1360,7 @@
      C                   PARM                    @MsgDtaArr                                  BUG4808
      C                   PARM                    @MsgFArray                                  BUG4808
      C                   PARM                    @APIRetC          1                         BUG4808
+     C                   PARM                    ACTRJ                                      AR701789
      C                   MOVEL     DDACTN        Buffer                                      BUG4808
      C                   MOVE      IKDN38        @ACDLNO                                      CDL033
      C                   MOVEL     DDACTN        @ACDLNO                                      CDL033
@@ -1372,6 +1377,7 @@
      C**********                                 + @TimeStamp                        BUG3986 BUG3684
      C**********                                 + @TimeStamp + DDACTC               BUG3684 BUG3792
      C                                           + @TimeStamp + DDACTC + PLATAK              BUG3792
+     C                                           + ACTRJ                                    AR701789
      C                                           + DDFOID                                     239400
      C                                           + #FRECS + #FPAYS                            CDL018
      C                                           + InRecSttmt + InPaySttmt
@@ -1648,6 +1654,7 @@
      C                   PARM                    @TimeStamp       26                         BUG3986
      C                   PARM                    DDACTC            1                         BUG3684
      C                   PARM                    PLATAK            1                         BUG3792
+     C                   PARM                    ACTRJ             1                        AR701789
      C                   PARM                    DDFOID           20                          239400
  
       * Set up the name of the primary and secondary message files from
@@ -2099,6 +2106,8 @@
       * OUTPUTS
       * (Current) deal in file format
      C                   PARM                    DealFilFmt
+      *                                                                                     AR701789
+     C                   PARM                    ACTRJ                                      AR701789
  
       * OK - Action code
      C                   PARM                    OKACTN
@@ -2395,6 +2404,7 @@
      C                   PARM      'S'           APRespMode
       * Transaction information (DS) from source system
      C                   PARM                    TranIn
+     C                   PARM                    ACTRJ                                      AR701789
      C                   PARM                    InfData
       * Receive Settlement Currency, Method & Nostro and
       * Payment Settlement Currency, Method & Nostro

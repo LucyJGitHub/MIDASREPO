@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD036070           Date 19Oct15               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. AR701789           Date 26Sep16               *
+      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -93,6 +94,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR701789 - Unable to reject a deal amendment. Add a new      *
+      *             parameter to indicate reject transaction.         *
+      *             Applied for MD041482                              *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
       *             function key F11.                                 *
@@ -943,6 +947,7 @@
      C                   CALLB     'MMLDNIVAL'
      C                   PARM                    RespMode
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    ACTRJ             1                        AR701789
      C                   PARM                    InfData                                      CDL007
      C                   PARM      IKSTCY        @@RSCY
      C                   PARM      IKRSTM        @@RSTM
@@ -1765,6 +1770,8 @@
       * (Current) deal in file format
      C                   PARM                    CrDlFilFmt
      C/COPY WNCPYSRC,MMLDNISC59
+      *                                                                                     AR701789
+     C                   PARM                    ACTRJ                                      AR701789
       *
       * OK - Action code
      C                   PARM      *BLANK        OKACTN
@@ -2549,6 +2556,7 @@
      C                   CALLB     'MMLDNIVAL'
      C                   PARM                    RespMode
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    ACTRJ                                      AR701789
      C                   PARM                    InfData                                      CDL007
      C                   PARM      IKSTCY        @@RSCY
      C                   PARM      IKRSTM        @@RSTM

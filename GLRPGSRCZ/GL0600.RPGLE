@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD038510           Date 20Jun16               *
-      *  Prev Amend No. MD035554           Date 25May16               *
+      *  Last Amend No. 256758             Date 21Jun16               *
+      *  Prev Amend No. MD038510           Date 20Jun16               *
+      *                 MD035554           Date 25May16               *
       *                 MD037046           Date 12Feb16               *
       *                 CRE095             Date 25Apr14               *
       *                 MD031057           Date 24Feb15             *
@@ -177,6 +178,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  256758 - Bit 0 of PRIN should not be checked when updating   *
+      *           Last Activity Date. Applied fix 232450.             *
+      *         - Applied for MD-38413.                               *
       *  MD038510 - Statement for system generatd accounts not        *
       *             produced. Rewrite processing STMTAH.              *
       *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
@@ -2026,10 +2030,12 @@
      C   05PSTA          DIV       1000          ZZAMT
      C   60
      CAN 05              EXSR      HASH
-     C                   TESTB     '0'           PRIN                     63
+     C**********         TESTB     '0'           PRIN                     63                  256758
+     C                   MOVE      '0'           *IN63                                        256758
 
-     C     *IN63         IFEQ      '0'
-     C     WCOIN         ANDEQ     'Y'
+     C******IN63         IFEQ      '0'                                                        256758
+     C*****WCOIN         ANDEQ     'Y'                                                        256758
+     C     WCOIN         IFEQ      'Y'                                                        256758
      C     *IN05         ANDEQ     '1'
      C                   MOVE      '1'           *IN63
      C                   ENDIF

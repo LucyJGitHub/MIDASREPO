@@ -17,11 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD035076           Date 21Jul15               *
-      *  Prev Amend No. CGL132  *CREATE    Date 01May13               *
+      *  Last Amend No. MD037883A          Date 31Mar16               *
+      *  Prev Amend No. MD035076           Date 21Jul15               *
+      *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037883A - Unable to Authorise Amendment on Customer Details*
       *  MD035076 - Unable to delete a customer where Creation Date   *
       *             is blank                                          *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -155,6 +157,7 @@
       * On Amendment - If Creation Date is displayed and left blank,
       * keep the value of 0, the take-on initial value for existing users
      C                   IF        DDACTN = 'A' and DDCRDT = *BLANKS
+     C                             OR DDACTN = 'D' and DDCRDT = *BLANKS                    MD037883A
      C                   IF        X1_XCCRDT = 0
      C                   Z-ADD     0             XCCRDT
      C                   GOTO      EndVCRDT

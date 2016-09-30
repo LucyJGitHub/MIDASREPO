@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033870           Date 17Apr15               *
-      *  Prev Amend No. AR892347           Date 25Nov14               *
+      *  Last Amend No. MD039348           Date 17Jun16               *
+      *  Prev Amend No. MD033870           Date 17Apr15               *
+      *                 AR892347           Date 25Nov14               *
       *                 MD030342           Date 25Nov14               *
       *                 MD029779           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -124,6 +125,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039348 - Error message "Settlement Payments fields cannot  *
+      *             be amended. (Field: Pay - Ordering Customer)" is  *
+      *             displayed during amendment of maturity date of    *
+      *             a valued deal. Prevent defaulting of settlement   *
+      *             fields when already protected by the system.      *
       *  MD033870 - Wrong value for DDAGVV. Corrected MOVE and MOVEL. *
       *  AR892347 - Details of payment defaulting should only take    *
       *             place if an MT103 is to be generated: i.e. if     *
@@ -813,18 +819,21 @@
      C     DDRSTM        OREQ      '01'                                                       186433
      C     ##ACCD        ANDEQ     'A'                                                        186433
      C     ##ValIter     ANDEQ     '1ST'                                                      186433
+     C     ##PREC        ANDNE     'Y'                                                      MD039348
      C     DDRSTM        OREQ      '07'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
      C     DDRSTM        OREQ      '07'                                                       186433
      C     ##ACCD        ANDEQ     'A'                                                        186433
      C     ##ValIter     ANDEQ     '1ST'                                                      186433
+     C     ##PREC        ANDNE     'Y'                                                      MD039348
      C     DDRSTM        OREQ      '08'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
      C     DDRSTM        OREQ      '08'                                                       186433
      C     ##ACCD        ANDEQ     'A'                                                        186433
      C     ##ValIter     ANDEQ     '1ST'                                                      186433
+     C     ##PREC        ANDNE     'Y'                                                      MD039348
      C                   EXSR      DEFREC
      C                   END
       *
@@ -836,18 +845,21 @@
      C     DDPSTM        OREQ      '01'                                                       186433
      C     ##ACCD        ANDEQ     'A'                                                        186433
      C     ##ValIter     ANDEQ     '1ST'                                                      186433
+     C     ##PPAY        ANDNE     'Y'                                                      MD039348
      C     DDPSTM        OREQ      '07'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
      C     DDPSTM        OREQ      '07'                                                       186433
      C     ##ACCD        ANDEQ     'A'                                                        186433
      C     ##ValIter     ANDEQ     '1ST'                                                      186433
+     C     ##PPAY        ANDNE     'Y'                                                      MD039348
      C     DDPSTM        OREQ      '08'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
      C     DDPSTM        OREQ      '08'                                                       186433
      C     ##ACCD        ANDEQ     'A'                                                        186433
      C     ##ValIter     ANDEQ     '1ST'                                                      186433
+     C     ##PPAY        ANDNE     'Y'                                                      MD039348
      C                   EXSR      DEFPAY
      C                   END
       *

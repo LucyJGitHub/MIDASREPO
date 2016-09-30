@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. MD033488           Date 12Mar15               *
+      *  Last Amend No. MD037869A          Date 28Mar16               *
+      *  Prev Amend No. MD037869           Date 11Mar16               *
+      *                 CGL165             Date 23Feb15               *
+      *                 MD033488           Date 12Mar15               *
       *                 MD031494           Date 13Feb15               *
       *                 MD030409           Date 03Dec14               *
       *                 MD029724           Date 03Dec14               *
@@ -148,6 +150,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037869A - Unable to authorise deal in LDNI after updating  *
+      *              base rate.                                       *
+      *  MD037869 - Unable to authorise deal in LDNI after updating   *
+      *             base rate.                                        *
       *  CGL165 - Dual Withholding Tax                                *
       *  MD033488 - Allow negative rates. Reversed MD031494.          *
       *  MD031494 - Negative Interest - MMDeals negative interest     *
@@ -707,6 +713,13 @@
       ** Previous Maturity Date                                                 CDL007
      D OLD_IKMATD      S              5P 0 INZ(0)                               CDL007
                                                                                 CDL006
+      ** New total interest                                                                 MD037869
+     D NEW_TOTI        S                   LIKE(IKMTTI)                                     MD037869
+      ** Current total interest                                                             MD037869
+     D OLD_TOTI        S                   LIKE(IKMTTI)                                     MD037869
+                                                                                            MD037869
+     D PNBDP           S              3P 0                                                  MD037869
+     D PNINT           S              3P 0                                                  MD037869
      D*******CDL006          S              1A   IMPORT                               CDL006 BUG9827
      D*******CDL006          S              1A                                      BUG9827 BUG10661
      D CDL006          S              1A   EXPORT                                           BUG10661
@@ -2239,6 +2252,12 @@
      C                   EVAL      WFldNamArr(WIdx) = 'DDBSRC'
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID1
      C                   ENDIF
+                                                                                            MD037869
+      ** Get old base rate when action is not insert                                        MD037869
+     C                   IF        DDACTN <> 'I'                                            MD037869
+     C**********         EVAL      Baserate = IKINTR - @SPRD                      MD037869 MD037869A
+     C                   EVAL      Baserate = IKINTR - IKSPRD                              MD037869A
+     C                   ENDIF                                                              MD037869
                                                                                               CDL033
      C                   ENDIF                                                                CDL033
  
@@ -2526,6 +2545,27 @@
       *  *--------------------------------*
       *  * Validate Total Interest Amount *  #24
       *  *--------------------------------*
+                                                                                            MD037869
+      ***Convert current total interest                                                     MD037869
+     C                   MOVEL     IKMTTI        OLD_TOTI                                   MD037869
+     C                   MOVEL     IKMTTI        NEW_TOTI                                   MD037869
+     C                   EVAL      PSCRF = DDTOTI                                           MD037869
+     C                   EVAL      PNBDP = A6NBDP                                           MD037869
+     C                   EVAL      PNINT = 13 - A6NBDP                                      MD037869
+     C                   CALLB     'ZA0841'                                                 MD037869
+     C                   PARM      *BLANKS       PRTCD                                      MD037869
+     C                   PARM                    PSCRF                                      MD037869
+     C                   PARM                    PNBDP                                      MD037869
+     C                   PARM                    PNINT                                      MD037869
+     C                   PARM      'N'           @@MTID                                     MD037869
+     C                   PARM      0             @@ERCD                                     MD037869
+     C                   PARM                    @@AMT                                      MD037869
+     C                   PARM                    BNDCSP                                     MD037869
+     C                                                                                      MD037869
+     C     @@ERCD        IFEQ      0                                                        MD037869
+     C                   EVAL      NEW_TOTI = @@AMT                                         MD037869
+     C                   ENDIF                                                              MD037869
+                                                                                            MD037869
       ***(Only*on*insertion.*Note*that*total*interest*is*not*amendable)** CAP004151977
       *  (Note that total interest is amendable in 'Amend' and 'Insert')        151977
  
@@ -2534,11 +2574,14 @@
      C     CDL019        ANDEQ     'Y'                                                        249905
      C     DDACTN        OREQ      'A'                                                        260340
      C     OLD_IKMATD    ANDNE     IKMATD                                                     260340
+     C     DDACTN        OREQ      'A'                                                      MD037869
+     C     OLD_TOTI      ANDNE     NEW_TOTI                                                 MD037869
       *  (Need to retrieve interest on Authorise)                               238009
      C     DDACTN        OREQ      'X'                                          238009
      C     CDL019        ANDEQ     'Y'                                                        249905
      C     DDACTN        OREQ      'X'                                                        260340
      C     OLD_IKMATD    ANDNE     IKMATD                                                     260340
+     C     OLD_IKMATD    ANDNE     *ZEROS                                                   MD037869
      C/COPY WNCPYSRC,MMLDNIVC11
       *                                                                                       CDL033
      C     CDL033        IFEQ      'Y'                                                        CDL033

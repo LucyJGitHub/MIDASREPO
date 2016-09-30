@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. AR701789           Date 26Sep16               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CSF011A            Date 28Nov11               *
@@ -121,6 +122,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR701789 - Unable to reject a deal amendment. Add a new      *
+      *             parameter to indicate reject transaction.         *
+      *             Applied for MD041482                              *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -1630,6 +1634,8 @@
      C                   PARM                    DealFilFmt
      C/COPY WNCPYSRC,MMLDNICC09
 
+      *                                                                                     AR701789
+     C                   PARM                    ACTRJ             1                        AR701789
       * OK - Action code
      C                   PARM                    DDActnOK
 
@@ -1846,6 +1852,8 @@
      C                   PARM                    APRespMode
       * Transaction information (DS) from source system
      C                   PARM                    TranIn
+      *                                                                                     AR701789
+     C                   PARM                    ACTRJ                                      AR701789
      C                   PARM                    InfData                        CDL007
       * Receive Settlement Currency, Method & Nostro and
       * Payment Settlement Currency, Method & Nostro

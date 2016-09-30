@@ -13,12 +13,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. 215959             Date 21Mar16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 241970             Data 05Sep06               *
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. 241970             Data 05Sep06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 240728             Date 06Jun06               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -29,6 +30,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  215959 - Truncation error on event amount in SE2450P3.       *
+      *           Recompiled due to changes in PF/SEKEYD.             *
+      *         - Applied for MD-37439.                               *
       *  241970 - Recompiled due to change in MXACSPRME.              *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

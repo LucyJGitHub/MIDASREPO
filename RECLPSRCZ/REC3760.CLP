@@ -13,8 +13,9 @@
 /*                                                                   */                 /*CRE083BU*/
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD022097           Date 30Aug13              */
-/*       Prev Amend No. AR1097467B         Date 17Apr13              */
+/*       Last Amend No. MD041343           Date 15Sep16              */
+/*       Prev Amend No. MD022097           Date 30Aug13              */
+/*                      AR1097467B         Date 17Apr13              */
 /*                      MD002850           Date 08Apr13              */
 /*                      CRE083BU           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD041343 - Undefined record type found in file SSRACJL      */
 /*       MD022097 - Low performance of REC3760T2                     */
 /*       AR1097467B - Expected 15% COB run optimization not met      */
 /*       MD002850 - Correct the processing for restart of subtasks   */
@@ -220,8 +222,10 @@ DTAQWAIT:                                                                       
 /* the GL and Retail accounts */                                                        /*MD022097*/
                                                                                         /*MD022097*/
              IF         COND(&CGL002 *EQ 'Y') THEN(DO)                                  /*MD022097*/
+/**********     OVRDBF     FILE(SSRACJL) TOFILE(GLACCTJ0) POSITION(*KEY +
+                             5 GLACCTJF &SKEYVALUE)                */          /*MD022097 MD041343*/
                 OVRDBF     FILE(SSRACJL) TOFILE(GLACCTJ0) POSITION(*KEY +
-                             5 GLACCTJF &SKEYVALUE)                                     /*MD022097*/
+                             5 SSRACJF &SKEYVALUE)                                      /*MD041343*/
              ENDDO                                                                      /*MD022097*/
              ELSE       CMD(DO)                                                         /*MD022097*/
                 OVRDBF     FILE(SSRACJL) TOFILE(SSRACJL) POSITION(*KEY +

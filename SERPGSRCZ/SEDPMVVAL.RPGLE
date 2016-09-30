@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
-      *  Prev Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD037824           Date 09Mar16               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *                 CSW210             Date 04May10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -83,6 +84,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037824 - Mismatch in value date between repo deal and depot*
+      *             movement. Remove checking of DDDRID to always do  *
+      *             validation of Associated Deal Number field.       *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -821,9 +825,9 @@
      C                   EXSR      SRRPInd                                                    CAP087
       ** Associated Deal Number                                                               CAP087
      C                   MOVE      DDDPAD        DPAD                                         244007
-     C                   IF        DDDRID <> '  '                                             244007
+     C**********         IF        DDDRID <> '  '                                    244007 MD037824
      C                   EXSR      SRDAsoD                                                    CAP087
-     C                   ENDIF                                                                244007
+     C**********         ENDIF                                                       244007 MD037824
       ** Switch Reference                                                                     CAP087
      C                   EXSR      SRSwRef                                                    CAP087
       ** Switch IN/OUT indicator                                                              CAP087

@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD000091           Date 17May13               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD038918           Date 31May16               *
+      *  Prev Amend No. MD000091           Date 17May13               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -44,6 +45,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038918 - Rate reset in Bank Fusion. Allow insertion of IR  *
+      *             event for an FRN security with event date equal   *
+      *             to the coupon array or the adjusted coupon date.  *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -308,6 +312,7 @@
      D PPROT           S              1A
      D WSEDE           S                   LIKE(SEDEFMT)
      D PEvtDno         S                   LIKE(WEvtDNo)
+     D PCpd            S                   LIKE(PDayNoOut)                                  MD038918
                                                                                               CSE065
      D CSE065          S              1A                                                      CSE065
       **                                                                                    MD000091
@@ -1101,6 +1106,59 @@
      C                   EVAL      WESC = 'Y'
      C                   LEAVE
      C                   ENDIF
+      *                                                                                     MD038918
+      ** If coupon date is to be adjusted, event date equal to the                          MD038918
+      ** adjusted coupon date will also be accepted.                                        MD038918
+      *                                                                                     MD038918
+     C                   IF        NOT *IN34                                                MD038918
+     C                   MOVE      WDat(WIx)     Wk2N                                       MD038918
+     C                   MOVEL     WDat(WIx)     Wk4N                                       MD038918
+     C                   MOVEL     Wk2N          Wk4N                                       MD038918
+     C                   MOVEL     WDat(WIx)     Wk2N                                       MD038918
+     C                   MOVEL     Wk4N          PADateIn                                   MD038918
+     C                   MOVE      Wk2N          PADateIn                                   MD038918
+     C                   EXSR      SRZDate1                                                 MD038918
+     C                   Z-ADD     PDayNoOut     PCpd                                       MD038918
+     C     F1BCNV        IFNE      ' '                                                      MD038918
+     C     F1BCNV        ANDNE     'N'                                                      MD038918
+     C     F1BCNV        IFEQ      'C'                                                      MD038918
+     C                   MOVE      'N'           NCI               1                        MD038918
+     C                   ELSE                                                               MD038918
+     C                   MOVE      'L'           NCI               1                        MD038918
+     C                   ENDIF                                                              MD038918
+     C                   Z-ADD     F1LCPN        WLCPN             5 0                      MD038918
+     C                   Z-ADD     0             F1LCPN                                     MD038918
+     C                   CALL      'SE0045'                                                 MD038918
+     C                   PARM                    F1SITP                                     MD038918
+     C                   PARM                    PCpd                                       MD038918
+     C                   PARM                    F1ITLD                                     MD038918
+     C                   PARM                    F1FCPN                                     MD038918
+     C                   PARM                    WCD                                        MD038918
+     C                   PARM                    WCR                                        MD038918
+     C                   PARM                    F1NMCY                                     MD038918
+     C                   PARM                    PCpd                                       MD038918
+     C                   PARM                    NCI                                        MD038918
+     C                   PARM                    F1BCNV                                     MD038918
+     C                   PARM                    F1MATY                                     MD038918
+     C                   PARM                    F1LCPN                                     MD038918
+     C                   PARM      *BLANKS       HCY1              3                        MD038918
+     C                   PARM      *BLANKS       HCY2              3                        MD038918
+     C                   PARM      *BLANKS       HCY3              3                        MD038918
+     C                   PARM      *BLANKS       HCY4              3                        MD038918
+     C                   PARM      *BLANKS       HCY5              3                        MD038918
+     C                   PARM      *BLANKS       HCY6              3                        MD038918
+     C                   PARM      *BLANKS       HCY7              3                        MD038918
+     C                   PARM      *BLANKS       HCY8              3                        MD038918
+     C                   PARM      *BLANKS       HCY9              3                        MD038918
+     C                   Z-ADD     WLCPN         F1LCPN                                     MD038918
+     C                   ENDIF                                                              MD038918
+     C     WEvtDNo       IFEQ      PCpd                                                     MD038918
+     C                   MOVE      *ON           *IN34                                      MD038918
+     C                   EVAL      WESC = 'Y'                                               MD038918
+     C                   LEAVE                                                              MD038918
+     C                   ENDIF                                                              MD038918
+     C                   ENDIF                                                              MD038918
+                                                                                            MD038918
  
      C                   ENDIF
      C                   ENDDO

@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CRE101             Date 27Aug14               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD037025           Date 10Feb16               *
+      *  Prev Amend No. CRE101             Date 27Aug14               *
+      *                 CGL165             Date 17Feb15               *
       *                 226364             Date 19Aug14               *
       *                 MD024951           Date 19Aug14               *
       *                 MD025198           Date 11May14               *
@@ -80,6 +81,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037025 - Cannot delete an Account if the IBAN is           *
+      *             referenced in a matured Incoming Payment.         *
+      *             Patterned after 230192.                           *
       *  CRE101 - Interim Interest Statements on a Frequency          *
       *           Pgm type changed to be SQLRPGLE                     *
       *           Added hooks:  CRE101_008, CRE101_014, CRE101_019    *
@@ -1215,10 +1219,13 @@
       *                                                                         CFT004
      C                   IF        CFT004 = 'Y'                                 CFT004
      C     A1IBAN        CHAIN     INPAYIB                            44        CFT004
+      *                                                                                     MD037025
+     C     *IN44         DOUEQ     '1'                                                      MD037025
       *                                                                         CFT004
       * If references an account that exists then Account can't be              CFT004
       * Amended or Deleted.                                                     CFT004
      C     *IN44         IFEQ      '0'                                          CFT004
+     C     RECI          ANDEQ     'D'                                                      MD037025
      C                   MOVEL     'N'           OKCNUM                         CFT004
      C                   MOVEL     'N'           OKCCY                          CFT004
      C                   MOVEL     'N'           OKACOD                         CFT004
@@ -1229,6 +1236,15 @@
      C                   MOVEL     'RE72027'     MsgIdArr(Ix)                   CFT004
      C                   GOTO      EVALAD                                       CFT004
      C                   END                                                    CFT004
+      *                                                                                     MD037025
+     C                   READ      INPAYIB                                44                MD037025
+      *                                                                                     MD037025
+     C     A1IBAN        IFNE      BNC34                                                    MD037025
+     C                   MOVE      '1'           *IN44                                      MD037025
+     C                   ENDIF                                                              MD037025
+      *                                                                                     MD037025
+     C                   ENDDO                                                              MD037025
+      *                                                                                     MD037025
      C                   END                                                    CFT004
                                                                                 CFT004
       *****************************************************************           AR801992 AR952677A

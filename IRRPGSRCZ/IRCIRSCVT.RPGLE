@@ -16,11 +16,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 245692             Date 11Dec13               *
+      *  Last Amend No. MD038303           Date 13May16               *
+      *  Prev Amend No. 245692             Date 11Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 244404             Date 13Dec06               *
+      *                 244404             Date 13Dec06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG11950           Date 25Aug06               *
       *                 CIR014             Date 11May06               *
@@ -68,6 +69,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038303 - Format zero value of buy-amount if it was entered *
+      *             by user.                                          *
       *  245692 - Incorrect validation of rates when the decimal se-  *
       *           parator in the Dealing ICD was defined as "," ins-  *
       *           tead of ".".                                        *
@@ -1020,6 +1023,8 @@
      C*****BOVD*         IFNE      *ZERO                                             CAP043 BUG11950
      C**********         Z-ADD     BOVD          @@AMTW                              CAP043 BUG11950
      C     BOAM          IFNE      *ZERO                                                    BUG11950
+     C     BOAM          OREQ      *ZERO                                                    MD038303
+     C     BOVD          ANDNE     *ZERO                                                    MD038303
      C                   Z-ADD     BOAM          @@AMTW                                     BUG11950
      C                   IF        BAPR = 'P'                                                 CAP043
      C                   Z-ADD     WUNBDP        @@QECN                                       CAP043

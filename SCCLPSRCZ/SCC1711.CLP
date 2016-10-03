@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD035839           Date 14Sep15              */
-/*       Prev Amend No. AR1096483          Date 18Mar13              */
+/*       Last Amend No. MD038500           Date 17Aug16              */
+/*       Prev Amend No. MD035839           Date 14Sep15              */
+/*                      AR1096483          Date 18Mar13              */
 /*                      CSC048             Date 06Aug12              */
 /*                      CCB023A *REWRITE   Date 06Aug12              */
 /*                      CCB020             Date 06Aug12              */
@@ -82,6 +83,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD038500 - Error when saving global library due to file     */
+/*                  locking. Patterned after fix AR546370 as a pre-  */
+/*                  ventative fix to avoid SAVLIB locking problems.  */
 /*       MD035839 - Include the prefix for new DI library to resolve */
 /*                  issue in SCC1711 during COB                      */
 /*       AR1096483 - Included DILIB name for global libraries.       */
@@ -371,17 +375,27 @@
 /*                        (&MODE *EQ 'GTA')) THEN(DO)              */               /*MD035839*/
              IF         COND((&MODE *EQ 'GM') *OR +
                           (&MODE *EQ 'GTA') *OR (&MODE *EQ 'GD')) THEN(DO)          /*MD035839*/
-               SAVLIB     LIB(&MODLIB) DEV(*SAVF) SAVF(&DILIB/&SAVF) +
+/**********    SAVLIB     LIB(&MODLIB) DEV(*SAVF) SAVF(&DILIB/&SAVF) +
                             USEOPTBLK(*NO) CLEAR(*ALL) PRECHK(*YES) +
                             SAVACT(*LIB) ACCPTH(&ACPTH) +
-                            DTACPR(&DTACPRV) OUTPUT(*PRINT)
+                            DTACPR(&DTACPRV) OUTPUT(*PRINT)        */                   /*MD038500*/
+               SAVLIB     LIB(&MODLIB) DEV(*SAVF) SAVF(&DILIB/&SAVF) +
+                          USEOPTBLK(*NO) CLEAR(*ALL) PRECHK(*YES) +
+                          SAVACT(*LIB) SAVACTWAIT(120 *NOCMTBDY) +
+                          ACCPTH(*YES) DTACPR(&DTACPRV) +
+                          OUTPUT(*PRINT)                                                /*MD038500*/
 
              ENDDO
              ELSE       DO
-               SAVLIB     LIB(&MODLIB) DEV(*SAVF) SAVF(&DILIB/&SAVF) +
+/**********    SAVLIB     LIB(&MODLIB) DEV(*SAVF) SAVF(&DILIB/&SAVF) +
                             USEOPTBLK(*NO) CLEAR(*ALL) PRECHK(*YES) +
                             ACCPTH(&ACPTH) DTACPR(&DTACPRV) +
-                            OUTPUT(*PRINT)
+                            OUTPUT(*PRINT)                         */                   /*MD038500*/
+               SAVLIB     LIB(&MODLIB) DEV(*SAVF) SAVF(&DILIB/&SAVF) +
+                          USEOPTBLK(*NO) CLEAR(*ALL) PRECHK(*YES) +
+                          SAVACT(*LIB) SAVACTWAIT(120 *NOCMTBDY) +
+                          ACCPTH(&ACPTH) DTACPR(&DTACPRV) +
+                          OUTPUT(*PRINT)                                                /*MD038500*/
              ENDDO
 
              RTVDTAARA  DTAARA(RUNDAT) RTNVAR(&RUNDAT)

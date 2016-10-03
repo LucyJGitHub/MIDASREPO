@@ -15,13 +15,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
-      *  Last Amend No. AR924843           Date 08Mar12               *
-      *  Prev Amend No. AR892737C          Date 01Feb12               *
+      *  Last Amend No. MD037908           Date 21Mar16               *
+      *  Prev Amend No. AR924843           Date 08Mar12               *
+      *                 AR892737C          Date 01Feb12               *
       *                 AR878597           Date 13Dec11               *
       *                 CBF005  *CREATE    Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037908 - Inhouse permissions missing. (MI_CST_*)           *
       *  AR924843 - Entitlement Type 'Branch' as Booking Branch       *
       *  AR892737C - Permissions by User Report does not allow lower  *
       *              case characters on user profile input            *
@@ -868,7 +870,8 @@
      C                             ' A.BFGROUPNAME = J.BFGROUPNAME AND        '+           AR892737C
      C                             ' J.BFGROUPIDPK = D.BFGROUPID AND          '+           AR892737C
      C                             ' D.BFPERMISSIONID = E.BFIDPK AND          '+
-     C                             ' E.BFIDPK = H.BFIDPK AND                  '+
+     C**********                   ' E.BFIDPK = H.BFIDPK AND                  '+            MD037908
+     C                             ' E.BFIDPK = H.BFPERMISSIONID AND          '+            MD037908
      C                             ' H.BFRESOURCEID = I.BFARTEFACTID          '
      C**********         IF        PCnsld <> '1'                                           AR892737C
      C                   IF        PCnsld = '0'                                            AR892737C

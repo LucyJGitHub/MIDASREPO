@@ -1,6 +1,7 @@
      H DEBUG DATEDIT(*YMD)
       *****************************************************************
-/*STD *  RPGBASEMOD                                                   *
+/*S*D****RPGBASEMOD****************************************************                     MD039105
+/*STD *  RPGSQLMOD                                                    *                     MD039105
 /*EXI *  TEXT('Midas API List of Todays Failed Transactions')         *
       *****************************************************************
       *                                                               *
@@ -16,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2006            *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CAP190             Date 19May08               *
+      *  Last Amend No. MD039105           Date 06Jun16               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CAP190             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27018           Date 04May10               *
       *                 BUG27041           Date 01Mar10               *
@@ -30,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039105 - Data truncation encountered when trying to insert *
+      *             CUSD MQ and SOAP transaction with UDF fields      *
+      *           - Applied for MD-39420.                             *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CAP190 - Customer Exchange MQ enabling. (Recompile)          *
       *  BUG27018 - In the Report (LIST OF TODAYS FAILED API TRANSAC- *
@@ -55,7 +60,7 @@
      FAPTLOGL2  IF   E           K DISK
      F                                     RENAME(APTLOGD0:APTLOG2)
       *
-     FAPIMSGL0  IF   E           K DISK
+     F***APIMSGL0  IF   E           K DISK                                                  MD039105
       *
       ** API logging file
       *
@@ -130,6 +135,8 @@
      D  UAMDS                  3      3
      D  UDELS                  4      4
      D  UAUTH                  5      5
+     D APIDS         E DS                  EXTNAME(T_APIMSG)                                MD039105
+     D  MQMSGS                47  32047                                                     MD039105
       *
      D WTemp           S              4                                                     BUG26911
      D WStart          S              5S 0                                                  BUG26911
@@ -283,8 +290,13 @@
      C                   MOVEL     AAMIDASMOD    TMIMOD
       *
       ** Check API name from MQ Series Messages Log file
-     C     AAMSGLOGID    CHAIN     APIMSGL0
-     C                   IF        %FOUND(APIMSGL0)
+     C*****AAMSGLOGID    CHAIN     APIMSGL0                                                 MD039105
+     C**********         IF        %FOUND(APIMSGL0)                                         MD039105
+     C/exec SQL                                                                             MD039105
+     C+ SELECT * INTO :APIDS FROM T_APIMSG                                                  MD039105
+     C+ where MQMSID = :AAMSGLOGID                                                          MD039105
+     C/end-exec                                                                             MD039105
+     C                   IF        SQLCODE = 0                                              MD039105
      C                   MOVEL     MQMSGS        WTemp                                      BUG26911
      C                   IF        WTemp = '<mid'                                           BUG26911
      C                   Z-ADD     0             WStart                                     BUG26911

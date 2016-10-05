@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
       *****************************************************************
-/*STD *  RPGBASEMOD                                                   *
+/*S*D****RPGBASEMOD****************************************************                     MD039105
+/*STD *  RPGSQLMOD                                                    *                     MD039105
 /*EXI *  TEXT('Midas AP Process incoming messages from file')         *
       *****************************************************************
       *                                                               *
@@ -22,8 +23,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CPK030             Date 11Apr14               * 
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. MD039105           Date 06Jun16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CPK030             Date 11Apr14               * 
+      *                 CSW214             Date 25Nov14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSW213             Date 03Jun13               *
       *                 CFT120             Date 28Sep12               *
@@ -51,6 +54,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039105 - Data truncation encountered when trying to insert *
+      *             CUSD MQ and SOAP transaction with UDF fields      *
+      *           - Applied for MD-39420.                             *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CPK030 - Clean up of deliverable data library.               *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  CDL094 - Enhance Receive Settlement Instructions (Recompile) *
@@ -91,7 +98,7 @@
  
       ** File to log received data
      F***APOUTPUTPDO*   E           K DISK                                                   CAP186C
-     FAPOUTPUTPDO    E           K DISK    PREFIX(O_)                                        CAP186C
+     F***APOUTPUTPDO    E           K DISK    PREFIX(O_)                            CAP186C MD039105
  
       ** File to log unauthorised access attempts
      FAPUNAUTHPDO    E           K DISK    USROPN
@@ -273,6 +280,8 @@
      D TRANS9B         S           1000A                                                      CSW209
      D Trans3A         S           1000A                                                      CFT120
      D Trans5A         S           1000A                                                      CFT120
+                                                                                            MD039105
+     D O_BUFFER        S          32000                                                     MD039105
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -366,7 +375,18 @@
       ** Log incoming data
      C                   MOVEL     *BLANKS       O_BUFFER                                    CAP186C
      C                   MOVEL     BUFFER        O_BUFFER                                    CAP186C
-     C                   WRITE     APOUTPUTD0
+     C**********         WRITE     APOUTPUTD0                                               MD039105
+                                                                                            MD039105
+     C/exec SQL                                                                             MD039105
+     C+ insert into APOUTPUTPD                                                              MD039105
+     C+ (                                                                                   MD039105
+     C+   BUFFER                                                                            MD039105
+     C+ )                                                                                   MD039105
+     C+ values                                                                              MD039105
+     C+ (                                                                                   MD039105
+     C+   :O_BUFFER                                                                         MD039105
+     C+ )                                                                                   MD039105
+     C/end-exec                                                                             MD039105
  
       ** Set up the Transaction & Settlement DS's
  

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSW214             Date 25Nov14               *
-      *  Prev Amend No. MD022862           Date 17Oct13               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *                 MD022862           Date 17Oct13               *
       *                 MD022444           Date 18Sep13               *
       *                 CFT050             Date 03Jun13               *
       *                 AR917747           Date 27Feb12               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  MD022862 - LEI Code not accepted eventhough consists of first*
       *             18 uppercase character and last 2 numbers.        *
@@ -200,6 +202,7 @@
      D CSW213          S              1A                                                    MD022862
      D PRTCD           S              7A                                                    MD022862
      D CSW214          S              1A                                                      CSW214
+     D CSW216          S              1A                                                      CSW216
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -335,7 +338,9 @@
       ** Validate International Business Entity Identifier                                    CSW207
       *                                                                                       CSW207
      C*********          EXSR      SRVIBEI                                             CSW207 CFT050
-     C                   IF        CSW214 <> 'Y'                                              CSW214
+     C**********         IF        CSW214 <> 'Y'                                       CSW214 CSW216
+     C                   IF        CSW214 <> 'Y' OR                                           CSW216
+     C                             CSW216 <> 'Y'                                              CSW216
      C                   EXSR      SRVNMSP                                                    CSW214
      C                   ENDIF                                                                CSW214
      C                   EVAL      CUIBEI = DDIBEI                                          MD022444
@@ -1038,6 +1043,10 @@
                                                                                               CSW214
       ** Namespace - OK                                                                       CSW214
      C                   PARM                    DDIBEIOK                                     CSW214
+      ** SWIFT2014 Flag                                                                       CSW216
+     C                   PARM                    CSW214                                       CSW216
+      ** SWIFT2016 Flag                                                                       CSW216
+     C                   PARM                    CSW216                                       CSW216
                                                                                               CSW214
       ** Update error info with that returned from the validation module                      CSW214
                                                                                               CSW214
@@ -1483,6 +1492,17 @@
      C                   ELSE                                                                 CSW214
      C                   EVAL      CSW214 = 'N'                                               CSW214
      C                   ENDIF                                                                CSW214
+      *                                                                                       CSW216
+      ** Check if SWIFT 2016 is installed                                                     CSW216
+      *                                                                                       CSW216
+     C                   CALL      'SWIF2016'                                                 CSW216
+     C                   PARM      *BLANKS       PRTCD                                        CSW216
+                                                                                              CSW216
+     C                   IF        PRTCD   = 'CSW2016'                                        CSW216
+     C                   EVAL      CSW216 = 'Y'                                               CSW216
+     C                   ELSE                                                                 CSW216
+     C                   EVAl      CSW216 = 'N'                                               CSW216
+     C                   ENDIF                                                                CSW216
       *
       *
       **--------------------------------------------------------------------------------------------

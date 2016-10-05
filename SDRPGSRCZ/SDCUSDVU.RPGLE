@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. MD034317           Date 17Jul15               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 MD034317           Date 17Jul15               *
       *                 MD034876           Date 03Jul15               *
       *                 AR684053           Date 03Jun15               *
       *                 AR316373           Date 03Jun15               *
@@ -131,6 +132,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER071 - BAIS - Legal Form field                             *
       *  MD034317 - Added CGL132 to the parameter when calling        *
       *             SDCUSD2VL                                         *

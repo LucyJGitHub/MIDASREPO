@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033870           Date 17Apr15               *
-      *  Prev Amend No. AR1023850          Date 25Nov14               *
+      *  Last Amend No. MD040199           Date 05Aug16               *
+      *  Prev Amend No. MD033870           Date 17Apr15               *
+      *                 AR1023850          Date 25Nov14               *
       *                 CDL094             Date 03Jun14               *
       *                 MD026923           Date 24May14               *
       *                 CSF011A            Date 28Nov11               *
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040199 - ISDA Agreement Version reflected incorrectly in   *
+      *             MT reports and deals enquiry. Reverse MD-33870.   *
       *  MD033870 - Wrong value for DDAGVV. Corrected MOVE and MOVEL. *
       *  AR1023850 - Version of ISDA field gets value "0000" instead  *
       *              of blanks                                        *
@@ -474,8 +477,10 @@
      C                   ELSE                                                   CSW097
      C**********         MOVE      FLAGVV        DDAGVV                CSW097 MD033870
      C**********         MOVEL     FLAGVC        DDAGVV                CSW097 MD033870
-     C                   MOVEL     FLAGVV        DDAGVV                       MD033870
-     C                   MOVE      FLAGVC        DDAGVV                       MD033870
+     C**********         MOVEL     FLAGVV        DDAGVV                            MD033870 MD040199
+     C**********         MOVE      FLAGVC        DDAGVV                            MD033870 MD040199
+     C                   MOVE      FLAGVV        DDAGVV                                     MD040199
+     C                   MOVEL     FLAGVC        DDAGVV                                     MD040199
      C                   END                                                    CAP003
                                                                                 CAP003
      C     FLISDA        IFEQ      *ZEROS                                       CAP003

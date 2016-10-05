@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039348           Date 17Jun16               *
-      *  Prev Amend No. MD033870           Date 17Apr15               *
+      *  Last Amend No. MD040199           Date 05Aug16               *
+      *  Prev Amend No. MD039348           Date 17Jun16               *
+      *                 MD033870           Date 17Apr15               *
       *                 AR892347           Date 25Nov14               *
       *                 MD030342           Date 25Nov14               *
       *                 MD029779           Date 25Nov14               *
@@ -125,6 +126,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040199 - ISDA Agreement Version reflected incorrectly in   *
+      *             MT reports and deals enquiry. Reverse MD-33870.   *
       *  MD039348 - Error message "Settlement Payments fields cannot  *
       *             be amended. (Field: Pay - Ordering Customer)" is  *
       *             displayed during amendment of maturity date of    *
@@ -6542,8 +6545,10 @@
      C                   MOVEL     ##FRIS        ##FRIF
      C**********         MOVEL     DDAGVV        FLAGVC                              CSW097 MD033870
      C**********         MOVE      DDAGVV        FLAGVV                              CSW097 MD033870
-     C                   MOVE      DDAGVV        FLAGVC                                     MD033870
-     C                   MOVEL     DDAGVV        FLAGVV                                     MD033870
+     C**********         MOVE      DDAGVV        FLAGVC                            MD033870 MD040199
+     C**********         MOVEL     DDAGVV        FLAGVV                            MD033870 MD040199
+     C                   MOVEL     DDAGVV        FLAGVC                                     MD040199
+     C                   MOVE      DDAGVV        FLAGVV                                     MD040199
       *
      C                   ENDSR
      C********************************************************************

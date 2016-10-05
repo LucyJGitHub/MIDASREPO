@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. AR316373           Date 03Jun15               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 AR316373           Date 03Jun15               *
       *                 CER070             Date 19Aug14               *
       *                 CSW214             Date 25Nov14               *
       *                 CGL132             Date 01May13               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  AR316373 - BOE @ MPlus - BOE cust dtls are not displayed in  *
       *             java wrapped function. Retrieve the details from  *

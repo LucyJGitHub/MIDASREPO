@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD030858A          Date 25Nov14               *
-      *  Prev Amend No. MD030858           Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD030858A          Date 25Nov14               *
+      *                 MD030858           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
       *                 MD024185           Date 19Dec13               *
       *                 MD023922           Date 11Dec13               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD030858A - Execution timestamp (Date) is not generated when *
       *             the RPIF fields were populated via Interface      *
       *             (Reopen)                                          *

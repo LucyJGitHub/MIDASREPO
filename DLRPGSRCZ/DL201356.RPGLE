@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CSW214             Date 25Nov14               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD022385           Date 16Sep13               *
@@ -21,6 +22,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  CDL096 - Business Day Conventions on MM Deals                *

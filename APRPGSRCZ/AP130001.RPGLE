@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
       *****************************************************************
-/*STD *  RPGBASEMOD                                                   *
+/*S*D****RPGBASEMOD****************************************************                     MD039105
+/*STD *  RPGSQLMOD                                                    *                     MD039105
 /*EXI *  TEXT('T_APIMSG Purging Program MODULE')                      *
       *****************************************************************
       *                                                               *
@@ -11,11 +12,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD028229           Date 29Oct14               *
-      *  Prev Amend No. CCB024A  *CREATE   Date 06Aug12               *
+      *  Last Amend No. MD039105           Date 06Jun16               *
+      *  Prev Amend No. MD028229           Date 29Oct14               *
+      *                 CCB024A  *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039105 - Data truncation encountered when trying to insert *
+      *             CUSD MQ and SOAP transaction with UDF fields      *
       *  MD028229 - Added purging of 'C' records on T_APIMSG.         *
       *  CCB024A - COB Restructure - COB Tuning                       *
       *                                                               *
@@ -28,7 +32,7 @@
      FSDSVALL0  IF   E           K DISK    INFSR(*PSSR)
       ** System Value
       *
-     FAPIMSGL0  UF   E           K DISK    INFSR(*PSSR)
+     F***APIMSGL0  UF   E           K DISK    INFSR(*PSSR)                                  MD039105
       ** API MQ Messages
       *
       *****************************************************************
@@ -39,6 +43,8 @@
      DMidasDate        S              5P 0
      DPRtCd            S              7A
      DPOptn            S              7A
+     DMidasConvDate    S             10A                                                    MD039105
+     D ULimit          S              5P 0 INZ(0)                                           MD039105
  
      D APMSGICD        C                   CONST('PurgeDaysOfAP_MQ_MSG')
  
@@ -105,35 +111,50 @@
       ** Subtract the ICD Setting from the Rundate.
  
      C                   EVAL      MidasRefDate = BJRDNB - %INT(GIVAL)
- 
-     C     *LOVAL        SETLL     T_APIMSG
-     C                   READ      T_APIMSG                               99
- 
-     C     *IN99         DOWEQ     '0'
- 
-      ** Convert the Timestamp to YYYYMMDD format for MIDAS Day conversion
- 
-     C                   EXTRCT    MQTMST:*Y     Year
-     C                   EXTRCT    MQTMST:*M     Month
-     C                   EXTRCT    MQTMST:*D     Day
- 
-     C                   CALLB     'ZDATE10'
-     C                   PARM                    YYYYMMDD
-     C                   PARM      *ZERO         MidasDate
- 
-     C     MidasDate     IFLT      MidasRefDate
+
+     C                   CALLB     'ZDATE9'                                                 MD039105
+     C                   PARM                    MidasRefDate                               MD039105
+     C                   PARM                    YYYYMMDD                                   MD039105
+     C                   PARM      *BLANKS       PRtCd                                      MD039105
+                                                                                            MD039105
+     C                   EVAL      MidasConvDate = Month + '/' + Day +                      MD039105
+     C                                             '/' + Year                               MD039105
+     C                   EVAL      ULimit = 0                                               MD039105
+                                                                                            MD039105 
+     C******LOVAL        SETLL     T_APIMSG                                                 MD039105
+     C**********         READ      T_APIMSG                               99                MD039105
+      **********                                                                            MD039105
+     C******IN99         DOWEQ     '0'                                                      MD039105
+      **********                                                                            MD039105
+      ***Convert*the*Timestamp*to*YYYYMMDD*format*for*MIDAS*Day*conversion                  MD039105
+      **********                                                                            MD039105
+     C**********         EXTRCT    MQTMST:*Y     Year                                       MD039105
+     C**********         EXTRCT    MQTMST:*M     Month                                      MD039105
+     C**********         EXTRCT    MQTMST:*D     Day                                        MD039105
+      **********                                                                            MD039105
+     C**********         CALLB     'ZDATE10'                                                MD039105
+     C**********         PARM                    YYYYMMDD                                   MD039105
+     C**********         PARM      *ZERO         MidasDate                                  MD039105
+      **********                                                                            MD039105
+     C*****MidasDate     IFLT      MidasRefDate                                             MD039105
      C*****MQSTAT        ANDEQ     'P'                                                      MD028229
-     C     MQSTAT        Ifeq      'C'                                                      MD028229
-     C     MQSTAT        Oreq      'P'                                                      MD028229
- 
-     C                   DELETE    T_APIMSG
- 
-     C                   Endif                                                              MD028229
-     C                   ENDIF
- 
-     C                   READ      T_APIMSG                               99
- 
-     C                   ENDDO
+     C*****MQSTAT        Ifeq      'C'                                             MD028229 MD039105
+     C*****MQSTAT        Oreq      'P'                                             MD028229 MD039105
+      **********                                                                            MD039105
+     C**********         DELETE    T_APIMSG                                                 MD039105
+      **********                                                                            MD039105
+     C**********         Endif                                                     MD028229 MD039105
+     C**********         ENDIF                                                              MD039105
+      **********                                                                            MD039105
+     C**********         READ      T_APIMSG                               99                MD039105
+      **********                                                                            MD039105
+     C**********         ENDDO                                                              MD039105
+                                                                                            MD039105
+     C/EXEC SQL                                                                             MD039105
+     C+ DELETE FROM T_APIMSG                                                                MD039105
+     C+ WHERE DATE(MQTMST) < :MidasConvDate AND                                             MD039105
+     C+ (MQSTAT = 'C' OR MQSTAT = 'P')                                                      MD039105
+     C/END-EXEC                                                                             MD039105
  
      C                   ENDSR
       *****************************************************************

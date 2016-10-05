@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD035515           Date 19Aug15               *
-      *  Prev Amend No. MD033754           Date 21Apr15               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD035515           Date 19Aug15               *
+      *                 MD033754           Date 21Apr15               *
       *                 CGL165             Date 17Feb15               *
       *                 MD026953           Date 25Nov14               *
       *                 MD030922           Date 25Nov14               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  MD035515 - No MT600 generated if branch internal customer is *
       *             alphanumeric                                      *
       *  MD033754 - SWIFT MT600 not displayed in MMM even when data   *
@@ -334,10 +336,14 @@
      D***MGTNXX*              147    178                                             MD022425 CSW214
      D***MGTIXX*              179    179                                             MD022425 CSW214
      D***MGETXX*              180    180                                             MD022425 CSW214
-     D  MGUTXX               137    156                                                       CSW214
-     D  MGTNXX               157    188                                                       CSW214
-     D  MGTIXX               189    189                                                       CSW214
-     D  MGETXX               190    190                                                       CSW214
+     D***MGUTXX*              137    156                                               CSW214 CSW216
+     D***MGTNXX*              157    188                                               CSW214 CSW216
+     D***MGTIXX*              189    189                                               CSW214 CSW216
+     D***MGETXX*              190    190                                               CSW214 CSW216
+     D  MGUTXX               137    166                                                       CSW216
+     D  MGTNXX               167    198                                                       CSW216
+     D  MGTIXX               199    199                                                       CSW216
+     D  MGETXX               200    200                                                       CSW216
       **  Multiple occurrence data structure for reporting party                            MD022425
                                                                                             MD022425
      D/COPY WNCPYSRC,MG0600I001

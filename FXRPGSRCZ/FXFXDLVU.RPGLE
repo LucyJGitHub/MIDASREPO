@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
       *  Prev Amend No. CSW214             Date 25Nov14               *
-      *  Last Amend No. MD030956           Date 24Nov14               *
+      *                 MD030956           Date 24Nov14               *
       *                 MD030841           Date 03Oct14               *
       *                 MD030436           Date 01Oct14               *
       *                 MD027337A          Date 01Oct14               *
@@ -109,6 +110,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *  MD030841 - Receive Bank to Bank info reset to blank upon     *

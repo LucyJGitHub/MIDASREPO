@@ -13,11 +13,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
-      *  Prev Amend No. CMG003  *CREATE    Date 04Oct12               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *                 CMG003  *CREATE    Date 04Oct12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  CMG003 - SWIFT MT600 Message Generation                      *
       *                                                               *
@@ -175,6 +177,7 @@
      D                                     0123456789 /-?:().,''+'
      D AlphaUP         C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
      D CSW215          S              1A                                                      CSW215
+     D CSW216          S              1A                                                      CSW216
  
       *****************************************************************
       /EJECT
@@ -770,6 +773,19 @@
      C                   SETON                                        9839
      C                   ENDIF
  
+      ** Unit: Entry must not be FOZ or TOZ for PALL, PLAT and SILV                           CSW216
+                                                                                              CSW216
+     C                   IF        CSW216 = 'Y'                                               CSW216
+     C                   IF        (#1CMTP = 'PALL' OR #1CMTP = 'PLAT'                        CSW216
+     C                             OR #1CMTP = 'SILV')                                        CSW216
+     C                             AND (#1CMUN = 'FOZ' OR #1CMUN = 'TOZ')                     CSW216
+     C                   MOVEL     #1CMUN        ZA0005                                       CSW216
+     C                   MOVEL     'USS0667'     ZAMSID                                       CSW216
+     C                   EXSR      ZASNMS                                                     CSW216
+     C                   SETON                                        9839                    CSW216
+     C                   ENDIF                                                                CSW216
+     C                   ELSE                                                                 CSW216
+                                                                                              CSW216
       ** Unit: Entry must be GOZ for PALL, PLAT and SILV                                      CSW215
                                                                                               CSW215
      C                   IF        CSW215 = 'Y'                                               CSW215
@@ -783,6 +799,7 @@
      C                   ENDIF                                                                CSW215
      C                   ENDIF                                                                CSW215
                                                                                               CSW215
+     C                   ENDIF                                                                CSW216
      C                   ELSE
  
       ** Unit: Entry must be a valid code
@@ -1685,6 +1702,16 @@
      C                   IF        PRTCD = 'CSW2015'                                          CSW215
      C                   EVAL      CSW215 = 'Y'                                               CSW215
      C                   ENDIF                                                                CSW215
+                                                                                              CSW216
+      ** Check if CSW216 is installed                                                         CSW216
+                                                                                              CSW216
+     C                   EVAL      CSW216 = 'N'                                               CSW216
+     C                   CALL      'SWIF2016'                                                 CSW216
+     C                   PARM      *BLANKS       PRTCD                                        CSW216
+                                                                                              CSW216
+     C                   IF        PRTCD = 'CSW2016'                                          CSW216
+     C                   EVAL      CSW216 = 'Y'                                               CSW216
+     C                   ENDIF                                                                CSW216
  
      C     ZZEXIT        ENDSR
       *****************************************************************

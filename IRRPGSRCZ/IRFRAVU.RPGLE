@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD033870           Date 17Apr15               *
-      *  Prev Amend No. MD030858           Date 25Nov14               *
+      *  Last Amend No. MD040199           Date 05Aug16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD033870           Date 17Apr15               *
+      *                 MD030858           Date 25Nov14               *
       *                 MD030830           Date 25Nov14               *
       *                 MD029165           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -76,6 +78,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040199 - ISDA Agreement Version reflected incorrectly in   *
+      *             MT reports and deals enquiry. Map the ISDA        *
+      *             Agreement Version fields correctly from screen to *
+      *             file format.                                      *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD033870 - ISDA fields are reset to blank after defaulting.  *
       *             Move original value if blank after defaulting.    *
       *  MD030858 - Execution timestamp (Date) is not generated when  *
@@ -1182,6 +1189,8 @@ RGC  C                   PARM                    InSwift2013                    
      C                   IF        DBFRASttmt = *BLANKS                                     MD033870
      C                             and InFRASttmt <> *BLANKS                                MD033870
      C                   EVAL      DBFRASttmt = InFRASttmt                                  MD033870
+     C                   MOVEL     DDAGVV        FLAGVC                                     MD040199
+     C                   MOVE      DDAGVV        FLAGVV                                     MD040199
      C                   ENDIF                                                              MD033870
       *  The defaulted instructions are in file format, but the
       *   Settlements validation requires that they are in the input format.

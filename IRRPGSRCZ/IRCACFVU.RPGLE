@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD031861           Date 12Jan15               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD031861           Date 12Jan15               *
+      *                 CSW214             Date 25Nov14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 AR314712           Date 13Apr10               *
@@ -77,6 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  MD031861 - Cannot insert transaction due to errors. Correct  *
       *             mapping to include CDL094 fields.                 *
       *  CSW214 - SWIFT Changes 2014                                  *
@@ -801,8 +803,10 @@
      C                   EVAL      STINFD=%SUBST(Buffer:2079)                               MD031861
      C                   EVAL      #1STAT=%SUBST(Buffer:2085)                               MD031861
      C                   EVAL      FORMULAOPC=%SUBST(Buffer:2109)                           MD031861
-     C                   EVAL      PCSAST=%SUBST(Buffer:4228) + Buffer2 +                   MD031861
-     C                             BufferEx2                                                MD031861
+     C**********         EVAL      PCSAST=%SUBST(Buffer:4228) + Buffer2 +            MD031861 CSW216
+     C**********                   BufferEx2                                         MD031861 CSW216
+     C                   EVAL      PCSAST=%SUBST(Buffer:4268) + Buffer2 +                     CSW216
+     C                             BufferEx2                                                  CSW216
      C
      C                   MOVEA     PCSAST        PCSA                           BUG5403
  
@@ -1023,8 +1027,10 @@
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:6145)                       CSW213 CSW214
      C**********         EVAL      Buffer2=%SUBST(PCSAST:1984)                       CSW214 MD031861
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:5983)                     CSW214 MD031861
-     C                   EVAL      Buffer2=%SUBST(PCSAST:1774)                                CSW214
-     C                   EVAL      BufferEx2=%SUBST(PCSAST:5773)                              CSW214
+     C**********         EVAL      Buffer2=%SUBST(PCSAST:1774)                         CSW214 CSW216
+     C**********         EVAL      BufferEx2=%SUBST(PCSAST:5773)                       CSW214 CSW216
+     C                   EVAL      Buffer2=%SUBST(PCSAST:1734)                                CSW216
+     C                   EVAL      BufferEx2=%SUBST(PCSAST:5733)                              CSW216
      C                   ENDIF                                                               BUG6377
  
      C                   RETURN

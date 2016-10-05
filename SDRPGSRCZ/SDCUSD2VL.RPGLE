@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD034317           Date 17Jul15               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD034317           Date 17Jul15               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CSD099             Date 11Feb15               *
       *                 CSW214             Date 25Nov14               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD034317 - Added condition on CGL132 fields validation to    *
       *             check if the feature is on.                       *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *

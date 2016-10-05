@@ -11,12 +11,19 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD028094           Date 25Nov14               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. MD038127           Date 30Mar16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD028094           Date 25Nov14               *
+      *                 CSW214             Date 25Nov14               *
       *                 CSW213  *CREATE    Date 03Jun13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD038127 - System generated dump in DLC0210A                 *
+      *           - Fix is to make sure that correct sequence number  *
+      *             is used when generating messages for amend and    *
+      *             delete action                                     *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD028094 - Deleted FXDN transaction created a cancellation   *
       *             entry on MGF300TR archive file                    *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
@@ -54,6 +61,7 @@
      D @MTPY           S              3
      D COUNT           S              2  0
      D @HEAD           S             16
+     D RLSeq           S              2                                                     MD038127
  
       ** Multiple occurrence data structure for message
  
@@ -329,8 +337,9 @@
  
      C     ' '           LOOKUP    @WRK(Z)                                99
  
-     C                   MOVEL     RILSWC        HLSWS
-     C                   MOVEA     HLSWS         @WRK(Z)
+     C**********         MOVEL     RILSWC        HLSWS                                      MD038127
+     C**********         MOVEA     HLSWS         @WRK(Z)                                    MD038127
+     C                   MOVEA     RLSeq         @WRK(Z)                                    MD038127
  
      C                   MOVEA     @WRK          @MFLD
      C                   EVAL      @TRNO = @MFLD
@@ -459,7 +468,9 @@
  
       ** Increment S.W.I.F.T. seq. number & update appropriate file
  
-     C                   ADD       1             RILSWC            5 0
+     C**********         ADD       1             RILSWC            5 0                      MD038127
+     C                   ADD       1             RICFNR                                     MD038127
+     C                   MOVE      RICFNR        RLSeq                                      MD038127
  
       ** Dealing Reporting Info (API + Ref) update
  

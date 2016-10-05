@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD034950           Date 08Jul15               *
-      *  Prev Amend No. MD034935           Date 08Jul15               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD034950           Date 08Jul15               *
+      *                 MD034935           Date 08Jul15               *
       *                 MD034866           Date 02Jul15               *
       *                 MD034877           Date 02Jul15               *
       *                 CFT051             Date 04Jun15               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD034950 - IBAN Details of ISO Country Code is not updated   *
       *             when a delta upload of the IBAN Structure         *
       *  MD034935 - IBAN National ID Length retains the previous value*

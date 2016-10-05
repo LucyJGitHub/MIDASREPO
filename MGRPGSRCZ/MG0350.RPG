@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. CDL096I02          Date 04Nov14               *
-      *  Prev Amend No. CDL096I01          Date 03Nov14               *
+      *  Last Amend No. MD038672           Date 10May16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CDL096I02          Date 04Nov14               *
+      *                 CDL096I01          Date 03Nov14               *
       *                 CSW213             Date 03Jun13               *
       *                 AR996895           Date 25Nov12               *
       *                 CLE148             Date 23Jul12               *
@@ -80,6 +82,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD038672 - MMM did not process MT350 due to duplicate message*
+      *             field tag :53:                                    *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  CDL096I02 - Fix on Next Interest Payment Date                *
       *  CDL096I01 - Fix to use IBDT(DEALSDC) when Amount Convention  *
       *              is 'A'(Actual)                                   *
@@ -1961,6 +1966,9 @@
       **  Field 53 is equal to Our Pay Nostro
       **  (only if settlement type is NOSTRO, ie. not if s/typ is '00')   E38183
      C           MGPSTM    IFNE *ZEROS                                    E38183
+     C                     MOVEL*BLANKS   WRKTAG  3                     MD038672
+     C                     MOVELMTAG      WRKTAG                        MD038672
+     C           WRKTAG    IFNE ':53'                                   MD038672
       *                                                                   E38183
      C                     MOVELMGPONS    @NSKYE
       *                                                                   137909
@@ -2013,6 +2021,7 @@
      C                     EXSR FSWAD
      C                     END
       *                                                                   E38183
+     C                     ENDIF                                        MD038672
      C                     END                                            E38183
       *
       **  Settlement 01,07 or 08 with MGAWBN blank or settlement 00
@@ -2632,8 +2641,20 @@
      C                     EXSR *PSSR                                     CSW200
      C                     END                                            CSW200
       *                                                                   CSW200
+      ** If SWIFT 2016 is enabled, use 37M tag                                                CSW216
+      *                                                                                       CSW216
+     C           CSW216    IFEQ 'Y'                                                           CSW216
+     C                     MOVEL':37M:'   MTAG                                                CSW216
+     C                     MOVELZSINRT    MFLD                                                CSW216
+      *                                                                                       CSW216
+     C           MGINTR    IFLT *ZERO                                                         CSW216
+     C           'N'       CAT  MFLD      MFLD                                                CSW216
+     C                     ENDIF                                                              CSW216
+      *                                                                                       CSW216
+     C                     ELSE                                                               CSW216
      C                     MOVEL':37J:'   MTAG                            CSW200
      C                     MOVELZSINRT    MFLD                            CSW200
+     C                     ENDIF                                                              CSW216
       *                                                                   CSW200
       ** FIELD :14D: - Day Count Fraction                                 CSW200
       *                                                                   CSW200
@@ -2962,6 +2983,9 @@
       **  Field 53 is equal to Our Pay Nostro                             CSW200
       **  (only if settlement type is NOSTRO, ie. not if s/typ is '00')   CSW200
      C           MGPSTM    IFNE *ZEROS                                    CSW200
+     C                     MOVEL*BLANKS   WRKTAG                        MD038672
+     C                     MOVELMTAG      WRKTAG                        MD038672
+     C           WRKTAG    IFNE ':53'                                   MD038672
       *                                                                   CSW200
      C                     MOVELMGPONS    @NSKYE                          CSW200
       *                                                                   CSW200
@@ -3013,6 +3037,7 @@
      C                     EXSR FSWAD                                     CSW200
      C                     END                                            CSW200
       *                                                                   CSW200
+     C                     ENDIF                                        MD038672
      C                     END                                            CSW200
       *                                                                   CSW200
       **  Settlement 01,07 or 08 with MGAWBN blank or settlement 00       CSW200
@@ -4003,6 +4028,17 @@
      C                     ELSE                                                               CSW201
      C                     MOVE 'N'       CSW201                                              CSW201
      C                     ENDIF                                                              CSW201
+      *                                                                                       CSW216
+      ** Access Switchable Features file for CSW216                                           CSW216
+      *                                                                                       CSW216
+     C                     CALL 'SWIF2016'                                                    CSW216
+     C                     PARM *BLANKS   @RTCD                                               CSW216
+      *                                                                                       CSW216
+     C           @RTCD     IFEQ 'CSW2016'                                                     CSW216
+     C                     MOVE 'Y'       CSW216  1                                           CSW216
+     C                     ELSE                                                               CSW216
+     C                     MOVE 'N'       CSW216                                              CSW216
+     C                     ENDIF                                                              CSW216
       *                                                                                       CSD015
       ** Check if CSD015 is enabled.                                                          CSD015
       *                                                                                       CSD015

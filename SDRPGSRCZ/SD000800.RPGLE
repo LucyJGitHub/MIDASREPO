@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2007            *
       *                                                               *
-      *  Last Amend No. CSW214             Date 25Nov14               *
-      *  Prev Amend No. MD022764           Date 11Oct13               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CSW214             Date 02Jun14               *
+      *                 MD022764           Date 11Oct13               *
       *                 CFT050             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  MD022764 - CSW207 Initialisation must be taken into account  *
       *             for CFT050.                                       *

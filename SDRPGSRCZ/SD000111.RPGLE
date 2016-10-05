@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD030328           Date 25Nov14               *
-      *  Prev Amend No. MD027482           Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD030328           Date 25Nov14               *
+      *                 MD027482           Date 25Nov14               *
       *                 MD028258           Date 25Nov14               *
       *                 MD028088           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD030328 - In Reporting Information default maintenance,     *
       *             Counterparty number and currency field are not    *
       *             functioning during filter/enquire mode            *

@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No  AR916361           Date 25May16               *
-      *  Prev Amend No. MD034675           Date 08Jul15               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No  AR916361           Date 25May16               *
+      *                 MD034675           Date 08Jul15               *
       *                 AR598353           Date 04Jun14               *
       *                 AR694628           Date 05Jun15               *
       *                 CDL088             Date 07Jul15               *
@@ -96,6 +97,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  AR916361 - Add Fix base rate checking on CDL019 before       *
       *             clearing MGINTR and MGTOTI field of MGF320PD.     *
       *             (Child: AR916362)                                 *
@@ -1016,6 +1018,17 @@
      C                     ELSE                                                               CSW214
      C                     MOVE 'N'       CSW214                                              CSW214
      C                     ENDIF                                                              CSW214
+      *                                                                                       CSW216
+      ** Check if SWIFT Changes 2016 (CSW216) is installed                                    CSW216
+      *                                                                                       CSW216
+     C                     CALL 'SWIF2016'                                                    CSW216
+     C                     PARM *BLANKS   PRTCD   7                                           CSW216
+      *                                                                                       CSW216
+     C           PRTCD     IFEQ 'CSW2016'                                                     CSW216
+     C                     MOVE 'Y'       CSW216  1                                           CSW216
+     C                     ELSE                                                               CSW216
+     C                     MOVE 'N'       CSW216                                              CSW216
+     C                     ENDIF                                                              CSW216
       *                                                                                       CSW213
       ** Setup key Fields for DLRPIFPD                                                        CSW213
       *                                                                                       CSW213
@@ -3024,7 +3037,21 @@
      C                     READ DEAMS                    12               068795
      C                     ENDDO                                          068795
       *
+     C           CSW216    IFEQ 'N'                                                           CSW216
+     C           CSW216    OREQ 'Y'                                                           CSW216
+     C           INTR      ANDLT0                                                             CSW216
      C                     Z-ADDINTR      MGINTR
+     C                     ELSE                                                               CSW216
+      *                                                                                       CSW216
+      ** Check if negative rate                                                               CSW216
+      *                                                                                       CSW216
+     C                     TESTB'1'       DSTI           20                                   CSW216
+     C           *IN20     IFEQ '1'                                                           CSW216
+     C                     Z-SUBINTR      MGINTR                                              CSW216
+     C                     ELSE                                                               CSW216
+     C                     Z-ADDINTR      MGINTR                                              CSW216
+     C                     ENDIF                                                              CSW216
+     C                     ENDIF                                                              CSW216
      C                     Z-ADDNIDT      MGNIDT
       *                                                                   067680
       ** FORMAT NEW FIELDS FOR CORRECT INTEREST CALCULATION IN MG0350     067680

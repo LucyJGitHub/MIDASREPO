@@ -17,12 +17,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CSW214             Date 25Nov14               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSW213  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *

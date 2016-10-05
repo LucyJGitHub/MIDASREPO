@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
       *                 MD030956           Date 09Oct14               *
       *                 MD027492           Date 12Jun14               *
@@ -61,6 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER071 - BAIS - Legal Form field                             *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *

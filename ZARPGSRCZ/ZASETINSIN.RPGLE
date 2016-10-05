@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037023           Date 12Jan16               *
-      *  Prev Amend No. MD036631           Date 27Nov15               *
+      *  Last Amend No. MD040178           Date 05Aug16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD037023           Date 12Jan16               *
+      *                 MD036631           Date 27Nov15               *
       *                 MD036070           Date 19Oct15               *
       *                 MD029855           Date 25Nov14               *
       *                 MD029216           Date 25Nov14               *
@@ -84,6 +86,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040178 - Rollup key text is missing in Settlement Details  *
+      *             screen. Adjust the position of Rollup key text.   *
+      *             (Recompile)                                       *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD037023 - Incorrect function keys on 2nd Settlement Details *
       *             Interest screen (Recompile)                       *
       *  MD036631 - F11 displays Reporting screen instead of going    *

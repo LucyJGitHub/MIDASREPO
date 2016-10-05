@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2007            *
       *                                                               *
-      *  Last Amend No. MD037941           Date 25May16               *
-      *  Prev Amend No. MD036262           Date 28Oct15               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD037941           Date 25May16               *
+      *                 MD036262           Date 28Oct15               *
       *                 MD034516           Date 26May15               *
       *                 CSW215             Date 06Apr15               *
       *                 AR874231           Date 25Nov11               *
@@ -117,6 +118,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD037941 - Invalid ISO country code used in code 3           *
       *  MD036262 - MT103 field 50F has incomplete data               *
       *  MD034516 - Allow entry of ISO code without town/country on   *

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2007            *
       *                                                               *
-      *  Last Amend No. AR924563           Date 05Nov14               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. AR924563           Date 05Nov14               *
+      *                 CSW214             Date 25Nov14               *
       *                 CSW213             Date 03Jun13               *
       *                 CFT050             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  AR924563 - Allow deleted/closed customers (Child: AR924564)  *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  CSW213 - SWIFT Changes 2013                                  *

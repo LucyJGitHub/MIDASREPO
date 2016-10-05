@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD031861           Date 12Jan15               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD031861           Date 12Jan15               *
+      *                 CSW214             Date 25Nov14               *
       *                 CDL094             Date 11Jun14               *
       *                 245692             Date 11Dec13               *
       *                 CSW213             Date 03Jun13               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  MD031861 - Cannot insert transaction due to errors. Correct  *
       *             mapping to include CDL094 fields.                 *
       *  CSW214 - SWIFT Changes 2014                                  *
@@ -544,8 +546,10 @@
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:6145)                       CSW213 CSW214
      C**********         EVAL      Buffer2=%SUBST(PCSAST:1984)                       CSW214 MD031861
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:5983)                     CSW214 MD031861
-     C                   EVAL      Buffer2=%SUBST(PCSAST:1774)                              MD031861
-     C                   EVAL      BufferEx2=%SUBST(PCSAST:5773)                            MD031861
+     C**********         EVAL      Buffer2=%SUBST(PCSAST:1774)                       MD031861 CSW216
+     C**********         EVAL      BufferEx2=%SUBST(PCSAST:5773)                     MD031861 CSW216
+     C                   EVAL      Buffer2=%SUBST(PCSAST:1734)                                CSW216
+     C                   EVAL      BufferEx2=%SUBST(PCSAST:5733)                              CSW216
  
      C                   SETON                                        LR
      C                   RETURN

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD030959           Date 17Jun15               *
-      *  Prev Amend No. AR648606           Date 30Oct14               *
+      *  Last Amend No. MD041157           Date 09Aug16               *
+      *  Prev Amend No. MD030959           Date 17Jun15               *
+      *                 AR648606           Date 30Oct14               *
       *                 MD000091           Date 08May13               *
       *                 AR401983           Date 11Dec12               *
       *                 AR685469           Date 03Oct12               *
@@ -55,6 +56,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041157 - Failure to close an account.  Check correct       *
+      *             network files during account closure.             *
       *  MD030959 - Recompiled due to changed PF/HELDIHC.             *
       *  AR648606 - TI Interface error. If TI account flag is 'Y',    *
       *             account closure should not be allowed.            *
@@ -197,6 +200,12 @@
      FSWACB     IF   E           K DISK    INFSR(*PSSR)                                       263834
      F                                     IGNORE(SWACSSAF)                                   263834
      F                                     IGNORE(SWACSSCF)                                   263834
+     FGLNWACL5  IF   E           K DISK    INFSR(*PSSR)                                     MD041157
+     F                                     PREFIX(G_)                                       MD041157
+      **  Midas GL GLNWACPD - By Brch/Custno/ccy/acod/accseq                                MD041157
+     FGLNW94L7  IF   E           K DISK    INFSR(*PSSR)                                     MD041157
+     F                                     PREFIX(H_)                                       MD041157
+      ** Midas GL GLNW94PD - By Brch/Custno/ccy/acod/accseq                                 MD041157
  
       *****************************************************************
       ** +--------------------------------------+
@@ -300,6 +309,11 @@
      D  WWACOD                13     22  0                                                    CGL029
      D  WWASEQ                23     24  0                                                    CGL029
  
+      ** Switchable Features Details File                                                   MD041157
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD041157
+      ** External data structure for access programs (long)                                 MD041157
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD041157
+                                                                                            MD041157
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -996,6 +1010,36 @@
      C                   EVAL      BLen = %Len(%Trim(NOSD))                                 MD000091
      C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(NOSD)                     MD000091
      C                   EndIf
+      *                                                                                     MD041157
+      ** If CGL013 is on, account should not have an attached GLNW record.                  MD041157
+      *                                                                                     MD041157
+     C     CGL013        IFEQ      'Y'                                                      MD041157
+     C     SWAKEY        CHAIN     GLNWACL5                           80                    MD041157
+     C     *IN80         IFEQ      '0'                                                      MD041157
+     C     G_NARECI      ANDNE     '*'                                                      MD041157
+     C                   MOVE      'N'           DDCUSNOk                                   MD041157
+     C                   MOVE      'N'           DDCcyOk                                    MD041157
+     C                   MOVE      'N'           DDACodOk                                   MD041157
+     C                   MOVE      'N'           DDASeqOk                                   MD041157
+     C                   MOVE      'N'           DDAcNoOk                                   MD041157
+     C                   ADD       1             Idx                                        MD041157
+     C                   MOVEL     'DDANAM'      FldNamXAr(Idx)                             MD041157
+     C                   MOVEL     '5045554'     MsgIDXAr(Idx)                              MD041157
+     C                   ELSE                                                               MD041157
+     C     SWAKEY        CHAIN     GLNW94L7                           80                    MD041157
+     C     *IN80         IFEQ      '0'                                                      MD041157
+     C     H_N4RECI      ANDNE     '*'                                                      MD041157
+     C                   MOVE      'N'           DDCUSNOk                                   MD041157
+     C                   MOVE      'N'           DDCcyOk                                    MD041157
+     C                   MOVE      'N'           DDACodOk                                   MD041157
+     C                   MOVE      'N'           DDASeqOk                                   MD041157
+     C                   MOVE      'N'           DDAcNoOk                                   MD041157
+     C                   ADD       1             Idx                                        MD041157
+     C                   MOVEL     'DDANAM'      FldNamXAr(Idx)                             MD041157
+     C                   MOVEL     '5045554'     MsgIDXAr(Idx)                              MD041157
+     C                   ENDIF                                                              MD041157
+     C                   ENDIF                                                              MD041157
+     C                   ELSE                                                               MD041157
       *                                                                                       263834
       ** Account should not have an attached SWACSSB record.                                  263834
       *                                                                                       263834
@@ -1011,6 +1055,7 @@
      C                   MOVEL     'DDANAM'      FldNamXAr(Idx)                               263834
      C                   MOVEL     '5045554'     MsgIDXAr(Idx)                                263834
      C                   ENDIF                                                                263834
+     C                   ENDIF                                                              MD041157
       *
       ** IF NO ERROR SET CONFIRMATION INDICATOR ON
       *
@@ -1199,6 +1244,19 @@
      C                   Eval      Mod11Chk = P@Vl01                                          CGL062
      C                   EndIf                                                                CGL062
                                                                                               CGL062
+      *                                                                                     MD041157
+      ** Check if CGL013 is switched on.                                                    MD041157
+      *                                                                                     MD041157
+     C                   MOVE      'N'           CGL013            1                        MD041157
+     C                   CALLB     'AOSARDR0'                                               MD041157
+     C                   PARM      *BLANKS       @RTCD                                      MD041157
+     C                   PARM      '*VERIFY'     @OPTN                                      MD041157
+     C                   PARM      'CGL013'      @SARD                                      MD041157
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD041157
+      *                                                                                     MD041157
+     C     @RTCD         IFEQ      *BLANKS                                                  MD041157
+     C                   MOVE      'Y'           CGL013                                     MD041157
+     C                   ENDIF                                                              MD041157                                                                                        
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

@@ -15,14 +15,17 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. CER068             Date 25Feb14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD041464           Date 23Sep16               *
+      *  Prev Amend No. CER068             Date 25Feb14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24101           Date 27May09               *
       *                 BUG23947           Date 20May09               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041464 - Non-account holder numbers truncated.  Increase   *
+      *             D1CUS to 10. (Recompile)                          *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG24101 - KWG Extract does not capture non-account holders  *

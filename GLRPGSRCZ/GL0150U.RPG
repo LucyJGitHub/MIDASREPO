@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD040884           Date 09Sep16               *
-      *  Prev Amend No. MD032207           Date 10Jun15               *
+      *  Last Amend No. MD040755           Date 23Aug16               *
+      *  Prev Amend No. MD040884           Date 09Sep16               *
+      *                 MD032207           Date 10Jun15               *
       *                 MD025865A          Date 27Mar14               *
       *                 MD025865           Date 20Mar14               *
       *                 AR1093096          Date 30Sep13               *
@@ -75,6 +76,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD040755 - Set error flag before returning if one of the     *
+      *             batch detail encountered errors.                  *
       *  MD040884 - SWITI Batch Interface with refer all debits or    *
       *             credits postings become HELD Status - expected    *
       *             is ACCEPT status like in R4                       *
@@ -701,6 +704,7 @@
      C                     MOVE *ZEROS    PTOTMN                                              CER046
       *                                                                                       CER046
      C                     ENDIF                                                              CER046
+     C                     MOVE *BLANKS   ERRFLG  1                                         MD040755
      C*
      C* Locate Interface Posting Records using I/Face Batch Number
      C*
@@ -733,6 +737,9 @@
       *                                                                                     MD032207
       **  Initialize the Error Flag to prevent the previous status from being used          MD032207
       *                                                                                     MD032207
+     C           PERRF     IFEQ 'Y'                                                         MD040755
+     C                     MOVE 'Y'       ERRFLG                                            MD040755
+     C                     ENDIF                                                            MD040755
      C                     MOVE *BLANKS   PERRF                                             MD032207
      C                     MOVE *BLANKS   WRTCD                                             MD032207
       *                                                                                       CER046
@@ -1088,6 +1095,9 @@ E1   C                     ENDIF                                          CGL016
      C                     MOVE PTOTMN    PTOTM                                               CER046
      C                     ENDIF                                                              CER046
      C*
+     C           ERRFLG    IFEQ 'Y'                                                         MD040755
+     C                     MOVE 'Y'       PERRF                                             MD040755
+     C                     ENDIF                                                            MD040755
      C/COPY WNCPYSRC,GL0150UC01
      C                     SETON                         LR
      C/COPY WNCPYSRC,GL0150UC03

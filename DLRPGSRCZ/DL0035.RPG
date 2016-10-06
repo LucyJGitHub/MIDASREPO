@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD022776           Date 23Aug16               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSW212             Date 03May12               *
       *                 CRE073             Date 06Dec10               *
@@ -137,6 +138,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD022776 - If book code is optional for deals, set to ICD    *
+      *             default                                           *
+      *           - Applied for MD-40716.                             *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -1498,6 +1502,20 @@
      C                     GOTO TABMIS                                                        CAP205
      C                     ENDIF                                                              CAP205
      C                     ENDIF                                                              CAP205
+      *                                                                                     MD022776
+      ** Call Access pgm AOSARDR0 to check if CAS001 is ON                                  MD022776
+      *                                                                                     MD022776
+     C                     MOVEL'N'       CAS001  1                                         MD022776
+     C                     CALL 'AOSARDR0'                                                  MD022776
+     C                     PARM *BLANKS   PRTCD                                             MD022776
+     C                     PARM '*VERIFY' POPTN                                             MD022776
+     C                     PARM 'CAS001'  PSARD                                             MD022776
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD022776
+      *                                                                                     MD022776
+     C           PRTCD     IFEQ *BLANKS                                                     MD022776
+     C                     MOVEL'Y'       CAS001                                            MD022776
+     C                     ENDIF                                                            MD022776
+      *                                                                                     MD022776
      C*                                                                   S01194
 0655 C**   set originating-branch-used indicator accordingly              S01117
      C           BKOBRU    IFEQ 'Y'                                       S01117
@@ -2238,12 +2256,26 @@
       *                                                                                      BUG8759
       ** Start of book code validation                                                       BUG8759
      C           BKCODE    IFEQ *BLANKS                                                      BUG8759
+      *                                                                                     MD022776
+      ** 3 conditions where BKCODE becomes mandatory                                        MD022776
+      *                                                                                     MD022776
+     C           CAS001    IFEQ 'Y'                                                         MD022776
+     C           BNBCOP    OREQ 'N'                                                         MD022776
+     C           BNBCOP    OREQ ' '                                                         MD022776
       *                                                                                      BUG8759
       ** Display error msg that book code is mandatory                                       BUG8759
      C                     MOVEAMSG,17    ERCD,A                                             BUG8759
      C                     MOVE ' 307'    ERCD,S                                             BUG8759
      C                     ADD  1         S                                                  BUG8759
      C                     MOVE *ON       *IN32                                              BUG8759
+     C                     ELSE                                                             MD022776
+      *                                                                                     MD022776
+      ** If Book Code is blank but optional, set it to ICD default                          MD022776
+      *                                                                                     MD022776
+     C                     MOVELBNBKCD    BKCODE                                            MD022776
+     C                     MOVELBNBKCD    BDBKCD                                            MD022776
+     C                     MOVELBNBKCD    BOKC                                              MD022776
+     C                     ENDIF                                                            MD022776
       *                                                                                      BUG8759
      C                     ELSE                                                              BUG8759
       *                                                                                      BUG8759

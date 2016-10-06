@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. MD025865           Date 20Mar14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD040602           Date 19Aug16               *
+      *  Prev Amend No. MD025865           Date 20Mar14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26846           Date 14Dec09               *
       *                 BUG26406           Date 13Oct09               *
       *                 BUG26086           Date 22Sep09               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040602 - Initialise HQJETP to 'R' as otherwise inteface    *
+      *             batched will not appear in JRNE ListView          *
       *  MD025865 - Transactions generated are on 'HELD' status and   *
       *             encounter errors.                                 *
       *           - Records for extension file GLJENHQD and GLJENPQD  *
@@ -599,7 +602,8 @@
      C                   EVAL      Q_HQBTCH = BRBTNB                                        MD025865
      C                   EVAL      Q_HQBRCD = BRBCDA                                        MD025865
      C                   EVAL      Q_HQFRID = *BLANKS                                       MD025865
-     C                   EVAL      Q_HQJETP = BRTOJE                                        MD025865
+     C**********         EVAL      Q_HQJETP = BRTOJE                               MD025865 MD040602
+     C                   EVAL      Q_HQJETP = 'R'                                           MD040602
       *                                                                                     MD025865
      C                   WRITE(E)  GLJEHQD0                                                 MD025865
       *

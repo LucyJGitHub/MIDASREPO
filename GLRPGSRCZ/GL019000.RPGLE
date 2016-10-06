@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2010            *
       *                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
-      *  Prev Amend No. BUG27769           Date 09Jun10               *
+      *  Last Amend No. MD040242A          Date 02Sep16               *
+      *  Prev Amend No. MD040242           Date 09Sep16               *
+      *                 CRE075             Date 06Dec10               *
+      *                 BUG27769           Date 09Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27219           Date 16Mar10               *
       *                 239243             Date 04Jan10               *
@@ -27,6 +29,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040242A - Send error message when no account exists for    *
+      *              entered selection criteria.                      *
+      *            - Applied for MD040318A.                           *
+      *  MD040242 - Reference does not appear in 'Selected Account    *
+      *             Maintenance'. Add check to make sure at least     *
+      *             one account exists.                               *
+      *            - Applied for MD040318.                            *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG27769 - Incorrect error code                              *
       *  BUG27219- Format for message IDs in GBGLUSRMSG are for       *
@@ -111,6 +120,8 @@
      FACNUM     IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACNUMABF)
  
+     FGLACNTL6  IF   E           K DISK    INFSR(*PSSR)                                     MD040242
+                                                                                            MD040242
      D/SPACE 5
  
      D ATY             S              1    DIM(6) CTDATA PERRCD(6)
@@ -194,6 +205,20 @@
  
      D  WKERFN                 1     10
  
+     DDSPARM           DS            65                                                    MD040242A
+     D DSBRCA                  1      3                                                    MD040242A
+     D DSCNU1                  4      9                                                    MD040242A
+     D DSCNU2                 10     15                                                    MD040242A
+     D DSCCY                  16     18                                                    MD040242A
+     D DSACO1                 19     28                                                    MD040242A
+     D DSACO2                 29     38                                                    MD040242A
+     D DSACSQ                 39     40                                                    MD040242A
+     D DSACN1                 41     50                                                    MD040242A
+     D DSACN2                 51     60                                                    MD040242A
+     D DSACOC                 61     62                                                    MD040242A
+     D DSATYP                 63     63                                                    MD040242A
+     D DSCOLC                 64     65                                                    MD040242A
+                                                                                           MD040242A
       ** Named Constants
  
      D C@NUMR          C                   CONST('1234567890 ')
@@ -1012,6 +1037,29 @@
      C                   MOVE      *ON           *IN74
      C                   ELSE
      C                   MOVEL     BBCUST        S2CNU1
+                                                                                            MD040242
+      ** 'Customer(s)', if valid, at least one account must exist                           MD040242
+                                                                                            MD040242
+     C     S2CNU1        CHAIN     GLACNTL6                           2021                  MD040242
+     C     *IN21         IFEQ      *ON                                                      MD040242
+     C     *LOCK         IN        LDA                                                      MD040242
+     C                   MOVEL(P)  'GLACNTL6'    DBFILE                                     MD040242
+     C                   MOVEL(P)  S2CNU1        DBKEY                                      MD040242
+     C                   Z-ADD     180           DBASE                                      MD040242
+     C                   OUT       LDA                                                      MD040242
+                                                                                            MD040242
+     C                   EXSR      *PSSR                                                    MD040242
+                                                                                            MD040242
+     C                   ENDIF                                                              MD040242
+                                                                                            MD040242
+     C     *IN20         IFEQ      *ON                                                      MD040242
+     C                   MOVEL     'ATU0069'     WKMSID                                     MD040242
+                                                                                            MD040242
+     C                   EXSR      XSPMSQ                                                   MD040242
+     C                   ADD       1             WKERR                                      MD040242
+     C                   MOVE      *ON           *IN74                                      MD040242
+     C                   ENDIF                                                              MD040242
+                                                                                            MD040242
      C                   ENDIF
      C                   ENDIF
  
@@ -1614,6 +1662,32 @@
      C                   MOVEA     '1111'        *IN(62)
      C                   ENDIF
  
+      ** If there is no error, check that at least one account exists for the selection    MD040242A
+     C     WKERR         IFEQ      0                                                       MD040242A
+     C                   EVAL      DSBRCA = S2BRCA                                         MD040242A
+     C                   EVAL      DSCNU1 = S2CNU1                                         MD040242A
+     C                   EVAL      DSCNU2 = S2CNU2                                         MD040242A
+     C                   EVAL      DSCCY  = S2CCY                                          MD040242A
+     C                   EVAL      DSACO1 = S2ACO1                                         MD040242A
+     C                   EVAL      DSACO2 = S2ACO2                                         MD040242A
+     C                   EVAL      DSACSQ = S2ACSQ                                         MD040242A
+     C                   EVAL      DSACN1 = S2ACN1                                         MD040242A
+     C                   EVAL      DSACN2 = S2ACN2                                         MD040242A
+     C                   EVAL      DSACOC = S2ACOC                                         MD040242A
+     C                   EVAL      DSATYP = S2ATYP                                         MD040242A
+     C                   EVAL      DSCOLC = S2COLC                                         MD040242A
+                                                                                           MD040242A
+     C                   CALL      'GLC003300'                                             MD040242A
+     C                   PARM                    DSPARM                                    MD040242A
+     C                   PARM      *BLANKS       NOREC             1                       MD040242A
+     C     NOREC         IFEQ      'Y'                                                     MD040242A
+     C                   MOVEL     'ATU0070'     WKMSID                                     MD040242
+     C                   EXSR      XSPMSQ                                                   MD040242
+     C                   ADD       1             WKERR                                      MD040242
+     C                   ENDIF                                                             MD040242A
+                                                                                           MD040242A
+     C                   ENDIF                                                             MD040242A
+                                                                                           MD040242A
       ** If there are any errors, redisplay detail screen,
       ** otherwise update the file and return to subfile screen.
  

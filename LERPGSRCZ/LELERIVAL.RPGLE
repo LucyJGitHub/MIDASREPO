@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. AR702532           Date 13Jan15               *
+      *  Last Amend No. LUC109             Date 23Aug16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 AR702532           Date 13Jan15               *
       *                 243608             Date 13Mar15               *
       *                 MD031083           Date 25Nov14               *
       *                 MD028338           Date 25Nov14               *
@@ -104,6 +105,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *           Issue error message if facility is blocked.         *
+      *           Amendment of core hook LELERIV001                   *
+      *           Amendment of core hook LELERIV002                   *
+      *           Amendment of core hook LELERIV010                   *
+      *           Amendment of core hook LELERIV058                   *
+      *           Amendment of core hook LELERIV069                   *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  AR702532 - After rejection, there is no WIP record but RSTS  *

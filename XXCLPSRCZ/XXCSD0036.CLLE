@@ -1,0 +1,61 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*LUC109*/
+/*STD    CLPBASEBND                                                  */                   /*LUC109*/
+/*EXI    TEXT('A/C Type table extract program Transfer to Host')     */                   /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/********SDCM036 - A/C Type table extract program Transfer to Host   */                   /*LUC109*/
+/*       XXCSD0036 - A/C Type table extract program Transfer to Host */                   /*LUC109*/
+/*                                                                   */
+/********(C)*Copyright*Midas-Kapiti*International*Ltd.*1998***********/                   /*LUC109*/
+/*       (c) Misys International Banking Systems Ltd. 2016           */                   /*LUC109*/
+/*                                                                   */
+/*       Last Amend No. LUC109             Date 20Sep16              */
+/*       Prev Amend No. MMI043  *CREATE    Date 27Jan99              */
+/*                      Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FB Midas 2.1)             */
+/*       MMI043 - Interface to Head Office Reporting                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+/*   Declare Variables                                           */
+/**/
+             DCL        VAR(&INTFLIB) TYPE(*CHAR) LEN(9) VALUE('  +
+                          INTFLIB')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+/**********  DCLF       FILE(SDM036DF) RCDFMT(SDM036R)                                 */ /*LUC109*/
+             DCLF       FILE(XXSD0036DF) RCDFMT(XXSD0036R)                                /*LUC109*/
+ 
+/**/
+/* Display Prompt Screen                        */
+/**/
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&SRUNA)
+             RTVJOBA    JOB(&SWSID) USER(&USRID)
+/**/
+             CHGVAR     VAR(&IN03) VALUE('0')
+/**********  SNDRCVF    RCDFMT(SDM036R)                                                */ /*LUC109*/
+             SNDRCVF    RCDFMT(XXSD0036R)                                                 /*LUC109*/
+/* If F3, Return                                */
+             IF         COND(&IN03 *EQ '1') THEN(DO)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**/
+/*   Retrieve Environment and set up library names               */
+/**/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&INTFLIB 1 2)) VALUE(&SYSID)
+ 
+/**/
+/*   Submit Job to transmit file to Host.                        */
+/**/
+             SBMJOB     CMD(CALL PGM(IBMCI/CIEXTFIL)) JOB(CIEXTFIL) +
+                          JOBQ(QBATCH2) OUTQ(IBMCI/IBMOUTQCI) +
+                          INLLIBL(QTEMP IBMCI &INTFLIB QGPL) LOG(4 +
+                          0 *SECLVL) LOGCLPGM(*YES) MSGQ(QSYSOPR)
+ 
+ END:        ENDPGM

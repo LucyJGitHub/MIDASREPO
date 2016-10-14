@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. LUC109             Date 24Aug16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 AR804792           Date 05Sep11               *
       *                 AR820566           Date 25Aug11               *
       *                 CER049             Date 06Dec10               *
@@ -112,6 +113,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109 - HO reporting (Upgrade to FB Midas 2.1)              *
+      *           Intrusive changes also noted as LUC109 for          *
+      *           window processing fixing.                           *
+      *           Amendment to core hook LE0170DTA                    *
+      *           Amendment to core hook LE0170MOV1                   *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR804792 - Percentage is displayed in the "Amount" field.    *
@@ -853,7 +859,7 @@
 0399 I                                        1   1 RECI
       * Define the data structure to pass data to WN0010 and return pgm   S01241
       *                                                                   S01241
-      /COPY QWINDSRC,LE0170DTA                                            S01241
+     **COPY*QWINDSRC,LE0170DTA*****                                       S01241 LUC109
      I                                      201 210 U#ORGN                                  AR820566
      I**********                            211 2160U#LNRF                           AR820566 CLE148
      I                                      211 216 U#LNRF                                    CLE148
@@ -872,6 +878,7 @@
      I                                       12  12 #1RCTP                                    CER001
      I                                       13  15 #1CCY                                     CER001
      I                                       16  32 #1AMNT                                    CER001
+      /COPY QWINDSRC,LE0170DTA                                            LUC109
 0406 I*
 0407 I*    LOCAL DATA AREA
 0408 I*
@@ -1105,6 +1112,9 @@
      C                     ENDIF                                          157602
       *                                                                   157602
      C/COPY WNCPYSRC,LE0170C017
+     C           FACA      IFNE DFACT                                     LUC109
+     C                     MOVE *BLANKS   FCCY                            LUC109
+     C                     ENDIF                                          LUC109
      C                     MOVELNUMNAM    CUSTNO  6                       147221
      C                     MOVE FACA      DFACT   3                       147221
      C                     MOVE FACB      DFCNO   2                       147221
@@ -1173,6 +1183,7 @@
      C           *INKX     ANDEQ'0'                                                           CER001
      C           *IN76     ANDEQ'0'                                                           CER001
      C           *IN77     ANDEQ'0'                                                           CER001
+     C           FCCY      ANDNE*BLANKS                                                       LUC109
      C                     MOVE CUSTNO    #1CNUM                                              CER001
      C                     MOVE DFACT     #1FACT                                              CER001
      C                     MOVE DFCNO     #1FCNO                                              CER001
@@ -1207,6 +1218,7 @@
      C           *INKX     ANDEQ'0'                        CMD23          191106
      C           *IN76     ANDEQ'0'                        ROLLUP         191106
      C           *IN77     ANDEQ'0'                        ROLLDOWN       191106
+     C           FCCY      ANDNE*BLANKS                                                       LUC109
       *    /copy to move data into the data structure fields passed       S01241
       *     as a parameter to the window controller                       S01241
       /COPY WNCPYSRC,LE0170MOV1                                           S01241
@@ -1272,6 +1284,7 @@
       **  pressed in window program.                                      CGL007
       *                                                                   CGL007
      C           PGN2D     IFEQ 'GL0090'                                  CGL007
+     C           PGN2D     ORNE 'GL0090'                                  LUC109
       *                                                                   CGL007
       **  If CA03 pressed, exit from program.                             CGL007
       *                                                                   CGL007
@@ -1884,7 +1897,9 @@
      C*    IF MULTIBRANCHING = YES, CHECK USERS ACCESS TO BOOKING BRANCH  S01117
      C*                                                                   S01117
       *                                                                   S01117
-     C                     CALL 'ZVBBU'                                   S01117
+     C**********           CALL 'ZVBBU'                            S01117 LUC109
+     C                     CALL 'ZVACTBU'                                 LUC109
+     C                     PARM 'E'       @ZACTN  1                       S01117
      C                     PARM BRCA      @ZBR    3                       S01117
      C                     PARM           @ERR    10                      S01117
      C           @ERR      IFNE 0                                         S01117
@@ -3925,7 +3940,7 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 SHORTNAME NOT ON FILE
 CUSTOMER NOT ON FILE
 FACILITY NOT ON FILE
- 
+
 USER IS NOT AUTHORISED TO ANY BOOKING BRANCHES
 USER IS NOT AUTHORISED TO THE BOOKING BRANCH
 FUNCTION KEY INVALID FOR NON-SYNDICATED FACILITY                                  191106

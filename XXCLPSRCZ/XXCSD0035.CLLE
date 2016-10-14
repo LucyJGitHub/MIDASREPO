@@ -1,0 +1,88 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*LUC109*/
+/*STD    CLPBASEBND                                                  */                   /*LUC109*/
+/*EXI    TEXT('A/C Type table extract program')                      */                   /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/********SDCM035*-*A/C*Type*table*extract*program*********************/                   /*LUC109*/
+/*       XXCSD0035 - A/C Type table extract program                  */                   /*LUC109*/
+/*                                                                   */
+/********(C)*Copyright*Midas-Kapiti*International*Ltd.*1998***********/                   /*LUC109*/
+/*       (c) Misys International Banking Systems Ltd. 2016           */                   /*LUC109*/
+/*                                                                   */
+/*       Last Amend No. LUC109             Date 20Sep16              */
+/*       Prev Amend No. MMI043  *CREATE    Date 03Dec98              */
+/*                      Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FB Midas 2.1)             */
+/*       MMI043 - Interface to Head Office Reporting                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+/**********  DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +                  */ /*LUC109*/
+/**********               Copyright Midas-Kapiti International Ltd. +                  */ /*LUC109*/
+/**********               1997')                                                       */ /*LUC109*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2016')                                                          /*LUC109*/
+/**********  DCLF       FILE(SDM035DF) RCDFMT(SDM035R)                                 */ /*LUC109*/
+             DCLF       FILE(XXSD0035DF) RCDFMT(XXSD0035R)                                /*LUC109*/
+ 
+/**/
+/* Global monitor message */
+/**/
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/**/
+/* Display Prompt Screen                        */
+/**/
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&SRUNA)
+             RTVJOBA    JOB(&SWSID) USER(&USRID)
+/**/
+             CHGVAR     VAR(&IN03) VALUE('0')
+/**********  SNDRCVF    RCDFMT(SDM035R)                                                */ /*LUC109*/
+             SNDRCVF    RCDFMT(XXSD0035R)                                                 /*LUC109*/
+/* If F3, Return                                */
+             IF         COND(&IN03 *EQ '1') THEN(DO)
+             GOTO       CMDLBL(END)
+             ENDDO
+/**/
+/* Run Extract                                  */
+/**/
+             CHGJOB     SWS(XXXXXX00)
+             CLRPFM     FILE(EXTACOD)
+/**********  CALL       PGM(SDM035)                                                    */ /*LUC109*/
+             CALL       PGM(XXSD0035)                                                     /*LUC109*/
+ 
+             GOTO       CMDLBL(END)
+ 
+/**/
+/* Abnormal termination */
+/**/
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/**********    SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +                */ /*LUC109*/
+/**********                 SDCM035 ended abnormally - see job log') +                 */ /*LUC109*/
+/**********                 TOMSGQ(MOPERQ)                                             */ /*LUC109*/
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            XXCSD0035 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)                                          /*LUC109*/
+ 
+ 
+/*END:*****  CHGVAR     VAR(&CPYFLD) VALUE('Copyright Midas-Kapiti +                   */ /*LUC109*/
+/**********               International Ltd.')                                         */ /*LUC109*/
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')                      /*LUC109*/
+ 
+ 
+             ENDPGM

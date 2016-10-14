@@ -1,0 +1,740 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - LE Module                                            *
+      *                                                               *
+      ***LE2020W0-*Facility Details Maintenance Window                *                       LUC109
+      *  XX2020W0- Facility Details Maintenance Window                *                       LUC109
+      *                                                               *
+      ***(C)*Copyright*Midas-Kapiti*International*Ltd.*1998              *                    LUC109
+      *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
+      *                                                               *
+      *  Last Amend No. LUC109             Date 24Aug16               *
+      *  Prev Amend No. MUI010             Date 10Mar04               *
+      *                 MUI009             Date 10Feb04               *
+      *                 LUC007                  21Dec00               *
+      *                 205749                  16May02               *
+      *                 205750                  16May02               *
+      *                 MMI043  *CREATE         26Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *  MUI010 - HOR Changes - Add HO Facility Link                  *
+      *  MUI009 - Upgrade to R4.01: apply LUC007.                     *
+      *  LUC007 - Amendments to Facilities and Loans Input Functions. *
+      *  205749 - F12 in the window after this one will force the pgm *
+      *           to crash. In this case, the code was never called.  *
+      *  205750 - Commit control is missing for the extension file.   *
+      *  MMI043 - Interface to Head Office Reporting                  *
+      *                                                               *
+      *****************************************************************
+     F*LE2020#0CF  E                    WORKSTN                                               LUC109
+     FXX2020#0CF  E                    WORKSTN                                                LUC109
+     F                                              KINFSR *PSSR
+      * DSP: Midas LE Facilities Maintenance Window
+      *
+     F*********SDFACTX0IF  E           K        DISK         KINFSR *PSSR              MUI010 LUC109
+     FXXFACTX0IF  E           K        DISK         KINFSR *PSSR                              LUC109
+     F*FCLTYY0 UF  E           K        DISK                      A       205750
+     FFCLTYY0 UF  E           K        DISK         KCOMIT       A        205750
+     F                                              KINFSR *PSSR
+      * UPD : Midas LE Facilities Extension File
+      *                                                                   MUI009
+      /COPY ZSRSRC,ZDATE2Z1                                               MUI009
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      **   Defines:                         134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     ISCSARD    E DSSCSARDPD
+      ** External data structure for switchable features
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+      ****************************************************************
+     **/COPY*QWINDSRC*LE2020GDTA                                           S01241             LUC109
+     IDATA        DS                           1024                                           LUC109
+      *                                                                                       LUC109
+     I                                        1   6 W0CUST                                    LUC109
+     I                                        7   90W0FACT                                    LUC109
+     I                                       10  110W0FCNO                                    LUC109
+     I                                       12  170W0FEXP                                    LUC109
+     I                                       18  18 ULRVAM                                    LUC109
+      *                                                                                       LUC109
+     I                                      100 102 @MRKBR                                    LUC109
+     I                                      103 105 @LMAXT                                    LUC109
+     I                                    P 106 1080@LMEDR                                    LUC109
+     I                                      109 109 @LMYTR                                    LUC109
+     I                                      110 110 @LFACT                                    LUC109
+     I                                      111 111 @LBFAC                                    LUC109
+     I                                      112 112 @LPROP                                    LUC109
+     I                                      113 142 @LNOTE                                    LUC109
+     I                                      143 163 @LLINK                                    LUC109
+     I*
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IDSRKBR      DS
+     I                                        1   1 RKBR1
+     I                                        2   2 RKBR2
+     I                                        3   3 RKBR3
+     IDSKEY       DS
+     I                                        1   6 DSKEYA
+     I                                        7   9 DSKEYB
+     I                                       10  11 DSKEYC
+      *                                                                   MUI010
+      * Data Structure for HO Link validation                             MUI010
+      *                                                                   MUI010
+     IDSLINK      DS                                                      MUI010
+     I                                        1   1 LKZERO                MUI010
+     I                                        2   4 LKBRCA                MUI010
+     I                                        5   6 LK84                  MUI010
+     I                                        7  21 LKNUM                 MUI010
+     I                                        7  200LKDIV                 MUI010
+     I                                       21  210LKRMD                 MUI010
+      /EJECT
+      *****************************************************************
+      * Standard parameter list for window manager
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE1256
+      *****************************************************************
+      *
+      * Main Processing
+      *
+      *****************************************************************
+      * Initialize
+     C                     EXSR #EINIT
+      * Continue to redisplay the screen if *IN30 remains off
+     C           *IN30     DOWEQ*OFF
+      * If error, write messages
+     C           *IN31     IFEQ *ON
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+      * Main format of the display file
+     C**********           EXFMTLE2020F0                                                      LUC109
+     C                     EXFMTXX2020F0                                                      LUC109
+     C                     MOVEA'00000000'*IN,41
+      * Clear messages
+     C                     EXSR #ECLR
+      * If F3 pressed, exit to main menu
+     C           *IN03     CASEQ'1'       #EEXIT
+      * If F12 pressed, exit window
+     C           *IN12     CASEQ'1'       #EPREV
+      * Validate
+     C                     CAS            #EVALD
+      *
+     C                     ENDCS
+      *
+     C                     ENDDO
+      * Exit program
+     C                     EXSR #EEND
+      *
+      ****************************************************************
+      *
+      * #EDELT - Delete record
+      *
+      ****************************************************************
+      *
+     C           #EDELT    BEGSR
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #ECLR  - Clear Message
+      *
+      ****************************************************************
+      *
+     C           #ECLR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EEXIT - Exit Program
+      *
+      ****************************************************************
+      *
+     C           #EEXIT    BEGSR
+      *
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR #EEND
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EINIT - Initial Processing
+      *
+      ****************************************************************
+      *
+     C           #EINIT    BEGSR
+      * Initialise data
+     C**********           MOVE *BLANKS   SRKBR                           LUC007
+      * Define the data areas
+     C           *NAMVAR   DEFN           LDA
+     C*                                                                   MUI009
+     C           *NAMVAR   DEFN           RUNDAT                          MUI009
+     C                     IN   RUNDAT                                    MUI009
+     C*                                                                   MUI009
+     C** Set Date Format Indicator *IN98  on if date format is MMDDYY     MUI009
+     C*                                                                   MUI009
+     C           DFF       IFEQ 'M'                                       MUI009
+     C                     SETON                     98                   MUI009
+     C                     END                                            MUI009
+      * Define key lists
+     C           KEYFCL    KLIST
+     C                     KFLD           W0CUST
+     C                     KFLD           W0FACT
+     C                     KFLD           W0FCNO
+     C**Check*if*CAR*LUC007 is switched on.                               LUC007              LUC109
+     C* Check if CAR LUC109 is switched on.                                                   LUC109
+     C                     CALL 'AOSARDR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C***********          PARM 'MMI043'  @SARD   6                       LUC007
+     C***********          PARM 'LUC007'  @SARD   6                       LUC007              LUC109
+     C                     PARM 'LUC109'  @SARD   6                                           LUC109
+     C           SCSARD    PARM SCSARD    DSFDY
+      * If switched off, exit program
+     C           @RTCD     IFNE *BLANKS
+     C                     EXSR #EEND
+     C                     ENDIF
+      * If Action is Delete, delete record here, dont display window.
+     C           ACTN      IFEQ 'R'
+     C           ACTN      OREQ 'C'
+     C                     EXSR #EDELT
+     C                     EXSR #EEND
+     C                     ENDIF
+      * If Action is 'Z', then insert record here, dont display window.
+     C           ACTN      IFEQ 'Z'
+     C                     EXSR #EZINS
+     C                     EXSR #EEND
+     C                     ENDIF
+      * Define window position
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+      * Retrieve title for window
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+      * Access FCLTYY0
+     C                     MOVE *OFF      *IN87
+     C           ACTN      IFNE 'I'
+     C           KEYFCL    CHAINFCLTYY0              87
+     C                     ENDIF
+      * Protect input fields if Enquiry or Delete
+     C           ACTN      IFEQ 'E'
+     C           ACTN      OREQ 'R'
+     C           ACTN      OREQ 'C'
+     C                     MOVE *ON       *IN39
+     C                     ENDIF
+      **If*Insert*and*record*exists,*perform*standard*database************205749
+      **error*processing**************************************************205749
+     C********** ACTN      IFEQ 'Z'                                       205749
+     C********** *IN87     IFEQ *OFF                                      205749
+     C********** *LOCK     IN   LDA                                       205749
+     C**********           MOVEL##PGM     DBPGM                           205749
+     C**********           MOVE W0CUST    DSKEYA                          205749
+     C**********           MOVE W0FACT    DSKEYB                          205749
+     C**********           MOVE W0FCNO    DSKEYC                          205749
+     C**********           MOVELDSKEY     DBKEY                           205749
+     C**********           MOVE 'FCLTYY0 'DBFILE                          205749
+     C**********           Z-ADD1         DBASE                           205749
+     C**********           OUT  LDA                                       205749
+     C**********           EXSR *PSSR                                     205749
+     C**********           ENDIF                                          205749
+     C**********           ENDIF                                          205749
+      * If record found, set up screen fields
+     C           *IN87     IFEQ *ON
+     C**********           MOVE *BLANK    SRKBR                           LUC007
+     C                     MOVE *BLANK    SMAXT                           LUC007
+     C                     MOVE *BLANK    SMEDR                           LUC007
+     C                     MOVE *BLANK    SMYTR                           LUC007
+     C                     MOVE *BLANK    SFACT                           LUC007
+     C                     MOVE *BLANK    SBFAC                           LUC007
+     C                     MOVE *BLANK    SPROP                           LUC007
+     C                     MOVE *BLANK    SNOTE                           LUC007
+     C                     MOVE *BLANKS   SLINK                           MUI010
+     C                     ELSE
+     C***********          MOVE MRKBR     SRKBR                           LUC007
+     C                     MOVE LMAXT     SMAXT                           LUC007
+     C                     MOVE LMEDR     ZDAYNO                          LUC007
+     C                     EXSR ZDATE2                                    LUC007
+     C                     MOVE ZDATE     SMEDR                           LUC007
+     C                     MOVE LMYTR     SMYTR                           LUC007
+     C                     MOVE LFACT     SFACT                           LUC007
+     C                     MOVE LBFAC     SBFAC                           LUC007
+     C                     MOVE LPROP     SPROP                           LUC007
+     C                     MOVE LNOTE     SNOTE                           LUC007
+     C                     MOVE LLINK     SLINK                           MUI010
+     C                     ENDIF                                          LUC007
+      *                                                                   LUC007
+      ** Proposal Sent to H.O. flag is reset to 'N' every time the        LUC007
+      *  Head Office Review Date is changed.                              LUC007
+      *                                                                   LUC007
+     C           ULRVAM    IFEQ 'Y'                        RV Date AmendedLUC007
+     C                     MOVE 'N'       SPROP                           LUC007
+     C                     ENDIF                                          LUC007
+     C                     MOVE 'N'       ULRVAM           RV Date AmendedLUC007
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EPREV - Go to previous screen
+      *
+      ****************************************************************
+      *
+     C           #EPREV    BEGSR
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR #EEND
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EUPDT - Update File
+      *
+      ****************************************************************
+      *
+     C           #EUPDT    BEGSR
+      * ... if insert mode , then save data as the loan ref
+      *     is not yet known. The record will later be added under
+      *     action code 'Z'.
+     C           ACTN      IFEQ 'I'
+     C                     EXSR #EKEEP
+     C                     ELSE
+      *
+     C           KEYFCL    CHAINFCLTYY0              87
+      * set up fields from screen
+     C***********          MOVE SRKBR     MRKBR                           LUC007
+     C                     MOVELSMAXT     LMAXT                           LUC007
+     C                     MOVELWMEDR     LMEDR                           LUC007
+     C                     MOVELSMYTR     LMYTR                           LUC007
+     C                     MOVELSFACT     LFACT                           LUC007
+     C                     MOVELSBFAC     LBFAC                           LUC007
+     C                     MOVELSPROP     LPROP                           LUC007
+     C                     MOVELSNOTE     LNOTE                           LUC007
+     C                     MOVE SLINK     LLINK                           MUI010
+      * update record
+     C           *IN87     IFEQ *OFF
+     C                     UPDATFCLTYFX0
+     C                     ELSE
+     C                     MOVE W0CUST    MCNUM
+     C                     MOVE W0FACT    MFACT
+     C                     MOVE W0FCNO    MFCNO
+     C                     WRITEFCLTYFX0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EKEEP - Keep Data until Loan number is known
+      *
+      ****************************************************************
+      *
+     C           #EKEEP    BEGSR
+      *
+      * set up data structure from screen
+     C***********          MOVE SRKBR     @MRKBR                          LUC007
+     C                     MOVE SMAXT     @LMAXT                          LUC007
+     C                     MOVE WMEDR     @LMEDR                          LUC007
+     C                     MOVE SMYTR     @LMYTR                          LUC007
+     C                     MOVE SFACT     @LFACT                          LUC007
+     C                     MOVE SBFAC     @LBFAC                          LUC007
+     C                     MOVE SPROP     @LPROP                          LUC007
+     C                     MOVE SNOTE     @LNOTE                          LUC007
+     C                     MOVE SLINK     @LLINK                          MUI010
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EZINS - Insert record for action 'Z'
+      *
+      ****************************************************************
+      *
+     C           #EZINS    BEGSR
+      *
+     C           KEYFCL    CHAINFCLTYY0              87
+      * set up fields from data structure
+     C**********           MOVE @MRKBR    MRKBR                           LUC007
+     C                     MOVE @LMAXT    LMAXT                           LUC007
+     C                     MOVE @LMEDR    LMEDR                           LUC007
+     C                     MOVE @LMYTR    LMYTR                           LUC007
+     C                     MOVE @LFACT    LFACT                           LUC007
+     C                     MOVE @LBFAC    LBFAC                           LUC007
+     C                     MOVE @LPROP    LPROP                           LUC007
+     C                     MOVE @LNOTE    LNOTE                           LUC007
+     C                     MOVE @LLINK    LLINK                           MUI010
+      * update record
+     C           *IN87     IFEQ *OFF
+     C                     UPDATFCLTYFX0
+     C                     ELSE
+     C                     MOVE W0CUST    MCNUM
+     C                     MOVE W0FACT    MFACT
+     C                     MOVE W0FCNO    MFCNO
+     C                     WRITEFCLTYFX0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EVALD - Validate Screen
+      *
+      ****************************************************************
+      *
+     C           #EVALD    BEGSR
+      * if action code is enquire then exit from program
+     C           ACTN      IFEQ 'E'
+     C                     EXSR #EEND
+     C                     ELSE
+      * if *IN30 is switched off, an error has occurred
+     C                     MOVE *ON       *IN30
+      * if *IN31 is switched on, an error message has been sent
+     C                     MOVE *OFF      *IN31
+      **********                                                          LUC007
+      **Validate Risk on Italian Branch                                   LUC007
+     C********** SRKBR     IFNE *BLANKS                                   LUC007
+     C**********           MOVE SRKBR     DSRKBR                          LUC007
+     C********** RKBR1     IFEQ *BLANKS                                   LUC007
+     C********** RKBR2     OREQ *BLANKS                                   LUC007
+     C********** RKBR3     OREQ *BLANKS                                   LUC007
+     C**********           MOVE 'XXX0068' ZAMSID                          LUC007
+     C**********           MOVE *OFF      *IN30                           LUC007
+     C**********           MOVE *ON       *IN31                           LUC007
+     C**********           MOVE *ON       *IN41                           LUC007
+     C**********           EXSR ZASNMS                                    LUC007
+     C**********           ENDIF                                          LUC007
+     C**********           ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Maximum Tenor. Field must not be left blank.             LUC007
+     C*                                                                   LUC007
+     C           SMAXT     IFEQ *BLANKS                                   LUC007
+     C                     MOVE 'XXX0079' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN41                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Maximum Tenor. Field must be in the form 'nnX' where     LUC007
+     C* 'nn' must be numeric and not zero, and 'X' must be 'M' or 'Y'.    LUC007
+     C           SMAXT     IFNE *BLANKS                                   LUC007
+     C                     MOVELSMAXT     WMAX12  2                       LUC007
+     C                     MOVE SMAXT     WMAX3   1                       LUC007
+     C                     TESTN          WMAX12     40                   LUC007
+     C           *IN40     IFEQ *OFF                                      LUC007
+     C           WMAX12    OREQ '00'                                      LUC007
+     C                     MOVE 'XXX0080' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN41                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ELSE                                           LUC007
+     C           WMAX3     IFNE 'Y'                                       LUC007
+     C           WMAX3     ANDNE'M'                                       LUC007
+     C                     MOVE 'XXX0080' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN41                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C                     ENDIF                                          LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Multiyear Transaction. Field must not be left blank.     LUC007
+     C           SMYTR     IFEQ *BLANKS                                   LUC007
+     C                     MOVE 'XXX0081' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN43                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Multiyear Transaction. Field must be set to 'Y' or 'N'.  LUC007
+     C           SMYTR     IFNE *BLANKS                                   LUC007
+     C           SMYTR     ANDNE'Y'                                       LUC007
+     C           SMYTR     ANDNE'N'                                       LUC007
+     C                     MOVE 'XXX0082' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN43                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Type of Facility. Field must not be left blank.          LUC007
+     C           SFACT     IFEQ *BLANKS                                   LUC007
+     C                     MOVE 'XXX0083' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN44                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Type of Facility. Field must be set to 'C' or 'T'.       LUC007
+     C           SFACT     IFNE *BLANKS                                   LUC007
+     C           SFACT     ANDNE'C'                                       LUC007
+     C           SFACT     ANDNE'T'                                       LUC007
+     C                     MOVE 'XXX0084' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN44                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Blocked Facility. Field must not be left blank.          LUC007
+     C           SBFAC     IFEQ *BLANKS                                   LUC007
+     C                     MOVE 'XXX0085' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN45                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Blocked Facility. Field must be set to 'Y' or 'N'.       LUC007
+     C           SBFAC     IFNE *BLANKS                                   LUC007
+     C           SBFAC     ANDNE'Y'                                       LUC007
+     C           SBFAC     ANDNE'N'                                       LUC007
+     C                     MOVE 'XXX0086' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN45                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Proposal Sent to H.O. Field must not be left blank.      LUC007
+     C           SPROP     IFEQ *BLANKS                                   LUC007
+     C                     MOVE 'XXX0087' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN46                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Validate Proposal Sent to H.O. Field must be set to 'Y' or 'N'.   LUC007
+     C           SPROP     IFNE *BLANKS                                   LUC007
+     C           SPROP     ANDNE'Y'                                       LUC007
+     C           SPROP     ANDNE'N'                                       LUC007
+     C                     MOVE 'XXX0088' ZAMSID                          LUC007
+     C                     MOVE *OFF      *IN30                           LUC007
+     C                     MOVE *ON       *IN31                           LUC007
+     C                     MOVE *ON       *IN46                           LUC007
+     C                     EXSR ZASNMS                                    LUC007
+     C                     ENDIF                                          LUC007
+     C*                                                                   LUC007
+     C* Calculate Maximum End Date of Risk.                               LUC007
+     C                     Z-ADD*ZERO     WMEDR   50                      LUC007
+     C*                                                                   LUC007
+     C* If the Type of Facility field is set to 'C', then the Maximum     LUC007
+     C* End Date of Risk will be calculated as Facility Expiry Date + a   LUC007
+     C* number of days. The number of days is found from the Maximum      LUC007
+     C* Tenor field. If Max. Tenor is in the form 'nnM', then days =      LUC007
+     C* nn x 31. If in the form 'nnY', then days = nn x 366.              LUC007
+     C*                                                                   LUC007
+     C           SFACT     IFEQ 'C'                                       LUC007
+     C           WMAX3     IFEQ 'M'                                       LUC007
+     C           *IN41     ANDEQ*OFF                                      LUC007
+     C                     MOVE WMAX12    WDAYS1  20                      LUC007
+     C           WDAYS1    MULT 31        WDAYS2  50                      LUC007
+     C           WDAYS2    ADD  W0FEXP    WMEDR                           LUC007
+     C                     ENDIF                                          LUC007
+     C           WMAX3     IFEQ 'Y'                                       LUC007
+     C           *IN41     ANDEQ*OFF                                      LUC007
+     C                     MOVE WMAX12    WDAYS1                          LUC007
+     C           WDAYS1    MULT 366       WDAYS2                          LUC007
+     C           WDAYS2    ADD  W0FEXP    WMEDR                           LUC007
+     C                     ENDIF                                          LUC007
+     C                     ENDIF                                          LUC007
+     C*
+     C           SFACT     IFEQ 'T'
+     C                     Z-ADDW0FEXP    WMEDR
+     C                     ENDIF
+     C*                                                                   MUI010
+     C* Validate H.O. Link                                                MUI010
+     C*                                                                   MUI010
+     C* - mandatory for Multiyear Facilities                              MUI010
+     C*                                                                   MUI010
+     C           SLINK     IFEQ *BLANKS                                   MUI010
+     C                     MOVE *BLANKS   MMLYR                           MUI010
+     C*********  W0FACT    CHAINSDFACTF0             01            MUI010 LUC109
+     C           W0FACT    CHAINXXFACTD0             01                   LUC109
+     C           MMLYR     IFEQ 'Y'                                       MUI010
+     C                     MOVE 'XXX0098' ZAMSID                          MUI010
+     C                     MOVE *OFF      *IN30                           MUI010
+     C                     MOVE *ON       *IN31                           MUI010
+     C                     MOVE *ON       *IN48                           MUI010
+     C                     EXSR ZASNMS                                    MUI010
+     C                     ENDIF                                          MUI010
+     C*                                                                   MUI010
+     C* - If entered, check contents                                      MUI010
+     C*                                                                   MUI010
+     C                     ELSE                                           MUI010
+     C                     MOVE SLINK     DSLINK                          MUI010
+     C*                                                                   MUI010
+     C* - Position 1 must be '0'                                          MUI010
+     C*                                                                   MUI010
+     C           LKZERO    IFNE '0'                                       MUI010
+     C                     MOVE 'XXX0099' ZAMSID                          MUI010
+     C                     MOVE *OFF      *IN30                           MUI010
+     C                     MOVE *ON       *IN31                           MUI010
+     C                     MOVE *ON       *IN48                           MUI010
+     C                     EXSR ZASNMS                                    MUI010
+     C                     ENDIF                                          MUI010
+     C*                                                                   MUI010
+     C* - Positions 2-4 must be a Branch Code                             MUI010
+     C*                                                                   MUI010
+     C                     CALL 'AOBRCHR0'                                MUI010
+     C                     PARM *BLANKS   @RTCD   7                       MUI010
+     C                     PARM '*KEY    '@OPTN   7                       MUI010
+     C                     PARM LKBRCA    @BRCD   3                       MUI010
+     C                     PARM           DSFDY                           MUI010
+     C           @RTCD     IFNE *BLANKS                                   MUI010
+     C                     MOVE 'XXX0100' ZAMSID                          MUI010
+     C                     MOVE *OFF      *IN30                           MUI010
+     C                     MOVE *ON       *IN31                           MUI010
+     C                     MOVE *ON       *IN48                           MUI010
+     C                     EXSR ZASNMS                                    MUI010
+     C                     ENDIF                                          MUI010
+     C*                                                                   MUI010
+     C* - Positions 5-6 must be '84'                                      MUI010
+     C*                                                                   MUI010
+     C           LK84      IFNE '84'                                      MUI010
+     C                     MOVE 'XXX0101' ZAMSID                          MUI010
+     C                     MOVE *OFF      *IN30                           MUI010
+     C                     MOVE *ON       *IN31                           MUI010
+     C                     MOVE *ON       *IN48                           MUI010
+     C                     EXSR ZASNMS                                    MUI010
+     C                     ENDIF                                          MUI010
+     C*                                                                   MUI010
+     C* - Positions 7-21 must be numeric                                  MUI010
+     C*                                                                   MUI010
+     C                     MOVE LKNUM     CHKNUM 150                      MUI010
+     C                     MOVE CHKNUM    COMP15 15                       MUI010
+     C           LKNUM     IFNE COMP15                                    MUI010
+     C                     MOVE 'XXX0102' ZAMSID                          MUI010
+     C                     MOVE *OFF      *IN30                           MUI010
+     C                     MOVE *ON       *IN31                           MUI010
+     C                     MOVE *ON       *IN48                           MUI010
+     C                     EXSR ZASNMS                                    MUI010
+     C*                                                                   MUI010
+     C* - Position 21 must be the remainder of pos. 7-20 divided by 7     MUI010
+     C*                                                                   MUI010
+     C                     ELSE                                           MUI010
+     C           LKDIV     DIV  7         CHKNUM                          MUI010
+     C                     MVR            COMP01  10                      MUI010
+     C           LKRMD     IFNE COMP01                                    MUI010
+     C                     MOVE 'XXX0103' ZAMSID                          MUI010
+     C                     MOVE *OFF      *IN30                           MUI010
+     C                     MOVE *ON       *IN31                           MUI010
+     C                     MOVE *ON       *IN48                           MUI010
+     C                     EXSR ZASNMS                                    MUI010
+     C                     ENDIF                                          MUI010
+     C                     ENDIF                                          MUI010
+     C                     ENDIF                                          MUI010
+     C*
+     C* No errors, then update file
+     C*
+     C           *IN31     IFNE *ON
+     C                     EXSR #EUPDT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EEND  - End Program
+      *
+      ****************************************************************
+      *
+     C           #EEND     BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * ZASNMS - Send message to programs message queue
+      *
+      ****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message File
+     C                     PARM           ZAMSDA132        Message Data
+     C                     PARM           ZAMSTP  7        Message Type
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * *PSSR  - Program exception error routine
+      *
+      ****************************************************************
+      *
+     C           *PSSR     BEGSR
+      * Send return code to control program
+     C                     MOVE 'Y2U0004' W0RTN
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+     C                     RETRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C*                                                                   MUI009
+      /COPY ZSRSRC,ZDATE2Z2                                               MUI009
+     C*                                                                   MUI009
+      ****************************************************************
+      /COPY ZSRSRC,ZDATE2Z3                                               MUI009

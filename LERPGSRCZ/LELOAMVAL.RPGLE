@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD035672           Date 07Sep15               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. LUC109             Date 23Aug16               *
+      *  Prev Amend No. MD035672           Date 07Sep15               *
+      *                 CDL094             Date 11Jun14               *
       *                 MD000091           Date 10May13               *
       *                 AR1094243          Date 05Mar13               *
       *                 AR632104           Date 02Oct12               *
@@ -88,6 +89,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *           Bypass check for PI date against last availablity   *
+      *           date.                                               *
+      *           Amendment of core hook LELOAMV001                   *
+      *           Amendment of core hook LELOAMV021                   *
+      *           Amendment of core hook LELOAMV027                   *
+      *           Addition of hook LUC109_010                         *
+      *           Addition of hook LUC109_011                         *
       *  MD035672 - Spread rate should only be allowed if the loan has*
       *             either base rate, base rate code or current base  *
       *             rate.                                             *
@@ -967,8 +976,10 @@
       * not be later than the Last Available date
      C     DDATYP        IFEQ      'PI'
      C     DDACTN        ANDEQ     'I'
+     C/COPY WNCPYSRC,LUC109_010
      C     DDATYP        OREQ      'PI'                                                       CLE030
      C     DDACTN        ANDEQ     'X'                                                        CLE030
+     C/COPY WNCPYSRC,LUC109_011
      C     CAM_ASTS      ANDNE     'Q'                                                        CLE030
       *                                                                                       245335
       *  Do not validate value date against last availability date if                         245335

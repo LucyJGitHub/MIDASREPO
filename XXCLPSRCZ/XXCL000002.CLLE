@@ -1,0 +1,56 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Update of file XXINCPPD FBM')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Data Extract Module                                 */
+/*                                                                   */
+/*       XXCL000002 - Update field IMDFN with corresponding file     */
+/*                    name in field ITGFN FBM                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*                                                                   */
+/*       Last Amend No. LUC109             Date 12Sep16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FB Midas 2.1)             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTNCDE &MODE)
+ 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MODE)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. 2016')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('XXCL000002 - Update field IMDFN FBM') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Call the update program                       */
+ 
+             CALL       PGM(XXL000002)
+ 
+             GOTO CMDLBL(END)
+ 
+/* Abnormal Termination  */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          XXCL000002 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               ROLLBACK
+               MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End Program           */
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD041342           Date 15Sep16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. LUC109             Date 23Aug16               *
+      *  Prev Amend No. MD041342           Date 15Sep16               *
+      *                 CLE141             Date 08Feb16               *
       *                 MD031089           Date 12Feb15               *
       *                 MD032052           Date 23Jan15               *
       *                 MD031225           Date 10Dec14               *
@@ -153,6 +154,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *         - bypass check if maturity date of loan is greater    *
+      *           than expiry date of facility.                       *
+      *         - bypass check if value date of the loan is greater   *
+      *           than the last availability date of facility.        *
+      *           Amendment of core hook LECLIP1V01                   *
+      *           Amendment of core hook LECLIP1V25                   *
+      *           Amendment of core hook LECLIP1V27                   *
+      *           Addition of hook LUC109_001                         *
+      *           Addition of hook LUC109_002                         *
+      *           Addition of hook LUC109_003                         *
       *  MD041342 - CBC022001 failed due to invalid character in file *
       *             text description. (Recompile)                     *
       *  CLE141 - Currency and Location Business Day Convention for   *
@@ -4227,6 +4239,7 @@ B001 C     ZERR          IFNE      *BLANKS
       *
      C     WSVVD         IFGT      AVLD
      C     AVLD          ANDNE     *ZERO
+     C/COPY WNCPYSRC,LUC109_001
      C     CLE030        IFEQ      'N'                                                        CLE030
      C     PGNTF         IFEQ      'Y'                                                        244213
      C     @@GPRT        OREQ      'Y'                                                        244213
@@ -4268,6 +4281,7 @@ B001 C     ZERR          IFNE      *BLANKS
       *
      C     WSVVD         IFGT      AVLDB
      C     AVLDB         ANDNE     0
+     C/COPY WNCPYSRC,LUC109_002
       *                                                                                       CLE030
       ** If CLE030 is off then this is an error                                               CLE030
       *                                                                                       CLE030
@@ -5114,6 +5128,7 @@ B001 C     ZERR          IFNE      *BLANKS
       *
      C     *IN83         IFEQ      '0'
      C     DDFCUSOK      ANDNE     'N'
+     C/COPY WNCPYSRC,LUC109_003
      C*****WSVMD         ANDGT     DTEXF                                                      241198
      C     WREAC         IFEQ      *ON                                                        241198
      C     WSVMD         ANDGT     NDEX                                                       241198

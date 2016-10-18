@@ -1,0 +1,89 @@
+/*********************************************************************/
+/*S*D****CLPBASE                                                         */               /*LUC109*/
+/*STD    CLPBASEBND                                                      */               /*LUC109*/
+/********************************************************************/
+/*                                                                  */
+/*      Midas   - Midas Interface                                   */
+/*                                                                  */
+/*******GLCM055*-*Validate*File*Copy*Definition**********************/              /*LUC109*/
+/*      (Copy of IBCM020 - CAR ICM003)                              */
+/*      XXC000055 - Midas HOR Validate File Copy Definition         */              /*LUC109*/
+/*                                                                  */
+/**(C)*COPYRIGHT*MKI*International*Ltd*1998                         */                    /*LUC109*/
+/* (c) Misys International Banking Systems Ltd. 2016                */                    /*LUC109*/
+/*                                                                  */
+/*       Last Amend No. LUC109          Date 26Aug16                */
+/*       Prev Amend No. MMI043 *CREATE  Date 01Dec98                */
+/*                      XXXXXX          Date DDMMMYY                */
+/*                                                                  */
+/*------------------------------------------------------------------*/
+/*                                                                  */
+/*       LUC109 - HO Reporting (Upgrade to FB Midas)                */
+/*       MMI043 - Bank of Italy Head Office Reporting               */
+/*                Validate OPNQRYF Selection Parameter details      */
+/*                                                                  */
+/********************************************************************/
+ 
+             PGM        PARM(&MIFL &TGFL &SLCT &ERCD)
+/**/
+/* Declare Variables */
+/**/
+             DCL        VAR(&MIFL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TGFL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SLCT) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&ERCD) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(9)
+ 
+/**/
+/* Retrieve Data Library */
+/**/
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PREFIX) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&JLIB) VALUE(&PREFIX *CAT 'INTFLIB')
+/* Comand that checks if file exists */
+             CHKOBJ     OBJ(*LIBL/&MIFL) OBJTYPE(*FILE)
+ 
+/* If file does not exist move 1 to the return parameter */
+             MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&ERCD) VALUE(1))
+             IF         COND(&ERCD *EQ 1) THEN(GOTO CMDLBL(ENDP))
+ 
+/**/
+/* Clear Target File */
+/**/
+             CLRPFM     FILE(&JLIB/&TGFL)
+             MONMSG     MSGID(CPF3142) EXEC(CHGVAR VAR(&ERCD) VALUE(5))
+/**/
+/* IF Target file not exist, Copy Midas File to Target File*/
+/**/
+             IF         COND(&ERCD *EQ 5) THEN(DO)
+             CPYF       FROMFILE(&MIFL) TOFILE(&JLIB/&TGFL) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             CLRPFM     FILE(&JLIB/&TGFL)
+             CHGVAR (&ERCD) VALUE(0)
+             ENDDO
+ 
+/* OPNQRYF comand to check selection criteria input  */
+             OPNQRYF    FILE((*LIBL/&MIFL)) OPTION(*INP) +
+                          FORMAT(*FILE) QRYSLT(&SLCT)
+ 
+/* If the selection criteria is incorrect move 2 to return code  */
+/* parameter. */
+             MONMSG     MSGID(CPF9899) EXEC(CHGVAR VAR(&ERCD) VALUE(2))
+             IF         COND(&ERCD *EQ 2) THEN(GOTO CMDLBL(ENDP))
+ 
+/* CPYF from Midas Filename to Target Filename       */
+ 
+             CPYFRMQRYF FROMOPNID(&MIFL) TOFILE(&JLIB/&TGFL) +
+                          MBROPT(*REPLACE) CRTFILE(*NO)
+ 
+/* If the copy file did not work move 3 to return code parameter */
+ 
+             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ERCD) VALUE(3))
+/**/
+/* Close File */
+/**/
+             CLOF       OPNID(&MIFL)
+ 
+ ENDP:       ENDPGM

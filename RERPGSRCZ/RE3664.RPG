@@ -12,9 +12,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039001           Date 12Aug16               *
-      *  Prev Amend No. MD039280           Date 27Jul16               *
-      *                 MD034990           Date 25May16               *      
+      *  Last Amend No. MD039280A          Date 18Oct16               *
+      *  Prev Amend No. MD039001           Date 12Aug16               *
+      *                 MD039280           Date 27Jul16               *
+      *                 MD034990           Date 25May16               *
       *                 MD032185           Date 02Jun15               *
       *                 AR676495A          Date 02Jun15               *
       *                 AR676495           Date 02Jun15               *
@@ -218,12 +219,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD039280A - Ensure that counterposting of tax to alternate   *
+      *              is done correctly.                               *
       *  MD039001 - Incorrect multilanguage narrative for Interest    *
       *             Capitalization. Review MD022635.                  *
       *  MD039280 - RE AC Int. Capitalised tax to alternate AC in     *
       *             another ccy, amount not converted.                *
       *  MD034990 - Postings not posted against account sequence of   *
-      *             the retail account.                               *      
+      *             the retail account.                               *
       *  MD032185 -  Job GLC0340 00003 (Midas GL Daily journal - post *
       *              1) failed with accounting imbalance of EUR 0.02  *
       *              from Retail Interest Adjustments                 *
@@ -15138,8 +15141,16 @@
       ** retail a/c currency only if Tax Ccy = A/c Ccy.                                       232543
       *                                                                                       CGL031
      C           TSTXCY    IFEQ BCCY                                                          232543
+     C           CACP      ANDEQ*BLANKS                                                    MD039280A
+     C           TSTXCY    OREQ CCY                                                        MD039280A
+     C           CACP      ANDNE*BLANKS                                                    MD039280A
       *                                                                                       232543
+     C           CACP      IFEQ *BLANKS                                                    MD039280A
+     C           BCCY      OREQ CCY                                                        MD039280A
      C                     Z-SUBWTAOC     WPSTA                                               232543
+     C                     ELSE                                                            MD039280A
+     C                     Z-SUBWPSTAA    WPSTA                                            MD039280A
+     C                     ENDIF                                                           MD039280A
      C                     MOVE BBICN     CNUM                                                CGL031
      C**********           Z-ADDTSWTAC    ACOD                                         CGL031 232543
      C                     Z-ADDWEWTA     ACOD                                                232543
@@ -15179,7 +15190,52 @@
       ** Output additional postings if Tax Ccy <> A/c Ccy.                                    232543
       *                                                                                       232543
      C           TSTXCY    IFNE BCCY                                                          232543
+     C           CACP      ANDEQ*BLANKS                                                    MD039280A
+     C           TSTXCY    ORNE CCY                                                        MD039280A
+     C           CACP      ANDNE*BLANKS                                                    MD039280A
+     C           WTAOC     ANDNE*ZERO                                                      MD039280A
+      *                                                                                    MD039280A
+     C                     Z-ADD*ZEROS    TMPWT2 150                                       MD039280A
+     C           CER048    IFEQ 'Y'                                                        MD039280A
+     C           WTAOC     ANDNE*ZEROS                                                     MD039280A
+     C           WKSTXO    ANDNE*ZEROS                                                     MD039280A
+     C           CACP      ANDNE*BLANKS                                                    MD039280A
+     C           BCCY      ANDNECCY                                                        MD039280A
+     C                     Z-ADDWKSTXO    WAMTCO                                           MD039280A
+     C                     EXSR CVTAMT                                                     MD039280A
+     C                     Z-ADDWKSTXO    TMPWT2                                           MD039280A
+     C                     Z-ADDWPSTAA    WKSTXO                                           MD039280A
+     C           WKSTXT    IFEQ *ZEROS                                                     MD039280A
+     C                     Z-ADDTSSTDT    WKSTXT                                           MD039280A
+     C                     ENDIF                                                           MD039280A
+     C           WKSTXB    IFEQ *ZEROS                                                     MD039280A
+     C                     ADD  TSSTDB    WKSTXB                                           MD039280A
+     C                     ENDIF                                                           MD039280A
+     C                     ENDIF                                                           MD039280A
+      *                                                                                    MD039280A
+     C           CACP      IFNE *BLANKS                                                    MD039280A
+     C                     MOVE BCCY      TMPCCY  3                                        MD039280A
+     C                     MOVE CCY       BCCY                                             MD039280A
+     C                     Z-ADDWTAOC     TMPWTA 130                                       MD039280A
+     C                     Z-ADDWPSTA     WTAOC                                            MD039280A
+     C           WTABC     IFEQ *ZEROS                                                     MD039280A
+     C                     ADD  TSTXSB    WTABC                                            MD039280A
+     C                     ENDIF                                                           MD039280A
+     C           WTATC     IFEQ *ZEROS                                                     MD039280A
+     C                     ADD  TSTXSC    WTATC                                            MD039280A
+     C                     ENDIF                                                           MD039280A
+     C                     ENDIF                                                           MD039280A
+      *                                                                                    MD039280A
      C                     EXSR SRFPOS                                                        CGL031
+      *                                                                                    MD039280A
+     C           CACP      IFNE *BLANKS                                                    MD039280A
+     C                     MOVE TMPCCY    BCCY                                             MD039280A
+     C                     Z-ADDTMPWTA    WTAOC                                            MD039280A
+     C           TMPWT2    IFNE *ZEROS                                                     MD039280A
+     C                     Z-ADDTMPWT2    WKSTXO                                           MD039280A
+     C                     ENDIF                                                           MD039280A
+     C                     ENDIF                                                           MD039280A
+      *                                                                                    MD039280A
      C                     ENDIF                                                              232543
       *                                                                                       232543
      C********** STRGRO    SUB  STRBRT    STRNET                                       CGL031 232543
@@ -15333,6 +15389,9 @@
      C                     ENDIF                                                              CER048
       *                                                                                       CER048
      C           TSTXCY    IFEQ BCCY                                                          CER048
+     C           CACP      ANDEQ*BLANKS                                                    MD039280A
+     C           TSTXCY    OREQ CCY                                                        MD039280A
+     C           CACP      ANDNE*BLANKS                                                    MD039280A
       *                                                                                       CER048
      C**********           MOVELWKSTXB    WPSTA                                     CER048 BUG23097A
      C                     Z-SUBWKSTXO    WPSTA                                            BUG23097A
@@ -15493,6 +15552,9 @@
      C                     ENDIF                                                              CER054
       *                                                                                       CER054
      C           TSTXCY    IFEQ BCCY                                                          CER054
+     C           CACP      ANDEQ*BLANKS                                                    MD039280A
+     C           TSTXCY    OREQ CCY                                                        MD039280A
+     C           CACP      ANDNE*BLANKS                                                    MD039280A
       *                                                                                       CER054
      C**********           Z-SUBWKTTXB    WPSTA                                      CER054 BUG25343
      C                     Z-SUBWKTTXO    WPSTA                                             BUG25343

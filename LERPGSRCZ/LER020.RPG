@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD027755           Date 26Jan15               *   
-      *  Prev Amend No. 226483             Date 29Oct14               *
+      *  Last Amend No. MD040535           Date 21Oct16               *
+      *  Prev Amend No. MD027755           Date 26Jan15               *
+      *                 226483             Date 29Oct14               *
       *                 MD020563           Date 21May13               *
       *                 AR806351           Date 24Apr13               *
       *                 AR1097176          Date 22Mar13               *
@@ -100,6 +101,8 @@
       *                                                                *
       *----------------------------------------------------------------*
       *                                                                *
+      *  MD040535 - If the MR is auto-settle Y but loan is auto-settle*
+      *             C then prevent output to LEACPDPD.                *
       *  MD027755 - Remove update of OAM,x due to fix MD024229 in     *
       *             LE0491 for expiring facilities.                   *
       *  226483 - Still a database error if facility reversed today   *
@@ -841,12 +844,25 @@
      C                     EXSR *PSSR                                                       AR567487
      C                     EXSR ZSFAU                                                       AR567487
      C                     ENDIF                                                            AR567487
+      *                                                                                     MD040535
+     C                     MOVE '0'       *IN30                                             MD040535
+     C           NEWCOB    IFEQ 'N'                                                         MD040535
+     C           LAUTO     ANDEQ'C'                                                         MD040535
+     C           AUTO      ANDNE'C'                                                         MD040535
+     C           AMTP      ANDNE'RV'                                                        MD040535
+     C           WTYPE     IFNE 'X'                                                         MD040535
+     C           WTYPE     ANDNE'Y'                                                         MD040535
+     C           WTYPE     ANDNE'Z'                                                         MD040535
+     C                     MOVE '1'       *IN30                                             MD040535
+     C                     ENDIF                                                            MD040535
+     C                     ENDIF                                                            MD040535
       *                                                                                       CLE134
      C           NEWCOB    IFEQ 'N'                                                           CLE134
      C********** AUTO      ANDEQ'C'                                                  CLE134 AR567487
      C           LAUTO     ANDEQ'C'                                                         AR567487
      C           KPRAM     ANDGE0                                                           AR806351
      C           KINTA     ANDGE0                                                           AR806351
+     C           *IN30     ANDEQ'0'                                                         MD040535
      C           AMTP      IFEQ 'MR'                                                          CLE134
      C           AMTP      OREQ 'RE'                                                          CLE134
      C           AMTP      OREQ 'MA'                                                          263413

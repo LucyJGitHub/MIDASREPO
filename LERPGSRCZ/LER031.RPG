@@ -17,8 +17,9 @@
       *                                                                *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                                *
-      *  Last Amend No. 226483             Date 14Oct13               *
-      *  Prev Amend No. MD027718           Date 17Sep14               *
+      *  Last Amend No. MD040535           Date 21Oct16               *
+      *  Prev Amend No. 226483             Date 14Oct13               *
+      *                 MD027718           Date 17Sep14               *
       *                 AR786878           Date 05Jun13               *
       *                 AR806351           Date 24Apr13               *
       *                 AR1076850          Date 25Jan13               *
@@ -96,6 +97,8 @@
       *                                                                *
       *----------------------------------------------------------------*
       *                                                                *
+      *  MD040535 - If the MR is auto-settle Y but loan is auto-settle*
+      *             C then output to HISACT.                          *
       *  226483 - Still a database error if facility reversed today   *
       *           Complete fix 171973 (for DBERRORs 017, 008 & 012)   *
       *         - Applied for MD030379.                               *
@@ -562,6 +565,30 @@
      C********** WFEIN     ANDEQ'N'                                                AR806351 MD027718
      C**********           MOVE 'Y'       WFAMU                                    AR720106 MD027718
      C**********           ENDIF                                                   AR720106 MD027718
+     C                     MOVE AUTO      WKAUTO  1                                         MD040535
+     C           NEWCOB    IFEQ 'N'                                                         MD040535
+     C           AK3       ANDEQ'R'                                                         MD040535
+     C           AK10      ANDEQ'A'                                                         MD040535
+     C           AUTO      ANDEQ'C'                                                         MD040535
+     C           EAMT      ANDGT0                                                           MD040535
+     C           WTYP      ANDNE'X'                                                         MD040535
+     C           WTYP      ANDNE'Y'                                                         MD040535
+     C           WTYP      ANDNE'Z'                                                         MD040535
+      *                                                                                     MD040535
+     C           KACTN5    SETLLLEACT5L2                                                    MD040535
+     C           KACTN5    READELEACT5L2                 40                                 MD040535
+     C           *IN40     DOWEQ'0'                                                         MD040535
+     C           PRAM      IFEQ EAMT                                                        MD040535
+     C           TAMT      ANDEQEAMT                                                        MD040535
+     C           AUTO      ANDNE'C'                                                         MD040535
+     C                     MOVE 'Y'       WFAMU                                             MD040535
+     C                     LEAVE                                                            MD040535
+     C                     ENDIF                                                            MD040535
+     C           KACTN5    READELEACT5L2                 40                                 MD040535
+     C                     ENDDO                                                            MD040535
+      *                                                                                     MD040535
+     C                     ENDIF                                                            MD040535
+     C                     MOVE WKAUTO    AUTO                                              MD040535
       *                                                                                       CLE134
       ** Do not process if FAMU = 'N'                                                         CLE134
       *                                                                                       CLE134

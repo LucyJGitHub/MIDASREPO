@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD023646           Date 03Sep14               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE075             Date 06Dec10               *
       *                 CLE139             Date 06Dec10               *
       *                 CLE073             Date 13May08               *
@@ -71,6 +72,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD023646 - LERC15 failed due to Lending Fee settling to a    *
+      *             closed account. Do not issue database error 10,   *
+      *             11 or 12 when account is not existing anymore.    *
+      *           - Patterned after fix 219358.                       *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference                                *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -988,6 +993,7 @@
      C                     ENDIF                                          CLE031
      C                     ENDIF                                          CLE031
       *                                                                   CLE031
+     C                     MOVE '0'       *IN30                                             MD023646
      C           FESTTL    IFEQ 1
      C           FESTTL    OREQ 2
      C           FESTTL    OREQ 7
@@ -1037,6 +1043,7 @@
      C                     END
       *
      C                     ELSE
+     C           @RTCD     IFNE '*NRF   '                                                   MD023646
      C                     MOVE *ALL'*'   @OURN
      C                     MOVE *ALL'*'   @OURT
      C           *LOCK     IN   LDA                         ************
@@ -1048,10 +1055,14 @@
      C                     EXSR E0000
      C                     OUT  LDA
      C                     EXSR *PSSR
+     C                     ELSE                                                             MD023646
+     C                     MOVE '1'       *IN30                                             MD023646
+     C                     ENDIF                                                            MD023646
      C                     END
       *
      C                     ELSE
       *
+     C                     MOVE '0'       *IN30                                             MD023646
      C           FESTTL    IFEQ 14                         Account
      C                     MOVE *BLANKS   @OURT            Number
      C                     MOVELFEOURS    ACNO   100
@@ -1097,6 +1108,8 @@
      C                     EXSR E0000
      C                     OUT  LDA
      C                     EXSR *PSSR
+     C                     ELSE                                                             MD023646
+     C                     MOVE '1'       *IN30                                             MD023646                        
      C                     END
      C                     END
       *
@@ -1143,6 +1156,8 @@
      C                     EXSR E0000
      C                     OUT  LDA
      C                     EXSR *PSSR
+     C                     ELSE                                                             MD023646
+     C                     MOVE '1'       *IN30                                             MD023646
      C                     END
      C                     END
       *
@@ -1183,6 +1198,7 @@
      C           FESTTL    OREQ 14
      C           FESTTL    OREQ 4
       *
+     C                     MOVE '0'       *IN30                                             MD023646
      C           @RTCD     IFEQ *BLANKS
      C                     MOVE ANAM      @OURN            account name
      C                     ELSE
@@ -1197,6 +1213,8 @@
      C                     EXSR E0000
      C                     OUT  LDA
      C                     EXSR *PSSR
+     C                     ELSE                                                             MD023646
+     C                     MOVE '1'       *IN30                                             MD023646
      C                     END                                                                142169
      C                     END
       *
@@ -1642,6 +1660,7 @@
      C                     SELEC                                          CLE005
      C           PTFI      WHEQ ' '                                       CLE005
      C                     WRITELER150D3                                  CLE005
+     C                     MOVE '0'       *IN30                                             MD023646
      C           PTFI      WHEQ 'P'                                       CLE005
      C           PTFI      OREQ 'S'                                                           CLE106
      C           PTFI      OREQ 'R'                                                           CLE106

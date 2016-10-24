@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. AR1029381          Date 26Sep12               *      
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 243070             Date 10Jul06               *
+      *  Prev Amend No. 243070             Date 10Jul06               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPK024             Date 13Feb06               *
+      *                 CPK024             Date 13Feb06               *
       *                 CSE070             Date 15Feb05               *
       *                 CSD025             Date 11Jan05               *
       *                 BUG3122            Date 17Jul04               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1029381 - Any change to Narrative by option "U" is not     *
+      *              updated to file. (Child: AR1029382)              *      
       *  243070 - Recompile over changed PF/SDVSECDPD                 *
       *  CPK024 - Packaging of MPLUS 1.2.1. No need to rename QQACCD  *
       *           as it was already removed by 7453 from SEDECDPD.    *
@@ -1214,6 +1217,11 @@
       ** Carry forward file data to valid file
      C                   Eval      SESRCD = @DDSRCD
      C                   Eval      SENARR = @DDNARR
+      *                                                                                    AR1029381
+      ** @DDNARR is always empty                                                           AR1029381
+      *                                                                                    AR1029381
+     C                   Eval      SESRCD = DDSRCD                                         AR1029381
+     C                   Eval      SENARR = DDNARR                                         AR1029381
       *
      C     DDACTN        IFEQ      'A'
       ** Carry forward number of trades value to valid file field

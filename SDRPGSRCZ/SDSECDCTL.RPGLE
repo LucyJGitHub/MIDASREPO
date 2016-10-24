@@ -26,12 +26,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. AR1029381          Date 26Sep12               *      
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 243070             Date 10Jul06               *
+      *  Prev Amend No. 243070             Date 10Jul06               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE070             Date 15Feb05               *
+      *                 CSE070             Date 15Feb05               *
       *                 BUG3122            Date 17Jul04               *
       *                 BUG2254            Date 06May04               *
       *                 CGL029             Date 01Sep03               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1029381 - Narrative is not updated. (Child: AR1029382)     *      
       *  243070 - Recompile over changed PF/SDVSECDPD                 *
       *  CSE070 - Repo Coupon Claims Report                           *
       *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
@@ -1142,6 +1144,12 @@
      C                   EVAL      V_SEREPA = APRprLocn
  
      C                   EVAL      TranStatus = 'S'
+      *                                                                                    AR1029381
+      ** Narrative is old, because it is not validated.                                    AR1029381
+      ** Carry forward file data to valid file                                             AR1029381
+      *                                                                                    AR1029381
+     C                   Eval      V_SESRCD = DDSRCD                                       AR1029381
+     C                   Eval      V_SENARR = DDNARR                                       AR1029381
  
       /COPY WNCPYSRC,SDSECDC017
      C                   ENDSR

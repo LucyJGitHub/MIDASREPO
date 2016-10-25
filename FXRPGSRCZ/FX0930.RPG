@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. MD040996           Date 10Oct16               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -38,6 +39,7 @@
       *                 CDL002             Date 06Mar97               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD040996 - Unconfirmed Nets problem searching by value date  *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
@@ -186,6 +188,22 @@
       **  Local data area for PGM-TO-PGM info
      ILCLDTA      DS
      I                                      101 111 CALPGM
+      *                                                                                     MD040996
+      **  Data Structure: Value Date                                                        MD040996
+      *                                                                                     MD040996
+     I            DS                                                                        MD040996
+     I                                        1   60DVALD1                                  MD040996
+     I                                        1   20DVALD2                                  MD040996
+     I                                        3   40DVALD3                                  MD040996
+     I                                        5   60DVALD4                                  MD040996
+     I            DS                                                                        MD040996
+     I                                        1   60DVALD5                                  MD040996
+     I                                        1   20DVALD6                                  MD040996
+     I                                        3   40DVALD7                                  MD040996
+     I                                        5   60DVALD8                                  MD040996
+     I            DS                                                                        MD040996
+     I                                        1   40VDYEAR                                  MD040996
+     I                                        3   40VDYR01                                  MD040996
       *
       *   Retrieve UsrId From Programme Status Data Structure
      IPSDS       SDS
@@ -382,13 +400,51 @@
      C           *INKL     ANDEQ'0'
       *  Check for change of request
      C                     MOVE ' '       WFNEWC  1
+      *                                                                                     MD040996
+     C                     Z-ADD*ZEROS    DVALD1                                            MD040996
+     C                     Z-ADD*ZEROS    DVALD5                                            MD040996
+     C                     MOVE PDVALD    DVALD1                                            MD040996
+      *                                                                                     MD040996
+     C           BJDFIN    IFEQ 'D'                                                         MD040996
+      *                                                                                     MD040996
+      ** Move DDMMYY to YYMMDD                                                              MD040996
+     C                     MOVE DVALD4    DVALD6                                            MD040996
+     C                     MOVE DVALD3    DVALD7                                            MD040996
+     C                     MOVE DVALD2    DVALD8                                            MD040996
+     C                     ELSE                                                             MD040996
+      *                                                                                     MD040996
+      ** Move MMDDYY to YYMMDD                                                              MD040996
+     C                     MOVE DVALD4    DVALD6                                            MD040996
+     C                     MOVE DVALD2    DVALD7                                            MD040996
+     C                     MOVE DVALD3    DVALD8                                            MD040996
+     C                     ENDIF                                                            MD040996
+      *                                                                                     MD040996
+     C           VDYY      IFEQ *ZEROS                                                      MD040996
+     C                     Z-ADD*ZEROS    VDYEAR                                            MD040996
+     C                     MOVELDVALD6    VDYR01                                            MD040996
+      *                                                                                     MD040996
+     C           WFVALY    IFGE 72                                                          MD040996
+     C                     MOVEL'19'      VDYEAR                                            MD040996
+     C                     ELSE                                                             MD040996
+     C                     MOVEL'20'      VDYEAR                                            MD040996
+     C                     ENDIF                                                            MD040996
+      *                                                                                     MD040996
+     C                     MOVELVDYEAR    VDYY                                              MD040996
+     C                     MOVELDVALD7    VDMM                                              MD040996
+     C                     MOVELDVALD8    VDDD                                              MD040996
+     C                     ENDIF                                                            MD040996
+      *                                                                                     MD040996
      C           PDCSSN    IFNE SAVCUS                     Customer change
-     C           PDVALD    ORNE WFVALD                     Val date change
-     C           PDVALD    ANDNE0
+     C********** PDVALD    ORNE WFVALD                     Val date change                  MD040996
+     C********** PDVALD    ANDNE0                                                           MD040996
+     C           DVALD5    ORNE WFVALD                                                      MD040996
+     C           DVALD5    ANDNE0                                                           MD040996
      C                     MOVE 'Y'       WFNEWC
      C                     END
-     C           PDVALD    IFNE WFVALD                     Val date change
-     C           PDVALD    ANDNE0
+     C********** PDVALD    IFNE WFVALD                     Val date change                  MD040996
+     C********** PDVALD    ANDNE0                                                           MD040996
+     C           DVALD5    IFNE WFVALD                                                      MD040996
+     C           DVALD5    ANDNE0                                                           MD040996
      C                     MOVE PDVALD    DSVD#1
      C           BJDFIN    IFEQ 'D'
       * Move DDMMYY to YYMMDD

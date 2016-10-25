@@ -16,8 +16,9 @@
      F*         to it in the various Migration Data Libraries         *
      F*         must be recompiled.                                   *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. MD035448           Date 01Dec15               *
+      *  Last Amend No. AR836982           Date 16May14               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 MD035448           Date 01Dec15               *
       *                 MD031299           Date 27Feb15               *
       *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 17Feb15               *
@@ -155,6 +156,11 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  AR836982 - REC62N failed dur to inseted account with back-   *
+      *             valued rate change date. To avoid REC62N failure, *
+      *             use HISD as key to search for rate change record. *
+      *             Applied fix 244181. (Child: AR836983)             *
+      *           - Applied for MD021848.                             *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD035448 - CER016 only applies to cal basis 0. Need to apply *
       *             in all cal basis.                                 *
@@ -495,6 +501,8 @@
      FRELINKL1IF  E           K        DISK
      FREHRCJ  IF  E           K        DISK
      FREHRDJ  IF  E           K        DISK
+     FREHRCJH IF  E           K        DISK                                                 AR836982
+     FREHRDJH IF  E           K        DISK                                                 AR836982
      FRECRG   IF  E           K        DISK
      F            RECRGAF                           KIGNORE
      F            RECRGZF                           KIGNORE
@@ -949,6 +957,15 @@
      I              BAL2                            CAL2                  067706
      I              BAL3                            CAL3                  067706
      I*
+     IREHRCJFH                                                                              AR836982
+     I              VALD                            RCVALD                                  AR836982
+     I              HISD                            RCHISD                                  AR836982
+     I              INTH                            INTHC                                   AR836982
+     I              RAT2                            CAT2                                    AR836982
+     I              RAT3                            CAT3                                    AR836982
+     I              BAL2                            CAL2                                    AR836982
+     I              BAL3                            CAL3                                    AR836982
+     I*                                                                                     AR836982
      IREHRDJF
      I*
      I** RENAME REHRDJF FORMAT FIELDS - REHRDJ FILE
@@ -956,6 +973,11 @@
      I              VALD                            RDVALD
      I              HISD                            RDHISD
      I              INTH                            INTHD
+     I*                                                                                     AR836982
+     IREHRDJFH                                                                              AR836982
+     I              VALD                            RDVALD                                  AR836982
+     I              HISD                            RDHISD                                  AR836982
+     I              INTH                            INTHD                                   AR836982
      I*
      IACCRACJF
      I*
@@ -3275,6 +3297,9 @@
      C*
      C** ERROR IN REHRCJ
      C*
+     C           *IN99     IFEQ '1'                                                         AR836982
+     C           DCKEY     CHAINREHRCJH              99                                     AR836982
+
      C           *IN99     IFEQ '1'                        - B3
      C           *LOCK     IN   LDA
      C                     Z-ADD12        DBASE            ***************
@@ -3284,6 +3309,7 @@
      C                     OUT  LDA
      C                     EXSR DBSR
      C                     END                             - E3
+     C                     ENDIF                                                            AR836982
      C*
      C** SETUP WORK CREDIT FIELDS WITH FIELDS READ PROCESSING
      C*
@@ -4133,6 +4159,8 @@
      C*
      C** ERROR IN REHRDJ
      C*
+     C           *IN99     IFEQ '1'                                                         AR836982
+     C           DCKEY     CHAINREHRDJH              99                                     AR836982
      C           *IN99     IFEQ '1'                        - B3
      C           *LOCK     IN   LDA
      C                     Z-ADD11        DBASE            ***************
@@ -4142,6 +4170,7 @@
      C                     OUT  LDA
      C                     EXSR DBSR
      C                     END                             - E3
+     C                     ENDIF                                                            AR836982
      C*
      C** SETUP WORK DEBIT FIELDS WITH FIELDS READ PROCESSING
      C*

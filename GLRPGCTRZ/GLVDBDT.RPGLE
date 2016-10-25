@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. AR836982           Date 16May14               *
+      *  Prev Amend No. MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *                 CGL029             Date 01Sep03               *
       *                 215208             Date 13Mar03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -26,6 +27,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR836982 - COB component REC62N failed due to inserted       *
+      *             accounts with back valued rate change date.       *
+      *             Applied 261452 to prevent rate change date later  *
+      *             than date account opened. (Child: AR836983)       *
+      *           - Applied for MD021848.                             *
       *  MD000091 - Event Codes Substitution                          *
       *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
       *  215208 - The change value date was not updated for retail    *
@@ -198,6 +204,15 @@
      C     SADRIS        ORNE      AMDRIS
      C     SADICT        ORNE      RIDICT
      C     SADCST        ORNE      RIDCST
+      *                                                                                     AR836982
+      ** Convert Date Account Open for validation                                           AR836982
+      *                                                                                     AR836982
+     C                   CallB     'ZDATE1'                                                 AR836982
+     C                   Parm      DDDACO        DateIn            6                        AR836982
+     C                   Parm                    ZDAYNO            5 0                      AR836982
+     C                   Parm                    BJDFIN                                     AR836982
+     C                   Parm                    ErrorFlag         1                        AR836982
+     C                   Z-ADD     ZDAYNO        ZDACO             5 0                      AR836982
       *
       ** IF DATE IS NOT ENTERED CHECK ACTION
       ** IF ACTION CODE IS INSERT, USE DDDACO FOR DDDRCD
@@ -251,6 +266,16 @@
      C                   MoveL     'DDDRCD'      FldNamXAr(Idx)
      C                   MoveL     'RE71215'     MsgIDXAr(Idx)
      C                   END
+      *                                                                                     AR836982
+      ** Cannot be lower than the Date account opened                                       AR836982
+      *                                                                                     AR836982
+     C     ZDAYNO        IFLT      ZDACO                                                    AR836982
+     C     DDACTN        ANDEQ     'I'                                                      AR836982
+     C                   Move      'N'           DDDRCDOk                                   AR836982
+     C                   Add       1             Idx                                        AR836982
+     C                   MoveL     'DDDRCD'      FldNamXAr(Idx)                             AR836982
+     C                   MoveL     'RE71214'     MsgIDXAr(Idx)                              AR836982
+     C                   ENDIF                                                              AR836982
       *
       ** CANNOT BE LOWER THAN LIMIT DATE
      C*****ZDAYNO        IFLT      WWVDRC                                                     215208

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD041420           Date 07Oct16               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 AR646775           Date 19Aug14               *
       *                 MD023887A          Date 27Feb14               *
@@ -72,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041420 - Todays Projected Closing balance incorrect        *
+      *             Ensure MEMOS, PRONO and OLPOS are updated         *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -240,6 +243,8 @@
      FFX0920DFCF  E                    WORKSTN
      F                                        S1RRN KSFILE FX0920S1
      FSDCWHTL1IF  E           K        DISK                                                   CSD015
+     FMEMOSL1 UF  E           K        DISK         KINFSR *PSSR                            MD041420
+     FSDNOSTL4IF  E           K        DISK         KINFSR *PSSR                            MD041420
       *
      F/COPY WNCPYSRC,FXH00156
      E                    CPY@    1   1 80
@@ -3070,6 +3075,11 @@
       *                                                                                     MD021333
      C                     WRITEQACMTLF                                                     MD021333
       *                                                                                     MD021333
+      ** Update MEMOS, PRONO, OLPOS                                                         MD041420
+      *                                                                                     MD041420
+     C                     EXSR UPDMEM                                                      MD041420
+     C                     EXSR UPDPRN                                                      MD041420
+     C                     EXSR UPDOLP                                                      MD041420
      C                     ENDIF                                                            MD021333
       *                                                                                     MD021333
      C                     ENDSR                                                            MD021333
@@ -3198,6 +3208,12 @@
      C                     ENDIF                                                            MD021333
       *                                                                                     MD021333
      C                     WRITEQACMTLG                                                     MD021333
+      *                                                                                     MD041420
+      ** Update MEMOS, PRONO, OLPOS                                                         MD041420
+      *                                                                                     MD041420
+     C                     EXSR UPDMEM                                                      MD041420
+     C                     EXSR UPDPRN                                                      MD041420
+     C                     EXSR UPDOLP                                                      MD041420
       *                                                                                     MD021333
      C           AMNET     READERSACMTLG            N    12                                 MD021333
       *                                                                                     MD021333
@@ -3369,6 +3385,115 @@
       *                                                                                     MD021333
      C                     ENDSR                                                            MD021333
       *                                                                                     MD021333
+      /EJECT                                                                                MD041420
+      *****************************************************************                     MD041420
+      * Subroutine  :  UPDMEM                                         *                     MD041420
+      * Function    :  Update MEMOS                                   *                     MD041420
+      *                                                               *                     MD041420
+      * Called by   :                                                 *                     MD041420
+      * Calls       :  None                                           *                     MD041420
+      *****************************************************************                     MD041420
+     C           UPDMEM    BEGSR                                                            MD041420
+     C           VUDT      IFLT BJDNWD                                                      MD041420
+     C           C#ATYP    ANDEQ'R'                                                         MD041420
+      * Access shadow balance                                                               MD041420
+     C           RSACNT    CHAINMEMOSL1              81                                     MD041420
+     C           *IN81     IFEQ *OFF                                                        MD041420
+     C           DORC      IFEQ 0                                                           MD041420
+     C                     ADD  MVAM      LDBLN                                             MD041420
+     C                     ADD  MVAM      CLBLN                                             MD041420
+     C                     ELSE                                                             MD041420
+     C                     SUB  MVAM      LDBLN                                             MD041420
+     C                     SUB  MVAM      CLBLN                                             MD041420
+     C                     ENDIF                                                            MD041420
+      *                                                                                     MD041420
+     C                     UPDATMEMOSMDF               82                                   MD041420
+     C           *IN82     IFEQ *ON                                                         MD041420
+     C                     MOVE 'FX0920'  DBKEY                                             MD041420
+     C                     MOVEL'MEMOS'   DBFILE                                            MD041420
+     C                     Z-ADD41        DBASE                                             MD041420
+     C                     EXSR *PSSR                                                       MD041420
+     C                     ENDIF                                                            MD041420
+      *                                                                                     MD041420
+     C                     ENDIF                                                            MD041420
+     C                     ENDIF                                                            MD041420
+      *                                                                                     MD041420
+     C                     ENDSR                                                            MD041420
+      /EJECT                                                                                MD041420
+      *****************************************************************                     MD041420
+      * Subroutine  :  UPDPRN                                         *                     MD041420
+      * Function    :  Update PRONO                                   *                     MD041420
+      *                                                               *                     MD041420
+      * Called by   :                                                 *                     MD041420
+      * Calls       :  None                                           *                     MD041420
+      *****************************************************************                     MD041420
+     C           UPDPRN    BEGSR                                                            MD041420
+      *                                                                                     MD041420
+     C                     MOVELACDE      ACDEC                                             MD041420
+     C           RSNOST    CHAINSDNOSTL4             81                                     MD041420
+      * If account is a nostro                                                              MD041420
+     C           *IN81     IFEQ *OFF                                                        MD041420
+     C                     MOVELA7CYCD    W0KEY#                                            MD041420
+     C                     MOVE A7NONB    W0KEY#                                            MD041420
+     C                     Z-ADDVUDT      W0VDAT                                            MD041420
+     C           DORC      IFEQ 0                                                           MD041420
+     C                     Z-ADDMVAM      W0AMT                                             MD041420
+     C                     ELSE                                                             MD041420
+     C                     Z-SUBMVAM      W0AMT                                             MD041420
+     C                     ENDIF                                                            MD041420
+      * Update projected nostro balances                                                    MD041420
+     C                     CALL 'AOPRONU0'                                                  MD041420
+     C                     PARM *BLANK    WRTCD   7                                         MD041420
+     C                     PARM           W0KEY#  5                                         MD041420
+     C                     PARM           W0VDAT  50                                        MD041420
+     C                     PARM           W0AMT  150                                        MD041420
+      *                                                                                     MD041420
+     C           WRTCD     IFEQ '*NRF'                                                      MD041420
+     C                     MOVE 'FX0920'  DBKEY                                             MD041420
+     C                     MOVEL'PRONO'   DBFILE                                            MD041420
+     C                     Z-ADD42        DBASE                                             MD041420
+     C                     EXSR *PSSR                                                       MD041420
+     C                     ENDIF                                                            MD041420
+     C                     ENDIF                                                            MD041420
+     C                     ENDSR                                                            MD041420
+      /EJECT                                                                                MD041420
+      *****************************************************************                     MD041420
+      * Subroutine  :  UPDOLP                                         *                     MD041420
+      * Function    :  Update OLPOS                                   *                     MD041420
+      *                                                               *                     MD041420
+      * Called by   :                                                 *                     MD041420
+      * Calls       :  None                                           *                     MD041420
+      *****************************************************************                     MD041420
+     C           UPDOLP    BEGSR                                                            MD041420
+      *                                                                                     MD041420
+     C                     MOVEL*BLANKS   WRK8    8                                         MD041420
+     C                     MOVEL*BLANKS   WRK6    6                                         MD041420
+     C                     MOVELBRCA      WRK6                                              MD041420
+     C                     MOVE CCYD      WRK6                                              MD041420
+     C                     MOVELWRK6      WRK8                                              MD041420
+     C                     MOVE '01'      WRK8                                              MD041420
+      *                                                                                     MD041420
+     C                     MOVEL*BLANKS   WRK1    1                                         MD041420
+     C           DORC      IFEQ 1                                                           MD041420
+     C                     MOVEL'I'       WRK1                                              MD041420
+     C                     ELSE                                                             MD041420
+     C                     MOVEL'O'       WRK1                                              MD041420
+     C                     ENDIF                                                            MD041420
+      *                                                                                     MD041420
+     C                     CALL 'AOOLPSU0'                                                  MD041420
+     C                     PARM *BLANKS   O#RTN   7                                         MD041420
+     C                     PARM WRK8      O#KOLP  8                                         MD041420
+     C                     PARM VUDT      O#VDAT  50                                        MD041420
+     C                     PARM MVAM      O#AMT  150                                        MD041420
+     C                     PARM WRK1      O#IO    1                                         MD041420
+      *                                                                                     MD041420
+     C           O#RTN     IFEQ '*NRF'                                                      MD041420
+     C                     MOVE 'FX0920'  DBKEY                                             MD041420
+     C                     MOVEL'OLPOS'   DBFILE                                            MD041420
+     C                     Z-ADD43        DBASE                                             MD041420
+     C                     EXSR *PSSR                                                       MD041420
+     C                     ENDIF                                                            MD041420
+     C                     ENDSR                                                            MD041420
       /EJECT                                                                                  CSD015
       *****************************************************************                       CSD015
      C           *INZSR    BEGSR

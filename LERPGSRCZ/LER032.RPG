@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD038236           Date 14Apr16               *
-      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *  Last Amend No. AR802544           Date 28Jul11               *
+      *  Prev Amend No. MD038236           Date 14Apr16               *
+      *                 CLE154             Date 06Aug12               *
       *                 259872             Date 02Feb15               *
       *                 MD027262           Date 02Feb15               *
       *                 CRE095             Date 25Apr14               *
@@ -146,6 +147,12 @@
      A*                                                               *
      A*---------------------------------------------------------------*
      A*                                                               *
+      *  AR802544 - LERC30A failed due to an invalid array index.     *
+      *             Applied core fix 171451 (Child: AR802545)         *
+      *             Applied fix for MDA-22967                         *
+      *  171451 - Field HAACTN remains 'RV' causing the index to the  *
+      *           array SQN to overflow and become 0, hence an inva-  *
+      *           lid array index.                                    *
       *  MD038236 - Utilisation increase and decrease not reversed    *
       *             when MFU is reversed. Do 204646 code removing the *
       *             sequence in SQN array for 'CA' facility only.     *
@@ -156,8 +163,8 @@
       *         - Set pointer to the last record processed in HISACT  *
       *           to ensure that correct drawn amount is reflected in *
       *           LER032P1.                                           *
-      *         - Applied for AR1042783.                              *     
-      *  MD027262 - RECI corrupted for Credit Agreement.              *     
+      *         - Applied for AR1042783.                              *
+      *  MD027262 - RECI corrupted for Credit Agreement.              *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
       *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
@@ -1324,7 +1331,7 @@
      C                     ENDIF                                          154584
      C                     ENDIF                                          154584
       *                                                                                     MD027262
-     C                     MOVELSVRECI    RECI                                              MD027262      
+     C                     MOVELSVRECI    RECI                                              MD027262
       *
      C           A6NBDP    COMP 1                    626061
      C   62      A6NBDP    COMP 3                      6263
@@ -2937,7 +2944,7 @@
      C           @UA       ADD  @UADJ     FAUNDR
       *                                                                                       CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
-     C           HAINOF    ANDEQ'Y'                                                           259872     
+     C           HAINOF    ANDEQ'Y'                                                           259872
      C           @OA       ADD  @OADJ     FAOFFS                                              CLE025
      C                     ENDIF                                                              CLE025
      C***********          MOVE FARCIN    WRCI                      154584159961
@@ -3010,7 +3017,7 @@
      C                     ENDIF                                                              CLE023
      C           @AMT      SUB  FADRAM    FAUNDR                          159212
      C           CLE025    IFEQ 'Y'                                                           CLE025
-     C           HAINOF    ANDEQ'Y'                                                           259872     
+     C           HAINOF    ANDEQ'Y'                                                           259872
      C                     ADD  FAOFFS    FAUNDR                                              CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       204450
@@ -3140,6 +3147,8 @@
      C** reversed for update purposes, as present amounts should          156585
      C** be taken out and rewritten.                                      156585
      C           HAACTN    IFEQ 'RV'                                      156585
+     C           FACNUM    IFNE WKCNUM                                                        171451
+     C           FAFCTY    ORNE WKFCTY                                                        171451
      C                     Z-ADDFACFAM    WCFAM                           156585
      C           CLE023    IFEQ 'Y'                                                           CLE023
      C                     Z-ADDFAAFAM    WAFAM                                               CLE023
@@ -3172,6 +3181,10 @@
      C***********          Z-ADDFAUNDR    WUNDR                    156585 184748
      C***********          READ FACHISAF                 84         156585158138
      C***********          READPHISACTF                  84         156585158138
+      *                                                                                       171451
+     C                     MOVE FAFCTY    WKFCTY  50                                          171451
+     C                     MOVE FACNUM    WKCNUM  60                                          171451
+     C                     ENDIF                                                              171451
      C                     ENDIF                                          156585
      C                     MOVELHAACTN    WACTN                           156585
       ** If facility changed zeroise adjustments so that this record
@@ -3926,7 +3939,7 @@
      C                     ENDIF                                                              CLE023
      C           @AMT      SUB  FADRAM    FAUNDR                          159212
      C           CLE025    IFEQ 'Y'                                                           CLE025
-     C           FAINOF    ANDEQ'Y'                                                           259872     
+     C           FAINOF    ANDEQ'Y'                                                           259872
      C                     ADD  FAOFFS    FAUNDR                                              CLE025
      C                     ENDIF                                                              CLE025
      C***********          Z-ADD*ZERO     FADRAM                    CLE005159212

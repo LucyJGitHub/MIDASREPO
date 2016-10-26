@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *  Last Amend No. AR1067728          Date 11Jul13               *
+      *  Prev Amend No. AR803849           Date 31Aug11               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -86,6 +88,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1067728 - Wrong value of CEXP and CAMD in FCLTYFN. Reverse *
+      *              part fix of AR803849 that will populate the value*
+      *              of K#KY01 fields with HISACT value. Correct faci-*
+      *              lity history details checking against K#KY01     *
+      *              fields. Save exchange rate of tranche before     *
+      *              processing CA and replace the used save exchange *
+      *              rate fields from SRACTN in SRCAAV.               *
+      *              (Child: AR1067729)                               *
+      *            - Applied for MD-14348                             *
+      *  AR803849 - Facility Decrease is encountered with other       *
+      *             facilities when a decrease in utilisation was     *
+      *             placed. Initialize action code (HAACTN) such that *
+      *             when new facility is read correct action code will*
+      *             be used. Also applied fix 261519.(Child: AR803850)*
       *  CLE148 - Alpha Loan Reference                                *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -759,6 +775,7 @@
      C                     MOVE CNUM      K1CNUM
      C                     MOVE FACT      K1FACT
      C                     MOVE FCNO      K1FCNO
+     C                     MOVE *BLANKS   HAACTN                                            AR803849
       *
       **  Retrieve the facility details used by manual utilisation
       *
@@ -883,6 +900,12 @@
      C                     EXSR SRAVAI
       *
      C           TRCA      IFEQ 'TR'
+      *                                                                                    AR1067728
+      ** Save exchange rate between Tranche and Credit Agreement                           AR1067728
+      *                                                                                    AR1067728
+     C                     MOVE CAXR      WCAXR  138                                       AR1067728
+     C                     MOVE CMDI      WCMDI   1                                        AR1067728
+      *                                                                                    AR1067728
      C           HAACTN    IFEQ 'UD'
      C           HAACTN    OREQ 'UE'
       *                                                                                       CLE041
@@ -902,9 +925,9 @@
      C                     MOVE CACY      WCACY   3                       140956
      C                     MOVELK1FACT    K1FCTY                          140956
      C                     MOVE K1FCNO    K1FCTY                          140956
-      * Save exchange rate between Tranche facility and Credit Agreement  189904
-     C                     MOVE CAXR      WCAXR  138       Credit Ag. rate189904
-     C                     MOVE CMDI      WCMDI   1        Mult/Divide ind189904
+      **Save*exchange*rate*between*Tranche*facility*and*Credit Agreement            189904 AR1067728
+     C**********           MOVE CAXR      WCAXR  138       Credit Ag. rate          189904 AR1067728
+     C**********           MOVE CMDI      WCMDI   1        Mult/Divide ind          189904 AR1067728
       *                                                                   CLE014
       ** Save the revolving credit indicator of the tranche               CLE014
       *                                                                   CLE014
@@ -1624,13 +1647,21 @@
      C                     ADD  4         DP                              189904
      C********** WCMDI     IFEQ 'D'                                                    189904 203069
      C********** WCAXR     DIV  POWR,DP   FCAXR  159H                                  189904 203069
-     C           WSCMDI    IFEQ 'D'                                                           203069
-     C           WSCAXR    DIV  POWR,DP   FCAXR  159H                                         203069
-     C           1         DIV  FCAXR     FCAXR                           189904
-     C                     ELSE                                           189904
+     C********** WSCMDI    IFEQ 'D'                                                 203069 AR1067728
+     C********** WSCAXR    DIV  POWR,DP   FCAXR  159H                               203069 AR1067728
+     C********** 1         DIV  FCAXR     FCAXR                                     189904 AR1067728
+     C**********           ELSE                                                     189904 AR1067728
      C********** WCAXR     MULT POWR,DP   FCAXR     H                                  189904 203069
-     C           WSCAXR    MULT POWR,DP   FCAXR     H                                         203069
-     C                     ENDIF                                          189904
+     C********** WSCAXR    MULT POWR,DP   FCAXR     H                               203069 AR1067728
+     C**********           ENDIF                                                    189904 AR1067728
+      *                                                                                    AR1067728
+     C           WCMDI     IFEQ 'D'                                                        AR1067728
+     C           WCAXR     DIV  POWR,DP   FCAXR  159H                                      AR1067728
+     C           1         DIV  FCAXR     FCAXR                                            AR1067728
+     C                     ELSE                                                            AR1067728
+     C           WCAXR     MULT POWR,DP   FCAXR     H                                      AR1067728
+     C                     ENDIF                                                           AR1067728
+      *                                                                                    AR1067728
      C********** CONAMT    MULT FCAXR     CONCAA 130                                   189904 203069
      C           CONAMT    MULT FCAXR     CONCAA 130H                                         203069
       *                                                                                       CLE023
@@ -1773,12 +1804,20 @@
       *
      C           K#KY05    SETGTHISUPD
      C                     READPHISUPD                   60
+      *                                                                                    AR1067728
+     C                     MOVELFAFCTY    WFACT   30                                       AR1067728
+     C                     MOVE FAFCTY    WFCNO   20                                       AR1067728
       *
       ** If BOF or different facility reference, check facility file
       *
      C           *IN60     IFEQ '1'
      C           K1CNUM    ORNE FACNUM
-     C           K1FACT    ORNE FAFCTY
+     C********** K1FACT    ORNE FAFCTY                                                     AR1067728
+     C           K1CNUM    OREQ FACNUM                                                     AR1067728
+     C           K1FACT    ANDNEWFACT                                                      AR1067728
+     C           K1CNUM    OREQ FACNUM                                                     AR1067728
+     C           K1FACT    ANDEQWFACT                                                      AR1067728
+     C           K1FCNO    ANDNEWFCNO                                                      AR1067728
      C           RVCR      IFEQ 'N'
      C           CLE014    ANDEQ'N'                                       CLE014
      C           RVCR      OREQ 'N'                                       CLE014

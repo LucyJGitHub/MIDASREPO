@@ -14,10 +14,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. MD042176           Date 26Oct16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256564             Date 17Sep08               *
-      *  Prev Amend No. BUG16696           Date 05Mar08               *
+      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 BUG16696           Date 05Mar08               *
       *                 249076             Date 03Aug07               *
       *                 243070             Date 10Jul06               *
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042176 - Unable to use ? in selecting a specific customer  *
+      *             in the Securities Client Details maintenance    	 *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  BUG16696 - Missing parameter when calling SDSECDBRW on       *
       *             RDNBRW subroutine                                 *
@@ -66,8 +69,8 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -79,206 +82,206 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
      D CrSdFilFmt    E DS                  EXTNAME(SDSECSPD)
      D                                     PREFIX(C_)
       * Current Securities Clients Detail in File Format
- 
- 
+
+
      D CurSecDets    E DS                  EXTNAME(SDSECDPD)
      D                                     PREFIX(@)
       * Current Securities Clients Detail in Screen Format
- 
- 
+
+
      D NwSdFilFmt    E DS                  EXTNAME(SDVSECDPD)
       * New Securities Clients Detail in File Format
- 
- 
+
+
      D PrvSecDets    E DS                  EXTNAME(SDSECDPD)
      D                                     PREFIX(@P)
       * Previous Securities Clients Detail in Scrn Format
- 
- 
+
+
      D OKSecDets     E DS                  EXTNAME(SDESECDPD)
       * Error indicators
- 
+
      D OKSecDets2    E DS                  EXTNAME(SDESECD2PD)                                CSE039
       * Error indicators                                                                      CSE039
                                                                                               CSE039
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access progrmas, long data structure
- 
+
      D DepotSn         S             10    DIM(10)
       ** Depot shortnames array
- 
- 
- 
+
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Customer Work Field
      D WKCUST          S                   LIKE(DDCUSN)
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** Customer Number
      D DDCUSN          S              6A
- 
+
       ** Action Code
      D DDACTN          S              1A
- 
+
       ** Customer Shortname
      D DDCSSN          S             10A
- 
+
       ** Customer Number / Shortname
      D DDCSST          S             10A
- 
+
       ** Customer Report Town
      D DDCRTN          S             10A
- 
+
       ** Customer Report Name
      D DDCRNM          S             20A
- 
+
       ** Build subfile
      D @BDSFL          S              1A
- 
+
       ** Customer selected
      D @CUSEL          S              6A
- 
+
       ** Whether position/select fields have been changed during key browse
      D KPosSelChg      S              1A
- 
+
       ** condition availability of F10 (delete)
      D @EINKJ          S              1A
                                                                                               CSE022
       ** condition availability of F11 (Depot References)                                     CSE022
      D @EINKK          S              1A                                                      CSE022
- 
+
       ** error message reference
      D @ERRMS          S              7A
       ** error message data                                                                   249076
      D @data           S             45                                                       249076
- 
+
       ** F3 Exit
      D @INKC           S              1A
- 
+
       ** F7 Roll backwards
      D @INKG           S              1A
- 
+
       ** F8 Roll forwards
      D @INKH           S              1A
- 
+
       ** F9 Insert
      D @INKI           S              1A
- 
+
       ** F10 Delete
      D @INKJ           S              1A
                                                                                               CSE022
       ** F11 Depot Reference                                                                  CSE022
      D @INKK           S              1A                                                      CSE022
- 
+
       ** F12 Cancel
      D @INKL           S              1A
- 
+
       ** Option selected
      D @OPSEL          S              1A
- 
+
       ** Read backwards in roll
      D @RDBCK          S              1A
- 
+
       ** Read forwards in roll
      D @RDFWD          S              1A
- 
+
       ** Read next browse
      D @RDNB           S              1A
- 
+
       ** Read subfile
      D @RDSFL          S              1A
- 
+
       **
      D @SCRED          S              6A
- 
+
       ** Screen / function
      D @SCRN           S              1A
- 
+
       ** Control return to key screen after F7/F8 rolls
      D INSERTENQ       S              1A
- 
+
       ** Read next browse in key screen query browse subfile
      D K@RDNB          S              1A
- 
+
       ** Query check in key screen customer number field
      D KEYQUERY        S              1A
- 
+
       ** Mode of operation
      D MODEOFOP        S              6A
- 
+
       ** Called from Customer Details or Midas menu
      D SDCUSDCALL      S              1A
- 
+
       ** Called from Customer Details or Midas menu
      D BrwQuery        S              1A
- 
+
       ** Index of errors
      D Idx             S              3P 0
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
                                                                                               CSE022
@@ -297,7 +300,7 @@
       ** Return code for SDC100001                                                            CSE022
      D PRTCD           S             10A                                                      CSE022
      D PModeOfOp       S              3A   INZ('SIN')                                         CSE022
- 
+
       ** Work variables for CSE022                                                            CSE022
      D WkCnt           S              3P 0                                                    CSE022
                                                                                               CSE022
@@ -305,14 +308,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDSECDS001
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -428,71 +431,71 @@
       *
       *
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDSECDS009
- 
+
       /EJECT
       *****************************************************************
       * SCRN@K - PROCESS SCREEN: KEY DETAILS
       *****************************************************************
      C     SCRN@K        BEGSR
- 
+
       * Set Customer number if there are no errors
      C     Idx           IFEQ      0
- 
+
       * Set key customer field with query processing work field value
       * (blank in normal processing, customer ref after query processing)
      C                   MOVEL     *BLANKS       DDCSST
      C                   MOVEL     WKCUST        DDCSST
- 
+
      C                   ENDIF
- 
+
       * Set F7/F8 called from Insert mode flag
      C                   MOVE      'Y'           INSERTENQ
- 
- 
+
+
       ** WRITE/READ DISPLAY SCREEN - Key Details
- 
+
      C                   CALLB     'SDSECDKDP'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUT PARAMETERS :
       * Return code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       ** Customer Number / Shortname
      C                   PARM                    DDCSST
- 
+
       ** Security Details in screen format
      C                   PARM                    CurSecDets
- 
+
       ** Security Details OK indicators
      C                   PARM                    OKSecDets
- 
+
       * ERRORS
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       * OUTPUT PARAMETERS :
- 
+
       * Function Keys
      C                   PARM      '0'           @INKC
      C                   PARM      '0'           @INKG
      C                   PARM      '0'           @INKH
      C                   PARM      '0'           @INKL
- 
- 
+
+
       * Reset customer number work field for query processing
      C                   Eval      WKCUST = *BLANKS
- 
+
       * Reset Errors
- 
+
      C                   MOVE      *ALL'Y'       OKSecDets
      C                   MOVEL     *BLANK        FldNameArr
      C                   MOVEL     *BLANK        MsgIdArr
      C                   MOVEL     *BLANK        MsgDtaArr
- 
+
       * F3 - End Program
      C     @INKC         CASEQ     '1'           ENDP
       *
@@ -517,9 +520,9 @@
       * VAL@K  - VALIDATE INPUT TO KEY SCREEN
       *****************************************************************
      C     VAL@K         BEGSR
- 
+
       * If query on key screen, provide customer subfile for selection
- 
+
      C                   MOVEL     DDCSST        KEYQuery
      C                   IF        KEYQuery = '?'
      C                   Eval      @SCRN = 'C'
@@ -527,13 +530,13 @@
      C                   Eval      DDCUSN=*BLANKS
      C                   GOTO      EndVal@K
      C                   ENDIF
- 
+
       * Retrieve Securities Clients Detail
       * Screen field may be shortname or customer number
      C                   MOVEL     DDCSST        DDCUSN
- 
+
      C                   EXSR      RTVCUS
- 
+
       * If primary fields are NOT OK
       * Re-output screen with error messages on it
       *
@@ -590,50 +593,50 @@
       * SCRN@P - PROCESS DETAIL SCREEN
       *****************************************************************
      C     SCRN@P        BEGSR
- 
+
       * Set function key status on screen
- 
+
      C                   EXSR      SFKEYS
      C                   Eval      @DDACTN = DDACTN
      C                   Eval      @DDCUSN = DDCUSN
- 
- 
+
+
       ** WRITE/READ DISPLAY SCREEN - Primary Details
- 
+
      C                   CALLB     'SDSECDDSP'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUT PARAMETERS :
- 
+
       * Return code
      C                   PARM      *BLANKS       RetCodeIn
- 
+
       ** Security Details in screen format
      C                   PARM                    CurSecDets
- 
+
       ** Security Details OK indicators
      C                   PARM                    OKSecDets
- 
+
       ** Customer Shortname
      C                   PARM                    DDCSSN
- 
+
       ** Customer Report Name
      C                   PARM                    DDCRNM
- 
+
       ** Customer Report Town
      C                   PARM                    DDCRTN
- 
+
       ** Depot Shortnames Array
      C                   PARM                    DepotSn
- 
+
       ** Called from Customer Details Module
      C                   PARM                    SDCUSDcall
- 
- 
+
+
       * ERRORS
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       *                                                                         CAP014
       * ENABLED KEY & DETAIL FIELDS                                             CAP014
       *                                                                         CAP014
@@ -645,11 +648,11 @@
      C                   PARM                    @EINKJ
                                                                                               CSE022
       ** F11 - Depot References                                                               CSE022
- 
+
      C                   PARM                    @EINKK                                       CSE022
- 
+
       * OUTPUT PARAMETERS :
- 
+
       * Function Keys
      C                   PARM      '0'           @INKC
      C                   PARM      '0'           @INKG
@@ -657,14 +660,14 @@
      C                   PARM      '0'           @INKJ
      C                   PARM      '0'           @INKK                                        CSE022
      C                   PARM      '0'           @INKL
- 
+
       * Reset Errors
- 
+
      C                   MOVE      *ALL'Y'       OKSecDets
      C                   MOVEL     *BLANK        FldNameArr
      C                   MOVEL     *BLANK        MsgIdArr
      C                   MOVEL     *BLANK        MsgDtaArr
- 
+
       ** If CSE022 is not installed                                                           CSE022
                                                                                               CSE022
      C                   IF        CSE022 = 'N'                                               CSE022
@@ -679,7 +682,7 @@
      C                   EVAL      @DDNDR0 = @DDDRF0                                          CSE022
                                                                                               CSE022
      C                   ENDIF                                                                CSE022
- 
+
       *
       * F3 - End Program
      C     @INKC         CASEQ     '1'           ENDP
@@ -699,10 +702,10 @@
       *
       * Validate Input to Details Screen
      C                   CAS                     VAL@P
- 
+
      C                   ENDCS
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -740,18 +743,18 @@
       *
       *----------------------------------------------------------------
       * IF ENQUIRE
- 
+
      C     DDACTN        IFEQ      'E'
      C     CSE039        ANDEQ     'N'                                                        CSE039
      C     CSE041        ANDEQ     'N'                                                        CSE041
      C     CSE042        ANDEQ     'N'                                                        CSE042
- 
+
      C     @RDNB         IFEQ      'Y'
      C                   MOVE      'R'           @SCRN
      C                   ELSE
      C                   EXSR      INITIAL
      C                   ENDIF
- 
+
      C                   GOTO      EndVAL@P
      C                   ENDIF
       *
@@ -760,44 +763,44 @@
       *
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'
- 
+
       * Validate Securities Clients Detail
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     @DDDRF1       @DDNDR1                                      CSE022
      C                   MOVEL     @DDDRF2       @DDNDR2                                      CSE022
      C                   MOVEL     CurSecDets    PrvSecDets
- 
+
      C                   CALLB     'SDSECDVAL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS
- 
+
       * Response mode
      C                   PARM      *BLANK        RespMode
- 
+
       ** Security Details
      C                   PARM                    CurSecDets
                                                                                               CSE039
       ** Automatic Settlement of Trades                                                       CSE039
      C                   PARM                    CSE039                                       CSE039
- 
+
       * OUTPUTS
- 
+
       ** Security Details OK inds
      C                   PARM                    OKSecDets
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Valid Securities Clients details layout (DS) from/to caller
      C                   PARM                    NwSdFilFmt
- 
+
       *
       * If errors returned
       *
@@ -817,7 +820,7 @@
       *
      C                   MOVE      *ALL'Y'       OKSecDets
      C                   ENDIF
- 
+
      C                   MOVE      'U'           @SCRN
       *                                                                                       CSE039
       * Display second screen if feature is on                                                CSE039
@@ -832,7 +835,7 @@
      C                   MOVE      'F'           @SCRN                                        CSE039
      C                   ENDIF                                                                CSE039
      C                   ENDIF                                                                CSE039
- 
+
      C     EndVAL@P      ENDSR
       *****************************************************************
       /EJECT                                                                                  CSE039
@@ -1049,7 +1052,7 @@
      C                   CALLB     'SDSECDRED'
       *
       * INPUT PARAMETERS :
- 
+
       * Return Code
      C                   PARM      *BLANKS       RetCodeIn
       * Action Code
@@ -1060,46 +1063,46 @@
      C                   PARM                    @RDFWD
       * Read Backwards
      C                   PARM                    @RDBCK
- 
+
       * OUTPUT PARAMETERS :
- 
+
       * Error message
      C                   PARM      *BLANK        @ERRMS
      C                   PARM      *BLANK        @data                                        249076
       * Securities client read
      C                   PARM      *BLANK        @SCRED
       *
- 
+
       * If error message returned from read, send it to detail screen
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   EXSR      SNDM@P
      C                   GOTO      EROLL
      C                   END
- 
+
       * If customer read
- 
+
      C     @SCRED        IFNE      *BLANK
- 
+
       * Retrieve customer details
- 
+
      C                   MOVEL     @SCRED        DDCUSN
- 
+
       * CSST field is used to test for blank/zeros customer in RTV module
      C                   MOVEL     DDCUSN        DDCSST
- 
+
      C                   EXSR      RTVCUS
- 
+
       * Return to previous screen if there is an error on customer/action
      C     DDCUSNOK      IFEQ      'N'
      C     DDACTNOK      OREQ      'N'
- 
+
      C     INSERTENQ     IFEQ      'Y'
      C                   MOVEL     'K'           @SCRN
      C                   ELSE
      C                   MOVEL     'B'           @SCRN
      C                   ENDIF
- 
+
      C                   GOTO      EROLL
      C                   ENDIF
       *
@@ -1129,9 +1132,9 @@
       *
       * Build Browse subfile
      C                   CALLB     'SDSECDBRW'
- 
+
       * INPUT PARAMETERS :
- 
+
       * Return Code
      C                   PARM      *BLANKS       RetCodeIn
       * Action Code
@@ -1159,8 +1162,8 @@
      C                   PARM      '0'           @INKC
      C                   PARM      '0'           @INKI
       *
- 
- 
+
+
       * If F3 taken in browse, End Program
      C     @INKC         IFEQ      '1'
      C                   EXSR      ENDP
@@ -1196,9 +1199,9 @@
       *
       * Read Next Subfile Record
      C                   CALLB     'SDSECDBRW'
- 
+
       * INPUT PARAMETERS :
- 
+
       * Return Code
      C                   PARM      *BLANKS       RetCodeIn
       * Action Code
@@ -1234,12 +1237,12 @@
       *
      C                   MOVEL     @OPSEL        DDACTN
      C                   MOVEL     @CUSEL        DDCUSN
- 
+
       * CSST field is used to test for blank/zeros customer in RTV module
      C                   MOVEL     DDCUSN        DDCSST
- 
+
      C                   EXSR      RTVCUS
- 
+
       * Stay on browse screen if there is an error on customer number
       *
      C     DDCUSNOK      IFEQ      'N'
@@ -1268,15 +1271,15 @@
       * KBLDBRW - BUILD BROWSE SUBFILE
       *****************************************************************
      C     KBLDBRW       BEGSR
- 
+
       * Reset Read next browse subfile record
      C                   MOVEL     *BLANK        K@RDNB
- 
+
       * Build Browse subfile
      C                   CALLB     'SDSECDKBR'
- 
+
       * INPUT PARAMETERS :
- 
+
       * Return Code
      C                   PARM      *BLANKS       RetCodeIn
       * Action Code
@@ -1304,8 +1307,8 @@
      C                   PARM      *BLANKS       KPosSelChg
       * Command Keys
      C                   PARM      '0'           @INKC
- 
- 
+
+
       * If F3 taken in browse, return to key screen
      C     @INKC         IFEQ      '1'
      C                   Eval      @SCRN = 'K'
@@ -1335,9 +1338,9 @@
       * Read Next Subfile Record
       *
      C                   CALLB     'SDSECDKBR'
- 
+
       * INPUT PARAMETERS :
- 
+
       * Return Code
      C                   PARM      *BLANKS       RetCodeIn
       * Action Code
@@ -1356,6 +1359,7 @@
       * OUTPUT PARAMETERS :
       * Error Message
      C                   PARM      *BLANKS       @ERRMS
+     C                   PARM      *BLANKS       @data                                      MD042176
       * Option Selected
      C                   PARM      *BLANKS       @OPSEL
       * Customer Reference selected
@@ -1375,17 +1379,17 @@
      C                   Eval      DDCUSN=*BLANKS
      C                   Eval      @SCRN = 'K'
      C                   GOTO      EndKRDNBRW
- 
+
      C                   ELSE
- 
+
       * Rebuild browse subfile after Enter or position/select entry
      C                   IF        @OPSEL = *BLANKS
      C                   Eval      @SCRN = 'C'
      C                   GOTO      EndKRDNBRW
      C                   ENDIF
- 
+
      C                   IF        @OPSEL <> '1'
- 
+
       * Err: 'Value entered for field is not valid, enter a '1' to select'
      C                   Eval      @ERRMS = 'USR5001'
      C                   EXSR      SNDM@K
@@ -1400,11 +1404,11 @@
      C                   MOVEL     @CUSEL        WKCUST
      C                   MOVEL     *BLANKS       DDCSST
      C                   MOVEL     DDCUSN        DDCSSN
- 
+
      C                   EXSR      RTVCUS
- 
+
       * Return to key screen if there is an error on customer number
- 
+
      C     DDCUSNOK      IFEQ      'N'
      C     DDACTNOK      OREQ      'N'
      C                   MOVEL     'K'           @SCRN
@@ -1412,9 +1416,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      'K'           @SCRN
- 
+
      C     EndKRDNBRW    ENDSR
       *****************************************************************
       /EJECT
@@ -1466,16 +1470,16 @@
       *
       ** Customer Shortname
      C                   PARM                    DDCSSN
- 
+
       ** Customer Report Name
      C                   PARM                    DDCRNM
- 
+
       ** Customer Report Town
      C                   PARM                    DDCRTN
- 
+
       ** Depot Shortnames Array
      C                   PARM                    DepotSn
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -1484,8 +1488,8 @@
       * Array index (3P0) from/to caller
      C                   PARM      0             Idx
       *
- 
- 
+
+
      C     EndRTVCUS     ENDSR
       *****************************************************************
       /EJECT
@@ -1506,12 +1510,12 @@
       * Securities Clients Details File Format
      C                   PARM                    CrSdFilFmt
       *
- 
+
       * Output Parameters
- 
+
       * Securities Clients Details Screen Format
      C                   PARM                    CurSecDets
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1520,11 +1524,11 @@
       * SFKEYS - SET FUNCTION KEY STATUS ON SCREEN
       *****************************************************************
      C     SFKEYS        BEGSR
- 
+
       * Enable/disable function keys
- 
+
       * KJ = Command Key F10 = CONFIRM DELETE
- 
+
      C     DDACTN        IFEQ      'D'
      C                   MOVEL     'Y'           @EINKJ
      C                   ELSE
@@ -1542,7 +1546,7 @@
      C                   MOVEL     'N'           @EINKK                                       CSE022
                                                                                               CSE022
      C                   ENDIF                                                                CSE022
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1633,36 +1637,36 @@
       * UPDATS - UPDATES
       *****************************************************************
      C     UPDATS        BEGSR
- 
- 
+
+
       * Update valid customer: customer reference
      C                   MOVEL     DDCUSN        SECUST
      C                   MOVEL     DDACTN        SETYLC
- 
+
       ** Carry forward non-validated screen field values to valid file
      C                   Eval      SESRCD = @DDSRCD
      C                   Eval      SENARR = @DDNARR
- 
+
      C     DDACTN        IFEQ      'A'
- 
+
       ** Carry forward number of trades value to valid file field
      C                   Eval      SENTFC = C_BFNTFC
      C                   Eval      SETMES = C_BFTMST
- 
+
      C                   ELSE
- 
+
      C     DDACTN        IFEQ      'I'
- 
+
       ** Initialise number of trades field for Insert
      C                   Eval      SENTFC = 0
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANK        @RTCD
- 
+
       * Securities Clients Details Updates
- 
+
      C                   CALLB     'SDSECDUPD'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    NwSdFilFmt
@@ -1800,7 +1804,7 @@
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Parameters
      C     *ENTRY        PLIST
       * INPUTS
@@ -1928,10 +1932,10 @@
      C                   MOVEL     'SECD'        @CALLP            4
      C                   ENDIF
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDSECDS010
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -1,0 +1,313 @@
+/********************************************************************/
+/*S*D****CLPBASE*****************************************************/              /*LUC109*/
+/*STD    CLPBASEBND                                                 */              /*LUC109*/
+/********************************************************************/
+/*                                                                  */
+/*      Midas   - Midas Interface                                   */
+/*                                                                  */
+/*******GLCM056*-**MAIN*HOR*COMPONENT********************************/              /*LUC109*/
+/*      (Copy of IBCM021 - CAR ICM003)                              */
+/*      XXC000056 - Midas HOR Main Processing                       */              /*LUC109*/
+/*                                                                  */
+/**(C)*COPYRIGHT*MKI*International*Ltd*1998                         */              /*LUC109*/
+/* (C) Copyright Misys International Banking Systems Ltd, 2016      */              /*LUC109*/
+/*                                                                  */
+/*       Last Amend No. LUC109             Date 14Sep16             */
+/*       Prev Amend No. LUC013             Date 20May08             */
+/*                      MUI009             Date 01Mar04             */
+/*                      205749             Date 21May02             */
+/*                      159964             Date 22Aug99             */
+/*                      MMI043             Date 27Apr99             */
+/*                      MMI043 *CREATE     Date 01Dec98             */
+/*                                                                  */
+/*------------------------------------------------------------------*/
+/*                                                                  */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                 */
+/*       LUC013 - Head Office Reporting Upgrade to MidasPlus.       */
+/*       MUI009 - R4.1 Upgrade: get rid of data queue INTQ.         */
+/*       205749 - Dropping orphan records in HOR window extensions  */
+/*       159964 - PGM/GLC032A cannot allocate LF/SDCUSTL0 due to    */
+/*                SCC0406.                                          */
+/*              - Seton job switches U7/U8 for error processing.    */
+/*       MMI043 - Extract only new records from the extension files */
+/*       MMI043 - Bank of Italy Head Office Reporting               */
+/*                Validate OPNQRYF Selection Parameter details      */
+/*                                                                  */
+/********************************************************************/
+     /*      PGM          */                                                        /*LUC109*/
+             PGM        PARM(&CNAM &CSEQ)                                           /*LUC109*/
+/**/
+/* Declare Variables */
+/**/
+/************DCLF*******FILE(GLINCPPP)*******************************/              /*LUC109*/
+             DCLF       FILE(XXINCPPD)                                              /*LUC109*/
+             DCL        VAR(&ITGFN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&IMDFN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ISLCT) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&ERCD) TYPE(*DEC) LEN(1)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&LENGTH) TYPE(*DEC) LEN(5) VALUE(9)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(9) +
+                          VALUE('FILE COPY')
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                              /*LUC109*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)                                /*LUC109*/
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')                    /*LUC109*/
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7)                              /*LUC109*/
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Call program CB0160 to get value of restart indicator. */                        /*LUC109*/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)                         /*LUC109*/
+
+/**/
+/**/
+/**/
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PREFIX) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&JLIB) VALUE(&PREFIX *CAT 'INTFLIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PREFIX *CAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PREFIX *CAT 'DPLIB')                     /*LUC109*/
+/**/
+/** Receive each record in turn until end of file reached          */
+/**/
+             CHGVAR     VAR(&ERCD) VALUE(0)
+ RCVF:       RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+/**/
+/* Clear Target File */
+/**/
+             CLRPFM     FILE(&JLIB/&ITGFN)
+             MONMSG     MSGID(CPF3142) EXEC(CHGVAR VAR(&ERCD) VALUE(5))
+/**/
+/* IF Target file not exist, Copy Midas File to Target File*/
+/**/
+             IF         COND(&ERCD *EQ 5) THEN(DO)
+             CPYF       FROMFILE(&IMDFN) TOFILE(&JLIB/&ITGFN) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             CLRPFM     FILE(&JLIB/&ITGFN)
+             CHGVAR (&ERCD) VALUE(0)
+             ENDDO
+
+/* OPNQRYF comand to check selection criteria input  */
+             OPNQRYF    FILE((*LIBL/&IMDFN)) OPTION(*INP) +
+                          FORMAT(*FILE) QRYSLT(&ISLCT)
+
+/* If the selection criteria is incorrect move 2 to return code  */
+/* parameter. */
+             MONMSG     MSGID(CPF9899) EXEC(CHGVAR VAR(&ERCD) VALUE(2))
+/**/
+/* If Error Goto End */
+/**/
+             IF         COND(&ERCD *EQ 2) THEN(GOTO CMDLBL(END))
+
+/* CPYF from Midas Filename to Target Filename       */
+
+/*********** CPYFRMQRYF FROMOPNID(&IMDFN) TOFILE(&JLIB/&ITGFN) +
+                          MBROPT(*REPLACE) CRTFILE(*NO) */
+             CPYFRMQRYF FROMOPNID(&IMDFN) TOFILE(&JLIB/&ITGFN) +
+                          MBROPT(*REPLACE) CRTFILE(*NO) FMTOPT(*MAP +
+                          *DROP)
+/* If the copy file did not work move 3 to return code parameter */
+
+             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ERCD) VALUE(3))
+             CLOF       OPNID(&IMDFN)
+             IF         COND(&ERCD *EQ 3) THEN(GOTO CMDLBL(END))
+/**/
+             GOTO       CMDLBL(RCVF)
+/************                                                         /*MUI009*/
+/**If*no*errors , send Message FILE COPY to INTFQ/*LIBL */            /*MUI009*/
+/************                                                         /*MUI009*/
+ END:        IF         COND(&ERCD *GE 1) THEN(GOTO CMDLBL(ABNOR))
+/************IF         COND(&ERCD *EQ 0) THEN(DO)                    /*MUI009*/
+/************CALL       PGM(QSNDDTAQ) PARM('INTFQ' '*LIBL' &LENGTH +  /*MUI009*/
+/************             &MESSAGE)                                   /*MUI009*/
+/************ENDDO                                                    /*MUI009*/
+/**/
+/* Rename extension files in DMLIB */
+/**/
+/*                                                                      LUC013*/
+/*           RNMOBJ     OBJ(&DMLIB/ACCNTBX0) OBJTYPE(*FILE) +           LUC013*/
+/*                      NEWOBJ(XCCNTBX0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&DMLIB/CLOANCX0) OBJTYPE(*FILE) +           LUC013*/
+/*                      NEWOBJ(XLOANCX0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&DMLIB/DEALSCX0) OBJTYPE(*FILE) +           LUC013*/
+/*                      NEWOBJ(XEALSCX0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&DMLIB/DEALSDX0) OBJTYPE(*FILE) +           LUC013*/
+/*                      NEWOBJ(XEALSDX0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&JLIB/ACCNTBY2) OBJTYPE(*FILE) +            LUC013*/
+/*                      NEWOBJ(YCCNTBY2)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&JLIB/CLOANCY0) OBJTYPE(*FILE) +            LUC013*/
+/*                      NEWOBJ(YLOANCY0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&JLIB/DEALSCY0) OBJTYPE(*FILE) +            LUC013*/
+/*                      NEWOBJ(YEALSCY0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&JLIB/DEALSDY0) OBJTYPE(*FILE) +            LUC013*/
+/*                      NEWOBJ(YEALSDY0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+
+/* If it is NOT a restart. */                                                       /*LUC109*/
+             IF         COND(&STAT *NE 'Y') THEN(DO)                                /*LUC109*/
+             CHGVAR     VAR(&RERUN) VALUE(' ')                                      /*LUC109*/
+               DLTF       FILE(XACCNTBX0)                                           /*LUC109*/
+               MONMSG     MSGID(CPF0000)                                            /*LUC109*/
+               DLTF       FILE(XDEALSCX0)                                           /*LUC109*/
+               MONMSG     MSGID(CPF0000)                                            /*LUC109*/
+               DLTF       FILE(XDEALSDX0)                                           /*LUC109*/
+               MONMSG     MSGID(CPF0000)                                            /*LUC109*/
+               DLTF       FILE(XCLOANCX0)                                           /*LUC109*/
+               MONMSG     MSGID(CPF0000)                                            /*LUC109*/
+               CPYF       FROMFILE(&JLIB/ACCNTBX0) TOFILE(&DPLIB/XACCNTBX0) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                            /*LUC109*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                            /*LUC109*/
+               CPYF       FROMFILE(&JLIB/DEALSCX0) TOFILE(&DPLIB/XDEALSCX0) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                            /*LUC109*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                            /*LUC109*/
+               CPYF       FROMFILE(&JLIB/DEALSDX0) TOFILE(&DPLIB/XDEALSDX0) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                            /*LUC109*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                            /*LUC109*/
+               CPYF       FROMFILE(&JLIB/CLOANCX0) TOFILE(&DPLIB/XCLOANCX0) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                            /*LUC109*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                            /*LUC109*/
+             ENDDO       /*LUC109*/
+
+/* If it is a restart. */                                                           /*LUC109*/
+
+             IF         COND(&STAT *EQ 'Y') THEN(DO)                                /*LUC109*/
+             CHGVAR     VAR(&RERUN) VALUE('Y')                                      /*LUC109*/
+               CPYF       FROMFILE(XACCNTBX0) TOFILE(&JLIB/ACCNTBX0) +
+                          MBROPT(*REPLACE)                                          /*LUC109*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                            /*LUC109*/
+               CPYF       FROMFILE(XDEALSCX0) TOFILE(&JLIB/DEALSCX0) +
+                          MBROPT(*REPLACE)                                          /*LUC109*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                            /*LUC109*/
+               CPYF       FROMFILE(XDEALSDX0) TOFILE(&JLIB/DEALSDX0) +
+                          MBROPT(*REPLACE)                                          /*LUC109*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                            /*LUC109*/
+               CPYF       FROMFILE(XCLOANCX0) TOFILE(&JLIB/CLOANCX0) +
+                          MBROPT(*REPLACE)                                          /*LUC109*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                            /*LUC109*/
+             ENDDO       /*LUC109*/
+
+             CHGVAR     VAR(&STAT) VALUE('Y')                                       /*LUC109*/
+
+/* Call CB0150 to update restart indicator */                                       /*LUC109*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                         /*LUC109*/
+
+             OVRDBF     FILE(XCCNTBX0) TOFILE(&DMLIB/ACCNTBX0) +
+                          SHARE(*NO)                                  /*LUC013*/
+             OVRDBF     FILE(XLOANCX0) TOFILE(&DMLIB/CLOANCX0) +
+                          SHARE(*NO)                                  /*LUC013*/
+             OVRDBF     FILE(XEALSCX0) TOFILE(&DMLIB/DEALSCX0) +
+                          SHARE(*NO)                                  /*LUC013*/
+             OVRDBF     FILE(XEALSDX0) TOFILE(&DMLIB/DEALSDX0) +
+                          SHARE(*NO)                                  /*LUC013*/
+             OVRDBF     FILE(YCCNTBY2) TOFILE(&JLIB/ACCNTBY2) +
+                          SHARE(*NO)                                  /*LUC013*/
+             OVRDBF     FILE(YLOANCY0) TOFILE(&JLIB/CLOANCY0) +
+                          SHARE(*NO)                                  /*LUC013*/
+             OVRDBF     FILE(YEALSCY0) TOFILE(&JLIB/DEALSCY0) +
+                          SHARE(*NO)                                  /*LUC013*/
+             OVRDBF     FILE(YEALSDY0) TOFILE(&JLIB/DEALSDY0) +
+                          SHARE(*NO)                                  /*LUC013*/
+/**/
+/* Copy new records from extension files in DMLIB to INTFLIB */
+/**/
+/************CALL*******PGM(GLM056A)*********************************/              /*LUC109*/
+             CALL       PGM(XX00056A)                                               /*LUC109*/
+
+             DLTOVR     FILE(XCCNTBX0)                                /*LUC013*/
+             DLTOVR     FILE(XLOANCX0)                                /*LUC013*/
+             DLTOVR     FILE(XEALSCX0)                                /*LUC013*/
+             DLTOVR     FILE(XEALSDX0)                                /*LUC013*/
+             DLTOVR     FILE(YCCNTBY2)                                /*LUC013*/
+             DLTOVR     FILE(YLOANCY0)                                /*LUC013*/
+             DLTOVR     FILE(YEALSCY0)                                /*LUC013*/
+             DLTOVR     FILE(YEALSDY0)                                /*LUC013*/
+/**/
+/* Rename extension files in DMLIB */
+/**/
+/*           RNMOBJ     OBJ(&DMLIB/XCCNTBX0) OBJTYPE(*FILE) +           LUC013*/
+/*                      NEWOBJ(ACCNTBX0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&DMLIB/XLOANCX0) OBJTYPE(*FILE) +           LUC013*/
+/*                      NEWOBJ(CLOANCX0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&DMLIB/XEALSCX0) OBJTYPE(*FILE) +           LUC013*/
+/*                      NEWOBJ(DEALSCX0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&DMLIB/XEALSDX0) OBJTYPE(*FILE) +           LUC013*/
+/*                      NEWOBJ(DEALSDX0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&JLIB/YCCNTBY2) OBJTYPE(*FILE) +            LUC013*/
+/*                      NEWOBJ(ACCNTBY2)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&JLIB/YLOANCY0) OBJTYPE(*FILE) +            LUC013*/
+/*                      NEWOBJ(CLOANCY0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&JLIB/YEALSCY0) OBJTYPE(*FILE) +            LUC013*/
+/*                      NEWOBJ(DEALSCY0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/*           RNMOBJ     OBJ(&JLIB/YEALSDY0) OBJTYPE(*FILE) +            LUC013*/
+/*                      NEWOBJ(DEALSDY0)                                LUC013*/
+/*           MONMSG     MSGID(CPF0000)                                  LUC013*/
+/**/                                                                  /*205749*/
+/* Run HOR clean up program */                                        /*205749*/
+/**/                                                                  /*205749*/
+/************CALL*******PGM(HORDROP)*PARM('D')**********************/ /*205749*/    /*LUC109*/
+             CALL       PGM(XX000060) PARM('D')                                     /*LUC109*/
+                                                                      /*159964*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                         CMDLBL(ABNOR))                               /*159964*/
+                                                                      /*159964*/
+/**/
+/* Run Interface to Head Office reporting */
+/**/
+/**          SBMJOB     CMD(CALL PGM(GLCM043) PARM(&RERUN)) +
+                          JOB(GLCM043) JOBD(MEODD)                    /*159964*/
+                                                                      /*159964*/
+/************CALL*******PGM(GLCM043)*PARM(&RERUN)*****************/   /*159964*/    /*LUC109*/
+             CALL       PGM(XXC000043) PARM(&RERUN)                                 /*LUC109*/
+                                                                      /*159964*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                         CMDLBL(ABNOR))                               /*159964*/
+                                                                      /*159964*/
+/**/
+/* If no errors , Goto ENDP  */
+/**/
+
+             GOTO       CMDLBL(ENDP)
+
+ ENDP:                                                                            /*LUC109*/
+             CHGVAR     VAR(&STAT) VALUE('N')                                     /*LUC109*/
+             CHGJOB     SWS(00000000)                                             /*LUC109*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                       /*LUC109*/
+             DLTF       FILE(XACCNTBX0)                                           /*LUC109*/
+             DLTF       FILE(XDEALSCX0)                                           /*LUC109*/
+             DLTF       FILE(XDEALSDX0)                                           /*LUC109*/
+             DLTF       FILE(XCLOANCX0)                                           /*LUC109*/
+             CHGJOB     SWS(00000000)                                             /*LUC109*/
+             GOTO       CMDLBL(ENDPGM)                                            /*LUC109*/
+/**/
+/* ABNOR: Error found in sending message to DTAQ */
+/**/
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+/************SNDPGMMSG**MSG('Program*GLCM056*ended*abnormally')*+
+                          TOMSGQ(MOPERQ MRUNQ)                      */              /*LUC109*/
+             SNDPGMMSG  MSG('Program XXC000056 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                                      /*LUC109*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+ /* ENDP:       ENDPGM      */                                                      /*LUC109*/
+ ENDPGM:     ENDPGM                                                                 /*LUC109*/

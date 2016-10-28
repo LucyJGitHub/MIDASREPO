@@ -1,0 +1,111 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/             /*LUC109*/
+/*STD    CLPBASEBND                                                  */             /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Interface to Head Office Reporting                  */
+/*                                                                   */
+/********GLCM038*-*GL*Facilities*Extract******************************/             /*LUC109*/
+/*       XC000038 - Midas HOR GL Facilities Extract                  */             /*LUC109*/
+/*                                                                   */
+/********(C)*COPYRIGHT*MKI*LIMITED*1998                              */             /*LUC109*/
+/*       (C) Copyright Misys Intl. Ltd. 2016                         */             /*LUC109*/
+/*                                                                   */
+/*                                                                   */
+/*       Last Amend No. LUC109             Date 14Sep16              */
+/*       Prev Amend No. 159964             Date 22Aug99              */
+/*                      MMI043  *CREATE    Date 09Dec98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*       159964 - PGM/GLM032A cannot allocate LF/SDCUSTL0 due to     */
+/*                SCC0406.                                           */
+/*              - Seton job switches U7/U8 for error processing.     */
+/*       MMI043 - Interface to Head Office Reporting                 */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+/*   Declare variables                                            */
+/**/
+/************DCL VAR(&CPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                 COPYRIGHT MKI LIMITED 1998')                     */                /*LUC109*/
+             DCL VAR(&CPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                 Copyright Misys Ltd. 2016')                                        /*LUC109*/
+             DCL VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&DATJOB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MMDD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILENAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*159964*/
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))                              /*159964*/
+/**/
+/*   Create Local Data Area                                       */
+/**/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas SD Local Data Area')
+             MONMSG     MSGID(CPF0000)
+ 
+/*                                                                   */
+/* Retrieve 'Last Acct date' (month and day) from SDGELRPP           */
+/*                                                                   */
+/************CALL*******GLCM049*PARM(&MMDD)***************************/             /*LUC109*/
+             CALL       XXC000049 PARM(&MMDD)                                       /*LUC109*/
+ 
+/*                                                                   */
+/* Clear working file FECRL for extraction                           */
+/*                                                                   */
+             CLRPFM     FILE(FECRL)
+ 
+/*                                                                   */
+/* Creating file name CRLxxyy (where xx=month, yy=day)               */
+/* CRLxxyy                                                           */
+/*                                                                   */
+             CHGVAR     VAR(&FILENAME) VALUE('CRL' *TCAT &MMDD)
+             RTVOBJD    OBJ(FECRL) OBJTYPE(*FILE) RTNLIB(&LIB)
+             DLTF       FILE(&LIB/&FILENAME)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(FECRL) FROMLIB(&LIB) OBJTYPE(*FILE) +
+                          TOLIB(*FROMLIB) NEWOBJ(&FILENAME) DATA(*NO)
+ 
+/*                                                                   */
+/* Run Extract                                                       */
+/*                                                                   */
+             OVRDBF     FILE(FECRL) TOFILE(&LIB/&FILENAME)
+ 
+/************CALL*******PGM(GLM038)***********************************/             /*LUC109*/
+             CALL       PGM(XX000038)                                               /*LUC109*/
+ 
+             DLTOVR     FILE(FECRL)
+                                                                      /*159964*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)              /*159964*/
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)           /*159964*/
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)                        /*159964*/
+               MONMSG     MSGID(CPF0000 RPG0000 MCH0000)              /*159964*/
+               GOTO       CMDLBL(ABNOR)                               /*159964*/
+             ENDDO                                                    /*159964*/
+                                                                      /*159964*/
+             GOTO       CMDLBL(ENDPGM)                                /*159964*/
+                                                                      /*159964*/
+ ABNOR:                                                               /*159964*/
+             CHGJOB     SWS(XXXXXX11)                                 /*159964*/
+/************SNDPGMMSG  MSG('Program GLCM038 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                   */   /*159964*/    /*LUC109*/
+             SNDPGMMSG  MSG('Program XXC000038 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                        /*159964*/    /*LUC109*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*159964*/
+ ENDPGM:                                                              /*159964*/
+/************CHGVAR &CPY '(C) COPYRIGHT MKI LIMITED 1998'     */      /*159964*/    /*LUC109*/
+             CHGVAR &CPY '(C) Copyright Misys Ltd. 2016'                            /*LUC109*/
+ 
+             ENDPGM
+ 
+/**          CHGVAR &CPY '(C) COPYRIGHT MKI LIMITED 1998'             /*159964*/

@@ -1,0 +1,87 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/             /*LUC109*/
+/*STD    CLPBASEBND                                                  */             /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Interface to Head Office Reporting                  */
+/*                                                                   */
+/********GLCM201*-*GL*Account*Codes*Extract***************************/             /*LUC109*/
+/*       XXC000201 - Midas HOR GL Account Codes Extract              */             /*LUC109*/
+/*                 SDACODPD to FEMID                                 */
+/*                                                                   */
+/*       Last Amend No. LUC109           Date 14Sep16                */
+/*       Prev Amend No.         *Create  Date ddmmmyy                */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+/*   Declare variables                                            */
+/**/
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MMDD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILENAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MIDDAYC) TYPE(*CHAR) LEN(5)
+/**/
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/**/
+/*   Create Local Data Area                                       */
+/**/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas SD Local Data Area')
+             MONMSG     MSGID(CPF0000)
+ 
+/*                                                                   */
+/* Retrieve 'Last Acct date' (month and day) from SDGELRPP           */
+/*                                                                   */
+/************CALL*******GLCM049*PARM(&MMDD)***************************/             /*LUC109*/
+             CALL       XXC000049 PARM(&MMDD)                                       /*LUC109*/
+/*                                                                   */
+/* Creating file name MIDxxyy (where xx=month, yy=day)               */
+/*                                                                   */
+             CHGVAR     VAR(&FILENAME) VALUE('MID' *TCAT &MMDD)
+             RTVOBJD    OBJ(FEMID) OBJTYPE(*FILE) RTNLIB(&LIB)
+             DLTF       FILE(&LIB/&FILENAME)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(FEMID) FROMLIB(&LIB) OBJTYPE(*FILE) +
+                          TOLIB(*FROMLIB) NEWOBJ(&FILENAME) DATA(*NO)
+/*                                                                   */
+/* Run Extract                                                       */
+/*                                                                   */
+             OVRDBF     FILE(FEMID) TOFILE(&LIB/&FILENAME)
+/************CALL*******PGM(GLM201)***********************************/             /*LUC109*/
+             CALL       PGM(XX000201)                                               /*LUC109*/
+             DLTOVR     FILE(FEMID)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+/************SNDPGMMSG  MSG('Program GLCM201 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                       */             /*LUC109*/
+             SNDPGMMSG  MSG('Program XXC000201 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                                      /*LUC109*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ ENDPGM:
+             ENDPGM

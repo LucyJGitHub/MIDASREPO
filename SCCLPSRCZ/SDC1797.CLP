@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD030818           Date 24Nov14              */
-/*       Prev Amend No. MD030956           Date 09Oct14              */
+/*       Last Amend No. LUC109             Date 21Sep16              */
+/*       Prev Amend No. MD030818           Date 24Nov14              */
+/*                      MD030956           Date 09Oct14              */
 /*                      MD029775           Date 19Aug14              */
 /*                      CBF002             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -44,6 +45,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                 */
+/*                Amendment of core hook SDC1797003                 */
+/*                Amendment of core hook SDC1797006                 */
 /*       MD030818 - TRMSAV ended abnormally due to missing DBIC     */
 /*                  save file. Renamed DBIC to DBICDM.              */
 /*       MD030956 - Additional changes to BFM-TI enhancement.       */

@@ -1,0 +1,94 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Match xxINTFLIB for FCLTYX0 FBM')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Data Extract Module                                 */
+/*                                                                   */
+/*       XXCL000390 - Extract of Version of FCLTYX0 file to match    */
+/*                    xxINTFLIB control                              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*                                                                   */
+/*       Last Amend No. LUC109             Date 12Sep16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FB Midas 2.1)             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CMTCTL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. 2016')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('XXCL000390 - FCLTYX0 file details') TOMSGQ(MRUNQ)
+ 
+/* If data area LDA doesn't exist, create LDA. */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Start Commitment Control                                  */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&CMTCTL) VALUE('Y'))
+ 
+/* Clear the extract file                         */
+ 
+             CLRPFM     FILE(XXFCLTYX0)
+ 
+/* Call the extract program                       */
+ 
+             CALL       PGM(XXL000390)
+ 
+       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             ROLLBACK
+ 
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ)
+       ENDDO
+ 
+/**/
+/* Only end commitment control if started from this program */
+/**/
+ 
+       IF         COND(&CMTCTL *NE 'Y') THEN(ENDCMTCTL)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             GOTO       CMDLBL(END)
+ 
+ 
+/* Abnormal Termination  */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          XXCL000390 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               ROLLBACK
+               MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End Program           */
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

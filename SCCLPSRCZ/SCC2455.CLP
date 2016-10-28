@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. 259085             Date 27Jul12              */
-/*       Prev Amend No. 246515             Date 19Mar07              */
+/*       Last Amend No. LUC109             Date 21Sep16              */
+/*       Prev Amend No. 259085             Date 27Jul12              */
+/*                      246515             Date 19Mar07              */
 /*                      CSC033             Date 21May07              */
 /*                      B13662             Date 21May07              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -46,6 +47,10 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*                Amendment of core hook SCC2455008                  */
+/*                Amendment of core hook SCC2455009                  */
+/*                Amendment of core hook SCC2455010                  */
 /*       259085 - COB Performance Improvement in M+.                 */
 /*       246515 - Not possible to answer message on MIDAS_SAVE job.  */
 /*                Do not save JRNIC. Allow option 7 to be taken when */

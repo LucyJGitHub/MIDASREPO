@@ -1,0 +1,149 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/             /*LUC109*/
+/*STD    CLPBASEBND                                                  */             /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Interface to Head Office Reporting                  */
+/*                                                                   */
+/********GLCM048*-*GL*INT/PRI/TAS*Extract*****************************/             /*LUC109*/
+/*       XXC000048 - Midas HOR GL INT/PRI/TAS Extract                */             /*LUC109*/
+/*                                                                   */
+/********(C)*COPYRIGHT*Misys*2004*************************************/             /*LUC109*/
+/*       (C) Copyright Misys 2016                                    */             /*LUC109*/
+/*                                                                   */
+/*                                                                   */
+/*       Last Amend No. LUC109             Date 14Sep16              */
+/*       Prev Amend No. 230946             Date 30Dec04              */
+/*                      228619             Date 09Aug04              */
+/*                      MUI011  *Create         07Jun04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*       230946 - Reduce principal amounts on FEPRI by parts sold.   */
+/*       228619 - In line with other HOR extracts, do not stop       */
+/*                processing if U7 and/or U8 on.                     */
+/*       MMI043 - ALMS changes to HOR                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+/*   Declare variables                                            */
+/**/
+/************DCL********VAR(&CPYFLD)*TYPE(*CHAR)*LEN(64)*VALUE('(c)*+****/
+/*************************Misys*International*Banking*Systems*Ltd.*+*****/
+/*************************2004')*************************************/              /*LUC109*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2016')                                                    /*LUC109*/
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MMDD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILENAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/                                                                  /*228619*/
+/*   Reset Job Switches                                          */   /*228619*/
+/**/                                                                  /*228619*/
+             CHGJOB     SWS(00000000)                                 /*228619*/
+/**/
+/*   Create Local Data Area                                       */
+/**/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas SD Local Data Area')
+             MONMSG     MSGID(CPF0000)
+
+/*                                                                   */
+/* Remove records output to HOR Dealing History file in earlier      */
+/**runs*of*GLCM048.***************************************************/             /*LUC109*/
+/* runs of XXC000048.                                                */             /*LUC109*/
+/*                                                                   */
+/************CALL*******PGM(DLM010)***********************************/             /*LUC109*/
+             CALL       PGM(XXDL0010)
+/*                                                                   */
+/* Extract Dealing Past Events                                       */
+/*                                                                   */
+/************CALL*******PGM(DLM011)***********************************/             /*LUC109*/
+             CALL       PGM(XXDL0011)
+/*                                                                   */
+/* Extract Dealing Today's Events from Account Keys                  */
+/*                                                                   */
+/************CALL*******PGM(DLM012)***********************************/             /*LUC109*/
+             CALL       PGM(XXDL0012)
+/*                                                                   */
+/* Extract IRS Future Events                                         */
+/*                                                                   */
+             CLRPFM     FILE(DLMFEVPP)
+/************CALL*******PGM(DLM013)***********************************/             /*LUC109*/
+             CALL       PGM(XXDL0013)
+/*                                                                   */
+/* Retrieve 'Last Acct date' (month and day) from SDGELRPP           */
+/*                                                                   */
+/************CALL*******PGM(GLCM049)*PARM(&MMDD)**********************/             /*LUC109*/
+             CALL       PGM(XXC000049) PARM(&MMDD)                                  /*LUC109*/
+/*                                                                   */
+/* Clear working files for extraction                                */
+/*                                                                   */
+             CLRPFM     FILE(FEINT)
+             CLRPFM     FILE(FEPRI)
+             CLRPFM     FILE(FETAS)
+             CLRPFM     FILE(WKFEPRI)                                 /*230946*/
+/*                                                                   */
+/* Run Extract                                                       */
+/*                                                                   */
+/************CALL*******PGM(GLM048)***********************************/             /*LUC109*/
+             CALL       PGM(XX000048)                                               /*LUC109*/
+/*                                                                    /*230946*/
+/* Compact work file WKFEPRI into extract file FEPRI.                 /*230946*/
+/*                                                                    /*230946*/
+/************CALL*******PGM(GLM049)***********************************/             /*LUC109*/
+             CALL       PGM(XX000049)                                               /*LUC109*/
+/*                                                                   */
+/**If*error*in*called*RPG*leave*now.************************************228619*/
+/* If error in called RPG send error message and continue.        */  /*228619*/
+/*                                                                   */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/************* GOTO       CMDLBL(ABNOR) */                            /*228619*/
+             ENDDO
+
+/*                                                                   */
+/* Create a copy of extract files with date included in file name.   */
+/*                                                                   */
+             CHGVAR     VAR(&FILENAME) VALUE('INT' *TCAT &MMDD)
+             RTVOBJD    OBJ(FEINT) OBJTYPE(*FILE) RTNLIB(&LIB)
+             DLTF       FILE(&LIB/&FILENAME)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(FEINT) FROMLIB(&LIB) OBJTYPE(*FILE) +
+                          TOLIB(*FROMLIB) NEWOBJ(&FILENAME) DATA(*YES)
+
+             CHGVAR     VAR(&FILENAME) VALUE('PRI' *TCAT &MMDD)
+             RTVOBJD    OBJ(FEPRI) OBJTYPE(*FILE) RTNLIB(&LIB)
+             DLTF       FILE(&LIB/&FILENAME)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(FEPRI) FROMLIB(&LIB) OBJTYPE(*FILE) +
+                          TOLIB(*FROMLIB) NEWOBJ(&FILENAME) DATA(*YES)
+
+             CHGVAR     VAR(&FILENAME) VALUE('TAS' *TCAT &MMDD)
+             RTVOBJD    OBJ(FETAS) OBJTYPE(*FILE) RTNLIB(&LIB)
+             DLTF       FILE(&LIB/&FILENAME)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(FETAS) FROMLIB(&LIB) OBJTYPE(*FILE) +
+                          TOLIB(*FROMLIB) NEWOBJ(&FILENAME) DATA(*YES)
+
+             GOTO       CMDLBL(ENDPGM)
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+/************SNDPGMMSG  MSG('Program GLCM048 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                       */             /*LUC109*/
+             SNDPGMMSG  MSG('Program XXC000048 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                                      /*LUC109*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ ENDPGM:
+             ENDPGM

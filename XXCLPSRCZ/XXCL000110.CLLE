@@ -1,0 +1,107 @@
+/*********************************************************************/
+/*S*D****CLPBASE                                                     */                   /*LUC109*/
+/*STD    CLPBASEBND                                                  */                   /*LUC109*/
+/*EXI    TEXT('Extract of Version of DEALSDE to match xxINTFLIB')    */                   /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Data Extract Module                                 */
+/*                                                                   */
+/********DECL000110*-*Extract*of*Version*of*DEALSDE*to*match**********/                   /*LUC109*/
+/*       XXCL000110 - Extract of Version of DEALSDE to match         */                   /*LUC109*/
+/*                    xxINTFLIB Control                              */
+/*                                                                   */
+/********(c)*Misys*International*Banking*Systems*Ltd.*2008************/                   /*LUC109*/
+/*       (c) Misys International Banking Systems Ltd. 2016           */                   /*LUC109*/
+/*                                                                   */
+/*       Last Amend No. LUC109             Date 08Sep16              */
+/*       Prev Amend No. LUC013  *CREATE    Date 01May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FB Midas 2.1)             */
+/*       LUC013 - Head Office Reporting Upgrade to MidasPlus         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CMTCTL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2016')                                                          /*LUC109*/
+/**********               2008')                                                       */ /*LUC109*/
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/**********  SNDPGMMSG  MSG('DECL000110 - Extract DEALSDE Details') TOMSGQ(MRUNQ)      */ /*LUC109*/
+             SNDPGMMSG  MSG('XXCL000110 - Extract DEALSDE Details') TOMSGQ(MRUNQ)         /*LUC109*/
+ 
+/* If data area LDA doesn't exist, create LDA. */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Start Commitment Control                                  */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&CMTCTL) VALUE('Y'))
+ 
+/* Clear the extract file                         */
+ 
+/**********  CLRPFM     FILE(DEDEALSEPP)                                               */ /*LUC109*/
+             CLRPFM     FILE(XXDEALSEPP)                                                  /*LUC109*/
+ 
+/* Call the extract program                       */
+ 
+/**********  CALL       PGM(DEL000110)                                                 */ /*LUC109*/
+             CALL       PGM(XXL000110)                                                    /*LUC109*/
+ 
+       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             ROLLBACK
+ 
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ)
+       ENDDO
+ 
+/**/
+/* Only end commitment control if started from this program */
+/**/
+ 
+       IF         COND(&CMTCTL *NE 'Y') THEN(ENDCMTCTL)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             GOTO       CMDLBL(END)
+ 
+ 
+/* Abnormal Termination  */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/**********    SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +                */ /*LUC109*/
+/**********               DECL000110 ended abnormally - see job log') +                */ /*LUC109*/
+/**********                 TOMSGQ(MOPERQ)                                             */ /*LUC109*/
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          XXCL000110 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)                                                /*LUC109*/
+               ROLLBACK
+               MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End Program           */
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

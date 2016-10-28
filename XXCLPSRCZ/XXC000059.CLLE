@@ -1,0 +1,260 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/             /*LUC109*/
+/*O*R****OVRDBF*GLCM058WK*QAFDPHY*************************************/             /*LUC109*/
+/*STD    CLPBASEBND                                                  */             /*LUC109*/
+/*OVR    OVRDBF XXC0058WK QAFDPHY                                    */             /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Interface to Head Office Reporting                  */
+/*                                                                   */
+/********HORCLEAR*-*Midas*GL*Extract*File*Purge*from*a*library********/             /*LUC109*/
+/*       XXC000059 - Midas HOR GL Extract File Purge from a library  */             /*LUC109*/
+/*                                                                   */
+/********(C)*Copyright*Misys*2004*************************************/             /*LUC109*/
+/*       (C) Copyright Misys 2016                                    */             /*LUC109*/
+/*                                                                   */
+/*       Last Amend No. LUC109            Date 14Sep16               */
+/*       Prev Amend No. LUC013            Date 28May08               */
+/*                      MUI011            Date 12Jul04               */
+/*                      MUI009 *Create    Date 27FEB04               */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*       LUC013 - Libraries ULINTFLIB and UEINTFLIB should not be    */
+/*                purged.                                            */
+/*       MUI011 - ALMS - Addition of FEINT, FEPRI and FETAS extracts */
+/*       MUI009 - R4.1 Upgrade of UCI Global CARS                    */
+/*                UTILITY CREATED BASED OVER GLCM058                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIB)
+/**/
+/* Declare Variables                                                 */
+/**/
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MMDD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&FILEMTH) TYPE(*DEC) LEN(2)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIVE) TYPE(*CHAR) LEN(1)                 /*LUC109*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*LUC109*/
+/*/COPY SDCPYSRC,SDSVALDCL                                                          /*LUC109*/
+/************DCLF*******FILE(QTEMP/GLCM058WK)**************************/            /*LUC109*/
+             DCLF       FILE(QTEMP/XXC0058WK)                                       /*LUC109*/
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+
+             CHGJOB     SWS(00000000)
+/**/
+/* Check library exists.                                             */
+/**/
+             CHKOBJ     OBJ(&LIB) OBJTYPE(*LIB) AUT(*NONE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             SNDPGMMSG  MSG('Library not found - or you are not +
+                          authorised to it.')
+             GOTO       CMDLBL(END)
+             ENDDO
+
+             CALL       PGM(AOSVALR0) +
+                          PARM(&RTCD 'TestSystemIndicator' +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
+                          &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
+                          &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)            /*LUC109*/
+             IF         COND(%SST(&SVAL1 1 4) *EQ 'LIVE') THEN(DO)    /*LUC109*/
+                        CHGVAR VAR(&LIVE) VALUE('Y')                  /*LUC109*/
+             ENDDO       /*LUC109*/
+
+/**/
+/* Do not purge live HOR libraries                                   */
+/**/
+/*           IF         COND((&LIB = 'LNINTFLIB') *OR (&LIB = +
+                          'NYINTFLIB') *OR (&LIB = 'CIINTFLIB') *OR +
+                          (&LIB = 'ULINTFLIB') *OR (&LIB = 'UEINTFLIB') *OR +
+                          (&LIB = 'SIINTFLIB')) THEN(DO)     */       /*LUC013 LUC109*/
+             IF         COND((&LIB = 'LSINTFLIB') *OR (&LIB = +
+                          'PSINTFLIB') *OR (&LIB = 'MSINTFLIB') *OR +
+                          (&LIB = 'ASINTFLIB') *OR (&LIVE = 'Y')) THEN(DO)  /*LUC109*/
+/*           SNDPGMMSG  MSG('This procedure cannot be used to remove +
+                          HOR files from a library called +
+                          CIINTFLIB, LNINTFLIB, NYINTFLIB,  +
+                          SIINTFLIB, ULINTFLIB or UEINTFLIB.')  */    /*LUC013 LUC109*/
+             SNDPGMMSG  MSG('This procedure cannot be used to remove +
+                          HOR files from a live system library +
+                          (i.e. LSINTFLIB, PSINTFLIB, MSINTFLIB   +
+                          or ASINTFLIB libraries.')   /*LUC109*/
+             GOTO       CMDLBL(END)
+             ENDDO
+/**/
+/* Create Work File of all Extract Files                             */
+/**/
+
+/************DSPFD      FILE(&LIB/CCD*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK)                   */             /*LUC109*/
+             DSPFD      FILE(&LIB/CCD*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK)                                  /*LUC109*/
+
+/************DSPFD      FILE(&LIB/RAT*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/RAT*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/POL*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                       */            /*LUC109*/
+             DSPFD      FILE(&LIB/POL*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/CRF*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/CRF*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/PTF*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/PTF*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/IMC*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/IMC*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/GIB*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/GIB*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/LIM*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/LIM*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/SIT*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/SIT*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/CRL*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/CRL*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/SEC*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/SEC*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/ANA*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/ANA*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/DER*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                      */             /*LUC109*/
+             DSPFD      FILE(&LIB/DER*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/INT*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                   */  /*MUI011*/    /*LUC109*/
+             DSPFD      FILE(&LIB/INT*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/PRI*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                   */  /*MUI011*/    /*LUC109*/
+             DSPFD      FILE(&LIB/PRI*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+
+/************DSPFD      FILE(&LIB/TAS*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/GLCM058WK) OUTMBR(*FIRST +
+                          *ADD)                                   */  /*MUI011*/    /*LUC109*/
+             DSPFD      FILE(&LIB/TAS*) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/XXC0058WK) OUTMBR(*FIRST +
+                          *ADD)                                                     /*LUC109*/
+/**/
+/* Determine which months to keep (Keep this month & the last 2 mths)*/
+/**/
+/************CALL*******PGM(GLCM049)*PARM(&MMDD)**********************/             /*LUC109*/
+             CALL       PGM(XXC000049) PARM(&MMDD)                                  /*LUC109*/
+
+/**/
+/* Read Work File and Delete Extract Files                           */
+/**/
+ READ:
+             RCVF
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(END))
+
+             CHGVAR     VAR(&FILEMTH) VALUE(%SST(&PHFILE 4 2))
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(READ))
+
+             IF         COND((&FILEMTH *LT 01) *OR (&FILEMTH *GT +
+                          12)) THEN(GOTO CMDLBL(READ))
+
+             DLTF       FILE(&LIB/&PHFILE)
+             MONMSG     MSGID(CPF0000)
+
+             GOTO       CMDLBL(READ)
+
+END:
+
+             ENDPGM

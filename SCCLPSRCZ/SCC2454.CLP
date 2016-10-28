@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. 259085             Date 12Jul12              */
-/*       Prev Amend No. CBF002             Date 04Jul11              */
+/*       Last Amend No. LUC109             Date 21Sep16              */
+/*       Prev Amend No. 259085             Date 12Jul12              */
+/*                      CBF002             Date 04Jul11              */
 /*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -38,6 +39,11 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*                Amendment of core hook SCC2454MPS                  */
+/*                Amendment of core hook SCC2454003                  */
+/*                Amendment of core hook SCC2454MP1                  */
+/*                Amendment of core hook SCC2454MP9                  */
 /*       259085 - COB Performance Improvement in M+.                 */
 /*       CBF002 - BF Infrastructure: Backup and Recovery             */
 /*       CSC043 - MidasPlus IASP Enablement                          */

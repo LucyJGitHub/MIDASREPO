@@ -9,15 +9,20 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. AR1097467B *CREATE Date 14Apr13              */
+/*       Last Amend No. LUC109             Date 16Sep16              */
+/*       Prev Amend No. AR1097467B *CREATE Date 14Apr13              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*                Addition of hook LUC109_012                        */
+/*                Addition of hook LUC109_013                        */
+/*                Addition of hook LUC109_014                        */
 /*       AR1097467B - Expected 15% COB run optimization not met      */
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
                           VALUE('LERC25    ')
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
@@ -28,74 +33,80 @@
              DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NBRCD1) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&NBRCD2) TYPE(*DEC) LEN(10 0)
- 
+
+/*/COPY WNCPYSRC,LUC109_012                                          */             /*LUC109*/
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Send message to MRUNQ */
- 
+
              SNDPGMMSG  MSG('LERC25T4 - Profitability Extract - End +
                           Task Split') TOMSGQ(MRUNQ)
- 
+
+/*/COPY WNCPYSRC,LUC109_013                                          */             /*LUC109*/
+
 /* Call trailer file update program */
- 
+
              RTVMBRD    FILE(LEPEGLD) NBRCURRCD(&NBRCD1)
              RTVMBRD    FILE(LEPERED) NBRCURRCD(&NBRCD2)
- 
+
              CALL       PGM(LER255) PARM(&NBRCD1 &NBRCD2)
- 
+
 /* Check if error */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /* Determine full JLIB and DTAQLIB library name */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(&JLIB) VALUE(&SYSID *CAT 'JLIB')
              CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'XLIB')
- 
+
 /* Define journal and receiver name */
- 
+
              CHGVAR     VAR(&JOURNAL) VALUE('J' *CAT &CNAME)
              CHGVAR     VAR(&RECEIVER) VALUE('JR' *CAT &CNAME)
- 
+
 /* Retrieve first member description */
- 
+
              RTVMBRD    FILE(LEEXPRPD) RTNMBR(&MEMBER)
- 
+
 /* Retrieve next member description */
- 
+
 LOOP:        RTVMBRD    FILE(LEEXPRPD) MBR(&MEMBER *NEXT) +
                           RTNMBR(&MEMBER)
              MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(REMOVE))
- 
+
 /* Loop for all members in driving file */
- 
+
              GOTO       CMDLBL(LOOP)
- 
+
 /* Remove all members from driving and trailer file */
- 
+
  REMOVE:     RMVM       FILE(LEEXPRPD) MBR(*ALL)
              MONMSG     MSGID(CPF7301 CPF7303)
- 
+
+/*/COPY WNCPYSRC,LUC109_014                                          */             /*LUC109*/
+
 /* Clear the action files */
- 
+
              CLRPFM     FILE(ACTN5DH)
              CLRPFM     FILE(ACTN5DK)
              CLRPFM     FILE(ACTN5DN)
              CLRPFM     FILE(ACTN5ZX)
- 
+
              GOTO       CMDLBL(END)
- 
- 
+
+
  ABNOR:      SNDPGMMSG  MSG('Program LERC25T4 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:
              ENDPGM

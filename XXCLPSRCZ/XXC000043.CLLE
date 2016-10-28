@@ -1,0 +1,373 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/             /*LUC109*/
+/*STD    CLPBASEBND                                                  */             /*LUC109*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Interface to Head Office Reporting                  */
+/*                                                                   */
+/********GLCM043*-*Head*Office*Reporting*Extract*File*Creation********/             /*LUC109*/
+/*       XXC000043 - Midas HOR Extract File Creation                 */             /*LUC109*/
+/*                                                                   */
+/*       Note:     This CLP can be rerun if necessary with the       */
+/*       -----     RERUN parameter set to 'Y'.                       */
+/*                                                                   */
+/********(C)*COPYRIGHT*MKI*LIMITED*1998*******************************/             /*LUC109*/
+/*       (C) Copyright Misys International Banking Systems Ltd. 2016 */             /*LUC109*/
+/*                                                                   */
+/*       Last Amend No. LUC109             Date 14Sep16              */
+/*       Prev Amend No. CM00160492         Date 23MAY16              */
+/*                      CM00082017         Date 22Apr15              */
+/*                      FTPFIX             Date 24Oct08              */
+/*                      LUC013             Date 28May08              */
+/*                      MUI011             Date 07Jun04              */
+/*                      MUI007             Date 27Aug02              */
+/*                      159964                  22Aug99              */
+/*                      MMI043  *CREATE         15Dec98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*       CM00160492 - Change the Job attribute to run under          */
+/*                    CCSID(37) to convert the data to CCSID(280)    */
+/*       CM00082017 - New extract file FEMID for account codes       */
+/*       FTPFIX - SYSID's UE and UF not handled by IBM FTP job.      */
+/*       LUC013 - Also select SYSID's UL and UE.                     */
+/*       MUI011 - ALMS - Add extract program GLM048 to produce new   */
+/*                FEINT, FEPRI and FETAS extract files.              */
+/*       MUI007 - Only send data to Head Office if System Prefix is  */
+/*                CI, LN, NY or SI.                                  */
+/*       159964 - PGM/GLM032A cannot allocate LF/SDCUSTL0 due to     */
+/*                SCC0406.                                           */
+/*              - Seton job switches U7/U8 for error processing.     */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RERUN)
+/**/
+/*   Declare Variables                                           */
+/**/
+             DCL        VAR(&INTFLIB) TYPE(*CHAR) LEN(9) VALUE('  +
+                          INTFLIB')
+             DCL        VAR(&FTPLIB) TYPE(*CHAR) LEN(8) +
+                          VALUE('CIFTPLIB')
+             DCL        VAR(&FTPIBM) TYPE(*CHAR) LEN(8) +
+                          VALUE('        ')                                             /* FTPFIX */
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MMDD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIVE) TYPE(*CHAR) LEN(1)                 /*LUC109*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*LUC109*/
+/*/COPY SDCPYSRC,SDSVALDCL                                                                /*LUC109*/
+
+/**/
+/*   Reset System Switches                                       */
+/*   and set CCSID(37)                                           */                 /* CM00160492 */
+/**/
+/*           CHGJOB     SWS(00000000)                            */                 /* CM00160492 */
+             CHGJOB     SWS(00000000) CCSID(37)                                     /* CM00160492 */
+
+/**/
+/****Set*MMI043*Data*Area*while*GLCM043*runs.*********************/                 /*LUC109*/
+/*   Set LUC109 Data Area while XXC000043 runs                   */                 /*LUC109*/
+/**/
+/************CHGDTAARA**DTAARA(MMI043*(1*1))*VALUE('Y')***********/    /* LUC013 */ /*LUC109*/
+/**          CHGDTAARA  DTAARA(LUC109 (1 1)) VALUE('Y')         **/                 /*LUC109*/
+/**/
+/*   Retrieve Environment and set up library names               */
+/**/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&INTFLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+
+             CALL       PGM(AOSVALR0) +
+                          PARM(&RTCD 'TestSystemIndicator' +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
+                          &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
+                          &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)            /*LUC109*/
+             IF         COND(%SST(&SVAL1 1 4) *EQ 'LIVE') THEN(DO)    /*LUC109*/
+                        CHGVAR VAR(&LIVE) VALUE('Y')                  /*LUC109*/
+             ENDDO       /*LUC109*/
+
+/************CHGDTAARA**DTAARA(&INTFLIB/MMI043*(1*1))*VALUE('Y')*****/ /* LUC013 */ /*LUC109*/
+             CHGDTAARA  DTAARA(&INTFLIB/LUC109 (1 1)) VALUE('Y')                    /*LUC109*/
+/**/
+/*   Change library list to have &INTFLIB at top.               */
+/*                                      (**DONT RUN IF RERUN**) */
+/**/
+/**          IF         COND(&RERUN *NE 'Y') THEN(DO)         **/                       /* LUC013 */
+             RMVLIBLE   LIB(&INTFLIB)
+             MONMSG     MSGID(CPF2104)                                                  /* LUC013 */
+             ADDLIBLE   LIB(&INTFLIB)
+/**          ENDDO                                            **/                       /* LUC013 */
+/**/
+/*   Copy SDSTAT data areas to &intflib (**DONT RUN IF RERUN**)  */
+/**/
+             IF         COND(&RERUN *NE 'Y') THEN(DO)
+             DLTDTAARA  DTAARA(&INTFLIB/SDSTAT)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(SDSTAT) FROMLIB(&DMLIB) +
+                          OBJTYPE(*DTAARA) TOLIB(&INTFLIB)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+/**/
+/*   Update File SDGELRPP  (**DONT RUN IF RERUN**)              */
+/**/
+             IF         COND(&RERUN *NE 'Y') THEN(DO)
+/************CALL*******PGM(SDM010)******************************/                  /*LUC109*/
+             CALL       PGM(XX000010)                                               /*LUC109*/
+             ENDDO
+/**/
+/*   Clear Reconciliation Work Files                             */
+/**/
+             CLRPFM     FILE(GLRECOPP)
+/**/
+/*   Run Extension File Updates   (**DONT RUN IF RERUN**)        */
+/**/
+/*           IF         COND(&RERUN *NE 'Y') THEN(DO)                   */          /*LUC109*/
+/************CALL*******PGM(MMM004)******************************/                  /*LUC109*/
+/************CALL*******PGM(MMM005)******************************/                  /*LUC109*/
+/************CALL*******PGM(LEM008)******************************/                  /*LUC109*/
+/************CALL*******PGM(REM009)******************************/                  /*LUC109*/
+             CALL       PGM(XX000004)                                               /*LUC109*/
+             CALL       PGM(XX000005)                                               /*LUC109*/
+             CALL       PGM(XX000008)                                               /*LUC109*/
+             CALL       PGM(XX000009)                                               /*LUC109*/
+/*           ENDDO                                                      */          /*LUC109*/
+/**/
+/*   Run Extract Programs                                        */
+/**/
+
+/************CALL*******PGM(GLCM025)*****************************/                  /*LUC109*/
+             CALL       PGM(XXC000025)                                              /*LUC109*/
+
+/************CALL*******PGM(GLCM030)*****************************/                  /*LUC109*/
+             CALL       PGM(XXC000030)                                              /*LUC109*/
+
+/************CALL*******PGM(GLCM031) PARM(&RERUN)****************/                  /*LUC109*/
+             CALL       PGM(XXC000031) PARM(&RERUN)                                 /*LUC109*/
+
+/************CALL*******PGM(GLCM032) PARM(&RERUN)****************/                  /*LUC109*/
+             CALL       PGM(XXC000032) PARM(&RERUN)                                 /*LUC109*/
+
+/************CALL*******PGM(GLCM033) PARM(&RERUN)****************/                  /*LUC109*/
+             CALL       PGM(XXC000033) PARM(&RERUN)                                 /*LUC109*/
+
+/************CALL*******PGM(GLCM034)*****************************/                  /*LUC109*/
+             CALL       PGM(XXC000034)                                              /*LUC109*/
+
+/************CALL*******PGM(GLCM035) PARM(&RERUN)****************/                  /*LUC109*/
+             CALL       PGM(XXC000035) PARM(&RERUN)                                 /*LUC109*/
+
+/************CALL*******PGM(GLCM036)*****************************/                  /*LUC109*/
+             CALL       PGM(XXC000036)                                              /*LUC109*/
+
+/************CALL*******PGM(GLCM037)*****************************/                  /*LUC109*/
+             CALL       PGM(XXC000037)                                              /*LUC109*/
+
+/************CALL*******PGM(GLCM038)*****************************/                  /*LUC109*/
+             CALL       PGM(XXC000038)                                              /*LUC109*/
+
+/************CALL*******PGM(GLCM039)*****************************/                  /*LUC109*/
+             CALL       PGM(XXC000039)                                              /*LUC109*/
+
+/************CALL*******PGM(GLCM040) PARM(&RERUN)****************/                  /*LUC109*/
+             CALL       PGM(XXC000040) PARM(&RERUN)                                 /*LUC109*/
+
+/************CALL*******PGM(GLCM042)*****************************/                  /*LUC109*/
+             CALL       PGM(XXC000042)                                              /*LUC109*/
+                                                                      /*MUI011*/
+/************CALL*******PGM(GLCM048)*****************************/    /*MUI011*/    /*LUC109*/
+             CALL       PGM(XXC000048)                                              /*LUC109*/
+                                                                      /*MUI011*/
+/************CALL*******PGM(GLCM201)*****************************/   /*CM00082017*/ /*LUC109*/
+             CALL       PGM(XXC000201)                                              /*LUC109*/
+                                                                      /*CM00082017*/
+/**          CHGJOB     SWS(00000000)                                 /*159964*/
+
+/**/
+/*   Retrieve Extract File Date Stamp                            */
+/**/
+/************CALL*******PGM(GLCM049)*PARM(&MMDD)******************/                 /*LUC109*/
+             CALL       PGM(XXC000049) PARM(&MMDD)                                  /*LUC109*/
+
+/**/                                                                  /*MUI007*/
+/*   If this is a live system, send data to Head Office by FTP  */    /*MUI007*/
+/**/                                                                  /*MUI007*/
+ /*          IF         COND((&SYSID = 'CI') *OR (&SYSID = 'LN') *OR +
+                        (&SYSID = 'UL') *OR (&SYSID = 'UE') *OR (&SYSID = 'UF') *OR +
+                       (&SYSID = 'NY') *OR (&SYSID = 'SI')) THEN(DO) */ /*LUC013 FTPFIX LUC109*/
+             IF         COND((&SYSID = 'LS') *OR (&SYSID = 'PS') *OR +
+                        (&SYSID = 'MS') *OR (&SYSID = 'AS') *OR (&LIVE = 'Y')) THEN(DO) /*LUC109*/
+/**/
+/*   Copy Extract Files to &FTPLIB                              */
+/**/
+    /*       IF    COND((&SYSID = 'UE') *OR (&SYSID = 'UF')) +
+             THEN(DO)                                              */           /* FTPFIX LUC109*/
+             IF    COND((&SYSID = 'MS') *OR (&SYSID = 'PS')) +
+             THEN(DO)                                                                   /* LUC109 */
+                     CHGVAR     VAR(&FTPLIB) VALUE(&SYSID *TCAT 'FTPLIB')               /* FTPFIX */
+                     CHGVAR     VAR(&FTPIBM) VALUE(&SYSID *TCAT 'FTPIBM')               /* FTPFIX */
+             ENDDO                                                                      /* FTPFIX */
+/**/                                                                                    /* FTPFIX */
+             CRTLIB     LIB(&FTPLIB)
+             MONMSG     MSGID(CPF0000)
+
+             CHGVAR     VAR(&FILE) VALUE('ANA' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('LIM' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('CCD' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('PTF' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('IMC' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('CRF' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('CRL' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('SIT' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('SEC' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('POL' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('DER' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('GIB' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+
+             CHGVAR     VAR(&FILE) VALUE('RAT' *TCAT &MMDD)
+             DLTF       FILE(&FTPLIB/&FILE)
+             MONMSG     MSGID(CPF0000)
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)
+                                                                      /*MUI011*/
+             CHGVAR     VAR(&FILE) VALUE('INT' *TCAT &MMDD)           /*MUI011*/
+             DLTF       FILE(&FTPLIB/&FILE)                           /*MUI011*/
+             MONMSG     MSGID(CPF0000)                                /*MUI011*/
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)     /*MUI011*/
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)     /*MUI011*/
+                                                                      /*MUI011*/
+             CHGVAR     VAR(&FILE) VALUE('PRI' *TCAT &MMDD)           /*MUI011*/
+             DLTF       FILE(&FTPLIB/&FILE)                           /*MUI011*/
+             MONMSG     MSGID(CPF0000)                                /*MUI011*/
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)     /*MUI011*/
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)     /*MUI011*/
+                                                                      /*MUI011*/
+             CHGVAR     VAR(&FILE) VALUE('TAS' *TCAT &MMDD)           /*MUI011*/
+             DLTF       FILE(&FTPLIB/&FILE)                           /*MUI011*/
+             MONMSG     MSGID(CPF0000)                                /*MUI011*/
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&CPYLIB)     /*MUI011*/
+             CRTDUPOBJ  OBJ(&FILE) FROMLIB(&CPYLIB) OBJTYPE(*FILE) +
+                          TOLIB(&FTPLIB) NEWOBJ(&FILE) DATA(*YES)     /*MUI011*/
+
+/**/
+/*   Submit Job to send files to Head Office                     */
+/**/
+/*           IF         COND((&SYSID = 'UE') *OR (&SYSID = 'UF')) +
+             THEN(DO)                                                     */   /* FTPFIX LUC109*/
+             IF         COND((&SYSID = 'MS') *OR (&SYSID = 'PS')) +
+             THEN(DO)                                                                   /* LUC109 */
+             SBMJOB     CMD(CALL PGM(&FTPIBM/CIFTPSND)) +
+                          JOB(CIFTPSND) JOBD(&FTPIBM/CIFTPJOBD) +
+                          JOBQ(&FTPIBM/CIFTPJOBQ) +
+                          OUTQ(&FTPIBM/CIFTPOUTQ) INLLIBL(*JOBD) +
+                          MSGQ(&FTPIBM/CIFTPMSGQ)                                       /* FTPFIX */
+             ENDDO                                                                      /* FTPFIX */
+             ELSE       CMD(DO)                                                         /* FTPFIX */
+             SBMJOB     CMD(CALL PGM(CIFTPIBM/CIFTPSND)) +
+                          JOB(CIFTPSND) JOBD(CIFTPIBM/CIFTPJOBD) +
+                          JOBQ(CIFTPIBM/CIFTPJOBQ) +
+                          OUTQ(CIFTPIBM/CIFTPOUTQ) INLLIBL(*JOBD) +
+                          MSGQ(CIFTPIBM/CIFTPMSGQ)
+             ENDDO                                                                      /* FTPFIX */
+
+             ENDDO                                                    /*MUI007*/
+
+/**/
+/*   Purge all extract files in &INTFLIB that are older than     */
+/*   2 months. (DONT RUN IF RERUN)                               */
+/**/
+             IF         COND(&RERUN *NE 'Y') THEN(DO)
+/************CALL*******PGM(GLCM058)                             */                 /*LUC109*/
+             CALL       PGM(XXC000058)                                              /*LUC109*/
+             ENDDO
+
+/**/
+/****Reset*MMI043*Data*Area*once*GLCM043*completed.***************/                 /*LUC109*/
+/*   Reset LUC109 Data Area once XXC000043 completes             */                 /*LUC109*/
+/**/
+/************CHGDTAARA**DTAARA(MMI043*(1*1))*VALUE(' ')***********/                 /*LUC109*/
+             CHGDTAARA  DTAARA(LUC109 (1 1)) VALUE(' ')                             /*LUC109*/
+
+             ENDPGM

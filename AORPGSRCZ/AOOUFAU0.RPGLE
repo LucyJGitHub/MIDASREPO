@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. AR943686           Date 23Sep16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *  Prev Amend No. CAP205             Date 03Mar10               *
       *                 CAP204             Date 09Feb10               *
@@ -52,6 +53,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR943686 - CLE031. System generating wrong projected move-   *
+      *             ments. Populate settlement details field with     *
+      *             passed value. (Child: AR943687)                   *
+      *           - Applied for MD-40690                              *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference                                *
       *  CAP205 - Teller Related APIs - Account Balance Check         *
@@ -601,16 +606,21 @@
       ** If Lending Enhancements is on.                                                       CLE031
      C     CLE031        IFEQ      'Y'                                                        CLE031
       *                                                                                       CLE031
-     C     FASCCY        IFNE      *BLANK                                                     CLE031
+     C*****FASCCY        IFNE      *BLANK                                            CLE031 AR943686
       * Store receipt settlement currency                                                     CLE031
      C                   MOVEL     FASCCY        SVSCCY            3                          CLE031
-     C                   ENDIF                                                                CLE031
+     C**********         ENDIF                                                       CLE031 AR943686
       *                                                                                       CLE031
-     C     FAPSCY        IFNE      *BLANK                                                     CLE031
+     C*****FAPSCY        IFNE      *BLANK                                            CLE031 AR943686
       * Store pay settlement currency                                                         CLE031
      C                   MOVEL     FAPSCY        SVPSCY            3                          CLE031
-     C                   ENDIF                                                                CLE031
+     C**********         ENDIF                                                       CLE031 AR943686
       *                                                                                       CLE031
+     C                   Z-ADD     FAREXR        SVREXR           13 8                      AR943686
+     C                   MOVE      FAREXI        SVREXI            1                        AR943686
+     C                   Z-ADD     FAPEXR        SVPEXR           13 8                      AR943686
+     C                   MOVE      FAPEXI        SVPEXI            1                        AR943686
+      *                                                                                     AR943686
      C                   ENDIF                                                  End If        CLE031
       *
      C                   MOVE      'F2'          ##TRYP            2            * trans type
@@ -754,6 +764,11 @@
       * Store receipt settlement details                                                      CLE031
      C                   MOVEL     SVSCCY        ##CCY             3                          CLE031
      C                   ENDIF                                                                218782
+      *                                                                                     AR943686
+     C                   MOVE      SVSCCY        FASCCY                                     AR943686
+     C                   Z-ADD     SVREXR        FAREXR                                     AR943686
+     C                   MOVE      SVREXI        FAREXI                                     AR943686
+      *                                                                                     AR943686
      C                   ENDIF                                                                CLE031
       *                                                                                       CLE031
      C     ##PYRC        IFEQ      'P'                                                        CLE031
@@ -765,6 +780,11 @@
       * Store pay settlement details                                                          CLE031
      C                   MOVEL     SVPSCY        ##CCY             3                          CLE031
      C                   ENDIF                                                                218782
+      *                                                                                     AR943686
+     C                   MOVE      SVPSCY        FAPSCY                                     AR943686
+     C                   Z-ADD     SVPEXR        FAPEXR                                     AR943686
+     C                   MOVE      SVPEXI        FAPEXI                                     AR943686
+      *                                                                                     AR943686
      C                   ENDIF                                                                CLE031
      C                   ENDIF                                                                CLE031
       *                                                                                       CLE031
@@ -1674,6 +1694,10 @@
      C                   MOVE      ##CCY         W#CCY             3                          CLE034
      C                   MOVE      SVSCCY        W#SVCY            3                          CLE034
      C                   MOVE      SVPSCY        W#PSCY            3                          CLE034
+     C                   Z-ADD     SVREXR        W#REXR           13 8                      AR943686
+     C                   Z-ADD     SVPEXR        W#PEXR           13 8                      AR943686
+     C                   MOVE      SVREXI        W#REXI            1                        AR943686
+     C                   MOVE      SVPEXI        W#PEXI            1                        AR943686
       *                                                                                       CLE034
      C     PTFI          IFEQ      *BLANK                                                     CLE034
      C                   MOVE      'R'           W#PYRC            1                          CLE034
@@ -1926,13 +1950,18 @@
       *                                                                                       CLE034
      C     CLE031        IFEQ      'Y'                                                        CLE034
       *                                                                                       CLE034
-     C     FASCCY        IFNE      *BLANKS                                                    CLE034
+     C*****FASCCY        IFNE      *BLANKS                                           CLE034 AR943686
      C                   MOVE      FASCCY        SVSCCY                                       CLE034
-     C                   ENDIF                                                                CLE034
-     C     FAPSCY        IFNE      *BLANKS                                                    CLE034
+     C**********         ENDIF                                                       CLE034 AR943686
+     C*****FAPSCY        IFNE      *BLANKS                                           CLE034 AR943686
      C                   MOVE      FAPSCY        SVPSCY                                       CLE034
-     C                   ENDIF                                                                CLE034
+     C**********         ENDIF                                                       CLE034 AR943686
       *                                                                                       CLE034
+     C                   Z-ADD     FAREXR        SVREXR                                     AR943686
+     C                   MOVE      FAREXI        SVREXI                                     AR943686
+     C                   Z-ADD     FAPEXR        SVPEXR                                     AR943686
+     C                   MOVE      FAPEXI        SVPEXI                                     AR943686
+      *                                                                                     AR943686
      C                   ENDIF                                                                CLE034
       *                                                                                       CLE034
      C                   ENDSR                                                  END SR34D     CLE034
@@ -1956,6 +1985,10 @@
      C                   MOVE      W#CCY         ##CCY                                        CLE034
      C                   MOVE      W#SVCY        SVSCCY                                       CLE034
      C                   MOVE      W#PSCY        SVPSCY                                       CLE034
+     C                   Z-ADD     W#REXR        SVREXR                                     AR943686
+     C                   Z-ADD     W#PEXR        SVPEXR                                     AR943686
+     C                   MOVE      W#REXI        SVREXI                                     AR943686
+     C                   MOVE      W#PEXI        SVPEXI                                     AR943686
      C                   MOVE      SVFEAD        FEEAD                                        CLE034
       *                                                                                       CLE034
      C                   ENDSR                                                  END SR34E     CLE034

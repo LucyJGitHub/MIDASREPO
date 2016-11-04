@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD006755           Date 25Sep14               *
-      *  Prev Amend No. AR1001269          Date 17Dec15               *
+      *  Last Amend No. AR943686           Date 23Sep16               *
+      *  Prev Amend No. MD006755           Date 25Sep14               *
+      *                 AR1001269          Date 17Dec15               *
       *                 CLE154             Date 07Aug12               *
       *                 MD028338           Date 25Nov14               *
       *                 MD025243           Date 10May14               *
@@ -125,6 +126,10 @@
      F*                                                                  *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR943686 - CLE031. System generating wrong projected move-   *
+      *             ments. Populate settlement details field with     *
+      *             passed value. (Child: AR943687)                   *
+      *           - Applied for MD-40690                              *
       *  MD006755 - Interest postings not generated after changing    *
       *             NIDT due to incorrect value of AUTO and incorrect *
       *             calculation of principal amount after changing    *
@@ -1225,14 +1230,19 @@
      C           CLE031    IFEQ 'Y'                                                           CLE031
       * Save receipt & pay settlement details                                                 CLE031
       *                                                                                       CLE031
-     C           SCCY      IFNE *BLANK                                                        CLE031
+     C********** SCCY      IFNE *BLANK                                               CLE031 AR943686
      C                     MOVELSCCY      SVSCCY  3                                           CLE031
-     C                     ENDIF                                                              CLE031
+     C**********           ENDIF                                                     CLE031 AR943686
       *                                                                                       CLE031
-     C           PSCY      IFNE *BLANK                                                        CLE031
+     C********** PSCY      IFNE *BLANK                                               CLE031 AR943686
      C                     MOVELPSCY      SVPSCY  3                                           CLE031
-     C                     ENDIF                                                              CLE031
+     C**********           ENDIF                                                     CLE031 AR943686
       *                                                                                       CLE031
+     C                     Z-ADDREXR      SVREXR 138                                        AR943686
+     C                     MOVE REXI      SVREXI  1                                         AR943686
+     C                     Z-ADDPEXR      SVPEXR 138                                        AR943686
+     C                     MOVE PEXI      SVPEXI  1                                         AR943686
+      *                                                                                     AR943686
      C                     ENDIF                           End If CLE031                      CLE031
       *                                                                                       CLE031
      C                     Z-ADDCPAM      ##PCPL 150   99  * principal
@@ -1395,6 +1405,12 @@
      C                     MOVELRPSC      PSCY                                                220754
      C                     Z-ADDRPSR      PEXR                                                220754
      C                     MOVELRPSI      PEXI                                                220754
+     C                     MOVE SCCY      SVSCCY                                            AR943686
+     C                     Z-ADDREXR      SVREXR                                            AR943686
+     C                     MOVE REXI      SVREXI                                            AR943686
+     C                     MOVE PSCY      SVPSCY                                            AR943686
+     C                     Z-ADDPEXR      SVPEXR                                            AR943686
+     C                     MOVE PEXI      SVPEXI                                            AR943686
      C                     MOVELRSTA      STAL                                                220754
      C                     MOVEL'ROLL'    WTYPE                                               220754
      C                     ENDIF                                                              218984
@@ -2316,6 +2332,11 @@
       * Store receipt settlement details                                                      CLE031
      C                     MOVELSVSCCY    ##CCY   3                                           CLE031
      C                     ENDIF                                                              218782
+      *                                                                                     AR943686
+     C                     MOVE SVSCCY    SCCY                                              AR943686
+     C                     Z-ADDSVREXR    REXR                                              AR943686
+     C                     MOVE SVREXI    REXI                                              AR943686
+      *                                                                                     AR943686
      C                     ENDIF                                                              CLE031
       *                                                                                       CLE031
      C           ##PYRC    IFEQ 'P'                                                           CLE031
@@ -2327,6 +2348,11 @@
       * Store pay settlement details                                                          CLE031
      C                     MOVELSVPSCY    ##CCY   3                                           CLE031
      C                     ENDIF                                                              218782
+      *                                                                                     AR943686
+     C                     MOVE SVPSCY    PSCY                                              AR943686
+     C                     Z-ADDSVPEXR    PEXR                                              AR943686
+     C                     MOVE SVPEXI    PEXI                                              AR943686
+      *                                                                                     AR943686
      C                     ENDIF                                                              CLE031
      C                     ENDIF                                                              CLE031
       *                                                                                       CLE031
@@ -4416,10 +4442,14 @@
      C                     MOVE ##CCY     SVCCY   3                                           CLE034
      C                     MOVE SVSCCY    S#SCCY  3                                           CLE034
      C                     MOVE SVPSCY    S#PSCY  3                                           CLE034
-     C                     MOVE PEXR      SVPEXR 138                                          CLE034
-     C                     MOVE REXR      SVREXR 138                                          CLE034
-     C                     MOVE PEXI      SVPEXI  1                                           CLE034
-     C                     MOVE REXI      SVREXI  1                                           CLE034
+     C**********           MOVE PEXR      SVPEXR 138                                 CLE034 AR943686
+     C**********           MOVE REXR      SVREXR 138                                 CLE034 AR943686
+     C**********           MOVE PEXI      SVPEXI  1                                  CLE034 AR943686
+     C**********           MOVE REXI      SVREXI  1                                  CLE034 AR943686
+     C                     Z-ADDSVREXR    W#REXR 138                                        AR943686
+     C                     Z-ADDSVPEXR    W#PEXR 138                                        AR943686
+     C                     MOVE SVREXI    W#REXI  1                                         AR943686
+     C                     MOVE SVPEXI    W#PEXI  1                                         AR943686
      C                     MOVE LNRF      WLNRF                                               CLE034
       *                                                                                       CLE034
       ** If reversing existing allocations, call AOBSTLR0 to                                  219608
@@ -4701,12 +4731,18 @@
      C           CLE031    IFEQ 'Y'                                                           CLE034
      C                     MOVE *BLANKS   SVSCCY                                              227696
      C                     MOVE *BLANKS   SVPSCY                                              227696
-     C           SCCY      IFNE *BLANKS                                                       CLE034
+     C********** SCCY      IFNE *BLANKS                                              CLE034 AR943686
      C                     MOVE SCCY      SVSCCY                                              CLE034
-     C                     ENDIF                                                              CLE034
-     C           PSCY      IFNE *BLANKS                                                       CLE034
+     C**********           ENDIF                                                     CLE034 AR943686
+     C********** PSCY      IFNE *BLANKS                                              CLE034 AR943686
      C                     MOVE PSCY      SVPSCY                                              CLE034
-     C                     ENDIF                                                              CLE034
+     C**********           ENDIF                                                     CLE034 AR943686
+      *                                                                                     AR943686
+     C                     Z-ADDREXR      SVREXR                                            AR943686
+     C                     MOVE REXI      SVREXI                                            AR943686
+     C                     Z-ADDPEXR      SVPEXR                                            AR943686
+     C                     MOVE PEXI      SVPEXI                                            AR943686
+      *                                                                                     AR943686
      C                     ENDIF                                                              CLE034
       *                                                                                       CLE034
      C                     ENDSR                                                              CLE034
@@ -4728,10 +4764,14 @@
      C                     MOVE SVCCY     ##CCY                                               CLE034
      C                     MOVE S#SCCY    SVSCCY                                              CLE034
      C                     MOVE S#PSCY    SVPSCY                                              CLE034
-     C                     MOVE SVPEXR    PEXR                                                CLE034
-     C                     MOVE SVREXR    REXR                                                CLE034
-     C                     MOVE SVPEXI    PEXI                                                CLE034
-     C                     MOVE SVREXI    REXI                                                CLE034
+     C**********           MOVE SVPEXR    PEXR                                       CLE034 AR943686
+     C**********           MOVE SVREXR    REXR                                       CLE034 AR943686
+     C**********           MOVE SVPEXI    PEXI                                       CLE034 AR943686
+     C**********           MOVE SVREXI    REXI                                       CLE034 AR943686
+     C                     Z-ADDW#REXR    SVREXR                                            AR943686
+     C                     Z-ADDW#PEXR    SVPEXR                                            AR943686
+     C                     MOVE W#REXI    SVREXI                                            AR943686
+     C                     MOVE W#PEXI    SVPEXI                                            AR943686
      C                     ENDSR                                                              CLE034
       *****************************************************************                       CRE073
       * Subroutine  :  SRNSPR                                         *                       CRE073

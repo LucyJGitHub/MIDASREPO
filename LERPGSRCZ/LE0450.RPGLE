@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE154             Date 02Aug12               *
-      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *  Last Amend No. MD012157           Date 23Oct13               *
+      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *                 CLE141A            Date 28Apr16               *
       *                 CLE141             Date 01Mar16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
@@ -366,6 +367,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD012157 - A/C movements show rundate instead of value date  *
+      *             after inserting a backvalued 'LS'. Use the value  *
+      *             of VDAT instead of RUND in SR/LOANSR.             *
       *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *           (Amendable Payment Type)                            *
       *  CLE141A - CLE141 Change Control 1                            *
@@ -11207,7 +11211,8 @@ L118 I                             P   72   77 7RTSPL
      C**                                                                  S01270
      C**   GENERATE OLD LOAN-TYPE/SUB-TYPE ACCOUNT KEYS                   S01270
      C**                                                                  S01270
-     C                   Z-ADD     RUND          ACDATE                                        S0127
+     C**********         Z-ADD     RUND          ACDATE                              S01270 MD012157
+     C                   Z-ADD     VDAT          ACDATE                                     MD012157
      C                   Z-ADD     ANYR          ACAMNT                                        S0127
      C                   MOVEA     LTYP          AKY(1)                                        S0127
      C                   MOVE      'A'           AKY(3)                                        S0127
@@ -11246,7 +11251,8 @@ L118 I                             P   72   77 7RTSPL
       *                                                                   CAC001
       **  Transaction Profit Centre                                       CAC001
       *                                                                   CAC001
-     C                   Z-ADD     RUND          ACDATE                                        CAC00
+     C**********         Z-ADD     RUND          ACDATE                              CAC001 MD012157
+     C                   Z-ADD     VDAT          ACDATE                                     MD012157
      C                   MOVEA     LTYP          AKY(1)                                        CAC00
      C                   MOVE      'A'           AKY(3)                                        CAC00
      C                   MOVEA     SUTP          AKY(4)                                        CAC00
@@ -11328,7 +11334,8 @@ L118 I                             P   72   77 7RTSPL
      C**                                                                  S01270
      C**   GENERATE OLD LOAN-TYPE/SUB-TYPE ACCOUNT KEYS                   S01270
      C**                                                                  S01270
-     C                   Z-ADD     RUND          ACDATE                                        S0127
+     C**********         Z-ADD     RUND          ACDATE                              S01270 MD012157
+     C                   Z-ADD     VDAT          ACDATE                                     MD012157
      C                   Z-ADD     WNYR          ACAMNT                                        S0127
      C                   MOVEA     LTYP          AKY(1)                                        S0127
      C                   MOVE      'A'           AKY(3)                                        S0127
@@ -11519,7 +11526,8 @@ L118 I                             P   72   77 7RTSPL
      C     CAS009        OREQ      'N'
       *                                                                                       CAS009
      C     AIPD          IFNE      0                                                     BH3409BH348
-     C                   Z-ADD     RUND          ACDATE                                        S0127
+     C**********         Z-ADD     RUND          ACDATE                              S01270 MD012157
+     C                   Z-ADD     VDAT          ACDATE                                     MD012157
      C*********************Z-ADDDPAM      ACAMNT                    S01270BH3409
      C                   MOVEA     LTYP          AKY(1)                                        S0127
      C                   MOVE      'A'           AKY(3)                                        S0127
@@ -11584,7 +11592,8 @@ L118 I                             P   72   77 7RTSPL
       ** Generate Old Loan sub-type account keys.                         BH3482
       *                                                                   BH3482
      C     TOTI          IFNE      0                                                           BH348
-     C                   Z-ADD     RUND          ACDATE                                        BH348
+     C**********         Z-ADD     RUND          ACDATE                              BH3482 MD012157
+     C                   Z-ADD     VDAT          ACDATE                                     MD012157
      C                   Z-ADD     TOTI          ACAMNT                                        BH348
      C                   MOVEA     LTYP          AKY(1)                                        BH348
      C     SPLITF        IFNE      'Y'                                                      MD027475

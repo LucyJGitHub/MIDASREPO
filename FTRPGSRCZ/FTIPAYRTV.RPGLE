@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD030957           Date 10Oct14               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. MD027200           Date 20Sep16               *      
+      *  Prev Amend No. MD030957           Date 10Oct14               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD025674           Date 25Mar14               *
       *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
@@ -56,6 +57,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027200 - Record locking when amending and deleting pay-    *
+      *             ment. Reverse fix 261468 in this module only.     *
+      *           - Applied for MD040962                              *
       *  MD030957 - Stop Request against already Stopped Transaction  *
       *             is allowed                                        *
       *  CFT157 - Stop FT Transaction after Authorisation             *
@@ -808,27 +812,27 @@
      C                   ENDIF
       *
      C                   ENDIF
-      *                                                                                       261468
-      ** Call CL program to allocate this reference to a dataarea                             261468
-      *                                                                                       261468
-     C                   EVAL      @MODLE = 'FT'                                              261468
-     C                   EVAL      @TREF  = DDPREF                                            261468
-     C                   EVAL      @RTINF = *Blanks                                           261468
-     C                   EVAL      C#RTCD = *Blanks                                           261468
-      *                                                                                       261468
-     C                   CALL      'AOC8000'                                                  261468
-     C                   PARM                    C#RTCD            7                          261468
-     C                   PARM                    @MODLE            2                          261468
-     C                   PARM                    @TREF            15                          261468
-     C                   PARM                    @RTINF           80                          261468
-      *                                                                                       261468
-     C     C#RTCD        IFEQ      '*IN USE'                                                  261468
-     C                   MOVEL     'N'           OKPREF                                       261468
-     C                   ADD       1             IDx                                          261468
-     C                   EVAL      FldNameArr(IDx) = 'DDPREF'                                 261468
+      *****************************************************************              261468 MD027200
+      ***Call*CL*program*to*allocate*this*reference*to*a*dataarea******              261468 MD027200
+      *****************************************************************              261468 MD027200
+     C**********         EVAL      @MODLE = 'FT'                                     261468 MD027200
+     C**********         EVAL      @TREF  = DDPREF                                   261468 MD027200
+     C**********         EVAL      @RTINF = *Blanks                                  261468 MD027200
+     C**********         EVAL      C#RTCD = *Blanks                                  261468 MD027200
+      *****************************************************************              261468 MD027200
+     C**********         CALL      'AOC8000'                                         261468 MD027200
+     C**********         PARM                    C#RTCD            7                 261468 MD027200
+     C**********         PARM                    @MODLE            2                 261468 MD027200
+     C**********         PARM                    @TREF            15                 261468 MD027200
+     C**********         PARM                    @RTINF           80                 261468 MD027200
+      *****************************************************************              261468 MD027200
+     C*****C#RTCD        IFEQ      '*IN USE'                                         261468 MD027200
+     C**********         MOVEL     'N'           OKPREF                              261468 MD027200
+     C**********         ADD       1             IDx                                 261468 MD027200
+     C**********         EVAL      FldNameArr(IDx) = 'DDPREF'                        261468 MD027200
      C**********         EVAL      MsgIdArr(IDx) = 'FTA0109'                         261468 MD025674
-     C                   EVAL      MsgIdArr(IDx) = 'MMM1021'                                MD025674
-     C                   ENDIF                                                                261468
+     C**********         EVAL      MsgIdArr(IDx) = 'MMM1021'                       MD025674 MD027200
+     C**********         ENDIF                                                       261468 MD027200
       *
      C     EValAmd       ENDSR
       *
@@ -870,26 +874,26 @@
      C                   ENDIF
       *
      C                   ENDIF
-      *                                                                                       261468
-      ** Call CL program to allocate this reference to a dataarea                             261468
-      *                                                                                       261468
-     C                   EVAL      @MODLE = 'FT'                                              261468
-     C                   EVAL      @TREF  = DDPREF                                            261468
-     C                   EVAL      @RTINF = *Blanks                                           261468
-     C                   EVAL      C#RTCD = *Blanks                                           261468
-      *                                                                                       261468
-     C                   CALL      'AOC8000'                                                  261468
-     C                   PARM                    C#RTCD            7                          261468
-     C                   PARM                    @MODLE            2                          261468
-     C                   PARM                    @TREF            15                          261468
-     C                   PARM                    @RTINF           80                          261468
-      *                                                                                       261468
-     C     C#RTCD        IFEQ      '*IN USE'                                                  261468
-     C                   MOVEL     'N'           OKPREF                                       261468
-     C                   ADD       1             IDx                                          261468
-     C                   EVAL      FldNameArr(IDx) = 'DDPREF'                                 261468
-     C                   EVAL      MsgIdArr(IDx) = 'MMM1021'                                  261468
-     C                   ENDIF                                                                261468
+      *****************************************************************              261468 MD027200
+      ***Call*CL*program*to*allocate*this*reference*to*a*dataarea******              261468 MD027200
+      *****************************************************************              261468 MD027200
+     C**********         EVAL      @MODLE = 'FT'                                     261468 MD027200
+     C**********         EVAL      @TREF  = DDPREF                                   261468 MD027200
+     C**********         EVAL      @RTINF = *Blanks                                  261468 MD027200
+     C**********         EVAL      C#RTCD = *Blanks                                  261468 MD027200
+      *****************************************************************              261468 MD027200
+     C**********         CALL      'AOC8000'                                         261468 MD027200
+     C**********         PARM                    C#RTCD            7                 261468 MD027200
+     C**********         PARM                    @MODLE            2                 261468 MD027200
+     C**********         PARM                    @TREF            15                 261468 MD027200
+     C**********         PARM                    @RTINF           80                 261468 MD027200
+      *****************************************************************              261468 MD027200
+     C*****C#RTCD        IFEQ      '*IN USE'                                         261468 MD027200
+     C**********         MOVEL     'N'           OKPREF                              261468 MD027200
+     C**********         ADD       1             IDx                                 261468 MD027200
+     C**********         EVAL      FldNameArr(IDx) = 'DDPREF'                        261468 MD027200
+     C**********         EVAL      MsgIdArr(IDx) = 'MMM1021'                         261468 MD027200
+     C**********         ENDIF                                                       261468 MD027200
       *
      C     EValDel       ENDSR
       *

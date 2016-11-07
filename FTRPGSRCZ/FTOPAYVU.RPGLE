@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD033098           Date 23Feb15               *
-      *  Prev Amend No. MD030906           Date 13Nov14               *
+      *  Last Amend No. MD041641           Date 04Oct16               *
+      *  Prev Amend No. MD033098           Date 23Feb15               *
+      *                 MD030906           Date 13Nov14               *
       *                 CFT157             Date 29Aug14               *
       *                 CFT151             Date 20Mar14               *
       *                 258944             Date 23Jan13               *
@@ -99,6 +100,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041641 - Details of Payment fields are uppercase. Remove   *
+      *             GEMS 250345.                                      *
       *  MD033098 - Incorrect data mapping due to CFT157. Adjust      *
       *             TranInExtn1 and TranInExtn2 accordingly.          *
       *  MD030906 - Counterparty Nostro not defaulted.                *
@@ -1485,9 +1488,9 @@
      C     ValdS3Detl    BEGSR
       ** Translate lowercase Details of Payment input to uppercase              250345
       ** to be recognized in validation                                         250345
-     C                   EVAL      TranSec1 =                                   250345
-     C                             %XLATE(LowerCase:UpperCase:TranInThir)       250345
-     C                   EVAL      TranInThir = TranSec1                        250345
+     C**********         EVAL      TranSec1 =                                   250345      MD041641
+     C**********                   %XLATE(LowerCase:UpperCase:TranInThir)       250345      MD041641
+     C**********         EVAL      TranInThir = TranSec1                        250345      MD041641
  
      C                   CALLB     'FTOPAY3VL'
       * Response mode (1A), from source system common header

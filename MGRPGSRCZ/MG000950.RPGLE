@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD024641           Date 10Feb14               *
-      *  Prev Amend No. CGL146A            Date 10Jul13               *
+      *  Last Amend No. MD042041           Date 21Oct16               *
+      *  Prev Amend No. MD024641           Date 10Feb14               *
+      *                 CGL146A            Date 10Jul13               *
       *                 CGL146             Date 10Jul13               *
       *                 AR972805           Date 27Feb13               *
       *                 AR787620           Date 10Jun11               *
@@ -47,6 +48,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042041 - Tag 61 is not sorted by DRCR and PSTA. Added a    *
+      *             system value that when is set to 'Y', program     *
+      *             use another logical file that is also sorted by   *
+      *             DRCR and PSTA.                                    *
       *  MD024641 - The field :65: Forward Available Balance is not   *
       *             correct if the statement date is in the past      *
       *  CGL146A - MT940/MT950 Production in Input Cycle              *
@@ -137,6 +142,10 @@
      FMGX950L0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(X_)
+     FMGX950L1  UF   E           K DISK    INFSR(*PSSR)                                     MD042041
+     F                                     COMMIT                                           MD042041
+     F                                     PREFIX(X_)                                       MD042041
+     F                                     RENAME(MGX950D0:MGX950D1)                        MD042041
      FSDNWRKL1  IF   E           K DISK    INFSR(*PSSR)
      FGLNWACL0  IF   E           K DISK    INFSR(*PSSR)
      FMGOREFL0  IF   E           K DISK    INFSR(*PSSR)
@@ -173,72 +182,72 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
      D AMFLD           S              1    DIM(50)
      D AL100           S              1    DIM(100)
- 
+
       ** File Information Data Structure for MG000950AU
      D SPOOLU          DS
      D   WFileU               83     92
      D   WFNumU              123    124B 0
- 
+
      D*MULT*****       DS                  OCCURS(2000)                                     BUG23209
      D MULT            DS                  OCCURS(9000)                                     BUG23209
      D  MTAG                   1      5
      D  MFLD                   6     55
      D  CTRC                  56     57
       * Multiple ocurrence data structure
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Externally described DS for bank details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Externally described DS for currency details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** Externally described DS for branch details
- 
+
      D SDMGME        E DS                  EXTNAME(SDMGMEPD)
       ** Externally described DS for message management details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D  QQDFA1       E                     EXTFLD(QQDFAC)                                     CGL029
       ** Externally described DS for customer details
- 
+
       ** Externam DS SC Switchable Features
- 
+
       ** External DS for SAR Details                                                        BUG25800
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                BUG25800
                                                                                             BUG25800
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** DS for access objects - short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS for access objects - long data structure
- 
+
      D                 DS
      D   WCrlf                 1      2
      D   WWCr                  1      1
      D   WWLf                  2      2
       /COPY OFCPYSRCZ,CGL146_087                                                             CGL146A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
- 
- 
+
+
+
       ** Work variables
- 
+
      D PCusN           S              6
      D*PAcctCde*       S              4                                                       CGL029
      D PAcctCde        S             10A                                                      CGL029
@@ -293,7 +302,7 @@
      D  KAcsq                 29     30  0                                                    CGL029
      D  KNaty                 31     31                                                       CGL029
      D  KNetAc                 1     31                                                       CGL029
- 
+
      D                 DS
      D   WSeqNum               1      6  0
      D   WSeqChr               1      6
@@ -302,25 +311,47 @@
      D   WPageChr              1      5
      D/COPY OFCPYSRCZ,CGL146_001                                                              CGL146
       /COPY OFCPYSRCZ,CGL146_129                                                             CGL146A
- 
+     D SValK1          C                   CONST('MT94xAddedSortfor61')                     MD042041
+     D WSort61         S              1A                                                    MD042041
+     D SysValK1        S             20A                                                    MD042041
+     D SysValK2        S             20A                                                    MD042041
+     D SysValK3        S             20A                                                    MD042041
+     D SysValK4        S             20A                                                    MD042041
+     D SysValK5        S             20A                                                    MD042041
+     D SysValK6        S             20A                                                    MD042041
+     D SysValK7        S             20A                                                    MD042041
+     D SysValK8        S             20A                                                    MD042041
+     D SysValK9        S             20A                                                    MD042041
+     D SysValK10       S             20A                                                    MD042041
+     D SysVal1         S            200A                                                    MD042041
+     D SysVal2         S            200A                                                    MD042041
+     D SysVal3         S            200A                                                    MD042041
+     D SysVal4         S            200A                                                    MD042041
+     D SysVal5         S            200A                                                    MD042041
+     D SysVal6         S            200A                                                    MD042041
+     D SysVal7         S            200A                                                    MD042041
+     D SysVal8         S            200A                                                    MD042041
+     D SysVal9         S            200A                                                    MD042041
+     D SysVal10        S            200A                                                    MD042041
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ *INZSR is executed at program activation.                  ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Process inputs.
- 
+
      C                   EXSR      SRProc
- 
+
       ** End the program
- 
+
      C                   EXSR      SREnd
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -329,59 +360,59 @@
       *                                                               *
       *****************************************************************
      C     SRProc        BEGSR
- 
+
      C                   EVAL      *IN01 = *OFF
- 
+
      C     *LOVAL        SETLL     MGF950L0                               01
      C                   READ      MGF950L0                               01
- 
+
      C                   DOW       *IN01 = *OFF
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_089                                                             CGL146A
- 
+
       ** Clear Work fields
      C                   EXSR      SR_Clear1
- 
+
       ** Get network details
      C                   EXSR      Get_NwrkDet
- 
+
       ** Get network account details
      C                   EXSR      Get_NwrkAcDet
- 
+
      C                   DoU       NewPage  = *Blank
- 
+
       ** Clear Work fields
      C                   EXSR      SR_Clear2
- 
+
       ** Format message
      C                   EXSR      Format_MT950
- 
+
       ** ... output to PF/MGOREFPD
- 
+
      C                   EXSR      SRORef
- 
+
       ** ... output to PF/MGOMSGPD
- 
+
      C                   EXSR      SROMsg
- 
+
       ** Accumulate number of MT950s generated
      C                   Add       1             Count950
- 
+
      C                   Enddo
- 
+
       ** Delete MGF950PD record
      C                   Delete    MGF950L0
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_096                                                             CGL146A
- 
+
       ** Comit all changes
- 
+
      C                   COMMIT
- 
+
      C                   READ      MGF950L0                               01
- 
+
      C                   Enddo
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -391,7 +422,7 @@
       *                                                               *
       *****************************************************************
      C     SR_Clear1     BEGSR
- 
+
       *  Clear Multiple Data structure
      C                   Eval      X = 1
      C                   Dow       X <= Q
@@ -400,15 +431,15 @@
      C                   Eval      MFLD = *Blanks
      C                   Eval      X = X + 1
      C                   Enddo
- 
+
      C                   Eval      WAccount = *blank
      C                   Eval      WPageNum = *zero
      C                   Eval      NewPage  = *blank
- 
+
       *  Reset Message length count to reflect allocated length for
       *  header and trailer.
      C                   Eval      WMsgCount = 100
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -419,7 +450,7 @@
       *                                                               *
       *****************************************************************
      C     SR_Clear2     BEGSR
- 
+
       *  Clear Multiple Data structure
      C                   Eval      X = 1
      C                   Dow       X <= Q
@@ -428,14 +459,14 @@
      C                   Eval      MFLD = *Blanks
      C                   Eval      X = X + 1
      C                   Enddo
- 
+
      C                   Eval      WPageNum = WPageNum + 1
      C                   Eval      NewPage  = *blank
- 
+
       *  Reset Message length count to reflect allocated length for
       *  header and trailer.
      C                   Eval      WMsgCount = 100
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -449,19 +480,19 @@
       *  Add 5 for message tag and CRLF
      C                   Eval      WMsgCount = WMsgCount + 5
      C                   Eval      WMsgCount = WMsgCount + 2
- 
+
       *  Determine fld length
      C                   MoveA     MFLD          AMFLD
      C                   Eval      X = 50
- 
+
      C                   Dow       X > 0  AND
      C                             AMFLD(X) = *blank
      C                   Eval      X = X - 1
      C                   Enddo
- 
+
       *  Add field length to message length
      C                   Add       X             WMsgCount
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -471,17 +502,17 @@
       *                                                               *
       *****************************************************************
      C     SRDetFldLen   BEGSR
- 
+
       *  Determine fld length
      C                   Eval      X = 100
- 
+
      C                   Dow       X > 0 AND
      C                             AL100(X) = *blank
      C                   Eval      X = X - 1
      C                   Enddo
- 
+
      C                   Z-add     X             WFldLen
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -491,10 +522,10 @@
       *                                                               *
       *****************************************************************
      C     Get_NwrkDet   BEGSR
- 
+
       *  Access Network Details to retrieve message settings
      C     MGNWRK        Chain     SDNWRKL1                           02
- 
+
      C                   If        *IN02 = *ON
      C     *Lock         In        LDA
      C                   Eval      DBASE = 1
@@ -503,7 +534,7 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -514,7 +545,7 @@
       *                                                               *
       *****************************************************************
      C     Get_NwrkAcDet BEGSR
- 
+
       *  Access Network Account Details
      C                   Eval      KNwrk  = MGNWRK
      C                   Eval      KBrca  = MGBRCA
@@ -523,9 +554,9 @@
      C                   Eval      KAccd  = MGACCD
      C                   Eval      KAcsq  = MGACSQ
      C                   Eval      KNaty  = MGNATY
- 
+
      C     KNwrkAc       Chain     GLNWACL0                           03
- 
+
      C                   If        *IN03 = *On
      C     *Lock         In        LDA
      C                   Eval      DBASE = 2
@@ -534,7 +565,7 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C
      C*  Get SWIFT account code currency
      C                   Call      'AOCURRR0'
@@ -542,7 +573,7 @@
      C                   Parm      '*KEY   '     @OPTN             7
      C                   Parm      MGCCY         @CCY              3
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
       ** Error on call
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
@@ -552,12 +583,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Movel     MGCNUM        PCusN
      C                   Movel     MGACCD        PAcctCde
      C                   Movel     MGACSQ        PAcctSeq
      C/COPY WNCPYSRC,MGH00048
- 
+
      C                   If        CER030 = 'Y'                                             BUG25799
       *                                                                                     BUG25799
      C*  Output IBAN, RE or GL account.
@@ -607,7 +638,7 @@
      C/COPY WNCPYSRC,MGH00049
       *                                                                                     BUG25799
      C                   EndIf                                                              BUG25799
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -617,7 +648,7 @@
       *                                                               *
       *****************************************************************
      C     Format_MT950  BEGSR
- 
+
      C/COPY OFCPYSRCZ,CGL146_143                                                            MD024641
                                                                                             MD024641
       * Field :20: Transaction number
@@ -651,7 +682,7 @@
      C                   Exsr      Format_F62
       *
      C                   Endif
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -660,9 +691,9 @@
       * Format_20 - Format Field 20 Transaction Number                *
       *                                                               *
       *****************************************************************
- 
+
      C     Format_20     BEGSR
- 
+
       *  Field :20: Transaction number  = 'GL' + rundate in YYMMDD + sequence
       *
      C                   Eval      Q = 1
@@ -684,9 +715,9 @@
       * Format_25 - Format Field 25, Account Identification           *
       *                                                               *
       *****************************************************************
- 
+
      C     Format_25     BEGSR
- 
+
       *  Field :25: Account Identification = IBAN, RE or GL account
       *
      C                   Eval      Q = Q + 1
@@ -706,11 +737,11 @@
       * Format_28 - Format Field 28C Entry and Page Number            *
       *                                                               *
       *****************************************************************
- 
+
      C     Format_28     BEGSR
- 
+
       *  Field :28C: Entry Number and Page Number
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':28C:'
@@ -729,11 +760,11 @@
       * Format_60 - Format Field 60  Opening Balance                  *
       *                                                               *
       *****************************************************************
- 
+
      C     Format_60     BEGSR
- 
+
       *  Field :60a: Opening Balance
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
       *
@@ -775,7 +806,7 @@
      C                   Eval      %subst(MFLD :8:3)   = A6SWCY
      C                   Eval      %subst(MFLD :11:15) = ZSAMNT
      C                   Eval      CTRC    = WCrLf
- 
+
      C                   Exsr      SRAccLen                                     Accumulate Msg len
       *
      C                   Endsr
@@ -786,15 +817,20 @@
       * Format_61    - Format Repeating field  61                     *
       *                                                               *
       *****************************************************************
- 
+
      C     Format_61     BEGSR
- 
+
       *    Format only if postings exist in MGX950L0 for this network account
- 
+
+     C                   IF        WSort61 = 'Y'                                            MD042041
+     C     KNwrkAc       SETLL     MGX950L1                                                 MD042041
+     C                   READ      MGX950L1                               65                MD042041
+     C                   ELSE                                                               MD042041
      C     KNwrkAc       Setll     MGX950L0
- 
+
      C                   READ      MGX950L0                               65
- 
+     C                   ENDIF                                                              MD042041
+
      C                   DOW       *IN65 = *OFF  And
      C                             KNWrk = X_MGNWRK  And
      C                             KBrca = X_MGBRCA  And
@@ -803,9 +839,9 @@
      C                             KAccd = X_MGACCD  And
      C                             KAcsq = X_MGACSQ  And
      C                             KNaty = X_MGNATY
- 
+
       *    Begin Formatting Field :61:
- 
+
      C                   Eval      WString100 = *Blank
      C                   Eval      Subfld1    = *Blank
      C                   Eval      Subfld2    = *Blank
@@ -816,22 +852,22 @@
      C                   Eval      Subfld7    = *Blank
      C                   Eval      Subfld8    = *Blank
      C                   Eval      Subfld9    = *Blank
- 
+
       *    Subfld 1 = Value date in YYMMDD
- 
+
      C                   Z-add     X_MGVALD      ZMDAY
       *
      C                   Exsr      Call_ZM0060
      C                   Eval      Subfld1 = ZMDATE
- 
+
       *    Subfld 2 = Posting date in MMDD
      C                   Z-add     X_MGPSTD      ZMDAY
      C                   Exsr      Call_ZM0060
      C                   Move      ZMDATE        Subfld2
- 
+
       *    Subfld 3 = Debit/Credit Indicator
      C                   Movel     X_MGDRCR      Subfld3
- 
+
       *    Subfld 4 = Funds Code
      C/COPY WNCPYSRC,MGH00050
      C                   IF        ED5F61 = 'Y'                                               CER030
@@ -840,27 +876,27 @@
      C                   Move      A6SWCY        Subfld4
      C/COPY WNCPYSRC,MGH00051
      C                   ENDIF                                                                CER030
- 
+
       *    Subfld 5 = Posting Amount
      C                   Z-add     X_MGPSTA      ZAMT
      C                   Exsr      Call_ZM0040
      C                   Movel     ZSAMNT        Subfld5
- 
- 
+
+
       *    Subfld 6 = Transaction type identification code
      C                   Movel     X_MGSFD6      Subfld6
- 
+
       *    Subfld 7 = Reference for the Account Owner
      C                   Movel     X_MGSFD7      Subfld7
- 
+
       *    Subfld 8 = Account Servicing Institution's Reference
      C                   Movel     X_MGSFD8      Subfld8
- 
+
       *    Subfld 9 = Supplementary Details
      C                   Movel     X_MGSFD9      Subfld9
- 
+
       *    Concatenate Fld 61 subfields into 1 long string and determine length
- 
+
      C                   Movel     Subfld1       Wstring100
      C                   Cat       Subfld2:0     Wstring100
      C                   Cat       Subfld3:0     Wstring100
@@ -869,22 +905,22 @@
      C                   Cat       Subfld6:0     Wstring100
      C                   Cat       Subfld7:0     Wstring100
      C                   Cat       Subfld8:0     Wstring100
- 
+
      C                   MoveA     *Blanks       AL100
      C                   MoveA     WString100    AL100
      C                   Exsr      SRDetFldLen
- 
+
      C*  Add 4 for tag and 2 for CRLF
      C                   Eval      Wfld61Len = WFldLen + 4 + 2
- 
+
      C*  Field 61 subfield 9
      C                   MoveA     *Blanks       AL100
      C                   MoveA     Subfld9       AL100
      C                   Exsr      SRDetFldLen
      C*  Add 2 for CRLF
      C                   Eval      Wfld61Len = Wfld61Len + WFldLen + 2
- 
- 
+
+
       *    Leave this posting for next page if:
       *    (1)  Max MT950 Length < £current message count + Fld 62 Closing
       *         Balance approx length + current Fld 61 length]
@@ -893,17 +929,17 @@
       *         But only fld 64 is left to output and adding this field will
       *         exceed maximum length.
       *    Else place this posting in MULT DS
- 
+
      C                   Eval      WLength1 = WMsgCount + 32 + WFld61Len
      C                   Eval      WLength2 = WLength1  + 32
      C
      C                   If        ED5MXL < Wlength1 OR
      C                             ED5MXL >=  Wlength1 AND
      C                             ED5MXL <   Wlength2
- 
+
      C                   Eval      NewPage  = 'Y'
      C                   Leave
- 
+
      C                   Else
       *
       *   Move Fld 61 into the multiple data structure
@@ -947,16 +983,24 @@
       *
       *  Delete record from MGX950PD
       *
+     C                   IF        WSort61 = 'Y'                                            MD042041
+     C                   DELETE    MGX950L1                                                 MD042041
+     C                   ELSE                                                               MD042041
      C                   Delete    MGX950L0
+     C                   ENDIF                                                              MD042041
       *
      C                   Endif
- 
+
+     C                   IF        WSort61 = 'Y'                                            MD042041
+     C                   READ      MGX950L1                               65                MD042041
+     C                   ELSE                                                               MD042041
      C                   READ      MGX950L0                               65
- 
+     C                   ENDIF                                                              MD042041
+
      C                   Enddo
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -964,11 +1008,11 @@
       * Format_62 - Format Field 62a Closing Balance                  *
       *                                                               *
       *****************************************************************
- 
+
      C     Format_62     BEGSR
- 
+
       *  Field :62a: Closing Balance  (non-final)
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
       *
@@ -999,15 +1043,15 @@
      C                   Else
      C                   Movel     'C'           MFLD
      C                   Endif
- 
+
      C                   Eval      %subst(MFLD :2:6)   = ZMDATE
      C                   Eval      %subst(MFLD :8:3)   = A6SWCY
      C                   Eval      %subst(MFLD :11:15) = ZSAMNT
      C                   Eval      CTRC    = WCrLf
- 
+
      C                   Z-add     PageClBal     WPrvCBAL
      C                   Z-add     ZMDAY         WPrvCDate
- 
+
      C                   Exsr      SRAccLen                                     Accumulate Msg len
       *
      C                   Endsr
@@ -1018,9 +1062,9 @@
       * Format_64 - Format Field 64  Closing Available Balance        *
       *                                                               *
       *****************************************************************
- 
+
      C     Format_64     BEGSR
- 
+
       *  Field :64: Closing Available Balance
       *
      C                   Eval      Q = Q + 1
@@ -1046,12 +1090,12 @@
      C                   Else
      C                   Movel     'C'           MFLD
      C                   Endif
- 
+
      C                   Eval      %subst(MFLD :2:6)   = ZMDATE
      C                   Eval      %subst(MFLD :8:3)   = A6SWCY
      C                   Eval      %subst(MFLD :11:15) = ZSAMNT
      C                   Eval      CTRC    = WCrLf
- 
+
      C                   Exsr      SRAccLen                                     Accumulate Msg len
       *
      C                   Endsr
@@ -1062,11 +1106,11 @@
       * Format_F62 - Format Final Field 62                            *
       *                                                               *
       *****************************************************************
- 
+
      C     Format_F62    BEGSR
- 
+
       *  Field :62: Revisited (record final closing balance)
- 
+
      C     W62Loc        Occur     MULT
       *
      C                   Eval      MTAG = ':62F:'
@@ -1089,12 +1133,12 @@
      C                   Else
      C                   Movel     'C'           MFLD
      C                   Endif
- 
+
      C                   Eval      %subst(MFLD :2:6)   = ZMDATE
      C                   Eval      %subst(MFLD :8:3)   = A6SWCY
      C                   Eval      %subst(MFLD :11:15) = ZSAMNT
      C                   Eval      CTRC    = WCrLf
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1103,11 +1147,11 @@
       * SROref - Output Record to MGOREFPD                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SROref        BEGSR
- 
+
       ** Initialise fields on PF/MGOREFPD
- 
+
      C                   CLEAR                   MGOREFD0
      C
      C                   Eval      SYTM = *Blanks
@@ -1122,7 +1166,7 @@
      C                   Eval      EVTP = *Blanks
      C                   Eval      NWRK = MGNWRK
      C/COPY OFCPYSRCZ,CGL146_063                                                              CGL146
- 
+
      C**********         Call      'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   Parm      *blanks       P@RTCD            7
@@ -1130,7 +1174,7 @@
      C                   Parm      MGBRCA        P@BRCA            3
      C*****SDBRCH        Parm      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
       ** Error on call
      C     P@RTCD        IFNE      *BLANK
      C     *LOCK         IN        LDA
@@ -1141,13 +1185,13 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   Move      A8BICN        SECN
- 
+
      C                   If        MGNWRK = 'SWIFT '
      C                   Eval      NWSN = A8BTID
      C                   ENDIF
- 
+
      C                   Movel     MGCNUM        DECN
- 
+
      C                   Movel     DECN          PKEY1
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRTCD             7
@@ -1173,16 +1217,16 @@
      C                   When      MGNWRK = 'STTX  '
      C                   Movel     BBSTAD        NWDS
      C                   Endsl
- 
+
      C                   Movel     *Blanks       NWBN
      C                   Movel     '950'         MTPY
- 
+
      C                   If        A6DPRU = 'Y'
      C                   Eval      MPRY = 'U'
      C                   Else
      C                   Eval      MPRY = 'N'
      C                   End
- 
+
      C                   If        MGDMST = 'C'
      C                   Movel     '1'           MGSG
      C                   Movel     'CRTD'        MGST
@@ -1190,7 +1234,7 @@
      C                   Movel     '2'           MGSG
      C                   Movel     'RSND'        MGST
      C                   Endif
- 
+
      C                   Movel     *blanks       LSCC
      C                   Movel     *blanks       F57U
      C                   Movel     *blanks       PTST
@@ -1201,7 +1245,7 @@
      C                   Z-add     NA5LST        MGTM
      C                   Move      BJMRDT        LADT
      C                   Time                    LATM
- 
+
      C                   If        MGST = 'RSND'
      C                   Move      BJMRDT        RELD
      C                   Eval      LATM = MGTM
@@ -1209,16 +1253,16 @@
      C                   Move      *Blanks       RELD
      C                   Eval      RELT = 0
      C                   End
- 
+
      C                   Eval      RUSR = *blanks
      C                   Eval      RWSN = *blanks
- 
+
      C                   Movel     *blanks       AMTX
      C                   Movel     *blanks       AMTS
      C                   Movel     *blanks       SVDT
      C                   Move      MGCCY         CCY
      C                   Z-add     0             NSNO
- 
+
      C                   Select
      C                   When      MGIBAN <> *Blank
      C                   Movel     MGIBAN        SACN
@@ -1231,14 +1275,14 @@
      C                   EVAL      SACN = %SUBST(WAccount:4:21)                               CGL029
      C                   Movel     'A'           AORR
      C                   Endsl
- 
+
      C                   Move      *blanks       DESI
      C                   Move      MGBRCA        BRCA
      C                   Move      *blanks       OTHB
      C                   Move      *blanks       RCBR
      C                   Move      *blanks       OTHT
      C                   Move      *blanks       NETI
- 
+
      C                   If        A6NDWR = 'Y'
      C                   If        A6DNOR = 'Y'
      C                   Eval      DELC = '3'
@@ -1270,7 +1314,7 @@
      C     DELC          ANDEQ     '3'
      C                   MOVEL     '2'           DELC
      C                   END
- 
+
      C                   Move      *blanks       DYST
      C                   Move      *blanks       RSID
      C                   Move      *blanks       MSE1
@@ -1296,9 +1340,9 @@
      C                   Endif
      C                   Eval      CINDV = *Blanks
      C                   Move      *Blanks       CLSS              1
- 
+
      C                   Write     MGOREFD0                             41
- 
+
      C                   If        *IN41 = *ON
      C                   Z-ADD     5             DBASE
      C                   MOVEL     'Write  '     DBKEY
@@ -1306,7 +1350,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1316,9 +1360,9 @@
       *                                                               *
       *****************************************************************
      C     SROMsg        BEGSR
- 
+
       ** Process Multiple Occurence Data Structure
- 
+
      C                   Movel     *blanks       PTDL
      C                   Movel     SavTrno       TRNO
      C                   EVAL      X = 1
@@ -1344,7 +1388,7 @@
      C                   Eval      X = X + 1
      C     X             OCCUR     MULT
      C                   Enddo
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1353,7 +1397,7 @@
       * Call_ZM0040 - Convert amount to SWIFT format                  *
       *                                                               *
       *****************************************************************
- 
+
      C     Call_ZM0040   BEGSR
       *
       *  Convert Amount to SWIFT format
@@ -1377,7 +1421,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1386,9 +1430,9 @@
       * Call_ZM0060 - Convert date to YYMMDD format                   *
       *                                                               *
       *****************************************************************
- 
+
      C     Call_ZM0060   BEGSR
- 
+
      C                   CALL      'ZM0060'                             15
      C                   PARM                    ZMDAY             5 0
      C                   PARM                    ZMDATE            6
@@ -1403,7 +1447,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1417,26 +1461,26 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRtcd             7
      C                   PARM      '*FIRST '     POptn             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = POptn
@@ -1445,16 +1489,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access SDMGMEPD for message management data
- 
+
      C                   CALL      'AOMGMER0'
      C                   PARM      '*MSG    '    PRtcd
      C                   PARM      '*FIRST  '    POptn
      C     SDMGME        PARM      SDMGME        DSFDY
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = POptn
@@ -1500,15 +1544,15 @@
      C                   Move      ZMDATE        WRundNum
      C                   Move      ZMDATE        WRundChr
       *
- 
+
       **  Initialise constant fields
       *
      C                   Eval      WCrLf = *LOVAL
      C                   BITON     '457'         WWCr
      C                   BITON     '257'         WWLf
- 
+
       ** Key List
- 
+
      C     KNwrkAc       KLIST
      C                   KFLD                    KNwrk
      C                   KFLD                    KBrca
@@ -1518,7 +1562,7 @@
      C                   KFLD                    KAcsq
      C                   KFLD                    KNaty
      C/COPY WNCPYSRC,MGH00095
- 
+
      C/COPY OFCPYSRCZ,CGL146_144                                                            MD024641
      C/COPY OFCPYSRCZ,CGL146_146                                                            MD024641
                                                                                             MD024641
@@ -1536,10 +1580,49 @@
       *    this is first GL message so set sequence to blank
      C                   Eval      WSeqChr = *blank
      C                   Endif
- 
+
      C                   Eval      Count950 = 0
- 
+
      C/COPY WNCPYSRC,MGH00052
+      *                                                                                     MD042041
+     C                   CALL      'AOSVALR0'                                               MD042041
+     C                   PARM      *BLANKS       PRtcd                                      MD042041
+     C                   PARM      SValK1        SysValK1                                   MD042041
+     C                   PARM                    SysVal1                                    MD042041
+     C                   PARM      *BLANKS       SysValK2                                   MD042041
+     C                   PARM                    SysVal2                                    MD042041
+     C                   PARM      *BLANKS       SysValK3                                   MD042041
+     C                   PARM                    SysVal3                                    MD042041
+     C                   PARM      *BLANKS       SysValK4                                   MD042041
+     C                   PARM                    SysVal4                                    MD042041
+     C                   PARM      *BLANKS       SysValK5                                   MD042041
+     C                   PARM                    SysVal5                                    MD042041
+     C                   PARM      *BLANKS       SysValK6                                   MD042041
+     C                   PARM                    SysVal6                                    MD042041
+     C                   PARM      *BLANKS       SysValK7                                   MD042041
+     C                   PARM                    SysVal7                                    MD042041
+     C                   PARM      *BLANKS       SysValK8                                   MD042041
+     C                   PARM                    SysVal8                                    MD042041
+     C                   PARM      *BLANKS       SysValK9                                   MD042041
+     C                   PARM                    SysVal9                                    MD042041
+     C                   PARM      *BLANKS       SysValK10                                  MD042041
+     C                   PARM                    SysVal10                                   MD042041
+      *                                                                                     MD042041
+     C                   IF        PRtcd <> *BLANKS                                         MD042041
+      *                                                                                     MD042041
+     C     *LOCK         IN        LDA                                                      MD042041
+     C                   EVAL      DBPGM = 'MG000950'                                       MD042041
+     C                   EVAL      DBFILE = 'SDSVALPD'                                      MD042041
+     C                   EVAL      DBASE = 014                                              MD042041
+     C                   EVAL      DBKEY = %TRIM(SysValK1)                                  MD042041
+     C                   OUT       LDA                                                      MD042041
+      *                                                                                     MD042041
+     C                   EXSR      *PSSR                                                    MD042041
+      *                                                                                     MD042041
+     C                   ELSE                                                               MD042041
+      *                                                                                     MD042041
+     C                   MOVEL     SysVal1       WSort61                                    MD042041
+     C                   ENDIF                                                              MD042041
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1548,13 +1631,13 @@
       * SREND  - Subroutine to End Program                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SREND         BEGSR
- 
+
       **   Output Report Header
- 
+
      C                   Write     HEADAU
- 
+
       **   If there is a DB Error, Output the DB Error Information.
      C                   If        *INU7 = *ON
      C                   Write     DBERROR
@@ -1565,7 +1648,7 @@
       *  End program
      C                   Seton                                        LR
      C                   Return
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -1583,18 +1666,18 @@
       *****************************************************************
       *
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   ROLBK
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EXSR      SREnd
- 
+
      C                   ENDSR
       ********************************************************************
      O/COPY FTCPYSRC,FTSWIFTRAN

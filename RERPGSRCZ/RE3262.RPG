@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. 262850             Date 26Nov09               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 230844             Date 16Dec04               *
+      *  Prev Amend No. 262850             Date 26Nov09               *
+      *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       *                 CLE064             Date 06Dec10               *
       *                 AR751622           Date 02May11               *
@@ -59,6 +60,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  230844 - There is a problem with charges after unlink of     *
+      *           accounts. Applied fix 200199.                       *
       *  262850 - DATABASE ERROR IN FILE HRCJ AT 093.                 *
       *           Use renamed fields DRIS1 and CRIS1 from ACCNTAB     *
       *           when validating DR/CR rate change file.             *
@@ -211,6 +214,10 @@
      F                                              KINFSR REASR
      FRECOM   UF  E           K        DISK         KCOMIT
      FTABLEV4 IF  E                    DISK
+     FREIAC   UF  E           K        DISK                                                   230844
+     F                                              KCOMIT                                    230844
+     F            REIACAF                           KIGNORE                                   230844
+     F            REIACZF                           KIGNORE                                   230844
      FRELINKL1UF  E           K        DISK                               169797
      F                                              KCOMIT                169797
      F/COPY WNCPYSRC,RE3262F001
@@ -1613,6 +1620,8 @@
      C**********           EXSR *PSSR                                                  169797 219375
      C                     END                                            169797
      C*                                                                   169797
+     C                     EXSR SRCHRG                                                        230844
+      *                                                                                       230844
      C                     ADD  1         NORE3
      C*
      C                     ENDSR                           **MAIN ENDSR**
@@ -3216,6 +3225,96 @@
      C*
      C                     ENDSR                           **DATEIN ENDSR**
      C*
+     C/EJECT                                                                                  230844
+      *****************************************************************                       230844
+      **                                                              *                       230844
+      ** SRCHRG subroutine for reversal of charges in primary         *                       230844
+      **                                                              *                       230844
+      **     Called by       MAIN                                     *                       230844
+      **     Calls                                                    *                       230844
+      **                                                              *                       230844
+      *****************************************************************                       230844
+     C           SRCHRG    BEGSR                                                              230844
+      *                                                                                       230844
+     C           *LIKE     DEFN CHGAN     WCHGAN                                              230844
+     C           *LIKE     DEFN CHGAR     WCHGAR                                              230844
+     C                     Z-ADD0         WCHGAN                                              230844
+     C                     Z-ADD0         WCHGAR                                              230844
+      *                                                                                       230844
+     C                     MOVE WCNUM     CNUM                                                230844
+     C                     Z-ADDWACOD     ACOD                                                230844
+     C                     Z-ADDWACSQ     ACSQ                                                230844
+     C                     MOVE WBRCA     BRCA                                                230844
+      *                                                                                       230844
+     C           ACCKEY    CHAINACCNT                55                                       230844
+     C           *IN55     IFEQ '1'                        - B1                               230844
+     C                     MOVE CCY       REHKEY                                              230844
+     C                     Z-ADD62        DBASE            ***************                    230844
+     C                     MOVE 'ACCNT'   DBFILE           **DB ERROR 62**                    230844
+     C                     MOVELAKEY      DBKEY            ***************                    230844
+     C                     EXSR *PSSR                                                         230844
+     C                     END                             - E2                               230844
+      *                                                                                       230844
+     C                     Z-ADDVALU      HISD                                                230844
+      *                                                                                       230844
+      ** Get charge amount information from secondary account                                 230844
+      *                                                                                       230844
+     C           REDKEY    SETLLREHISPPF                                                      230844
+     C           ACCKY     READEREHISPPF                 53                                   230844
+     C           *IN53     DOWEQ'0'                                                           230844
+     C           HISD      ANDLELMVD                                                          230844
+     C                     ADD  CHGAN     WCHGAN                                              230844
+     C                     ADD  CHGAR     WCHGAR                                              230844
+     C           ACCKY     READEREHISPPF                 53                                   230844
+     C                     ENDDO                                                              230844
+      *                                                                                       230844
+     C                     MOVE WLTCUS    CNUM                                                230844
+     C                     Z-ADDWLTAC     ACOD                                                230844
+     C                     Z-ADDWLTAS     ACSQ                                                230844
+     C                     MOVE WLTAB     BRCA                                                230844
+     C                     Z-ADDRUND      HISD                                                230844
+      *                                                                                       230844
+      ** Subtract secondary account charges from primary account                              230844
+      *                                                                                       230844
+     C           REDKEY    SETGTREHISPPF                                                      230844
+     C           ACCKY     REDPEREHISPPF                 53                                   230844
+      *                                                                                       230844
+      ** Verify if error                                                                      230844
+      *                                                                                       230844
+     C           *IN53     IFNE '0'                                                           230844
+     C                     MOVE CCY       REHKEY                                              230844
+     C                     Z-ADD63        DBASE            ***************                    230844
+     C                     MOVE 'REHISDL' DBFILE           **DB ERROR 63**                    230844
+     C                     MOVE *BLANKS   DBKEY            ***************                    230844
+     C                     MOVELAKEY      DBKEY                                               230844
+     C                     EXSR *PSSR                                                         230844
+      *                                                                                       230844
+     C                     ELSE                                                               230844
+     C           CHGAN     SUB  WCHGAN    CHGAN                                               230844
+     C           CHGAR     SUB  WCHGAR    CHGAR                                               230844
+     C           TCHGAN    SUB  WCHGAN    TCHGAN                                              230844
+     C           TCHGAR    SUB  WCHGAR    TCHGAR                                              230844
+     C                     UPDATREHISPPF                                                      230844
+     C                     ENDIF                                                              230844
+      *                                                                                       230844
+      ** Update REIACD                                                                        230844
+      *                                                                                       230844
+     C           ACCKEY    CHAINREIAC                66                                       230844
+     C           *IN66     IFEQ '1'                        - B1                               230844
+     C                     MOVE CCY       REHKEY                                              230844
+     C                     Z-ADD64        DBASE            ***************                    230844
+     C                     MOVE 'REIAC'   DBFILE           **DB ERROR 64**                    230844
+     C                     MOVELAKEY      DBKEY            ***************                    230844
+     C                     EXSR *PSSR                                                         230844
+     C                     ELSE                                                               230844
+     C           NRCA      SUB  WCHGAN    NRCA                                                230844
+     C           RCA       SUB  WCHGAR    RCA                                                 230844
+     C                     UPDATREIACDF                                                       230844
+     C                     END                             - E2                               230844
+      *                                                                                       230844
+     C                     ENDSR                                                              230844
+      *****************************************************************                       230844
+     C/EJECT                                                                                  230844
      C********************************************************************
       *                                                               *                       CER016
       *  SRINT0 - Subroutine to calculate interest for Retail type    *                       CER016

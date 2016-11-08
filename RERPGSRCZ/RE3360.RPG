@@ -11,8 +11,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039579           Date 27Jul16               *
-      *  Prev Amend No. MD035448           Date 01Dec15               *
+      *  Last Amend No. 198547             Date 30Sep16               *
+      *  Prev Amend No. 152698             Date 30Sep16               *
+      *                 MD039579           Date 27Jul16               *
+      *                 MD035448           Date 01Dec15               *
       *                 CGL165             Date 23Feb15               *
       *                 MD031352           Date 13Feb15               *
       *                 CER070             Date 19Aug14               *
@@ -133,6 +135,14 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  198547 - Overdraft interest calculation, if ovred.int. was   *
+      *           inputted, should be calculated also if overdraft    *
+      *           limit = *Zero.                                      *
+      *           Applied for MD-41736.                               *
+      *  152698 - Overdraft Interest Calculation:                     *
+      *           Correct DR interest calculation for a/cs without    *
+      *           OD Expiry Date i.e. ODED = 0                        *
+      *           Applied for MD-41736.                               *
       *  MD039579 - OSIC Enquiry - issue in RE336* programs when F12  *
       *             is pressed from RE3363                            *
       *  MD035448 - CER016 only applies to cal basis 0. Need to       *
@@ -6487,7 +6497,7 @@
      C           ZICALC    OREQ 5                                                           MD035448
      C           ZICALC    OREQ 3                                                           MD035448
      C           ZICALC    OREQ 2                                                           MD035448
-     C           ZICALC    OREQ 0                                                           MD035448                         
+     C           ZICALC    OREQ 0                                                           MD035448
       *                                                                                       CER016
      C********** WWZIR     DIV  360       ZIWRK1    H                                         220566
      C********** ZIAMT     DIV  36000     ZIWRK1    H                                  220566 220323
@@ -6623,8 +6633,11 @@
       *                                                                   CRE001
      C           RHISB     IFGT FODLN                       - B1          CRE001
      C           ATAODR    ANDNE0                                         CRE001
-     C           ZIEND     ANDLEODED                                      CRE001
+     C********** ZIEND     ANDLEODED                                                   CRE001 152698
      C/COPY WNCPYSRC,RE3360C049
+      *                                                                                       152698
+     C           ZIEND     IFLE ODED                        - B3                              152698
+      *                                                                                       152698
      C                     Z-ADDRHISB     ZIAMT                           CRE001
      C/COPY WNCPYSRC,RE3360C050
       *                                                                   CRE001
@@ -6664,9 +6677,28 @@
      C                     Z-ADDRHISB     ZIAMT                           CRE001
      C                     EXSR ZIC00                                     CRE001
      C                     Z-ADDZINTR     FDINT                           CRE001
+      *                                                                                       152698
+     C                     Z-ADDRHISB     ZIAMT                                               152698
+     C                     Z-ADDATAODR    ZIRATE                                              152698
+     C                     EXSR ZIC00                                                         152698
+      *                                                                                       152698
+     C                     Z-ADDZINTR     FOINT                                               152698
+      *                                                                                       152698
+      ** Reset the interest calculation work fields                                           152698
+      *                                                                                       152698
+     C           FDINT     ADD  FOINT     FDINT                                               152698
+      *                                                                                       152698
+     C                     END                             - E3                               152698
+      *                                                                                       152698
+     C                     END                             - E2                               152698
+     C                     ELSE                                                               152698
+     C                     Z-ADDRHISB     ZIAMT                                               152698
+     C                     EXSR ZIC00                                                         152698
+     C                     Z-ADDZINTR     FDINT                                               152698
+      *                                                                                       152698
      C                     END                                            CRE001
       *                                                                   CRE001
-     C                     END                                            CRE001
+     C**********           END                                                         CRE001 198547
      C                     Z-ADDFDINT     ZINTR                           CRE001
      C/COPY WNCPYSRC,RE3360C048
      C                     ENDSR                                          CRE001

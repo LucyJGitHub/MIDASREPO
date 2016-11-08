@@ -10,12 +10,13 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
+      *  Last Amend No. MD041784           Date 04Nov16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 217970             Date 06Jun06               *
-      *  Prev Amend No. 237310             Date 15Dec05               *
+      *  Prev Amend No. 217970             Date 06Jun06               *
+      *                 237310             Date 15Dec05               *
       *                 CSD027             Date 09Dec05               *
       *                 CLE025             Date 20Oct03               *
       *                 TDA035             Date 02Apr04               *
@@ -46,6 +47,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD041784 - Invalid account number issued for account defined *
+      *             in Network Account Maintenance                    *
       *  217970 - Use of VBRA is replaced by VBRX in MBRBSDD.         *
       *           Applied fix annotated as 237310.                    *
       *  237310 - Fix 197434 made field VBRA redundant and created    *
@@ -107,6 +110,11 @@
      F            SWACSSCF                          KIGNORE
      FSWACR   IF  E           K        DISK
      F            SWACSSBF                          KRENAMESWACRET
+     FACCNTL0 IF  E           K        DISK                                                 MD041784
+     F            ACCNTABF                          KRENAMEACCTFUL                          MD041784
+     FACCNTL1 IF  E           K        DISK                                                 MD041784
+     F            ACCNTABF                          KRENAMEACCTRET                          MD041784
+     FGLNWACL5IF  E           K        DISK                                                 MD041784
       *                                                                   186033
       ** Valid branch for user                                            186033
       *                                                                   186033
@@ -154,6 +162,10 @@
      E**********          BR        100  3  A            Branches                      186033 237310
      E                    BR        900  3  A            Branches                             237310
      E                    ACTA        6  1  A            Action codes     186033
+     IACCTFUL                                                                               MD041784
+     I              CFSB                            GLCFSB                                  MD041784
+     IACCTRET                                                                               MD041784
+     I              CFSB                            GLCFSB                                  MD041784
       *
      IINFDS       DS
      I                                    B 378 3790LSTRRN
@@ -256,6 +268,19 @@
      C                     KFLD           KACOD
      C                     KFLD           KACSQ
       *
+     C           REKEY     KLIST                                                            MD041784
+     C                     KFLD           BRCA                                              MD041784
+     C                     KFLD           CNUM                                              MD041784
+     C                     KFLD           CCY                                               MD041784
+     C                     KFLD           ACOD                                              MD041784
+     C                     KFLD           ACSQ                                              MD041784
+      *                                                                                     MD041784
+     C           GLKEY     KLIST                                                            MD041784
+     C                     KFLD           SCNUM                                             MD041784
+     C                     KFLD           SCCY                                              MD041784
+     C                     KFLD           KACOD                                             MD041784
+     C                     KFLD           KACSQ                                             MD041784
+     C                     KFLD           BRANCH                                            MD041784
       **  ZM1001 ERROR
       *
      C           PLIST3    PLIST
@@ -442,6 +467,17 @@
      C                     MOVEAVBRX      BR,1                                                237310
      C                     ENDIF                                          186033
       *                                                                   186033
+      ** Check if CGL013 is installed                                                       MD041784
+      *                                                                                     MD041784
+     C                     MOVEL'N'       CGL013  1                                         MD041784
+     C                     CALL 'AOSARDR0'                                                  MD041784
+     C                     PARM '       ' @RTCD                                             MD041784
+     C                     PARM '*VERIFY' @OPTN                                             MD041784
+     C                     PARM 'CGL013'  @SARD   6                                         MD041784
+     C           @RTCD     IFEQ *BLANKS                                                     MD041784
+     C                     MOVEL'Y'       CGL013                                            MD041784
+     C                     ENDIF                                                            MD041784
+      *                                                                                     MD041784
      C/COPY WNCPYSRC,ME0560C001
      C                     ENDSR
      C/EJECT
@@ -524,6 +560,16 @@
       *
       ** Use full a/c i/d to access SWIFT account reference
      C           KFUL      CHAINSWACFUL              80
+      *                                                                                     MD041784
+      ** If CGL013 is installed, access network accounts file                               MD041784
+      *                                                                                     MD041784
+     C           CGL013    IFEQ 'Y'                                                         MD041784
+     C           *IN80     ANDEQ'1'                                                         MD041784
+     C           KFUL      CHAINGLNWACL5             80                                     MD041784
+     C           *IN80     IFEQ '0'                                                         MD041784
+     C           GLKEY     CHAINACCTFUL              80                                     MD041784
+     C                     ENDIF                                                            MD041784
+     C                     ENDIF                                                            MD041784
       *
       ** Set key to Message reference to full a/c i/d
      C                     MOVELKEYFUL    KEYAC
@@ -544,6 +590,16 @@
       ** Use Retail a/c i/d to access SWIFT account reference
      C           KRET      CHAINSWACRET              80
       *
+      ** If CGL013 is installed, access network accounts file                               MD041784
+      *                                                                                     MD041784
+     C           CGL013    IFEQ 'Y'                                                         MD041784
+     C           *IN80     ANDEQ'1'                                                         MD041784
+     C           KRET      CHAINACCTRET              80                                     MD041784
+     C           *IN80     IFEQ '0'                                                         MD041784
+     C           REKEY     CHAINGLNWACL5             80                                     MD041784
+     C                     ENDIF                                                            MD041784
+     C                     ENDIF                                                            MD041784
+      *                                                                                     MD041784
       ** Set key to Message reference to retail a/c i/d
      C                     MOVELSREAC     KEYAC
       *

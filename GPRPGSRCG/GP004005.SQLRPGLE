@@ -15,14 +15,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
-      *  Last Amend No. MD037908           Date 21Mar16               *
-      *  Prev Amend No. AR924843           Date 08Mar12               *
+      *  Last Amend No. MD042298           Date 08Nov16               *
+      *  Prev Amend No. MD037908           Date 21Mar16               *
+      *                 AR924843           Date 08Mar12               *
       *                 AR892737C          Date 01Feb12               *
       *                 AR878597           Date 13Dec11               *
       *                 CBF005  *CREATE    Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042298 - Reports GP004003 / GP004005 not generated         *
       *  MD037908 - Inhouse permissions missing. (MI_CST_*)           *
       *  AR924843 - Entitlement Type 'Branch' as Booking Branch       *
       *  AR892737C - Permissions by User Report does not allow lower  *
@@ -872,7 +874,9 @@
      C                             ' D.BFPERMISSIONID = E.BFIDPK AND          '+
      C**********                   ' E.BFIDPK = H.BFIDPK AND                  '+            MD037908
      C                             ' E.BFIDPK = H.BFPERMISSIONID AND          '+            MD037908
-     C                             ' H.BFRESOURCEID = I.BFARTEFACTID          '
+     C**********                   ' H.BFRESOURCEID = I.BFARTEFACTID          '             MD042298
+     C                             ' H.BFRESOURCEID = I.BFARTEFACTID          '+            MD042298
+     C                             'AND I.BFDISPLAYNAME IS NOT NULL'                        MD042298
      C**********         IF        PCnsld <> '1'                                           AR892737C
      C                   IF        PCnsld = '0'                                            AR892737C
      C                   EVAL      StmSQL3 = %TRIM(StmSQL3) + ' AND           '+

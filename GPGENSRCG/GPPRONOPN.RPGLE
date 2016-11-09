@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD034693           Date 11Aug15               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD041785           Date 29Sep16               *
+      *  Prev Amend No. MD034693           Date 11Aug15               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041785 - GZPRONOPN is not getting populated by GOC0100     *
       *  MD034693 - Dump due to record locks by Job GO_ONL_OPL.       *
       *             Detect record locks and try to chain again for    *
       *             4 times to let locking job realease the file.     *
@@ -67,9 +69,10 @@ O
      C     CHKLCK        TAG                                                                MD034693
 O    C*****K_GZPRONOL1   CHAIN     PRONOPNF                           99                    MD034693
      C     K_GZPRONOL1   CHAIN (E) PRONOPNF                           99                    MD034693
-     C                   SELECT                                                             MD034693
+     C**********         SELECT                                                    MD034693 MD041785
       * Error retrieving record                                                             MD034693
-     C                   WHEN      %ERROR                                                   MD034693
+     C**********         WHEN      %ERROR                                          MD034693 MD041785
+     C                   IF        %ERROR                                                   MD041785
       * Record lock error                                                                   MD034693
      C                   IF        %STATUS = 1218                                           MD034693
      C                   ADD       1             CNTLCK                                     MD034693
@@ -79,8 +82,9 @@ O    C*****K_GZPRONOL1   CHAIN     PRONOPNF                           99        
      C                   EXSR      *PSSR                                                    MD034693
      C                   ENDIF                                                              MD034693
      C                   ENDIF                                                              MD034693
-      * Record retrieved successfully                                                       MD034693
-     C                   WHEN      %FOUND                                                   MD034693
+      **Record*retrieved*successfully*********************************             MD034693 MD041785
+     C*************      WHEN      %FOUND                                          MD034693 MD041785
+     C                   ENDIF                                                              MD041785
 O
 O     * 'Before'
 O
@@ -106,8 +110,8 @@ O    C                   ELSE
 O    C                   WRITE     W_PRONOPNF
 O    C                   ENDIF
 O    C                   ENDIF
-     C                   OTHER                                                              MD034693
-     C                   ENDSL                                                              MD034693
+     C**********         OTHER                                                     MD034693 MD041785
+     C**********         ENDSL                                                     MD034693 MD041785
      C/COPY GPCPYSRCG,Z1PRONOPN                                                             BUG10215
  
      C                   RETURN

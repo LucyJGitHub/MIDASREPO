@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD042407           Date 07Nov16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CER071             Date 01Aug16               *
       *                 MD034317           Date 17Jul15               *
       *                 MD034876           Date 03Jul15               *
       *                 AR684053           Date 03Jun15               *
@@ -132,6 +133,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042407 - Creation Date field is missing when CGL132 is     *
+      *             switched off ; reversed MD034317 fix              *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER071 - BAIS - Legal Form field                             *
       *  MD034317 - Added CGL132 to the parameter when calling        *
@@ -2214,7 +2217,7 @@
                                                                                              BUG5082
      C                   PARM                    CLE025                                      BUG5082
      C                   PARM                    CFX001                                      BUG5082
-     C                   PARM                    CGL132                                     MD034317
+     C**********         PARM                    CGL132                            MD034317 MD042407
       ** Customer SWIFT Details                                                               CSW207
      C                   PARM                    TranInSwft                                   CSW207
       * OUTPUTS

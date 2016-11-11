@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD038401B          Date 05Oct16               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD042407           Date 08Nov16               *
+      *  Prev Amend No. MD038401B          Date 05Oct16               *
+      *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
       *                 MD030958           Date 17Jul15               *
       *                 CER070             Date 29Oct14               *
@@ -129,6 +130,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042407 - Creation Date field is missing when CGL132 is     *
+      *             switched off ; reversed MD030958 fix              *
       *  MD038401B - Corrected parameters when calling SDCUSDRTV.     *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER071 - BAIS - Legal Form field                             *
@@ -2696,7 +2699,7 @@
      C                   EVAL      BBPRBA=A_CUPRBA
      C                   EVAL      BBCLSS=A_CUCLSS                                            CDL008
      C                   EVAL      BBEFDT=A_CUEFDT                                            CDL008
-     C                   IF        CGL132 = 'Y'                                             MD030958
+     C**********         IF        CGL132 = 'Y'                                    MD030958 MD042407
       ** Extension file - SDCUSTXC                                                            CGL132
      C                   EVAL      XCCUST = A_CUCUST                                          CGL132
       ** Alternative Country of Citizenship                                                   CGL132
@@ -2709,7 +2712,7 @@
      C**********         EVAL      XCLCUS=PSUSER                                     CGL132 MD026835
      C**********         EVAL      XCLCUS=WKUSER                                  MD026835 MD027492A
      C                   EVAL      XCLCUS=WLUSER                                           MD027492A
-     C                   ENDIF                                                              MD030958
+     C**********         ENDIF                                                     MD030958 MD042407
                                                                                               CSW024
      C                   IF        CSW024 = 'Y' and BGMSDL = 'Y'                              CSW024
      C                   EVAL      BBCORP=A_CUCORP                                            CSW024
@@ -2854,11 +2857,11 @@
       ** WRITE NEW CUSTOMER
 
      C                   WRITE     @BBREBG
-     C                   IF        CGL132 = 'Y'                                             MD030958
+     C**********         IF        CGL132 = 'Y'                                    MD030958 MD042407
       ** Write into extension file - SDCUSTXC                                                 CGL132
      C                                                                                        CGL132
      C                   WRITE     SDCUSTX1                                                   CGL132
-     C                   ENDIF                                                              MD030958
+     C**********         ENDIF                                                     MD030958 MD042407
                                                                                               CSD092
      C                   IF        CSD092 = 'Y' AND                                           CGL132
      C                             CGL132 = 'N'                                               CGL132
@@ -3396,7 +3399,7 @@
      C                   CLEAR                   SDCUXC2                                    MD026854
      C                   MOVE      SDCUXC        SDCUXC2                                    MD026854
      C     *IN99         IFEQ      '1'                                                        CGL132
-     C     CGL132        ANDEQ     'Y'                                                      MD030958
+     C*****CGL132        ANDEQ     'Y'                                             MD030958 MD042407
      C                   MOVEL     A_CUCUST      DBKEY                                        CGL132
      C                   MOVEL     'SDCUSTXC'    DBFILE                         ************  CGL132
      C                   MOVEL     '004'         DBASE                          * DBERR 004*  CGL132
@@ -3639,7 +3642,7 @@
      C                   EVAL      BBEFDT=A_CUEFDT                                            CDL008
      C                   EVAL      BBCLST=A_CUCLST                                           BUG5409
      C                   EVAL      BBCLDT=A_CUCLDT                                           BUG5409
-     C                   IF        CGL132 = 'Y'                                             MD030958
+     C**********         IF        CGL132 = 'Y'                                    MD030958 MD042407
       ** Alternative Country of Citizenship                                                   CGL132
      C                   EVAL      XCACCZ=A_XCACCZ                                            CGL132
       ** Creation Date                                                                        CGL132
@@ -3650,7 +3653,7 @@
      C**********         EVAL      XCLCUS=PSUSER                                    CGL132 MD026957B
      C**********         EVAL      XCLCUS=WKUSER                                 MD026957B MD027492A
      C                   EVAL      XCLCUS=WLUSER                                           MD027492A
-     C                   ENDIF                                                              MD030958
+     C**********         ENDIF                                                     MD030958 MD042407
                                                                                               CSW024
      C                   IF        CSW024 = 'Y' and BGMSDL = 'Y'                              CSW024
      C                   EVAL      BBCORP=A_CUCORP                                            CSW024
@@ -3842,9 +3845,9 @@
      C                   UPDATE    @BBREBG
       *                                                                                       CGL132
       ** UPDATE EXTENSION RECORD                                                              CGL132
-     C                   IF        CGL132 = 'Y'                                             MD030958
+     C**********         IF        CGL132 = 'Y'                                    MD030958 MD042407
      C                   UPDATE    SDCUSTX1                                                   CGL132
-     C                   ENDIF                                                              MD030958
+     C**********         ENDIF                                                     MD030958 MD042407
      C                   ENDIF                                                                CSD028
                                                                                               CSD092
      C**********         IF        CSD092 = 'Y'                                        CSD092 CGL132

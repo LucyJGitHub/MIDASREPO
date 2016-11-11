@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. MD034317           Date 17Jul15               *
+      *  Last Amend No. MD042407           Date 07Nov16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD034317           Date 17Jul15               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CSD099             Date 11Feb15               *
@@ -61,6 +62,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042407 - Creation Date field is missing when CGL132 is     *
+      *             switched off ; reversed MD034317 fix              *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD034317 - Added condition on CGL132 fields validation to    *
       *             check if the feature is on.                       *
@@ -117,16 +120,16 @@
                                                                                              BUG2313
      FGPCUSTXL2 IF   E           K DISK    INFSR(*PSSR)                                      BUG2313
      FSDBRCHL0  IF   E           K DISK    INFSR(*PSSR)                                      BUG2313
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Midas SD Local Industry Codes
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDCUDPV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -138,100 +141,100 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Customer Primary Details in screen format
      D CuPrim        E DS                  EXTNAME(SDCUPRPD)
       ** Customer Extension 1 Details in screen format                                        CGL132
      D CuXC          E DS                  EXTNAME(SDCUXCPD)                                  CGL132
       ** Customer SWIFT etails in screen format                                               CSW207
      D CuSwft        E DS                  EXTNAME(SDCUSWPD)                                  CSW207
- 
+
       ** Customer Primary Details OK indicators
      D OKCuPrim      E DS                  EXTNAME(SDECUPRPD)
       ** Customer Extension 1 Details OK indicators                                           CGL132
      D OKCuXC        E DS                  EXTNAME(SDECUXCPD)                                 CGL132
       ** Customer SWIFT Details OK indicators                                                 CSW207
      D OKCuSwft      E DS                  EXTNAME(SDECUSWPD)                                 CSW207
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External DS for Global Customer X-Reference details                                  CGP001
      D GPCUSTX       E DS                  EXTNAME(GPCUSTXPD)                                 CGP001
      D                                     PREFIX(G)                                          CGP001
                                                                                               CGP001
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D ZMUSER          DS            17
      D  USRBCH                11     13
- 
- 
+
+
      D ValidCusd     E DS                  EXTNAME(SDVCUSDPD)
       * Valid Customer Details layout
      D ValidCuXc     E DS                  EXTNAME(SDVCUXCPD)                                 CGL132
       * Valid Customer Ext Details layout                                                     CGL132
      D ValidSwft     E DS                  EXTNAME(SDVSWSDPD)                                 CSW207
       * Valid Customer Details layout                                                         CSW207
- 
+
      D ExtData       E DS                  EXTNAME(SDCUEXPD)
       * Customer Details Extra Data - File (D/B) format
- 
+
       ** External DS for SAR details                                                          CSC011
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC011
                                                                                               CSC011
@@ -240,17 +243,17 @@
                                                                                               CSC011
       ** SD data area                                                                         CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
      D CSC011          S              1A                                                      CSC011
      D PRtCd           S              7A                                                      CSC011
      D POptn           S              7A                                                      CSC011
@@ -264,7 +267,7 @@
      D CFX001          S              1                                                       CFX001
      D CLE025          S              1                                                       CLE025
      D CSD025          S              1                                                       CSD025
-     D CGL132          S              1                                                     MD034317
+     D***CGL132*          S              1                                         MD034317 MD042407
                                                                                               CLE025
      D CSW207          S              1A                                                      CSW207
      D CTI006          S              1A                                                    MD030956
@@ -272,28 +275,28 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDCUDPV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
- 
+
+
       /COPY WNCPYSRC,SDCUDPV003
- 
+
       ** Pass data not requiring validation to VALIDCUSD fields
       *
       ** Customer Name and Address.2
@@ -367,15 +370,15 @@
       *                                                                                       CGL132
       ** Validate Creation Date                                                               CGL132
       *                                                                                       CGL132
-     C                   IF        CGL132 = 'Y'                                             MD034317
+     C**********         IF        CGL132 = 'Y'                                    MD034317 MD042407
      C                   EXSR      VCCRDT                                                     CGL132
-     C                   ENDIF                                                              MD034317
+     C**********         ENDIF                                                     MD034317 MD042407
       *                                                                                       CGL132
       ** Validate Dormant Indicator                                                           CGL132
       *                                                                                       CGL132
-     C                   IF        CGL132 = 'Y'                                             MD034317
+     C**********         IF        CGL132 = 'Y'                                    MD034317 MD042407
      C                   EXSR      VCDRMT                                                     CGL132
-     C                   ENDIF                                                              MD034317
+     C**********         ENDIF                                                     MD034317 MD042407
       *
       ** Validate parent indicator and parent customer number
       *
@@ -393,9 +396,9 @@
       *
       /COPY WNCPYSRC,SDCUDPV020
      C                   EXSR      VCCNCZ
-     C                   IF        CGL132 = 'Y'                                             MD034317
+     C**********         IF        CGL132 = 'Y'                                    MD034317 MD042407
      C                   EXSR      VCACCZ                                                     CGL132
-     C                   ENDIF                                                              MD034317
+     C**********         ENDIF                                                     MD034317 MD042407
       /COPY WNCPYSRC,SDCUDPV021
       *
       ** Validate country of domicile
@@ -552,19 +555,19 @@
      C                   ENDIF                                                                CSW207
       *                                                                                       CSW207
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDCUDPV050
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       ** VCCNA1 - Validate Customer Name and Address
       *****************************************************************
      C     VCCNA1        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate customer name and address
@@ -590,7 +593,7 @@
      C                   PARM                    DDCNA1OK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -600,9 +603,9 @@
       ** VCCRNM - Validate Customer Report Name
       *****************************************************************
      C     VCCRNM        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate customer report name
@@ -628,7 +631,7 @@
      C                   PARM                    DDCRNMOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -695,9 +698,9 @@
       ** VCCRTN - Validate Customer Report Town
       *****************************************************************
      C     VCCRTN        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate customer report town
@@ -724,7 +727,7 @@
       *
       * Update error info with that returned from the validation module
       *
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -787,9 +790,9 @@
       ** VCBRCD - Validate Branch Code
       *****************************************************************
      C     VCBRCD        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate branch code
@@ -820,7 +823,7 @@
      C                   PARM                    DDBRCDOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -830,9 +833,9 @@
       ** VCLCCD - Validate Location
       *****************************************************************
      C     VCLCCD        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate location code
@@ -858,7 +861,7 @@
      C                   PARM                    DDLCCDOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -868,9 +871,9 @@
       ** VCCNCZ - Validate Country of Citizenship
       *****************************************************************
      C     VCCNCZ        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate country of citizenship
@@ -896,7 +899,7 @@
      C                   PARM                    DDCNCZOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1026,9 +1029,9 @@
       ** VCCOLC - Validate Country of Domicile
       *****************************************************************
      C     VCCOLC        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate country of domicile
@@ -1057,7 +1060,7 @@
      C                   PARM                    DDCOLCOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1067,9 +1070,9 @@
       ** VCLINC - Validate Local Institution Code
       *****************************************************************
      C     VCLINC        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate local institution code
@@ -1115,7 +1118,7 @@
      C                   MOVEL     'USR0034'     MsgIdXAr(Idx)                               BUG3605
      C                   ENDIF                                                               BUG3605
      C                   ENDIF                                                               BUG3605
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1125,9 +1128,9 @@
       ** VCLICD - Local Industry Code
       *****************************************************************
      C     VCLICD        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate local industry code
@@ -1153,7 +1156,7 @@
      C                   PARM                    DDLICDOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1163,9 +1166,9 @@
       ** VCRWCD - Risk Weighting Code
       *****************************************************************
      C     VCRWCD        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate risk weighting code
@@ -1191,7 +1194,7 @@
      C                   PARM                    DDRWCDOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1201,9 +1204,9 @@
       ** VCCSSN - Validate Customer Shortname
       *****************************************************************
      C     VCCSSN        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate customer shortname
@@ -1248,7 +1251,7 @@
      C                   PARM                    DDLCCDOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1258,9 +1261,9 @@
       ** VCACOC - Validate Account Officer
       *****************************************************************
      C     VCACOC        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate account officer
@@ -1291,7 +1294,7 @@
      C                   PARM                    DDACOCOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1301,9 +1304,9 @@
       ** VCPIPN - Validate Parent Indicator and Parent Number
       *****************************************************************
      C     VCPIPN        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Parent Indicator and Parent Number
@@ -1345,7 +1348,7 @@
      C                   PARM                    DDPCNBOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1355,9 +1358,9 @@
       ** VCSSDT - Validate Suspended Date
       *****************************************************************
      C     VCSSDT        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate suspended date
@@ -1403,9 +1406,9 @@
       ** VCDOIC - Validate First Contact Date
       *****************************************************************
      C     VCDOIC        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate first contact date
@@ -1456,9 +1459,9 @@
       ** VCBNBI - Validate Bank/Non-bank Indicator
       *****************************************************************
      C     VCBNBI        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate bank/non-bank indicator
@@ -1484,7 +1487,7 @@
      C                   PARM                    DDBNBIOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1494,9 +1497,9 @@
       ** VCCGRP - Validate Retail Customer Group
       *****************************************************************
      C     VCCGRP        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate retail customer group
@@ -1534,9 +1537,9 @@
       ** VCTNBI - Validate tax/non-tax indicator and branch indicator
       *****************************************************************
      C     VCTNBI        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate tax/non-tax indicator and branch indicator
@@ -1585,7 +1588,7 @@
      C                   PARM                    DDCSTYOK          1                          CDL013
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1595,9 +1598,9 @@
       ** VCCDEL - Validate Allow COB Deletion
       *****************************************************************
      C     VCCDEL        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate allow COB deletion
@@ -1627,7 +1630,7 @@
      C                   PARM                    DDCDELOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1637,9 +1640,9 @@
       ** VCMCAC - Validate MA Analysis by Associated Customer
       *****************************************************************
      C     VCMCAC        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate MA analysis by associated customer
@@ -1667,7 +1670,7 @@
      C                   PARM                    DDMCACOK
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1677,9 +1680,9 @@
       ** VCMTSC - Validate Margin Type
       *****************************************************************
      C     VCMTSC        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate margin type
@@ -1713,7 +1716,7 @@
      C                   PARM                    CUMGTP
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1723,9 +1726,9 @@
       ***VCDINC*-*Validate*Designated*In-Currency**********************                      BUG5450
       *****************************************************************
      C*****VCDINC        BEGSR                                                               BUG5450
- 
+
       **Reset*variables*updated*by*each*module*************************                      BUG5450
- 
+
      C**********         EXSR      RESETERRS                                                 BUG5450
       *
       ***Validate*designated*in-currency*******************************                      BUG5450
@@ -1751,7 +1754,7 @@
      C**********         PARM                    DDDINCOK                                    BUG5450
       *
       **Update*error*info*with*that*returned*from*the*validation*module                      BUG5450
- 
+
      C**********         EXSR      UPDATERRS                                                 BUG5450
       *
      C**********         ENDSR                                                               BUG5450
@@ -1761,9 +1764,9 @@
       ** Validate Private Banking Customer
       *****************************************************************
      C     VCPRBA        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Call Validation Module
@@ -1792,7 +1795,7 @@
      C                   PARM                    DDPRBAOK
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1913,7 +1916,7 @@
       *    from each validation module.                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1923,7 +1926,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1972,14 +1975,14 @@
       *                                                               *
       *****************************************************************
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
- 
+
       ** Customer Primary Details
      C                   PARM                    CuPrim
      C                   PARM                    CuXC                                         CGL132
@@ -1987,31 +1990,31 @@
       ** Switchable features                                                                  CLE025
      C                   PARM                    CLE025                                       CLE025
      C                   PARM                    CFX001                                       CFX001
-     C                   PARM                    CGL132                                     MD034317
+     C**********         PARM                    CGL132                            MD034317 MD042407
       ** Customer SWIFT Extension                                                             CSW207
      C                   PARM                    CuSwft                                       CSW207
- 
+
       * OUTPUTS
- 
+
       ** Customer Primary Details OK inds
      C                   PARM                    OKCuPrim
      C                   PARM                    OKCuXC                                       CGL132
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Customer details layout (DS) from/to caller
       ** Valid Global Customer ID                                                             CGP001
                                                                                               CGP001
@@ -2234,7 +2237,7 @@
      C                   ELSE                                                               MD030956
      C                   EVAL      CTI006 = 'N'                                             MD030956
      C                   ENDIF                                                              MD030956
- 
+
       ** Check if SWIFT 2007 is installed                                                     CSW207
                                                                                               CSW207
      C                   CALL      'SWIF2007'                                                 CSW207
@@ -2251,10 +2254,10 @@
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDCUDPV051
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

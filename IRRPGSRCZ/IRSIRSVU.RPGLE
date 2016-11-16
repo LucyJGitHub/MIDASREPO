@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. MD031775           Date 09Jan15               *
+      *  Last Amend No. CSD095CC1          Date 13Sep16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD031775           Date 09Jan15               *
       *                 MD031224           Date 25Nov14               *
       *                 MD029165           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -103,6 +104,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD095CC1 - Allow Deal Sub-Type and Branch for IRS, FRA and  *
+      *              CCF SSIs                                         *
       *  CSW216 - SWIFT Changes 2016                                  *
       *  MD031775 - Cannot insert transaction due to errors. Correct  *
       *             mapping to include CDL094 fields.                 *
@@ -1918,11 +1921,12 @@ RGC                                                                             
      C                   PARM                    BQAGVC            2
                                                                                               CSD095
       ** Deal Subtype                                                                         CSD095
-     C                   PARM      *BLANK        BlankSTYP                                    CSD095
+     C******             PARM      *BLANK        BlankSTYP                          CSD095 CSD095CC1
+     C                   PARM      SDLST         BlankSTYP                                 CSD095CC1
                                                                                               CSD095
       ** Branch                                                                               CSD095
-     C                   PARM      *BLANK        BlankBRCA                                    CSD095
-                                                                                              CSD095
+     C******             PARM      *BLANK        BlankBRCA                          CSD095 CSD095CC1
+     C                   PARM      SBRCA         BlankBRCA                                 CSD095CC1
       ** Return
       ** Defaulted Payment Settlement Instruction in file format
      C                   PARM                    DBPaySttmt

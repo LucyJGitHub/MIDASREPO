@@ -12,14 +12,17 @@
 /*       (c) Misys International Banking Systems Ltd. 2010           */
 /*                                                                   */
 /*       Last Amend No. MD040242A          Date 02Sep16              */
+/*       Prev Amend No. MD040266           Date 10Aug16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CGL114  *CREATE    Date 04Jan10              */
+/*                      CGL114  *CREATE    Date 04Jan10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
 /*       MD040242A - Send error message when no account exists for   */
 /*                   entered selection criteria.                     */
 /*                 - Applied for MD040318A.                          */
+/*       MD040266 - Option 'Select to Run in Close of Business'      */
+/*                  ends in error. Add SHARE *NO fro ACCNTAL0.       */
 /*       CGL114 - Account Transfer Utility                           */
 /*                                                                   */
 /*********************************************************************/
@@ -43,6 +46,7 @@
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
  
+             OVRDBF     FILE(ACCNTL0) MBR(*FIRST) SHARE(*NO)                            /*MD040266*/
 /** Build Query Selection String **/
  
 /*           CALL       PGM(GL003200) PARM(&REFERENCE &RTCD &QRYSLT) */                /*MD040242A*/

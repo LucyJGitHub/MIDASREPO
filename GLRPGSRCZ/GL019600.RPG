@@ -18,14 +18,19 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2010            *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD039530           Date 04Oct16               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
       *                 BUG27769           Date 09Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CGL114A *CREATE    Date 12Mar10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039530 - Menu option 'Select to Run in Close of Business   *
+      *             is failng with the error: Commitment control not  *
+      *             valid for open of member ACCNTL0                  *
+      *           - Applied for MD040266A.
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG27769 - Incorrect error code                              *
@@ -40,10 +45,12 @@
       *****************************************************************
       *
      FGLSLACL8IF  E           K        DISK         KINFSR *PSSR
-     FACCNTL0 UF  E           K        DISK         KINFSR *PSSR
+     F***ACCNTL0 UF  E           K        DISK         KINFSR *PSSR                         MD039530
+     FACCNTL0 UF  E           K        DISK         KINFSR *PSSR      UC                    MD039530
      F                                              KCOMIT
       /EJECT
      E                    CPY@    1   1 80
+     E                    CMD     1   1 65                                                  MD039530
       *
       ** Array containing Copyright statement
       *
@@ -185,6 +192,16 @@
      C                     ENDIF
       *
      C                     MOVE 'F'       PRTCD
+      *                                                                                     MD039530
+      ** Override and open file ACCNTL0                                                     MD039530
+      *                                                                                     MD039530
+     C           ACOPEN    IFNE 'Y'                                                         MD039530
+     C                     CALL 'QCMDEXC'                                                   MD039530
+     C                     PARM           CMD                                               MD039530
+     C                     PARM 65        CMDLEN 155                                        MD039530
+     C                     OPEN ACCNTL0                                                     MD039530
+     C                     MOVEL'Y'       ACOPEN  1                                         MD039530
+     C                     ENDIF                                                            MD039530
       *
      C                     ENDSR
       *
@@ -256,3 +273,5 @@
       ********************************************************************
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2010
+** CMD                                                                                      MD039530
+OVRDBF FILE(ACCNTL0) TOFILE(ACCNTL0) OVRSCOPE(*JOB) SHARE(*NO)                              MD039530

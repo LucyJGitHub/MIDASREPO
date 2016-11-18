@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. AR994044           Date 26Jun12               *
-      *  Prev Amend No. AR796650           Date 27Jun11               *
+      *  Last Amend No. MD042517           Date 18Nov16               *
+      *  Prev Amend No. AR994044           Date 26Jun12               *
+      *                 AR796650           Date 27Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP205             Date 23Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD042517 - Unknown error message displayed.  Display error   *
+      *             message if #1EMSG is not blank.  This error       *
+      *             manifested during CSD095CC1 testing.              *
       *  AR994044 - Field tag 72 Seq C is missing in MT300 if deal    *
       *             type is AT and CSW212 and CSW005 is on            *
       *  AR796650 - Use of data area Y2MGFLA is redundant             *
@@ -813,10 +817,12 @@
      C     *INU7         IFEQ      '1'
      C     *INU8         ANDEQ     '1'
      C     P2EIND        OREQ      'Y'
+     C     #1EMSG        IFNE      *BLANKS                                                  MD042517
      C                   SETON                                        3599
       * Send the message specified in filed #1EMSG
      C                   MOVEL     #1EMSG        ZAMSID
      C                   EXSR      ZASNMS
+     C                   ENDIF                                                              MD042517
       *
      C                   ENDIF
       *

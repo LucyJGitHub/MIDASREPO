@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039702           Date 14Jul16               *
-      *  Prev Amend No. MD029074           Date 21Nov14               *
+      *  Last Amend No. MD039988           Date 08Aug16               *
+      *  Prev Amend No. MD039702           Date 14Jul16               *
+      *                 MD029074           Date 21Nov14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR792734A          Date 14Sep11               *
       *                 AR586146           Date 17Apr12               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039988 - Discrepancy of Balances between enquiry screens.  *
+      *             Amend to reconcile all screens.                   *
       *  MD039702 - Batch number can hold alpha characters. Test      *
       *             should be done on characters 4 to 6 when          *
       *             displaying 'MANPO'.                               *
@@ -804,7 +807,16 @@
 
       * Posting date = Read From Date
 
+     C                   IF        ReadFromDate <> BJRDNB                                   MD039988
+     C                   Z-ADD     ReadFromDate  ZDAYNO                                     MD039988   
+     C                   ELSE                                                               MD039988
      C                   Z-ADD     ReadFromDate  ZDAYNO
+     C                   MOVE      CCY           ZCCY                                       MD039988
+     C                   MOVE      BJSLCD        ZLOC                                       MD039988
+     C                   Z-ADD     1             ZNRDYS                                     MD039988
+     C                   EXSR      ZBKDT                                                    MD039988
+     C                   Z-ADD     ZDYNBR        ZDAYNO                                     MD039988
+     C                   ENDIF                                                              MD039988
      C                   EXSR      ZDATE2
      C                   MOVE      ZADATE        EPSTD
 
@@ -813,7 +825,11 @@
 
       * Posting narrative
 
+     C                   IF        ReadFromDate <> BJRDNB                                   MD039988
      C                   EVAL      EPNAR = 'OPENING LEDGER BALANCE ------>'
+     C                   ELSE                                                               MD039988
+     C                   EVAL      EPNAR = 'CLOSING LEDGER BALANCE ------>'                 MD039988
+     C                   ENDIF                                                              MD039988
 
       * Posting amount
 
@@ -853,13 +869,25 @@
 
       * Value date = Read From Date
 
+     C                   IF        ReadFromDate <> BJRDNB                                   MD039988
      C                   Z-ADD     ReadFromDate  ZDAYNO
+     C                   ELSE                                                               MD039988
+     C                   MOVE      CCY           ZCCY                                       MD039988
+     C                   MOVE      BJSLCD        ZLOC                                       MD039988
+     C                   Z-ADD     1             ZNRDYS                                     MD039988
+     C                   EXSR      ZBKDT                                                    MD039988
+     C                   Z-ADD     ZDYNBR        ZDAYNO                                     MD039988
+     C                   ENDIF                                                              MD039988
      C                   EXSR      ZDATE2
      C                   MOVE      ZADATE        EVALD
 
       * Posting narrative
 
+     C                   IF        ReadFromDate <> BJRDNB                                   MD039988
      C                   EVAL      EPNAR = 'OPENING CLEARED BALANCE ----->'
+     C                   ELSE                                                               MD039988
+     C                   EVAL      EPNAR = 'CLOSING CLEARED BALANCE ----->'                 MD039988
+     C                   ENDIF                                                              MD039988
 
       * Posting amount
 
@@ -1610,6 +1638,24 @@
      C                   ENDSR
       *****************************************************************
       /SPACE 5
+      *****************************************************************                     MD039988
+      *                                                               *                     MD039988
+      *  ZBKDT - CALCULATE THE NTH WORKING DAY BACKWARD FROM A GIVEN  *                     MD039988
+      *          START DATE FOR ANY PARTICULAR CURRENCY               *                     MD039988
+      *          AND (OPTIONAL) LOCATION.                             *                     MD039988
+      *                                                               *                     MD039988
+      *****************************************************************                     MD039988
+      *****************************************************************                     MD039988
+     C/COPY ZSRSRC,ZBKDT_ILE                                                                MD039988
+      /SPACE 5                                                                              MD039988
+      *****************************************************************                     MD039988
+      *                                                               *                     MD039988
+      *  ZACCH - ACCESS A HOLIDAY RECORD FOR A PARTICULAR CURRENCY    *                     MD039988
+      *          AND (OPTIONAL) LOCATION.                             *                     MD039988
+      *                                                               *                     MD039988
+      *****************************************************************                     MD039988
+     C/COPY ZSRSRC,ZACCHLE                                                                  MD039988
+      /SPACE 5                                                                              MD039988
       *****************************************************************
       * *INZSR - Initial subroutine called automatically at program start
       *****************************************************************

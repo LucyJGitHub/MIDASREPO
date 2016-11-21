@@ -804,6 +804,7 @@
       *                                                                                       CRE019
      C     P2EIND        IFEQ      'Y'
      C     P2NUME        ANDGT     0
+     C                   SETON                                        3599                  MD042517
      C* Send all the messages specified in the Error Array.
      C                   Z-ADD     1             PX                3 0          P2A index
      C     PX            DOWLE     P2NUME

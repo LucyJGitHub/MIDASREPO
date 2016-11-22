@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD031617           Date 23Jun15               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD039575           Date 07Jul16               *
+      *  Prev Amend No. MD031617           Date 23Jun15               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 245692             Date 12Dec13               *
@@ -69,6 +70,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039575 - LDNI ERROR in validating Payment Convention fields*
+      *             but fields are not available for this Deal        *
+      *             (also not sent from the API) nor the Payment      *
+      *             Convention feature (CDL096) switched on           *
       *  MD031617 - Display problem with negative interest but        *
       *             positive total interest. Check value of AIPD when *
       *             formatting Total Interest (TOTI).                 *
@@ -201,7 +206,8 @@
                                                                                               CGL011
       * Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(MMDELDPP)
-     D   BsDayFil            148    181                                                       CDL096
+     D***BsDayFil            148    181                                              CDL096 MD039575
+     D   BsDayFil           2148   2181                                                     MD039575
  
       * Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(MMLDNIPD)

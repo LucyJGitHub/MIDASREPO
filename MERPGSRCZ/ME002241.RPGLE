@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD023237           Date 05Nov13               *
-      *  Prev Amend No. CGL146             Date 10Jul13               *
+      *  Last Amend No. CGL178             Date 04Aug16               *
+      *  Prev Amend No. MD023237           Date 05Nov13               *
+      *                 CGL146             Date 10Jul13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL178 - Generate MT942 based on MT950.                      *
       *  MD023237 - Database error encountered when amending          *
       *             Generate Message to 'Y'. (Recompile)              *
       *             Amended hook: CGL146_051                          *
@@ -37,7 +39,8 @@
       *  CGL013 - MT94x Message Generation                            *
       *                                                               *
       *****************************************************************
- 
+
+     FGLNW94L1  IF   E           K DISK    INFSR(*PSSR)                                       CGL178
      F/COPY OFCPYSRCZ,CGL146_033                                                              CGL146
       *****************************************************************
       *                                                               *
@@ -66,11 +69,11 @@
       * 99 - Multi-purpose                                            *
       *                                                               *
       *****************************************************************
- 
+
       ** Automatically included D-specs
       ** ==============================
       *
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -82,55 +85,55 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
       *
- 
+
       ** Named constants
       ** ---------------
       *
- 
+
       ** Valid frequency codes
       *
      D FreqArr         C                   'DWFSMRTQXYLBAZ '
- 
+
       ** Arrays and Data Structures
       ** --------------------------
       *
- 
+
      D NewFilRcd     E DS                  EXTNAME(GLNWACPD)
       ** New Network Account File Record (i.e. new state after amendments)
       *
- 
+
      D ScrLayout     E DS                  EXTNAME(ME002221DF:ME002221F1)
       ** Detail 1 Screen Layout
       *
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
       ** Rundat DS
       *
      D/COPY OFCPYSRCZ,CGL146_020                                                              CGL146
- 
+
       ** Declared variables
       ** ------------------
       *
- 
+
       ** Error Indicators Array
       *
      D IN40_TO_70      S              1    DIM(31)
      D/COPY OFCPYSRCZ,CGL146_001                                                              CGL146
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
       *
- 
+
       ** Entry Parameters
       *
      C     *ENTRY        PLIST
@@ -139,17 +142,36 @@
      C                   PARM                    ScrLayout
      C                   PARM                    IN40_TO_70
      C                   PARM                    NewFilRcd
- 
+
+     C     KG940R        KLIST                                                                CGL178
+     C                   KFLD                    NANWRK                                       CGL178
+     C                   KFLD                    NABRCH                                       CGL178
+     C                   KFLD                    NACNUM                                       CGL178
+     C                   KFLD                    NACCY                                        CGL178
+     C                   KFLD                    NAACOD                                       CGL178
+     C                   KFLD                    NAACSQ                                       CGL178
+     C                   KFLD                    NANATY                                       CGL178
+                                                                                              CGL178
+     C     KG940S        KLIST                                                                CGL178
+     C                   KFLD                    NANWRK                                       CGL178
+     C                   KFLD                    NABRCH                                       CGL178
+     C                   KFLD                    NACNUM                                       CGL178
+     C                   KFLD                    NACCY                                        CGL178
+     C                   KFLD                    NAACOD                                       CGL178
+     C                   KFLD                    NAACSQ                                       CGL178
+     C                   KFLD                    NANATY                                       CGL178
+     C                   KFLD                    XXDSTN           11                          CGL178
+                                                                                              CGL178
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
       *------------------------------------------------------------------------*
       *                      Details 1 Fields Validation                       *
       *------------------------------------------------------------------------*
- 
+
       ** Generates MT950
       *
       ** -- The field is mandatory
@@ -181,6 +203,25 @@
       *
  B1  C                   IF        F1G950 = 'N'
       *
+      ** If CGL178 is on, field cannot be 'N' it there is an existing entry in GLNW94PD       CGL178
+      ** with MT940 not to be generated and either MT941 or MT942 to be generated             CGL178
+     C                   IF        CGL178 = 'Y'                                               CGL178
+     C     KG940S        SETLL     GLNW94L1                                                   CGL178
+     C     KG940R        READE     GLNW94L1                                                   CGL178
+     C                   DOW       NOT %EOF(GLNW94L1)                                         CGL178
+     C                   IF        N4G940 = 'N' AND N4G941 ='Y' OR                            CGL178
+     C                             N4G940 = 'N' AND N4G942 ='Y'                               CGL178
+     C                   MOVE      'ME00998'     ZAMSID                                       CGL178
+     C                   MOVE      *On           *IN41                                        CGL178
+     C                   EXSR      $ZaSndMsg                                                  CGL178
+     C                   MOVE      *On           *IN40                                        CGL178
+     C                   MOVEL(P)  '*MSG'        RetCodeOut                                   CGL178
+     C                   LEAVE                                                                CGL178
+     C                   ENDIF                                                                CGL178
+     C     KG940R        READE     GLNW94L1                                                   CGL178
+     C                   ENDDO                                                                CGL178
+     C                   ENDIF                                                                CGL178
+                                                                                              CGL178
       ** ---- Entry in all the other fields is forbidden
       *
  B2  C                   IF        F15SFQ <> *Blank  OR F15SDY <> 0 OR
@@ -201,9 +242,9 @@
  E1  C                   ENDIF
       *
       ** End Generates MT950
- 
+
       ** N.B.: At this point, F1G950 is always 'Y' **
- 
+
      C/COPY OFCPYSRCZ,CGL146_051                                                              CGL146
       ** Statement Frequency
       *
@@ -218,7 +259,7 @@
      C                   ENDIF
       *
       ** End Statement Frequency
- 
+
       ** Statement Day in Month
       *
       ** -- If the frequency is 'M', 'Q', 'X' or 'T'
@@ -251,7 +292,7 @@
      C                   MOVE      'ME00046'     ZAMSID
      C                   MOVE      *On           *IN43
  E2  C                   ENDIF
- 
+
  E1  C                   ENDIF
       *
       ** -- If an error was found
@@ -263,7 +304,7 @@
      C                   ENDIF
       *
       ** End Statement Day in Month
- 
+
       ** Next Statement Date
       *
       ** -- If the frequency is 'Z' and the next statement date is blank,
@@ -333,7 +374,7 @@
      C                   ENDIF
       *
       ** End Next Statement Date
- 
+
       ** Demand Statement Indicator
       *
       ** -- The field is mandatory
@@ -341,18 +382,18 @@
  B1  C                   IF        F15DSI = *Blank
      C                   MOVE      'ME00034'     ZAMSID
      C                   MOVE      *On           *IN45
- 
+
       ** -- The valid values are 'Y' and 'N'
       *
  X1  C                   ELSE
- 
+
  B2  C                   IF        F15DSI <> 'Y' AND F15DSI <> 'N'
      C                   MOVE      'ME00042'     ZAMSID
      C                   MOVE      *On           *IN45
  E2  C                   ENDIF
- 
+
  E1  C                   ENDIF
- 
+
       ** -- If an error was found
       *
      C                   IF        *IN45
@@ -362,24 +403,24 @@
      C                   ENDIF
       *
       ** End Demand Statement Indicator
- 
+
      C/COPY OFCPYSRCZ,CGL146_052                                                              CGL146
       ** End of the module
       *
      C     @EndMod       TAG
       *    ----------    ------
      C                   EXSR      $ExitMod
- 
+
       *========================================================================*
       *                    S  U  B  R  O  U  T  I  N  E  S                     *
       *========================================================================*
- 
+
       *========================================================================*
       * $ZaSndMsg : Send message to the program message queue                  *
       *------------------------------------------------------------------------*
      C     $ZaSndMsg     BEGSR
       *    ----------    ------
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGM
      C                   PARM                    ZAPGRL
@@ -389,7 +430,7 @@
      C                   PARM                    ZAMSTP
       *    ----------    ------
      C     @ZaSndMsg     ENDSR
- 
+
       *========================================================================*
       * $ExitMod  : Exit from the module                                       *
       *------------------------------------------------------------------------*
@@ -398,12 +439,12 @@
       ** Return the current values of the error indicators
       *
      C                   MOVEA     *IN(40)       IN40_TO_70
- 
+
      C                   MOVE      *On           *INLR
      C                   RETURN
       *    ----------    ------
      C     @ExitMod      ENDSR
- 
+
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *========================================================================*
@@ -412,63 +453,76 @@
       ** Initialise Copyright Array
       *
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Define fields used by the message sending function
       *
       ** -- If no named caller --> set-up ZAPGM with the current program name
       *
      C                   IF        CallerIn = *Blanks
      C                   MOVEL     PSProcPgm     ZAPGM            10
- 
+
       ** -- Otherwise set-up ZAPGM with the caller name
       *
      C                   ELSE
      C                   MOVEL     CallerIn      ZAPGM
      C                   ENDIF
- 
+
      C                   MOVEL     'MEMSG'       ZAMSGF           10
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     *Blanks       ZAMSID            7
      C                   MOVEL     *Blanks       ZAMSDA          132
      C                   MOVEL     *Blanks       ZAMSTP            7
- 
+
       ** Retrieve RUNDAT
       *
      C                   IN        RUNDAT
      C     AGDFF         COMP      'M'                                    98
      C/COPY OFCPYSRCZ,CGL146_041                                                              CGL146
- 
+
       ** Initialize error indicators with the values passed by the caller
       *
      C                   MOVEA     IN40_TO_70    *IN(40)
- 
+
       ** Reset general error indicator
       *
      C                   MOVE      *OFF          *IN40
- 
+      *                                                                                       CGL178
+      ** Check if CGL178 is installed                                                         CGL178
+      *                                                                                       CGL178
+     C                   MOVEL     'N'           CGL178                                       CGL178
+     C                   CALLB     'AOSARDR0'                                                 CGL178
+     C                   PARM      *BLANKS       PRtCd             7                          CGL178
+     C                   PARM      '*VERIFY'     POptn             7                          CGL178
+     C                   PARM      'CGL178'      @SARD                                        CGL178
+                                                                                              CGL178
+     C                   IF        PRtCd = *BLANKS                                            CGL178
+     C                   MOVEL     'Y'           CGL178            1                          CGL178
+     C                   ENDIF                                                                CGL178
+      *                                                                                       CGL178
+
       ** Clear the return code
       *
      C                   EVAL      RetCodeOut = *Blanks
       *    ----------    ------
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
      C     *PSSR         BEGSR
       *    ----------    ------
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
- 
+
      C                   CALLB     'DBERRCTL'                           99
- 
+
      C                   MOVEL(P)  '*ERROR'      RetCodeOut
      C                   EXSR      $ExitMod
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2002

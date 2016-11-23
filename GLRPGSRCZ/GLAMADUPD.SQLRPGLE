@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD034725           Date 27Jul16               *
-      *  Prev Amend No. MD035554           Date 25May16               *
+      *  Last Amend No. MD042832           Date 23Nov16               *
+      *  Prev Amend No. MD034725           Date 27Jul16               *
+      *                 MD035554           Date 25May16               *
       *                 MD033852           Date 20Aug15               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 23Feb15               *
@@ -125,6 +126,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042832 - Serious Midas Error upon authorization due to     *
+      *             incorrect of indicator.                           *
       *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
       *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
       *  MD033852 - Wrong balance when statement frequency is         *
@@ -6046,13 +6049,15 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *
      C     AccntKey      CHAIN     REAPWDL0                           8081
       ** DATABASE ERROR
-     C     *IN80         IFEQ      '1'
+     C******IN80         IFEQ      '1'                                                      MD042832
+     C     *IN81         IFEQ      '1'                                                      MD042832
      C                   MOVEL     DBerrKey      DBKEY
      C                   MOVEL     'REAPWDPD'    DBFILE                         ************
      C                   MOVEL     '069'         DBASE                          * DBERR 069*
      C                   EXSR      SRERR                                        ************
      C                   ENDIF
-     C     *IN81         IFEQ      '0'
+     C******IN81         IFEQ      '0'                                                      MD042832
+     C     *IN80         IFEQ      '0'                                                      MD042832
      C                   EVAL      RW_PSWD=PWPSWD
      C                   UPDATE    REAPWDD0
      C                   ENDIF

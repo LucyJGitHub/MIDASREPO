@@ -1,0 +1,59 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas COB check Active Jobs in a System')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Module                            */
+/*                                                                   */
+/*       CBC000108 -  Check Active Jobs in a System                  */
+/*                                                                   */
+/*       Function: This program checks all jobs per type (I/B)       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*                                                                   */
+/*       Last Amend No. MD038993 *CREATE   Date 21Nov16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD038993 - Missing code functionality on CCB014.            */
+/*                  Define 10 jobs. COB will not run if one of the   */
+/*                  job is active.                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&JOBST &CBJOBN)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2016')
+             DCL        VAR(&JOBST) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FIRST) TYPE(*CHAR) LEN(1)
+             DCLF       CBJOBLPD
+ 
+/** Global Monitor Message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&FIRST) VALUE('Y')
+ READNXT:    RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+             IF         COND(&CBJOBN *NE ' ') THEN(DO)
+             CALL CBC000109 PARM(&CBJOBN &CBJOBT &CBJOBS &FIRST &JOBST)
+             IF         COND(&JOBST *EQ 'R') THEN(GOTO       +
+                          CMDLBL(END))
+             ENDDO
+             CHGVAR     VAR(&FIRST) VALUE('N')
+             GOTO READNXT
+ 
+/** If Error */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             GOTO       CMDLBL(ENDCL)
+ 
+/** Completed */
+ END:
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+ ENDCL:      ENDPGM

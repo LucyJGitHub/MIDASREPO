@@ -13,20 +13,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2005            *
       *                                                               *
-      *  Last Amend No. MD038993           Date 21Nov16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG10848R          Date 02May06               *
-      *                 BUG10848           Date 15Mar06               *
+      *  Last Amend No. BUG10848R          Date 02May06               *
+      *  Prev Amend No. BUG10848           Date 15Mar06               *
       *                 CCB014  *Create    Date 25Apr05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD038993 - Missing code functionality on CCB014.             *
-      *             Define 10 jobs. COB will not run if one of the    *
-      *             job is active.                                    *
       *  BUG10848R - Retrieved the UserId who runs the schedule batch *
       *              for COB                                          *
       *  BUG10848 - Schedule not functioning for Global Processing    *
@@ -44,7 +40,6 @@
       *
      FCB0004DFCF  E                    WORKSTN      KINFSR *PSSR
      FGPZONEL2IF  E           K        DISK         KINFSR *PSSR                            BUG10848
-     FCBJOBLPDUF  E                    DISK         KINFSR *PSSR                            MD038993
       *
       ** COB Scheduling Maintenance/Control Screen
       *
@@ -117,9 +112,6 @@
      I                                        2   30WHOUR                                   BUG10848
      I                                        1   3 WOFFST                                  BUG10848
      I              ' Zone (Time Zone '   C         WZONE5                                  BUG10848
-      *
-     I            DS                                                                        MD038993
-     I              'CBC000109'           C         ACTJOB                                  MD038993
       /EJECT
       *****************************************************************
       *                   Index to subroutines                        *
@@ -153,10 +145,6 @@
       ** Control actual status of scheduling
       *
      C                     EXSR #LINSC
-      *                                                                                     MD038993
-      ** Active job checking                                                                MD038993
-      *                                                                                     MD038993
-     C                     EXSR #ACJOB                                                      MD038993
       *
       ** Do while F3 is not pressed to exit the program
       *
@@ -195,8 +183,6 @@
      C                     EXSR #LVLDS
       *
      C           @ERR      IFEQ '0'
-      *                                                                                     MD038993
-     C                     EXSR #JOBSC                                                      MD038993
       *
       ** Update DLYCOB dtaara
       *
@@ -437,153 +423,6 @@
       *
      C                     ENDSR
       /EJECT
-      *****************************************************************                     MD038993
-      *                                                               *                     MD038993
-      *  #ACJOB  -  Active job checking                               *                     MD038993
-      *                                                               *                     MD038993
-      *  Called by: Main routine                                      *                     MD038993
-      *  Calls    : None                                              *                     MD038993
-      *                                                               *                     MD038993
-      *****************************************************************                     MD038993
-      *                                                                                     MD038993
-     C           #ACJOB    BEGSR                                                            MD038993
-      *                                                                                     MD038993
-     C                     DO   10        WRRN    20                                        MD038993
-      *                                                                                     MD038993
-     C           WRRN      CHAINCBJOBLPD             95                                     MD038993
-      *                                                                                     MD038993
-     C                     MOVELCBJOBN    PJOBN                                             MD038993
-     C                     MOVELCBJOBT    PJOBT                                             MD038993
-     C                     MOVELCBJOBS    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-      *                                                                                     MD038993
-     C                     SELEC                                                            MD038993
-     C           WRRN      WHEQ 1                                                           MD038993
-     C                     MOVELCBJOBN    #0JBN1                                            MD038993
-     C                     MOVELCBJOBT    #0JBT1                                            MD038993
-     C                     MOVELCBJOBS    #0JBC1                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS1                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS1                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 2                                                           MD038993
-     C                     MOVELCBJOBN    #0JBN2                                            MD038993
-     C                     MOVELCBJOBT    #0JBT2                                            MD038993
-     C                     MOVELCBJOBS    #0JBC2                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS2                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS2                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 3                                                           MD038993
-     C                     MOVELCBJOBN    #0JBN3                                            MD038993
-     C                     MOVELCBJOBT    #0JBT3                                            MD038993
-     C                     MOVELCBJOBS    #0JBC3                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS3                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS3                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 4                                                           MD038993
-     C                     MOVELCBJOBN    #0JBN4                                            MD038993
-     C                     MOVELCBJOBT    #0JBT4                                            MD038993
-     C                     MOVELCBJOBS    #0JBC4                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS4                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS4                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 5                                                           MD038993
-     C                     MOVELCBJOBN    #0JBN5                                            MD038993
-     C                     MOVELCBJOBT    #0JBT5                                            MD038993
-     C                     MOVELCBJOBS    #0JBC5                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS5                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS5                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 6                                                           MD038993
-     C                     MOVELCBJOBN    #0JBN6                                            MD038993
-     C                     MOVELCBJOBT    #0JBT6                                            MD038993
-     C                     MOVELCBJOBS    #0JBC6                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS6                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS6                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 7                                                           MD038993
-     C                     MOVELCBJOBN    #0JBN7                                            MD038993
-     C                     MOVELCBJOBT    #0JBT7                                            MD038993
-     C                     MOVELCBJOBS    #0JBC7                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS7                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS7                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 8                                                           MD038993
-     C                     MOVELCBJOBN    #0JBN8                                            MD038993
-     C                     MOVELCBJOBT    #0JBT8                                            MD038993
-     C                     MOVELCBJOBS    #0JBC8                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS8                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS8                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 9                                                           MD038993
-     C                     MOVELCBJOBN    #0JBN9                                            MD038993
-     C                     MOVELCBJOBT    #0JBT9                                            MD038993
-     C                     MOVELCBJOBS    #0JBC9                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS9                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS9                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 10                                                          MD038993
-     C                     MOVELCBJOBN    #0JBNA                                            MD038993
-     C                     MOVELCBJOBT    #0JBTA                                            MD038993
-     C                     MOVELCBJOBS    #0JBCA                                            MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBSA                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBSA                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C                     ENDSL                                                            MD038993
-      *                                                                                     MD038993
-     C                     ENDDO                                                            MD038993
-      *                                                                                     MD038993
-     C                     ENDSR                                                            MD038993
-      /EJECT                                                                                MD038993
       *****************************************************************
       *                                                               *
       *  #LVLDS  -  Validate main screen fields                       *
@@ -806,266 +645,8 @@
      C                     MOVELWUSER     REQUSR                                           BUG10848R
       *
      C                     OUT  DLYCOB
-      *                                                                                     MD038993
-      ** Update Active Jobs                                                                 MD038993
-      *                                                                                     MD038993
-     C                     DO   10        WRRN                                              MD038993
-      *                                                                                     MD038993
-     C           WRRN      CHAINCBJOBLPD             95                                     MD038993
-      *                                                                                     MD038993
-     C                     SELEC                                                            MD038993
-     C           WRRN      WHEQ 1                                                           MD038993
-     C                     MOVEL#0JBN1    CBJOBN                                            MD038993
-     C                     MOVEL#0JBT1    CBJOBT                                            MD038993
-     C                     MOVEL#0JBC1    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 2                                                           MD038993
-     C                     MOVEL#0JBN2    CBJOBN                                            MD038993
-     C                     MOVEL#0JBT2    CBJOBT                                            MD038993
-     C                     MOVEL#0JBC2    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 3                                                           MD038993
-     C                     MOVEL#0JBN3    CBJOBN                                            MD038993
-     C                     MOVEL#0JBT3    CBJOBT                                            MD038993
-     C                     MOVEL#0JBC3    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 4                                                           MD038993
-     C                     MOVEL#0JBN4    CBJOBN                                            MD038993
-     C                     MOVEL#0JBT4    CBJOBT                                            MD038993
-     C                     MOVEL#0JBC4    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 5                                                           MD038993
-     C                     MOVEL#0JBN5    CBJOBN                                            MD038993
-     C                     MOVEL#0JBT5    CBJOBT                                            MD038993
-     C                     MOVEL#0JBC5    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 6                                                           MD038993
-     C                     MOVEL#0JBN6    CBJOBN                                            MD038993
-     C                     MOVEL#0JBT6    CBJOBT                                            MD038993
-     C                     MOVEL#0JBC6    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 7                                                           MD038993
-     C                     MOVEL#0JBN7    CBJOBN                                            MD038993
-     C                     MOVEL#0JBT7    CBJOBT                                            MD038993
-     C                     MOVEL#0JBC7    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 8                                                           MD038993
-     C                     MOVEL#0JBN8    CBJOBN                                            MD038993
-     C                     MOVEL#0JBT8    CBJOBT                                            MD038993
-     C                     MOVEL#0JBC8    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 9                                                           MD038993
-     C                     MOVEL#0JBN9    CBJOBN                                            MD038993
-     C                     MOVEL#0JBT9    CBJOBT                                            MD038993
-     C                     MOVEL#0JBC9    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 10                                                          MD038993
-     C                     MOVEL#0JBNA    CBJOBN                                            MD038993
-     C                     MOVEL#0JBTA    CBJOBT                                            MD038993
-     C                     MOVEL#0JBCA    CBJOBS                                            MD038993
-      *                                                                                     MD038993
-     C                     ENDSL                                                            MD038993
-      *                                                                                     MD038993
-     C                     UPDATCBJOBLD0                                                    MD038993
-      *                                                                                     MD038993
-     C                     ENDDO                                                            MD038993
-      *                                                                                     MD038993
      C                     ENDSR
       /EJECT
-      *****************************************************************                     MD038993
-      *                                                               *                     MD038993
-      *  #JOBST  -  Check Job Status                                  *                     MD038993
-      *                                                               *                     MD038993
-      *  Called by: Main program                                      *                     MD038993
-      *  Calls    : None                                              *                     MD038993
-      *                                                               *                     MD038993
-      *****************************************************************                     MD038993
-      *                                                                                     MD038993
-     C           #JOBST    BEGSR                                                            MD038993
-      *                                                                                     MD038993
-     C                     MOVEL*BLANK    PJOBA                                             MD038993
-      *                                                                                     MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-      *                                                                                     MD038993
-     C           WRRN      IFEQ 1                                                           MD038993
-     C                     MOVEL'Y'       PFRST                                             MD038993
-     C                     ELSE                                                             MD038993
-     C                     MOVEL'N'       PFRST                                             MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-      ** Check Job Status                                                                   MD038993
-      *                                                                                     MD038993
-     C                     CALL ACTJOB                                                      MD038993
-     C                     PARM           PJOBN  10                                         MD038993
-     C                     PARM           PJOBT   1                                         MD038993
-     C                     PARM           PJOBS   1                                         MD038993
-     C                     PARM           PFRST   1                                         MD038993
-     C                     PARM           PJOBA   1                                         MD038993
-      *                                                                                     MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C                     ENDSR                                                            MD038993
-      /EJECT                                                                                MD038993
-      *****************************************************************                     MD038993
-      *                                                               *                     MD038993
-      *  #JOBSC  -  Update Screen Job Status                          *                     MD038993
-      *                                                               *                     MD038993
-      *  Called by: Main program                                      *                     MD038993
-      *  Calls    : None                                              *                     MD038993
-      *                                                               *                     MD038993
-      *****************************************************************                     MD038993
-      *                                                                                     MD038993
-     C           #JOBSC    BEGSR                                                            MD038993
-      *                                                                                     MD038993
-     C                     MOVEL*BLANKS   #0JBS1                                            MD038993
-     C                     MOVEL*BLANKS   #0JBS2                                            MD038993
-     C                     MOVEL*BLANKS   #0JBS3                                            MD038993
-     C                     MOVEL*BLANKS   #0JBS4                                            MD038993
-     C                     MOVEL*BLANKS   #0JBS5                                            MD038993
-     C                     MOVEL*BLANKS   #0JBS6                                            MD038993
-     C                     MOVEL*BLANKS   #0JBS7                                            MD038993
-     C                     MOVEL*BLANKS   #0JBS8                                            MD038993
-     C                     MOVEL*BLANKS   #0JBS9                                            MD038993
-     C                     MOVEL*BLANKS   #0JBSA                                            MD038993
-      *                                                                                     MD038993
-     C                     DO   10        WRRN                                              MD038993
-      *                                                                                     MD038993
-     C                     SELEC                                                            MD038993
-     C           WRRN      WHEQ 1                                                           MD038993
-     C                     MOVEL#0JBN1    PJOBN                                             MD038993
-     C                     MOVEL#0JBT1    PJOBT                                             MD038993
-     C                     MOVEL#0JBC1    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS1                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS1                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 2                                                           MD038993
-     C                     MOVEL#0JBN2    PJOBN                                             MD038993
-     C                     MOVEL#0JBT2    PJOBT                                             MD038993
-     C                     MOVEL#0JBC2    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS2                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS2                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 3                                                           MD038993
-     C                     MOVEL#0JBN3    PJOBN                                             MD038993
-     C                     MOVEL#0JBT3    PJOBT                                             MD038993
-     C                     MOVEL#0JBC3    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS3                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS3                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 4                                                           MD038993
-     C                     MOVEL#0JBN4    PJOBN                                             MD038993
-     C                     MOVEL#0JBT4    PJOBT                                             MD038993
-     C                     MOVEL#0JBC4    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS4                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS4                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 5                                                           MD038993
-     C                     MOVEL#0JBN5    PJOBN                                             MD038993
-     C                     MOVEL#0JBT5    PJOBT                                             MD038993
-     C                     MOVEL#0JBC5    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS5                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS5                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 6                                                           MD038993
-     C                     MOVEL#0JBN6    PJOBN                                             MD038993
-     C                     MOVEL#0JBT6    PJOBT                                             MD038993
-     C                     MOVEL#0JBC6    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS6                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS6                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 7                                                           MD038993
-     C                     MOVEL#0JBN7    PJOBN                                             MD038993
-     C                     MOVEL#0JBT7    PJOBT                                             MD038993
-     C                     MOVEL#0JBC7    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS7                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS7                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 8                                                           MD038993
-     C                     MOVEL#0JBN8    PJOBN                                             MD038993
-     C                     MOVEL#0JBT8    PJOBT                                             MD038993
-     C                     MOVEL#0JBC8    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS8                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS8                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 9                                                           MD038993
-     C                     MOVEL#0JBN9    PJOBN                                             MD038993
-     C                     MOVEL#0JBT9    PJOBT                                             MD038993
-     C                     MOVEL#0JBC9    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBS9                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBS9                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C           WRRN      WHEQ 10                                                          MD038993
-     C                     MOVEL#0JBNA    PJOBN                                             MD038993
-     C                     MOVEL#0JBTA    PJOBT                                             MD038993
-     C                     MOVEL#0JBCA    PJOBS                                             MD038993
-     C                     EXSR #JOBST                                                      MD038993
-     C           PJOBA     IFEQ 'R'                                                         MD038993
-     C                     MOVEL'Running' #0JBSA                                            MD038993
-     C                     ELSE                                                             MD038993
-     C           PJOBN     IFNE *BLANKS                                                     MD038993
-     C                     MOVEL'Finished'#0JBSA                                            MD038993
-     C                     ENDIF                                                            MD038993
-     C                     ENDIF                                                            MD038993
-      *                                                                                     MD038993
-     C                     ENDSL                                                            MD038993
-     C                     ENDDO                                                            MD038993
-      *                                                                                     MD038993
-     C                     ENDSR                                                            MD038993
-      /EJECT                                                                                MD038993
       *****************************************************************
       *                                                               *
       *  #SCSTR  -  Start/Restart COB jobs                            *

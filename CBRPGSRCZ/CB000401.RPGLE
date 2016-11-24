@@ -323,7 +323,7 @@
       *
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
-     C                   MOVEL     'CB0004'      DBPGM
+     C                   MOVEL     'CB000401'    DBPGM
      C                   OUT       LDA
       *
       ** Access RUNDAT
@@ -352,7 +352,7 @@
       *
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
-     C                   MOVEL     'CB0004'      DBPGM
+     C                   MOVEL     'CB000401'    DBPGM
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     'FIRST'       DBKEY
      C                   Z-ADD     1             DBASE
@@ -399,7 +399,7 @@
      C     KZONE         CHAIN     GPZONEL2                           30
       *
      C     *IN30         IFEQ      *ON
-     C                   MOVEL     'CB0004'      DBPGM
+     C                   MOVEL     'CB000401'    DBPGM
      C                   MOVEL     'GPZONEL2'    DBFILE
      C                   MOVEL     LIBR          DBKEY
      C                   Z-ADD     2             DBASE

@@ -93,30 +93,30 @@
              DLYJOB     DLY(60)
                                                                                         /*MD038993*/
 /** Do not START COB if job is active.                                          */      /*MD038993*/
-             CHGVAR     VAR(&IDX)   VALUE(0)                                            /*MD038993*/
-CHKJOB:      CHGVAR     VAR(&JOBST) VALUE(' ')                                          /*MD038993*/
-             CHGVAR     VAR(&JOBNM) VALUE(' ')                                          /*MD038993*/
-             CALL CBC000108 PARM(&JOBST &JOBNM)                                         /*MD038993*/
-             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD038993*/
-             CHGVAR     VAR(&MSG) VALUE('Job CBC000108 in error.')                      /*MD038993*/
-             SNDMSG     MSG(&MSG) TOMSGQ(MOPERQ MRUNQ)                                  /*MD038993*/
-                        GOTO       CMDLBL(ENDPGM)                                       /*MD038993*/
+             CHGVAR      VAR(&IDX)   VALUE(0)                                           /*MD038993*/
+CHKJOB:      CHGVAR      VAR(&JOBST) VALUE(' ')                                         /*MD038993*/
+             CHGVAR      VAR(&JOBNM) VALUE(' ')                                         /*MD038993*/
+             CALL        CBC000108 PARM(&JOBST &JOBNM)                                  /*MD038993*/
+             IF           COND(%SWITCH(XXXXXX11)) THEN(DO)                              /*MD038993*/
+                CHGVAR    VAR(&MSG) VALUE('Job CBC000108 in error.')                    /*MD038993*/
+                SNDMSG    MSG(&MSG) TOMSGQ(MOPERQ MRUNQ)                                /*MD038993*/
+                GOTO      CMDLBL(ENDPGM)                                                /*MD038993*/
              ENDDO                                                                      /*MD038993*/
-             IF         COND(&JOBST *EQ 'R' *AND &IDX *LT 60) +
-                          THEN(DO)                                                      /*MD038993*/
-             DLYJOB     DLY(60)                                                         /*MD038993*/
-             CHGVAR     VAR(&IDX)   VALUE(&IDX + 1)                                     /*MD038993*/
-             GOTO       CMDLBL(CHKJOB)                                                  /*MD038993*/
+             IF           COND(&JOBST *EQ 'R' *AND &IDX *LT 60) +
+                THEN(DO)                                                                /*MD038993*/
+                DLYJOB    DLY(60)                                                       /*MD038993*/
+                CHGVAR    VAR(&IDX)   VALUE(&IDX + 1)                                   /*MD038993*/
+                GOTO      CMDLBL(CHKJOB)                                                /*MD038993*/
              ENDDO                                                                      /*MD038993*/
 /** After a delay of 1 hour and if all the Jobs are not finished                */      /*MD038993*/
 /** go back into input cycle and send an error message to the MOPERQ and MRUNQ. */      /*MD038993*/
                                                                                         /*MD038993*/
-             IF         COND(&JOBST *EQ 'R') THEN(DO)                                   /*MD038993*/
-             CHGDTAARA  DTAARA(DLYCOB (2 1)) VALUE('N')                                 /*MD038993*/
-             CHGVAR     VAR(&MSG) VALUE('Job ' *CAT &JOBNM *BCAT 'is +
+             IF           COND(&JOBST *EQ 'R') THEN(DO)                                 /*MD038993*/
+                CHGDTAARA DTAARA(DLYCOB (2 1)) VALUE('N')                               /*MD038993*/
+                CHGVAR    VAR(&MSG) VALUE('Job ' *CAT &JOBNM *BCAT 'is +
                           ACTIVE.')                                                     /*MD038993*/
-             SNDMSG     MSG(&MSG) TOMSGQ(MOPERQ MRUNQ)                                  /*MD038993*/
-                        GOTO       CMDLBL(ENDPGM)                                       /*MD038993*/
+                SNDMSG    MSG(&MSG) TOMSGQ(MOPERQ MRUNQ)                                /*MD038993*/
+                GOTO      CMDLBL(ENDPGM)                                                /*MD038993*/
              ENDDO                                                                      /*MD038993*/
                                                                                         /*MD038993*/
              CALL       PGM(CBC0001) PARM('I' 'E')

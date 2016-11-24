@@ -10,7 +10,7 @@
       *                                                               *
       *  Function:  This program prompt a screen to define scheduling *
       *             conditions and to control status (Restart/Stop)   *
-
+      *                                                               *
       *             Source converted to RPGLE from OPM program CB0004.*
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *

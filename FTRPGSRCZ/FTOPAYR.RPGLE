@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD039986           Date 10Aug16               *
+      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *                 CFT157             Date 29Aug14               *
+      *                 CFT120             Date 28Sep12               *
       *                 AR1067499          Date 12Dec12               *
       *                 AR870195           Date 11Jan12               *
       *                 CSF011A            Date 28Nov11               *
@@ -44,6 +46,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039986 - Additional codes to upgrade AR1090283.            *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -186,6 +192,8 @@
      D                                     PREFIX(EX)                                         CER001
      D RegData       E DS                  EXTNAME(FTOPRXPD)                                  CER001
                                                                                               CER001
+     D ExtData       E DS                  EXTNAME(FTOPEXPD)                                MD039986
+                                                                                            MD039986
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
       * External DS for Funds Transfer details
  
@@ -228,6 +236,7 @@
      D SMTCN           S              6                                                       CFT116
      D SCHQN           S              6                                                       CFT116
      D SCQIN           S              1                                                       CFT118
+     D AAuth           S              1                                                     MD039986
      D/COPY WNCPYSRC,FTOPAYZD01
       **--------------------------------------------------------------------------------------------
  
@@ -397,6 +406,8 @@
      C                   MOVE      OPMSGR        PMSGR             8                          CSD083
      C                   MOVEL     RegData       RegData1          2                          CSF011
      C                   MOVE      RegData       RegData2         18                          CSF011
+     C                   MOVEL     NewPmtScn6    NewPmtScn6A       9                        MD039986
+     C                   MOVE      NewPmtScn6    NewPmtScn6B      11                        MD039986
      C                   EVAL                    Buffer = NewPmtScn1
      C                                           + NewPmtSc1b + NewPmtSc2a
      C                                           + NewPmtSc2b + NewPmtScn3
@@ -413,11 +424,15 @@
      C                                           + PMSGR + OPORB1 + OPORB2                    CSD083
      C                                           + OPORB3 + OPORB4 + OPORB5                   CSD083
      C                                           + OPORBT                                     CSD083
-     C                                           + NewPmtScn6                                 CER049
+     C**********                                 + NewPmtScn6                        CER049 MD039986
      C**********                                 + RegData                             CER001 CSF011
-     C                                           + RegData1                                   CSF011
+     C**********                                 + RegData1                          CSF011 MD039986
+     C                                           + NewPmtScn6A                              MD039986
  
-     C                   EVAL      Buffer2 =  RegData2                                        CSF011
+     C**********         EVAL      Buffer2 =  RegData2                               CSF011 MD039986
+     C                   EVAL      Buffer2 = NewPmtScn6B + AAuth                            MD039986
+     C                                       + BtnPressed                                   MD039986
+     C                                       + RegData + ExtData                            MD039986
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************                       CSF011
@@ -514,6 +529,9 @@
      C**********         EVAL      %SUBST(WAccntType:1:10) = @DSTT + @RCRT           CSF011 AR870195
      C**********                   + @BNCT + @TRIT + @ACBT + @ORBT + @ORCT           CSF011 AR870195
      C**********                   + @SNCT + @INBT + @CDRT                           CSF011 AR870195
+     C                   EVAL      %SUBST(WAccntType:1:10) = DSTT + RCRT                    MD039986
+     C                             + BNCT + OPTRIT + ACBT + OPORBT + ORCT                   MD039986
+     C                             + SNCT + INBT + CDRT                                     MD039986
                                                                                               CSF011
      C                   DOW       CusIdx <= NoOfCusField                                     CSF011
                                                                                               CSF011
@@ -521,6 +539,7 @@
      C                   EVAL      WAccName  = *BLANKS                                     AR1067499
      C                   EVAL      W@Slash = 'N'                                              CSF011
      C**********         EVAL      W@ATyp = %SUBST(WAccntType:CusIdx:1)              CSF011 AR870195
+     C                   EVAL      W@ATyp = %SUBST(WAccntType:CusIdx:1)                     MD039986
      C                   EVAL      P@Str = %SUBST(WNumDetlIn:CusIdx2:35)                      CSF011
      C                   EVAL      P@Str2 = %SUBST(WNumDetlIn:CusIdx2+35:35)                  CSF011
      C                   EVAL      P@Str3 = %SUBST(WNumDetLn3:CusIdx3:35)                     CSF011
@@ -534,11 +553,14 @@
      C                   ENDIF                                                                CSF011
                                                                                               CSF011
      C**********         IF        W@ATyp = *BLANKS                                  CSF011 AR870195
+     C                   IF        W@ATyp = *BLANKS OR W@Atyp = 'A'                         MD039986
+     C                   EVAL      W@Atyp = *BLANKS                                         MD039986
      C                   IF        (W@Slash = 'Y' AND P@Str3 <> *BLANKS)                      CSF011
      C                             OR (W@Slash = 'N' AND P@Str2 <> *BLANKS)                   CSF011
      C                   EVAL      W@ATyp = 'A'                                               CSF011
      C                   ENDIF                                                                CSF011
      C**********         ENDIF                                                       CSF011 AR870195
+     C                   ENDIF                                                              MD039986
                                                                                               CSF011
      C                   IF        P@Str <> *BLANKS                                           CSF011
      C                             AND W@ATyp <> 'A'                                          CSF011
@@ -793,6 +815,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
+     C                   PARM                    BtnPressed       10                       AR1090283
  
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -997,6 +1020,7 @@
      C                   PARM                    SHMSGR
       * Part Number
      C                   PARM                    SHPART
+     C                   PARM                    BtnPressed                                AR1090283
       *                                                                                       CER001
      C                   IF        ULX043 = 'Y'                                               CER001
      C                   CALLB     'FTOPAY2CT'                                                CER001

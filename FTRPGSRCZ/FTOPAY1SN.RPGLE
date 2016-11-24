@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD036155           Date 23Oct15               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. AR1090283          Date 10Aug16               *
+      *  Prev Amend No. MD036155           Date 23Oct15               *
+      *                 CGL165             Date 17Feb15               *
       *                 MD029067           Date 27Oct14               *
       *                 MD024335           Date 19Aug14               *
       *                 MD023832           Date 28Apr14               *
@@ -164,6 +165,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  MD036155 - FT OUTWARD PAYMENTS - Only Even reference         *
       *              numbers are being produced                       *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -4950,6 +4954,7 @@
      C                   PARM                    SHMSGR                                       190845
      C* Part Number                                                                           190845
      C                   PARM                    SHPART                                       190845
+     C                   PARM      *BLANKS       BtnPressed       10                       AR1090283
      C/COPY WNCPYSRC,FTH00660
       *                                                                                       190845
       * Update 'Current' Payment with Payment in Screen Format

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT050             Date 03Jun13               *
-      *  Prev Amend No. 258944             Date 23Jan13               *
+      *  Last Amend No. AR1090283          Date 10Aug16               *
+      *  Prev Amend No. CFT050             Date 03Jun13               *
+      *                 258944             Date 23Jan13               *
       *                 CFT148             Date 23Jan13               *
       *                 CFT120             Date 28Sep12               *
       *                 CAP211             Date 28Sep12               *
@@ -86,6 +87,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  CFT050 - SWIFTRef Directories upload                         *
       *  258944 - APISERVER API FTOPAY: correct positions; fix use of *
       *           APNARV in CFT148 which adds one to positions        *
@@ -2743,6 +2747,7 @@
      C                   PARM                    SHMSGR                                       190845
      C* Part Number                                                                           190845
      C                   PARM                    SHPART                                       190845
+     C                   PARM      *BLANKS       BtnPressed       10                       AR1090283
       * Update 'Current' Payment with Payment in Screen Format
       *
      C                   MOVEL     NewPmtScn1    CurPmtScn1

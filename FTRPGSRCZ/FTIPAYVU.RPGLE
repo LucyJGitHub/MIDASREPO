@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD036159           Date 15Jul16               *
-      *  Prev Amend No. MD034973           Date 16Jul15               *
+      *  Last Amend No. AR1090283          Date 10Aug16               *
+      *  Prev Amend No. MD036159           Date 15Jul16               *
+      *                 MD034973           Date 16Jul15               *
       *                 MD032077           Date 26Jan15               *
       *                 MD030906           Date 13Nov14               *
       *                 CFT157             Date 29Aug14               *
@@ -93,6 +94,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  MD036159 - Systems allows payment with same FRNT.            *
       *             Pattern fix AR971184.                             *
       *           - Applied for MD-39705.                             *
@@ -958,6 +962,7 @@
      D OVERRIDE        S              1                                                       CFT115
      D SOVRO           S             10                                                       CFT115
      D SPWRD           S             10                                                       CFT115
+     D BtnPressed      S             10A                                                   AR1090283
       /COPY WNCPYSRC,FTIPAYV002
 
       *****************************************************************
@@ -1159,6 +1164,7 @@
      C                                      NewButton +                                       255190
      C                                      TranInIPY9 +                                      CER049
      C                                      AAuth +                                           CAP211
+     C                                      BtnPressed +                                   AR1090283
      C                                      RegData +                                         CER001
      C                                      ExtData
 
@@ -1497,6 +1503,7 @@
 
       ** Output Charge Currency No. of Decimal Places
      C                   PARM                    PONBDP
+     C                   PARM      *BLANKS       BtnPressed                                AR1090283
 
      C                   ENDSR
       *****************************************************************

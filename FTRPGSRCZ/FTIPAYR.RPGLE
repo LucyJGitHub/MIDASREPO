@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD039986           Date 10Aug16               *
+      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *                 CFT157             Date 29Aug14               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CSF011             Date 12Sep11               *
       *                 CER049             Date 06Dec10               *
@@ -40,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039986 - Additional codes to upgrade AR1090283.            *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -315,6 +321,7 @@
      D W@Abc           S              1                                                       CSF011
      D W@CCY           S              3                                                       CSF011
      D W@BRC           S              3                                                       CSF011
+     D AAuth           S              1                                                     MD039986
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -419,6 +426,8 @@
      C                                      @TimeStamp +                                     BUG4196
      C                                      @NewButton +                                      CER049
      C                                      CurTrIPY9  +                                      CER049
+     C                                      AAuth +                                         MD039986
+     C                                      BtnPressed +                                    MD039986
      C                                      RegData    +                                      CER001
      C                                      ExtData
  
@@ -999,6 +1008,7 @@
  
       ** Output Charge Currency No. of Decimal Places
      C                   PARM                    PONbdp
+     C                   PARM                    BtnPressed                                AR1090283
  
      C                   IF        ULX043 = 'Y'                                               CER001
      C                   CALLB     'FTIPAY2CT'                                                CER001
@@ -1352,6 +1362,7 @@
  
       ** API Return Code
      C                   PARM                    APIRetc
+     C                   PARM                    BtnPressed       10                       AR1090283
  
       * Set up the names of the message files from which the message handler
       * will get the messages

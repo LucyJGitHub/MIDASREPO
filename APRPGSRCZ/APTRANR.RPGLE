@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. AR701789           Date 26Sep16               *
-      *  Prev Amend No. AR702532           Date 13Jan15               *
+      *  Last Amend No. MD039986           Date 10Aug16               *
+      *  Prev Amend No. AR1090283          Date 10Aug16               *      
+      *                 AR701789           Date 26Sep16               *
+      *                 AR702532           Date 13Jan15               *
       *                 CAP212             Date 15Sep14               *
       *                 CGL165             Date 23Feb15               *
       *                 CGL132             Date 01May13               *
@@ -74,6 +76,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039986 - Additional codes to upgrade AR1090283.            *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *      
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -247,6 +253,7 @@
      D FOTRID          S             20                                                       CAP210
      D OKACTN          S              1                                                       CAP210
      D OKTRNN          S              1                                                       CAP210
+     D BtnPressed      S             10                                                    AR1090283
  
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
@@ -365,7 +372,9 @@
  
      C                   MOVEL     TransID       DDPREF_In        15
      C*****1****         SUBST     TransID:16    DDACTN_In         1                        AR833200
-     C     1             SUBST     TransID:19    DDACTN_In         1                        AR833200
+     C*****1             SUBST     TransID:19    DDACTN_In         1               AR833200 MD039986
+     C     10            SUBST     TransID:19    BtnPressed                                AR1090283
+     C     1             SUBST     TransID:29    DDACTN_In         1                        MD039986
  
      C                   CALL      'FTIPAYR'
      C                   PARM                    FwdBck
@@ -377,6 +386,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
+     C                   PARM                    BtnPressed                                AR1090283
  
       * Outgoing payments
  
@@ -384,7 +394,9 @@
  
      C                   MOVEL     TransID       DDPREF_In
      C*****1****         SUBST     TransID:16    DDACTN_In         1                        AR833200
-     C     1             SUBST     TransID:19    DDACTN_In         1                        AR833200
+     C*****1             SUBST     TransID:19    DDACTN_In         1               AR833200 MD039986
+     C     10            SUBST     TransID:19    BtnPressed                                 MD039986
+     C     1             SUBST     TransID:29    DDACTN_In         1                        MD039986
  
      C                   CALL      'FTOPAYR'
      C                   PARM                    FwdBck
@@ -397,6 +409,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
+     C                   PARM                    BtnPressed                                AR1090283
  
      C     TransTYPE     WHENEQ    'AMAD'
      C     TransTYPE     OREQ      'ACMC'                                                     CRE026

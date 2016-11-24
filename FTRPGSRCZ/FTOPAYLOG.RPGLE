@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. AR1090283          Date 10Aug16               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -36,6 +37,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -277,6 +281,7 @@
      C                   PARM                    PSTATUS
      C                   PARM                    PMSGR
      C                   PARM                    PPART
+     C                   PARM      *BLANKS       BtnPressed       10                       AR1090283
  
       ** No error on conversion, format TRANSDTL field
  

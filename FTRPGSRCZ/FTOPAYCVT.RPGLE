@@ -16,8 +16,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. AR1080200          Date 24Jan13               *
+      *  Last Amend No. MD039986           Date 10Aug16               *
+      *  Prev Amend No. MD024011           Date 10Aug16               *
+      *                 AR1090283          Date 10Aug16               *
+      *                 CFT157             Date 29Aug14               *
+      *                 AR1080200          Date 24Jan13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -68,6 +71,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039986 - Additional codes to upgrade AR1090283.            *
+      *  MD024011 - Pb when job name is QZDASSINIT                    *
+      *           - Applied for MD-39986.                             *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *  AR1080200 - In Charge details 2 tab, charges on the left and *
       *              right hand side of the screen is incorrect       *
@@ -474,6 +483,10 @@
      C/COPY WNCPYSRC,FTH00642
      C     SACTION       IFEQ      'E'                                                        195220
      C     JobType       AndEq     'INTER'                                                  BUG18401
+     C     BtnPressed    OREQ      'ENQUIRE'                                               AR1090283
+     C     PSJobName     ANDEQ     'QZDASOINIT'                                            AR1090283
+     C     BtnPressed    OREQ      'ENQUIRE'                                                MD024011
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                             MD024011
       *                                                                                       195220
      C                   CLEAR                   P8FT                                         195220
      C                   MOVEL     *BLANKS       W8STMT                                       195220
@@ -494,7 +507,10 @@
       *                                                                                       195220
      C                   EXSR      SREXPGM                                                    195220
       *                                                                                       195220
+     C     SACTION       IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       SDST1                                        195220
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      SDST2                                        195220
      C     35            SUBST     P8SCR:71      SDST3                                        195220
      C     35            SUBST     P8SCR:106     SDST4                                        195220
@@ -541,6 +557,10 @@
      C/COPY WNCPYSRC,FTH00644
      C     SACTION       IFEQ      'E'                                                        195220
      C     JobType       AndEq     'INTER'                                                  BUG18401
+     C     BtnPressed    OREQ      'ENQUIRE'                                               AR1090283
+     C     PSJobName     ANDEQ     'QZDASOINIT'                                            AR1090283
+     C     BtnPressed    OREQ      'ENQUIRE'                                                MD024011
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                             MD024011
       *                                                                                       195220
      C                   CLEAR                   P8FT                                         195220
      C                   MOVEL     *BLANKS       W8STMT                                       195220
@@ -563,7 +583,10 @@
       *                                                                                       195220
      C                   EXSR      SREXPGM                                                    195220
       *                                                                                       195220
+     C     SACTION       IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       SORC1                                        195220
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      SORC2                                        195220
      C     35            SUBST     P8SCR:71      SORC3                                        195220
      C     35            SUBST     P8SCR:106     SORC4                                        195220
@@ -814,6 +837,10 @@
      C/COPY WNCPYSRC,FTH00646
      C     SACTION       IFEQ      'E'                                                        195220
      C     JobType       AndEq     'INTER'                                                  BUG18401
+     C     BtnPressed    OREQ      'ENQUIRE'                                               AR1090283
+     C     PSJobName     ANDEQ     'QZDASOINIT'                                            AR1090283
+     C     BtnPressed    OREQ      'ENQUIRE'                                                MD024011
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                             MD024011
       *                                                                                       195220
      C                   CLEAR                   P8FT                                         195220
      C                   MOVEL     *BLANKS       W8STMT                                       195220
@@ -833,7 +860,10 @@
       *                                                                                       195220
      C                   EXSR      SREXPGM                                                    195220
       *                                                                                       195220
+     C     SACTION       IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       SRCO1                                        195220
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      SRCO2                                        195220
      C     35            SUBST     P8SCR:71      SRCO3                                        195220
      C     35            SUBST     P8SCR:106     SRCO4                                        195220
@@ -852,6 +882,10 @@
      C/COPY WNCPYSRC,FTH00648
      C     SACTION       IFEQ      'E'                                                        195220
      C     JobType       AndEq     'INTER'                                                  BUG18401
+     C     BtnPressed    OREQ      'ENQUIRE'                                               AR1090283
+     C     PSJobName     ANDEQ     'QZDASOINIT'                                            AR1090283
+     C     BtnPressed    OREQ      'ENQUIRE'                                                MD024011
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                             MD024011
       *                                                                                       195220
      C                   CLEAR                   P8FT                                         195220
      C                   MOVEL     *BLANKS       W8STMT                                       195220
@@ -871,7 +905,10 @@
       *                                                                                       195220
      C                   EXSR      SREXPGM                                                    195220
       *                                                                                       195220
+     C     SACTION       IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       SACB1                                        195220
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      SACB2                                        195220
      C     35            SUBST     P8SCR:71      SACB3                                        195220
      C     35            SUBST     P8SCR:106     SACB4                                        195220
@@ -890,6 +927,10 @@
      C/COPY WNCPYSRC,FTH00650
      C     SACTION       IFEQ      'E'                                                        195220
      C     JobType       AndEq     'INTER'                                                  BUG18401
+     C     BtnPressed    OREQ      'ENQUIRE'                                               AR1090283
+     C     PSJobName     ANDEQ     'QZDASOINIT'                                            AR1090283
+     C     BtnPressed    OREQ      'ENQUIRE'                                                MD024011
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                             MD024011
       *                                                                                       195220
      C                   CLEAR                   P8FT                                         195220
      C                   MOVEL     *BLANKS       W8STMT                                       195220
@@ -909,7 +950,10 @@
       *                                                                                       195220
      C                   EXSR      SREXPGM                                                    195220
       *                                                                                       195220
+     C     SACTION       IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       SBNC1                                        195220
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      SBNC2                                        195220
      C     35            SUBST     P8SCR:71      SBNC3                                        195220
      C     35            SUBST     P8SCR:106     SBNC4                                        195220
@@ -942,6 +986,10 @@
      C/COPY WNCPYSRC,FTH00652
      C     SACTION       IFEQ      'E'                                                        195220
      C     JobType       AndEq     'INTER'                                                  BUG18401
+     C     BtnPressed    OREQ      'ENQUIRE'                                               AR1090283
+     C     PSJobName     ANDEQ     'QZDASOINIT'                                            AR1090283
+     C     BtnPressed    OREQ      'ENQUIRE'                                                MD024011
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                             MD024011
       *                                                                                       195220
      C                   CLEAR                   P8FT                                         195220
      C                   MOVEL     *BLANKS       W8STMT                                       195220
@@ -961,7 +1009,10 @@
       *                                                                                       195220
      C                   EXSR      SREXPGM                                                    195220
       *                                                                                       195220
+     C     SACTION       IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       SINB1                                        195220
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      SINB2                                        195220
      C     35            SUBST     P8SCR:71      SINB3                                        195220
      C     35            SUBST     P8SCR:106     SINB4                                        195220
@@ -2049,6 +2100,7 @@
      C                   PARM                    SHMSGR                                       190845
      C* Part Number                                                                           190845
      C                   PARM                    SHPART                                       190845
+     C                   PARM                    BtnPressed       10                       AR1090283
       *
       ** Initialize program name
       *

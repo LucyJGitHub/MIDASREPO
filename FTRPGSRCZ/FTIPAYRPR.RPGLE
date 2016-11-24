@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD025111           Date 24Feb14               *
-      *  Prev Amend No. CFT151             Date 21Mar14               *
+      *  Last Amend No. AR1090283          Date 10Aug16               *
+      *  Prev Amend No. MD025111           Date 24Feb14               *
+      *                 CFT151             Date 21Mar14               *
       *                 MD022652           Date 07Oct13               *
       *                 CFT120             Date 28Sep12               *
       *                 CAP211             Date 28Sep12               *
@@ -71,6 +72,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  MD025111 - Incoming payment without charges is not allowed   *
       *             if the account is blocked for DR                  *
       *  CFT151 - FT IN/OP Alphanumeric sequence                      *
@@ -7033,6 +7037,7 @@
       *                                                                         CFT009
       ** Output Charge Currency No. of Decimal Places                           CFT009
      C                   PARM                    PONBDP                         CFT009
+     C                   PARM      *BLANKS       BtnPressed       10                       AR1090283
       *                                                                                       CSW209
       ** Initialise screen fields with values from file.                                      CSW209
       *                                                                                       CSW209

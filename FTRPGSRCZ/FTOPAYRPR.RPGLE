@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT151             Date 21Mar14               *
-      *  Prev Amend No. MD022652           Date 07Oct13               *
+      *  Last Amend No. AR1090283          Date 10Aug16               *
+      *  Prev Amend No. CFT151             Date 21Mar14               *
+      *                 MD022652           Date 07Oct13               *
       *                 258944             Date 23Jan13               *
       *                 CFT148             Date 23Jan13               *
       *                 CFT120             Date 28Sep12               *
@@ -99,6 +100,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  CFT151 - FT IN/OP Alphanumeric sequence                      *
       *  MD022652 - Excluded Phase Processing                         *
       *  258944 - APISERVER API FTOPAY: correct positions; fix use of *
@@ -3640,6 +3644,7 @@
      C                   PARM                    SHMSGR                                       190845
      C* Part Number                                                                           190845
      C                   PARM                    SHPART                                       190845
+     C                   PARM      *BLANKS       BtnPressed       10                       AR1090283
       *                                                                                       190845
       * Update 'Current' Payment with Payment in Screen Format
       *

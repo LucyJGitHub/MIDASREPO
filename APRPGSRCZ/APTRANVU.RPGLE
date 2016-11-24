@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. AR701789           Date 26Sep16               *
+      *  Last Amend No. MD039986           Date 10Aug16               *
+      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *                 CSW216             Date 14Mar16               *
+      *                 AR701789           Date 26Sep16               *
       *                 MD038485           Date 10Aug16               *
       *                 CER071             Date 01Aug16               *
       *                 CLE141             Date 08Feb16               *
@@ -201,6 +203,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039986 - Additional codes to upgrade AR1090283.            *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
@@ -1020,6 +1026,8 @@ RGC  D RPIF4LN         S              4  0                                      
      D FillerBufEx3    S           9999A                                                    MD022093
      D FillerBufEx4    S           6284A                                                    MD022093
                                                                                             MD022093
+      *                                                                                    AR1090283
+     D BtnPressed      S             10                                                    AR1090283
      D***/COPY*OFCPYSRCZ,CAP090_001                                                    CAP090 CLE164
      D CAP090          S              1A                                                      CLE164
      D SBJBLen         S              4S 0                                                    CLE164
@@ -1407,6 +1415,8 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                                    AR1002463
      C     1             SUBST     BUFFER:Bfp    AAuth                                     AR1002463
      C                   ADD       1             Bfp                                       AR1002463
+     C     10            SUBST     BUFFER:Bfp    BtnPressed                                AR1090283
+     C                   ADD       10            Bfp                                       AR1090283
      C/COPY WNCPYSRC,APH00058
       *                                                                                       CER049
      C     IPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
@@ -1531,6 +1541,8 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                                       CFT120
      C     1             SUBST     BUFFER2:Bfp2  AAuth                                        CFT120
      C                   ADD       1             Bfp2                                         CFT120
+     C     10            SUBST     BUFFER:Bfp2   BtnPressed                                 MD039986
+     C                   ADD       10            Bfp2                                       MD039986
       *                                                                                    AR1002463
      C*****2****         SUBST     BUFFER:Bfp    TempData#3                         CSF011 AR1005984
      C/COPY WNCPYSRC,APH00061

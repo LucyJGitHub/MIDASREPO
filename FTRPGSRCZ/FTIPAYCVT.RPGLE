@@ -20,8 +20,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. AR1079259          Date 21Jan13               *
+      *  Last Amend No. MD039986           Date 10Aug16               *
+      *  Prev Amend No. MD024011           Date 10Aug16               *
+      *                 AR1090283          Date 10Aug16               *      
+      *                 CFT157             Date 29Aug14               *
+      *                 AR1079259          Date 21Jan13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
@@ -52,6 +55,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039986 - Additional codes to upgrade AR1090283.            *
+      *  MD024011 - Pb when job name is QZDASSINIT                    *
+      *           - Applied for MD-39986.                             *
+      *  AR1090283 - Customer details not visible for enquire.        *
+      *              (Child: AR1090284)                               *
+      *            - Applied for MD-39986.                            *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *  AR1079259 - Projected fee amount is wrong                    *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -618,6 +627,10 @@
       *
      C     DDACTN        IFEQ      'E'
      C     JobType       AndEq     'INTER'                                                  BUG18401
+     C     BtnPressed    OREQ      'ENQUIRE'                                               AR1090283
+     C     PSJobName     ANDEQ     'QZDASOINIT'                                            AR1090283
+     C     BtnPressed    OREQ      'ENQUIRE'                                                MD024011
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                             MD024011
       *
       ** Setup Sender address.
       *
@@ -639,7 +652,10 @@
       *
      C                   EXSR      SRExPgm
       *
+     C     DDACTN        IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       DDSND1
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      DDSND2
      C     35            SUBST     P8SCR:71      DDSND3
      C     35            SUBST     P8SCR:106     DDSND4
@@ -665,7 +681,10 @@
       *                                                                         CFT014
      C                   EXSR      SRExPgm                                      CFT014
       *                                                                         CFT014
+     C     DDACTN        IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       DDRCO1                         CFT014
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      DDRCO2                         CFT014
      C     35            SUBST     P8SCR:71      DDRCO3                         CFT014
      C     35            SUBST     P8SCR:106     DDRCO4                         CFT014
@@ -692,7 +711,10 @@
       *
      C                   EXSR      SRExPgm
       *
+     C     DDACTN        IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       DDBNC1
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      DDBNC2
      C     35            SUBST     P8SCR:71      DDBNC3
      C     35            SUBST     P8SCR:106     DDBNC4
@@ -905,6 +927,10 @@
       *
      C     DDACTN        IFEQ      'E'
      C     JobType       AndEq     'INTER'                                                  BUG18401
+     C     BtnPressed    OREQ      'ENQUIRE'                                               AR1090283
+     C     PSJobName     ANDEQ     'QZDASOINIT'                                            AR1090283
+     C     BtnPressed    OREQ      'ENQUIRE'                                                MD024011
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                             MD024011
       *
       ** Set up Ordering Bank.
       *
@@ -926,7 +952,10 @@
       *
      C                   EXSR      SRExPgm
       *
+     C     DDACTN        IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       DDOBK1
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      DDOBK2
      C     35            SUBST     P8SCR:71      DDOBK3
      C     35            SUBST     P8SCR:106     DDOBK4
@@ -952,7 +981,10 @@
       *
      C                   EXSR      SRExPgm
       *
+     C     DDACTN        IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       DDSNC1
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      DDSNC2
      C     35            SUBST     P8SCR:71      DDSNC3
      C     35            SUBST     P8SCR:106     DDSNC4
@@ -979,7 +1011,10 @@
       *
      C                   EXSR      SRExPgm
       *
+     C     DDACTN        IFEQ      'E'                                                      MD039986
+     C     JobType       ANDEQ     'INTER'                                                  MD039986
      C     35            SUBST     P8SCR:1       DDORC1
+     C                   ENDIF                                                              MD039986
      C     35            SUBST     P8SCR:36      DDORC2
      C     35            SUBST     P8SCR:71      DDORC3
      C     35            SUBST     P8SCR:106     DDORC4
@@ -1169,7 +1204,7 @@
      C                   Z-ADD     4             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        CFT009 = 'Y'                                 CFT009
      C                   EVAL      PINBDP = A6NBDP                              CFT009
      C                   ENDIF                                                  CFT009
@@ -1264,7 +1299,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   IF        CFT010 = 'Y'                                 CFT009
      C                   EVAL      VAT9 = VTMIC1                                CFT009
      C                   EVAL      VAT10 = VTMIC2                               CFT009
@@ -2166,6 +2201,7 @@
       *                                                                         CFT009
       ** Output Charge Currency No. of Decimal Places                           CFT009
      C                   PARM                    PONBDP                         CFT009
+     C                   PARM                    BtnPressed       10                       AR1090283
       *
       ** Get text messages for FTM2510 and FTM2519.
       *

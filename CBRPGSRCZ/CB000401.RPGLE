@@ -262,9 +262,9 @@
      C                   RETURN
      C                   ENDIF
       *
-      ** Update Screen Job Status
+      ** Default Job Type and Type of Checking when blank
       *
-     C                   EXSR      #JOBSC
+     C                   EXSR      #JOBDF
       *
       ** Validate screen fields
       *
@@ -272,6 +272,9 @@
       *
      C     @ERR          IFEQ      '0'
       *
+      ** Update Screen Job Status
+      *
+     C                   EXSR      #JOBSC
       *
       ** Update DLYCOB dtaara
       *
@@ -749,7 +752,7 @@
 
      C                   DO        10            WRRN
 
-     C                   IF        %SUBST(DSJOBS:WIDX:12) <> *BLANKS
+     C                   IF        %SUBST(DSJOBS:WIDX:10) <> *BLANKS
       *
       ** Validate Job Type, valid values are B or I
       *
@@ -860,6 +863,42 @@
       /EJECT
       *****************************************************************
       *                                                               *
+      *  #JOBDF  -  Default Job Type and Type of Checking when blank  *                      *
+      *                                                               *
+      *  Called by: Main program                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C     #JOBDF        BEGSR
+      *
+     C                   EVAL      WIDX = 1
+     C                   EVAL      WIDX3 = 11
+     C                   EVAL      WIDX4 = 12
+      *
+     C                   DO        10            WRRN
+      *
+      ** Default Job Type and Type of Checking when blank
+      *
+     C                   IF        %SUBST(DSJOBS:WIDX:10) <> *BLANKS
+     C                   IF        %SUBST(DSJOBS:WIDX3:1) = *BLANKS
+     C                   EVAL      %SUBST(DSJOBS:WIDX3:1) = 'B'
+     C                   ENDIF
+     C                   IF        %SUBST(DSJOBS:WIDX4:1) = *BLANKS
+     C                   EVAL      %SUBST(DSJOBS:WIDX4:1) = 'J'
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   EVAL      WIDX = WIDX + 12
+     C                   EVAL      WIDX3 = WIDX3 + 12
+     C                   EVAL      WIDX4 = WIDX4 + 12
+
+     C                   ENDDO
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
       *  #JOBSC  -  Update Screen Job Status                          *
       *                                                               *
       *  Called by: Main program                                      *
@@ -872,21 +911,8 @@
      C                   EVAL      DSJOBA = *BLANKS
      C                   EVAL      WIDX = 1
      C                   EVAL      WIDX2 = 1
-     C                   EVAL      WIDX3 = 11
-     C                   EVAL      WIDX4 = 12
       *
      C                   DO        10            WRRN
-      *
-      ** Default Job Type and Type of Checking when blank
-      *
-     C                   IF        %SUBST(DSJOBS:WIDX:12) <> *BLANKS
-     C                   IF        %SUBST(DSJOBS:WIDX3:1) = *BLANKS
-     C                   EVAL      %SUBST(DSJOBS:WIDX3:1) = 'B'
-     C                   ENDIF
-     C                   IF        %SUBST(DSJOBS:WIDX4:1) = *BLANKS
-     C                   EVAL      %SUBST(DSJOBS:WIDX4:1) = 'J'
-     C                   ENDIF
-     C                   ENDIF
       *
       ** Check Job Status
       *
@@ -904,8 +930,6 @@
 
      C                   EVAL      WIDX = WIDX + 12
      C                   EVAL      WIDX2 = WIDX2 + 10
-     C                   EVAL      WIDX3 = WIDX3 + 12
-     C                   EVAL      WIDX4 = WIDX4 + 12
       *
      C                   ENDDO
       *

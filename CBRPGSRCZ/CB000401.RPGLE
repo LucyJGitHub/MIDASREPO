@@ -949,7 +949,7 @@
       ** Stop previous scheduling if exists + restart a new one
       *
      C                   CALL      'CBC0005'
-     C                   PARM      'S'           MODE              1            Mode
+     C                   PARM      'S'           MODE              1
       *
      C                   ENDSR
       /EJECT

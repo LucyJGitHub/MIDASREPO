@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG22246           Date 17Feb09              */
+/*       Last Amend No. MD038993           Date 21Nov16              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG22246           Date 17Feb09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CRE026             Date 24May06              */
@@ -40,6 +41,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD038993 - Missing code functionality on CCB014.            */
+/*                  Define 10 jobs. COB will not run if one of the   */
+/*                  job is active.                                   */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG22246 - Message monitoring for CPF1311                   */
 /*       CRE026 - Consumer Banking (Recompile)                       */
@@ -249,7 +253,7 @@
                                                                                           /*208201*/
              IF         COND(&CURUSER *NE &USRP) THEN(GOTO +
                           CMDLBL(RCVF))                                                   /*208201*/
- 
+
 /* */                                                                 /*097148*/
 /*   Call SC1021 to check the integrity of the run date held on       /*097148*/
 /*   PF/SDBANKPD, PF/TABTB10 and DTAARA/RUNDAT                        /*097148*/
@@ -311,7 +315,8 @@
 /* Retrieve offset value (time difference) */                                           /*BUG10848*/
                                                                                         /*BUG10848*/
              RTVSYSVAL  SYSVAL(QUTCOFFSET) RTNVAR(&POFFST)                              /*BUG10848*/
-             CALL       PGM(CB0004) PARM(&POFFST)                                       /*BUG10848*/
+/**********  CALL       PGM(CB0004) PARM(&POFFST)                              /*BUG10848 MD038993*/
+             CALL       PGM(CB000401) PARM(&POFFST)                                     /*MD038993*/
              RTVDTAARA  DTAARA(DLYCOB (2 1)) RTNVAR(&SCHREQ)                              /*CCB014*/
              IF         COND(&SCHREQ *EQ 'Y') THEN(GOTO +
                           CMDLBL(ENDPGM))                                                 /*CCB014*/
@@ -330,7 +335,7 @@
                           VAR(&AUS025) VALUE('Y'))                    /*049656*/
                                                                       /*049656*/
 /*   END ALL ACTIVE SESSIONS                                     */
- 
+
              IF         COND(&AUS025 *EQ 'Y') THEN(DO)                /*049656*/
                RTVGRPA    GRPJOBL(&GRPJOBL)
                MONMSG     MSGID(CPF1311) EXEC(GOTO CMDLBL(LOOP2))                       /*BUG22246*/
@@ -339,14 +344,14 @@ LOOP:          CHGVAR     VAR(&JOBPTR) VALUE((&OFFSET * 66) + 1)
                IF         COND(%SST(&GRPJOBL &JOBPTR 1) *NE ' ') +
                           THEN(ENDGRPJOB GRPJOB(%SST(&GRPJOBL +
                           &JOBPTR 10)))
- 
+
                IF         COND(&OFFSET *GE 2) THEN(DO)
                 CHGVAR     VAR(&OFFSET) VALUE(&OFFSET - 1)
                 GOTO       CMDLBL(LOOP)
                ENDDO
- 
+
 /*   CHANGE TO A NON-GROUP JOB                                   */
- 
+
                CHGGRPA    GRPJOB(*NONE)
              ENDDO                                                    /*049656*/
 /** Check if CSC011 *ON */                                                                /*CSC011*/
@@ -380,7 +385,7 @@ LOOP2:       CHGVAR     VAR(&SARRTCD) VALUE('       ')                          
                        CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)               /*CSC011*/
                        CHGDTAARA  DTAARA(MIDASMSG (2 1)) VALUE('1')                       /*CSC011*/
                        CALL       PGM(SCC0010) PARM('SFC4464' 'OPTION' &CLBP)             /*CSC011*/
- 
+
                        IF         COND(&CLBP *NE 'Y') THEN(GOTO CMDLBL(ENDPGM))           /*CSC011*/
                                                                                           /*CSC011*/
 /** Call program SCC004300 (Main to Support System Transition Proc.) */                   /*CSC011*/
@@ -495,7 +500,7 @@ TAGUSC1:                                                                        
                                                                       /*089614*/
 /* */                                                                /*056090*/
 /*   NOW REROUTE THE JOB                                         */
- 
+
 /*/COPY WNCPYSRC,SFC4464002                                          */
              IF         COND(&CCB014 *EQ 'Y' *AND &SCHREQ *EQ 'Y') +
                           THEN(GOTO CMDLBL(TAGUSC2))                                      /*CCB014*/
@@ -509,7 +514,7 @@ TAGUSC1:                                                                        
                                                                                           /*CCB014*/
 TAGUSC2:                                                                                  /*CCB014*/
                                                                                           /*CCB014*/
- 
+
 /* */                                                                 /*S01390*/
 /** Change value of &BISCPY to avoid error of its declaration.     */ /*S01390*/
 /* */                                                                 /*S01390*/

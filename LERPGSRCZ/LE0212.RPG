@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 252942             Date 17Dec15               *
-      *  Prev Amend No. MD039619           Date 05Aug16               *
+      *  Last Amend No. MD039651           Date 11Aug16               *
+      *  Prev Amend No. 252942             Date 17Dec15               *
+      *                 MD039619           Date 05Aug16               *
       *                 MD039618           Date 29Jul16               *
       *                 CLE154             Date 09Aug12               *
       *                 MD039391A          Date 21Jul16               *
@@ -260,6 +261,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039651 - Loan Activity Enquiry not reflecting updated Base *
+      *             Rate when value date is backvalued. Use the new   *
+      *             rate if it is >= historic rate & <= refixing date.*
       *  252942 - Loan activity shows incorrect projected interest    *
       *           amount if a zero principal amount occurred sometime *
       *           in the past. Move the position of ENDIF such that   *
@@ -9910,6 +9914,8 @@
       *                                                                                       235907
       ** Override the Current Base Rate based on History File                                 239062
       ** if rate fixing days is not equal to zero                                           MD039619
+      ** and new rate's value date is < historic rate retrieved                             MD039651
+      ** or new rate's value date is > rate re-fixing date                                  MD039651
       ** or rate fixing days is zero and rollover date is                                   MD039619
       ** less than the value date of new rate.                                              MD039619
       *                                                                                     MD039619
@@ -9927,8 +9933,15 @@
      C           RLDT      ANDLTBAVDNR                                                      MD039619
      C                     MOVE PKEY1     ZCCY                                                239062
      C                     MOVE PKEY2     WBRTT                                               239062
+     C                     Z-ADDWCUBR     OWCUBR 117                                        MD039651
+     C                     MOVE 'N'       USENEW  1                                         MD039651
      C                     EXSR SRBRFZ                                                        239062
+     C           BANBRT    IFNE BACBSR                                                      MD039651
+     C           USENEW    ANDEQ'Y'                                                         MD039651
+     C                     MOVE OWCUBR    ZFIELD                                            MD039651
+     C                     ELSE                                                             MD039651
      C                     MOVE WCUBR     ZFIELD                                              239062
+     C                     ENDIF                                                            MD039651
      C                     ELSE                                                             MD025520
      C                     MOVE WCUBR     ZFIELD                                            MD025520
      C                     ENDIF                                                              239062
@@ -10782,6 +10795,10 @@
      C           @RTCD     IFEQ *BLANK                                                        239062
      C           CHIN      ANDNE'N'                                                         MD025520
      C                     Z-ADDG0CBSR    WCUBR  117                                          239062
+     C           BAVDNR    IFGE G0HIDT                                                      MD039651
+     C           BAVDNR    ANDLEWDAYN                                                       MD039651
+     C                     MOVE 'Y'       USENEW                                            MD039651
+     C                     ENDIF                                                            MD039651
      C                     ENDIF                                                              239062
       *                                                                                       239062
      C                     ENDSR                                                              239062

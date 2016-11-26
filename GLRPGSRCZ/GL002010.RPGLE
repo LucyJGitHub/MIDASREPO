@@ -186,6 +186,8 @@
       ** First DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs
+     D/COPY ZSRSRC,ZHOLILE                                                                  MD039988
+     D/COPY ZSRSRC,ZHOLELE                                                                  MD039988
                                                                                             BUG12888
      D/COPY WNCPYSRC,GLH00463
       ** narrative dscription constants for CLS transaction  type                           BUG12888
@@ -808,7 +810,7 @@
       * Posting date = Read From Date
 
      C                   IF        ReadFromDate <> BJRDNB                                   MD039988
-     C                   Z-ADD     ReadFromDate  ZDAYNO                                     MD039988   
+     C                   Z-ADD     ReadFromDate  ZDAYNO                                     MD039988
      C                   ELSE                                                               MD039988
      C                   Z-ADD     ReadFromDate  ZDAYNO
      C                   MOVE      CCY           ZCCY                                       MD039988

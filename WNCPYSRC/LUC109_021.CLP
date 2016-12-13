@@ -18,7 +18,8 @@
              CHGVAR     VAR(&OPN) VALUE('*VERIFY')                    /*LUC109*/
              CHGVAR     VAR(&SARD) VALUE('LUC109')                    /*LUC109*/
              CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)     /*LUC109*/
-             IF         COND(&PRTCD *EQ ' ') THEN(DO)                 /*LUC109*/
+             IF         COND((&RTN *EQ ' ') *AND (&MODE *EQ 'DM')) +
+                          THEN(DO) /*LUC109*/
 /* Define HOR Library                                                 /*LUC109*/
                CHGVAR     VAR(%SUBSTRING(&LIBI 1 2)) +
                           VALUE(%SUBSTRING(&SDSTAT 6 2))              /*LUC109*/

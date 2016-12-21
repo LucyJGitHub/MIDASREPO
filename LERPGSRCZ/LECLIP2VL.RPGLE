@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD040412           Date 17Aug16               *
-      *  Prev Amend No. MD039304           Date 19Jul16               *
+      *  Last Amend No. MD041917           Date 20Dec16               *
+      *  Prev Amend No. MD040412           Date 17Aug16               *
+      *                 MD039304           Date 19Jul16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
       *                 MD031225           Date 10Dec14               *
@@ -109,9 +110,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041917 - Total interest is calculated as zero when fixed   *
+      *             rate has value and contractual spread is zero.    *
+      *             Move DDFXRT to WSVRS to calculate TOTI accurately.*
       *  MD040412 - No description for error 45048709 ; fixed also    *
       *             the serious midas error when a user entered an    *
-      *             invalid character in rate/spread field            *       *
+      *             invalid character in rate/spread field            *
       *  MD039304 - Prevent a combination of zero spread rate and a   *
       *             spread indicator equal to percentage.             *
       *  CLE141 - Currency and Location Business Day Convention for   *
@@ -474,7 +478,7 @@
       *
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
-
+ 
      D OKFlags1DS    E DS                  EXTNAME(LEECLI1PD)                                BUG3721
       ** Flags to indicate whether transaction fields are valid on 1st screen                BUG3721
       *
@@ -2899,7 +2903,7 @@ E004 C                   ENDIF
       *  SRFCRA - Validate facility currency repayment amount         *
       *****************************************************************
      C     SRFCRA        BEGSR
-
+ 
      C     *IN83         IFEQ      '0'
      C                   MOVE      FCCYF         @CYCD
      C                   ELSE
@@ -4039,7 +4043,7 @@ E004 C                   ENDIF
      C                   ELSE
      C                   Z-ADD     ZINTR         WCHKI
      C                   ENDIF
-
+ 
      C     WCHKI         IFLT      *ZEROS
      C                   Z-SUB     WCHKI         WCHKI
      C                   MOVE      'Y'           WSUB              1
@@ -5791,6 +5795,7 @@ E004 C                   ENDIF
      C                             AND DDFXRTOK <> 'N'                                        CRE073
      C                             AND DDCNSP = *BLANKS                                       CRE073
      C                   Z-ADD     WFXRT         CCLRTSP                                      CRE073
+     C                   Z-ADD     WFXRT         WSVRS                                      MD041917
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
      C                   ENDSR                                                                CRE073

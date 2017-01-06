@@ -12,10 +12,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. CSD095CC1 *CREATE   Date 13Sep16              *
+      *  Last Amend No. MD043278            Date 06Jan17              *
+      *  Prev Amend No. CSD095CC1 *CREATE   Date 13Sep16              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043278 - Incomplete valid values indicated for             *
+      *             SSIDealSubtype_Trans in System Value Maintenance  *
       *  CSD095CC1 - Allow Deal Sub-Type and Branch for IRS, FRA and  *
       *              CCF SSIs                                         *
       *                                                               *
@@ -115,7 +118,8 @@
      C                              AND WSTYP1 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
@@ -146,7 +150,8 @@
      C                              AND WSTYP2 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
@@ -190,7 +195,8 @@
      C                              AND WSTYP3 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
@@ -237,7 +243,8 @@
      C                              AND WSTYP4 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
@@ -286,7 +293,8 @@
      C                              AND WSTYP5 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
@@ -337,7 +345,8 @@
      C                              AND WSTYP6 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
@@ -390,7 +399,8 @@
      C                              AND WSTYP7 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
@@ -445,7 +455,8 @@
      C                              AND WSTYP8 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
@@ -502,7 +513,8 @@
      C                              AND WSTYP9 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
@@ -561,7 +573,8 @@
      C                              AND WSTYP9 <> 'RR'
      C                   EVAL      Rflag = 'Y'
      C                   ADD       1             Idx
-     C                   EVAL      MsgIDXArr(Idx) = 'USR7005'
+     C**********         EVAL      MsgIDXArr(Idx) = 'USR7005'                               MD043278
+     C                   EVAL      MsgIDXArr(Idx) = 'USR7008'                               MD043278
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF

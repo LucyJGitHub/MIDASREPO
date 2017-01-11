@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 223313             Date 16Mar15               *
-      *  Prev Amend No. MD000091           Date 09May13               *
+      *  Last Amend No. MD043379           Date 11Jan17               *
+      *  Prev Amend No. 223313             Date 16Mar15               *
+      *                 MD000091           Date 09May13               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043379 - Forward Rates Module shows a wrong error message  *
+      *             when trying to insert an already existing forward *
+      *             rate                                              *
       *  223313 - Send message MMA1155 only if CSD006 is on           *
       *         - Applied for 256377                                  *
       *  MD000091 - Event Codes Substitution                          *
@@ -55,51 +59,51 @@
      FFWDRTL1   IF   E           K DISK    INFSR(*PSSR)                                       CAP059
      F                                     RENAME(FWDRTFEF:FWDRTL1F)                          CAP059
      FSDCURRL9  IF   E           K DISK    INFSR(*PSSR)                                       CAP059
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -108,37 +112,37 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAP059
      D                                     PREFIX(S_)                                         CAP059
       ** EXTERNAL DS FOR SAR DETAILS                                                          CAP059
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D FWRTFilFmt    E DS                  EXTNAME(FWDRTFE)
       ** Forward Rates record in File Format
- 
+
      D ZMUSER        E DS                  EXTNAME(ZMUSER)
       ** Obtain default branch for user
                                                                                             MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -537,7 +541,8 @@ E01  C                   ENDIF
      C                   MOVEL     'N'           OKCCY                          CAP059
      C                   ADD       1             Ix                             CAP059
      C                   MOVEL     'DDCCY'       FldNameArr(Ix)                 CAP059
-     C                   MOVEL     'USR0542'     MsgIdArr(Ix)                   CAP059
+     C**********         MOVEL     'USR0542'     MsgIdArr(Ix)                        CAP059 MD043379
+     C                   MOVEL     '5048889'     MsgIdArr(Ix)                               MD043379
      C                   ENDIF                                                  CAP059
       *                                                                         CAP059
       *                                                                         CAP059
@@ -628,7 +633,7 @@ E01  C                   ENDIF
       *                                                                                       CAP059
       * Front Office Transaction Id                                                           CAP059
      C                   PARM                    FOTRID           20                          CAP059
- 
+
       * OUTPUTS
       *
       * (Current) forward rates in file format
@@ -685,7 +690,7 @@ E01  C                   ENDIF
      C                   ENDIF                                                  CAP059
                                                                                 CAP059
       *
- 
+
       ** Access SAR details file to see if CSD006 is installed.                               CSD006
                                                                                               CSD006
      C                   CALLB     'AOSARDR0'                                                 CSD006

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. AR1096378          Date 20Mar13              */
-/*       Prev Amend No. CRE083AH           Date 06Aug12              */
+/*       Last Amend No. MD043389           Date 10Jan17              */
+/*       Prev Amend No. AR1096378          Date 20Mar13              */
+/*                      CRE083AH           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD043389 - Component failed with parameter mismatch. Re-    */
+/*                  introduced entry parameters removed by AR1096378.*/
 /*       AR1096378 - NWDC issues encountered during link testing.    */
 /*       CRE083AH - COB Restructure - RE COB Optimisation Phase 1    */
 /*       241159 - Copy of history files in xxDPLIB are not deleted   */
@@ -44,7 +47,8 @@
 /*                                                                   */
 /*********************************************************************/
 /**********  PGM        PARM(&RSEQ &RLEV &RENT)                      */                /*AR1096378*/
-             PGM                                                                       /*AR1096378*/
+/**********  PGM                                                     */       /*AR1096378 MD043389*/
+             PGM        PARM(&RSEQ &RLEV &RENT)                                         /*MD043389*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')

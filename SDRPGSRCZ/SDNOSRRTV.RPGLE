@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2006            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 01Sep14               *
-      *  Prev Amend No. MD027264           Date 25Jun14               *
+      *  Last Amend No. MD037493           Date 28Nov16               *
+      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *                 MD027264           Date 25Jun14               *
       *                 MD000091           Date 03May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037493 - Nostro record cannot be deleted even after        *
+      *             deletion of SSI                                   *
       *  CDL094 - Enhance  Receive Settlement Instructions (Recompile)*
       *  MD027264 - Prevent single digit nostro number as input.      *
       *  MD000091 - Event Codes Substitution                          *
@@ -44,6 +47,8 @@
      FSDNostL9  IF   E           K DISK       INFSR(*PSSR)
      F                                        RENAME(SDNostD0:SDNosFOI)
       * Nostro Codes File by Front Office Id
+     FSTDSEDCY  IF   E           K DISK       INFSR(*PSSR)                                  MD037493
+      * STDSED (Nostro by currency)                                                         MD037493
  
       *****************************************************************
       ** +--------------------------------------+
@@ -524,6 +529,34 @@
      C                   MOVEL     'USR1546'     MsgIdArr(Ix)
      C                   ENDIF
       *
+      ** Add validation to SE Extended Settlements                                          MD037493
+      *                                                                                     MD037493
+     C                   EVAL      *IN55 = *OFF                                             MD037493
+     C     DDCYCD        SETLL     STDSEDCY                           55                    MD037493
+     C     DDCYCD        READE     STDSEDCY                               55                MD037493
+      *                                                                                     MD037493
+     C                   DOW       *IN55 = *OFF                                             MD037493
+     C                   MOVEL     SRAC          RCVACC            2                        MD037493
+     C                   MOVEL     SPAT          PAYACC            2                        MD037493
+     C     DDCYCD        IFEQ      CYSI                                                     MD037493
+     C     RECI          ANDNE     '*'                                                      MD037493
+     C     DDNONB        IFEQ      RCVACC                                                   MD037493
+     C     DDNONB        OREQ      PAYACC                                                   MD037493
+      *                                                                                     MD037493
+      ** Send message 'Nostro can't be Deleted'                                             MD037493
+      *                                                                                     MD037493
+     C                   MOVE      'N'           OKNONB                                     MD037493
+     C                   ADD       1             Ix                                         MD037493
+     C                   MOVEL     'DDNONB'      FldNameArr(Ix)                             MD037493
+     C                   MOVEL     'USR4283'     MsgIdArr(Ix)                               MD037493
+     C                   EVAL      *IN55 = *ON                                              MD037493
+     C                   LEAVE                                                              MD037493
+     C                   ENDIF                                                              MD037493
+     C                   ENDIF                                                              MD037493
+      *                                                                                     MD037493
+     C     DDCYCD        READE     STDSEDCY                               55                MD037493
+     C                   ENDDO                                                              MD037493
+      *                                                                                     MD037493
      C                   ENDIF
       *
  

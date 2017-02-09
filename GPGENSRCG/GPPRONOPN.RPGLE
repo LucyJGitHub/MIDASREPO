@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD041785           Date 29Sep16               *
-      *  Prev Amend No. MD034693           Date 11Aug15               *
+      *  Last Amend No. AR876427           Date 26Jan17               *
+      *  Prev Amend No. MD041785           Date 29Sep16               *
+      *                 MD034693           Date 11Aug15               *
       *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR876427 - Perform /COPY GPCPYSRCG,Z1PRONOPN only after      *
+      *             UPDATE or WRITE operation.                        *
+      *           - Applied for MD-39312                              *
       *  MD041785 - GZPRONOPN is not getting populated by GOC0100     *
       *  MD034693 - Dump due to record locks by Job GO_ONL_OPL.       *
       *             Detect record locks and try to chain again for    *
@@ -109,10 +113,11 @@ O    C                   UPDATE    PRONOPNF
 O    C                   ELSE
 O    C                   WRITE     W_PRONOPNF
 O    C                   ENDIF
+     C/COPY GPCPYSRCG,Z1PRONOPN                                                             AR876427
 O    C                   ENDIF
      C**********         OTHER                                                     MD034693 MD041785
      C**********         ENDSL                                                     MD034693 MD041785
-     C/COPY GPCPYSRCG,Z1PRONOPN                                                             BUG10215
+     C***/COPY GPCPYSRCG,Z1PRONOPN                                                 BUG10215 AR876427
  
      C                   RETURN
  

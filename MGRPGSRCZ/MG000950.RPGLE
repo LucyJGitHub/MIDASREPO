@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD042041           Date 21Oct16               *
-      *  Prev Amend No. MD024641           Date 10Feb14               *
+      *  Last Amend No. MD042357           Date 02Dec16               *
+      *  Prev Amend No. MD042041           Date 21Oct16               *
+      *                 MD024641           Date 10Feb14               *
       *                 CGL146A            Date 10Jul13               *
       *                 CGL146             Date 10Jul13               *
       *                 AR972805           Date 27Feb13               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042357 - Do not write IBAN to SWIFT Account on MGOREFPD    *
       *  MD042041 - Tag 61 is not sorted by DRCR and PSTA. Added a    *
       *             system value that when is set to 'Y', program     *
       *             use another logical file that is also sorted by   *
@@ -1264,9 +1266,13 @@
      C                   Z-add     0             NSNO
 
      C                   Select
-     C                   When      MGIBAN <> *Blank
-     C                   Movel     MGIBAN        SACN
-     C                   Movel     *blanks       AORR
+      *                                                                                     MD042357
+      ** Don't use IBAN - Internal IUS pgms not designed to use.                            MD042357
+      ** Revert to Re AcNo                                                                  MD042357
+      *                                                                                     MD042357
+     C**********         When      MGIBAN <> *Blank                                         MD042357
+     C**********         Movel     MGIBAN        SACN                                       MD042357
+     C**********         Movel     *blanks       AORR                                       MD042357
      C                   When      MGACNO <> 0
      C                   Movel     MGACNO        SACN
      C                   Movel     'R'           AORR

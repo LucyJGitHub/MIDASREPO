@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. AR1085447D         Date 29Mar13               *
-      *  Prev Amend No. AR1085447          Date 06Feb13               *
+      *  Last Amend No. MD039358           Date 05May16               *
+      *  Prev Amend No. AR1085447D         Date 29Mar13               *
+      *                 AR1085447          Date 06Feb13               *
       *                 AR1078292          Date 31Jan13               *
       *                 AR1056323          Date 14Nov12               *
       *                 CLE134             Date 01Aug12               *
@@ -35,6 +36,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039358  - LEACCFPD does not have old numeric loan number   *
+      *              field like LEACCTPD as it was introduced later   *
+      *              as a fix to CLE134.                              *
       *  AR1085447D- Update new fields in CLOANCL, remove from ALR    *
       *  AR1085447 - Update new fields in CLOANCL.                    *
       *  AR1078292 - Replace SMU006PD as driving file for alpha loan  *
@@ -483,27 +487,27 @@
      C**********         ENDIF                                                                CLE134
  
       ** File LEACCFPD
-     C                   EVAL      SQLSTRING =
-     C                             'UPDATE LEACCFPD SET SELNRF = ' +
-     C                             'CASE ' +
-     C                              'WHEN QQSELN = 0 THEN '' '' ELSE ' +
-     C                              'CONCAT(' +
-     C                                    'CASE LENGTH(TRIM(CHAR(QQSELN))) ' +
-     C                                      'WHEN 1 THEN ''00000'' ' +
-     C                                      'WHEN 2 THEN ''0000'' ' +
-     C                                      'WHEN 3 THEN ''000'' ' +
-     C                                      'WHEN 4 THEN ''00'' ' +
-     C                                      'WHEN 5 THEN ''0'' ' +
-     C                                      'ELSE '''' ' +
-     C                                     'END, ' +
-     C                                     'TRIM(CHAR(QQSELN))) ' +
-     C                             'END, QQSELN = 0'
-     C/Exec SQL
-     C+ Execute Immediate :SQLSTRING
-     C/End-Exec
-     C                   IF         SQLCOD < 0 AND SQLCOD <> -204
-     C                   EXSR      *PSSR
-     C                   EndIf
+     C**********         EVAL      SQLSTRING =                                              MD039358
+     C**********                   'UPDATE LEACCFPD SET SELNRF = ' +                        MD039358
+     C**********                   'CASE ' +                                                MD039358
+     C**********                    'WHEN QQSELN = 0 THEN '' '' ELSE ' +                    MD039358
+     C**********                    'CONCAT(' +                                             MD039358
+     C**********                          'CASE LENGTH(TRIM(CHAR(QQSELN))) ' +              MD039358
+     C**********                            'WHEN 1 THEN ''00000'' ' +                      MD039358
+     C**********                            'WHEN 2 THEN ''0000'' ' +                       MD039358
+     C**********                            'WHEN 3 THEN ''000'' ' +                        MD039358
+     C**********                            'WHEN 4 THEN ''00'' ' +                         MD039358
+     C**********                            'WHEN 5 THEN ''0'' ' +                          MD039358
+     C**********                            'ELSE '''' ' +                                  MD039358
+     C**********                           'END, ' +                                        MD039358
+     C**********                           'TRIM(CHAR(QQSELN))) ' +                         MD039358
+     C**********                   'END, QQSELN = 0'                                        MD039358
+     C***/Exec SQL                                                                          MD039358
+     C***+  EXECUTE IMMEDIATE :SQLSTRING                                                    MD039358
+     C***/End-Exec                                                                          MD039358
+     C**********         IF         SQLCOD < 0 AND SQLCOD <> -204                           MD039358
+     C**********         EXSR      *PSSR                                                    MD039358
+     C**********         EndIf                                                              MD039358
  
       ***File*EDLKY1PD                                                              CLE134 AR1056323
      C**********         EVAL      SQLSTRING =                                      CLE134 AR1056323

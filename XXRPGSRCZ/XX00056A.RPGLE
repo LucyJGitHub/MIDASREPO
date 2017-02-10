@@ -28,8 +28,9 @@
       ***(C)*COPYRIGHT*MKI*International*LTD*1998**********************                       LUC109
       *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
       *                                                               *
-      *  Last Amend No. LUC109             Date 21Sep16               *
-      *  Prev Amend No. LUC013             Date 15Mar08               *
+      *  Last Amend No. LUC109             Date 25Jan17               *
+      *  Prev Amend No. LUC109             Date 21Sep16               *
+      *                 LUC013             Date 15Mar08               *
       *                 MUI011             Date 15Jul04               *
       *                 MUI009             Date 16Feb04               *
       *                 187153             Date 04Dec00               *
@@ -39,6 +40,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  LUC109  -R306 Netting flag not available in Loans            *
       *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
       *  LUC013 - Move first 4 characters of AACOD to MACOD.          *
       *  MUI011 - ALMS changes to HOR - add ISIN code to CLOANCX0.    *

@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. LUC109 *Create     Date 14Oct16               *
+      *  Last Amend No. LUC109             Date 25Jan17               *
+      *  Prev Amend No. LUC109 *Create     Date 14Oct16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109  -R306 Netting flag not available in Loans            *
       *  LUC109 - HO Reporting                                        *
       *                                                               *
       *****************************************************************
@@ -23,6 +25,7 @@
      D tolib           S             10
      D fromlibtxt      S             22
      D tolibtxt        S             22
+     D proctype        S              1                                         LUC109
       *
      D recursive       S              1
       *
@@ -31,8 +34,20 @@
      C     *entry        plist
      C                   parm                    fromlib
      C                   parm                    tolib
+     C                   parm                    proctype                       LUC109
       *
+     C                   select                                                 LUC109
+      *                                                                         LUC109
+     C                   when      proctype = '1'                               LUC109
      C                   exsr      ldni
+      *                                                                         LUC109
+     C                   when      proctype = '2'                               LUC109
+     C                   exsr      ldniwithR306                                 LUC109
+      *                                                                         LUC109
+     C                   when      proctype = '3'                               LUC109
+     C                   exsr      ldnionlyR306                                 LUC109
+      *                                                                         LUC109
+     C                   endsl                                                  LUC109
       *
      C                   eval      *inlr = *on
      C                   return
@@ -88,6 +103,106 @@
      C                   endsr
       *
       *****************************************************************
+      /eject                                                                    LUC109
+      *****************************************************************         LUC109
+      *                                                               *         LUC109
+      * ldni - Migrate LDNI data, including R306                      *         LUC109
+      *                                                               *         LUC109
+      * Called by: main                                               *         LUC109
+      *                                                               *         LUC109
+      * Calls:                                                        *         LUC109
+      *                                                               *         LUC109
+      *****************************************************************         LUC109
+      *                                                                         LUC109
+     C     ldniwithR306  begsr                                                  LUC109
+      *                                                                         LUC109
+      * DEALSCX0                                                                LUC109
+      *                                                                         LUC109
+     C                   if        fromlib <> *blanks                           LUC109
+     C                   eval      fromlibtxt = ' ' + %trim(fromlib)            LUC109
+     C                             + '/T_GZLDNIEX'                              LUC109
+     C                   else                                                   LUC109
+     C                   eval      fromlibtxt = ' T_GZLDNIEX'                   LUC109
+     C                   endif                                                  LUC109
+      *                                                                         LUC109
+     C                   if        tolib <> *blanks                             LUC109
+     C                   eval      tolibtxt = ' ' + %trim(tolib)                LUC109
+     C                             + '/DEALSCX0'                                LUC109
+     C                   else                                                   LUC109
+     C                   eval      tolibtxt = 'DEALSCX0'                        LUC109
+     C                   endif                                                  LUC109
+      *                                                                         LUC109
+     C                   clear                   s                              LUC109
+     C                   eval      s='update '+tolibtxt                         LUC109
+     C                   eval      s=%trim(s)+' a SET (MXTRNO,MXNTAF,MXCNTL) = 'LUC109
+     C                   eval      s=%trim(s)+' (SELECT COALESCE(b.MXTRNO,'     LUC109
+     C                   eval      s=%trim(s)+ x'7D' + ' ' + x'7D' + '),'       LUC109
+     C                   eval      s=%trim(s)+' COALESCE(b.R306,'               LUC109
+     C                   eval      s=%trim(s)+ x'7D' + ' ' + x'7D' + '),'       LUC109
+     C                   eval      s=%trim(s)+' COALESCE(b.MXCNTL,'             LUC109
+     C                   eval      s=%trim(s)+ x'7D' + ' ' + x'7D' + ')'        LUC109
+     C                   eval      s=%trim(s)+' FROM'                           LUC109
+     C                   eval      s=%trim(s)+%trimr(fromlibtxt)+' b WHERE'     LUC109
+     C                   eval      s=%trim(s)+' b.DDDLNO = a.MDLNO and'         LUC109
+     C                   eval      s=%trim(s)+' b.zone <> ' + x'7D'             LUC109
+     C                   eval      s=%trim(s)+ ' ' + x'7D' + ') WHERE'          LUC109
+     C                   eval      s=%trim(s)+' a.MDLNO IN (SELECT bb.DDDLNO'   LUC109
+     C                   eval      s=%trim(s)+' FROM'                           LUC109
+     C                   eval      s=%trim(s)+%trimr(fromlibtxt)+' bb)'         LUC109
+      *                                                                         LUC109
+     C                   exsr      executesql                                   LUC109
+      *                                                                         LUC109
+     C                   endsr                                                  LUC109
+      *                                                                         LUC109
+      *****************************************************************         LUC109
+      /eject                                                                    LUC109
+      *****************************************************************         LUC109
+      *                                                               *         LUC109
+      * ldni - Migrate LDNI data, only R306                           *         LUC109
+      *                                                               *         LUC109
+      * Called by: main                                               *         LUC109
+      *                                                               *         LUC109
+      * Calls:                                                        *         LUC109
+      *                                                               *         LUC109
+      *****************************************************************         LUC109
+      *                                                                         LUC109
+     C     ldnionlyR306  begsr                                                  LUC109
+      *                                                                         LUC109
+      * DEALSCX0                                                                LUC109
+      *                                                                         LUC109
+     C                   if        fromlib <> *blanks                           LUC109
+     C                   eval      fromlibtxt = ' ' + %trim(fromlib)            LUC109
+     C                             + '/T_GZLDNIEX'                              LUC109
+     C                   else                                                   LUC109
+     C                   eval      fromlibtxt = ' T_GZLDNIEX'                   LUC109
+     C                   endif                                                  LUC109
+      *                                                                         LUC109
+     C                   if        tolib <> *blanks                             LUC109
+     C                   eval      tolibtxt = ' ' + %trim(tolib)                LUC109
+     C                             + '/DEALSCX0'                                LUC109
+     C                   else                                                   LUC109
+     C                   eval      tolibtxt = 'DEALSCX0'                        LUC109
+     C                   endif                                                  LUC109
+      *                                                                         LUC109
+     C                   clear                   s                              LUC109
+     C                   eval      s='update '+tolibtxt                         LUC109
+     C                   eval      s=%trim(s)+' a SET (MXNTAF) = '              LUC109
+     C                   eval      s=%trim(s)+' (SELECT COALESCE(b.R306,'       LUC109
+     C                   eval      s=%trim(s)+ x'7D' + ' ' + x'7D' + ')'        LUC109
+     C                   eval      s=%trim(s)+' FROM'                           LUC109
+     C                   eval      s=%trim(s)+%trimr(fromlibtxt)+' b WHERE'     LUC109
+     C                   eval      s=%trim(s)+' b.DDDLNO = a.MDLNO and'         LUC109
+     C                   eval      s=%trim(s)+' b.zone <> ' + x'7D'             LUC109
+     C                   eval      s=%trim(s)+ ' ' + x'7D' + ') WHERE'          LUC109
+     C                   eval      s=%trim(s)+' a.MDLNO IN (SELECT bb.DDDLNO'   LUC109
+     C                   eval      s=%trim(s)+' FROM'                           LUC109
+     C                   eval      s=%trim(s)+%trimr(fromlibtxt)+' bb)'         LUC109
+      *                                                                         LUC109
+     C                   exsr      executesql                                   LUC109
+      *                                                                         LUC109
+     C                   endsr                                                  LUC109
+      *                                                                         LUC109
+      *****************************************************************         LUC109
       /eject
       *****************************************************************
       *                                                               *

@@ -17,8 +17,9 @@
       ***(C)*Copyright*Midas-Kapiti*International*Ltd.*2002************                       LUC109
       *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
       *                                                               *
-      *  Last Amend No. LUC109             Date 21Sep16               *
-      *  Prev Amend No. LUC013             Date 28May08               *
+      *  Last Amend No. LUC109             Date 25Jan17               *
+      *  Prev Amend No. LUC109             Date 21Sep16               *
+      *                 LUC013             Date 28May08               *
       *                 LONDON             Date 06Feb04               *
       *                 MUI009             Date 06Feb04               *
       *                 213609             Date 03Jan03               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109  -R306 Netting flag not available in Loans            *
       *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
       *  LUC013 - Increase account code to 10 long.                   *
       *  LONDON - Only for London branch - Purge Bank of England      *

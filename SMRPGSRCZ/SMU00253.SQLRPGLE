@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD039358           Date 05May16               *
-      *  Prev Amend No. AR1085447D         Date 29Mar13               *
+      *  Last Amend No. MD040956           Date 01Sep16               *
+      *  Prev Amend No. MD039358           Date 05May16               *
+      *                 AR1085447D         Date 29Mar13               *
       *                 AR1085447          Date 06Feb13               *
       *                 AR1078292          Date 31Jan13               *
       *                 AR1056323          Date 14Nov12               *
@@ -36,6 +37,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040956 - SQL syntax incorrect.                             *
+      *           - Incorrect files/fields referenced based on        *
+      *             SMLOANPD.                                         *
       *  MD039358  - LEACCFPD does not have old numeric loan number   *
       *              field like LEACCTPD as it was introduced later   *
       *              as a fix to CLE134.                              *
@@ -49,22 +53,22 @@
       *  CLE148 - Alpha Loan Reference                                *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** | D-specs                              |
       ** | =======                              |
       ** +--------------------------------------+
      D LEALLO        E DS                  EXTNAME(LEALLO) DTAARA(LEALLO)
      D SQLSTRING       S          32000A   VARYING INZ
- 
+
      D UpgDS           DS
      D  LNFILE                       10A
      D  LNFLDN                       10A
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Update MXEXFFPD
      C                   EVAL      SQLSTRING =
      C                             'UPDATE MXEXFFPD SET ' +
@@ -73,7 +77,7 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update PSTTOM
      C                   EVAL      SQLSTRING =
      C                             'UPDATE PSTTOM SET ' +
@@ -82,7 +86,7 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update GZCLOANCL
      C                   EVAL      SQLSTRING =
      C                             'UPDATE GZCLOANCL SET ' +
@@ -106,7 +110,7 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update GZLOAMSDK
      C                   EVAL      SQLSTRING =
      C                             'UPDATE GZLOAMSDK SET ' +
@@ -122,7 +126,7 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update GZLEFEED
      C                   EVAL      SQLSTRING =
      C                             'UPDATE GZLEFEED SET ' +
@@ -138,7 +142,7 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update GZLEFEEAD
      C**********         EVAL      SQLSTRING =                                                CLE134
      C**********                   'UPDATE GZLEFEEAD SET ' +                                  CLE134
@@ -151,7 +155,7 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update CLOANHH
      C                   EVAL      SQLSTRING =
      C                             'UPDATE CLOANHH SET ' +
@@ -160,7 +164,7 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update FACHISA
      C                   EVAL      SQLSTRING =
      C                             'UPDATE FACHISA SET ' +
@@ -169,7 +173,7 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LEFHST
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEFHST SET ' +
@@ -178,82 +182,93 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update MCLONCL
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE MCLONCL SET' +
+     C******************           'UPDATE MCLONCL SET' +                                   MD040956
+     C                             'UPDATE MCLONCL SET ' +                                  MD040956
      C                             'LNRF ='''' WHERE LNRF=' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE MCLONCL SET' +
-     C                             'MLNRF ='''' WHERE MLNRF=' +
+     C******************           'UPDATE MCLONCL SET' +                                   MD040956
+     C                             'UPDATE MCLONCL SET ' +                                  MD040956
+     C******************           'MLNRF ='''' WHERE MLNRF=' +                             MD040956
+     C                             'MLNR ='''' WHERE MLNR=' +                               MD040956
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE MCLONCL SET' +
+     C******************           'UPDATE MCLONCL SET' +                                   MD040956
+     C                             'UPDATE MCLONCL SET ' +                                  MD040956
      C                             'OLNRF ='''' WHERE OLNRF=' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE MCLONCL SET' +
+     C******************           'UPDATE MCLONCL SET' +                                   MD040956
+     C                             'UPDATE MCLONCL SET ' +                                  MD040956
      C                             'TOLN ='''' WHERE TOLN=' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update CUTX2HP
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE CUTX2HP SET' +
+     C******************           'UPDATE CUTX2HP SET' +                                   MD040956
+     C                             'UPDATE CUTX2HP SET ' +                                  MD040956
      C                             'LNRF ='''' WHERE LNRF=' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LEFEAM
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE LEFEAM SET' +
+     C******************           'UPDATE LEFEAM SET' +                                    MD040956
+     C                             'UPDATE LEFEAM SET ' +                                   MD040956
      C                             'FELOAN ='''' WHERE FELOAN=' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LENQ
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE LENQ SET' +
+     C******************           'UPDATE LENQ SET' +                                      MD040956
+     C                             'UPDATE LENQ SET ' +                                     MD040956
      C                             'NQLNRF ='''' WHERE NQLNRF=' +
-     C                             ' ''000000 WITH NC'
+     C******************           ' ''000000 WITH NC'                                      MD040956
+     C                             ' ''000000'' WITH NC'                                    MD040956
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LENQLND
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE LENQ SET' +
+     C******************           'UPDATE LENQ SET' +                                      MD040956
+     C                             'UPDATE LENQLND SET ' +                                  MD040956
      C                             'QLLNRF ='''' WHERE QLLNRF=' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LVENTEL
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE LVENTEL SET' +
+     C******************           'UPDATE LVENTEL SET' +                                   MD040956
+     C                             'UPDATE LVENTEL SET ' +                                  MD040956
      C                             'LNRF ='''' WHERE LNRF=' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LEPDUFPD
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEPDUFPD SET ' +
@@ -265,7 +280,7 @@
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEPDUFPD SET ' +
      C                             'YPORG ='''' WHERE YPORG =' +
@@ -276,7 +291,7 @@
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update LEACCNPD
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEACCNPD SET ' +
@@ -288,7 +303,7 @@
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEACCNPD SET ' +
      C                             'RPFLNR ='''' WHERE RPFLNR =' +
@@ -299,7 +314,7 @@
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update LEPDFHPD
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEPDFHPD SET ' +
@@ -311,7 +326,7 @@
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEPDFHPD SET ' +
      C                             'YPLON ='''' WHERE YPLON =' +
@@ -322,7 +337,7 @@
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update LEPDLHPD
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEPDLHPD SET ' +
@@ -334,7 +349,7 @@
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEPDLHPD SET ' +
      C                             'YPLON ='''' WHERE YPLON =' +
@@ -345,7 +360,7 @@
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update XHISACT
      C                   EVAL      SQLSTRING =
      C                             'UPDATE XHISACT SET ' +
@@ -354,7 +369,7 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update XLEFEED
      C                   EVAL      SQLSTRING =
      C                             'UPDATE XLEFEED SET ' +
@@ -370,64 +385,71 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update XLEFEEDQD
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE XLEFEEDQD SET' +
+     C******************           'UPDATE XLEFEEDQD SET' +                                 MD040956
+     C                             'UPDATE XLEFEEDQD SET ' +                                MD040956
      C                             'FQLOAN ='''' WHERE FQLOAN =' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update CLOANCL
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE CLOANCL SET' +
+     C******************           'UPDATE CLOANCL SET' +                                   MD040956
+     C                             'UPDATE CLOANCL SET ' +                                  MD040956
      C                             'LNRF ='''' WHERE LNRF =' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE CLOANCL SET' +
+     C******************           'UPDATE CLOANCL SET' +                                   MD040956
+     C                             'UPDATE CLOANCL SET ' +                                  MD040956
      C                             'MLNR ='''' WHERE MLNR =' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE CLOANCL SET' +
+     C******************           'UPDATE CLOANCL SET' +                                   MD040956
+     C                             'UPDATE CLOANCL SET ' +                                  MD040956
      C                             'TOLN ='''' WHERE TOLN =' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LOAMSDK
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE LOAMSDK SET' +
+     C******************           'UPDATE LOAMSDK SET' +                                   MD040956
+     C                             'UPDATE LOAMSDK SET ' +                                  MD040956
      C                             'RLON ='''' WHERE RLON =' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE LOAMSDK SET' +
+     C******************           'UPDATE LOAMSDK SET' +                                   MD040956
+     C                             'UPDATE LOAMSDK SET ' +                                  MD040956
      C                             'ROLN ='''' WHERE ROLN =' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update XLEFHST
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE XLEFHST SET' +
+     C******************           'UPDATE XLEFHST SET' +                                   MD040956
+     C                             'UPDATE XLEFHST SET ' +                                  MD040956
      C                             'HILNRF ='''' WHERE HILNRF =' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LEFEED
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEFEED SET ' +
@@ -443,38 +465,40 @@
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LEFEEDQD
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE LEFEEDQD SET' +
+     C******************           'UPDATE LEFEEDQD SET' +                                  MD040956
+     C                             'UPDATE LEFEEDQD SET ' +                                 MD040956
      C                             'FQLOAN ='''' WHERE FQLOAN =' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LEFEEAD
      C                   EVAL      SQLSTRING =
-     C                             'UPDATE LEFEEAD SET' +
+     C******************           'UPDATE LEFEEAD SET' +                                   MD040956
+     C                             'UPDATE LEFEEAD SET ' +                                  MD040956
      C                             'FALOAN ='''' WHERE FALOAN =' +
      C                             ' ''000000'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update XLEPDUFPD
      C                   EVAL      SQLSTRING =
      C                             'UPDATE XLEPDUFPD SET ' +
      C                             'YPLON ='''' WHERE YPLON =' +
      C                             ' ''000000'' WITH NC'
- 
+
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C**********         EVAL      SQLSTRING =                                                CLE134
      C**********                   'UPDATE GZLEFEEAD SET ' +                                  CLE134
      C**********                   'YPORG ='''' WHERE YPORG =' +                              CLE134
@@ -485,7 +509,7 @@
      C**********         IF         SQLCOD < 0 AND SQLCOD <> -204                             CLE134
      C**********         EXSR      *PSSR                                                      CLE134
      C**********         ENDIF                                                                CLE134
- 
+
       ** File LEACCFPD
      C**********         EVAL      SQLSTRING =                                              MD039358
      C**********                   'UPDATE LEACCFPD SET SELNRF = ' +                        MD039358
@@ -508,7 +532,7 @@
      C**********         IF         SQLCOD < 0 AND SQLCOD <> -204                           MD039358
      C**********         EXSR      *PSSR                                                    MD039358
      C**********         EndIf                                                              MD039358
- 
+
       ***File*EDLKY1PD                                                              CLE134 AR1056323
      C**********         EVAL      SQLSTRING =                                      CLE134 AR1056323
      C**********                   'UPDATE EDLKY1PD SET LNNO = ' +                  CLE134 AR1056323
@@ -578,7 +602,7 @@
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204                             CLE134
      C                   EXSR      *PSSR                                                      CLE134
      C                   ENDIF                                                                CLE134
- 
+
       ** File LEACCTPD
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEACCTPD SET SELNRF = ' +
@@ -667,49 +691,53 @@
      C**********         IF         SQLCOD < 0 AND SQLCOD <> -204                          AR1056323
      C**********         EXSR      *PSSR                                                   AR1056323
      C**********         ENDIF                                                             AR1056323
- 
+
       ** Update GTEESGT
      C                   EVAL      SQLSTRING =
      C                             'UPDATE GTEESGT SET ' +
      C                             'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+
      C                             'WHERE SUBSTR(FCLN,1,1) = ''F'' WITH NC'
- 
+
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update GTREFGR
      C                   EVAL      SQLSTRING =
      C                             'UPDATE GTREFGR SET ' +
      C                             'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+
      C                             'WHERE SUBSTR(FCLN,1,1) = ''F'' WITH NC'
- 
+
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LEGUX1PD
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEGUX1PD SET ' +
-     C                             'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+
-     C                             'WHERE SUBSTR(FCLN,1,1) = ''F'' WITH NC'
- 
+     C******************           'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+                  MD040956
+     C******************           'WHERE SUBSTR(FCLN, 1, 1) = ''F'' WITH NC'               MD040956
+     C                             'WHFCLN = ''''  CONCAT SUBSTR(WHFCLN,2,5)'+              MD040956
+     C                             'WHERE SUBSTR(WHFCLN, 1, 1) = ''F'' WITH NC'             MD040956
+
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
       ** Update LEGUX2PD
      C                   EVAL      SQLSTRING =
      C                             'UPDATE LEGUX2PD SET ' +
-     C                             'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+
-     C                             'WHERE SUBSTR(FCLN,1,1) = ''F'' WITH NC'
- 
+     C******************           'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+                  MD040956
+     C******************           'WHERE SUBSTR(FCLN, 1, 1) = ''F'' WITH NC'               MD040956
+     C                             'WHFCLN = ''''  CONCAT SUBSTR(WHFCLN,2,5)'+              MD040956
+     C                             'WHERE SUBSTR(WHFCLN, 1, 1) = ''F'' WITH NC'             MD040956
+
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
- 
+
      C                   EXSR      SRUpdate                                                   CLE134
- 
+
       ** If there's an SQL error, set on U7 and U8.
      C                   IF        SQLCOD < 0
      C                   EVAL      *INU7 = *ON
@@ -720,7 +748,7 @@
      C                   EVAL      PCLAST = 'AAAAAAAA'
      C                   OUT       LEALLO
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON                                                CLE134
      C                   RETURN                                                               CLE134
                                                                                               CLE134

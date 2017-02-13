@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. LLN022A            Date 03Jun15               *
-      *  Prev Amend No. CRE101             Date 27Aug14               *
+      *  Last Amend No. MD039546           Date 26Jan17               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
       *                 MD028970           Date 25Nov14               *
       *                 MD026979           Date 09Jun14               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039546 - Ensure that the buffer take the correct timestamp.*
+      *             Applied for MD-39522.                             *      
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  CRE101 - Interim Interest Statements on a Frequency          *
@@ -464,6 +467,9 @@
       ** are added before the data structure ExtData                                         BUG6218
                                                                                              BUG6218
      C                   MOVE      TMST          @TimeStamp       26                         BUG4196
+     C     *IN83         IFEQ      '0'                                                      MD039546
+     C                   MOVE      TSTAMP        @TimeStamp                                 MD039546
+     C                   ENDIF                                                              MD039546
      C                   MOVEL     AccnInPena    AccnInPena1                                  CRE015
      C                   MOVE      AccnInPena    AccnInPena2                                  CRE015
      C                   EVAL                    Buffer = AccnInMast
@@ -1146,6 +1152,7 @@
       ** Test the A/c if it is a prime account or a secondary account, also
       ** set up secondary account details to diplay
      C                   MOVEL     ' '           LTYP              1
+     C                   MOVE      TMST          TSTAMP           26                        MD039546
      C     LTAS          IFEQ      99
      C                   MOVEL     'P'           LTYP
      C                   ELSE

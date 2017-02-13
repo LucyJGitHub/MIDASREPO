@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD030983           Date 04Oct16               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD024368           Date 13Dec16               *
+      *  Prev Amend No. MD030983           Date 04Oct16               *
+      *                 CSW216             Date 14Mar16               *
       *                 MD023231           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
       *                 MD023802           Date 26Nov13               *
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024368 - DB Error when reversing Deal with no Reporting    *
+      *             details. Applied for MD-39839                     *
       *  MD030983 -  Generated messages still display previous trade  *
       *              repository details upon reversal of the deal     *
       *  CSW216 - SWIFT Changes 2016                                  *
@@ -307,12 +310,12 @@
  
      C                   UPDATE    DLRPIFD0
  
-     C                   ELSE
+     C**********         ELSE                                                               MD024368
  
-     C                   MOVEL     RVTRRF        DBKEY
-     C                   MOVEL     'DLRPIF'      DBFILE
-     C                   MOVEL     '004'         DBASE
-     C                   EXSR      SRERR
+     C**********         MOVEL     RVTRRF        DBKEY                                      MD024368
+     C**********         MOVEL     'DLRPIF'      DBFILE                                     MD024368
+     C**********         MOVEL     '004'         DBASE                                      MD024368
+     C**********         EXSR      SRERR                                                    MD024368
  
      C                   ENDIF
  

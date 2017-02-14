@@ -11,12 +11,13 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
 0010 F*      1990,1993                                                *
 0010 F*                                                               *
+      *  Last Amend No. 226604             Date 12Dec16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       *                 173636             Date 13Jan00               *
      F*                 CDE002             Date 23Dec99               *
@@ -31,6 +32,11 @@
 0012 F*                                                               *
 0013 F*****************************************************************
 0012 F*                                                               *
+      *  226604 - Retail Int. Capitalisation posted to Suspense Acct. *
+      *           Allow negative value on Minimum DR/CR Int to Cap    *
+      *           to direct -ve postings to customer account instead  *
+      *           of computer suspense. Applied fix 215907.           *
+      *           Applied for MD041654                                *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
      F*  173636 - Error messages not displayed / some fields not      *
@@ -130,6 +136,8 @@
 0047 E*    SUBROUTINE TABLES/ARRAYS                                       RE0242
 0048 E                    ZA1        16  1               ZALIGN/ZEDIT     RE0242
 0049 E                    ZA2        16  1               ZALIGN/ZEDIT     RE0242
+      /COPY ZSRSRC,ZSEDITZ1                                                                   226604
+      /COPY ZSRSRC,ZASIGNZ1                                                                   226604
 0050 E*                                                                   RE0242
 0051 E***********         ERCD       19  4               ERROR CODES      S01413
      E                    ERCD       38  4               ERROR CODES      S01413
@@ -403,6 +411,7 @@
      I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
      I*                                                                   S01194
      I**                                                                  RE0242
+      /COPY ZSRSRC,ZSEDITZ2                                                                   226604
      I/EJECT
       * Insert DS to pass DATA parameter to the return program            S01413
       *                                                                   S01413
@@ -725,7 +734,10 @@
 0314 C*  VALIDATE AMOUNTS                                                 RE0242
 0315 C*
 0322 C                     Z-ADDCDP       ZADEC
+     C                     Z-ADDCDP       ZSDEC                                               226604
+     C                     Z-ADDCDP       ZDECS                                               226604
 0323 C           13        SUB  CDP       ZADIG
+     C           13        SUB  CDP       ZSDIG                                               226604
 0315 C*
 0316 C*  MANDATORY                                                        RE0242
 0317 C*                                                                   RE0242
@@ -733,9 +745,12 @@
 0319 C   12                GOTO VMADC                                     RE0242
 0320 C*                                                                   RE0242
 0321 C*  CHECK NUMERIC                                                    RE0242
-0324 C                     MOVE BLK16     ZFIELD                          RE0242
-0325 C                     MOVE SMIDC     ZFIELD                          RE0242
-0326 C                     EXSR ZALIGN                                    RE0242
+0324 C**********           MOVE BLK16     ZFIELD                                       RE0242 226604
+     C                     MOVE BLK16     ZFLD17                                              226604
+0325 C**********           MOVE SMIDC     ZFIELD                                       RE0242 226604
+     C                     MOVE SMIDC     ZFLD17                                              226604
+0326 C**********           EXSR ZALIGN                                                 RE0242 226604
+     C                     EXSR ZASIGN                                                        226604
 0327 C   99                SETON                     02                   RE0242
 0328 C   02      S         ADD  1         S                               RE0242
 0329 C   02                MOVE '010'     ERCD,S                          RE0242
@@ -743,12 +758,21 @@
 0331 C*                                                                   RE0242
 0332 C*  WMIDC WILL BE USED TO UPDATE S/RECCY                             RE0242
 0333 C*                                                                   RE0242
-0334 C                     MOVE ZFIELD    WMIDC  130                      RE0242
+0334 C**********           MOVE ZFIELD    WMIDC  130                                   RE0242 226604
+     C                     MOVE ZOUT15    WMIDC  130                                          226604
+      *                                                                                       226604
+     C           ZFSIGN    IFEQ '-'                                                           226604
+     C                     Z-SUBWMIDC     WMIDC                                               226604
+     C                     ENDIF                                                              226604
+      *                                                                                       226604
 0335 C*                                                                   RE0242
 0336 C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     RE0242
 0337 C*                                                                   RE0242
-0338 C                     EXSR ZEDIT                                     RE0242
-0339 C                     MOVE ZFIELD    SMIDC                           RE0242
+0338 C**********           EXSR ZEDIT                                                  RE0242 226604
+0339 C**********           MOVE ZFIELD    SMIDC                                        RE0242 226604
+     C                     Z-ADDWMIDC     ZFLD15                                              226604
+     C                     EXSR ZSEDIT                                                        226604
+     C                     MOVE ZOUT21    SMIDC                                               226604
 0340 C*                                                                   RE0242
 0341 C           VMADC     TAG                             *** VMADC ***  RE0242
      C   12                Z-ADD0         WMIDC  130
@@ -800,9 +824,12 @@
 0367 C   12                GOTO VMACC                                     RE0242
 0368 C*                                                                   RE0242
 0369 C*  CHECK NUMERIC                                                    RE0242
-0370 C                     MOVE BLK16     ZFIELD                          RE0242
-0371 C                     MOVE SMICC     ZFIELD                          RE0242
-0372 C                     EXSR ZALIGN                                    RE0242
+0370 C**********           MOVE BLK16     ZFIELD                                       RE0242 226604
+     C                     MOVE BLK16     ZFLD17                                              226604
+0371 C**********           MOVE SMICC     ZFIELD                                       RE0242 226604
+     C                     MOVE SMICC     ZFLD17                                              226604
+0372 C**********           EXSR ZALIGN                                                 RE0242 226604
+     C                     EXSR ZASIGN                                                        226604
 0373 C   99                SETON                     04                   RE0242
 0374 C   04      S         ADD  1         S                               RE0242
 0375 C   04                MOVE '012'     ERCD,S                          RE0242
@@ -810,12 +837,21 @@
 0377 C*                                                                   RE0242
 0378 C*  WMICC WILL BE USED TO UPDATE S/RECCY                             RE0242
 0379 C*                                                                   RE0242
-0380 C                     MOVE ZFIELD    WMICC                           RE0242
+0380 C**********           MOVE ZFIELD    WMICC                                        RE0242 226604
+     C                     MOVE ZOUT15    WMICC  130                                          226604
+      *                                                                                       226604
+     C           ZFSIGN    IFEQ '-'                                                           226604
+     C                     Z-SUBWMICC     WMICC                                               226604
+     C                     ENDIF                                                              226604
+      *                                                                                       226604
 0381 C*                                                                   RE0242
 0382 C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     RE0242
 0383 C*                                                                   RE0242
-0384 C                     EXSR ZEDIT                                     RE0242
-0385 C                     MOVE ZFIELD    SMICC                           RE0242
+0384 C**********           EXSR ZEDIT                                                  RE0242 226604
+0385 C**********           MOVE ZFIELD    SMICC                                        RE0242 226604
+     C                     Z-ADDWMICC     ZFLD15                                              226604
+     C                     EXSR ZSEDIT                                                        226604
+     C                     MOVE ZOUT21    SMICC                                               226604
 0386 C*                                                                   RE0242
 0387 C           VMACC     TAG                             *** VMACC ***  RE0242
      C   12                Z-ADD0         WMICC  130
@@ -862,21 +898,21 @@
      C***12****************Z-ADD0         WMACC  130                      E19929
      C   12                SETON                         11               BHF701
      C*                                                                   BHF701
-     C*  CHECK THAT MAXIMUM IS GREATER THAN MINIMUM - CR                  BHF701
-     C           *IN11     IFNE '1'                                       BHF701
-     C           SMACC     COMP SMICC                  12                 BHF701
-     C   12      S         ADD  1         S                               BHF701
-     C   12                MOVE '014'     ERCD,S                          BHF701
-     C   12                SETON                     0405                 BHF701
-     C                     END                                            BHF701
-     C*                                                                   BHF701
-     C*  CHECK THAT MAXIMUM IS GREATER THAN MINIMUM - DR                  BHF701
-     C           *IN10     IFNE '1'                                       BHF701
-     C           SMADC     COMP SMIDC                  12                 BHF701
-     C   12      S         ADD  1         S                               BHF701
-     C   12                MOVE '015'     ERCD,S                          BHF701
-     C   12                SETON                     0203                 BHF701
-     C                     END                                            BHF701
+     C***CHECK*THAT*MAXIMUM*IS*GREATER*THAN*MINIMUM*-*CR***************                BHF701 226604
+     C********** *IN11     IFNE '1'                                                    BHF701 226604
+     C********** SMACC     COMP SMICC                  12                              BHF701 226604
+     C***12***** S         ADD  1         S                                            BHF701 226604
+     C***12*****           MOVE '014'     ERCD,S                                       BHF701 226604
+     C***12*****           SETON                     0405                              BHF701 226604
+     C**********           END                                                         BHF701 226604
+     C*****************************************************************                BHF701 226604
+     C***CHECK*THAT*MAXIMUM*IS*GREATER*THAN*MINIMUM*-*DR***************                BHF701 226604
+     C********** *IN10     IFNE '1'                                                    BHF701 226604
+     C********** SMADC     COMP SMIDC                  12                              BHF701 226604
+     C***12***** S         ADD  1         S                                            BHF701 226604
+     C***12*****           MOVE '015'     ERCD,S                                       BHF701 226604
+     C***12*****           SETON                     0203                              BHF701 226604
+     C**********           END                                                         BHF701 226604
      C*                                                                   S01413
      C           SHOMN     COMP BLK14                    12               S01413
      C   12                GOTO VHOMX                                     S01413
@@ -1821,6 +1857,8 @@
 0640 C**                                                                 *RE0242
 0641 C           ZEND      ENDSR                           ** ZEND **    *RE0242
 0642 C*                                                                  *RE0242
+      /COPY ZSRSRC,ZASIGNZ2                                                                   226604
+      /COPY ZSRSRC,ZSEDITZ3                                                                   226604
 0643 C********************************************************************RE0242
      C**         ERROR HANDLING FOR MIMIMUM INTEREST AMOUNT
      C*****************************************************************

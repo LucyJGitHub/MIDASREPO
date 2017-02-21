@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD012157           Date 23Oct13               *
-      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *  Last Amend No. MD038365           Date 20Apr16               *
+      *  Prev Amend No. MD012157           Date 23Oct13               *
+      *                 CLE154             Date 02Aug12               *
       *                 CLE141A            Date 28Apr16               *
       *                 CLE141             Date 01Mar16               *
       *                 CLE141             Date 08Feb16               *
@@ -367,6 +368,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038365 - Incorrect update of data area LESTAT due to       *
+      *             LDA field DAYRUN overridden value                 *
       *  MD012157 - A/C movements show rundate instead of value date  *
       *             after inserting a backvalued 'LS'. Use the value  *
       *             of VDAT instead of RUND in SR/LOANSR.             *
@@ -5732,7 +5735,7 @@ L118 I                             P   72   77 7RTSPL
      C**                                                                  S01117
      C*    ENSURE REPORT SPOOL FILE RECORDED BY RCF                       S01117
      C**                                                                  S01117
-     C     *LOCK         IN        LDA                                                        CLE164
+     C******LOCK         IN        LDA                                               CLE164 MD038365
      C                   Z-ADD     SFNUM1        ZSNUM1            6 0                         S0111
      C                   OUT       LDA                                                         S0111
      C**                                                                  S01117

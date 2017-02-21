@@ -11,11 +11,27 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD031720           Date 07Jan15               *
-      *  Prev Amend No. CLE164 *CREATE     Date 18Aug14               *
+      *  Last Amend No. MD038258           Date 13Apr16               *
+      *  Prev Amend No. MD037489           Date 11Feb16               *
+      *                 MD037485           Date 11Feb16               *
+      *                 MD036881           Date 17Dec15               *
+      *                 MD031720           Date 07Jan15               *
+      *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD038258 - Bulk update does not work correctly for fees      *
+      *           - Priorities are not updated for fees when ran in   *
+      *             command line                                      *
+      *           - Corrected the passed fee code parameter to sub    *
+      *             routine RetrievePDPFC to correctly retrieve       *
+      *             the priority group id                             *
+      *  MD037489 - Initialize common SQL String build variables      *
+      *             between loan and fee access                       *
+      *  MD037485 - Only Process Live Loans and Fees when             *
+      *             running the program as take-on                    *
+      *  MD036881 - Incorrect Repayment Priority and Priority Level   *
+      *             retrieved for loan fees during bulk update        *
       *  MD031720 - Job not ended properly when LEC000507 ran         *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *                                                               *
@@ -122,6 +138,7 @@
      D SQLSTR          S           2000A   INZ(*BLANKS)
      D SQLLTST         S            500A   INZ(*BLANKS)
      D SQLFACT         S            500A   INZ(*BLANKS)
+     D SQLFACT2        S            500A   INZ(*BLANKS)                                   //MD036881
      D SQLFEE          S            500A   INZ(*BLANKS)
      D SQLParse1       S            500A   INZ(*BLANKS)
      D SQLParse2       S            500A   INZ(*BLANKS)
@@ -169,6 +186,11 @@
      D  DWNLCount      S              3  0 INZ(*ZEROS)
      D  zPrefix        S              2A   INZ(*BLANKS)
      D  wKeyDesc       S             20A   INZ('PDPRepMatrixBulkUpd')
+                                                                                            MD036881
+     D  WCLFTYP        S              3A   INZ(*BLANKS)                                     MD036881
+     D  WLTYP          S              2A   INZ(*BLANKS)                                     MD036881
+     D  WSTYP          S              2A   INZ(*BLANKS)                                     MD036881
+                                                                                            MD036881
      D SDSTAT        E DS                  DTAARA(SDSTAT)
 
      C     KUpdFees      KLIST
@@ -274,11 +296,17 @@
                   aPDCL_Z(3) = 'ZPRIN';
                   aPDCL_Z(4) = 'ZPRIM';
 
-       // Select and process all loans records tagged as auto-settle
+       //*Select*and*process*all*loans*records*tagged*as*auto-settle*         //MD037485
+       // Select and process Live Loans tagged as auto-settle                 //MD037485
 
-                  SQLStr = 'select * from CLOANCL ' +
-                           'where AUTO = ' + QUO + 'C' + QUO +
-                           ' order by LNRF';
+       //         SQLStr = 'select * from CLOANCL ' +
+       //                   'where AUTO = ' + QUO + 'C' + QUO +
+       //                   ' order by LNRF';
+
+                 SQLStr = 'select * from CLOANCL ' +                           //MD037485
+                          'where AUTO = ' + QUO + 'C' + QUO +                  //MD037485
+                          ' and RECI = ' + QUO + 'D'  + QUO +                  //MD037485
+                          ' order by LNRF';                                    //MD037485
 
                   Exec SQL Prepare P1 from :SQLStr;
                   Exec SQL Declare P1 cursor for P1;
@@ -447,7 +475,8 @@
 
 
        // Retrieve SDFEEPD->PDP Group-ID
-                     @@FECD = %Editc(F_FEFSEQ:'X');
+       //            @@FECD = %Editc(F_FEFSEQ:'X');                //MD038258
+                     @@FECD = %Editc(F_FEFCOD:'X');                //MD038258
                      Exsr RetrievePDPFC;
 
 
@@ -564,9 +593,14 @@
                      aLateFee(1) = 'Fee90';
                      aLateFee(2) = 'Fee9M';
 
-                     SQLStr = 'select * from LEFEED  ' +
-                              'where FEAUTO = ' + QUO + 'C' + QUO +
-                              ' order by FEBRCA, FECNUM, FEFACL,FELOAN, FEFSEQ';
+       //            SQLStr = 'select * from LEFEED  ' +                               //MD037485
+       //                     'where FEAUTO = ' + QUO + 'C' + QUO +                    //MD037485
+       //                     ' order by FEBRCA, FECNUM, FEFACL,FELOAN, FEFSEQ';       //MD037485
+
+                     SQLStr = 'select * from LEFEED ' +                                //MD037485
+                              'where FEAUTO = ' + QUO + 'C' + QUO +                    //MD037485
+                              'and FERECI = ' + QUO + 'D' + QUO +                      //MD037485
+                           ' order by FEBRCA, FECNUM, FEFACL, FELOAN, FEFSEQ';         //MD037485
 
                      Exec SQL Prepare P2 from :SQLStr;
                      Exec SQL Declare P2 Cursor for P2;
@@ -890,10 +924,25 @@
                      FeeFCod = '00';
                   EndIf;
 
+                  //Initializa SQL strings to avoid conflict on common variables between  //MD034789
+                  //loans and fees extracts                                               //MD034789
+
+                  SQLFACT = *Blanks;                                                      //MD034789
+                  SQLFACT2 = *Blanks;                                                     //MD034789
+                  SQLLTST = *Blanks;                                                      //MD034789
+                  SQLFEE = *Blanks;                                                       //MD034789
+
+
                   If FFacGrp <> *Blank;
                      SQLFACT = 'or left(FEFACL,3) in (select AMFCTY from ' +
                                'SDFACTPD where AMPGID = ' + QUO + FFacGrp +
                                QUO + ')';
+                     SQLFACT2 = 'or(FELOAN <> ' + QUO + QUO + '  +
+                                and FEFACL = 0) and +
+                                (select FTYP from CLOANCL where +
+                                LNRF = FELOAN) in +
+                                (select AMFCTY from SDFACTPD where +
+                                AMPGID = ' + QUO + FFacGrp + QUO + ')';                  //MD036881
                   Endif;
 
                   If FLTSGrp <> *Blank;
@@ -923,7 +972,9 @@
                            '(' +
                            %Trim(SQLParse1) + ' ' + %Trim(SQLParse2) + ' ' +
                            'FEFCOD = ' + QUO + FeeFCod + QUO +
-                           %Trim(SQLFACT) + ' ' +  %Trim(SQLLTST) + ' ' +
+                           //%Trim(SQLFACT) + ' ' +  %Trim(SQLLTST) + ' ' +                MD036881
+                           %Trim(SQLFACT) + ' ' +  %Trim(SQLFACT2) + ' ' +
+                           %Trim(SQLLTST) + ' ' +                                        //MD036881
                            %Trim(SQLFEE) + ' ' +
                            ')';
 
@@ -972,30 +1023,51 @@
                            Exec SQL
                            select AUPGID into :wFCPDPPRGrp from SDFEEPD
                            where AUFECD = :F_FEFCOD;
-                           If wFCPDPPRGrp = *Blank;
-                              wFCPDPPRGrp = '***';
-                           Endif;
+                           //If wFCPDPPRGrp = *Blank;                                       MD036881
+                           //   wFCPDPPRGrp = '***';                                        MD036881
+                           //Endif;                                                         MD036881
 
                            If F_FEFACL <> 0;
                               Exec SQL
                               select AMPGID into :wFTPDPPRGrp from SDFACTPD
                               where AMFCTY = left(:F_FEFACL,3);
-                              If wFTPDPPRGrp = *Blank;
-                                 wFTPDPPRGrp = '***';
-                              Endif;
-                           Else;
-                              wFTPDPPRGrp = '***';
+                              //If wFTPDPPRGrp = *Blank;                                    MD036881
+                              //   wFTPDPPRGrp = '***';                                     MD036881
+                              //Endif;                                                      MD036881
+                           //Else;                                                          MD036881
+                           // wFTPDPPRGrp = '***';                                          MD036881
                            Endif;
+
+                           //Start of Change MD036881
+                           // For Loan Fees Get the Facility of the associated Loan
+                           // then get the Priority Group Id for the Facility
+
+                           If F_FEFACL = 0 and F_FELOAN <> *Blank;
+                              Exec SQL
+                              select FTYP into :wCLFTYP from CLOANCL
+                              where LNRF = :F_FELOAN;
+
+                              Exec SQL
+                              select AMPGID into :wFTPDPPRGrp from SDFACTPD
+                              where AMFCTY = :wCLFTYP;
+                           Endif;
+                           //End of Change MD036881
 
                            If F_FELOAN <> *Blank;
                               Exec SQL
+                              select LTYP,SUTP into :WLTYP, :WSTYP
+                              from CLOANCL
+                              where LNRF = :F_FELOAN;
+
+                              Exec SQL
                               select AYPGID into :wLSPDPPRGrp from SDLOANPD
-                              where AYLNTY = :LTYP and AYLNST = :SUTP;
-                              If wLSPDPPRGrp = *Blank;
-                                 wLSPDPPRGrp = '***';
-                              Endif;
-                           Else;
-                              wLSPDPPRGrp = '***';
+                              where AYLNTY = :WLTYP and AYLNST = :WSTYP;                  //MD036881
+                              //where AYLNTY = :LTYP and AYLNST = :SUTP;                    MD036881
+                              //If wLSPDPPRGrp = *Blank;                                    MD036881
+                              //   wLSPDPPRGrp = '***';                                     MD036881
+                              //Endif;                                                      MD036881
+                           //Else;                                                          MD036881
+                           // wLSPDPPRGrp = '***';                                          MD036881
                            Endif;
 
                            CallP RETRIEVE_REPR(  wRetCode

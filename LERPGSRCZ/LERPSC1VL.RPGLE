@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE154             Date 02Aug12               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD038257           Date 13Apr16               *
+      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *                 CLE164             Date 18Aug14               *
       *                 MD025679A          Date 12May14               *
       *                 MD022695           Date 03Oct13               *
       *                 AR740107           Date 21Dec12               *
@@ -45,6 +46,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038257 - Incorrect Default value for Auto settle indicator *
+      *           - Get the value of auto settle indicator of the     *
+      *             loan instead of the Lending ICD default value     *
       *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD025679A - API - OLPOSOA Locking Issue Performance Update   *
@@ -215,9 +219,9 @@
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External DS for currency details
       *
-     D SDCLND        E DS                  EXTNAME(SDCLNDPD)                                  CLE164
-      *** Customer Lending ICD                                                                CLE164
-      *                                                                                       CLE164
+     D***SDCLND**      E DS                  EXTNAME(SDCLNDPD)                       CLE164 MD038257
+      ****Customer*Lending*ICD*******************************                        CLE164 MD038257
+      *******************************************************                        CLE164 MD038257
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
       *
@@ -1393,7 +1397,8 @@
       *
      C     DDAUTO        IFEQ      *BLANK
      C**********         MOVE      CL_AUTO       DDAUTO                                       CLE164
-     C                   EVAL      DDAUTO = BPDASI                                            CLE164
+     C**********         EVAL      DDAUTO = BPDASI                                   CLE164 MD038257
+     C                   MOVE      CL_AUTO       DDAUTO                              CLE164 MD038257
      C                   ELSE
      C     DDAUTO        IFNE      'Y'
      C     DDAUTO        ANDNE     'N'
@@ -1741,19 +1746,19 @@
      C                   MOVE      'P'           PPCUST                                       240408
      C                   ENDIF                                                                240408
      C                   ENDIF                                                                240408
-                                                                                              CLE164
-     C**  Access Customer Lending ICD via access program                                      CLE164
-                                                                                              CLE164
-     C                   CALL      'AOCLNDR0'                                                 CLE164
-     C                   PARM      *BLANKS       @RTCD                                        CLE164
-     C                   PARM      '*FIRST '     @OPTN                                        CLE164
-     C     SDCLND        PARM      SDCLND        DSSDY                                        CLE164
-     C     @RTCD         IFNE      *BLANKS                                                    CLE164
-     C                   MOVEL     'SDCLNDPD'    DBFILE                                       CLE164
-     C                   Z-ADD     10            DBASE                                        CLE164
-     C                   MOVEL     @OPTN         DBKEY                                        CLE164
-     C                   EXSR      *PSSR                                                      CLE164
-     C                   ENDIF                                                                CLE164
+      *******************************************************************            CLE164 MD038257
+     C****Access*Customer*Lending*ICD*via*access*program*****************            CLE164 MD038257
+      *******************************************************************            CLE164 MD038257
+     C**********         CALL      'AOCLNDR0'                                        CLE164 MD038257
+     C**********         PARM      *BLANKS       @RTCD                               CLE164 MD038257
+     C**********         PARM      '*FIRST '     @OPTN                               CLE164 MD038257
+     C*****SDCLND        PARM      SDCLND        DSSDY                               CLE164 MD038257
+     C*****@RTCD         IFNE      *BLANKS                                           CLE164 MD038257
+     C**********         MOVEL     'SDCLNDPD'    DBFILE                              CLE164 MD038257
+     C**********         Z-ADD     10            DBASE                               CLE164 MD038257
+     C**********         MOVEL     @OPTN         DBKEY                               CLE164 MD038257
+     C**********         EXSR      *PSSR                                             CLE164 MD038257
+     C**********         ENDIF                                                       CLE164 MD038257
       *
       ***  Determine whether program is running interactively or in batch
       ***   ( 0 = batch   1 = interactive)

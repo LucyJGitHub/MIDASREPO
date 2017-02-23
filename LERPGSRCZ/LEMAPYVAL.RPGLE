@@ -14,9 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD038714           Date 09May16               *
-      *  Prev Amend No. MD037915           Date 24Feb16               *
-      *                 249766             Date 03Jul15               *
+      *  Last Amend No. MD039009           Date 26May16               *
+      *  Prev Amend No. MD038714           Date 09May16               *
+      *                 MD037915           Date 24Feb16               *
       *                 CLE164             Date 18Aug14               *
       *                 MD000091           Date 10May13               *
       *                 MD020445           Date 16May13               *
@@ -63,6 +63,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039009 - Validation Changes on Auto-Settle indicator       *
+      *             of Manual Repayments for PDCL with auto settle    *
+      *             indicator that is not equal to C                  *
       *  MD038714 -If negative Amounts entered re-set the Auto Settle *
       *           Indicator to 'Y' and don't show the error           *
       *  MD037915 - Auto Settle Indicator for Manual Repayment        *
@@ -852,11 +855,21 @@
      C                   EVAL      WMsgIDArr(Widx) = '5047352'                                CLE164
      C                   Endif                                                                CLE164
                                                                                               CLE164
-     C                   If        CL_AUTO <> 'C' and DDAuto = 'C'                            CLE164
-     C                   ADD       1             Widx                                         CLE164
-     C                   EVAL      WFldNamArr(Widx) = 'DDAUTO'                                CLE164
-     C                   EVAL      WMsgIDArr(Widx) = '5047353'                                CLE164
-     C                   Endif                                                                CLE164
+      ** Input of Auto Settle of 'C' or 'N' should be prevented when loan                   MD039009
+      ** is a PDCL with Auto Settle <> 'C'                                                  MD039009
+ 
+     C**********         If        CL_AUTO <> 'C' and DDAuto = 'C'                   CLE164 MD039009
+     C**********         ADD       1             Widx                                CLE164 MD039009
+     C**********         EVAL      WFldNamArr(Widx) = 'DDAUTO'                       CLE164 MD039009
+     C**********         EVAL      WMsgIDArr(Widx) = '5047353'                       CLE164 MD039009
+     C**********         Endif                                                       CLE164 MD039009
+ 
+     C                   If        CL_AUTO <> 'C' and (DDAuto = 'C'                         MD039009
+     C                             or DDAuto = 'N')                                         MD039009
+     C                   ADD       1             Idx                                        MD039009
+     C                   EVAL      FldNameArr(Idx) = 'DDAUTO'                               MD039009
+     C                   EVAL      MsgIdArr(Idx) = '5048551'                                MD039009
+     C                   ENDIF                                                              MD039009
                                                                                               CLE164
      C                   Else                                                                 CLE164
                                                                                               CLE164

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD037915           Date 24Feb16               *
-      *  Prev Amend No. 249766             Date 03Jul15               *
+      *  Last Amend No. MD038714           Date 09May16               *
+      *  Prev Amend No. MD037915           Date 24Feb16               *
+      *                 249766             Date 03Jul15               *
       *                 CLE164             Date 18Aug14               *
       *                 MD000091           Date 10May13               *
       *                 MD020445           Date 16May13               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038714 -If negative Amounts entered re-set the Auto Settle *
+      *           Indicator to 'Y' and don't show the error           *
       *  MD037915 - Auto Settle Indicator for Manual Repayment        *
       *             not being considered for account balance check    *
       *  249766 - Compare interest repayment to interest expected if  *
@@ -865,9 +868,11 @@
      C                   Endif                                                                CLE164
                                                                                               CLE164
      C                   If        DDAuto = 'Y' and CL_AUTO = 'C'                             CLE164
+     C                   If        DDISIG <> '-' and DDPSIG <> '-'                          MD038714
      C                   ADD       1             Widx                                         CLE164
      C                   EVAL      WFldNamArr(Widx) = 'DDAUTO'                                CLE164
      C                   EVAL      WMsgIDArr(Widx) = '5047354'                                CLE164
+     C                   Endif                                                              MD038714
      C                   Endif                                                                CLE164
                                                                                               CLE164
      C                   Endif                                                                CLE164
@@ -886,16 +891,17 @@
      C                   If        DDISIG = '-' or                                          MD037915
      C                             DDPSIG = '-'                                             MD037915
                                                                                             MD037915
-     C                   ADD       1             Idx                                        MD037915
-     C                   If        DDISIG = '-'                                             MD037915
-     C                   Eval      FldNameArr(Idx) = 'DDISIG'                               MD037915
-     C                   Eval      DDPSIGOK = 'N'                                           MD037915
-     C                   Else                                                               MD037915
-     C                   Eval      FldNameArr(Idx) = 'DDPSIG'                               MD037915
-     C                   Eval      DDISIGOK = 'N'                                           MD037915
-     C                   Endif                                                              MD037915
-     C                                                                                      MD037915
-     C                   Eval      MsgIDArr(Idx) = '5048510'                                MD037915
+     C                   EVAL      DDAUTO = 'Y'                                             MD038714
+     C**********         ADD       1             Idx                               MD037915 MD038714
+     C**********         If        DDISIG = '-'                                    MD037915 MD038714
+     C**********         Eval      FldNameArr(Idx) = 'DDISIG'                      MD037915 MD038714
+     C**********         Eval      DDPSIGOK = 'N'                                  MD037915 MD038714
+     C**********         Else                                                      MD037915 MD038714
+     C**********         Eval      FldNameArr(Idx) = 'DDPSIG'                      MD037915 MD038714
+     C**********         Eval      DDISIGOK = 'N'                                  MD037915 MD038714
+     C**********         Endif                                                     MD037915 MD038714
+     C**********                                                                   MD037915 MD038714
+     C**********         Eval      MsgIDArr(Idx) = '5048510'                       MD037915 MD038714
      C                   EndiF                                                              MD037915
                                                                                             MD037915
      C                   Endif                                                              MD037915

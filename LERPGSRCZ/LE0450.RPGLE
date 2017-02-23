@@ -13,7 +13,8 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *  Last Amend No. MD038365           Date 20Apr16               *
-      *  Prev Amend No. MD012157           Date 23Oct13               *
+      *  Prev Amend No. MD037915           Date 24Feb16               *      
+      *                 MD012157           Date 23Oct13               *
       *                 CLE154             Date 02Aug12               *
       *                 CLE141A            Date 28Apr16               *
       *                 CLE141             Date 01Mar16               *
@@ -370,6 +371,8 @@
       *                                                               *
       *  MD038365 - Incorrect update of data area LESTAT due to       *
       *             LDA field DAYRUN overridden value                 *
+      *  MD037915 - Auto Settle Indicator for Manual Repayment        *
+      *             not being considered for account balance check    *
       *  MD012157 - A/C movements show rundate instead of value date  *
       *             after inserting a backvalued 'LS'. Use the value  *
       *             of VDAT instead of RUND in SR/LOANSR.             *
@@ -11817,7 +11820,8 @@ L118 I                             P   72   77 7RTSPL
      C     CLE134        IFEQ      'Y'                                                        CLE134
      C     AKY(3)        ANDEQ     'R'                                                        CLE134
      C*****AKY(10)       ANDEQ     'B'                                             AR402543 AR641069
-     C     WAUTO         ANDEQ     'C'                                                        CLE134
+     C*****WAUTO         ANDEQ     'C'                                               CLE134 MD037915
+     C     AUTO          ANDEQ     'C'                                                      MD037915
      C     *IN24         ANDEQ     '1'                                                        CLE164
      C     WPDCLL        ANDNE     'Y'                                                        262967
      C     *IN21         ANDEQ     *OFF                                                       CLE134
@@ -11825,15 +11829,15 @@ L118 I                             P   72   77 7RTSPL
      C     *IN53         ANDEQ     *OFF                                                       CLE134
      C*****ACAMNT        ANDGT     0                                               AR720106 MD027718
      C     ACAMNT        ANDNE     0                                                        MD027718
-     C     CLE134        OREQ      'Y'                                                        CLE164
-     C     AKY(3)        ANDEQ     'R'                                                        CLE164
-     C     WAUTO2        ANDEQ     'C'                                                        CLE164
-     C     *IN24         ANDEQ     '0'                                                        CLE164
-     C     WPDCLL        ANDNE     'Y'                                                        CLE164
-     C     *IN21         ANDEQ     *OFF                                                       CLE164
-     C     *IN46         ANDEQ     *OFF                                                       CLE164
-     C     *IN53         ANDEQ     *OFF                                                       CLE164
-     C     ACAMNT        ANDNE     0                                                          CLE164
+     C*****CLE134        OREQ      'Y'                                               CLE164 MD037915
+     C*****AKY(3)        ANDEQ     'R'                                               CLE164 MD037915
+     C*****WAUTO2        ANDEQ     'C'                                               CLE164 MD037915
+     C******IN24         ANDEQ     '0'                                               CLE164 MD037915
+     C*****WPDCLL        ANDNE     'Y'                                               CLE164 MD037915
+     C******IN21         ANDEQ     *OFF                                              CLE164 MD037915
+     C******IN46         ANDEQ     *OFF                                              CLE164 MD037915
+     C******IN53         ANDEQ     *OFF                                              CLE164 MD037915
+     C*****ACAMNT        ANDNE     0                                                 CLE164 MD037915
      C*****ACAMNT        ANDGT     0                                               AR720106 MD027718
       *********************************************************************        AR402543 AR641069
       ***Set*WNEWF*=*'Y'*also*in*the*case*where*account*key*is*not*********        AR402543 AR641069

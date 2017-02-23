@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
 0009 F*                                                               *
-      *  Last Amend No. CLE154             Date 02Aug12               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD037915           Date 24Feb16               *
+      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *                 CLE164             Date 18Aug14               *
       *                 AR806351           Date 19Aug14               *
       *                 MD023312           Date 24Apr14               *
       *                 MD022510           Date 25Sep13               *
@@ -150,6 +151,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD037915 - Auto Settle Indicator for Manual Repayment        *
+      *             not being considered for account balance check    *
       *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *           (Amendable Payment Type)                            *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -877,7 +880,8 @@
 0334 I**********                             76  810CNUM                                      CSD027
 0334 I                                       76  81 CNUM                                      CSD027
 0335 I                                       82  820REPT
-0336 I                                       83  83 AUTO
+0336 I**********                             83  83 AUTO                                    MD037915
+     I                                       83  83 AUTOA                                   MD037915
 0337 I                                       84  84 STAI
 0338 I                                       85  860SETP
 0339 I**********                             87  98 OSAC                                      CGL029
@@ -1544,7 +1548,7 @@
      C           RECIA     IFEQ 'D'                                       S01117
      C           RECIA     OREQ 'R'                                       S01117
      C                     SETON                     03                   S01117
-     C                     MOVE AUTO      AUTOC   1                                         AR988312
+     C**********           MOVE AUTO      AUTOC   1                                AR988312 MD037915
      C                     END                                            S01117
      C           RECIA     IFEQ 'M'                                       S01117
      C                     SETON                     58                   S01117
@@ -3112,14 +3116,26 @@
       *                                                                                       CLE134
      C                     ENDIF                                                              CLE134
       *                                                                                       CLE134
+      ** Check if the Principal amount OR the Interest amount is not negative,as            MD037915
+      ** negative MR for PDCL should be excluded, enhance AR806351                          MD037915
+      *                                                                                     MD037915
+     C           PRAM      IFLT 0                                                           MD037915
+     C           INTA      ORLT 0                                                           MD037915
+     C                     MOVE 'Y'       MRNG    1                                         MD037915
+     C                     ELSE                                                             MD037915
+     C                     MOVE 'N'       MRNG                                              MD037915
+     C                     ENDIF                                                            MD037915
+      *                                                                                     MD037915
      C           CLE134    IFEQ 'Y'                                                         AR786878
      C           *IN72     ANDEQ'1'                                                         AR786878
      C           NEWCOB    ANDEQ'N'                                                         AR786878
-     C           PRAM      ANDGE0                                                           AR806351
-     C           INTA      ANDGE0                                                           AR806351
+     C********** PRAM      ANDGE0                                                  AR806351 MD037915
+     C*********  INTA      ANDGE0                                                  AR806351 MD037915
+     C           MRNG      ANDEQ'N'                                                         MD037915
      C********** WREMR     ANDEQ'Y'                                                 AR1036220 CLE164
-     C           AUTO      ANDEQ'C'                                                           CLE164
-     C           AUTOC     ANDEQ'C'                                                         AR988312
+     C********** AUTO      ANDEQ'C'                                                  CLE164 MD037915
+     C           AUTOA     ANDEQ'C'                                                         MD037915
+     C********** AUTOC     ANDEQ'C'                                                AR988312 MD037915
      C           WLTYP     IFEQ 'X'                                                         AR786878
      C           WLTYP     OREQ 'Y'                                                         AR786878
      C           WLTYP     OREQ 'Z'                                                         AR786878
@@ -3558,8 +3574,9 @@
      C           *IN74     ANDEQ'1'                                                         AR786878
      C           NEWCOB    ANDEQ'N'                                                         AR786878
      C********** WREMR     ANDEQ'Y'                                                 AR1036220 CLE164
-     C           AUTO      ANDEQ'C'                                                           CLE164
-     C           AUTOC     ANDEQ'C'                                                         AR988312
+     C********** AUTO      ANDEQ'C'                                                  CLE164 MD037915
+     C********** AUTOC     ANDEQ'C'                                                AR988312 MD037915
+     C           AUTOA     ANDEQ'C'                                                         MD037915
      C           WLTYP     IFEQ 'X'                                                         AR786878
      C           WLTYP     OREQ 'Y'                                                         AR786878
      C           WLTYP     OREQ 'Z'                                                         AR786878

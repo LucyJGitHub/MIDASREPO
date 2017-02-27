@@ -38,8 +38,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2005            *
       *                                                               *
-      *  Last Amend No. CRE101             Date 27Aug14               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD042713           Date 05Dec16               *
+      *  Prev Amend No. 222427             Date 05Dec16               *
+      *                 CRE101             Date 27Aug14               *
+      *                 CGL165             Date 17Feb15               *
       *                 MD027217           Date 29May14               *
       *                 AR971184           Date 29May14               *
       *                 AR947093           Date 26Apr12               *
@@ -64,6 +66,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042713 - Display Default Statement commission.             *
+      *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
+      *           value is 0.00.  Data structure which includes       *
+      *           DDSTFQ should be included in the parameter list on  *
+      *           call to module GLAMAD4DT.                           *
+      *           Partially Applied for MD042713.                     *
       *  CRE101 - Interim Interest Statement on a Frequency           *
       *           Added hooks: CRE101_008, CRE101_009, CRE101_014,    *
       *                        CRE101_017, CRE101_022, CRE101_026,    *
@@ -1015,6 +1023,7 @@
      C                   MOVEL     '1'           BBCGRP
      C                   ENDIF
       *
+     C                   MOVE      DDSTFQ        NDDSTFQ                                    MD042713
       *
      C                   CALLB     'GLAMAD4DT'
       *
@@ -1031,6 +1040,7 @@
       * Account details (DS) in file format
      C                   PARM                    AccnFilFmt
      C                   PARM                    NABXFilFmt
+     C                   PARM                    NewAcPrim                                    222427
  
       * OUTPUTS :
       * Screen 4 Output

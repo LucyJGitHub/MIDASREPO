@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. 222427             Date 05Dec16               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CER055             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
@@ -47,6 +48,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
+      *           value is 0.00.  Data structure which includes       *
+      *           DDSTFQ should be included in the module entry       *
+      *           parameter list.                                     *
+      *           Partially Applied for MD042713.                     *
       *  CGL165  - Dual Withholding Tax (Recompile)                   *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -471,6 +477,7 @@
      C                   PARM                    AccnFilFmt
       * Valid Account layout (extension file) (DS) from/to caller               208221
      C                   PARM                    ExBXFilFmt                     208221
+     C                   PARM                    AccScnMast                                   222427
 
       * OUTPUTS
       * Screen 4 Output

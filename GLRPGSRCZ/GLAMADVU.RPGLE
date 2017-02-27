@@ -34,8 +34,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD040328           Date 16Aug16               *
-      *  Prev Amend No. MD040146           Date 11Aug16               *
+      *  Last Amend No. MD042713           Date 05Dec16               *
+      *  Prev Amend No. 222427             Date 05Dec16               *      
+      *                 MD040328           Date 16Aug16               *
+      *                 MD040146           Date 11Aug16               *
       *                 LLN022A            Date 03Jun15               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
@@ -128,6 +130,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042713 - Display Default Statement commission.             *
+      *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
+      *           value is 0.00.  Data structure which includes       *
+      *           DDSTFQ should be included in the parameter list on  *
+      *           call to module GLAMAD4DT.                           *
+      *           Partially Applied for MD042713.                     *      
       *  MD040328 - Unable to update Include Account Balance check    *
       *             field via SOAP in AMAD                            *
       *  MD040146 - Account maintenance - Account name different from *
@@ -1668,6 +1676,7 @@
       *
       *
      C                   MOVEL     DDCCY         CCY                                          240916
+     C                   MOVE      DDSTFQ        NDDSTFQ                                    MD042713
       *                                                                                     BUG13639
       ** Do not execute GLAMAD4DT when currency code is blanks,                             BUG13639
       ** Serious midas error will be encountered                                            BUG13639
@@ -1688,6 +1697,7 @@
       * Account details (DS) in file format
      C                   PARM                    AccnFilFmt
      C                   PARM                    NABXFilFmt
+     C                   PARM                    NewAcPrim                                    222427
 
       * OUTPUTS :
       * Screen 4 Output

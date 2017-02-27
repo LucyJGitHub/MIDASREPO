@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD039546           Date 26Jan17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. 222427             Date 05Dec16               *
+      *  Prev Amend No. MD039546           Date 26Jan17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
       *                 MD028970           Date 25Nov14               *
@@ -63,6 +64,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
+      *           value is 0.00.  Data structure which includes       *
+      *           DDSTFQ should be included in the parameter list on  *
+      *           call to module GLAMAD4DT.                           *
+      *           Partially Applied for MD042713.                     *      
       *  MD039546 - Ensure that the buffer take the correct timestamp.*
       *             Applied for MD-39522.                             *      
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -1315,6 +1321,7 @@
       *
      C*****DDACTN        IFNE      'I'                                                        260272
      C     DDACTN        IFEQ      'I'                                                        260272
+     C     DDACTN        OREQ      'E'                                                      MD042713
      C                   EXSR      DFT@O
      C                   END
       *
@@ -1402,6 +1409,7 @@
       * Account details (DS) in file format
      C                   PARM                    AccnFilFmt
      C                   PARM                    NABXFilFmt
+     C                   PARM                    AccnInMast                                   222427
  
       * OUTPUTS :
       * Screen 4 Output

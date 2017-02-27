@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. LLN022A            Date 03Jun15               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. 222427             Date 05Dec16               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 17Feb15               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
@@ -83,6 +84,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
+      *           value is 0.00.  Data structure which includes       *
+      *           DDSTFQ should be included in the parameter list on  *
+      *           call to module GLAMAD4DT.                           *
+      *           Partially Applied for MD042713.                     *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
@@ -2104,10 +2110,10 @@
       * Do charges and VAT calculations only if first time through              176842
       * for transaction.                                                        176842
      C     DDACTN        IFNE      'I'                                          176842
-     C     DDACCN        IFNE      #DACCN                                       176842
+     C*****DDACCN        IFNE      #DACCN                                              176842 222427
      C                   EXSR      DFT@O                                        176842
-     C                   MOVEL     DDACCN        #DACCN           18            176842
-     C                   END                                                    176842
+     C**********         MOVEL     DDACCN        #DACCN           18                   176842 222427
+     C**********         END                                                           176842 222427
      C                   END                                                    176842
  
       * Update 'previous' screens and previous number of warnings
@@ -2216,6 +2222,7 @@
       * Account details (DS) in file format                                     176842
      C                   PARM                    NwAcFilFmt                     176842
      C                   PARM                    NABXFilFmt                     208221
+     C                   PARM                    NewAcMast                                    222427
                                                                                 176842
       * OUTPUTS :                                                               176842
       * Screen 4 Output                                                         176842

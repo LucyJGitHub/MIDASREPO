@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD029030           Date 25Nov14               *
-      *  Prev Amend No. MD027306           Date 10Jun14               *
+      *  Last Amend No. CCG024             Date 29Sep16               *
+      *  Prev Amend No. MD029030           Date 25Nov14               *
+      *                 MD027306           Date 10Jun14               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -65,6 +66,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CCG024 - Use Atlernate Name and Address in Correspondence    *
       *  MD029030 - Unexpected error S.W.I.F.T. BIC not found in      *
       *             directory  (CFT007-BIC Database Plus is OFF)      *
       *           - do not validate SWIFT BIC if CFT007 is off        *
@@ -402,6 +404,15 @@
      I I            'CORRESPONDENT'           1  13 FUNCD1                                    CSD012
      I I            'DETAILS'                15  21 FUNCD2                                    CSD012
       *                                                                                       CSD012
+      * Data structure for AOSVALR0 string                                                    CCG024
+     I            DS                                                                          CCG024
+     I                                        1 200 SVAL2                                     CCG024
+     I                                        1   1 SVAL21                                    CCG024
+      *                                                                                       CCG024
+      * System Value                                                                          CCG024
+     I            DS                                                                          CCG024
+     I I            'RecipientSpecialChar'    1  20 SVALK2                                    CCG024
+      *                                                                                       CCG024
       /EJECT
       *
       * Data to be passed to window processing
@@ -583,6 +594,17 @@
      C                     GOTO BEEXIT
      C                     END                             FI 91
       *
+      * If CCG024 is on, check that Correspondent name does not contain special char          CCG024
+     C           CCG024    IFEQ 'Y'                                                           CCG024
+     C           SVAL21    SCAN #1CORR                   99                                   CCG024
+     C           *IN99     IFEQ *ON                                                           CCG024
+     C                     MOVEL'CGD1912' ZAMSID                                              CCG024
+     C                     EXSR ZASNMS                                                        CCG024
+     C                     SETON                     9931  *                                  CCG024
+     C                     GOTO BEEXIT                                                        CCG024
+     C                     ENDIF                                                              CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
       * If record does not exist, flip to add mode
      C           *IN90     IFEQ '1'
      C                     MOVEL'ADD'     W0PMD
@@ -4626,6 +4648,60 @@
      C                     ELSE                                                             MD029030
      C                     MOVE 'N'       CFT007                                            MD029030
      C                     ENDIF                                                            MD029030
+      *                                                                                       CCG024
+      * Check if CCG024 is switched on                                                        CCG024
+     C                     CALL 'AOSARDR0'                                                    CCG024
+     C                     PARM           PRTCD                                               CCG024
+     C                     PARM '*VERIFY' POPTN                                               CCG024
+     C                     PARM 'CCG024'  PSARD                                               CCG024
+      *                                                                                       CCG024
+     C           PRTCD     IFEQ *BLANKS                                                       CCG024
+     C                     MOVE 'Y'       CCG024  1                                           CCG024
+     C                     ELSE                                                               CCG024
+     C                     MOVE 'N'       CCG024                                              CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+      * Check System Value RecipientSpecialChar                                               CCG024
+     C           CCG024    IFEQ 'Y'                                                           CCG024
+      *                                                                                       CCG024
+     C                     CALL 'AOSVALR0'                                                    CCG024
+     C                     PARM *BLANKS   RTNCDE  7                                           CCG024
+     C                     PARM *BLANKS   SVALK1 20                                           CCG024
+     C                     PARM           SVAL1 200                                           CCG024
+     C                     PARM           SVALK2 20                                           CCG024
+     C                     PARM           SVAL2 200                                           CCG024
+     C                     PARM *BLANKS   SVALK3 20                                           CCG024
+     C                     PARM           SVAL3 200                                           CCG024
+     C                     PARM *BLANKS   SVALK4 20                                           CCG024
+     C                     PARM           SVAL4 200                                           CCG024
+     C                     PARM *BLANKS   SVALK5 20                                           CCG024
+     C                     PARM           SVAL5 200                                           CCG024
+     C                     PARM *BLANKS   SVALK6 20                                           CCG024
+     C                     PARM           SVAL6 200                                           CCG024
+     C                     PARM *BLANKS   SVALK7 20                                           CCG024
+     C                     PARM           SVAL7 200                                           CCG024
+     C                     PARM *BLANKS   SVALK8 20                                           CCG024
+     C                     PARM           SVAL8 200                                           CCG024
+     C                     PARM *BLANKS   SVALK9 20                                           CCG024
+     C                     PARM           SVAL9 200                                           CCG024
+     C                     PARM *BLANKS   SVALK0 20                                           CCG024
+     C                     PARM           SVAL10200                                           CCG024
+      *                                                                                       CCG024
+     C           RTNCDE    IFNE *BLANKS                                                       CCG024
+     C           SVAL2     IFEQ '*NRF'                                                        CCG024
+     C                     MOVE SVALK2    DBKEY                                               CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     MOVEL'SDSVALR0'W0FILE           ***************                    CCG024
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 14 *                    CCG024
+     C                     Z-ADD21        W0ERNB           ***************                    CCG024
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG024
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG024
+     C                     EXSR SRERR                                                         CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
       * EDTRCD: Initialise prog - R10 Copy source templates  *
      C*EDTRCD: Cpysrc Templates Initialise Program C-spec
      C/COPY WNCPYSRC,CG0010DCPG

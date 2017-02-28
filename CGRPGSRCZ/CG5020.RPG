@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CCG024             Date 29Sep16               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CCG024 - Use Atlernate Name and Address in Correspondence    *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER047 - German Features LF037-00 Reporting §24c KWG         *
@@ -66,6 +68,7 @@
      FCGCORRL1IF  E           K        DISK
      F                                              KINFSR SRFILE
       * RTV : Correspondent Details     Retrieval index
+     FCGCORRL4IF  E           K        DISK         KINFSR SRFILE                             CCG024
       *
      FCGISTSL1IF  E           K        DISK
      F                                              KINFSR SRFILE
@@ -215,6 +218,15 @@
      I                                       20  21 ##ACSN                                    CGL029
      I                                       22  24 ##BRCA                                    CGL029
       *
+      * Data structure for AOSVALR0 string                                                    CCG024
+     I            DS                                                                          CCG024
+     I                                        1 200 SVAL1                                     CCG024
+     I                                        1   1 SVAL11                                    CCG024
+      *                                                                                       CCG024
+      * System Value                                                                          CCG024
+     I            DS                                                                          CCG024
+     I I            'RecipientSpecialChar'    1  20 SVALK1                                    CCG024
+      *                                                                                       CCG024
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -534,6 +546,20 @@
      C                     KFLD           CDCORR           Correspondent
       * Setup key
      C                     MOVEL#1DCOR    CDCORR           Correspondent
+      ** If feature CCG024 is on and special character is found in DRDCOR                     CCG024
+      *                                                                                       CCG024
+     C           CCG024    IFEQ 'Y'                                                           CCG024
+     C           SVAL11    SCAN CDCORR                   97                                   CCG024
+     C           *IN97     IFEQ *ON                                                           CCG024
+     C                     MOVELCDCORR    XXCORR  6                                           CCG024
+     C           XXCORR    CHAINCGCORRL4             9091                                     CCG024
+     C           *IN90     IFEQ '0'                                                           CCG024
+      * Record found - move back any virtuals                                                 CCG024
+     C                     GOTO VAEXIT                                                        CCG024
+     C                     END                                                                CCG024
+     C                     END                                                                CCG024
+     C                     END                                                                CCG024
+      *                                                                                       CCG024
      C           KLVCCD    CHAIN@CORRL1              9091  *
      C           *IN90     IFEQ '0'
       * Record found - move back any virtuals
@@ -1111,6 +1137,60 @@
       *
       ** Set up variables
      C                     Z-ADD*ZERO     YAFSCH  40
+      *                                                                                       CCG024
+      * Check if CCG024 is switched on                                                        CCG024
+     C                     CALL 'AOSARDR0'                                                    CCG024
+     C                     PARM           P@RTCD                                              CCG024
+     C                     PARM '*VERIFY' P@OPTN                                              CCG024
+     C                     PARM 'CCG024'  P@SARD  6                                           CCG024
+      *                                                                                       CCG024
+     C           P@RTCD    IFEQ *BLANKS                                                       CCG024
+     C                     MOVE 'Y'       CCG024  1                                           CCG024
+     C                     ELSE                                                               CCG024
+     C                     MOVE 'N'       CCG024                                              CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+      * Check System Value RecipientSpecialChar                                               CCG024
+     C           CCG024    IFEQ 'Y'                                                           CCG024
+      *                                                                                       CCG024
+     C                     CALL 'AOSVALR0'                                                    CCG024
+     C                     PARM *BLANKS   RTNCDE  7                                           CCG024
+     C                     PARM           SVALK1 20                                           CCG024
+     C                     PARM           SVAL1 200                                           CCG024
+     C                     PARM *BLANKS   SVALK2 20                                           CCG024
+     C                     PARM           SVAL2 200                                           CCG024
+     C                     PARM *BLANKS   SVALK3 20                                           CCG024
+     C                     PARM           SVAL3 200                                           CCG024
+     C                     PARM *BLANKS   SVALK4 20                                           CCG024
+     C                     PARM           SVAL4 200                                           CCG024
+     C                     PARM *BLANKS   SVALK5 20                                           CCG024
+     C                     PARM           SVAL5 200                                           CCG024
+     C                     PARM *BLANKS   SVALK6 20                                           CCG024
+     C                     PARM           SVAL6 200                                           CCG024
+     C                     PARM *BLANKS   SVALK7 20                                           CCG024
+     C                     PARM           SVAL7 200                                           CCG024
+     C                     PARM *BLANKS   SVALK8 20                                           CCG024
+     C                     PARM           SVAL8 200                                           CCG024
+     C                     PARM *BLANKS   SVALK9 20                                           CCG024
+     C                     PARM           SVAL9 200                                           CCG024
+     C                     PARM *BLANKS   SVALK0 20                                           CCG024
+     C                     PARM           SVAL10200                                           CCG024
+      *                                                                                       CCG024
+     C           RTNCDE    IFNE *BLANKS                                                       CCG024
+     C           SVAL1     IFEQ '*NRF'                                                        CCG024
+     C                     MOVE SVALK1    DBKEY                                               CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     MOVEL'SDSVALR0'W0FILE                                              CCG024
+     C                     MOVEL'*CALL'   W0KEY                                               CCG024
+     C                     Z-ADD21        W0ERNB                                              CCG024
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG024
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG024
+     C                     EXSR SRERR                                                         CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
      C*
       * PMTRCD: Initialise prog. - R10 Copy source templates  *
      C*PMTRCD: Cpysrc Templates Initialise Program C-Spec

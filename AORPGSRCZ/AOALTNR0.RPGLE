@@ -13,11 +13,12 @@
      F*                                                                  *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                                  *
+      *  Last Amend No. MD043685           Date 23Jan17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CRE026             Date 24May06               *
+      *  Prev Amend No. CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD053             Date 01Jun06               *
+      *                 CSD053             Date 01Jun06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 133773             Date 25Apr05               *
@@ -44,6 +45,8 @@
      F*                                                                  *
      F*****************************************************************   S01230
      F*                                                               *
+      *  MD043685 - If CCG024 is on, alternate address must be        *
+      *             retrieved from SDALTNPD.                          *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
       *         - (Recompile)                                         *
@@ -548,6 +551,17 @@
      C                   MOVEL     P@ADCD        K@ADC1            1                           S0152
      C                   ENDIF                                                                 S0152
       *                                                                   S01522
+      ** Check if CCG024 is on                                                              MD043685
+      *                                                                                     MD043685
+     C                   CALLB     'AOSARDR0'                                               MD043685
+     C                   PARM      *BLANKS       @RTCD                                      MD043685
+     C                   PARM      '*VERIFY'     @OPTN                                      MD043685
+     C                   PARM      'CCG024'      @SARD                                      MD043685
+      *                                                                                     MD043685
+     C     @RTCD         IFEQ      *BLANKS                                                  MD043685
+     C                   MOVEL     *BLANKS       FILUSE                                     MD043685
+     C                   ENDIF                                                              MD043685
+      *                                                                                     MD043685
      C                   ENDSR                                                                 S0152
      C********************************************************************S01522
 **CTDATA @MG

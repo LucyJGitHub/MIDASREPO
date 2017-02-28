@@ -25,12 +25,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. MD043920           Date 02Feb17               *
+      *  Prev Amend No. MD043686           Date 20Jan17               *
+      *                 MD043637           Date 20Jan17               *
+      *                 CCG024             Date 29Sep16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD053             Date 01Jun06               *
-      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *                 CSD053             Date 01Jun06               *
+      *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -49,6 +53,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043920 - Customer Lending default Address Ref to 'B'.      *
+      *             Change program to ignore it.                      *
+      *  MD043686 - Use retail number instead if account is not found *
+      *  MD043637 - Type BUY_SELL was overlooked.                     *
+      *  CCG024 - Use Atlernate Name and Address in Correspondence    *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  107390 - Advices are being created although there are no     *
@@ -115,6 +124,20 @@
      FEXUDCRPDO   E           K        DISK                           UC
      F            @UDCRPD                           KRENAME@UDCRPDX
      F                                              KINFSR SRFILE
+     FACCNT   IF  E           K        DISK         KINFSR SRFILE                             CCG024
+     F            ACCNTAAF                          KIGNORE                                   CCG024
+     F            ACCNTACF                          KIGNORE                                   CCG024
+     FCLOAN   IF  E           K        DISK         KINFSR SRFILE                             CCG024
+     F            CLOANHHF                          KIGNORE                                   CCG024
+     F            CLOANCKF                          KIGNORE                                   CCG024
+     F            CLOANZ1F                          KIGNORE                                   CCG024
+     FCLINT   IF  E           K        DISK         KINFSR SRFILE                             CCG024
+     F            CLINTCAF                          KIGNORE                                   CCG024
+     F            CLINTCBF                          KIGNORE                                   CCG024
+     F            CLINTCCF                          KIGNORE                                   CCG024
+     F            CLINTC1F                          KIGNORE                                   CCG024
+     FACCNTL1 IF  E           K        DISK         KINFSR SRFILE                           MD043686
+     F            ACCNTABF                          KRENAMERETAILF                          MD043686
       /EJECT
      E                    CPY@    1   1 80
       ** Copyright statement
@@ -143,6 +166,9 @@
      E                    #CTY       20 10                                087283
       ** Store of last twenty correspondent types                         087283
       *                                                                   087283
+      ** Store alternate address ref                                                          CCG024
+     E                    #ADD       10  1                                                    CCG024
+      *                                                                                       CCG024
       /COPY CGCPYSRC,SRERRE
       /EJECT
      ICPYR@#      DS
@@ -184,6 +210,15 @@
       *
      I##UDCR    E DSCGUDCRPD
       ** External DS for incomplete reference
+     I                                      180 185 ##CNUM                                    CCG024
+     I                                      186 188 ##CCY                                     CCG024
+     I                                      189 1980##ACO                                     CCG024
+     I                                      199 2000##ACSQ                                    CCG024
+     I                                      201 203 ##BRCA                                    CCG024
+     I                                      180 1890##ACNO                                  MD043686
+     IAD          DS                                                                          CCG024
+     I                                        1   8 AD1                                       CCG024
+     I                                        9  10 AD2                                       CCG024
       *
      ICGDATA    E DSCGDTA
       ** Data Area for UDC (used for next item identifier)
@@ -213,6 +248,31 @@
      I                                      256 256 ##NFP                 087283
       ** Occur data structure for stored reads                            087283
       *                                                                   087283
+      * System Value                                                                          CCG024
+     I            DS                                                                          CCG024
+     I I            'RecipientSpecialChar'    1  20 SVALK1                                    CCG024
+      *                                                                                       CCG024
+     I              'STATEMENT '          C         C#STMT                                    CCG024
+     I              'LOAN COMMC'          C         C#LOCM                                    CCG024
+     I              'LOAN REPAY'          C         C#LORP                                    CCG024
+     I              'LOAN ROLLO'          C         C#LORL                                    CCG024
+     I              'LOAN FEE'            C         C#LOFE                                    CCG024
+     I              'LOAN INTER'          C         C#LOIT                                    CCG024
+     I              'LOAN RATCH'          C         C#LORT                                    CCG024
+     I              'LOAN PSTDU'          C         C#LOPD                                    CCG024
+     I              'CURR_EXCHG'          C         C#RECX                                    CCG024
+     I              'DEALINGGEN'          C         C#REDL                                    CCG024
+     I              'RETAILADVS'          C         C#READ                                    CCG024
+     I              'INT_CAP'             C         C#REIC                                    CCG024
+     I              'LENDINGGEN'          C         C#RELE                                    CCG024
+     I              'RATE_CHG'            C         C#RERC                                    CCG024
+     I              'STAND_ORDR'          C         C#RESO                                    CCG024
+     I              'TRN_CHRG'            C         C#RETC                                    CCG024
+     I              'RTL_ADVG'            C         C#REAG                                    CCG024
+     I              'RETAIL'              C         C#RETL                                    CCG024
+     I              'SEC_ADV_CF'          C         C#SEAD                                    CCG024
+     I              'SEC_POS_CF'          C         C#SEPO                                    CCG024
+     I              'BUY_SELL'            C         C#SEBS                                  MD043637
       /COPY CGCPYSRC,SRERRI
       /EJECT
       *****************************************************************
@@ -394,14 +454,126 @@
      C           ##MODE    IFEQ '*GEN'
      C                     EXSR SRIDGN
      C                     Z-ADD##ITMN    DRITEM
+      *                                                                   CCG024
+     C                     MOVEL'Y'       TOWRT   1                       CCG024
+      ** If CCG024 is on, look for alternate address                      CCG024
+     C           CCG024    IFEQ 'Y'                                       CCG024
+     C           ##MODE    ANDEQ'*GEN'                                    CCG024
+      *                                                                   CCG024
+      ** For GL statement                                                 CCG024
+     C           DRPTYP    IFEQ C#STMT                                    CCG024
+     C           KMACT     CHAINACCNTABF             22                   CCG024
+     C           *IN22     IFEQ '0'                                       CCG024
+     C                     MOVELADREF1    AD1                             CCG024
+     C                     MOVELADREF2    AD2                             CCG024
+     C                     MOVEAAD        #ADD                            CCG024
+     C                     DO   10        C       20                      CCG024
+     C           #ADD,C    IFNE *BLANKS                                   CCG024
+     C           #ADD,C    IFNE 'B'                                       CCG024
+     C           ##CUST    CAT  SVAL1     DRDCOR    P                     CCG024
+     C                     CAT  #ADD,C:0  DRDCOR                          CCG024
+     C                     ENDIF                                          CCG024
+     C                     MOVEL'N'       TOWRT                           CCG024
+     C           ##CMT     IFEQ 'YES'                                     CCG024
+     C                     WRITE@UDCRPD                                   CCG024
+     C                     ELSE                                           CCG024
+     C                     WRITE@UDCRPDX                                  CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDDO                                          CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDIF                                          CCG024
+      *                                                                   CCG024
+      ** For RE advices                                                   CCG024
+     C           DRPTYP    IFEQ C#RECX                                    CCG024
+     C           DRPTYP    OREQ C#REDL                                    CCG024
+     C           DRPTYP    OREQ C#READ                                    CCG024
+     C           DRPTYP    OREQ C#REIC                                    CCG024
+     C           DRPTYP    OREQ C#RELE                                    CCG024
+     C           DRPTYP    OREQ C#RERC                                    CCG024
+     C           DRPTYP    OREQ C#RESO                                    CCG024
+     C           DRPTYP    OREQ C#RETC                                    CCG024
+     C           DRPTYP    OREQ C#REAG                                    CCG024
+     C           DRPTYP    OREQ C#RETL                                    CCG024
+     C           KMACT     CHAINACCNTABF             22                   CCG024
+     C           *IN22     IFEQ '1'                                     MD043686
+     C           ##ACNO    CHAINRETAILF              22                 MD043686
+     C                     ENDIF                                        MD043686
+     C           *IN22     IFEQ '0'                                       CCG024
+     C                     MOVELADREF1    AD1                             CCG024
+     C                     MOVELADREF2    AD2                             CCG024
+     C                     MOVEAAD        #ADD                            CCG024
+     C                     DO   10        C       20                      CCG024
+     C           #ADD,C    IFNE *BLANKS                                   CCG024
+     C           #ADD,C    IFNE 'B'                                       CCG024
+     C           ##CUST    CAT  SVAL1     DRDCOR    P                     CCG024
+     C                     CAT  #ADD,C:0  DRDCOR                          CCG024
+     C                     ENDIF                                          CCG024
+     C                     MOVEL'N'       TOWRT                           CCG024
+     C           ##CMT     IFEQ 'YES'                                     CCG024
+     C                     WRITE@UDCRPD                                   CCG024
+     C                     ELSE                                           CCG024
+     C                     WRITE@UDCRPDX                                  CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDDO                                          CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDIF                                          CCG024
+      *                                                                   CCG024
+      ** For LE confirmations                                             CCG024
+     C           DRPTYP    IFEQ C#LOCM                                    CCG024
+     C           DRPTYP    OREQ C#LORP                                    CCG024
+     C           DRPTYP    OREQ C#LORL                                    CCG024
+     C           DRPTYP    OREQ C#LOFE                                    CCG024
+     C           DRPTYP    OREQ C#LOIT                                    CCG024
+     C           DRPTYP    OREQ C#LORT                                    CCG024
+     C           DRPTYP    OREQ C#LOPD                                    CCG024
+     C                     MOVELDRMTRN    KLNRF                           CCG024
+     C                     MOVEL'A'       KRCDT                           CCG024
+     C           KLOAN     CHAINCLOAN                22                   CCG024
+     C           *IN22     IFEQ '0'                                       CCG024
+     C           NACD      ANDNE*BLANKS                                   CCG024
+     C           NACD      ANDNE'B'                                     MD043920
+     C           ##CUST    CAT  SVAL1     DRDCOR    P                     CCG024
+     C                     CAT  NACD:0    DRDCOR                          CCG024
+     C                     MOVEL'N'       TOWRT                           CCG024
+     C           ##CMT     IFEQ 'YES'                                     CCG024
+     C                     WRITE@UDCRPD                                   CCG024
+     C                     ELSE                                           CCG024
+     C                     WRITE@UDCRPDX                                  CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDIF                                          CCG024
+      *                                                                   CCG024
+      ** For SE confirmations                                             CCG024
+     C           DRPTYP    IFEQ C#SEAD                                    CCG024
+     C           DRPTYP    OREQ C#SEPO                                    CCG024
+     C           DRPTYP    OREQ C#SEBS                                  MD043637
+     C           ##CUST    CHAINCLINTSEF             22                   CCG024
+     C           *IN22     IFEQ '0'                                       CCG024
+     C           C1AN      ANDNE*BLANKS                                   CCG024
+     C           ##CUST    CAT  SVAL1     DRDCOR    P                     CCG024
+     C                     CAT  C1AN:0    DRDCOR                          CCG024
+     C                     MOVEL'N'       TOWRT                           CCG024
+     C           ##CMT     IFEQ 'YES'                                     CCG024
+     C                     WRITE@UDCRPD                                   CCG024
+     C                     ELSE                                           CCG024
+     C                     WRITE@UDCRPDX                                  CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDIF                                          CCG024
+     C                     ENDIF                                          CCG024
+      *                                                                   CCG024
+     C                     ENDIF                                          CCG024
      C*                                                                   S01408
      C/COPY WNCPYSRC,CG9010CCP2                                           S01408
      C*                                                                   S01408
+     C           TOWRT     IFEQ 'Y'                                       CCG024
      C           ##CMT     IFEQ 'YES'
      C                     WRITE@UDCRPD
      C                     ELSE
      C                     WRITE@UDCRPDX
      C                     ENDIF
+     C                     ENDIF                                          CCG024
      C*                                                                   S01408
      C/COPY WNCPYSRC,CG9010CCP3                                           S01408
      C*                                                                   S01408
@@ -1498,6 +1670,17 @@
      C                     KFLD           DRITEM                          082705
      C                     KFLD           DRDCOR                          082705
       *
+     C           KMACT     KLIST                                          CCG024
+     C                     KFLD           ##CNUM                          CCG024
+     C                     KFLD           ##CCY                           CCG024
+     C                     KFLD           ##ACO                           CCG024
+     C                     KFLD           ##ACSQ                          CCG024
+     C                     KFLD           ##BRCA                          CCG024
+      *                                                                   CCG024
+     C           KLOAN     KLIST                                          CCG024
+     C                     KFLD           KLNRF   6                       CCG024
+     C                     KFLD           KRCDT   1                       CCG024
+      *                                                                   CCG024
       ** *LIKE definitions
      C           *LIKE     DEFN DRDCOR    Z#PRIM
      C           *LIKE     DEFN DRPRTD    Z#PRTD
@@ -1643,6 +1826,56 @@
      C           *IN90     WHEQ *ON                                       CCG004
      C                     MOVEL'No '     ##CUSR                          CCG004
      C                     ENDSL                                          CCG004
+      *                                                                                       CCG024
+      * Check if CCG024 is switched on                                                        CCG024
+     C                     CALL 'AOSARDR0'                                                    CCG024
+     C                     PARM           ##RTCD                                              CCG024
+     C                     PARM '*VERIFY' ##OPTN                                              CCG024
+     C                     PARM 'CCG024'  ##SARD                                              CCG024
+      *                                                                                       CCG024
+     C           ##RTCD    IFEQ *BLANKS                                                       CCG024
+     C                     MOVE 'Y'       CCG024  1                                           CCG024
+      *                                                                                       CCG024
+      * Check System Value RecipientSpecialChar                                               CCG024
+     C                     CALL 'AOSVALR0'                                                    CCG024
+     C                     PARM *BLANKS   RTNCDE  7                                           CCG024
+     C                     PARM           SVALK1 20                                           CCG024
+     C                     PARM           SVAL1 200                                           CCG024
+     C                     PARM *BLANKS   SVALK2 20                                           CCG024
+     C                     PARM           SVAL2 200                                           CCG024
+     C                     PARM *BLANKS   SVALK3 20                                           CCG024
+     C                     PARM           SVAL3 200                                           CCG024
+     C                     PARM *BLANKS   SVALK4 20                                           CCG024
+     C                     PARM           SVAL4 200                                           CCG024
+     C                     PARM *BLANKS   SVALK5 20                                           CCG024
+     C                     PARM           SVAL5 200                                           CCG024
+     C                     PARM *BLANKS   SVALK6 20                                           CCG024
+     C                     PARM           SVAL6 200                                           CCG024
+     C                     PARM *BLANKS   SVALK7 20                                           CCG024
+     C                     PARM           SVAL7 200                                           CCG024
+     C                     PARM *BLANKS   SVALK8 20                                           CCG024
+     C                     PARM           SVAL8 200                                           CCG024
+     C                     PARM *BLANKS   SVALK9 20                                           CCG024
+     C                     PARM           SVAL9 200                                           CCG024
+     C                     PARM *BLANKS   SVALK0 20                                           CCG024
+     C                     PARM           SVAL10200                                           CCG024
+      *                                                                                       CCG024
+     C           RTNCDE    IFNE *BLANKS                                                       CCG024
+     C           SVAL1     IFEQ '*NRF'                                                        CCG024
+     C                     MOVE SVALK1    DBKEY                                               CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     MOVEL'AOSVALR0'W0FILE           ***************                    CCG024
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 14 *                    CCG024
+     C                     Z-ADD21        W0ERNB           ***************                    CCG024
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG024
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG024
+     C                     EXSR SRERR                                                         CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     ELSE                                                               CCG024
+     C                     MOVE 'N'       CCG024                                              CCG024
+     C                     ENDIF                                                              CCG024
       *
      C           EXINIT    TAG
      C                     ENDSR

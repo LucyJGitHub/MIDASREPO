@@ -19,12 +19,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. CCG024             Date 29Sep16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSD053             Date 01Jun06               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD053             Date 01Jun06               *
       *                 CSC022             Date 24Feb04               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CCG015             Date 31Jul01               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CCG024 - Use Atlernate Name and Address in Correspondence    *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
       *         - (recompile)                                         *
@@ -66,6 +68,7 @@
       *****************************************************************
      FCGCORRL1IF  E           K        DISK
      F                                              KINFSR SRFILE
+     FCGCORRL4IF  E           K        DISK         KINFSR SRFILE                             CCG024
      FCGPGENPDO   E                    DISK
      F                                              KINFSR SRFILE
      F                                              KCOMIT
@@ -170,6 +173,15 @@
      I                                        4 103 WCJOBS                                    CSC022
       ** Commitment Control dataarea                                                          CSC022
       **                                                                                      CSC022
+      * Data structure for AOSVALR0 string                                                    CCG024
+     I            DS                                                                          CCG024
+     I                                        1 200 SVAL1                                     CCG024
+     I                                        1   1 SVAL11                                    CCG024
+      *                                                                                       CCG024
+      * System Value                                                                          CCG024
+     I            DS                                                                          CCG024
+     I I            'RecipientSpecialChar'    1  20 SVALK1                                    CCG024
+      *                                                                                       CCG024
       *
       /COPY CGCPYSRC,SRERRI
       *
@@ -282,6 +294,26 @@
      C                     Z-ADDDRDDAT    B2DDAT
      C                     MOVE DRLGID    B2LGID
       *
+      ** If feature CCG024 is on and special character is found in DRDCOR                     CCG024
+     C                     MOVEL'N'       XFOUND  1                                           CCG024
+     C           CCG024    IFEQ 'Y'                                                           CCG024
+     C           SVAL11    SCAN DRDCOR                   99                                   CCG024
+     C           *IN99     IFEQ *ON                                                           CCG024
+     C                     MOVELDRDCOR    XXCORR  6                                           CCG024
+     C           XXCORR    CHAINCGCORRL4             51                                       CCG024
+     C           *IN51     IFEQ *ON                                                           CCG024
+     C                     MOVEL'CGCORRL4'W0FILE                                              CCG024
+     C                     MOVELB2DCOR    W0KEY            ***************                    CCG024
+     C                     Z-ADD11        W0ERNB           * DB ERROR 11 *                    CCG024
+     C                     MOVEL'MEM5004' W0MSGD           ***************                    CCG024
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG024
+     C                     EXSR SRERR                                                         CCG024
+     C                     ENDIF                                                              CCG024
+     C                     MOVEL'Y'       XFOUND                                              CCG024
+     C                     ENDIF                                                              CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C           XFOUND    IFEQ 'N'                                                           CCG024
       **  Obtain the Correspondent Type using tHe Correspondent.
      C           B2DCOR    CHAINCGCORRL1             51
       *
@@ -294,6 +326,7 @@
      C                     MOVEL'MIDAS  ' W0MSGF
      C                     EXSR SRERR
      C                     ENDIF
+     C                     ENDIF                                                              CCG024
       *                                                                   086662
       **  Apply selection for correspsondent type here as opposed to in   086662
       **  the OPNQRYF in CGC5230.                                         086662
@@ -689,6 +722,60 @@
       ** For copysource SRERRC                                                                CSC022
      C                     MOVE WCRSKP    WCMTSK  1                                           CSC022
       **                                                                                      CSC022
+      *                                                                                       CCG024
+      * Check if CCG024 is switched on                                                        CCG024
+     C                     CALL 'AOSARDR0'                                                    CCG024
+     C                     PARM           P@RTCD                                              CCG024
+     C                     PARM '*VERIFY' P@OPTN                                              CCG024
+     C                     PARM 'CCG024'  P@SARD                                              CCG024
+      *                                                                                       CCG024
+     C           P@RTCD    IFEQ *BLANKS                                                       CCG024
+     C                     MOVE 'Y'       CCG024  1                                           CCG024
+     C                     ELSE                                                               CCG024
+     C                     MOVE 'N'       CCG024                                              CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+      * Check System Value RecipientSpecialChar                                               CCG024
+     C           CCG024    IFEQ 'Y'                                                           CCG024
+      *                                                                                       CCG024
+     C                     CALL 'AOSVALR0'                                                    CCG024
+     C                     PARM *BLANKS   RTNCDE  7                                           CCG024
+     C                     PARM           SVALK1 20                                           CCG024
+     C                     PARM           SVAL1 200                                           CCG024
+     C                     PARM *BLANKS   SVALK2 20                                           CCG024
+     C                     PARM           SVAL2 200                                           CCG024
+     C                     PARM *BLANKS   SVALK3 20                                           CCG024
+     C                     PARM           SVAL3 200                                           CCG024
+     C                     PARM *BLANKS   SVALK4 20                                           CCG024
+     C                     PARM           SVAL4 200                                           CCG024
+     C                     PARM *BLANKS   SVALK5 20                                           CCG024
+     C                     PARM           SVAL5 200                                           CCG024
+     C                     PARM *BLANKS   SVALK6 20                                           CCG024
+     C                     PARM           SVAL6 200                                           CCG024
+     C                     PARM *BLANKS   SVALK7 20                                           CCG024
+     C                     PARM           SVAL7 200                                           CCG024
+     C                     PARM *BLANKS   SVALK8 20                                           CCG024
+     C                     PARM           SVAL8 200                                           CCG024
+     C                     PARM *BLANKS   SVALK9 20                                           CCG024
+     C                     PARM           SVAL9 200                                           CCG024
+     C                     PARM *BLANKS   SVALK0 20                                           CCG024
+     C                     PARM           SVAL10200                                           CCG024
+      *                                                                                       CCG024
+     C           RTNCDE    IFNE *BLANKS                                                       CCG024
+     C           SVAL1     IFEQ '*NRF'                                                        CCG024
+     C                     MOVE SVALK1    DBKEY                                               CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     MOVEL'SDSVALR0'W0FILE                                              CCG024
+     C                     MOVEL'*CALL'   W0KEY                                               CCG024
+     C                     Z-ADD21        W0ERNB                                              CCG024
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG024
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG024
+     C                     EXSR SRERR                                                         CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
       *
       **  Key list ...
       *

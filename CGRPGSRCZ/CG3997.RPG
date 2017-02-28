@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-     F*  Last Amend No. MD039544           Date 11Aug16               *
-      *  Prev Amend No. CSD090             Date 06Dec10               *
+      *  Last Amend No. CCG024             Date 29Sep16               *
+      *  Prev Amend No. MD039544           Date 30Jun16               *
+      *                 CSD090             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22356           Date 22Jan09               *
       *                 CER038             Date 19May08               *
@@ -56,6 +57,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CCG024 - Use Atlernate Name and Address in Correspondence    *
       *  MD039544 - Introduce System Value 'CMAddrFromAddCustInf' to  *
       *             extract address from 'Additional Customer         *
       *             Information' tab.                                 *
@@ -220,6 +222,7 @@
      ISDCTRY    E DSSDCTRYPD                                                                  CER038
      ISDBANK    E DSSDBANKPD                                                                  CER038
       *                                                                                       CER038
+     ISDALTN    E DSSDALTNPD                                                                  CCG024
      I/COPY CGCPYSRC,SRERRI
      I/COPY CGCPYSRC,SRPGN
      I*
@@ -301,6 +304,18 @@
      I                                        1   1 PR2P                                      CCG018
       * Data Structures used by AllPurposeField                                               CCG018
       *                                                                                       CCG018
+      * DATA STRUCTURE FOR AOSVALR0 STRING                                                    CCG024
+     I            DS                                                                          CCG024
+     I                                        1 200 PSVL3                                     CCG024
+     I                                        1   1 PSVL31                                    CCG024
+      *                                                                                       CCG024
+     I            DS                                                                          CCG024
+     I                                        1  10 #@CORR                                    CCG024
+     I                                        8   8 AZCD                                      CCG024
+      * System Value                                                                          CCG024
+     I            DS                                                                          CCG024
+     I I            'RecipientSpecialChar'    1  20 WSVLK3                                    CCG024
+      *                                                                                       CCG024
      I********************************************************************
      C/EJECT
      C********************************************************************
@@ -449,6 +464,61 @@
      C                     MOVELPSVL2     ADDTNL  1                                         MD039544
      C                     ENDIF                                                              CER038
       *                                                                                       CER038
+      *                                                                                       CCG024
+      * Check if CCG024 is switched on                                                        CCG024
+     C                     CALL 'AOSARDR0'                                                    CCG024
+     C                     PARM           PRTCD                                               CCG024
+     C                     PARM '*VERIFY' POPTN                                               CCG024
+     C                     PARM 'CCG024'  PSARD                                               CCG024
+      *                                                                                       CCG024
+     C           PRTCD     IFEQ *BLANKS                                                       CCG024
+     C                     MOVE 'Y'       CCG024  1                                           CCG024
+     C                     ELSE                                                               CCG024
+     C                     MOVE 'N'       CCG024                                              CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+      * Check System Value RecipientSpecialChar                                               CCG024
+     C           CCG024    IFEQ 'Y'                                                           CCG024
+      *                                                                                       CCG024
+     C                     MOVELWSVLK3    PSVLK3                                              CCG024
+     C                     CALL 'AOSVALR0'                                                    CCG024
+     C                     PARM *BLANKS   PRTCD                                               CCG024
+     C                     PARM           PSVLK1                                              CCG024
+     C                     PARM           PSVL1                                               CCG024
+     C                     PARM           PSVLK2                                              CCG024
+     C                     PARM           PSVL2                                               CCG024
+     C                     PARM           PSVLK3                                              CCG024
+     C                     PARM           PSVL3                                               CCG024
+     C                     PARM           PSVLK4                                              CCG024
+     C                     PARM           PSVL4                                               CCG024
+     C                     PARM           PSVLK5                                              CCG024
+     C                     PARM           PSVL5                                               CCG024
+     C                     PARM           PSVLK6                                              CCG024
+     C                     PARM           PSVL6                                               CCG024
+     C                     PARM           PSVLK7                                              CCG024
+     C                     PARM           PSVL7                                               CCG024
+     C                     PARM           PSVLK8                                              CCG024
+     C                     PARM           PSVL8                                               CCG024
+     C                     PARM           PSVLK9                                              CCG024
+     C                     PARM           PSVL9                                               CCG024
+     C                     PARM           PSVLK0                                              CCG024
+     C                     PARM           PSVL0                                               CCG024
+      *                                                                                       CCG024
+     C           PRTCD     IFNE *BLANKS                                                       CCG024
+     C           PSVL3     IFEQ '*NRF'                                                        CCG024
+     C                     MOVE PSVLK3    DBKEY                                               CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     MOVEL'SDSVALR0'W0FILE                                              CCG024
+     C                     MOVEL'*CALL'   W0KEY                                               CCG024
+     C                     Z-ADD21        W0ERNB                                              CCG024
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG024
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG024
+     C                     EXSR SRERR                                                         CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
      C                     OPEN CGRDTAL1
       *
       *  Set up copyright statement
@@ -1127,6 +1197,45 @@
      C                     ADD  1         Q       50
      C                     MOVEL'SRCADD'  @STK,Q
      C*
+      ** If feature CCG024 is on and special character is found in DRDCOR                     CCG024
+     C                     MOVEL'N'       XFOUND  1                                           CCG024
+     C           CCG024    IFEQ 'Y'                                                           CCG024
+     C           PSVL31    SCAN ##CORR                   99                                   CCG024
+     C           *IN99     IFEQ *ON                                                           CCG024
+     C                     MOVEL##CORR    #@CORR                                              CCG024
+     C                     MOVEL##CORR    XXCORR  6                                           CCG024
+     C           XXCORR    CHAINCGCORRL4             92                                       CCG024
+     C           *IN92     IFEQ *ON                                                           CCG024
+     C                     MOVEL'CGCORRL4'W0FILE                                              CCG024
+     C                     MOVELXXCORR    W0KEY            ***************                    CCG024
+     C                     Z-ADD11        W0ERNB           * DB ERROR 11 *                    CCG024
+     C                     MOVEL'MEM5004' W0MSGD           ***************                    CCG024
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG024
+     C                     EXSR SRERR                                                         CCG024
+     C                     ENDIF                                                              CCG024
+     C                     MOVEL'Y'       XFOUND                                              CCG024
+      ** call AOALTNR0 to retireve alternate address                                          CCG024
+     C                     CALL 'AOALTNR0'                                                    CCG024
+     C                     PARM '*BLANKS' PRTCD                                               CCG024
+     C                     PARM '*KEY   ' POPTN                                               CCG024
+     C                     PARM           XXCORR                                              CCG024
+     C                     PARM           AZCD                                                CCG024
+     C           SDALTN    PARM SDALTN    DSFDY                                               CCG024
+     C                     MOVELCDBICC    ##BICC    P                                         CCG024
+     C                     MOVELCDBICB    ##BICB    P                                         CCG024
+     C                     MOVELCDCTYP    ##CTYP    P                                         CCG024
+     C                     MOVELCDCORN    ##CORN    P                                         CCG024
+     C                     MOVELCDFATT    ##FATT    P                                         CCG024
+     C                     MOVELBCCNA1    ##ADD1    P                                         CCG024
+     C                     MOVELBCCNA2    ##ADD2    P                                         CCG024
+     C                     MOVELBCCNA3    ##ADD3    P                                         CCG024
+     C                     MOVELBCCNA4    ##ADD4    P                                         CCG024
+     C                     MOVELBCCRTN    ##ADD5    P                                         CCG024
+     C                     MOVELBCCNCD    ##ADD6    P                                         CCG024
+     C                     ENDIF                                                              CCG024
+     C                     ENDIF                                                              CCG024
+      *                                                                                       CCG024
+     C           XFOUND    IFEQ 'N'                                                           CCG024
      C* Seek values in the correspondent details file:
      C*
      C           ##CORR    CHAINCGCORRL0             92
@@ -1156,6 +1265,7 @@
      C                     MOVE CDERT     ##ERT                                               CCG015
      C                     MOVE CDEML     ##EML                                               CCG015
      C                     ENDIF
+     C                     ENDIF                                                              CCG024
      C*...................................................................
      C/EJECT
      C*...................................................................

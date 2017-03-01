@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR784570           Date 21Feb17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
-      *                 CDL096             Date 22Sep14               *
+      *  Last Amend No. CGL165             Date 23Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD026719           Date 19Aug14               *
       *                 MD025467           Date 12May14               *
@@ -99,10 +98,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR784570 - Condition whether internal customer of customer   *
-      *             inputted by the user to be used for CI deal.      *
-      *             Apply fixes 255909 and 256390. (Child: AR784571)  *
-      *           - Applied for MD044115.                             *
       *  CGL165 - Dual Withholding Tax                                *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -409,8 +404,7 @@
      D CRE020          S              1A                                                      CRE020
      D KRefNo          S             30A                                                      CRE020
      D KPrgMn          S             10A   INZ('MMLDNIUPD ')                                  CRE020
-     D*PSysVal01       S             20A   INZ('LoansDeposNAsIssued ')               CRE020 AR784570
-     D PSysVal01       S             20A                                                    AR784570
+     D PSysVal01       S             20A   INZ('LoansDeposNAsIssued ')                        CRE020
      D PCurSet01       S            200A                                                      CRE020
      D PSysVal02       S             20A                                                      CRE020
      D PCurSet02       S            200A                                                      CRE020
@@ -576,59 +570,12 @@
  
       ***DEAL*CUSTOMER*-*BICN*OF*BRANCH*IF*CD*ISSUED                                          185914
       *  DEAL CUSTOMER - BICN OF BRANCH IF CD ISSUED                                          202780
-      *                                                                                     AR784570
-      ** Check system value whether branch internal customer or the                         AR784570
-      ** original customer inputted will be used for CI deals.                              AR784570
-      *                                                                                     AR784570
-     C                   EVAL      PSysVal01 = 'MM/CIDealsDefaulting'                       AR784570
-     C                   CALLB     'AOSVALR0'                                               AR784570
-     C                   PARM      *BLANKS       PRtCd                                      AR784570
-     C                   PARM                    PSysVal01                                  AR784570
-     C                   PARM                    PCurSet01                                  AR784570
-     C                   PARM                    PSysVal02                                  AR784570
-     C                   PARM                    PCurSet02                                  AR784570
-     C                   PARM                    PSysVal03                                  AR784570
-     C                   PARM                    PCurSet03                                  AR784570
-     C                   PARM                    PSysVal04                                  AR784570
-     C                   PARM                    PCurSet04                                  AR784570
-     C                   PARM                    PSysVal05                                  AR784570
-     C                   PARM                    PCurSet05                                  AR784570
-     C                   PARM                    PSysVal06                                  AR784570
-     C                   PARM                    PCurSet06                                  AR784570
-     C                   PARM                    PSysVal07                                  AR784570
-     C                   PARM                    PCurSet07                                  AR784570
-     C                   PARM                    PSysVal08                                  AR784570
-     C                   PARM                    PCurSet08                                  AR784570
-     C                   PARM                    PSysVal09                                  AR784570
-     C                   PARM                    PCurSet09                                  AR784570
-     C                   PARM                    PSysVal10                                  AR784570
-     C                   PARM                    PCurSet10                                  AR784570
-      *                                                                                     AR784570
-     C                   EVAL      CIdeals = 'N'                                            AR784570
-      *                                                                                     AR784570
-      ** If the system value is not found issue a database error                            AR784570
-      *                                                                                     AR784570
-     C                   IF        PRtCd = *BLANKS                                          AR784570
-     C                   MOVEL     PCurSet01     CIdeals           1                        AR784570
-     C                   ELSE                                                               AR784570
-      *                                                                                     AR784570
-     C                   IF        PRtCd <> '*NRF'                                          AR784570
-     C     *LOCK         IN        LDA                                                      AR784570
-     C                   EVAL      DBFile = 'SDSVALPD'                                      AR784570
-     C                   EVAL      DBase = 916                                              AR784570
-     C                   EVAL      DBKey = PSysVal01                                        AR784570
-     C                   OUT       LDA                                                      AR784570
-     C                   EXSR      SRErr                                                    AR784570
-     C                   ENDIF                                                              AR784570
-      *                                                                                     AR784570
-     C                   ENDIF                                                              AR784570
  
      C*****IKMTYP        IFEQ      'CI'                                                       185914
      C**********         EXSR      ACSBRN                                                     185914
      C**********         MOVE      A8BICN        CNUM                                         185914
      C**********         ELSE                                                                 185914
      C     IKMTYP        IFEQ      'CI'                                                       202780
-     C     CIdeals       ANDEQ     'Y'                                                      AR784570
      C     IKMTYP        OREQ      'CF'                                                       CDL033
      C     CDL033        ANDEQ     'Y'                                                        CDL033
      C/COPY WNCPYSRC,MMLDNIDC10
@@ -1423,51 +1370,6 @@
       * DEAL DATE
      C                   Z-ADD     IKDDND        DDAT
       *
-      ** Check system value whether branch internal customer or the                         AR784570
-      ** original customer inputted will be used for CI deals.                              AR784570
-      *                                                                                     AR784570
-     C                   EVAL      PSysVal01 = 'MM/CIDealsDefaulting'                       AR784570
-     C                   CALLB     'AOSVALR0'                                               AR784570
-     C                   PARM      *BLANKS       PRtCd                                      AR784570
-     C                   PARM                    PSysVal01                                  AR784570
-     C                   PARM                    PCurSet01                                  AR784570
-     C                   PARM                    PSysVal02                                  AR784570
-     C                   PARM                    PCurSet02                                  AR784570
-     C                   PARM                    PSysVal03                                  AR784570
-     C                   PARM                    PCurSet03                                  AR784570
-     C                   PARM                    PSysVal04                                  AR784570
-     C                   PARM                    PCurSet04                                  AR784570
-     C                   PARM                    PSysVal05                                  AR784570
-     C                   PARM                    PCurSet05                                  AR784570
-     C                   PARM                    PSysVal06                                  AR784570
-     C                   PARM                    PCurSet06                                  AR784570
-     C                   PARM                    PSysVal07                                  AR784570
-     C                   PARM                    PCurSet07                                  AR784570
-     C                   PARM                    PSysVal08                                  AR784570
-     C                   PARM                    PCurSet08                                  AR784570
-     C                   PARM                    PSysVal09                                  AR784570
-     C                   PARM                    PCurSet09                                  AR784570
-     C                   PARM                    PSysVal10                                  AR784570
-     C                   PARM                    PCurSet10                                  AR784570
-      *                                                                                     AR784570
-     C                   EVAL      CIdeals = 'N'                                            AR784570
-      *                                                                                     AR784570
-      ** If the system value is not found issue a database error                            AR784570
-      *                                                                                     AR784570
-     C                   IF        PRtCd = *BLANKS                                          AR784570
-     C                   MOVEL     PCurSet01     CIdeals           1                        AR784570
-     C                   ELSE                                                               AR784570
-      *                                                                                     AR784570
-     C                   IF        PRtCd <> '*NRF'                                          AR784570
-     C     *LOCK         IN        LDA                                                      AR784570
-     C                   EVAL      DBFile = 'SDSVALPD'                                      AR784570
-     C                   EVAL      DBase = 916                                              AR784570
-     C                   EVAL      DBKey = PSysVal01                                        AR784570
-     C                   OUT       LDA                                                      AR784570
-     C                   EXSR      SRErr                                                    AR784570
-     C                   ENDIF                                                              AR784570
-      *                                                                                     AR784570
-     C                   ENDIF                                                              AR784570
       ***DEAL*CUSTOMER*-*BICN*OF*BRANCH*IF*CD*ISSUED*                                         185914
       *  DEAL CUSTOMER - BICN OF BRANCH IF CD ISSUED                                          202780
      C*****IKMTYP        IFEQ      'CI'                                                       185914
@@ -1475,7 +1377,6 @@
      C**********         MOVE      A8BICN        CNUM                                         185914
      C**********         ELSE                                                                 185914
      C     IKMTYP        IFEQ      'CI'                                                       202780
-     C     CIdeals       ANDEQ     'Y'                                                      AR784570
      C     IKMTYP        OREQ      'CF'                                                       CDL033
      C     CDL033        ANDEQ     'Y'                                                        CDL033
      C/COPY WNCPYSRC,MMLDNIDC14
@@ -3359,7 +3260,6 @@
                                                                                              BUG5169
       ** Check if CRE020 is enabled.                                                          CRE020
                                                                                               CRE020
-     C                   EVAL      PSysVal01 = 'LoansDeposNAsIssued '                       AR784570
      C                   CALLB     'AOSARDR0'                                                 CRE020
      C                   PARM      *BLANKS       PRtCd                                        CRE020
      C                   PARM      '*VERIFY'     POptn                                        CRE020

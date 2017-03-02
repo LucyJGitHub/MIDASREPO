@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD042041           Date 21Oct16               *
-      *  Prev Amend No. MD031691           Date 30Jul15               *
+      *  Last Amend No. MD042371           Date 11Nov16               *
+      *  Prev Amend No. MD042041           Date 21Oct16               *
+      *                 MD031691           Date 30Jul15               *
       *                 AR858070           Date 03Nov11               *
       *                 MD024641           Date 10Feb14               *
       *                 MD024415           Date 20Jan14               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042371 - MT940 not accepted by SWIFT because it is too long*
       *  MD042041 - Tag 61 is not sorted by DRCR and PSTA. Added a    *
       *             system value that when is set to 'Y', program     *
       *             use another logical file that is also sorted by   *
@@ -327,6 +329,8 @@
       ** Array of Fields in error                                                             CER030
       *                                                                                       CER030
      D FldNamXAr       S             10A   DIM(40)                                            CER030
+      *                                                                                     MD042371
+     D ArrStrFmt       S             70A   DIM(27)                                          MD042371
 
       ** File Information Data Structure for MG000940AU
      D SPOOLU          DS
@@ -410,7 +414,8 @@
      D WFldLen         S              3  0
      D WFld61Len       S              3  0
      D WFld65Len       S              3  0
-     D WFld86Len       S              3  0
+     D***WFld86Len       S              3  0                                                MD042371
+     D WFld86Len       S              7  0                                                  MD042371
      D W62Loc          S              4  0
      D WTRNO           S             16
      D WHrdt           S              6
@@ -557,6 +562,15 @@
 
      D SValK3          C                   CONST('MT94xAddedSortfor61')                     MD042041
      D WSort61         S              1A                                                    MD042041
+     D WMFLD           S             55A                                                    MD042371
+     D Wfld64Len       S              7  0                                                  MD042371
+     D Wfld86ALen      S              7  0                                                  MD042371
+     D Wfld86GLen      S              7  0                                                  MD042371
+     D NewPage1A       S              1A                                                    MD042371
+     D NewPage2A       S              1A                                                    MD042371
+     D CX              S              3S 0                                                  MD042371
+     D ChkLen86A       S              1A                                                    MD042371
+     D WExtNar         S            100A                                                    MD042371
 
       *****************************************************************
       /EJECT
@@ -604,6 +618,8 @@
      C                   EXSR      Get_NwrkAcDet
 
      C                   DoU       NewPage1 = *Blank  And
+     C                             NewPage1A = *BLANK AND                                   MD042371
+     C                             NewPage2A = *BLANK AND                                   MD042371
      C                             NewPage2 = *Blank
 
       ** Clear Work fields
@@ -661,6 +677,8 @@
      C                   Eval      WPageNum = *zero
      C                   Eval      NewPage1 = *blank
      C                   Eval      NewPage2 = *blank
+     C                   EVAL      NewPage1A = *BLANK                                       MD042371
+     C                   EVAL      NewPage2A = *BLANK                                       MD042371
      C/COPY WNCPYSRC,MGH00015
 
       *  Reset Message length count to reflect allocated length for
@@ -690,6 +708,8 @@
      C                   Eval      WPageNum = WPageNum + 1
      C                   Eval      NewPage1 = *blank
      C                   Eval      NewPage2 = *blank
+     C                   EVAL      NewPage1A = *BLANK                                       MD042371
+     C                   EVAL      NewPage2A = *BLANK                                       MD042371
      C/COPY WNCPYSRC,MGH00016
 
       *  Reset Message length count to reflect allocated length for
@@ -925,6 +945,7 @@
      C                   Exsr      Format_64
      C/COPY OFCPYSRCZ,CGL146_141                                                            MD024641
       *
+     C                   IF        NewPage1A <> 'Y'                                         MD042371
       * Repeating field :65: Forward Available Balance
      C/COPY OFCPYSRCZ,CGL146_142                                                            MD024641
      C                   Exsr      Format_65
@@ -936,9 +957,12 @@
      C                   Exsr      Format_86
       *
       *  Field :62: Revisited (record final closing balance)
+     C                   IF        NewPage2A <> 'Y'                                         MD042371
      C                   Exsr      Format_F62
       *
+     C                   ENDIF                                                              MD042371
      C                   Endif                                                  NewPage2 <> 'Y'
+     C                   ENDIF                                                              MD042371
      C                   Endif                                                  NewPage1 <> 'Y'
 
      C                   ENDSR
@@ -1335,6 +1359,7 @@
 
 
       *    Now, count number of characters for fld 86
+     C                   IF        CER030 <> 'Y'                                            MD042371
 
      C                   Eval      WFld86Len = 4
 
@@ -1379,6 +1404,11 @@
      C                   Exsr      SRDetFldLen
      C                   Eval      WFld86Len = WFld86Len + WFldLen + 2
      C                   Endif
+     C                   ELSE                                                               MD042371
+     C                   EVAL      ChkLen86A = 'Y'                                          MD042371
+     C                   EXSR      SRMTCash                                                 MD042371
+     C                   EVAL      WFld86Len = Wfld86ALen                                   MD042371
+     C                   ENDIF                                                              MD042371
 
       *    Leave this posting for next page if:
       *    (1)  Max MT940 Length < £current message count + Fld 62 Closing
@@ -1526,6 +1556,7 @@
       *                                                                                       CER030
      C**********         ELSEIF    CER030 = 'Y' AND EDMCNW = 'Y'                     CER030 BUG22853
      C                   ELSEIF    CER030 = 'Y'                                             BUG22853
+     C                   EVAL      ChkLen86A = 'N'                                          MD042371
      C                   EXSR      SRMTCash                                                   CER030
      C                   ENDIF                                                                CER030
       *
@@ -1631,10 +1662,11 @@
 
       *  Field :64: Closing Available Balance
       *
-     C                   Eval      Q = Q + 1
-     C     Q             Occur     MULT
+     C**********         Eval      Q = Q + 1                                                MD042371
+     C*****Q****         Occur     MULT                                                     MD042371
       *
-     C                   Eval      MTAG = ':64:'
+     C**********         Eval      MTAG = ':64:'                                            MD042371
+     C                   EVAL      WMFLD = *BLANKS                                          MD042371
      C                   Z-add     MGCLBL        ZAMT
      C                   Z-add     BJRDNB        ZMDAY
       /COPY OFCPYSRCZ,CGL146_092                                                             CGL146A
@@ -1650,17 +1682,38 @@
       *  Now, format MFLD
       *
      C                   If        MGCLBL > *Zeros
-     C                   Movel     'D'           MFLD
+     C**********         Movel     'D'           MFLD                                       MD042371
+     C                   MOVEL     'D'           WMFLD                                      MD042371
      C                   Else
-     C                   Movel     'C'           MFLD
+     C**********         Movel     'C'           MFLD                                       MD042371
+     C                   MOVEL     'C'           WMFLD                                      MD042371
      C                   Endif
 
-     C                   Eval      %subst(MFLD :2:6)   = ZMDATE
-     C                   Eval      %subst(MFLD :8:3)   = A6SWCY
-     C                   Eval      %subst(MFLD :11:15) = ZSAMNT
-     C                   Eval      CTRC    = WCrLf
+     C**********         Eval      %subst(MFLD :2:6)   = ZMDATE                             MD042371
+     C**********         Eval      %subst(MFLD :8:3)   = A6SWCY                             MD042371
+     C**********         Eval      %subst(MFLD :11:15) = ZSAMNT                             MD042371
+     C                   EVAL      %subst(WMFLD :2:6)   = ZMDATE                            MD042371
+     C                   EVAL      %subst(WMFLD :8:3)   = A6SWCY                            MD042371
+     C                   EVAL      %subst(WMFLD :11:15) = ZSAMNT                            MD042371
+     C**********         Eval      CTRC    = WCrLf                                          MD042371
 
-     C                   Exsr      SRAccLen                                     Accumulate Msg len
+     C**********         Exsr      SRAccLen                                                 MD042371
+     C                   MOVEA     *BLANKS       AL100                                      MD042371
+     C                   MOVEA     WMFLD         AL100                                      MD042371
+     C                   EXSR      SRDetFldLen                                              MD042371
+     C                   EVAL      Wfld64Len = WFldLen + 4 + 2                              MD042371
+     C                   EVAL      WLength = WMsgCount + WFld64Len                          MD042371
+     C                   If        ED0MXL < Wlength                                         MD042371
+     C                   EVAL      NewPage1A = 'Y'                                          MD042371
+     C                   LEAVESR                                                            MD042371
+     C                   ELSE                                                               MD042371
+     C                   EVAL      Q = Q + 1                                                MD042371
+     C     Q             OCCUR     MULT                                                     MD042371
+     C                   EVAL      MTAG = ':64:'                                            MD042371
+     C                   EVAL      MFLD = WMFLD                                             MD042371
+     C                   Eval      CTRC    = WCrLf                                          MD042371
+     C                   EVAL      WMsgCount = WMsgCount + WFld64Len                        MD042371
+     C                   ENDIF                                                              MD042371
       *
      C                   Endsr
       *****************************************************************
@@ -1764,6 +1817,50 @@
      C     Format_86     BEGSR
 
       *  Field :86: General Information to Account Owner
+      ** Check for length                                                                   MD042371
+      *                                                                                     MD042371
+     C                   EVAL      WFld86GLen = 0                                           MD042371
+     C                   IF        MGMIO1   <> *blanks                                      MD042371
+     C                   EVAL      WFld86GLen = 4                                           MD042371
+     C                   MOVEA     *Blanks       AL100                                      MD042371
+     C                   MOVEA     MGMIO1        AL100                                      MD042371
+     C                   EXSR      SRDetFldLen                                              MD042371
+     C                   EVAL      WFld86GLen = WFld86GLen + WFldLen + 2                    MD042371
+     C                   ENDIF                                                              MD042371
+     C                   IF        MGMIO2   <> *blanks                                      MD042371
+     C                   MOVEA     *Blanks       AL100                                      MD042371
+     C                   MOVEA     MGMIO2        AL100                                      MD042371
+     C                   EXSR      SRDetFldLen                                              MD042371
+     C                   EVAL      WFld86GLen = WFld86GLen + WFldLen + 2                    MD042371
+     C                   ENDIF                                                              MD042371
+     C                   IF        MGMIO3   <> *blanks                                      MD042371
+     C                   MOVEA     *Blanks       AL100                                      MD042371
+     C                   MOVEA     MGMIO3        AL100                                      MD042371
+     C                   EXSR      SRDetFldLen                                              MD042371
+     C                   EVAL      WFld86GLen = WFld86GLen + WFldLen + 2                    MD042371
+     C                   ENDIF                                                              MD042371
+     C                   IF        MGMIO4   <> *blanks                                      MD042371
+     C                   MOVEA     *Blanks       AL100                                      MD042371
+     C                   MOVEA     MGMIO4        AL100                                      MD042371
+     C                   EXSR      SRDetFldLen                                              MD042371
+     C                   EVAL      WFld86GLen = WFld86GLen + WFldLen + 2                    MD042371
+     C                   ENDIF                                                              MD042371
+     C                   IF        MGMIO5   <> *blanks                                      MD042371
+     C                   MOVEA     *Blanks       AL100                                      MD042371
+     C                   MOVEA     MGMIO5        AL100                                      MD042371
+     C                   EXSR      SRDetFldLen                                              MD042371
+     C                   EVAL      WFld86GLen = WFld86GLen + WFldLen + 2                    MD042371
+     C                   ENDIF                                                              MD042371
+     C                   IF        MGMIO6   <> *blanks                                      MD042371
+     C                   MOVEA     *Blanks       AL100                                      MD042371
+     C                   MOVEA     MGMIO6        AL100                                      MD042371
+     C                   EXSR      SRDetFldLen                                              MD042371
+     C                   EVAL      WFld86GLen = WFld86GLen + WFldLen + 2                    MD042371
+     C                   ENDIF                                                              MD042371
+     C                   EVAL      WLength = WMsgCount + WFld86GLen                         MD042371
+     C                   IF        ED0MXL < WLength                                         MD042371
+     C                   EVAL      NewPage2A = 'Y'                                          MD042371
+     C                   ELSE                                                               MD042371
 
      C                   If        MGMIO1 <> *Blank
      C                   Eval      Q = Q + 1
@@ -1850,6 +1947,8 @@
      C                   Endif
      C                   Endif
      C
+     C                   EVAL      WMsgCount = WMsgCount + WFld86GLen                       MD042371
+     C                   ENDIF                                                              MD042371
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -2480,6 +2579,29 @@
      C                   EVAL      ArrExtNar(21) = PFormL21                                 BUG23742
      C                   EVAL      ArrExtNar(22) = PFormL22                                 BUG23742
      C                   EVAL      WIdx = 1                                                   CER030
+      *                                                                                     MD042371
+      ** Check for length                                                                   MD042371
+      *                                                                                     MD042371
+     C                   IF        ChkLen86A = 'Y'                                          MD042371
+     C                   EVAL      Wfld86ALen = 0                                           MD042371
+     C                   EVAL      CX = 1                                                   MD042371
+     C                   DOW       CX <= 22                                                 MD042371
+     C                   MOVEA     *BLANKS       AL100                                      MD042371
+     C                   EVAL      WExtNar = *BLANKS                                        MD042371
+     C                   EVAL      WExtNar = ArrExtNar(CX)                                  MD042371
+     C                   IF        WExtNar <> *BLANKS                                       MD042371
+     C                   IF        CX = 1                                                   MD042371
+     C                   EVAL      Wfld86ALen = 4                                           MD042371
+     C                   ENDIF                                                              MD042371
+     C                   MOVEA     WExtNar       AL100                                      MD042371
+     C                   EXSR      SRDetFldLen                                              MD042371
+     C                   EVAL      Wfld86ALen = Wfld86ALen +                                MD042371
+     C                             WFldLen + 2                                              MD042371
+     C                   ENDIF                                                              MD042371
+     C                   EVAL      CX = CX + 1                                              MD042371
+     C                   ENDDO                                                              MD042371
+     C                   LEAVESR                                                            MD042371
+     C                   ENDIF                                                              MD042371
       *                                                                                       CER030
       ** Populate the Extended Narratives                                                     CER030
       *                                                                                       CER030
@@ -2609,6 +2731,59 @@
       ** Structured Format                                                                    CER030
       *                                                                                       CER030
      C                   ELSE                                                                 CER030
+     C                   IF        ChkLen86A = 'Y'                                          MD042371
+     C                   EVAL      Wfld86ALen = 0                                           MD042371
+     C                   MOVEA     *BLANKS       ArrExtNar                                  MD042371
+     C                   EVAL      ArrStrFmt(1) = %TRIM(X_MG86GV)                           MD042371
+     C                   EVAL      ArrStrFmt(2) = %TRIM(X_MG8600)                           MD042371
+     C                   EVAL      ArrStrFmt(3) = %TRIM(X_MG8610)                           MD042371
+     C                   EVAL      ArrStrFmt(4) = %TRIM(X_MG8620)                           MD042371
+     C                   EVAL      ArrStrFmt(5) = %TRIM(X_MG8621)                           MD042371
+     C                   EVAL      ArrStrFmt(6) = %TRIM(X_MG8622)                           MD042371
+     C                   EVAL      ArrStrFmt(7) = %TRIM(X_MG8623)                           MD042371
+     C                   EVAL      ArrStrFmt(8) = %TRIM(X_MG8624)                           MD042371
+     C                   EVAL      ArrStrFmt(9) = %TRIM(X_MG8625)                           MD042371
+     C                   EVAL      ArrStrFmt(10) = %TRIM(X_MG8626)                          MD042371
+     C                   EVAL      ArrStrFmt(11) = %TRIM(X_MG8627)                          MD042371
+     C                   EVAL      ArrStrFmt(12) = %TRIM(X_MG8628)                          MD042371
+     C                   EVAL      ArrStrFmt(13) = %TRIM(X_MG8629)                          MD042371
+     C                   EVAL      ArrStrFmt(14) = %TRIM(X_MG8630)                          MD042371
+     C                   EVAL      ArrStrFmt(15) = %TRIM(X_MG8631)                          MD042371
+     C                   EVAL      ArrStrFmt(16) = %TRIM(X_MG8632)                          MD042371
+     C                   EVAL      ArrStrFmt(17) = %TRIM(X_MG8633)                          MD042371
+     C                   EVAL      ArrStrFmt(18) = %TRIM(X_MG8634)                          MD042371
+     C                   EVAL      ArrStrFmt(19) = %TRIM(X_MG8635)                          MD042371
+     C                   EVAL      ArrStrFmt(20) = %TRIM(X_MG8636)                          MD042371
+     C                   EVAL      ArrStrFmt(21) = %TRIM(X_MG8638)                          MD042371
+     C                   EVAL      ArrStrFmt(22) = %TRIM(X_MG8660)                          MD042371
+     C                   EVAL      ArrStrFmt(23) = %TRIM(X_MG8661)                          MD042371
+     C                   EVAL      ArrStrFmt(24) = %TRIM(X_MG8662)                          MD042371
+     C                   EVAL      ArrStrFmt(25) = %TRIM(X_MG8663)                          MD042371
+     C                   EVAL      ArrStrFmt(26) = %TRIM(X_MG8664)                          MD042371
+     C                   EVAL      ArrStrFmt(27) = %TRIM(X_MG8665)                          MD042371
+      *                                                                                     MD042371
+      ** Check for length                                                                   MD042371
+      *                                                                                     MD042371
+     C                   EVAL      CX = 1                                                   MD042371
+     C                   EVAL      Wfld86ALen = 0                                           MD042371
+     C                   DOW       CX <= 27                                                 MD042371
+     C                   MOVEA     *BLANKS       AL100                                      MD042371
+     C                   EVAL      WExtNar = *BLANKS                                        MD042371
+     C                   EVAL      WExtNar = ArrStrFmt(CX)                                  MD042371
+     C                   IF        WExtNar <> *BLANKS                                       MD042371
+     C                   IF        CX = 1                                                   MD042371
+     C                   EVAL      Wfld86ALen = 4                                           MD042371
+     C                   ENDIF                                                              MD042371
+     C                   MOVEA     WExtNar       AL100                                      MD042371
+     C                   EXSR      SRDetFldLen                                              MD042371
+     C                   EVAL      Wfld86ALen = Wfld86ALen +                                MD042371
+     C                             WFldLen + 2                                              MD042371
+     C                   ENDIF                                                              MD042371
+     C                   EVAL      CX = CX + 1                                              MD042371
+     C                   ENDDO                                                              MD042371
+     C                   LEAVESR                                                            MD042371
+     C                   ENDIF                                                              MD042371
+      *                                                                                     MD042371
      C                   EVAL      WFld86= *BLANKS                                            CER030
      C                   EVAL      WKTag= *BLANKS                                             CER030
      C                   EVAL      WFldSep = EDFSEP                                           CER030

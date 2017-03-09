@@ -10,8 +10,9 @@
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*           1989                                                    */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG23582           Date 13Apr08              */
+/*       Last Amend No. MD036589           Date 14Feb16              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG23582           Date 13Apr08              */
 /*                      CER037             Date 19May08              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CAP204             Date 15Feb10              */
@@ -43,6 +44,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD036589 - FX neeting projection during COB.                */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG23582 - Records in REBNODPD are not cleared              */
 /*       CER037 - Creation of the Extract File for the Online        */
@@ -113,6 +115,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*CGL010*/
              DCL        VAR(&TION) TYPE(*CHAR) LEN(1)                 /*CTI001*/
              DCL        VAR(&CAP204) TYPE(*CHAR) LEN(1)                             /*CAP204*/
+             DCL        VAR(&CDL002) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD036589*/
 /*                                                                    /*S01408*/
 /*/COPY WNCPYSRC,GLC0802C07                                           /*S01408*/
 /*                                                                    /*S01408*/
@@ -142,6 +145,16 @@
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CAP204) VALUE('Y'))                                  /*CAP204*/
 /*                                                                                  /*CAP204*/
+/**/                                                                                    /*MD036589*/
+/* Check if switchable feature CDL002 is on                                             /*MD036589*/
+/**/                                                                                    /*MD036589*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD036589*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD036589*/
+             CHGVAR     VAR(&SARD) VALUE('CDL002')                                      /*MD036589*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                      /*MD036589*/
+             IF         COND(&RTCD *EQ '       ') THEN( +
+             CHGVAR     VAR(&CDL002) VALUE('Y'))                                        /*MD036589*/
+/**/                                                                                    /*MD036589*/
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)                    /*E193  */
                                                                       /*S03220*/
              CHGJOB     SWS(00000000)
@@ -209,6 +222,12 @@
                         RETURN                                        /*E193  */
                         ENDDO                                         /*E193  */
 /**/                                                                  /*E193  */
+/**/                                                                                    /*MD036589*/
+/* Call DL0405 if switchable feature CDL002 is installed                                /*MD036589*/
+/**/                                                                                    /*MD036589*/
+             IF         COND(%SUBSTRING(&SWS 7 2) = '00') THEN(DO)                      /*MD036589*/
+                 IF        COND(&CDL002 = 'Y') THEN(CALL DL0405)                        /*MD036589*/
+             ENDDO                                                                      /*MD036589*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,GLC0802C05                                           /*S01408*/
                                                                       /*CGL010*/

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD039986           Date 10Aug16               *
-      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *  Last Amend No. MD044395           Date 08Mar17               *
+      *  Prev Amend No. MD039986           Date 10Aug16               *
+      *                 AR1090283          Date 10Aug16               *
       *                 CFT157             Date 29Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044395 - Incorrect Customer Name on Inputs details for     *
+      *             valid BIC entry                                   *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
@@ -1206,10 +1209,18 @@
      C     ACCNT         PARM                    DSSDY                                        CSF011
                                                                                               CSF011
      C                   WHEN      P@TYP = '*CUSTNO' OR                                       CSF011
+     C                             P@TYP = '*SWIFT ' OR                                     MD044395
      C                             P@TYP = '*SHNAME'                                          CSF011
                                                                                               CSF011
      C                   EVAL      SDCUST = DSSDY                                             CSF011
      C                   EVAL      WCustomer = *BLANKS                                        CSF011
+     C                   EVAL      AC_ANAM  = *BLANKS                                       MD044395
+                                                                                            MD044395
+     C                   IF        P@TYP = '*SWIFT '                                        MD044395
+     C                             AND BBCSSN = *BLANKS                                     MD044395
+     C                   EVAL      BBCSID = *BLANKS                                         MD044395
+     C                   ENDIF                                                              MD044395
+                                                                                            MD044395
      C                   WHEN      P@TYP = '*NRF   '                                          CSF011
      C                   EVAL      WCustomer = *BLANKS                                        CSF011
      C                   ENDSL                                                                CSF011

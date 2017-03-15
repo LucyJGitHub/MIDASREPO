@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037148           Date 19Jan16               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD034285           Date 14Feb17               *
+      *  Prev Amend No. MD037148           Date 19Jan16               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
@@ -103,12 +104,13 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD034285 - New SWIFT message not generated after PD event.   *
       *  MD037148 - Error on SI deal amendment when interest is       *
       *             negative. DBASE error in DLC0400.                 *
       *             Instead of Pay, system produced Receive message   *
       *             due to negative interest,but receipt instructions *
       *             are not provided for SI.                          *
-      *           - Applied for MD-38972.                             *      
+      *           - Applied for MD-38972.                             *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -286,6 +288,7 @@
      F*********   DTRIXDF                           KRENAMEDTRIXD5 110231 180814
      FFXNETMPDIF  E           K        DISK                               CDL002
      FFXNETSL0IF  E           K        DISK                               CDL025
+     FPREX5L1 IF  E           K        DISK                                                 MD034285
      F*MGF100PDO***E***                 DISK                                                  141571
      FMGF100L0UF  E           K        DISK                      A                            141571
      F                                              KCOMIT
@@ -361,6 +364,10 @@
      I              RECI                            DRECI
      I              VDAT                            DVDAT
      I              DASN                            DDASN
+     IPREX5PHF                                                                              MD034285
+     I              DLNO                            P5DLNO                                  MD034285
+     I              RCDT                            P5RCDT                                  MD034285
+     I              PRI2                            P5PRI2                                  MD034285
      I/COPY WNCPYSRC,DL6315I003
       **  Rename conflicting DEAMS fields
       *
@@ -670,6 +677,19 @@
      C                     Z-ADDOTDT      MGAVDT                          134254
      C                     END                                            134254
      C                     END                                            134254
+      *                                                                                     MD034285
+      ** When Principal Increase/Decrease is Insert                                         MD034285
+      *                                                                                     MD034285
+     C                     MOVE 'N'       WDEAM   1                                         MD034285
+     C           DLNO      CHAINPREX5L1              59                                     MD034285
+     C           *IN59     IFEQ *OFF                                                        MD034285
+     C           PRCDT     ANDEQ'A'                                                         MD034285
+     C           CHTP      ANDEQ'I'                                                         MD034285
+     C           MGAMTP    IFEQ 'PD'                                                        MD034285
+     C           MGAMTP    OREQ 'PI'                                                        MD034285
+     C                     MOVE 'Y'       WDEAM                                             MD034285
+     C                     ENDIF                                                            MD034285
+     C                     ENDIF                                                            MD034285
       *
       **  Do Deletion/cancellation processing when:-                      E29588
       **  i.  input cycle                                                 E29588
@@ -695,6 +715,7 @@
      C***********PRCDT     ANDNE'S'                                 085620087655
      C***********PRCDT     ANDNE'I'                                 085620087655
      C           CHTP      OREQ 'R'
+     C           WDEAM     OREQ 'Y'                                                         MD034285
      C********** PRCDT     OREQ 'R'                                 042844079035
      C********** CHTP      OREQ 'A'                                                    105343 141571
      C********** PRCDT     ANDEQ'D'                                                    105343 141571
@@ -1627,6 +1648,10 @@
      C                     ELSE
      C                     MOVE 'PR'      CALLP
      C                     END
+      *                                                                                     MD034285
+     C           WDEAM     IFEQ 'Y'                                                         MD034285
+     C                     MOVE 'PX'      CALLP                                             MD034285
+     C                     ENDIF                                                            MD034285
       *                                                                   CDL002
       **  If net record type then call with 'PN' net processing           CDL002
       *   MODID is set to NT, whereas previously it was always 'DL'       CDL002

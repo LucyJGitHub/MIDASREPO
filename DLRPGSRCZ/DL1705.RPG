@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. MD031127           Date 13Feb15               *
+      *  Last Amend No. MD034285           Date 14Feb17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 MD031127           Date 13Feb15               *
       *                 MD031141           Date 25Nov14               *
       *                 MD031098           Date 25Nov14               *
       *                 MD030373           Date 25Nov14               *
@@ -202,6 +203,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD034285 - New SWIFT message not generated after PD event.   *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD031127 - CGL035/CER048/CER054 tax processing will not be   *
       *             executed for negative interest.                   *
@@ -673,6 +675,7 @@
      FSDBRTDL1IF  E           K        DISK                               S01383
      FSDCBRTL1IF  E           K        DISK                               S01383
      FDLNASSL1IF  E           K        DISK                               136030
+     FDTRIXL9 IF  E           K        DISK                                                 MD034285
      F* OUTPUT FILES
      FPREXHH  O   F     160            DISK                      A
      F*PREXPH**O***F*****160************DISK**********************A*      E22600
@@ -1605,6 +1608,22 @@
      I              RPDN                            RPDNNS                136030
      I              VDAT                            VDATNS                136030
      I              FVAL                            FVALNS                136030
+     IDTRIXDF                                                                               MD034285
+     I              RECI                            DTRECI                                  MD034285
+     I              RCDT                            DTRCDT                                  MD034285
+     I              DLNO                            DTDLNO                                  MD034285
+     I              VDAT                            DTVDAT                                  MD034285
+     I              DASN                            DTDASN                                  MD034285
+     I              CHTP                            DTCHTP                                  MD034285
+     I              CNRQ                            DTCNRQ                                  MD034285
+     I              CNPR                            DTCNPR                                  MD034285
+     I              REPR                            DTREPR                                  MD034285
+     I              TIM                             DTTIM                                   MD034285
+     I              PRI1                            DTPRI1                                  MD034285
+     I              PRI2                            DTPRI2                                  MD034285
+     I              PRI3                            DTPRI3                                  MD034285
+     I              BRCA                            DTBRCA                                  MD034285
+     I              TNLU                            DTTNLU                                  MD034285
 0479 I*****                                                       *****   S01194
 0480 I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.       *****   S01194
 0481 I*****                                                       *****   S01194
@@ -2977,8 +2996,38 @@
      C   42                EXSR PROC1                      DO DEAL
      C           RCDT      COMP 'A'                      42
      C   42                EXSR PROC2                      DO AMENDMENT
+      *                                                                                     MD034285
+     C           RCDT      IFEQ 'A'                                                         MD034285
+     C                     EXSR PROC6                                                       MD034285
+     C                     ENDIF                                                            MD034285
      C*
      C           P5END     ENDSR                           ** P5END TAG **
+     C********************************************************************                  MD034285
+     C/EJECT                                                                                MD034285
+     C*                                                                                     MD034285
+     C* P R O C E S S 6 - Generate interest pay/receive when PD/PI insert                   MD034285
+     C*                                                                                     MD034285
+     C           PROC6     BEGSR                                                            MD034285
+      *                                                                                     MD034285
+      ** Generate interest pay/receive extract when PD/PI deal insert                       MD034285
+      *                                                                                     MD034285
+     C           DLNO      CHAINDTRIXL9              59                                     MD034285
+      *                                                                                     MD034285
+     C           *IN59     IFEQ *OFF                                                        MD034285
+     C           DTPRI2    ANDEQ9                                                           MD034285
+     C           VDATDI    ANDLTNIDT                                                        MD034285
+     C           CHTPDI    ANDEQ'I'                                                         MD034285
+     C           AMTPDI    IFEQ 'PI'                                                        MD034285
+     C           PRI1      ANDEQ1                                                           MD034285
+     C           AMTPDI    OREQ 'PD'                                                        MD034285
+     C           PRI3      ANDEQ1                                                           MD034285
+     C                     SETOF                     2123                                   MD034285
+     C                     SETON                     717222                                 MD034285
+     C                     EXSR PROC1                                                       MD034285
+     C                     ENDIF                                                            MD034285
+     C                     ENDIF                                                            MD034285
+      *                                                                                     MD034285
+     C                     ENDSR                                                            MD034285
      C********************************************************************
      C/EJECT
      C* P R O C E S S  .1.      - D E A L S

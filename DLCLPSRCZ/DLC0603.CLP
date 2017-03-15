@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD031243           Date 06Nov14              */
-/*       Prev Amend No. CSW214             Date 25Nov14              */
+/*       Last Amend No. MD044136           Date 13Mar17              */
+/*       Prev Amend No. MD031243           Date 06Nov14              */
+/*                      CSW214             Date 25Nov14              */
 /*                      MD030111           Date 28Aug14              */
 /*                      MD028093           Date 03Jul14              */
 /*                      MD022405           Date 16Sep13              */
@@ -61,6 +62,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD044136 - DLC0603 00001 in MSGW                            */
 /*       MD031243 - DLC0603 sequence 00001 failed in COB             */
 /*       CSW214 - SWIFT Changes 2014                                 */
 /*       MD030111 - Incorrect value equated for CSW213 condition     */
@@ -664,8 +666,10 @@
              OVRDBF     FILE(DAIND) SHARE(*YES)                      /*051496*/
 /**********  OPNQRYF    FILE((DAIND *FIRST DTRIEPHF)) KEYFLD((DLNO) +
 /**********                  (VDAT) (RRLA) (DASN))   */  /*051496*/  /*096561*/
+/**********  OPNQRYF    FILE((DAIND *FIRST DTRIEPHF)) KEYFLD((BRCA) +
+                             (DLNO) (VDAT) (RRLA) (DASN))                        /*096561 MD044136*/
              OPNQRYF    FILE((DAIND *FIRST DTRIEPHF)) KEYFLD((BRCA) +
-                             (DLNO) (VDAT) (RRLA) (DASN))            /*096561*/
+                             (DLNO) (VDAT) (RRLA) (DASN)) IGNDECERR(*YES)               /*MD044136*/
              OVRDBF     FILE(DLIND) TOFILE(DLIND2)                   /*090998*/
 /* */                                                                /*051496*/
 /* Produce confirmation extract ECONX */

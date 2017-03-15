@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD044140           Date 02Mar17              */
+/*       Prev Amend No. 220343             Date 02Mar17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CAS009             Date 04May04              */
+/*                      CAS009             Date 04May04              */
 /*                      228542             Date 05Aug04              */
 /*                      CPK016             Date 04Jun03              */
 /* Midas Release 4.01 -----------------------------------------------*/
@@ -42,6 +44,12 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD044140 - Ensure automatic submission of the job will      */
+/*                  display the program name                         */
+/*       220343 - Retrieve the value of the user profile that        */
+/*                submitted the current job and override USRDTA      */
+/*                of the ME0890P1 produced with the retrieved value. */
+/*              - Applied for MD-44140                               */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CAS009 - Effective Interest Rate/Amortised Cost Accounting  */
 /*       228542 - RGZPFM has changed at R5V3                         */
@@ -133,6 +141,14 @@
              DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)                                    /*CAS009*/
              DCL        VAR(&CAS009) TYPE(*CHAR) LEN(1)                                   /*CAS009*/
                                                                                           /*CAS009*/
+             DCL        VAR(&RTN_INFO) TYPE(*CHAR) LEN(512)                               /*220343*/
+             DCL        VAR(&RTN_BIN) TYPE(*CHAR) LEN(4)                                  /*220343*/
+             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(10)                                  /*220343*/
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(26)                                     /*220343*/
+             DCL        VAR(&INT_JOB_ID) TYPE(*CHAR) LEN(16)                              /*220343*/
+             DCL        VAR(&SUBMITTER) TYPE(*CHAR) LEN(10)                               /*220343*/
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2) VALUE(' ')                        /*MD044140*/
+                                                                                          /*220343*/
              DCLF       FILE(SDMGMEPD)
  
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -536,6 +552,16 @@ TAGJ:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('J')
              OVRDBF     FILE(CLOAN) SHARE(*NO)
              OVRDBF     FILE(DEALS) SHARE(*NO)
              OVRDBF     FILE(MGOREFL0) SHARE(*NO)
+             CHGVAR     VAR(&RTN_BIN) VALUE(X'00000200')                                  /*220343*/
+             CHGVAR     VAR(&FORMAT) VALUE('JOBI0300')                                    /*220343*/
+             CHGVAR     VAR(&JOB) VALUE('*')                                              /*220343*/
+             CALL       PGM(QUSRJOBI) PARM(&RTN_INFO &RTN_BIN +
+                          &FORMAT &JOB &INT_JOB_ID)                                       /*220343*/
+             CHGVAR     VAR(&SUBMITTER) VALUE(%SST(&RTN_INFO 127 10))                     /*220343*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRFX)                              /*MD044140*/
+             IF         COND(&SUBMITTER *NE (&PRFX *CAT 'OWNER   ')) THEN(DO)           /*MD044140*/
+             OVRPRTF    FILE(ME0890P1) USRDTA(&SUBMITTER)                                 /*220343*/
+             ENDDO                                                                      /*MD044140*/
 /*/COPY WNCPYSRC,DLC0211015                                          */
              CALL DL6315  /* COMIT DEALS ONLY */
  

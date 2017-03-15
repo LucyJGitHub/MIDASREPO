@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG22231           Date 15Jan09               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG22231           Date 15Jan09               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting                                     *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG22231 - Loop in navigation when enquiring transactions    *
       *  CER030 - Multicash German Feature                            *
@@ -655,6 +657,7 @@
      C                     MOVEL*BLANK    #1PASB           Passbook Transa
      C                     MOVEL*BLANK    #1CIND           Cash Indicator
      C                     MOVEL*BLANK    #1CLIN           Clearing Indica
+     C                     MOVE *BLANKS   #1FTPT                                              CGL154
       *================================================================
      CSR         MAEXIT    ENDSR
       /EJECT
@@ -678,6 +681,7 @@
      C                     MOVELA1PASB    #1PASB           Passbook Transa
      C                     MOVELA1CIND    #1CIND           Cash Indicator
      C                     MOVELA1CLIN    #1CLIN           Clearing Indica
+     C                     MOVELA1FTPT    #1FTPT                                              CGL154
       *================================================================
      CSR         MBEXIT    ENDSR
       /EJECT
@@ -1638,6 +1642,32 @@
      C*
       * 00/Copy member SD0131EOPG - Retail Transaction Types  * S01212
      C                     END                             *FI
+      *                                                                                       CGL154
+      ** Check if CGL154 - FATCA Reporting is ON                                              CGL154
+      *                                                                                       CGL154
+     C                     CALL 'AOSARDR0'                                                    CGL154
+     C                     PARM *BLANKS   @RTCD   7                                           CGL154
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL154
+     C                     PARM 'CGL154'  @SARD   6                                           CGL154
+     C                     PARM WUFDY     SCSARD 76                                           CGL154
+      *                                                                                       CGL154
+     C           *IN90     IFEQ '1'                                                           CGL154
+     C                     MOVEL'Y2U0032' W0RTN                                               CGL154
+     C                     MOVEL*BLANKS   W0CLPG 10                                           CGL154
+     C                     MOVEL'AOSARDR0'W0CLPG                                              CGL154
+     C                     MOVEL'Y2U0032' ZAMSID                                              CGL154
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CGL154
+     C                     MOVELW0CLPG    ZAMSDA                                              CGL154
+     C                     EXSR ZASNMS                                                        CGL154
+     C                     ENDIF                                                              CGL154
+      *                                                                                       CGL154
+     C           @RTCD     IFEQ *BLANKS                                                       CGL154
+     C                     MOVEL'Y'       CGL154  1                                           CGL154
+     C                     MOVE '1'       *IN80                                               CGL154
+     C                     ELSE                                                               CGL154
+     C                     MOVEL'N'       CGL154                                              CGL154
+     C                     MOVE '0'       *IN80                                               CGL154
+     C                     ENDIF                                                              CGL154
       *================================================================
      CSR         ZZEXIT    ENDSR
       /EJECT

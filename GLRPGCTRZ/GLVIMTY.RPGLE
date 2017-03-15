@@ -18,11 +18,12 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD000091           Date 08May13               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. MD000091           Date 08May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 245802             Date 20Feb07               *
+      *                 245802             Date 20Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 TCA102             Date 02Apr04               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD000091 - Event Codes Substitution                          *
       *  245802 - Correctly validated the Transaction Type when       *
       *           Management A/Cs Module is on and CEU013 is off.     *

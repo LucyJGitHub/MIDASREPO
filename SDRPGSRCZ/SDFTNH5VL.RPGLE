@@ -11,8 +11,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD027456           Date 17Sep14               *
-      *  Prev Amend No. MD029805           Date 05Sep14               *
+      *  Last Amend No. MD042697           Date 22Nov16               *
+      *  Prev Amend No. MD036356           Date 02Nov15               *
+      *                 MD033414           Date 28Feb15               *
+      *                 MD030158           Date 05Sep14               *
+      *                 MD030156           Date 02Sep14               *
+      *                 MD027456           Date 17Sep14               *
+      *                 MD029805           Date 05Sep14               *
       *                 MD029837           Date 22Aug14               *
       *                 MD027458           Date 04Aug14               *
       *                 MD027453           Date 27Aug14               *
@@ -28,6 +33,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042697 - Newly insert NAHO is not reflected                *
+      *  MD036356 - Multiple NAHO FATCA fields does not default values*
+      *             from Main NAHO/CRS Details                        *
+      *  MD033414 - CGL154 amended exceptions is missing. Apply       *
+      *             fix MD025163                                      *
+      *  MD030158 - OCBC FATCA - error not prompted when discrepancy  *
+      *             between joint account holders. Apply fix MD-27140 *
+      *  MD030156 - OCBC FATCA - The warning prompt for "PS" subtype  *
+      *             appears to be inconsistent. Apply fix MD-27288    *
+      *  MD025163 - Exception for Customer/Non-Account holder does    *
+      *             not recognize US TIN when subject to reporting is *
+      *             set to Y                                          *
       *  MD027456 - FATCA Reporting type and FATCA Exempt's Populated *
       *             Time on Newly Inserted NAHO is Invalid            *
       *             Apply Fix MD028155                                *
@@ -202,6 +219,8 @@
      D PVL01           S            200A   INZ(*BLANKS)                                     MD027454
      D POP02           S             20A   INZ(*BLANKS)                                     MD027454
      D PVL02           S            200A   INZ(*BLANKS)                                     MD027454
+     D PHasIndicia     S              1A   INZ('N')                                         MD036356
+     D PAINSF          S              1A                                                    MD036460
                                                                                             MD027454
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -240,6 +259,11 @@
      C                   ENDIF                                                              MD027454
      C                   ENDIF                                                              MD027454
                                                                                             MD027454
+     C                   EVAL      PHasIndicia = 'N'                                        MD036356
+                                                                                            MD036356
+      ** Check Customer Indicia                                                             MD036356
+     C                   EXSR      SrChkIndicia                                             MD036356
+                                                                                            MD036356
      C                   EVAL      DDUSID = PSUSER
  
       ** Validate FATCA Customer Type
@@ -285,9 +309,9 @@
      C                   EXSR      SrVFTIC
  
       ** Process Exception of customer
-     C                   IF        Idx = 0
+     C**********         IF        Idx = 0                                                  MD027288
      C                   EXSR      SrVEXCP
-     C                   ENDIF
+     C**********         ENDIF                                                              MD027288
  
      C                   CALL      'QCMDEXC'                                                MD027454
      C                   PARM                    ##OV2                                      MD027454
@@ -773,6 +797,9 @@
       ** Return Code
      C                   PARM                    RetCodeOut
  
+      ***Action*Code***************************************************            MD035388 MD042697
+     C**********         PARM                    DDACTI                            MD035388 MD042697
+                                                                                            MD035388
       ** High Value Account (Original)
      C                   PARM                    P_DDHVAC
  
@@ -825,12 +852,17 @@
       ** Return Code
      C                   PARM                    RetCodeOut
  
+      ***Action*Code***************************************************            MD035388 MD042697
+     C**********         PARM                    DDACTI                            MD035388 MD042697
+                                                                                            MD035388
       ** FATCA Customer Type
      C                   PARM                    DDNHTP            1
  
       ** FATCA Customer Type Description
      C                   PARM                    DDNHTD
  
+     C**********         PARM                    P_DDNHTP                          MD035388 MD042697
+                                                                                            MD035388
       ** OUTPUTS
  
       ** Error fields/message IDs/message data (arrays) from/to caller
@@ -870,11 +902,16 @@
       ** Return Code
      C                   PARM                    RetCodeOut
  
+      ***Action*Code***************************************************            MD035388 MD042697
+     C**********         PARM                    DDACTI                            MD035388 MD042697
+                                                                                            MD035388
       ** FATCA Customer Sub type
      C                   PARM                    DDNHST            2
      C                   PARM                    DDNHTP            1
      C                   PARM                    DDNHSD
  
+     C**********         PARM                    P_DDNHST                          MD035388 MD042697
+                                                                                            MD035388
       ** OUTPUTS
  
       ** Error fields/message IDs/message data (arrays) from/to caller
@@ -1008,6 +1045,9 @@
      C                   PARM                    PPTNC5                                     MD026693
      C                   PARM                    PPTIN5                                     MD026693
      C                   PARM                    DDAUSV                                     MD027560
+     C**********         PARM      *BLANKS       PCUST                             MD027140 MD042697
+     C                   PARM                    PHasIndicia       1                        MD042697
+     C                   PARM      'N'           POrigin           1                        MD042697
  
       ** OUTPUTS
  
@@ -1066,6 +1106,7 @@
      C                   PARM                    NwNaFilFmt
      C                   PARM                    BJRDNB
      C                   PARM                    BJDFIN                                     MD026997
+     C                   PARM                    PHasIndicia                                MD036356
  
       ** Warning fields/message IDs/message data (arrays)
       ** from/to caller
@@ -1075,6 +1116,7 @@
      C                   PARM                    WMsgDtXAr
      C                   PARM                    FVEXMA
      C                   PARM                    FVEXID
+     C**********         PARM                    BJDFIN                            MD025163 MD042697
  
       ** Update error info with that returned from the validation module
  
@@ -1082,6 +1124,27 @@
  
      C                   ENDSR
  
+      *****************************************************************                     MD036356
+     C/EJECT                                                                                MD036356
+      *****************************************************************                     MD036356
+      * SrChkIndicia - Check Indicia for the customer                                       MD036356
+      *****************************************************************                     MD036356
+                                                                                            MD036356
+     C     SrChkIndicia  BEGSR                                                              MD036356
+                                                                                            MD036356
+     C                   CALLB     'SDVNINDI'                                               MD036356
+     C                   PARM                    RetCodeOut                                 MD036356
+                                                                                            MD036356
+     C                   PARM                    NwNaFilFmt                                 MD036356
+     C                   PARM                    CrFaScnFmt                                 MD036356
+      ** Insert Flag                                                                        MD036460
+     C                   PARM                    PAINSF                                     MD036460
+                                                                                            MD036356
+      ** Output - Indicia Flag                                                              MD036356
+     C                   PARM                    PHasIndicia                                MD036356
+                                                                                            MD036356
+     C                   ENDSR                                                              MD036356
+                                                                                            MD036356
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1169,6 +1232,7 @@
      C                   PARM                    NwNaFilFmt
      C                   PARM                    P_CRDT            8                        MD026550
      C                   PARM                    WCLAFlag          1                        MD027561
+     C                   PARM                    PAINSF                                     MD042697
  
       ** OUTPUTS
  

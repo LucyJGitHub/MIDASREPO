@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD027295           Date 24May14               *
-      *  Prev Amend No. MD026848           Date 12May14               *
+      *  Last Amend No. MD042763           Date 21Nov16               *
+      *  Prev Amend No. MD027295           Date 24May14               *
+      *                 MD026848           Date 12May14               *
       *                 MD026193           Date 07Apr14               *
       *                 CSD092   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042763 - GOC0100 00221 comp failed during COB              *
       *  MD027295 - SDC009697 COB component run too long              *
       *  MD026848 - History of cust information is not updated when   *
       *             customer's FATCA classification is change         *
@@ -78,10 +80,15 @@
      I**********                                HDTMST        L1M3                 MD026848 MD027295
      I**********                                HDFILN        L1M2                 MD026193 MD027295
      I**********                                HDIMGT        L1M1                 MD026193 MD027295
-     I                                          HDCUST        L1M4                          MD027295
-     I                                          HDFILN        L1M3                          MD027295
-     I                                          HDCDAT        L1M2                          MD027295
-     I                                          HDTMST        L1M1                          MD027295
+     I**********                                HDCUST        L1M4                 MD027295 MD042763
+     I**********                                HDFILN        L1M3                 MD027295 MD042763
+     I**********                                HDCDAT        L1M2                 MD027295 MD042763
+     I**********                                HDTMST        L1M1                 MD027295 MD042763
+     I                                          HDCUST        L1M5                          MD042763
+     I                                          HDCREF        L1M4                          MD042763
+     I                                          HDFILN        L1M3                          MD042763
+     I                                          HDCDAT        L1M2                          MD042763
+     I                                          HDTMST        L1M1                          MD042763
      IFormatGLB     02
      I**********                                G_HDCUST      L1M4                          MD026193
      I**********                                G_HDCDAT      L1M3                          MD026193
@@ -93,10 +100,15 @@
      I**********                                G_HDTMST      L1M3                 MD026848 MD027295
      I**********                                G_HDFILN      L1M2                 MD026193 MD027295
      I**********                                G_HDIMGT      L1M1                 MD026193 MD027295
-     I                                          G_HDCUST      L1M4                          MD027295
-     I                                          G_HDFILN      L1M3                          MD027295
-     I                                          G_HDCDAT      L1M2                          MD027295
-     I                                          G_HDTMST      L1M1                          MD027295
+     I**********                                G_HDCUST      L1M4                 MD027295 MD042763
+     I**********                                G_HDFILN      L1M3                 MD027295 MD042763
+     I**********                                G_HDCDAT      L1M2                 MD027295 MD042763
+     I**********                                G_HDTMST      L1M1                 MD027295 MD042763
+     I                                          G_HDCUST      L1M5                          MD042763
+     I                                          G_HDCREF      L1M4                          MD042763
+     I                                          G_HDFILN      L1M3                          MD042763
+     I                                          G_HDCDAT      L1M2                          MD042763
+     I                                          G_HDTMST      L1M1                          MD042763
  
      C     *INMR         IFEQ      *OFF
      C     *IN01         IFEQ      *ON

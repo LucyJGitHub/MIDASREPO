@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2010            *
       *                                                               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CRE015  *CREATE    Date 18Dec09               *
+      *  Prev Amend No. CRE015  *CREATE    Date 18Dec09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  CRE015 - Retail Term and Notice Accounts                     *
       *                                                               *
       *****************************************************************

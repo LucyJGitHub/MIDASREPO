@@ -18,9 +18,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CAP205             Date 23Feb10               *
+      *                 CAP205             Date 23Feb10               *
       *                 CAP204             Date 09Feb10               *
       *                 CAP187             Date 21Aug09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -37,6 +38,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CAP205 - Teller Related APIs - Account Balance Check         *
       *           (Recompile)                                         *

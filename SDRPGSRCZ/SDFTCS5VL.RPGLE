@@ -11,8 +11,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD029837A          Date 22Aug14               *
-      *  Prev Amend No. MD029805           Date 05Sep14               *
+      *  Last Amend No. MD042966           Date 20Dec16               *
+      *  Prev Amend No. MD042794           Date 21Nov16               *
+      *                 MD042692           Date 20Dec16               *
+      *                 MD036380           Date 03Nov15               *
+      *                 MD036375           Date 02Nov15               *
+      *                 MD036356           Date 02Nov15               *
+      *                 MD030153           Date 03Sep14               *
+      *                 MD029837A          Date 22Aug14               *
+      *                 MD029805           Date 05Sep14               *
       *                 MD029837           Date 22Aug14               *
       *                 MD027458           Date 04Aug14               *
       *                 MD027760           Date 24Jun14               *
@@ -34,6 +41,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042966 - FATCA US Indicia are not updated upon             *
+      *             complete                                          *
+      *  MD042692 - Serious midas error occurred after pressing       *
+      *             complete during customer insert                   *
+      *  MD042794 - Customer with complete FATCA information cannot   *
+      *             be inserted due to blocking error                 *
+      *  MD036380 - FATCA Information Complete Flag cannot be set     *
+      *             to yes even if all TIN details are defined        *
+      *  MD036375 - Exception 3 is displayed even TIN details are comp*
+      *  MD036356 - Multiple NAHO FATCA fields does not default values*
+      *            from Main NAHO/CRS Details                         *
+      *  MD030153 - OCBC FATCA - cannot set FATCA complete to Y       *
+      *             during creation of new customer                   *
+      *             Apply fix MD027454                                *
       *  MD029837A - OCBC FATCA - cannot set FATCA complete to "Y"    *
       *              during creation of new customer                  *
       *  MD029805 - GIIN number validation                            *
@@ -81,7 +102,7 @@
       ** +--------------------------------------+
  
       ** Customer FATCA Info Retrieval Index                                                MD027454
-     FSDFTCSL1  IF   E           K DISK    INFSR(*PSSR)                                     MD027454
+     F***SDFTCSL1  IF   E           K DISK    INFSR(*PSSR)                         MD027454 MD042692
                                                                                             MD027454
       *****************************************************************
       ** +--------------------------------------+
@@ -123,6 +144,10 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
  
+      ** Additional Customer Details Screen Format                                          MD036375
+     D CrTrnScFmt    E DS                  EXTNAME(SDACUDPD)                                MD036375
+     D                                     PREFIX(C_)                                       MD036375
+                                                                                            MD036375
       ** FATCA Customer Details in screen format
      D CrFaScnFmt    E DS                  EXTNAME(SDFTCRPD)
  
@@ -133,6 +158,16 @@
       ** Additional Customer details
      D CrCuScnFmt    E DS                  EXTNAME (SDCUADPD)
      D                                     PREFIX(AD)
+     D CrFoScnFmt      DS                                                                   MD036375
+     D  WCDESC1                1     50                                                     MD036375
+     D  WPDESC1               51    100                                                     MD036375
+     D  DDBRTH               101    105                                                     MD036375
+     D  DDCBTH               106    107                                                     MD036375
+     D  DDBTHT               108    142                                                     MD036375
+     D  DDCNCZ               143    144                                                     MD036375
+     D  DDCDOM               145    146                                                     MD036375
+     D  DDACCZ               147    148                                                     MD036375
+     D  DDUTNN               149    173                                                     MD036375
  
       ** FATCA Customer Details OK indicators
      D OKFATCAdet    E DS                  EXTNAME(SDEFTCSPD)
@@ -166,6 +201,16 @@
      D ##OV1           S             50    DIM(1) CTDATA PERRCD(1)                          MD027454
      D ##OV2           S             50    DIM(1) CTDATA PERRCD(1)                          MD027454
                                                                                             MD027454
+     D PAPARM          DS           100                                                     MD036356
+     D  PAMODE                 1      1                                                     MD036356
+     D  PADOMC                 2      3                                                     MD036356
+     D  PACNCZ                 4      5                                                     MD036356
+     D  PACSSN                 6     15                                                     MD036356
+     D  PACRNM                16     35                                                     MD036356
+     D  PACRTN                36     45                                                     MD036356
+     D  PAACCZ                46     47                                                     MD036356
+     D  PAINSF                48     48                                                     MD036356
+                                                                                            MD036356
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -188,7 +233,7 @@
      D FVNFRD          S              5P 0
      D DDINFCO         S              1A
      D ALLCUS          S              1A   INZ('C')
-     D DDBTHT          S             35A
+     D***DDBTHT          S             35A                                                  MD036375
      D DDDBTH          S              8A
      D WWCOLC          S              2A                                                    MD026693
      D PPTIN1          S             25A                                                    MD026693
@@ -205,6 +250,9 @@
      D WEffDate        S              5P 0                                                  MD027454
      D WNEffDate       S              6P 0                                                  MD027454
      D WMsgLen         S             15P 5 INZ(50)                                          MD027454
+     D DDBBTH          S              6A                                                    MD036380
+     D PHasIndicia     S              1A   INZ('N')                                         MD042692
+     D POrigin         S              1A                                                    MD042692
  
       ** Parameters for AOSVAL                                                              MD027454
      D PRetCode        S             20A   INZ(*BLANKS)                                     MD027454
@@ -212,6 +260,11 @@
      D PVL01           S            200A   INZ(*BLANKS)                                     MD027454
      D POP02           S             20A   INZ(*BLANKS)                                     MD027454
      D PVL02           S            200A   INZ(*BLANKS)                                     MD027454
+                                                                                            MD036375
+     D PBirthDetails   DS                                                                   MD036375
+     D  BirthDate              1      8                                                     MD036375
+     D  BirthCtry              9     10                                                     MD036375
+     D  BirthTown             11     45                                                     MD036375
                                                                                             MD027454
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -235,29 +288,42 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
  
-     C                   CALL      'QCMDEXC'                                                MD027454
-     C                   PARM                    ##OV1                                      MD027454
-     C                   PARM                    WMsgLen                                    MD027454
+     C**********         CALL      'QCMDEXC'                                       MD027454 MD042692
+     C**********         PARM                    ##OV1                             MD027454 MD042692
+     C**********         PARM                    WMsgLen                           MD027454 MD042692
                                                                                             MD027454
       ** Check if the Customer is being inserted and                                        MD027454
       ** after Effective Date                                                               MD027454
      C                   EVAL      PIsNew = 'N'                                             MD027454
-     C     DDCUST        CHAIN(N)  SDFTCSL1                                                 MD027454
-     C                   IF        NOT %FOUND(SDFTCSL1)                                     MD027454
+     C*****DDCUST        CHAIN(N)  SDFTCSL1                                        MD027454 MD042692
+     C**********         IF        NOT %FOUND(SDFTCSL1)                            MD027454 MD042692
      C**********         IF        DDACTI = 'I'                                   MD027454 MD029837A
-     C                   IF        DDACTI = ' '                                            MD029837A
-     C                             AND WRunDay >= WEffDate                                  MD027454
+     C**********         IF        DDACTI = ' '                                   MD029837A MD042692
+     C**********                   AND WRunDay >= WEffDate                         MD027454 MD042692
+     C                   IF        ADDDACTN = 'I'                                           MD042692
      C                   EVAL      PIsNew = 'Y'                                             MD027454
      C                   ENDIF                                                              MD027454
-     C                   ENDIF                                                              MD027454
+     C**********         ENDIF                                                     MD027454 MD042692
                                                                                             MD027454
-     C                   IN        ZMUSER                                                  MD027010B
-     C                   EVAL      DDUSID = PSUSER
+     C**********         IN        ZMUSER                                         MD027010B MD042692
+      ** Check whether user is a web browser user, if so overwrite                          MD042692
+     C                   CALL      'SFC000026'                                              MD042692
+     C                   PARM      *BLANKS       USER             10                        MD042692
+      *                                                                                     MD042692
+     C                   IF        USER <> *BLANKS                                          MD042692
+     C                   EVAL      PSUSER = USER                                            MD042692
+     C                   ENDIF                                                              MD042692
+     C**********         EVAL      DDUSID = PSUSER                                          MD042692
      C                   IF        DDCSSD <> *BLANKS                                        MD027010
      C                   EVAL      DDUSID = DDCSSD                                          MD027010
      C                   ENDIF                                                              MD027010
                                                                                             MD027561
      C                   MOVEL     DDCSTD        WCLAFlag                                   MD027561
+     C                   EVAL      PHasIndicia = 'N'                                        MD042692
+                                                                                            MD042692
+      ** Check Customer Indicia                                                             MD042692
+     C                   EXSR      SrChkIndicia                                             MD042692
+                                                                                            MD042692
  
       ** Validate FATCA Customer Type
      C                   EXSR      SrVCSTY
@@ -328,12 +394,33 @@
      C                   EVAL      DDEXMA = FVEXMA                                         MD026790A
      C                   ENDIF
  
-     C                   CALL      'QCMDEXC'                                                MD027454
-     C                   PARM                    ##OV2                                      MD027454
-     C                   PARM                    WMsgLen                                    MD027454
+     C**********         CALL      'QCMDEXC'                                       MD027454 MD042692
+     C**********         PARM                    ##OV2                             MD027454 MD042692
+     C**********         PARM                    WMsgLen                           MD027454 MD042692
                                                                                             MD027454
      C                   RETURN
  
+      *****************************************************************
+     C/EJECT
+      *****************************************************************                     MD042692
+      * SrChkIndicia - Check Indicia for the customer                                       MD042692
+      *****************************************************************                     MD042692
+                                                                                            MD042692
+     C     SrChkIndicia  BEGSR                                                              MD042692
+                                                                                            MD042692
+     C                   CALLB     'SDVINDI'                                                MD042692
+     C                   PARM                    RetCodeOut                                 MD042692
+                                                                                            MD042692
+     C**********         PARM                    CrTrnScFmt                        MD042692 MD042966
+     C                   PARM                    CrCuScnFmt                                 MD042966
+     C                   PARM                    CrFaScnFmt                                 MD042692
+     C                   PARM                    PAPARM                                     MD042692
+                                                                                            MD042692
+      ** Output - Indicia Flag                                                              MD042692
+     C                   PARM                    PHasIndicia                                MD042692
+                                                                                            MD042692
+     C                   ENDSR                                                              MD042692
+                                                                                            MD042692
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -985,6 +1072,10 @@
  
      C     SrVFTIC       BEGSR
  
+     C                   EVAL      DDBTHT = C_DDBTHT                                        MD036380
+     C                   EVAL      DDCBTH = C_DDBTHC                                        MD036380
+     C                   EVAL      DDBBTH = C_DDDBTH                                        MD036380
+
       ** Reset variables updated by validation
  
      C                   EXSR      RESETERRS
@@ -1033,6 +1124,7 @@
      C**********         PARM      ADDDDBTH      DDDBTH                                     MD027064
      C                   PARM      ADDDBRTH      DDDBTH                                     MD027064
      C                   PARM      ADDDBTHT      DDBTHT
+     C**********         PARM                    DDBBTH                            MD036380 MD042794
      C                   PARM                    DDREPT
      C                   PARM                    DDRPTT
      C                   PARM                    ALLCUS
@@ -1050,6 +1142,9 @@
      C                   PARM      ADDDTNC5      PPTNC5                                     MD026693
      C                   PARM      ADDDTIN5      PPTIN5                                     MD026693
      C                   PARM                    DDAUSV                                     MD027560
+     C**********         PARM                    DDCUST                            MD027140 MD042692
+     C                   PARM                    PHasIndicia                                MD042692
+     C                   PARM      'C'           POrigin                                    MD042692
  
       ** OUTPUTS
  
@@ -1088,6 +1183,10 @@
  
      C                   EXSR      RESETERRS
  
+     C                   EVAL      BirthDate = C_DDDBTH                                     MD036375
+     C                   EVAL      BirthTown = C_DDBTHT                                     MD036375
+     C                   EVAL      BirthCtry = C_DDBTHC                                     MD036375
+
       ** Process Exception of Customer
  
      C                   CALLB     'SDVEXCP'
@@ -1101,6 +1200,7 @@
      C                   PARM                    BJRDNB
      C                   PARM      ADDDACTN      P_ACTN            1                       MD026790A
      C                   PARM                    BJDFIN                                     MD026997
+     C                   PARM                    PHasIndicia                                MD042692
  
       ** Warning fields/message IDs/message data (arrays)
       ** from/to caller
@@ -1208,6 +1308,7 @@
      C                   PARM                    P_CRDT            8                        MD026550
      C                   PARM                    WWCOLC                                     MD026693
      C                   PARM                    NwXcFilFmt                                 MD026497
+     C                   PARM                    PAPARM                                     MD036356
  
       ** OUTPUTS
  
@@ -1233,7 +1334,7 @@
      C                   PARM                    ValidFATCA
                                                                                            MD026835A
       ** Retrieve ZMUSER details.                                                          MD026835A
-     C     *DTAARA       DEFINE                  ZMUSER                                    MD026835A
+     C******DTAARA       DEFINE                  ZMUSER                           MD026835A MD042692
  
       ** Access bank details
  

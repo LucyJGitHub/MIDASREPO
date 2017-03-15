@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD042713           Date 05Dec16               *
-      *  Prev Amend No. 222427             Date 05Dec16               *      
+      *  Last Amend No. MD043890           Date 06Feb17               *
+      *  Prev Amend No. MD042713           Date 05Dec16               *
+      *                 222427             Date 05Dec16               *      
       *                 MD040328           Date 16Aug16               *
       *                 MD040146           Date 11Aug16               *
       *                 LLN022A            Date 03Jun15               *
@@ -130,6 +131,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043890 - Cannot insert term and notice                     *
       *  MD042713 - Display Default Statement commission.             *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
       *           value is 0.00.  Data structure which includes       *
@@ -780,6 +782,7 @@
      D DDEABC          S              1A                                                      CRE010
      D DDZINS          S              1A                                                    AR802610
      D TranInStamp     S            124A                                                      CER049
+     D FillerBOE       S             25A                                                    MD043890
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D RepMast         S              1A   inz('N')
@@ -1092,6 +1095,7 @@
      C                                           + GLFullAcct                               MD026979
      C/COPY OFCPYSRCZ,CRE101_020                                                              CRE101
      C                                           + InfData                                    CRE015
+     C                                           + FillerBOE                                MD043890
      C                                           + AccnInPena2                                CRE015
      C**********                                 + RegData                             CER001 CRE073
      C**********                                 + ExtData                           BUG62183 CRE073

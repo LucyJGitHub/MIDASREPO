@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. MD029850           Date 30Sep14               *
+      *  Last Amend No. MD030161A          Date 16Sep14               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 MD029850           Date 30Sep14               *
       *                 MD027548           Date 19Jun14               *
       *                 MD027577A          Date 17Jun14               *
       *                 MD027513           Date 17Jun14               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030161A - SDC009697 COB component run too long             *
+      *              Applied fix MD027315, MD027355                   *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD029850 - SDC009697 COB component run too long              *
       *             Applied fix MD028974, MD028321, MD028949 and      *
@@ -226,6 +229,8 @@
      D Index           S              5I 0                                                  MD026666
      D Wpos            S              5S 0                                                  MD026666
      D WImage          S           5000A                                                    MD026666
+     D KCustRefNum     S             10A                                                   MD030161A
+     D CustRefNum      S             10A                                                   MD030161A
      D PackedToChar    DS             6                                                     MD026666
      D WChar2                         2A   overlay(PackedToChar)                            MD026666
      D WPacked3                       3P 0 overlay(PackedToChar)                            MD026666
@@ -321,6 +326,7 @@
      C                   EVAL      WWJARC = 'N'                                             MD027295
      C                   EVAL      WBJACC = PBefJACC                                        MD027295
      C                   EVAL      WAJACC = PAftJACC                                        MD027295
+     C                   EVAL      CustRefNum = *BLANKS                                    MD030161A
      C                   IF        PBefCUST = *BLANKS AND                                   MD027295
      C                             PAftCUST = *BLANKS AND                                   MD027295
      C                             PBefACUS = *BLANKS AND                                   MD027295
@@ -409,6 +415,11 @@
      C                   IF        PBefJACC <> *BLANKS OR
      C                             PAftJACC <> *BLANKS
      C                   EVAL      HCDESC = PDESC(6)
+     C                   IF        PBefJACC <> *BLANKS                                     MD030161A
+     C                   EVAL      CustRefNum = %SUBST(PBefJACC:7:6)                       MD030161A
+     C                   ELSE                                                              MD030161A
+     C                   EVAL      CustRefNum = %SUBST(PAftJACC:7:6)                       MD030161A
+     C                   ENDIF                                                             MD030161A
      C                   ENDIF
 
      C                   IF        PACRV = 'Y'
@@ -425,6 +436,7 @@
      C                   EVAL      SDFTCSX = PBefFTCS                                         CGL132
      C                   EVAL      SDFTCSY = PAftFTCS                                         CGL132
      C                   IF        XFACLAC <> YFACLAC                                         CGL132
+     C                             AND XFACLAC <> *Blanks                                  MD030161A
      C                   EVAL      WPRIOR = 1                                                 CGL132
      C                   EVAL      WBCLAS = XFACLAC                                           CGL132
      C                   EVAL      WACLAS = YFACLAC                                           CGL132
@@ -528,6 +540,7 @@
      C**********         IF        PBefCUST <> *BLANKS                                      MD027295
      C                   EVAL      KCUST = HCCUST                                           MD027295
      C                   EVAL      KFILE = 'SDCUSTPD'                                       MD027295
+     C                   EVAL      KCustRefNum = *BLANKS                                   MD030161A
      C     KHCIN         CHAIN     SDHCIDL0                                                 MD027295
      C                   IF        NOT %FOUND(SDHCIDL0) OR                                  MD027295
      C                             PACRV = 'Y'                                              MD027295
@@ -555,6 +568,7 @@
 
      C**********         IF        PBefACUS <> *BLANKS                             MD026854 MD027295
      C                   EVAL      KFILE = 'SDACUSPD'                                       MD027295
+     C                   EVAL      KCustRefNum = *BLANKS                                   MD030161A
      C     KHCIN         CHAIN     SDHCIDL0                                                 MD027295
      C                   IF        NOT %FOUND(SDHCIDL0) OR                                  MD027295
      C                             PACRV = 'Y'                                              MD027295
@@ -577,6 +591,7 @@
                                                                                               CGL132
      C**********         IF        PBefFTCS <> *BLANKS                             MD026854 MD027295
      C                   EVAL      KFILE = 'SDFTCSPD'                                       MD027295
+     C                   EVAL      KCustRefNum = *BLANKS                                   MD030161A
      C     KHCIN         CHAIN     SDHCIDL0                                                 MD027295
      C                   IF        NOT %FOUND(SDHCIDL0) OR                                  MD027295
      C                             PACRV = 'Y'                                              MD027295
@@ -600,6 +615,7 @@
      C**********         IF        PBefCUXC <> *BLANKS                             MD026854 MD027295
      C                   EVAL      KCUST = HCCUST                                           MD027295
      C                   EVAL      KFILE = 'SDCUSTXC'                                       MD027295
+     C                   EVAL      KCustRefNum = *BLANKS                                   MD030161A
      C     KHCIN         CHAIN     SDHCIDL0                                                 MD027295
      C                   IF        NOT %FOUND(SDHCIDL0) OR                                  MD027295
      C                             PACRV = 'Y'                                              MD027295
@@ -628,6 +644,7 @@
       **
      C**********         IF        PBefJACC <> *BLANKS                            MD026957A MD027295
      C                   EVAL      KFILE = 'SDJACCPD'                                       MD027295
+     C                   EVAL      KCustRefNum = CustRefNum                                MD030161A
      C     KHCIN         CHAIN     SDHCIDL0                                                 MD027295
      C                   IF        NOT %FOUND(SDHCIDL0) OR                                  MD027295
      C                             PACRV = 'Y'                                              MD027295
@@ -939,6 +956,8 @@
      C                   EVAL      HCLUSR = YFALUSR                                         MD029018
      C                   ENDIF                                                              MD029018
      C                   EVAL      HCIEXR = YFAEXMA                                         MD029018
+     C                   EVAL      HCCREF = CustRefNum                                     MD030161A
+                                                                                           MD030161A
      C                   WRITE     SDHCIND0                                                 MD027295
                                                                                             MD027295
      C                   ENDSR                                                              MD027295
@@ -1299,6 +1318,7 @@
                                                                                             MD027295
      C     KHCIN         KLIST                                                              MD027295
      C                   KFLD                    KCUST                                      MD027295
+     C                   KFLD                    KCustRefNum                               MD030161A
      C                   KFLD                    KFILE                                      MD027295
 
       ** Access Bank Details

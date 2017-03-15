@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD027561           Date 03Jul14               *
-      *  Prev Amend No. MD026523           Date 02May14               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. MD027561           Date 03Jul14               *
+      *                 MD026523           Date 02May14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD027561 - FATCA Classification Date is not updated to date  *
       *             when FATCA Classification was changed             *
       *  MD026523 - Some FATCA fields in FATCA Non-account Holder     *

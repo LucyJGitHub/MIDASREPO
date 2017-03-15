@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CER030             Date 09Jul08               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting                                     *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature                            *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -155,6 +157,8 @@
       * UPD : Midas SD Retail transaction types update
       * Current/previous master file format fields for change control
       *
+     ISCSARD    E DSSCSARDPD                                                                  CGL154
+     IDSFDY     E DSDSFDY                                                                     CGL154
      I***#1DBRC*     DS                             56                                        CGL029
      I#1DBRC      DS                           9999                                           CGL029
       * Stored master file format fields
@@ -1415,6 +1419,31 @@
      C                     MOVEL'Y2USRMSG'ZAMSGF
      C                     EXSR ZASNMS
      C                     END                             FI
+      *                                                                                       CGL154
+      ** If CGL154 is ON validate FATCA Payment Type                                          CGL154
+      *                                                                                       CGL154
+     C           CGL154    IFEQ 'Y'                                                           CGL154
+      *                                                                                       CGL154
+      ** Blank FATCA Payment Type will be defaulted to 'N'                                    CGL154
+      *                                                                                       CGL154
+     C           #1FTPT    IFEQ *BLANK                                                        CGL154
+     C                     MOVEL'N'       #1FTPT                                              CGL154
+     C                     MOVEL'Y'       W0DCF                                               CGL154
+     C                     ELSE                                                               CGL154
+      *                                                                                       CGL154
+     C           #1FTPT    IFNE 'D'                                                           CGL154
+     C           #1FTPT    ANDNE'I'                                                           CGL154
+     C           #1FTPT    ANDNE'G'                                                           CGL154
+     C           #1FTPT    ANDNE'O'                                                           CGL154
+     C           #1FTPT    ANDNE'N'                                                           CGL154
+     C                     SETON                     9944                                     CGL154
+     C                     MOVEL'USS0515' ZAMSID                                              CGL154
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CGL154
+     C                     EXSR ZASNMS                                                        CGL154
+     C                     ENDIF                                                              CGL154
+     C                     ENDIF                                                              CGL154
+      *                                                                                       CGL154
+     C                     ENDIF                                                              CGL154
       *================================================================
      CSR         DCEXIT    ENDSR
       /EJECT
@@ -1620,6 +1649,7 @@
      C                     MOVEL*BLANK    #1PASB           Passbook Transa
      C                     MOVEL*BLANK    #1CIND           Cash Indicator
      C                     MOVEL*BLANK    #1CLIN           Clearing Indica
+     C                     MOVEL*BLANK    #1FTPT                                              CGL154
       *================================================================
      CSR         MAEXIT    ENDSR
       /EJECT
@@ -1645,6 +1675,7 @@
      C                     MOVELA1CLIN    #1CLIN           Clearing Indica
       * Hold existing record image
      C                     MOVEL@1DBRC    #1DBRC
+     C                     MOVELA1FTPT    #1FTPT                                              CGL154
       *================================================================
      CSR         MBEXIT    ENDSR
       /EJECT
@@ -1819,6 +1850,12 @@
      C                     MOVEL#1PASB    A1PASB           Passbook Transa
      C                     MOVEL#1CIND    A1CIND           Cash Indicator
      C                     MOVEL#1CLIN    A1CLIN           Clearing Indica
+      *                                                                                       CGL154
+     C                     MOVEL#1FTPT    A1FTPT                                              CGL154
+     C           #1FTPT    IFEQ *BLANK                                                        CGL154
+     C           CGL154    ANDEQ'Y'                                                           CGL154
+     C                     MOVEL'N'       A1FTPT                                              CGL154
+     C                     ENDIF                                                              CGL154
       *
       * USER: Processing before Data update
       * CASE: WRK.S01212 is Fix installed
@@ -2397,6 +2434,12 @@
      C                     MOVEL#1PASB    A1PASB           Passbook Transa
      C                     MOVEL#1CIND    A1CIND           Cash Indicator
      C                     MOVEL#1CLIN    A1CLIN           Clearing Indica
+      *                                                                                       CGL154
+     C                     MOVEL#1FTPT    A1FTPT                                              CGL154
+     C           #1FTPT    IFEQ *BLANK                                                        CGL154
+     C           CGL154    ANDEQ'Y'                                                           CGL154
+     C                     MOVEL'N'       A1FTPT                                              CGL154
+     C                     ENDIF                                                              CGL154
       *
       * Set PGM.*Record Data Changed flag
      C           @1DBRC    IFNE YCRDCS
@@ -3715,6 +3758,34 @@
      C*
       * 00/Copy member SD0131ROPG - Retail Transaction Types  * S01212
      C                     END                             *FI
+      *                                                                                       CGL154
+      ** Check if CGL154 - FATCA Reporting is ON                                              CGL154
+      *                                                                                       CGL154
+     C                     MOVEL'N'       CGL154                                              CGL154
+     C                     MOVE '1'       *IN80                                               CGL154
+      *                                                                                       CGL154
+     C                     CALL 'AOSARDR0'                                                    CGL154
+     C                     PARM *BLANKS   PRTCD   7                                           CGL154
+     C                     PARM '*VERIFY' OPTION  7                                           CGL154
+     C                     PARM 'CGL154'  @SARD   6                                           CGL154
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL154
+      *                                                                                       CGL154
+     C           PRTCD     IFNE *BLANKS                                                       CGL154
+     C           PRTCD     IFNE '*NRF'                                                        CGL154
+     C                     MOVEL'Y2U0032' W0RTN                                               CGL154
+     C                     MOVEL*BLANKS   W0CLPG                                              CGL154
+     C                     MOVEL'AOSARDR0'W0CLPG                                              CGL154
+     C                     MOVEL'Y2U0032' ZAMSID                                              CGL154
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CGL154
+     C                     MOVELW0CLPG    ZAMSDA                                              CGL154
+     C                     EXSR ZASNMS                                                        CGL154
+     C                     ENDIF                                                              CGL154
+      *                                                                                       CGL154
+     C                     ELSE                                                               CGL154
+      *                                                                                       CGL154
+     C                     MOVEL'Y'       CGL154  1                                           CGL154
+     C                     MOVE '0'       *IN80                                               CGL154
+     C                     ENDIF                                                              CGL154
       *================================================================
      CSR         ZZEXIT    ENDSR
       /EJECT

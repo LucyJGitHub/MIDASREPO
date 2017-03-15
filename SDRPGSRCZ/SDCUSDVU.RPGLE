@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD042407           Date 07Nov16               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD042966           Date 20Dec16               *
+      *  Prev Amend No. MD042692           Date 20Dec16               *
+      *                 MD042407           Date 07Nov16               *
+      *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
       *                 MD034317           Date 17Jul15               *
       *                 MD034876           Date 03Jul15               *
@@ -133,6 +135,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042966 - FATCA US Indicia are not updated upon             *
+      *             complete                                          *
+      *  MD042692 - Serious midas error occurred after pressing       *
+      *             complete during customer insert                   *
       *  MD042407 - Creation Date field is missing when CGL132 is     *
       *             switched off ; reversed MD034317 fix              *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
@@ -1030,6 +1036,15 @@
      D WMsgLen         S             15P 5 INZ(50)                                          MD026519
      D CTI006          S              1A                                                    MD030956
                                                                                             MD026519
+     D PAPARM          DS           100                                                     MD042692
+     D  PAMODE                 1      1                                                     MD042692
+     D  PADOMC                 2      3                                                     MD042692
+     D  PACNCZ                 4      5                                                     MD042692
+     D  PACSSN                 6     15                                                     MD042692
+     D  PACRNM                16     35                                                     MD042692
+     D  PACRTN                36     45                                                     MD042692
+     D  PAACCZ                46     47                                                     MD042692
+     D  PAINSF                48     48                                                     MD042692
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
@@ -5598,6 +5613,9 @@
                                                                                               CGL132
      C     ValdCuFTCS5   BEGSR                                                                CGL132
                                                                                               CGL132
+     C                   MOVE      DDCUSN        FSDDCUST                                   MD042966
+     C                   EVAL      PADOMC = V_CUCOLC                                        MD042966
+     C                   EVAL      PACNCZ = V_CUCNCZ                                        MD042966
      C                   CALLB     'SDFTCS5VL'                                                CGL132
                                                                                               CGL132
       ** INPUTS                                                                               CGL132
@@ -5621,6 +5639,7 @@
      C                   PARM      XCDDCRDT      P_CRDT            8                        MD026997
      C                   PARM      DDCOLC        PPCOLC                                     MD026693
      C                   PARM                    ValidCuxc                                  MD026497
+     C                   PARM                    PAPARM                                     MD042692
                                                                                               CGL132
       ** OUTPUTS                                                                              CGL132
       ** FATCA Customer Details OK inds                                                       CGL132

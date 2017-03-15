@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. AR701789           Date 26Sep16               *
-      *  Prev Amend No. MD037869A          Date 28Mar16               *
+      *  Last Amend No. MD042711           Date 22Nov16               *
+      *  Prev Amend No. MD033924           Date 27Mar15               *
+      *                 AR701789           Date 26Sep16               *
+      *                 MD037869A          Date 28Mar16               *
       *                 MD038485           Date 10Aug16               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -127,6 +129,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042711 - Database error and serious midas error encountered*
+      *             during insert of Fiduciary Deals                  *
+      *  MD033924 - Cannot Insert Fiduciary Fixed-Term Placing        *
+      *             and Call Placing                                  *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -1112,7 +1118,8 @@
      C**********         EVAL      FIDTScnRstN = %SUBST(Buffer:5156:240)               CSF011 CDL096
      C**********         EVAL      FIDTScnRstN = %SUBST(Buffer:5190:240)               CDL096 CGL165
      C                   EVAL      FIDTScnRstN = %SUBST(Buffer:5194:240)                      CGL165
-     C                   EVAL      FIDTScnRpt = %SUBST(Buffer2:1563) +                        CSF011
+     C**********         EVAL      FIDTScnRpt = %SUBST(Buffer2:1563) +               CSF011 MD042711
+     C                   EVAL      FIDTScnRpt = %SUBST(Buffer2:1777) +                      MD042711
      C                                          %SUBST(BufferEx2:1:2315)                      CSF011
      C                   EndIf                                                               BUG9827
 
@@ -1362,7 +1369,7 @@
      C                   PARM                    @MsgDtaArr                                  BUG4808
      C                   PARM                    @MsgFArray                                  BUG4808
      C                   PARM                    @APIRetC          1                         BUG4808
-     C                   PARM                    ACTRJ                                      AR701789
+     C**********         PARM                    ACTRJ                             AR701789 MD042711
      C                   MOVEL     DDACTN        Buffer                                      BUG4808
      C                   MOVE      IKDN38        @ACDLNO                                      CDL033
      C                   MOVEL     DDACTN        @ACDLNO                                      CDL033
@@ -1379,7 +1386,7 @@
      C**********                                 + @TimeStamp                        BUG3986 BUG3684
      C**********                                 + @TimeStamp + DDACTC               BUG3684 BUG3792
      C                                           + @TimeStamp + DDACTC + PLATAK              BUG3792
-     C                                           + ACTRJ                                    AR701789
+     C**********                                 + ACTRJ                           AR701789 MD042711
      C                                           + DDFOID                                     239400
      C                                           + #FRECS + #FPAYS                            CDL018
      C                                           + InRecSttmt + InPaySttmt
@@ -1657,7 +1664,7 @@
      C                   PARM                    @TimeStamp       26                         BUG3986
      C                   PARM                    DDACTC            1                         BUG3684
      C                   PARM                    PLATAK            1                         BUG3792
-     C                   PARM                    ACTRJ             1                        AR701789
+     C**********         PARM                    ACTRJ             1               AR701789 MD042711
      C                   PARM                    DDFOID           20                          239400
 
       * Set up the name of the primary and secondary message files from
@@ -2110,7 +2117,7 @@
       * (Current) deal in file format
      C                   PARM                    DealFilFmt
       *                                                                                     AR701789
-     C                   PARM                    ACTRJ                                      AR701789
+     C**********         PARM                    ACTRJ                             AR701789 MD042711
 
       * OK - Action code
      C                   PARM                    OKACTN
@@ -2407,7 +2414,7 @@
      C                   PARM      'S'           APRespMode
       * Transaction information (DS) from source system
      C                   PARM                    TranIn
-     C                   PARM                    ACTRJ                                      AR701789
+     C**********         PARM                    ACTRJ                             AR701789 MD042711
      C                   PARM                    InfData
       * Receive Settlement Currency, Method & Nostro and
       * Payment Settlement Currency, Method & Nostro
@@ -3927,8 +3934,10 @@
      C                   If        DDACTN <> 'D'                                             BUG9827
                                                                                             BUG10341
      C                   Eval      ErrTot = Idx                                             BUG10341
+     C                   MOVE      Tkg           TkgA                                       MD033924
      C                   CALLB     'MMFIDTVAL'                                               BUG9827
-     C                   PARM      *blanks       ReturnCode                                  BUG9827
+     C**********         PARM      *blanks       ReturnCode                         BUG9827 MD033924
+     C                   PARM      TkgA          ReturnCode                                 MD033924
      C                   PARM                    DDACTN                                      BUG9827
      C                   PARM                    DDDLNO                                      BUG9827
      C                   PARM                    DDBRCA                                      BUG9827

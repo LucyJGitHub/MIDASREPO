@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD029837A          Date 22Aug14               *
-      *  Prev Amend No. MD029837           Date 22Aug14               *
+      *  Last Amend No. MD036356           Date 20Oct15               *
+      *  Prev Amend No. MD035388           Date 20Oct15               *
+      *                 MD029837A          Date 22Aug14               *
+      *                 MD029837           Date 22Aug14               *
       *                 MD027560           Date 19Jun14               *
       *                 MD026997           Date 29May14               *
       *                 MD026753A          Date 29May14               *
@@ -27,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036356 - Multiple NAHO FATCA fields does not default values*
+      *             from Main NAHO/CRS Details                        *
+      *  MD035388 - FATCA Screen order rework                         *
       *  MD029837A - OCBC FATCA - cannot set FATCA complete to "Y"    *
       *              during creation of new customer                  *
       *  MD029837 - OCBC FATCA - cannot set FATCA complete to "Y"     *
@@ -221,6 +226,13 @@
      C                   MOVEL     'USS0188'     MsgIdXAr(Idx)
      C                   ENDIF
      C                   ENDIF
+     C                   IF        PHasIndicia = 'N'                                        MD035388
+     C                             AND DDREPT <> 'Y'                                        MD035388
+     C**********                   AND POrigin = 'C'                               MD035388 MD036356
+     C                             AND (POrigin = 'C'                                       MD036356
+     C                             OR POrigin = 'N')                                        MD036356
+     C                   RETURN                                                             MD035388
+     C                   ENDIF                                                              MD035388
                                                                                            MD026753A
      C                   IF        CUSTID = 'C'                                            MD026753A
      C                   EVAL      DDUTIN = *BLANKS                                        MD026753A
@@ -827,6 +839,8 @@
      C                   PARM                    PPTNC5                                     MD026693
      C                   PARM                    PPTIN5                                     MD026693
      C                   PARM                    DDAUSV            1                        MD027560
+     C                   PARM                    PHasIndicia       1                        MD035388
+     C                   PARM                    POrigin           1                        MD035388
  
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr

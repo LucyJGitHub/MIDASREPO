@@ -11,17 +11,20 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
+      *  Last Amend No. MD033924           Date 27Mar15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG9827            Date 27Jan05               *
-      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *  Prev Amend No. BUG9827            Date 27Jan05               *
+      *                 CGL029             Date 01Sep03               *
       * Midas Release 4.01.02 ----------------------------------------*
       *                 209905  *CREATE    Date 25Sep02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033924 - Cannot Insert Fiduciary Fixed-Term Placing        *
+      *             and Call Placing                                  *
       *  BUG9827 - Fiduciary deal changes for Midas Plus              *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  209905 - Fiduciary API Enhancement                           *
@@ -149,6 +152,7 @@
      D PDealType       S              2A
      D WTAmount        S             15S 0
      D WPTFRInd        S              1A
+     D WKDealNo        S              3A                                                    MD033924
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -168,6 +172,7 @@
  
       ** Validate Deal Number
  
+     C                   EVAL      WKDealNo = RetCodeIn                                     MD033924
      C                   IF        PAction = 'I'                                             BUG9827
      C                   EXSR      SRDealNo
      C                   Else                                                                BUG9827
@@ -176,6 +181,9 @@
      C                   IF        OKDealNo = 'Y'
      C                   EVAL      VSFDLNO = SFDLNO
      C                   ENDIF
+     C                   IF        WKDealNo = '001'                                         MD033924
+     C                   MOVEA     *BLANKS       DealNoARR                                  MD033924
+     C                   ENDIF                                                              MD033924
  
       ** Validate Customer Number
  

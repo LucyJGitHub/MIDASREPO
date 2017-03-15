@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 256758             Date 21Jun16               *
-      *  Prev Amend No. MD038510           Date 20Jun16               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. 256758             Date 21Jun16               *
+      *                 MD038510           Date 20Jun16               *
       *                 MD035554           Date 25May16               *
       *                 MD037046           Date 12Feb16               *
       *                 CRE095             Date 25Apr14               *
@@ -178,6 +179,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  256758 - Bit 0 of PRIN should not be checked when updating   *
       *           Last Activity Date. Applied fix 232450.             *
       *         - Applied for MD-38413.                               *

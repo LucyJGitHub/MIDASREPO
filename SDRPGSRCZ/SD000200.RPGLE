@@ -11,14 +11,23 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD036917           Date 22Dec15               *
-      *  Prev Amend No. MD036806           Date 14Dec15               *
+      *  Last Amend No. MD034087           Date 11Apr15               *
+      *  Prev Amend No. MD034079           Date 10Apr15               *
+      *                 MD033128           Date 25Feb15               *
+      *                 MD036917           Date 22Dec15               *
+      *                 MD036806           Date 14Dec15               *
       *                 MD033546           Date 08Apr15               *
       *                 MD029834           Date 27Aug14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD034087 - Incorrect behavior when selecting a record in     *
+      *             FATCA Classification Code                         *
+      *  MD034079 - IO error on display file                          *
+      *  MD033128 - FATCA Classification Code cannot be added after   *
+      *             switch ON of CGL132 (FATCA Ph1), thus blocking    *
+      *             FATCA Initialization process                      *
       *  MD036917 - Classification Codes not sorted alphabetically    *
       *             which prevents filtering when not using the whole *
       *             classification code                               *
@@ -75,6 +84,7 @@
      D WFilterDesc     S             50                                                     MD029834
      D WFCDESC         S             50                                                     MD029834
      D WWDPCD          S             50                                                     MD029834
+     D NoRecSts        S              1A   INZ(*OFF)                                        MD033128
       *
       *
       ** +--------------------------------------+
@@ -210,6 +220,7 @@
      C                             *IN05 = *ON
      C                   EVAL      DPCC = *BLANKS
      C                   EVAL      DPCD = *BLANKS
+     C                   EVAL      NoRecSts = *OFF                                          MD034079
      C                   EVAL      DCACTN = *BLANK                                          MD029834
      C                   EVAL      *IN33 = *OFF                                             MD029834
      C                   EVAL      *IN34 = *ON                                              MD029834
@@ -274,6 +285,7 @@
      C                   IF        DPCC <> *blank                                           MD029834
      C                   EVAL      FilterCode = DPCC                                        MD029834
      C                   EVAL      *IN05 = *ON                                              MD029834
+     C                   EVAL      NoRecSts = *OFF                                          MD034087
      C                   GOTO      ProcSflE                                                 MD029834
      C                   ENDIF                                                              MD029834
                                                                                             MD029834
@@ -414,10 +426,12 @@
      C
      C                   EVAL      DCCODE = FCCODE
      C                   EVAL      DCDESC = FCDESC
+     C                   IF        NoRecSts = *OFF                                          MD033128
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SD000200S0
      C                   EVAL      *IN80 = *OFF
      C                   EVAL      SflRRN = SflRRN + 1                                      MD029834
+     C                   ENDIF                                                              MD033128
  
      C     ReadNext      TAG
      C                   READ      SDFATCD0
@@ -425,7 +439,9 @@
       *
       ** Only inactive/deleted records exist
       *
-     C                   IF        SflRRN < 1
+     C**********         IF        SflRRN < 1                                               MD033128
+     C                   IF        SflRRN = 1                                               MD033128
+     C                             AND FCRECI = '*'                                         MD033128
      C                   EXSR      NoRecords
      C                   ENDIF
  
@@ -442,14 +458,15 @@
      C                   EVAL      *IN80 = *OFF                                             MD029834
      C                   EXSR      NoRecords                                                MD029834
      C                   EVAL      FilterCode = *BLANKS                                     MD029834
-     C                   EVAL      DPCC = *BLANKS                                           MD029834
+     C**********         EVAL      DPCC = *BLANKS                                  MD029834 MD034079
      C                   EVAL      FilterDesc = *BLANKS                                     MD029834
-     C                   EVAL      DPCD = *BLANKS                                           MD029834
+     C**********         EVAL      DPCD = *BLANKS                                  MD029834 MD034079
+     C                   EVAL      *IN79 = '1'                                              MD034079
                                                                                             MD029834
       ** Clear program message queue                                                        MD029834
      C                   CALL      'ZA0250'                                                 MD029834
                                                                                             MD029834
-     C                   GOTO      START                                                    MD029834
+     C**********         GOTO      START                                           MD029834 MD034079
                                                                                             MD029834
      C                   ELSE                                                               MD029834
      C                   EVAL      *IN82 = *ON
@@ -478,6 +495,8 @@
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
      C                   MOVEL     'USS0307'     ZAMSID
      C                   EXSR      ZASNMS
+     C                   EVAL      NoRecSts = *ON                                           MD033128
+     C                   WRITE     SD000200F1                                               MD033128
      C                   WRITE     #MSGCTL
      C                   EVAL      *IN79 = *OFF                                             MD029834
      C                   EVAL      SflRRN = SflRRN + 1                                      MD029834
@@ -627,6 +646,9 @@
      C                   EXSR      *PSSR
      C                   ENDIF
  
+     C                   IF        DetActn = 'I'                                            MD033128
+     C                   EVAL      NoRecSts = *OFF                                          MD033128
+     C                   ENDIF                                                              MD033128
      C                   EVAL      DetActn = *Blanks
      C                   EVAL      DetMode = *Blanks
      C                   EVAL      DetRetCode = *Blanks

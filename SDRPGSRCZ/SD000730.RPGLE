@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD027258           Date 05Aug14               *
-      *  Prev Amend No. MD027355A          Date 06Jun14               *
+      *  Last Amend No. MD025321           Date 16Sep14               *
+      *  Prev Amend No. MD027258           Date 05Aug14               *
+      *                 MD027355A          Date 06Jun14               *
       *                 MD027360           Date 06Jun14               *
       *                 MD027172           Date 28May14               *
       *                 MD026650           Date 09May14               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD025321 - Scroll Bar should be removed when there is only   *
+      *             only 1 page of selection                          *
       *  MD027258 - Second screen becomes default on entry            *
       *  MD027355A - 'US Indicia Changed' header is not displayed     *
       *  MD027360 - No FATCA Classification changed is displayed      *
@@ -478,6 +481,11 @@
      C                   READ      SDFCLSL0
  
      C                   ENDDO
+                                                                                            MD025321
+      ** At end of file set the subfile end = *on                                           MD025321
+                                                                                            MD025321
+     C                   EVAL      *IN96 = *ON                                              MD025321
+     C                   WRITE     SD000730C0                                               MD025321
  
      C                   IF        DDSFRN = 0
      C                   EVAL      PZMsgID = 'ASM0001'
@@ -1092,6 +1100,7 @@
      C     SrInitSFL     BEGSR
  
      C                   Z-ADD     0             DDSFRN
+     C                   EVAL      *IN96 = *OFF                                             MD025321
      C                   EVAL      *IN97 = *ON
      C                   WRITE     SD000730C0
      C                   EVAL      *IN97 = *OFF

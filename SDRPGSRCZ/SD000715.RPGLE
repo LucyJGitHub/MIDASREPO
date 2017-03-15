@@ -11,14 +11,27 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD029839           Date 01Sep14               *
-      *  Prev Amend No. MD027115A          Date 24May14               *
+      *  Last Amend No. MD044164           Date 20Feb17               *
+      *  Prev Amend No. MD035150           Date 29Jul15               *
+      *                 MD034071           Date 10Apr15               *
+      *                 MD033804           Date 23Mar15               *
+      *                 MD033414           Date 28Feb15               *
+      *                 MD029839           Date 01Sep14               *
+      *                 MD027115A          Date 24May14               *
       *                 MD027115           Date 22May14               *
       *                 MD026790A          Date 21May14               *
       *                 MD026790 *CREATE   Date 09May14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044164 - FATCA Exception 3 still present even if Customer  *
+      *             Details comply w/ System Value FATCAUSTINBrthRqd  *
+      *  MD035150 - Exception is bypassed by Joint Account when it is *
+      *             amended                                           *
+      *  MD034071 - Exception 10 not triggered properly               *
+      *  MD033804 - Database error encountered when a non-account     *
+      *             holder is included for FATCA reporting            *
+      *  MD033414 - CGL154 amended exceptions is missing              *
       *  MD029839 - OCBC FATCA - SD000554P1 - "The customer is subject*
       *             to reporting but no US tax number is defined."    *
       *             Applied Fix MD027148                              *
@@ -35,10 +48,12 @@
       ** +--------------------------------------+
  
      FSDFTCSL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     F**********                           COMMIT                                           MD033947
+     F                                     COMMIT(PCommitCUSD)                              MD033947
  
      FSDFTNHL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     F**********                           COMMIT                                           MD033947
+     F                                     COMMIT(PCommitNAHL)                              MD033947
  
      FSDFTCSL1  IF   E           K DISK
      F                                     RENAME(SDFTCSD0:SDFTCSD1)
@@ -108,6 +123,9 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
  
      D DSLDY         E DS                  EXTNAME(DSLDY)
+                                                                                            MD033414
+      ** External DS for SAR Details                                                        MD033414
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD033414
  
      D CustIndOverDS   DS
      D  JFAHMOV
@@ -199,6 +217,8 @@
      D PCUST           S              6A
      D PInDate         S              8A
      D PMDate          S              5  0
+     D PSARD           S              6A                                                    MD033414
+     D CGL154          S              1A                                                    MD033414
  
      D WRUND           S              5S 0
      D WBthDate        S              5S 0
@@ -217,6 +237,19 @@
      D WIndCnt         C                   CONST(12)
      D WArrCnt         S              2S 0
      D WFound          S              1A
+     D PCommitCUSD     S              1A                                                    MD033947
+     D PCommitNAHL     S              1A                                                    MD033947
+     D WSvalEftStrDte  S              6A                                                    MD033414
+     D WSvalDlgNewAC   S              2  0                                                  MD033414
+     D WSvalDlgMedInd  S              6A                                                    MD033414
+     D WSvalDlgHiInd   S              6A                                                    MD033414
+     D WSvalDlgMedEnt  S              6A                                                    MD033414
+     D WSvalDlgHiEnt   S              6A                                                    MD033414
+     D WDlgDt          S              5  0                                                  MD033414
+      ** Define work field Work File Date                                                   MD033414
+     D PIDate          S              6A                                                    MD033414
+     D PODate          S              5  0                                                  MD033414
+     D PErrFlag        S              1A                                                    MD033414
  
       ** Exception Report Flag Array
      D WExcpRptArr     S              1    Dim(30)
@@ -305,6 +338,15 @@
       ** FATCA account review is passed due date
      C                   EXSR      SrCSActRvw
  
+      ** Due diligence period is expired but FATCA information                              MD033414
+      ** complete flag still set to 'No'                                                    MD033414
+                                                                                            MD033414
+     C                   IF        CGL154 = 'Y'                                             MD033414
+                                                                                            MD033414
+     C                   EXSR      SrCSDlgnce                                               MD033414
+                                                                                            MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
      C                   MOVEA     WExcpRptArr   WFAEXID
  
       ** Move and update file on change in exceptions
@@ -412,10 +454,42 @@
       *****************************************************************
      C     SrCSRepTxN    BEGSR
  
+     C     FACUST        CHAIN     SDCUSTX0                                                 MD035150
+     C                   IF        NOT %FOUND(SDCUSXL0)                                     MD035150
+     C                   EVAL      DBFILE = 'SDCUSXL0'                                      MD035150
+     C                   EVAL      DBASE  = 901                                             MD035150
+     C                   EVAL      DBKEY  = POPTN                                           MD035150
+     C                   EXSR      *PSSR                                                    MD035150
+     C                   ENDIF                                                              MD035150
+                                                                                            MD035150
+     C                   EVAL      PIDate = *ZERO                                           MD035150
+     C                   EVAL      PODate = *ZERO                                           MD035150
+                                                                                            MD035150
+     C                   EVAL      PIDate = WSvalEftStrDte                                  MD035150
+     C                   EXSR      SRMdasDay                                                MD035150
+                                                                                            MD035150
+      ** Check the US Indicia for Customer                                                  MD033414
+                                                                                            MD033414
+     C                   IF        CGL154 = 'Y'                                             MD033414
+     C     FACUST        CHAIN     SDFTCSL1                                                 MD033414
+     C                   IF        %FOUND(SDFTCSL1)                                         MD033414
+     C                   EXSR      SrChkIndCust                                             MD033414
+     C                   ENDIF                                                              MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
       ** Customer Subject to reporting but no US Tax defined
  
-     C                   IF        FAREPT = 'Y'
-     C                             AND FAUTIN = *BLANKS
+     C**********         IF        FAREPT = 'Y'                                             MD033414
+     C**********                   AND FAUTIN = *BLANKS                                     MD033414
+     C                   IF        (FAREPT = 'Y'                                            MD033414
+     C**********                   AND FAUTIN = *BLANKS)                           MD033414 MD035150
+     C                             AND FAUTIN = *BLANKS                                     MD035150
+     C                             AND XCCRDT >= PODate)                                    MD035150
+     C                             OR (WHasIndicia = 'Y'                                    MD033414
+     C                             AND CGL154 = 'Y'                                         MD033414
+     C**********                   AND FAUTIN = *BLANKS)                           MD033414 MD035150
+     C                             AND FAUTIN = *BLANKS                                     MD035150
+     C                             AND XCCRDT >= PODate)                                    MD035150
      C                   IF        FACSST <> 'NP' AND                                       MD027148
      C                             FARPTT <> 'R'                                            MD027148
      C                   EVAL      WArrCnt = WArrCnt +1
@@ -438,16 +512,27 @@
  
      C                   EXSR      SRACUS
  
+      ** Check the US Indicia for Customer                                                  MD033414
+                                                                                            MD033414
+     C                   IF        CGL154 = 'Y'                                             MD033414
+     C     FACUST        CHAIN     SDFTCSL1                                                 MD033414
+     C                   IF        %FOUND(SDFTCSL1)                                         MD033414
+     C                   EXSR      SrChkIndCust                                             MD033414
+     C                   ENDIF                                                              MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
       ** Customer Subject to Reporting
  
      C                   IF        FAREPT = 'Y'
+     C                             OR (WHasIndicia = 'Y'                                    MD033414
+     C                             AND CGL154 = 'Y')                                        MD033414
      C                   IF        WSvalTinBrthRq = 'U'
      C                             AND FAUTIN = *BLANKS
  
      C                             OR WSvalTinBrthRq = 'B'
      C                             AND WBthDate = *ZERO
-     C                             OR WSvalTinBrthRq = 'B'
-     C                             AND WBthCntry = *BLANKS
+     C**********                   OR WSvalTinBrthRq = 'B'                                  MD044164
+     C**********                   AND WBthCntry = *BLANKS                                  MD044164
      C                             OR WSvalTinBrthRq = 'B'
      C                             AND WBthTown = *BLANKS
  
@@ -455,8 +540,8 @@
      C                             AND FAUTIN = *BLANKS
      C                             OR WSvalTinBrthRq = 'Y'
      C                             AND WBthDate = *ZERO
-     C                             OR WSvalTinBrthRq = 'Y'
-     C                             AND WBthCntry = *BLANKS
+     C**********                   OR WSvalTinBrthRq = 'Y'                                  MD044164
+     C**********                   AND WBthCntry = *BLANKS                                  MD044164
      C                             OR WSvalTinBrthRq = 'Y'
      C                             AND WBthTown = *BLANKS
  
@@ -627,6 +712,7 @@
       ** US inidicia identified, but the individual members of the
       ** joint account do not have US indicia
  
+     C                   EVAL      WHasIndicia =  ' '                                       MD034071
      C                   IF        FAEXEM <> 'Y'
      C                             AND FACSTY = 'J'
      C                             AND FAJASV = 'Y'
@@ -718,6 +804,106 @@
  
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                                MD033414
+      *****************************************************************                     MD033414
+      *                                                               *                     MD033414
+      *  SrCSDlgnce - FATCA Customer Diligence Check                  *                     MD033414
+      *                                                               *                     MD033414
+      *****************************************************************                     MD033414
+     C     SrCSDlgnce    BEGSR                                                              MD033414
+                                                                                            MD033414
+     C                   EVAL      PIDate = *ZERO                                           MD033414
+     C                   EVAL      PODate = *ZERO                                           MD033414
+                                                                                            MD033414
+     C                   EVAL      PIDate = WSvalEftStrDte                                  MD033414
+     C                   EXSR      SRMdasDay                                                MD033414
+                                                                                            MD033414
+      ** New Customer                                                                       MD033414
+                                                                                            MD033414
+     C                   IF        XCCRDT >= PODate                                         MD033414
+                                                                                            MD033414
+     C                   EVAL      WDlgDt = XCCRDT + WSvalDlgNewAC                          MD033414
+     C                   IF        WDlgDt <= WRUND AND                                      MD033414
+     C                             FAINFC <> 'Y'                                            MD033414
+     C                   EVAL      WArrCnt = WArrCnt + 1                                    MD033414
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'M'                              MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
+     C                   ELSE                                                               MD033414
+                                                                                            MD033414
+      ** Existing Customer (Created before FATCA effective date)                            MD033414
+                                                                                            MD033414
+      ** Existing A/C - Individual/Medium                                                   MD033414
+     C                   SELECT                                                             MD033414
+     C                   WHEN      FACSTY = 'P' AND FAHVAC = 'M'                            MD033414
+                                                                                            MD033414
+     C                   MOVE      WSvalDlgMedIndPIDate                                     MD033414
+     C                   EXSR      SRMdasDay                                                MD033414
+                                                                                            MD033414
+     C                   IF        PODate <= WRUND AND                                      MD033414
+     C                             FAINFC <> 'Y'                                            MD033414
+     C                   EVAL      WArrCnt = WArrCnt + 1                                    MD033414
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'M'                              MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
+      ** Existing A/C - Individual/High                                                     MD033414
+     C                   WHEN      FACSTY = 'P' AND FAHVAC = 'H'                            MD033414
+                                                                                            MD033414
+     C                   MOVE      WSvalDlgHiInd PIDate                                     MD033414
+     C                   EXSR      SRMdasDay                                                MD033414
+                                                                                            MD033414
+     C                   IF        PODate <= WRUND AND                                      MD033414
+     C                             FAINFC <> 'Y'                                            MD033414
+     C                   EVAL      WArrCnt = WArrCnt + 1                                    MD033414
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'M'                              MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
+      ** Existing A/C - Entity/Medium                                                       MD033414
+     C                   WHEN      FACSTY <> 'P' AND FAHVAC = 'M'                           MD033414
+                                                                                            MD033414
+     C                   MOVE      WSvalDlgMedEntPIDate                                     MD033414
+     C                   EXSR      SRMdasDay                                                MD033414
+                                                                                            MD033414
+     C                   IF        PODate <= WRUND AND                                      MD033414
+     C                             FAINFC <> 'Y'                                            MD033414
+     C                   EVAL      WArrCnt = WArrCnt + 1                                    MD033414
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'M'                              MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
+      ** Existing A/C - Entity/High                                                         MD033414
+     C                   WHEN      FACSTY <> 'P' AND FAHVAC = 'H'                           MD033414
+                                                                                            MD033414
+     C                   MOVE      WSvalDlgHiEnt PIDate                                     MD033414
+     C                   EXSR      SRMdasDay                                                MD033414
+                                                                                            MD033414
+     C                   IF        PODate <= WRUND AND                                      MD033414
+     C                             FAINFC <> 'Y'                                            MD033414
+     C                   EVAL      WArrCnt = WArrCnt + 1                                    MD033414
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'M'                              MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
+     C                   ENDSL                                                              MD033414
+                                                                                            MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
+     C                   ENDSR                                                              MD033414
+      *****************************************************************                     MD033414
+      /EJECT                                                                                MD033414
+      *****************************************************************                     MD033414
+      *                                                               *                     MD033414
+      *  SRMdasDay - Convert Diligence 6A Dates to Midas Day No.      *                     MD033414
+      *                                                               *                     MD033414
+      *****************************************************************                     MD033414
+     C     SRMdasDay     BEGSR                                                              MD033414
+                                                                                            MD033414
+     C                   CALLB     'ZDATE1'                                                 MD033414
+     C                   PARM                    PIDate                                     MD033414
+     C                   PARM      *ZERO         PODate                                     MD033414
+     C                   PARM                    BJDFIN                                     MD033414
+     C                   PARM      *BLANK        PErrFlag                                   MD033414
+                                                                                            MD033414
+     C                   ENDSR                                                              MD033414
+      *****************************************************************                     MD033414
       /EJECT
       *****************************************************************
       *                                                               *
@@ -736,6 +922,7 @@
  
      C                   DOU       WOvrOff = 0 OR WOvrOff > WIndCnt
      C                             OR WHasIndicia = 'Y'
+     C                             OR WOvrOff = 12                                          MD033804
  
       ** Check any override as 'N' possibly invalidating
       ** system value Indicia
@@ -782,6 +969,7 @@
  
      C                   DOU       WOvrOff = 0 OR WOvrOff > WIndCnt
      C                             OR WHasIndicia = 'Y'
+     C                             OR WOvrOff = 12                                          MD033804
  
       ** Check any override as 'N' possibly invalidating
       ** system value Indicia
@@ -863,6 +1051,12 @@
      C                   EVAL      POP02 = 'FATCAExpDayDftClsNew'
      C                   EVAL      POP03 = 'FATCADftCLsNewCustNH'
      C                   EVAL      POP04 = 'FATCADftClsTakeon'
+     C                   EVAL      POP05 = 'FATCAEffectStartDate'                           MD033414
+     C                   EVAL      POP06 = 'FATCADiligenceNewA/C'                           MD033414
+     C                   EVAL      POP07 = 'FATCADiligenceMedInd'                           MD033414
+     C                   EVAL      POP08 = 'FATCADiligenceHiInd'                            MD033414
+     C                   EVAL      POP09 = 'FATCADiligenceMedEnt'                           MD033414
+     C                   EVAL      POP10 = 'FATCADiligenceHiEnt'                            MD033414
  
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtcd
@@ -891,6 +1085,12 @@
      C                   MOVEL     PVL02         WSvalExpDayDft
      C                   EVAL      WSvalDftClsCde = PVL03
      C                   EVAL      WSvalDftClsTkn  = PVL04
+     C                   EVAL      WSvalEftStrDte = PVL05                                   MD033414
+     C                   MOVEL     PVL06         WSvalDlgNewAC                              MD033414
+     C                   EVAL      WSvalDlgMedInd = PVL07                                   MD033414
+     C                   EVAL      WSvalDlgHiInd = PVL08                                    MD033414
+     C                   EVAL      WSvalDlgMedEnt = PVL09                                   MD033414
+     C                   EVAL      WSvalDlgHiEnt = PVL10                                    MD033414
  
      C                   ENDSR
       *****************************************************************
@@ -923,6 +1123,8 @@
  
      C     *ENTRY        PLIST
      C                   PARM                    P_Cust            6
+     C                   PARM                    PCommitCUSD                                MD033947
+     C                   PARM                    PCommitNAHL                                MD033947
  
       ** Access Bank details.
  
@@ -955,6 +1157,34 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                            MD033414
+      ** Check if CGL154 is On                                                              MD033414
+                                                                                            MD033414
+     C                   MOVE      'N'           CGL154                                     MD033414
+                                                                                            MD033414
+     C                   CALL      'AOSARDR0'                                               MD033414
+     C                   PARM      *BLANKS       PRTCD                                      MD033414
+     C                   PARM      '*VERIFY'     POPTN                                      MD033414
+     C                   PARM      'CGL154'      PSARD                                      MD033414
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD033414
+                                                                                            MD033414
+     C     PRTCD         IFEQ      *BLANKS                                                  MD033414
+                                                                                            MD033414
+     C                   EVAL      CGL154 = 'Y'                                             MD033414
+                                                                                            MD033414
+     C                   ELSE                                                               MD033414
+                                                                                            MD033414
+     C     PRTCD         IFNE      '*NRF   '                                                MD033414
+                                                                                            MD033414
+     C     *LOCK         IN        LDA                                                      MD033414
+     C                   EVAL      DBFile = 'SCSARDPD'                                      MD033414
+     C                   EVAL      DBase = 103                                              MD033414
+     C                   OUT       LDA                                                      MD033414
+     C                   EXSR      *PSSR                                                    MD033414
+                                                                                            MD033414
+     C                   ENDIF                                                              MD033414
+                                                                                            MD033414
+     C                   ENDIF                                                              MD033414
  
      C                   ENDSR
       *****************************************************************

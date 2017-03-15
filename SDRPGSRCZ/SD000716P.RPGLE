@@ -14,13 +14,21 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD027545           Date 01Aug14               *
-      *  Prev Amend No. MD027439           Date 18Jun14               *
+      *  Last Amend No. MD030151           Date 05Sep14               *
+      *  Prev Amend No. MD030165           Date 03Sep14               *
+      *                 MD027545           Date 01Aug14               *
+      *                 MD027439           Date 18Jun14               *
       *                 MD024592           Date 28Jan14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030151 - Exceptions with JACM Update - The customer is not *
+      *             exempt and flagged as joint account but there is  *
+      *             no joint account members defined                  *
+      *             Applied fix MD027576 MD027115 MD026790 MD025161   *
+      *  MD030165 -  OCBC FATCA - report SD000716P1 is being truncated*
+      *              Apply Fix MD026653                               *
       *  MD027545 - Previous FATCA Classification Description is      *
       *             Populated in Reports even if it is not yet Defined*
       *             Applied fix MD028123                              *
@@ -71,6 +79,12 @@
       ** Customer Details Master File Retrieval
      FSDCUSTL1  IF   E           K DISK
  
+      ** Midas SD Customer Details Ext C - Keyed                                            MD025161
+     FSDCUSXL0  IF   E           K DISK                                                     MD025161
+                                                                                            MD025161
+      ** Additional customer details retrieval                                              MD025161
+     FSDACUSL1  IF   E           K DISK                                                     MD025161
+                                                                                            MD025161
       ** RPT: FATCA Customer details report
      FSD000716P1O    E             PRINTER INFSR(*PSSR)
      F                                     OFLIND(*IN05)
@@ -320,16 +334,24 @@
      C                   IF        NOT %FOUND (SDCUSTL1)
      C                   EVAL      DBFILE = 'SDCUSTL1'
      C                   EVAL      DBASE = 1
-     C                   EVAL      DBKEY = '*FIRST'
+     C**********         EVAL      DBKEY = '*FIRST'                                         MD026653
+     C                   EVAL      DBKEY = FACUST                                           MD026653
      C                   EXSR      *PSSR
      C                   ELSE
  
-      ** customer no, customer shortname, report name, report town.
+      ***customer*no,*customer*shortname,*report*name,*report*town.****                     MD026653
  
-     C                   EVAL      DDCUST = FACUST
-     C                   EVAL      DDCSSN = BBCSSN
-     C                   EVAL      DDCRNM = BBCRNM
-     C                   EVAL      DDCRTN = BBCRTN
+     C**********         EVAL      DDCUST = FACUST                                          MD026653
+     C**********         EVAL      DDCSSN = BBCSSN                                          MD026653
+     C**********         EVAL      DDCRNM = BBCRNM                                          MD026653
+     C**********         EVAL      DDCRTN = BBCRTN                                          MD026653
+                                                                                            MD025161
+     ** Add-on Country of Citizenship and Country of Domicile                               MD025161
+                                                                                            MD025161
+     C                   EVAL      DDCNCZ = *BLANKS                                         MD025161
+     C                   EVAL      DDCOLC = *BLANKS                                         MD025161
+     C                   EVAL      DDCNCZ = BBCNCZ                                          MD025161
+     C                   EVAL      DDCOLC = BBCOLC                                          MD025161
  
      C                   ENDIF
  
@@ -337,6 +359,13 @@
  
      C                   IF        (PMode = 'A' AND BBLCD = BJRDNB)
      C                             OR PMode = 'L' OR PMode = ' '
+                                                                                            MD026653
+      ** customer no, customer shortname, report name, report town.                         MD026653
+                                                                                            MD026653
+     C                   EVAL      DDCUST = FACUST                                          MD026653
+     C                   EVAL      DDCSSN = BBCSSN                                          MD026653
+     C                   EVAL      DDCRNM = BBCRNM                                          MD026653
+     C                   EVAL      DDCRTN = BBCRTN                                          MD026653
  
       ** Initiate fields to blanks before writing details.
  
@@ -376,7 +405,8 @@
      C                   ENDIF
      C                   WRITE     SD0716R4
  
-     C                   EVAL      WReqLin = 4
+     C**********         EVAL      WReqLin = 4                                              MD025161
+     C                   EVAL      WReqLin = 5                                              MD025161
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
@@ -546,7 +576,8 @@
      C                   IF        %OPEN (SD000716P1)
      C                   EVAL      WReqLin = 2
      C                   IF        PrtLn1 + WReqLin >= OflLn1
-     C                   EXSR      SROVRFLOW
+     C**********         EXSR      SROVRFLOW                                                MD026653
+     C                   WRITE     SD0716R0                                                 MD026653
      C                   ENDIF
      C                   WRITE     SD0716R18
      C                   CLOSE     SD000716P1
@@ -755,6 +786,10 @@
      C                   EVAL      DDREPT = *BLANKS
      C                   EVAL      DDINFC = *BLANKS
      C                   EVAL      DDEXMA = *BLANKS
+     C                   EVAL      DDACCZ = *BLANKS                                         MD025161
+     C                   EVAL      DDBRTH = *BLANKS                                         MD025161
+     C                   EVAL      DDBTHT = *BLANKS                                         MD025161
+     C                   EVAL      DDCBTH = *BLANKS                                         MD025161
  
      C                   ENDSR
  
@@ -1342,6 +1377,34 @@
      C                   ELSE                                                               MD028123
      C                   EVAL      DDPFCE = *BLANKS                                         MD028123
      C                   ENDIF                                                              MD028123
+                                                                                            MD025161
+      ** Set-up Alternative Citizenship                                                     MD025161
+                                                                                            MD025161
+     C     FACUST        CHAIN     SDCUSXL0                           17                    MD025161
+     C                   IF        NOT %FOUND (SDCUSXL0)                                    MD025161
+     C                   EVAL      DBFILE = 'SDCUSXL0'                                      MD025161
+     C                   EVAL      DBASE = 3                                                MD025161
+     C                   EVAL      DBKEY = FACUST                                          MD025161A
+     C                   EXSR      *PSSR                                                    MD025161
+     C                   ELSE                                                               MD025161
+     C                   EVAL      DDACCZ = XCACCZ                                          MD025161
+     C                   ENDIF                                                              MD025161
+                                                                                            MD025161
+      ** Setup date of birth, town and country                                              MD025161
+                                                                                            MD025161
+     C     FACUST        CHAIN     SDACUSL1                           18                    MD025161
+     C                   IF        %FOUND(SDACUSL1)                                        MD025161A
+     C                   EVAL      WTempDate = E5BRTH                                       MD025161
+     C                   EXSR      SRZDate2                                                 MD025161
+     C                   IF        ZDATE > 0                                                MD025161
+     C                   MOVEL     ZADATE        DDBRTH                                     MD025161
+     C                   ELSE                                                               MD025161
+     C                   EVAL      DDBRTH = *BLANKS                                         MD025161
+     C                   ENDIF                                                              MD025161
+                                                                                            MD025161
+     C                   EVAL      DDBTHT = E5BTHT                                          MD025161
+     C                   EVAL      DDCBTH = E5BTHC                                          MD025161
+     C                   ENDIF                                                              MD025161
  
      C                   ENDSR
  
@@ -1386,6 +1449,7 @@
       ** print error message and exit program.
  
      C                   IF        *IN80 = *ON
+     C                   Z-ADD     WCustCnt      RRCUST                                     MD026653
      C                   WRITE     CONTROL
      C                   WRITE     DBERROR
      C                   GOTO      TEND

@@ -13,14 +13,20 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD027209           Date 07Aug14               *
-      *  Prev Amend No. MD027334           Date 12Aug14               *
+      *  Last Amend No. MD039670           Date 26Jul16               *
+      *  Prev Amend No. MD030211A          Date 05Sep14               *
+      *                 MD030211           Date 01Sep14               *
+      *                 MD027209           Date 07Aug14               *
+      *                 MD027334           Date 12Aug14               *
       *                 MD027033           Date 29May14               *
       *                 MD026826           Date 12May14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD039670 - FATCA Housekeeping program                        *
+      *  MD030211A - F11 and F13 needs to be pressed twice            *
+      *  MD030211 - F11 and F13 needs to be pressed twice             *
       *  MD027209 - F4-Print Report is not available in USIT and NCUP *
       *  MD027334 - Validation on Mandatory Class Code removed        *
       *  MD027033 - NCUP Tool does not set FATCA Information Complete *
@@ -129,6 +135,7 @@
      D PDate           S              6  0
      D PDateFormat     S              1A
      D PDayNo          S              5  0
+     D WVal            S              1                                                    MD030211A
       *
      D ZAPGM           S             10    INZ('SD000551')
      D ZAPGRL          S              5    INZ(*Blanks)
@@ -149,6 +156,9 @@
      D PrcComplete     S              1  0 INZ(0)
      D IsFileLocked    S              1A   INZ('N')
      D LckRlsFlag      S              5A
+     D PRTCD           S              7                                                     MD039670
+     D POPTN           S              7                                                     MD039670
+     D PKEY1           S             10                                                     MD039670
  
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
@@ -174,6 +184,7 @@
       *                                                               *
       *****************************************************************
       *
+     C                   EVAL      WVal = ' '                                              MD030211A
      C                   DOW       Step <> 'T'
       *
       ** Input New Classification Codes
@@ -256,7 +267,10 @@
      C                   EXSR      RstScrnInd
      C                   EXSR      ClrMsgQue
      C                   WRITE     #MSGCTL
+     C                   IF        WVal = 'Y'                                              MD030211A
      C                   EXSR      ValInput
+     C                   ENDIF                                                             MD030211A
+     C                   EVAL      WVal = 'Y'                                              MD030211A
       **
      C                   IF        *INKM = *ON and InpRevwOK = 1
      C                             and WValErr <> '1'
@@ -814,6 +828,22 @@
      C     *LOVAL        SETLL     SDFTNHD0
      C                   READ      SDFTNHD0
      C                   DOW       %EOF = '0'
+                                                                                            MD039670
+     C                   EVAL      PKEY1 = FNNAHO                                           MD039670
+     C                   IF        PKEY1 <> *BLANKS                                         MD039670
+     C                   CALL      'AONAHOR0'                                               MD039670
+     C                   PARM      *Blanks       PRTCD                                      MD039670
+     C                   PARM      '*KEY   '     POPTN                                      MD039670
+     C                   PARM                    PKEY1                                      MD039670
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+                                                                                            MD039670
+     C                   IF        PRTCD = '*NRF'                                           MD039670
+     C                             OR NHCHTP = 'D'                                          MD039670
+     C                   READ      SDFTNHD0                                                 MD039670
+     C                   ITER                                                               MD039670
+     C                   ENDIF                                                              MD039670
+     C                   ENDIF                                                              MD039670
+                                                                                            MD039670
                                                                                             MD026826
      C                   IF        FNHVAC = 'L'  and                                        MD026826
      C                             (NAINF1 <> *BLANKS OR                                    MD027334

@@ -11,11 +11,18 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD025220           Date 03Feb14               *
-      *  Prev Amend No. CGL132   *CREATE   Date 01May13               *
+      *  Last Amend No. MD042897           Date 29Nov16               *
+      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *                 MD039196           Date 21Jul16               *
+      *                 MD025220           Date 03Feb14               *
+      *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD042897 - Customer/Non-Account Holders with FATCA Exceptions*
+      *             are not reported in FATCA Exceptions IC Report    *
+      *  MD039670 - FATCA Housekeeping program                        *
+      *  MD039196 - FATCA/CRS Exceptions Report Cosmetic Issues       *
       *  MD025220 - SD000554P1 and SD000554AU input cycle reports has *
       *             no information if 9 or more exceptions selected   *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -55,7 +62,8 @@
      FSDFTCSL6  IF   E             DISK
  
       ** FATCA Non-Account Holders with Exceptions - List
-     FSDFTNHL6  IF   E             DISK
+     F***SDFTNHL6  IF   E             DISK                                                  MD039670
+     FSDFTNHL6  IF   E           K DISK                                                     MD039670
  
       ** Non - Account Holder Details
      FSDNAHOL0  IF   E           K DISK
@@ -90,6 +98,7 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDSVAL        E DS                  EXTNAME(SDSVALPD)
      D SDFATC        E DS                  EXTNAME(SDFATCPD)
+     D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                MD039670
  
      DPSDS            SDS
  
@@ -188,6 +197,10 @@
      D ZDATFMT         S              1
      D ErrorFlag       S              1
  
+     D PRTCD           S              7                                                     MD039670
+     D POPTN           S              7                                                     MD039670
+     D PKEY1           S             10                                                     MD039670
+     D WxNAHO          S             10A                                                    MD039670
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -305,6 +318,29 @@
      C*    *LOVAL        SETLL     SDFTNHL6
      C                   READ      SDFTNHD0                               14
      C                   DOW       *IN14 <> *ON
+     C**********         EVAL      WxNAHO = NHNAHO                                 MD040686 MD042897
+     C*****NHNAHO        CHAIN     SDFTNHL6                                        MD039670 MD042897
+     C                   EVAL      WxNAHO = FNNAHO                                          MD042897
+     C     WxNAHO        CHAIN     SDFTNHL6                                                 MD042897
+     C                   IF        %FOUND(SDFTNHL6)                                         MD039670
+     C                   IF        FNLCTP <> 'D'                                            MD039670
+                                                                                            MD039670
+     C**********         EVAL      PKEY1 = NHNAHO                                 MD039670  MD042897
+     C                   EVAL      PKEY1 = FNNAHO                                           MD042897
+     C                   IF        PKEY1 <> *BLANKS                                         MD039670
+     C                   CALL      'AONAHOR0'                                               MD039670
+     C                   PARM      *Blanks       PRTCD                                      MD039670
+     C                   PARM      '*KEY   '     POPTN                                      MD039670
+     C                   PARM                    PKEY1                                      MD039670
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+                                                                                            MD039670
+     C                   IF        PRTCD = '*NRF'                                           MD039670
+     C                             OR NHCHTP = 'D'                                          MD039670
+     C                   READ      SDNAHOL0                                                 MD039670
+     C                   ITER                                                               MD039670
+     C                   ENDIF                                                              MD039670
+     C                   ENDIF                                                              MD039670
+                                                                                            MD039670
       ** Record(s) found
      C                   IF        *IN50 = *OFF
      C                   OPEN      SD000554P1
@@ -339,6 +375,10 @@
      C                   ADD       1             WCALC
      C                   ADD       1             WCALCN
      C                   ENDIF
+      *                                                                                     MD039670
+     C                   ENDIF                                                              MD039670
+      *                                                                                     MD039670
+     C                   ENDIF                                                              MD039670
       *
       ** Read next record
       *
@@ -440,6 +480,7 @@
       ** Move exception message (256A) to array of 4 elements (64A)
      C                   EVAL      MsgLines = *BLANKS
      C                   MOVEA     FEEXDE        MsgLines
+     C                   EVAL      XREXID = FEEXID                                          MD039196
       ** Set on bullet for first line of each message.
      C                   EVAL      *IN42 = *ON
      C                   EVAL      WIdx2 = 1

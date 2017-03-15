@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD029849           Date 12Sep14               *
-      *  Prev Amend No. MD026515           Date 28Apr14               *
+      *  Last Amend No. MD039670           Date 26Jul16               *
+      *  Prev Amend No. MD029849           Date 12Sep14               *
+      *                 MD026515           Date 28Apr14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039670 - FATCA Housekeeping program                        *
       *  MD029849 - Issues on NAHL/NAHE with FATCA                    *
       *  MD026515 - Deleted Record is still Visible in F14=List by US *
       *             Indicia                                           *
@@ -265,6 +267,9 @@
       *
       **  Initialise count of records written to subfile page.
       *
+     C     FNLCTP        IFEQ      'D'                                                      MD039670
+     C                   GOTO      RDCUST_TAG                                               MD039670
+     C                   ENDIF                                                              MD039670
      C                   Z-ADD     0             @@CNT             3 0
       *
       **  For each record read, write it to the subfile.
@@ -340,6 +345,7 @@
       *
       **  Read a valid Customer
       *
+     C     RDCUST_TAG    TAG                                                                MD039670
      C                   EXSR      RDCUST
      C                   END
      C                   SETOFF                                       81                    MD029849
@@ -476,6 +482,10 @@
      C     FNNAHO        ORNE      *BLANKS
       *
      C                   READ      SDFTNHL1                               96
+      **                                                                                    MD039670
+     C                   IF        FNLCTP = 'D'                                             MD039670
+     C                   LEAVE                                                              MD039670
+     C                   ENDIF                                                              MD039670
       **
      C                   MOVE      *BLANK        IgnorRec         12
  

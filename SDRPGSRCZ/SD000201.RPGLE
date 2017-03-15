@@ -11,11 +11,18 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD036917A          Date 20Jan16               *
-      *  Prev Amend No. CGL132   *CREATE   Date 01May13               *
+      *  Last Amend No. MD033948           Date 01Apr15               *
+      *  Prev Amend No. MD033141           Date 26Feb14               *
+      *                 CGL154             Date 13Oct14               *
+      *                 MD036917A          Date 20Jan16               *
+      *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD033948 - Return to detail screen after selection of '?'    *
+      *  MD033141 - Inappropriate Input Fields are displayed in FATCA *
+      *             Classification Code insert screen                 *
+      *  CGL154 - FATCA Phase 2 - FATCA Reporting                     *
       *  MD036917A - I/o error during add                             *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -52,6 +59,8 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs, Long Data Structure
      D FatCDS        E DS                  EXTNAME(SDFATCPD)
+      ** External DS for SAR Details                                                          CGL154
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL154
  
      DPSDS            SDS
  
@@ -91,6 +100,15 @@
      D ZAMSGF          S             10    INZ(*Blanks)
      D ZAMSDA          S            132    INZ(*Blanks)
      D ZAMSTP          S              7    INZ(*Blanks)
+      ** Parameters for Access Objects                                                        CGL154
+     D PRtcd           S              7                                                       CGL154
+     D POptn           S              7                                                       CGL154
+     D PSard           S              6                                                       CGL154
+     D CGL154          S              1                                                       CGL154
+      *                                                                                       CGL154
+     D WCLAC           S              5                                                       CGL154
+     D WDMVA           S              5                                                       CGL154
+     D WDHVA           S              5                                                       CGL154
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
@@ -206,6 +224,33 @@
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
+                                                                                              CGL154
+      ** Check if CGL154 - FATCA Reporting is ON                                              CGL154
+                                                                                              CGL154
+     C                   EVAL      CGL154 = 'N'                                               CGL154
+     C                   EVAL      *IN77 = *OFF                                               CGL154
+     C                   EVAL      *IN78 = *OFF                                             MD033141
+     C                   EVAL      *IN79 = *OFF                                             MD033141
+     C                   EVAL      *IN80 = *OFF                                             MD033141
+                                                                                              CGL154
+     C                   CALL      'AOSARDR0'                                                 CGL154
+     C                   PARM      *Blanks       PRtcd                                        CGL154
+     C                   PARM      '*VERIFY'     POptn                                        CGL154
+     C                   PARM      'CGL154'      PSard                                        CGL154
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL154
+                                                                                              CGL154
+     C                   IF        (PRtcd <> *BLANKS) AND                                     CGL154
+     C                             (PRtcd <> '*NRF   ')                                       CGL154
+     C                   EVAL      DBKEY = 'CGL154'                                           CGL154
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL154
+     C                   MOVEL     '901'         DBASE                                        CGL154
+     C                   EXSR      *PSSR                                                      CGL154
+     C                   ELSE                                                                 CGL154
+     C                   IF        PRtcd <> '*NRF   '                                         CGL154
+     C                   EVAL      CGL154 = 'Y'                                               CGL154
+     C                   EVAL      *IN77 = *ON                                                CGL154
+     C                   ENDIF                                                                CGL154
+     C                   ENDIF                                                                CGL154
  
      C     InitE         ENDSR
  
@@ -306,6 +351,8 @@
      C                   EVAL      *IN17 = *OFF
      C                   EVAL      *IN18 = *OFF
      C                   EVAL      *IN19 = *OFF
+     C                   EVAL      *IN20 = *OFF                                               CGL154
+     C                   EVAL      *IN22 = *OFF                                               CGL154
      C*                  EVAL      *IN71 = *OFF
      C                   ENDSR
  
@@ -320,17 +367,33 @@
      C                   SELECT
      C                   WHEN      Actn = 'I'
      C                   EVAL      *IN70 = *ON
+     C                   IF        CGL154 = 'Y'                                             MD033141
+     C                   EVAL      *IN79 = *ON                                              MD033141
+     C                   EVAL      *IN80 = *ON                                              MD033141
+     C                   ENDIF                                                              MD033141
      C                   EVAL      Action = 'created'
      C                   WHEN      Actn = 'A'
      C                   EVAL      *IN70 = *ON
+     C                   IF        CGL154 = 'Y'                                             MD033141
+     C                   EVAL      *IN79 = *ON                                              MD033141
+     C                   EVAL      *IN80 = *ON                                              MD033141
+     C                   ENDIF                                                              MD033141
      C                   EVAL      Action = 'updated'
      C                   WHEN      Actn = 'D'
      C                   EVAL      *IN70 = *ON
+     C                   IF        CGL154 = 'Y'                                             MD033141
+     C                   EVAL      *IN79 = *OFF                                             MD033141
+     C                   EVAL      *IN80 = *OFF                                             MD033141
+     C                   ENDIF                                                              MD033141
      C                   EVAL      *IN71 = *ON
      C                   EVAL      *IN72 = *ON
      C                   EVAL      Action = 'deleted'
      C                   WHEN      Actn = 'E'
      C                   EVAL      *IN70 = *ON
+     C                   IF        CGL154 = 'Y'                                             MD033141
+     C                   EVAL      *IN79 = *OFF                                             MD033141
+     C                   EVAL      *IN80 = *OFF                                             MD033141
+     C                   ENDIF                                                              MD033141
      C                   EVAL      *IN71 = *ON
      C                   EVAL      *IN73 = *ON
      C                   ENDSL
@@ -358,6 +421,41 @@
       ** Basic Details
      C                   EVAL      DCDESC = FCDESC
      C                   EVAL      DCUSIA = FCUSIA
+                                                                                              CGL154
+     C                   IF        CGL154 = 'Y'                                               CGL154
+     C                   EVAL      WDMVA = FCDMVA                                             CGL154
+     C                   EVAL      WDHVA = FCDHVA                                             CGL154
+                                                                                              CGL154
+      ** Default Medium Value A/C details retrieval                                           CGL154
+     C                   IF        WDMVA <> *BLANKS                                           CGL154
+     C                   CALL      'AOFATCR0'                                                 CGL154
+     C                   PARM      *BLANKS       PRtcd                                        CGL154
+     C                   PARM      '*KEYMNT '    POptn                                        CGL154
+     C                   PARM      WDMVA         WCLAC                                        CGL154
+     C     FatCDS        PARM      FatCDS        DSFDY                                        CGL154
+                                                                                              CGL154
+      ** If Default Medium Value A/C is live record                                           CGL154
+     C                   EVAL      DCDMVA = WDMVA                                             CGL154
+     C                   EVAL      DCDMVD = FCDESC                                            CGL154
+                                                                                              CGL154
+      ** Else non live record found, clear details                                            CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** Default High Value A/C details retrieval                                             CGL154
+     C                   IF        WDHVA <> *BLANKS                                           CGL154
+     C                   CALL      'AOFATCR0'                                                 CGL154
+     C                   PARM      *BLANKS       PRtcd                                        CGL154
+     C                   PARM      '*KEYMNT '    POptn                                        CGL154
+     C                   PARM      WDHVA         WCLAC                                        CGL154
+     C     FatCDS        PARM      FatCDS        DSFDY                                        CGL154
+                                                                                              CGL154
+      ** If Default High Value A/C is live record                                             CGL154
+     C                   EVAL      DCDHVA = WDHVA                                             CGL154
+     C                   EVAL      DCDHVD = FCDESC                                            CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
      C                   ENDIF
  
      C                   ENDIF
@@ -384,6 +482,159 @@
      C                   WRITE     #MSGCTL
      C                   GOTO      ValDetailsE
      C                   ENDIF
+                                                                                              CGL154
+     C                   IF        CGL154 = 'Y'                                               CGL154
+                                                                                              CGL154
+      ** Default Medium Value A/C Validation                                                  CGL154
+     C                   IF        DCDMVA <> *BLANKS AND                                      CGL154
+     C                             Actn <> 'D'                                                CGL154
+                                                                                              CGL154
+     C                   EVAL      FatCDS = *BLANKS                                           CGL154
+     C                   CALL      'AOFATCR0'                                                 CGL154
+     C                   PARM      *BLANKS       PRtcd                                        CGL154
+     C                   PARM      '*KEYMNT '    POptn                                        CGL154
+     C                   PARM      DCDMVA        WCLAC                                        CGL154
+     C     FatCDS        PARM      FatCDS        DSFDY                                        CGL154
+                                                                                              CGL154
+     C                   IF        Prtcd = '*NRF' AND                                         CGL154
+     C                             FCCODE <> '?'                                              CGL154
+     C                   EVAL      FatCDS = *BLANKS                                           CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** If F3 is keypressed without selection clear DS                                       CGL154
+     C                   IF        FCCODE = '?'                                               CGL154
+     C                   EVAL      FatCDS = *BLANKS                                           CGL154
+     C                   EVAL      DCDMVD = FCDESC                                            CGL154
+     C                   EVAL      FCCODE = '?'                                               CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** If classification code found is live record                                          CGL154
+     C                   IF        FCRECI <> '*'                                              CGL154
+                                                                                              CGL154
+      ** If code from classification code file is not                                         CGL154
+      ** equal to blanks, move field to temp variable                                         CGL154
+     C                   IF        FCCODE <> *BLANKS                                          CGL154
+     C                   EVAL      WDMVA = FCCODE                                             CGL154
+     C                   EVAL      DCDMVD = FCDESC                                            CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** If value entered by user is not found on the FATCA                                   CGL154
+      ** classification code file then return an error                                        CGL154
+     C                   IF        PRtcd = '*NRF'                                             CGL154
+     C                   EVAL      *IN20 = *ON                                                CGL154
+     C                   EVAL      ValErr = 1                                                 CGL154
+     C                   MOVEL     'USS0173'     ZAMSID                                       CGL154
+     C                   MOVEL     DCDMVA        ZAMSDA                                       CGL154
+     C                   EXSR      ZASNMS                                                     CGL154
+     C                   WRITE     #MSGCTL                                                    CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** Else classification code found is non-live record                                    CGL154
+      ** return an error to screen                                                            CGL154
+     C                   ELSE                                                                 CGL154
+     C                   EVAL      *IN20 = *ON                                                CGL154
+     C                   EVAL      ValErr = 1                                                 CGL154
+     C                   MOVEL     'SDUSRMSG'    ZAMSGF                                       CGL154
+     C                   MOVEL     'USS0173'     ZAMSID                                       CGL154
+     C                   MOVEL     DCDMVA        ZAMSDA                                       CGL154
+     C                   EXSR      ZASNMS                                                     CGL154
+     C                   WRITE     #MSGCTL                                                    CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** If Default Medium Value is blanked out during                                        CGL154
+      ** insert and amend, blanked out also the description                                   CGL154
+      ** and temp variable                                                                    CGL154
+     C                   ELSE                                                                 CGL154
+     C                   IF        DCDMVA = *BLANKS AND                                       CGL154
+     C                             (Actn = 'I' OR Actn = 'A')                                 CGL154
+     C                   EVAL      WDMVA = *BLANKS                                            CGL154
+     C                   EVAL      DCDMVD = *BLANKS                                           CGL154
+     C                   ENDIF                                                                CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+     C                   IF        DCDMVA = '?' AND                                           CGL154
+     C                             Actn <> 'D'                                                CGL154
+     C                   EVAL      DCDMVA = FCCODE                                            CGL154
+     C                   EVAL      DCDMVD = FCDESC                                            CGL154
+     C                   EVAL      ValErr = 1                                               MD033948
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** Default High Value A/C Validation                                                    CGL154
+     C                   IF        DCDHVA <> *BLANKS AND                                      CGL154
+     C                             Actn <> 'D'                                                CGL154
+                                                                                              CGL154
+     C                   EVAL      FatCDS = *BLANKS                                           CGL154
+     C                   CALL      'AOFATCR0'                                                 CGL154
+     C                   PARM      *BLANKS       PRtcd                                        CGL154
+     C                   PARM      '*KEYMNT '    POptn                                        CGL154
+     C                   PARM      DCDHVA        WCLAC                                        CGL154
+     C     FatCDS        PARM      FatCDS        DSFDY                                        CGL154
+                                                                                              CGL154
+     C                   IF        Prtcd = '*NRF' AND                                         CGL154
+     C                             FCCODE <> '?'                                              CGL154
+     C                   EVAL      FatCDS = *BLANKS                                           CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** If F3 is keypressed without selection clear DS                                       CGL154
+     C                   IF        FCCODE = '?'                                               CGL154
+     C                   EVAL      FatCDS = *BLANKS                                           CGL154
+     C                   EVAL      DCDHVD = FCDESC                                            CGL154
+     C                   EVAL      FCCODE = '?'                                               CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** If Classification code found is live record                                          CGL154
+     C                   IF        FCRECI <> '*'                                              CGL154
+                                                                                              CGL154
+      ** If code from classification code file is not                                         CGL154
+      ** equal to blanks, move field to temp variable                                         CGL154
+     C                   IF        FCCODE <> *BLANKS                                          CGL154
+     C                   EVAL      WDHVA = FCCODE                                             CGL154
+     C                   EVAL      DCDHVD = FCDESC                                            CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** If value entered by user is not found on the FATCA                                   CGL154
+      ** classification code file then return an error                                        CGL154
+     C                   IF        PRtcd = '*NRF'                                             CGL154
+     C                   EVAL      *IN22 = *ON                                                CGL154
+     C                   EVAL      ValErr = 1                                                 CGL154
+     C                   MOVEL     'USS0173'     ZAMSID                                       CGL154
+     C                   MOVEL     DCDHVA        ZAMSDA                                       CGL154
+     C                   EXSR      ZASNMS                                                     CGL154
+     C                   WRITE     #MSGCTL                                                    CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** Else classification code found is non-live record                                    CGL154
+      ** return an error to screen                                                            CGL154
+     C                   ELSE                                                                 CGL154
+     C                   EVAL      *IN22 = *ON                                                CGL154
+     C                   EVAL      ValErr = 1                                                 CGL154
+     C                   MOVEL     'SDUSRMSG'    ZAMSGF                                       CGL154
+     C                   MOVEL     'USS0173'     ZAMSID                                       CGL154
+     C                   MOVEL     DCDHVA        ZAMSDA                                       CGL154
+     C                   EXSR      ZASNMS                                                     CGL154
+     C                   WRITE     #MSGCTL                                                    CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** If Default High Value is blanked out during                                          CGL154
+      ** insert and amend, blanked out also the description                                   CGL154
+      ** and temp variable                                                                    CGL154
+     C                   ELSE                                                                 CGL154
+     C                   IF        DCDHVA = *BLANKS AND                                       CGL154
+     C                             (Actn = 'I' OR Actn = 'A')                                 CGL154
+     C                   EVAL      WDHVA = *BLANKS                                            CGL154
+     C                   EVAL      DCDHVD = *BLANKS                                           CGL154
+     C                   ENDIF                                                                CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+     C                   IF        DCDHVA = '?' AND                                           CGL154
+     C                             Actn <> 'D'                                                CGL154
+     C                   EVAL      DCDHVA = FCCODE                                            CGL154
+     C                   EVAL      DCDHVD = FCDESC                                            CGL154
+     C                   EVAL      ValErr = 1                                               MD033948
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
      C     ValDetailsE   ENDSR
       /EJECT
       *****************************************************************
@@ -404,6 +655,24 @@
      C                   EVAL      FCLCTP = Actn
      C                   EVAL      FCLCDT = BJRDNB
      C                   EVAL      FCLCTS = %timestamp()
+                                                                                              CGL154
+     C                   IF        CGL154 = 'Y'                                               CGL154
+                                                                                              CGL154
+     C                   IF        WDMVA <> *BLANKS AND                                       CGL154
+     C                             WDMVA <> '?'                                               CGL154
+     C                   EVAL      FCDMVA = WDMVA                                             CGL154
+     C                   ELSE                                                                 CGL154
+     C                   EVAL      FCDMVA = DCDMVA                                            CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+     C                   IF        WDHVA <> *BLANKS AND                                       CGL154
+     C                             WDMVA <> '?'                                               CGL154
+     C                   EVAL      FCDHVA = WDHVA                                             CGL154
+     C                   ELSE                                                                 CGL154
+     C                   EVAL      FCDHVA = DCDHVA                                            CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+     C                   ENDIF                                                                CGL154
       **
      C                   IF        Actn = 'I' and ReUseCode = 'Y'
      C                   EVAL      Actn = 'A'

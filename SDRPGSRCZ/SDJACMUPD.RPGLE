@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CER069             Date 03Jul14               *
+      *  Last Amend No. MD036377           Date 30Oct15               *
+      *  Prev Amend No. MD033947           Date 28Apr15               *
+      *                 MD030151           Date 05Sep14               *
+      *                 CER070             Date 19Aug14               *
+      *                 CER069             Date 03Jul14               *
       *                 MD026854           Date 29May14               *
       *                 MD026790           Date 29May14               *
       *                 CGL132             Date 01May13               *
@@ -31,6 +34,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036377 - Database error upon F12 cancel                    *
+      *  MD033947 - Database Error occurred when amending US Indicia  *
+      *             details of Non-account Holder                     *
+      *  MD030151 - Exceptions with JACM Update - The customer is not *
+      *             exempt and flagged as joint account but there is  *
+      *             no joint account members defined                  *
+      *             Applied fix MD027576                              *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CER069 - German Tax Enhancement                              *
       *  MD026854 - Alternative country of citizenship is missing in  *
@@ -234,6 +244,11 @@
      D PLocn           S              3A                                                    BUG23732
      D KCtax           S              2A                                                    BUG23732
      D CER069          S              1A                                                      CER069
+     D PCommitCUSD     S              1A                                                    MD033947
+     D PCommitNAHL     S              1A                                                    MD033947
+      ** Override SDFTCSPD, SDFTNHPD                                                        MD027576
+     D CMDNH           S             50    DIM(1) CTDATA PERRCD(1)                          MD027576
+     D CMDCS           S             50    DIM(1) CTDATA PERRCD(1)                          MD027576
  
       *****************************************************************
       /EJECT
@@ -272,6 +287,8 @@
       *                                                                                     MD026790
      C                   CALL      'SD000715'                                               MD026790
      C                   PARM                    A_JANO                                     MD026790
+     C                   PARM      '0'           PCommitCUSD                                MD036377
+     C                   PARM      '0'           PCommitNAHL                                MD033947
       *                                                                                     BUG23732
      C                   IF        CER048 = 'Y' AND                                         BUG23732
      C                             A_CUST <> *BLANKS  AND                                   BUG23732
@@ -994,6 +1011,16 @@
       *****************************************************************
      C     *INZSR        BEGSR
  
+      * Override SDFTNHL0                                                                   MD027576
+     C                   Z-ADD     50            CMDLEN           15 5                      MD027576
+     C                   CALL      'QCMDEXC'                                                MD027576
+     C                   PARM                    CMDNH                                      MD027576
+     C                   PARM                    CMDLEN                                     MD027576
+      * Override SDFTCSL0                                                                   MD027576
+     C                   CALL      'QCMDEXC'                                                MD027576
+     C                   PARM                    CMDCS                                      MD027576
+     C                   PARM                    CMDLEN                                     MD027576
+                                                                                            MD027576
      C     *ENTRY        PLIST
  
       **********************
@@ -1185,3 +1212,7 @@
       *****************************************************************
 ** CPY@
 (c) Misys International Banking Systems Ltd. 2004
+** CMDNH                                                                                    MD027576
+OVRDBF FILE(SDFTNHL0) TOFILE(SDFTNHL0) SHARE(*NO)                                           MD027576
+** CMDCS                                                                                    MD027576
+OVRDBF FILE(SDFTCSL0) TOFILE(SDFTCSL0) SHARE(*NO)                                           MD027576

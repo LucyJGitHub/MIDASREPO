@@ -15,11 +15,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CER030  *CREATE    Date 09Jul08               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER030  *CREATE    Date 09Jul08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature                            *
       *                                                               *

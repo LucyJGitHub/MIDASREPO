@@ -16,7 +16,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2010            *
       *                                                               *
-      *  Last Amend No. MD039864           Date 02Aug16               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. MD039864           Date 02Aug16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *  Prev Amend No. BUG27473           Date 21Apr10               *
       *                 CGL114A            Date 12Mar10               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD039864 - Allow dummy entries not to be generated. If       *
       *             Posting Amount is zero, send warning message.     *
       *  BUG27473 - Error in retail account and transaction type      *

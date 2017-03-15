@@ -17,12 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD033924           Date 27Mar15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
       *                 CSW037             Date 15Dec04               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033924 - Cannot Insert Fiduciary Fixed-Term Placing        *
+      *             and Call Placing                                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
@@ -161,19 +164,20 @@
  
       ** Validate Customer
  
-     C                   SELECT
-     C                   WHEN      PDType = 'FL'
-     C                   MOVE      'FT'          PDealType
-     C                   WHEN      PDType = 'DP'
-     C                   MOVE      'DT'          PDealType
-     C                   WHEN      PDType = 'LP'
-     C                   MOVE      'LT'          PDealType
-     C                   ENDSL
+     C**********         SELECT                                                             MD033924
+     C**********         WHEN      PDType = 'FL'                                            MD033924
+     C**********         MOVE      'FT'          PDealType                                  MD033924
+     C**********         WHEN      PDType = 'DP'                                            MD033924
+     C**********         MOVE      'DT'          PDealType                                  MD033924
+     C**********         WHEN      PDType = 'LP'                                            MD033924
+     C**********         MOVE      'LT'          PDealType                                  MD033924
+     C**********         ENDSL                                                              MD033924
  
      C                   MOVE      BBCUST        PCustNo
  
      C                   CALLB     'MMVCUSTFID'
-     C                   PARM                    PDealType
+     C**********         PARM                    PDealType                                  MD033924
+     C                   PARM      PDType        PDealType                                  MD033924
      C                   PARM                    PCustNo
      C                   PARM                    SDCUST
      C                   PARM                    PReturnCode

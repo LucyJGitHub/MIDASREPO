@@ -14,14 +14,20 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD027682           Date 28Aug14               *
-      *  Prev Amend No. MD027669           Date 01Jul14               *
+      *  Last Amend No. MD039670           Date 26Jul16               *
+      *  Prev Amend No. MD034067           Date 13Jul15               *
+      *                 MD027682           Date 28Aug14               *
+      *                 MD027669           Date 01Jul14               *
       *                 MD027498           Date 20Jun14               *
       *                 MD027315           Date 06Jun14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039670 - FATCA Housekeeping program                        *
+      *  MD034067 - Customer with joint account indicia is wrongly    *
+      *             classified by the US indicia tool as without US   *
+      *             indicia (Apply Fix MD027669)                      *
       *  MD027682 - Reporting Type is not Reflected During Information*
       *             and Update Mode in USIT                           *
       *  MD027669 - Joint Account Principal Wrongly classified        *
@@ -140,6 +146,9 @@
  
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      ** External data structure for Non-Account                                        MD039670
+     D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                            MD039670
+                                                                                        MD039670
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -175,6 +184,9 @@
      D WTFCD1          S              5A
      D WTFCD2          S              5A
      D Wupdat          S              1A                                                    MD027315
+     D PRTCD           S              7                                                     MD039670
+     D POPTN           S              7                                                     MD039670
+     D PKEY1           S             10                                                     MD039670
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -278,7 +290,8 @@
      C                   PARM                    PClasIF
      C                   PARM                    PClasNF
      C                   PARM      ' '           PRepType
-     C                   PARM                    PMode
+     C**********         PARM                    PMode                                      MD024755
+     C                   PARM      'M'           PMode                                      MD024755
  
       ** Identify all Classification Code changes for                                       MD027669
       ** Classification Run                                                                 MD027669
@@ -359,6 +372,22 @@
      C     KClassKey     READE     SDFTNHL3
  
      C                   DOW       NOT %EOF(SDFTNHL3)
+                                                                                            MD039670
+     C                   EVAL      PKEY1 = FNNAHO                                           MD039670
+     C                   IF        PKEY1 <> *BLANKS                                         MD039670
+     C                   CALL      'AONAHOR0'                                               MD039670
+     C                   PARM      *Blanks       PRTCD                                      MD039670
+     C                   PARM      '*KEY   '     POPTN                                      MD039670
+     C                   PARM                    PKEY1                                      MD039670
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+                                                                                            MD039670
+     C                   IF        PRTCD = '*NRF'                                           MD039670
+     C                             OR NHCHTP = 'D'                                          MD039670
+     C                   READ      SDFTNHL3                                                 MD039670
+     C                   ITER                                                               MD039670
+     C                   ENDIF                                                              MD039670
+     C                   ENDIF                                                              MD039670
+                                                                                            MD039670
  
      C**********         IF        DPFCD1 <> *BLANKS                                        MD027498
      C                   EVAL      PClasIF = DPFCD1
@@ -479,6 +508,7 @@
  
      C     SrValInput    BEGSR
  
+     C     *LOVAL        SETLL     SDFCLSL0                                                 
       ** Loop though the Prompt input
      C                   DOU       %EOF(SDFCLSL0)
  

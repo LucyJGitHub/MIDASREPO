@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD026518 *CREATE   Date 30Apr14               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. MD026518 *CREATE   Date 30Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD026518 - Incorrect drop down selection in US indicia       *
       *                                                               *
       *****************************************************************

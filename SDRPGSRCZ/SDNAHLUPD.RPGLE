@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. MD029836           Date 22Aug14               *
-      *  Prev Amend No. MD027473           Date 11Jun14               *
+      *  Last Amend No. MD033947           Date 28Apr15               *
+      *  Prev Amend No. MD029836           Date 22Aug14               *
+      *                 MD027473           Date 11Jun14               *
       *                 MD027115           Date 22May14               *
       *                 MD026752           Date 19May14               *
       *                 CGL132             Date 01May13               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033947 - Database Error occurred when amending US Indicia  *
+      *             details of Non-account Holder                     *
       *  MD029836 - OCBC FATCA - US Indicia Comments History          *
       *           - Apply fix MD027525                                *
       *  MD027473 - Unable to Override US Account Authority Holder    *
@@ -365,6 +368,8 @@
      D WWHVAC          S              1A                                                      CGL132
      D WTime           S               T                                                      CGL132
      D WWTIME          S              6A                                                      CGL132
+     D PCommitCUSD     S              1A                                                    MD033947
+     D PCommitNAHL     S              1A                                                    MD033947
                                                                                               CSW207
       ** SWIFT 2007 feature                                                                   CSW207
                                                                                               CSW207
@@ -900,6 +905,10 @@ als  C                   PARM                    @In36
      C                   EVAL      FNRPTR = A_FVRPTR                                          CGL132
      C                   EVAL      FNRPTD = A_FVRPTD                                          CGL132
      C                   EVAL      FNRPTM = A_FVRPTM                                          CGL132
+     C                   IF        FNRPTM = '******'                                        MD033947
+     C                   MOVE      TimeStamp     WTime                                      MD033947
+     C     *HMS0         MOVE      WTime         FNRPTM                                     MD033947
+     C                   ENDIF                                                              MD033947
      C                   EVAL      FNRPTU = A_FVRPTU                                          CGL132
      C                   EVAL      FNHVAC = A_FVHVAC                                          CGL132
      C                   EVAL      FNINFC = A_FVINFC                                          CGL132
@@ -1522,6 +1531,10 @@ als  C                   PARM                    @In36
      C                   EVAL      FNRPTR = A_FVRPTR                                          CGL132
      C                   EVAL      FNRPTD = A_FVRPTD                                          CGL132
      C                   EVAL      FNRPTM = A_FVRPTM                                          CGL132
+     C                   IF        FNRPTM = '******'                                        MD033947
+     C                   MOVE      TimeStamp     WTime                                      MD033947
+     C     *HMS0         MOVE      WTime         FNRPTM                                     MD033947
+     C                   ENDIF                                                              MD033947
      C                   EVAL      FNRPTU = A_FVRPTU                                          CGL132
      C                   EVAL      FNHVAC = A_FVHVAC                                          CGL132
      C                   EVAL      FNINFC = A_FVINFC                                          CGL132
@@ -1563,6 +1576,8 @@ als  C                   PARM                    @In36
      C                   DOW       NOT %EOF(SDJACCL7)                                       MD027115
      C                   CALL      'SD000715'                                               MD027115
      C                   PARM                    JCJANO                                     MD027115
+     C                   PARM      '0'           PCommitCUSD                                MD033947
+     C                   PARM      '1'           PCommitNAHL                                MD033947
                                                                                             MD027115
      C     NHNAHO        READE     SDJACCL7                                                 MD027115
      C                   ENDDO                                                              MD027115

@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD026599           Date 28May14               *
-      *  Prev Amend No. MD026848           Date 12May14               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. MD026599           Date 28May14               *
+      *                 MD026848           Date 12May14               *
       *                 CSD092   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD026599 - FATCA information complete flag is missing in     *
       *             history of customer information (Recompile)       *
       *  MD026848 - History of cust information is not updated when   *

@@ -19,12 +19,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CAP207             Date 10Feb11               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. CAP207             Date 10Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CSC024             Date 07Feb05               *
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  CAP207 - Account Balance Check extended to other APIs        *
       *           (Recompile)                                         *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

@@ -14,10 +14,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CGL132  *CREATE    Date 01May13               *
+      *  Last Amend No. MD033502           Date 04Mar15               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 MD024613           Date 30Jan14               *
+      *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033502 - Component is in infinite loop                     *
+      *  CGL154 - FATCA Reporting                                     *
       *  MD024613 - Fields for ICY and COB Reports for FATCA          *
       *             Classification Codes are inconsistent with FDS    *
       *             (Recompile)                                       *
@@ -130,6 +135,9 @@
      D SDFATC        E DS                  EXTNAME(SDFATCPD)
       ** FATCA Classification Codes Container for Access Program
  
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL154
+      ** External DS for SAR Details                                                          CGL154
+                                                                                              CGL154
      D  @JOB                 244    253
      D  @USER                254    263
      D                 DS
@@ -192,11 +200,16 @@
      D POPTN           S              7
      D PDCCD           S              2
      D PCTRY           S              2
+     D PSard           S              6                                                       CGL154
+     D CGL154          S              1                                                       CGL154
  
       * ZDATE1  parms
      D ZDATEA          S              6  0
      D ZDATFMT         S              1
      D ErrorFlag       S              1
+     D WCLAC           S              5                                                       CGL154
+     D WDMVA           S              5                                                       CGL154
+     D WDHVA           S              5                                                       CGL154
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -346,6 +359,52 @@
      C                   EVAL      RDCODE = FCCODE
      C                   EVAL      RDDESC = FCDESC
      C                   EVAL      RDUSIA = FCUSIA
+                                                                                              CGL154
+     C                   EVAL      *IN60 = *OFF                                               CGL154
+                                                                                              CGL154
+     C                   IF        CGL154 = 'Y'                                               CGL154
+     C                   EVAL      *IN60 = *ON                                                CGL154
+     C                   EVAL      WDMVA = FCDMVA                                             CGL154
+     C                   EVAL      WDHVA = FCDHVA                                             CGL154
+     C                   EVAL      RDDMVA = *BLANKS                                           CGL154
+     C                   EVAL      RDDMDS = *BLANKS                                           CGL154
+     C                   EVAL      RDDHVA = *BLANKS                                           CGL154
+     C                   EVAL      RDDHDS = *BLANKS                                           CGL154
+                                                                                              CGL154
+      ** Default Medium Value A/C details retrieval                                           CGL154
+     C                   IF        WDMVA <> *BLANKS                                           CGL154
+     C                   CALL      'AOFATCR0'                                                 CGL154
+     C                   PARM      *BLANKS       PRtcd                                        CGL154
+     C                   PARM      '*KEY   '     POptn                                        CGL154
+     C                   PARM      WDMVA         WCLAC                                        CGL154
+     C     SDFATC        PARM      SDFATC        DSFDY                                        CGL154
+                                                                                              CGL154
+      ** Set Default Medium Value A/C Value and Description                                   CGL154
+                                                                                              CGL154
+     C                   EVAL      RDDMVA = WDMVA                                             CGL154
+     C                   EVAL      RDDMDS = FCDESC                                            CGL154
+                                                                                              CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** Default High Value A/C details retrieval                                             CGL154
+     C                   IF        WDHVA <> *BLANKS                                           CGL154
+     C                   CALL      'AOFATCR0'                                                 CGL154
+     C                   PARM      *BLANKS       PRtcd                                        CGL154
+     C                   PARM      '*KEY   '     POptn                                        CGL154
+     C                   PARM      WDHVA         WCLAC                                        CGL154
+     C     SDFATC        PARM      SDFATC        DSFDY                                        CGL154
+                                                                                              CGL154
+      ** Set Default High Value A/C Value and Description                                     CGL154
+                                                                                              CGL154
+     C                   EVAL      RDDHVA = WDHVA                                             CGL154
+     C                   EVAL      RDDHDS = FCDESC                                            CGL154
+                                                                                              CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+      ** Reposition file                                                                    MD033502
+     C     RDCODE        CHAIN     SDFATCL0                                                 MD033502
+                                                                                            MD033502
+     C                   ENDIF                                                                CGL154
       *
      C*                  MOVE      FCLCTS        WWTMST
      C*                  EVAL      WWYr = %SUBST(WWTMST:03:2)
@@ -483,6 +542,28 @@
      C                   Z-ADD     0             WCALCI
      C                   Z-ADD     0             WCALCD
      C                   Z-ADD     0             WCALCA
+                                                                                              CGL154
+      ** Check if CGL154 - FATCA Reporting is ON                                              CGL154
+                                                                                              CGL154
+     C                   EVAL      CGL154 = 'N'                                               CGL154
+                                                                                              CGL154
+     C                   CALL      'AOSARDR0'                                                 CGL154
+     C                   PARM      *Blanks       PRtcd                                        CGL154
+     C                   PARM      '*VERIFY'     POptn                                        CGL154
+     C                   PARM      'CGL154'      PSard                                        CGL154
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL154
+                                                                                              CGL154
+     C                   IF        (PRtcd <> *BLANKS) AND                                     CGL154
+     C                             (PRtcd <> '*NRF   ')                                       CGL154
+     C                   EVAL      DBKEY = 'CGL154'                                           CGL154
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL154
+     C                   MOVEL     '901'         DBASE                                        CGL154
+     C                   EXSR      *PSSR                                                      CGL154
+     C                   ELSE                                                                 CGL154
+     C                   IF        PRtcd <> '*NRF   '                                         CGL154
+     C                   EVAL      CGL154 = 'Y'                                               CGL154
+     C                   ENDIF                                                                CGL154
+     C                   ENDIF                                                                CGL154
  
      C     IEND          ENDSR
  

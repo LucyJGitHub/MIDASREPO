@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD027573A          Date 24Sep14               *
-      *  Prev Amend No. MD027573           Date 04Aug14               *
+      *  Last Amend No. MD025689           Date 03Apr14               *
+      *  Prev Amend No. MD027573A          Date 24Sep14               *
+      *                 MD027573           Date 04Aug14               *
       *                 MD027575           Date 07Aug14               *
       *                 MD027572           Date 06Aug14               *
       *                 MD026207           Date 07Apr14               *
@@ -21,6 +22,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD025689 - "Next schedule date does not match with account   *
+      *             review frequency date" should be removed because  *
+      *             it is not mentioned in FDS                        *
       *  MD027573A - Next schedule date must not be lower than        *
       *              rundate                                          *
       *  MD027573 - Next schedule date must not be lower than         *
@@ -323,9 +327,9 @@
      C                   ENDIF
  
      C                   IF        DDNSDF <> WDATE
-     C                   EVAL      WIx = WIx + 1
-     C                   EVAL      WFldNmXAr(WIx) = 'ARNSDT    '
-     C                   EVAL      WMsgIdXAr(WIx) = 'USS0194'
+     C**********         EVAL      WIx = WIx + 1                        MD025689
+     C**********         EVAL      WFldNmXAr(WIx) = 'ARNSDT    '        MD025689
+     C**********         EVAL      WMsgIdXAr(WIx) = 'USS0194'           MD025689
      C                   ELSE
      C                   MOVE      ZDATE         DDNSDF
      C                   ENDIF

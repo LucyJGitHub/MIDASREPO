@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. AR1000542 *CREATE  Date 26Apr16               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. AR1000542 *CREATE  Date 26Apr16               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  AR1000542 - Online Printing of Retail Advices not printed    *
       *              for Account Transfers. Created RE000889 to       *
       *              handle printing of account transfer retail       *

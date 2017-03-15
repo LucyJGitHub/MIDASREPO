@@ -18,10 +18,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14211D          Date 19Sep07               *
-      *  Prev Amend No. BUG14838           Date 15Sep07               *
+      *  Prev Amend No. BUG14211D          Date 19Sep07               *
+      *                 BUG14838           Date 15Sep07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
       *  BUG14211D - Component GLC30 failed                           *
       *  BUG14838 - REC004210 Failed when CRT001 or CRT002 is OFF     *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

@@ -14,8 +14,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. MD029805           Date 05Sep14               *
-      *  Prev Amend No. MD029849           Date 12Sep14               *
+      *  Last Amend No. MD043147           Date 03Jan17               *
+      *  Prev Amend No. MD036509           Date 12Nov15               *
+      *                 MD036460           Date 05Nov15               *
+      *                 MD033967           Date 01Apr15               *
+      *                 MD029805           Date 05Sep14               *
+      *                 MD029849           Date 12Sep14               *
       *                 MD027453           Date 27Aug14               *
       *                 MD027324           Date 05Aug14               *
       *                 MD027561           Date 03Jul14               *
@@ -45,6 +49,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043147 - US account authority holder indicia is not        *
+      *             updated from insert like other US Indicia         *
+      *             system values                                     *
+      *  MD036509 - NAHO CRS Info Complete is validating on Enquire   *
+      *  MD036460 - FATCA US Indicia update enhancements              *
+      *  MD033967 - Exception 3 breached even when TIN is supplied    *
+      *             in NAHO                                           *
       *  MD029805 - GIIN number validation                            *
       *  MD029849 - Issues on NAHL/NAHE with FATCA                    *
       *  MD027453 - FATCA classification Description is not updated   *
@@ -286,6 +297,7 @@
      D @EINKH          S              1
      D @EINKX          S              1                                                       CSD093
      D @INKC           S              1
+     D @INKF           S              1                                                       CGL157
      D @INKG           S              1
      D @INKH           S              1
      D @INKL           S              1
@@ -319,6 +331,7 @@
  
      D CGL132          S              1                                                       CGL132
      D CGL133          S              1                                                       CGL132
+     D CGL157          S              1                                                       CGL157
      D Idx             S              3  0
      D WIdx_Kval       S              3  0
      D WIdx_Pval       S              3  0
@@ -341,6 +354,13 @@
      D PINAHO          S             10A                                                      CSD093
      D PINTYP          S              1A                                                      CSD093
      D WFATCABRW       S              1A                                                    MD027324
+     D PSelect         S              1A                                                      CGL157
+     D WVAL            S              1A                                                      CGL157
+     D WOption         S              1A                                                      CGL157
+     D PCountry        S              2A                                                      CGL157
+     D PCRSDT          S            351A                                                      CGL157
+     D PWarning        S              1A                                                      CGL157
+     D PAINSF          S              1A                                                    MD036460
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -2201,6 +2221,9 @@
                                                                                               CGL132
      C     VAL@G         BEGSR                                                                CGL132
                                                                                               CGL132
+      ** If Amend / Insert                                                                  MD036509
+     C                   IF        DDACTN = 'A' OR DDACTN = 'I'                             MD036509
+                                                                                            MD036509
      C                   Z-ADD     *ZERO         Idx                                          CGL132
      C                   MOVE      *ALL'Y'       OkFATCAdet                                   CGL132
                                                                                               CGL132
@@ -2209,6 +2232,11 @@
      C                   Z-ADD     *ZERO         WIdx_GVAL                                    CGL132
      C                   EVAL      FVNAHO = DDNAHL                                            CGL132
      C                   EVAL      FVLCTP = DDACTI                                            CGL132
+     C                   EVAL      FVUTIN = DDUTIN                                          MD033967
+     C                   EVAL      PAINSF = DDACTN                                          MD036460
+     C                   IF        DDACTN = 'I'                                             MD043147
+     C                   EVAL      PAINSF = 'Y'                                             MD043147
+     C                   ENDIF                                                              MD043147
                                                                                               CGL132
      C                   CALLB     'SDFTNH5VL'                                                CGL132
                                                                                               CGL132
@@ -2224,6 +2252,7 @@
      C                   PARM                    NwNaFilFmt                                   CGL132
      C                   PARM      DDCRDT        P_CRDT            8                        MD026550
      C                   PARM                    WCLAFlag          1                        MD027561
+     C                   PARM                    PAINSF                                     MD036460
                                                                                               CGL132
       ** OUTPUTS :                                                                            CGL132
       ** FATCA Customer Details OK inds                                                       CGL132
@@ -2473,6 +2502,8 @@
      C                   GOTO      EndVAL@G                                                   CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
+     C                   ENDIF                                                              MD036509
+                                                                                            MD036509
      C     DDACTN        IFEQ      'E'                                                        CGL132
      C                   MOVE      'A'           @SCRN                                        CGL132
      C                   GOTO      EndVAL@G                                                   CGL132

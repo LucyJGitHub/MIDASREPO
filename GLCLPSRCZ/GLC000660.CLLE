@@ -1,0 +1,144 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Extract Program for Reporting')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000660 - Midas GL Extract Program for Reporting          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. MD043066           Date 12Dec16              */
+/*       Prev Amend No. CGL154  *CREATE    Date 13Oct14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD043066 - FATCA Payment amount reflected is incorrect for  */
+/*                  an account holder with exception included in the */
+/*                  Draft-New Report                                 */
+/*       CGL154 - FATCA Reporting                                    */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&PYEAR)
+ 
+             DCL        VAR(&RTCDE)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PYEAR)    TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DALIB) TYPE(*CHAR) LEN(7) VALUE('  DALIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7) VALUE('  DVLIB')
+ 
+             DCL        VAR(&GLCAPAPD) TYPE(*CHAR) LEN(10) VALUE('GLCAPAPD  ')
+             DCL        VAR(&GLCSBAPD) TYPE(*CHAR) LEN(10) VALUE('GLCSBAPD  ')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2015')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    JOB(&JOBID)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DALIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DVLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&GLCAPAPD 9 2)) VALUE(&PYEAR)
+             CHGVAR     VAR(%SUBSTRING(&GLCSBAPD 9 2)) VALUE(&PYEAR)
+ 
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAPD)
+             MONMSG     MSGID(CPF0000)
+ 
+/*********   CLRPFM     FILE(GLRMEXPD)*/                                                /*MD043066*/
+             CLRPFM     FILE(QTEMP/GLRMEXPD) /*MD043066*/
+ 
+             IF         COND(&PYEAR *NE '  ') THEN(DO)
+ 
+                CHKOBJ     OBJ(&DALIB/&GLCAPAPD) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NORMAL))
+ 
+                CPYF       FROMFILE(&DALIB/&GLCAPAPD) TOFILE(QTEMP/GLCAPAPD) +
+                             TOMBR(GLCAPAPD) CRTFILE(*YES) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+                CPYF       FROMFILE(&DALIB/&GLCSBAPD) TOFILE(QTEMP/GLCSBAPD) +
+                             TOMBR(GLCSBAPD) CRTFILE(*YES) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+                CRTDUPOBJ  OBJ(GLCAPAL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                             TOLIB(QTEMP) NEWOBJ(&JOBID)
+                MONMSG     MSGID(CPF2130 CPD2104)
+ 
+                MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+                MONMSG     MSGID(CPF2135)
+ 
+                CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                             NEWOBJ(GLCAPAL0)
+                MONMSG     MSGID(CPF2130 CPD2104)
+ 
+                DLTF       FILE(&DMLIB/&JOBID)
+ 
+                CRTDUPOBJ  OBJ(GLCSBAL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                             TOLIB(QTEMP) NEWOBJ(&JOBID)
+                MONMSG     MSGID(CPF2130 CPD2104)
+ 
+                MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+                MONMSG     MSGID(CPF2135)
+ 
+                CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                             NEWOBJ(GLCSBAL0)
+                MONMSG     MSGID(CPF2130 CPD2104)
+ 
+                DLTF       FILE(&DMLIB/&JOBID)
+ 
+                OVRDBF     FILE(GLCAPAL0) TOFILE(QTEMP/GLCAPAL0)
+                OVRDBF     FILE(GLCSBAL0) TOFILE(QTEMP/GLCSBAL0)
+             ENDDO
+ 
+             CALL       PGM(GL000660) PARM(&RTCDE)
+ 
+             IF         COND(&RTCDE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             SNDMSG     MSG('Midas GL Extract Program for Reporting +
+                          has terminated abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             DMPCLPGM
+ 
+ 
+ENDPGM:
+ 
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

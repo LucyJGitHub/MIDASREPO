@@ -10,10 +10,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CGL132   *CREATE   Date 01May13               *
+      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Prev Amend No. CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL154 - FATCA Phase 2 - FATCA Reporting                     *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
       *                                                               *
@@ -190,10 +192,37 @@
      C     *IN90         CABEQ     '1'           T@SKIP                   LR
      C                   ENDIF
  
+      ** Caller requests record indicated by key :                                            CGL154
+                                                                                              CGL154
+     C                   IF        P@Optn = '*KEYMNT'                                         CGL154
+                                                                                              CGL154
+     C                   IF        %TRIM(P@CLAS) = '?'                                        CGL154
+                                                                                              CGL154
+     C                   EVAL      ClsCode = P@CLAS                                           CGL154
+     C                   CALL      'SD000203'                           98                    CGL154
+     C                   PARM      '*SELECT'     P@Mode                                       CGL154
+     C                   PARM                    ReturnDS                                     CGL154
+                                                                                              CGL154
+     C                   EVAL      P@CLAS = ClsCode                                           CGL154
+     C                   EVAL      FCCODE = ClsCode                                           CGL154
+     C                   EVAL      FCDESC = ClsDesc                                           CGL154
+     C                   IF        RetCode <> *BLANKS                                         CGL154
+     C                   EVAL      *IN97 = *ON                                                CGL154
+     C                   ENDIF                                                                CGL154
+     C     *IN97         CABEQ     '1'           T@SKIP                                       CGL154
+     C     *IN98         CABEQ     '1'           T@SKIP                   LR                  CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+     C     P@CLAS        CHAIN     SDFATCD0                           9590                    CGL154
+     C     *IN95         CABEQ     '1'           T@SKIP                                       CGL154
+     C     *IN90         CABEQ     '1'           T@SKIP                   LR                  CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
      C                   IF        P@Optn <> '*KEY   ' AND
      C                             P@Optn <> '*NEXT  ' AND
      C                             P@Optn <> '*PREV  ' AND
      C                             P@Optn <> '*VERIFY' AND
+     C                             P@Optn <> '*KEYMNT' AND                                    CGL154
      C                             P@Optn <> '*FREE  '
      C                   EVAL      *IN96 = *ON
      C                   ENDIF

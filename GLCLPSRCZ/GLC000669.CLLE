@@ -1,0 +1,68 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Build XML Data')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000669 - Midas GL Build XML Data                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. CGL154  *CREATE    Date 13Oct14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL154 - FATCA Reporting                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MSID &RTCDE)
+
+             DCL        VAR(&MSID)   TYPE(*CHAR) LEN(21)
+             DCL        VAR(&NAME)   TYPE(*CHAR) LEN(9)
+             DCL        VAR(&NAME2)   TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&RTCDE)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&JOBNM) TYPE(*CHAR) LEN(10) +
+                          VALUE('FATCA_OECD')
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID)    TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2015')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&OWNER) VALUE(&SYSID *CAT 'OWNER')
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(&NAME) VALUE(%SUBSTRING(&MSID 12 9))
+             CHGVAR     VAR(%SUBSTRING(&NAME 4 1)) VALUE('0')
+             CHGVAR     VAR(&NAME2) VALUE('F' *CAT &NAME)
+
+             CPYF       FROMFILE(QTEMP/GLRMDTPD) TOFILE(&DPLIB/&NAME2) +
+                          CRTFILE(*YES) TOMBR(GLRMDTPD) MBROPT(*REPLACE)
+
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             SBMJOB     CMD(CALL PGM(GLC000671) PARM(&MSID)) +
+                          JOB(&JOBNM) JOBD(MBATCH) USER(&OWNER)
+
+/* Normal ending: */
+/*================*/
+
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+
+/* Abnormal ending: */
+/*==================*/
+
+ABNOR:
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+
+
+ENDPGM:
+             ENDPGM

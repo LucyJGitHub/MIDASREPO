@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD042407           Date 08Nov16               *
-      *  Prev Amend No. MD038401B          Date 05Oct16               *
+      *  Last Amend No. MD043029           Date 05Dec16               *
+      *  Prev Amend No. MD042407           Date 08Nov16               *
+      *                 MD038401B          Date 05Oct16               *
       *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
       *                 MD030958           Date 17Jul15               *
@@ -130,6 +131,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043029 - Serious Midas Error encountered during            *
+      *             authorisation of CUSD amend                       *
       *  MD042407 - Creation Date field is missing when CGL132 is     *
       *             switched off ; reversed MD030958 fix              *
       *  MD038401B - Corrected parameters when calling SDCUSDRTV.     *
@@ -1199,6 +1202,8 @@
      D***WKUSER*       S             10A                                           MD026835 MD027492
      D WLUSER          S             10A                                                   MD026835A
      D CTI006          S              1A                                                    MD030956
+     D PCommitCUSD     S              1A                                                    MD043029
+     D PCommitNAHL     S              1A                                                    MD043029
 
       /EJECT
      C*****************************************************************
@@ -4627,6 +4632,8 @@
                                                                                             MD027115
      C                   CALL      'SD000715'                                               MD027115
      C                   PARM                    JCJANO                                     MD027115
+     C                   PARM      '1'           PCommitCUSD                                MD043029
+     C                   PARM      '0'           PCommitNAHL                                MD043029
                                                                                             MD027115
      C     BBCUST        READE     SDJACCL4                                                 MD027115
      C                   ENDDO                                                              MD027115

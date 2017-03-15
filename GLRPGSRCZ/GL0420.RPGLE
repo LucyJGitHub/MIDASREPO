@@ -14,8 +14,9 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD037536           Date 26Apr16               *
-      *  Prev Amend No. MD033999           Date 29Jun15               *
+      *  Last Amend No. CGL184             Date 07Dec16               *
+      *  Prev Amend No. MD037536           Date 26Apr16               *
+      *                 MD033999           Date 29Jun15               *
       *                 AR1014455          Date 23Jan14               *
       *                 MD020563           Date 21May13               *
       *                 AR1097176          Date 22Mar13               *
@@ -155,6 +156,7 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  CGL184 - New Frequencies for Account Statements              *
       *  MD037536 - GLC43 components failed with �Record in file      *
       *             GL0420P4 truncated at end of line�.               *
       *             Review GL0420P4 definition and make it            *
@@ -1788,6 +1790,21 @@
      C                   ELSE                                                                 248797
      C                   MOVE      'N'           CSD007                                       248797
      C                   ENDIF                                                                248797
+      *                                                                                       CGL184
+      ** Check if CGL184 is switched ON                                                       CGL184
+      *                                                                                       CGL184
+     C                   CALL      'AOSARDR0'                                                 CGL184
+     C                   PARM      *BLANKS       PRTCD                                        CGL184
+     C                   PARM      '*VERIFY'     POPTN                                        CGL184
+     C                   PARM      'CGL184'      PSARD                                        CGL184
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL184
+      *                                                                                       CGL184
+     C     PRTCD         IFEQ      *BLANKS                                                    CGL184
+     C                   MOVE      'Y'           CGL184            1                          CGL184
+     C                   ELSE                                                                 CGL184
+     C                   MOVE      'N'           CGL184                                       CGL184
+     C                   ENDIF                                                                CGL184
+      *                                                                                       CGL184
      C/COPY WNCPYSRC,GL0420CP18                                           S01408
      C*                                                                   S01408
 0428 C/EJECT
@@ -3684,6 +3701,9 @@
      C   68              GOTO      FRCHK
      C     STFQ          COMP      'D'                                    68
      C/COPY WNCPYSRC,GL0420CX33
+     C     CGL184        IFEQ      'Y'                                                        CGL184
+     C  N68STFQ          COMP      'K'                                    68                  CGL184
+     C                   ENDIF                                                                CGL184
      C***68******          Z-ADDDNWD      NSTDA                           S01194
      C   68              Z-ADD     BJDNWD        NSTDA                                        S01194
      C   68              GOTO      FRCHK
@@ -3715,6 +3735,14 @@
      CANN85STFQ          COMP      'X'                                    85                  E43356
      C  N68
      CANN85STFQ          COMP      'Y'                                    85                  E43356
+     C     CGL184        IFEQ      'Y'                                                        CGL184
+     C  N68                                                                                   CGL184
+     CANN85STFQ          COMP      'G'                                    85                  CGL184
+     C  N68                                                                                   CGL184
+     CANN85STFQ          COMP      'H'                                    85                  CGL184
+     C  N68                                                                                   CGL184
+     CANN85STFQ          COMP      'O'                                    85                  CGL184
+     C                   ENDIF                                                                CGL184
      C  N68
      C/COPY WNCPYSRC,GLH00808
      CAN 85              Z-ADD     STDY          ZMDAY                    85                  E43356

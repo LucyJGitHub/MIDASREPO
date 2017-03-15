@@ -11,17 +11,19 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR702741           Date 02Feb11               *
+      *  Last Amend No. CGL184             Date 07Dec16               *
+      *  Prev Amend No. AR702741           Date 02Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. 180721  *CREATE    Date 03May00               *
+      *                 180721  *CREATE    Date 03May00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL184 - New Frequencies for Account Statements              *
       *  AR702741 - Include location as parameter in ZFREQB to        *
       *             determine the next settlement date                *
       *             (Child: AR702742)                                 *
@@ -162,6 +164,10 @@
      C     DDNStD        Ifeq      *Blanks
  
      C     DDStFq        Ifeq      'D'
+     C     CGL184        Andeq     'N'                                                        CGL184
+     C     DDStFq        Orne      'D'                                                        CGL184
+     C     DDStFq        Andne     'K'                                                        CGL184
+     C     CGL184        Andeq     'Y'
      C                   Movel     DDNSDN        ZMDAY
      C                   Else
      C                   Z-add     *zeros        ZMDAY
@@ -216,6 +222,7 @@
       ** ICD
      C                   Parm                    SDBANK
      C                   Parm                    SDGELR
+     C                   Parm                    CGL184            1                          CGL184
       *
       ** OUTPUTS
       *

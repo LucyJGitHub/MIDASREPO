@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL154             Date 13Oct14               *
-      *  Prev Amend No. 256758             Date 21Jun16               *
+      *  Last Amend No. CGL184             Date 07Dec16               *      
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 256758             Date 21Jun16               *
       *                 MD038510           Date 20Jun16               *
       *                 MD035554           Date 25May16               *
       *                 MD037046           Date 12Feb16               *
@@ -179,6 +180,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL184 - New Frequencies for Account Statements              *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  256758 - Bit 0 of PRIN should not be checked when updating   *
       *           Last Activity Date. Applied fix 232450.             *
@@ -2671,6 +2673,21 @@
      C                   MOVE      'N'           CGL048
      C                   ENDIF
 
+      *                                                                                       CGL184
+      ** Check if CGL184 is switched ON                                                       CGL184
+      *                                                                                       CGL184
+     C                   CALL      'AOSARDR0'                                                 CGL184
+     C                   PARM      *BLANKS       @RTCD                                        CGL184
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL184
+     C                   PARM      'CGL184'      @SARD                                        CGL184
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL184
+      *                                                                                       CGL184
+     C     @RTCD         IFEQ      *BLANKS                                                    CGL184
+     C                   MOVE      'Y'           CGL184            1                          CGL184
+     C                   ELSE                                                                 CGL184
+     C                   MOVE      'N'           CGL184                                       CGL184
+     C                   ENDIF                                                                CGL184
+      *                                                                                       CGL184
      C/COPY WNCPYSRC,GLH00528
 
       ** Is rund last working day of month? 48 on if yes.
@@ -3517,6 +3534,9 @@
       ** Check for and increment for code D-Daily-working day.
 
      C     ZFREQ         COMP      'D'                                    91
+     C     CGL184        IFEQ      'Y'                                                        CGL184
+     C  N91ZFREQ         COMP      'K'                                    91                  CGL184
+     C                   ENDIF                                                                CGL184
      C/COPY WNCPYSRC,GL0600C004
      C     *IN91         IFEQ      '1'
      C                   Z-ADD     1             ZNRDYS
@@ -3557,6 +3577,9 @@
       ** Check for and increment for code M-monthlu.
 
      C     ZFREQ         COMP      'M'                                    91
+     C     CGL184        IFEQ      'Y'                                                        CGL184
+     C  N91ZFREQ         COMP      'G'                                    91                  CGL184
+     C                   ENDIF                                                                CGL184
      C   91              Z-ADD     ZMDAY         ZDAY
      C   91ZMTH          ADD       1             ZMTH
      C   91              GOTO      ZFDATE
@@ -3577,6 +3600,9 @@
       ** Check for and increment for code Q-quarterly.
 
      C     ZFREQ         COMP      'Q'                                    91
+     C     CGL184        IFEQ      'Y'                                                        CGL184
+     C  N91ZFREQ         COMP      'Q'                                    91                  CGL184
+     C                   ENDIF                                                                CGL184
      C   91              Z-ADD     ZMDAY         ZDAY
      C   91ZMTH          ADD       3             ZMTH
      C   91              GOTO      ZFDATE
@@ -3591,6 +3617,9 @@
       ** Check for and increment for code Y-yearly.
 
      C     ZFREQ         COMP      'Y'                                    91
+     C     CGL184        IFEQ      'Y'                                                        CGL184
+     C  N91ZFREQ         COMP      'O'                                    91                  CGL184
+     C                   ENDIF                                                                CGL184
      C   91              Z-ADD     ZMDAY         ZDAY
      C   91ZYEAR         ADD       1             ZYEAR
      C   91              GOTO      ZFDATE

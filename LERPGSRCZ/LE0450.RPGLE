@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. CGL184             Date 07Dec16               *
       *  Last Amend No. MD038365           Date 20Apr16               *
-      *  Prev Amend No. MD037915           Date 24Feb16               *      
+      *                 MD037915           Date 24Feb16               *      
       *                 MD012157           Date 23Oct13               *
       *                 CLE154             Date 02Aug12               *
       *                 CLE141A            Date 28Apr16               *
@@ -369,10 +370,11 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
       *  MD038365 - Incorrect update of data area LESTAT due to       *
       *             LDA field DAYRUN overridden value                 *
       *  MD037915 - Auto Settle Indicator for Manual Repayment        *
-      *             not being considered for account balance check    *
+      *             not being considered for account balance check    *      
       *  MD012157 - A/C movements show rundate instead of value date  *
       *             after inserting a backvalued 'LS'. Use the value  *
       *             of VDAT instead of RUND in SR/LOANSR.             *

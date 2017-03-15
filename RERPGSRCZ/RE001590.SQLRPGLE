@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD023554           Date 19Nov13               *
-      *  Prev Amend No. MD023412           Date 14Nov13               *
+      *  Last Amend No. MD044087           Date 14Feb17               *
+      *  Prev Amend No. MD023554           Date 19Nov13               *
+      *                 MD023412           Date 14Nov13               *
       *                 MD021158           Date 30Sep13               *
       *                 MD019039           Date 30Sep13               *
       *                 AR1083172          Date 30Sep13               *
@@ -29,6 +30,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044087 - Database Error Control is encountered when        *
+      *             accessing account via Account Movements           *
+      *             Enquiry screen                                    *
       *  MD023554 - Unable to proceed with the transaction            *
       *             (withdrawal) as it already hanged                 *
       *  MD023412 - DBERRCTL appears when making a withdrawal upon    *
@@ -192,7 +196,8 @@
  
      D SQAsstAmtX      S             15S 0                                                  MD021158
      D SQMatDatOK      S              1A                                                    MD021158
-     D PRtAcNum        S             10S 0
+     D********** PRtAcNum        S             10S 0                                        MD044087
+     D PRtAcNum        S             10  0                                                  MD044087
      D PCusn           S              6A
      D PCurr           S              3A
      D PACod           S             10S 0

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD025568           Date 11Mar14               *
-      *  Prev Amend No. CGL001             Date 06Aug12               *
+      *  Last Amend No. CGL184             Date 07Dec16               *
+      *  Prev Amend No. MD025568           Date 11Mar14               *
+      *                 CGL001             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL184 - New Frequencies for Account Statements              *
       *  MD025568 - Incorrect error message displayed upon            *
       *             selecting Frequency E                             *
       *  CGL001 - Introduction of New statement frequency 'N' (NEVER) *
@@ -109,7 +111,8 @@
  
       ** Valid Frequency Data
      D***Frequency       C                   CONST('ABDEFLMQRSTWXYZ')                         CGL001
-     D Frequency       C                   CONST('ABDEFLMNQRSTWXYZ')                          CGL001
+     D********** Frequency       C                   CONST('ABDEFLMNQRSTWXYZ')         CGL001 CGL184
+     D Frequency       C                   CONST('ABDEFLMNQRSTWXYZKGHO')                      CGL184
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -180,6 +183,14 @@
      C     *In80         IfEq      False
      C     DDStFq        OrEq      'E'
      C     TTURN         AndNE     'Y'
+     C     DDStFq        OrEQ      'K'                                                        CGL184
+     C     CGL184        ANDEQ     'N'                                                        CGL184
+     C     DDStFq        OrEQ      'G'                                                        CGL184
+     C     CGL184        ANDEQ     'N'                                                        CGL184
+     C     DDStFq        OrEQ      'H'                                                        CGL184
+     C     CGL184        ANDEQ     'N'                                                        CGL184
+     C     DDStFq        OrEQ      'O'                                                        CGL184
+     C     CGL184        ANDEQ     'N'                                                        CGL184
      C/COPY WNCPYSRC,GLH00724
      C                   Move      'N'           DDStFqOk
      C                   Add       1             Idx
@@ -252,6 +263,10 @@
      C     DDStFq        OrEq      'Q'
      C     DDStFq        OrEq      'X'
      C     DDStFq        OrEq      'Y'
+     C     DDStFq        OrEq      'K'                                                        CGL184
+     C     DDStFq        OrEq      'G'                                                        CGL184
+     C     DDStFq        OrEq      'H'                                                        CGL184
+     C     DDStFq        OrEq      'O'                                                        CGL184
       *
      C     DDNSDN        IfNE      *Blanks
      C     DDNSDN        AndNE     '00'
@@ -315,6 +330,7 @@
       *
       ** Day no in next statement date field
      C                   Parm                    WDAY              2
+     C                   Parm                    CGL184            1                          CGL184
       *
       ** OUTPUTS
       *

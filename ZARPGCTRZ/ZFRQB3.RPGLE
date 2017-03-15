@@ -15,18 +15,20 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE064             Date 06Dec10               *
+      *  Last Amend No. CGL184             Date 07Dec16               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
       *                 CIR005  *CREATE    Date 21Jan00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL184 - New Frequencies for Account Statements              *
       *  CLE064 - Enhancement of Lending Frequencies                  *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  CIR005 - FRA/IRS Business Day Conventions                    *
@@ -40,6 +42,9 @@
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** External DS for GENERAL LEDGER details
       *
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL184
+      ** EXTERNAL DS FOR SAR DETAILS                                                          CGL184
+                                                                                              CGL184
      D DSFDY         E DS                  EXTNAME(DSFDY)
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
@@ -73,6 +78,19 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                       CGL184
+      ** Check if CGL184 is installed.                                                        CGL184
+      *                                                                                       CGL184
+     C                   CALLB     'AOSARDR0'                                                 CGL184
+     C                   PARM      *BLANKS       PRtCd             7                          CGL184
+     C                   PARM      '*VERIFY'     POptn             7                          CGL184
+     C                   PARM      'CGL184'      PSard             6                          CGL184
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL184
+                                                                                              CGL184
+     C                   MOVE      'N'           CGL184            1                          CGL184
+     C                   IF        PRtCd = *BLANKS                                            CGL184
+     C                   EVAL      CGL184 = 'Y'                                               CGL184
+     C                   ENDIF                                                                CGL184
       *
      C                   EXSR      ZFRQB3
       *
@@ -127,6 +145,8 @@
       ** D - daily wokring day
       *
      C     ZFREQ         WHENEQ    'D'
+     C     ZFREQ         OREQ      'K'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
      C     ZDAYNO        ADD       1             ZDAYNO
       *
       ** W - weekly
@@ -154,6 +174,8 @@
       ** M - monthly
       *
      C     ZFREQ         WHENEQ    'M'
+     C     ZFREQ         OREQ      'G'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
      C                   Z-ADD     ZMDAY         ZDAY
      C     ZMTH          ADD       1             ZMTH
       *
@@ -172,6 +194,8 @@
       ** Q - quarterly
       *
      C     ZFREQ         WHENEQ    'Q'
+     C     ZFREQ         OREQ      'H'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
      C                   Z-ADD     ZMDAY         ZDAY
      C     ZMTH          ADD       3             ZMTH
       *
@@ -184,6 +208,8 @@
       ** Y - yearly
       *
      C     ZFREQ         WHENEQ    'Y'
+     C     ZFREQ         OREQ      'O'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
      C                   Z-ADD     ZMDAY         ZDAY
      C     ZYEAR         ADD       1             ZYEAR             2 0
       *
@@ -349,6 +375,11 @@
      C     ZERR          IFEQ      '1'
      C     ZFREQ         ORNE      'B'
      C     ZFREQ         ANDNE     'D'
+     C     CGL184        ANDEQ     'N'                                                        CGL184
+     C     ZFREQ         ORNE      'B'                                                        CGL184
+     C     ZFREQ         ANDNE     'D'                                                        CGL184
+     C     ZFREQ         ANDNE     'K'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
      C                   LEAVE
      C                   ENDIF
       *
@@ -368,6 +399,8 @@
       *
      C     ZIND          IFEQ      'H'
      C     ZFREQ         IFEQ      'D'
+     C     ZFREQ         OREQ      'K'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
      C                   ADD       1             ZDAYNO
      C                   ELSE
      C                   SUB       1             ZDAYNO

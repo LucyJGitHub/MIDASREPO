@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CER069             Date 03Jul14               *
+      *  Last Amend No. CGL184             Date 07Dec16               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CER069             Date 03Jul14               *
       *                 MD024336A          Date 19Aug14               *
       *                 MD024398           Date 11May14               *
       *                 CGL123             Date 12Dec12               *
@@ -78,6 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL184 - New Frequencies for Account Statements              *
       *  CGL165 - Dual Withholding Tax                                *
       *  CER069 - German Tax Enhancement                              *
       *  MD024336A - Account name in error as blank if Account not    *
@@ -450,6 +452,7 @@
      D CRE075          S              1A                                                      CRE075
      D CER069          S              1A                                                      CER069
      D CGL165          S              1A                                                      CGL165
+     D CGL184          S              1A                                                      CGL184
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1335,6 +1338,7 @@
       ** ICD                                                                    180721
      C                   Parm                    SDBANK                         180721
      C                   Parm                    SDGELR                         180721
+     C                   Parm                    CGL184                                       CGL184
       *                                                                         180721
       * OUTPUTS                                                                 180721
       *                                                                         180721
@@ -1448,6 +1452,7 @@
       ** Day no in next statement date field
      C                   Parm                    WDAY
       *
+     C                   Parm                    CGL184                                       CGL184
       * OUTPUTS
       *
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -2665,6 +2670,19 @@
      C                   EVAL      CGL165 = 'Y'                                               CER069
      C                   ENDIF                                                                CER069
      C                   MOVE      *OFF          *IN11                                        262025
+                                                                                              CGL184
+      ** Check if CGL184 is installed.                                                        CGL184
+                                                                                              CGL184
+     C                   CALLB     'AOSARDR0'                                                 CGL184
+     C                   PARM      *BLANKS       PRtCd                                        CGL184
+     C                   PARM      '*VERIFY'     POptn                                        CGL184
+     C                   PARM      'CGL184'      PSard                                        CGL184
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL184
+                                                                                              CGL184
+     C                   EVAL      CGL184 = 'N'                                               CGL184
+     C                   IF        PRtCd = *BLANKS                                            CGL184
+     C                   EVAL      CGL184 = 'Y'                                               CGL184
+     C                   ENDIF                                                                CGL184
       *                                                                                       262025
      C     KLActx        KLIST                                                                CER048
      C                   KFLD                    KFCusn                                       CER048

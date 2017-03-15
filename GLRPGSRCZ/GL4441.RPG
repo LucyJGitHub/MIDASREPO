@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD024417           Date 20Feb14               *
-      *  Prev Amend No. AR864876           Date 18Nov11               *
+      *  Last Amend No. CGL183             Date 09Dec16               *
+      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *                 MD024417           Date 20Feb14               *
+      *                 AR864876           Date 18Nov11               *
       *                 MD024978           Date 12Feb14               *
       *                 MD022437           Date 04Dec13               *
       *                 CRE098             Date 02Dec13               *
@@ -105,6 +107,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL183 - User Access audit of Account Enquiry functions      *
+      *  CGL184 - New Frequencies for Account Statements              *
       *  MD024417 - Incorrect alignment of posting details in ACMV    *
       *  AR864876 - Extra page number not updated (Child:AR864877)    *
       *  MD024978 - Batch number is displayed for every posting in    *
@@ -412,6 +416,7 @@
      F            RSACMTPO                          KRENAMERSACMTP2                           CGL131
      F                                              KINFDS INFO7                              CGL131
       *                                                                                       CGL131
+     FREEAUDPPO   E                    DISK                                                   CGL183
      F*                                                                   S01408
       /TITLE         >>> TABLES/ARRAYS <<<
      E*                                                                   S01408
@@ -429,8 +434,10 @@
      E                    ZS2        22  1
      E**********          FRQ    14  14  1               STMT FREQ                          AR864876
      E**********          FRQA    1  14 13               STMT DESC                          AR864876
-     E                    FRQ    15  15  1                                                  AR864876
-     E                    FRQA    1  15 13                                                  AR864876
+     E**********          FRQ    15  15  1                                           AR864876 CGL184
+     E**********          FRQA    1  15 13                                           AR864876 CGL184
+     E                    FRQ    19  19  1                                                    CGL184
+     E                    FRQA    1  19 13                                                    CGL184
      E                    REDS    1   7 13               RETL DESC
      E                    RETT        7 13               DSP RETL DESC
      E*                                                                   S01408
@@ -545,6 +552,7 @@
      I              CCY                             KCCY
      I              ACOD                            KCOD
      I              ACSQ                            KASE
+     I              ACNO                            KRET                                      CGL183
      I/COPY WNCPYSRC,GL4441I002
      I                                        2   7 KCUSA
      I**********                              2  16 KEYAC                                     CGL029
@@ -652,6 +660,23 @@
      I*                                                                   S01408
      I/COPY WNCPYSRC,GL4441IIPG                                           S01408
      I*                                                                   S01408
+     I                                      244 253 SWSID                                     CGL183
+     I                                      254 263 SUSER                                     CGL183
+      *                                                                                       CGL183
+     I            DS                                                                          CGL183
+     I                                        1  140TIMDAT                                    CGL183
+     I                                        1   60WTIM                                      CGL183
+     I                                        7  140WDAT                                      CGL183
+     I            DS                                                                          CGL183
+     I                                        1   80ISODAT                                    CGL183
+     I                                        1   40WISCY                                     CGL183
+     I                                        5   60WISMM                                     CGL183
+     I                                        7   80WISDD                                     CGL183
+     IDSAAUD      DS                                                                          CGL183
+     I                                        1   1 VLOSIC                                    CGL183
+     I                                        2   2 VLACMV                                    CGL183
+     I                                        3   3 VLCACB                                    CGL183
+     I                                        4   4 VLPAMV                                    CGL183
      I*
      I*    DSPF DS  TO RETRIEVE CPF'S POSITION WITHIN THE SUBFILE
      I*
@@ -672,6 +697,8 @@
       *                                                                                     MD021130
      I              'AccMovEnqAvlBal'     C         V#GLAB                                  MD021130
       *                                                                                     MD021130
+      *                                                                                       CGL183
+     I              'UserEnqAccessAudit'  C         V#AAUD                                    CGL183
       /TITLE         >>> START OF MAIN PROCESSING <<<
      I/COPY WNCPYSRC,GL4441I001
      C*
@@ -783,6 +810,20 @@
      C                     ELSE                                           CFT004
      C                     MOVE 'N'       CFT004                          CFT004
      C                     ENDIF                                          CFT004
+      *                                                                                       CGL184
+      ** Check if CGL184 is switched ON                                                       CGL184
+      *                                                                                       CGL184
+     C                     CALL 'AOSARDR0'                                                    CGL184
+     C                     PARM *BLANKS   PRTCD   7                                           CGL184
+     C                     PARM '*VERIFY' POPTN   7                                           CGL184
+     C                     PARM 'CGL184'  PSARD   6                                           CGL184
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL184
+      *                                                                                       CGL184
+     C           PRTCD     IFEQ *BLANKS                                                       CGL184
+     C                     MOVE 'Y'       CGL184  1                                           CGL184
+     C                     ELSE                                                               CGL184
+     C                     MOVE 'N'       CGL184                                              CGL184
+     C                     ENDIF                                                              CGL184
       *                                                                                       CGL037
       ** Access SAR details file to determine if Account Access                               CGL037
       ** Security is switched on                                                              CGL037
@@ -808,6 +849,61 @@
       *                                                                                       CGL037
      C/COPY OFCPYSRCZ,CGL145_023                                                             CGL145B
      C/COPY WNCPYSRC,GL4441C001
+      *                                                                                       CGL183
+      ** Check if feature CGL183 is On                                                        CGL183
+      *                                                                                       CGL183
+     C                     CALL 'AOSARDR0'                                                    CGL183
+     C                     PARM *BLANKS   @RTCD   7                                           CGL183
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL183
+     C                     PARM 'CGL183'  @SARD   6                                           CGL183
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL183
+      *                                                                                       CGL183
+     C           @RTCD     IFEQ *BLANKS                                                       CGL183
+     C                     MOVE 'Y'       CGL183  1                                           CGL183
+     C                     ELSE                                                               CGL183
+     C                     MOVE 'N'       CGL183                                              CGL183
+     C                     END                                                                CGL183
+      *                                                                                       CGL183
+      ** System value that controls user access audit for this enquiry                        CGL183
+      *                                                                                       CGL183
+     C                     MOVELV#AAUD    P@OP01                                              CGL183
+      *                                                                                       CGL183
+     C                     CALL 'AOSVALR0'                                                    CGL183
+     C                     PARM *BLANKS   @RTCD   7                                           CGL183
+     C                     PARM           P@OP01 20                                           CGL183
+     C                     PARM *BLANKS   P@VL01200                                           CGL183
+     C                     PARM *BLANKS   P@OP02 20                                           CGL183
+     C                     PARM *BLANKS   P@VL02200                                           CGL183
+     C                     PARM *BLANKS   P@OP03 20                                           CGL183
+     C                     PARM *BLANKS   P@VL03200                                           CGL183
+     C                     PARM *BLANKS   P@OP04 20                                           CGL183
+     C                     PARM *BLANKS   P@VL04200                                           CGL183
+     C                     PARM *BLANKS   P@OP05 20                                           CGL183
+     C                     PARM *BLANKS   P@VL05200                                           CGL183
+     C                     PARM *BLANKS   P@OP06 20                                           CGL183
+     C                     PARM *BLANKS   P@VL06200                                           CGL183
+     C                     PARM *BLANKS   P@OP07 20                                           CGL183
+     C                     PARM *BLANKS   P@VL07200                                           CGL183
+     C                     PARM *BLANKS   P@OP08 20                                           CGL183
+     C                     PARM *BLANKS   P@VL08200                                           CGL183
+     C                     PARM *BLANKS   P@OP09 20                                           CGL183
+     C                     PARM *BLANKS   P@VL09200                                           CGL183
+     C                     PARM *BLANKS   P@OP10 20                                           CGL183
+     C                     PARM *BLANKS   P@VL10200                                           CGL183
+      *                                                                                       CGL183
+     C                     MOVELP@VL01    DSAAUD                                              CGL183
+      *                                                                                       CGL183
+      ** Get time and date, but only format date-CCYYMMDD                                     CGL183
+      *                                                                                       CGL183
+     C                     TIME           TIMDAT                                              CGL183
+      *                                                                                       CGL183
+     C                     MOVELWDAT      WISDD                                               CGL183
+     C                     MOVE WDAT      WISCY                                               CGL183
+     C                     MOVELWDAT      WDDMM   4                                           CGL183
+     C                     MOVE WDDMM     WISMM                                               CGL183
+      *                                                                                       CGL183
+     C                     MOVE 'N'       AUDIT   1                                           CGL183
+      *                                                                                       CGL183
       *                                                                   S01472
      C********             MOVE *BLANKS   SFLDS1                    S01472165546
      C  N41                MOVE *BLANKS   SFLDS1                          165546
@@ -1286,10 +1382,47 @@
       *                                                                                       CGL131
      C                     WRITESTATIC
      C/COPY WNCPYSRC,GL4441C006
+     C*
       *                                                                                       CGL131
      C                     ENDIF                                                              CGL131
       *                                                                                       CGL131
-     C*
+      * Only write to file REEAUDPP if CGL183 is on & audit not yet done                      CGL183
+      *                                                                                       CGL183
+     C           *IN60     IFEQ '1'                                                           CGL183
+     C           *IN50     ANDNE'1'                                                           CGL183
+     C                     MOVE 'N'       AUDIT                                               CGL183
+     C                     ENDIF                                                              CGL183
+      *                                                                                       CGL183
+     C           CGL183    IFEQ 'Y'                                                           CGL183
+     C           AUDIT     ANDNE'Y'                                                           CGL183
+     C           VLACMV    ANDEQ'Y'                                                           CGL183
+      *                                                                                       CGL183
+      * Format the fields for output                                                          CGL183
+      *                                                                                       CGL183
+     C                     MOVELSUSER     LG1ID                                               CGL183
+     C                     MOVELSWSID     LG1WRK                                              CGL183
+      *                                                                                       CGL183
+      * Format Time and Date (ccyymmdd) Fields.                                               CGL183
+      *                                                                                       CGL183
+     C                     TIME           TIMDAT                                              CGL183
+     C                     Z-ADDWTIM      LG1TIM                                              CGL183
+     C                     Z-ADDISODAT    LG1DAT                                              CGL183
+      *                                                                                       CGL183
+     C                     Z-ADDKRET      LG1RTN                                              CGL183
+     C                     MOVELKBRC      LG1BRN                                              CGL183
+     C                     MOVE KCUS      LG1CUN                                              CGL183
+     C                     MOVELKCCY      LG1CCY                                              CGL183
+     C                     Z-ADDKCOD      LG1ACD                                              CGL183
+     C                     Z-ADDKASE      LG1ASQ                                              CGL183
+     C                     MOVEL'AC'      LG1ZDR                                              CGL183
+     C                     MOVEL'A'       LG1TYP                                              CGL183
+     C                     MOVE *BLANKS   LG1REF                                              CGL183
+      *                                                                                       CGL183
+     C                     WRITEREEAUDR1                                                      CGL183
+     C                     MOVE 'Y'       AUDIT                                               CGL183
+      *                                                                                       CGL183
+     C                     ENDIF                                                              CGL183
+      *                                                                                       CGL183
      C                     ELSE                            ** X003
      C*
      C                     SETOF                     20
@@ -3052,6 +3185,12 @@
      C           STFQ      OREQ 'Q'                                       BHF448
      C           STFQ      OREQ 'X'                                       BHF448
      C           STFQ      OREQ 'Y'                                       BHF448
+     C           STFQ      OREQ 'G'                                                           CGL184
+     C           CGL184    ANDEQ'Y'                                                           CGL184
+     C           STFQ      OREQ 'H'                                                           CGL184
+     C           CGL184    ANDEQ'Y'                                                           CGL184
+     C           STFQ      OREQ 'O'                                                           CGL184
+     C           CGL184    ANDEQ'Y'                                                           CGL184
      C                     MOVE '0'       *IN26                           BHF448
      C                     ELSE                                           BHF448
      C                     MOVE '1'       *IN26                           BHF448
@@ -3960,7 +4099,7 @@
 **   ZMNM - MONTHS SHORT NAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 **   FRQ  - STATEMENT FREQUENCY CODES
-DWFSMTRBLAQXYZE                                                                             AR864876
+DWFSMTRBLAQXYZEKGHO                                                                  AR864876 CGL184
 **   FRQA - STATEMENT FREQUENCY DESCRIPTION
 DAILY
 WEEKLY
@@ -3976,6 +4115,11 @@ QUARTERLY
 SIX MONTHLY
 YEARLY
 ON REQUEST
+                                                                                              CGL184
+DAILY MOD                                                                                     CGL184
+MONTHLY MOD                                                                                   CGL184
+QUARTERLY MOD                                                                                 CGL184
+YEARLY MOD                                                                                    CGL184
 **   REDS - STATUS FOR RETAIL ACCOUNTS
 REFER DEBITS
 REFER CREDITS

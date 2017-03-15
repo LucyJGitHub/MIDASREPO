@@ -36,7 +36,7 @@
      F***DEALS** IF  F    2441  6AI     2 DISK                                         CAS005 CAS006
      F***DEALS** IF  F    2448  6AI     2 DISK                                         CAS006 CDL017
      F*DEALS****IF   F 2540     6AIDISK    KEYLOC(2)                                  CDL017 CAS008
-     F*DEALS****IF   F 2550     6AIDISK    KEYLOC(2)                                  CAS008 CDL038
+     F*DEALS****IF   F 2550     6AIDISK    KEYLOC(2)                                   CAS008 CDL038
      FDEALS     IF   F 2606     6AIDISK    KEYLOC(2)                                         CDL038
      F/COPY WNCPYSRC,DL0280F002
 0014 FDAMSX     IF   E           K DISK                                         BHF641

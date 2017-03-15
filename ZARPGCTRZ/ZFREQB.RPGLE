@@ -70,8 +70,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CLE064             Date 06Dec10               *
-      *  Prev Amend No. AR702741           Date 02Feb11               *
+      *  Last Amend No. CGL184             Date 07Dec16               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *                 AR702741           Date 02Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -89,6 +90,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL184 - New Frequencies for Account Statements              *
       *  CLE064 - Enhancement of Lending Frequencies                  *
       *  AR702741 - Include location as parameter in ZFREQB to        *
       *             determine the next settlement date                *
@@ -166,7 +168,10 @@
  
       ** Array containing number of days in month.
      D  ZFMD           S              2  0 DIM(12) CTDATA PERRCD(12)
- 
+                                                                                              CGL184
+      ** EXTERNAL DS FOR SAR DETAILS                                                          CGL184
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL184
+                                                                                              CGL184
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -318,6 +323,8 @@
 3680 C**
 3681 C**   CHECK FOR AND INCREMENT FOR CODE D-DAILY-WORKING DAY.
 3682 C     ZFREQ         IFEQ      'D'
+     C     ZFREQ         OREQ      'K'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
 3683 C     ZDAYNO        ADD       1             ZDAYNO
      C                   GOTO      ZFHCHK
      C                   ENDIF
@@ -346,6 +353,8 @@
 3703 C**
 3704 C**   CHECK FOR AND INCREMENT FOR CODE M-MONTHLY.
 3705 C     ZFREQ         IFEQ      'M'
+     C     ZFREQ         OREQ      'G'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
 3706 C                   MOVE      'IN'          ZINDE
 3707 C                   Z-ADD     ZMDAY         ZDAY
 3708 C     ZMTH          ADD       1             ZMTH
@@ -366,6 +375,8 @@
 3723 C**
 3724 C**   CHECK FOR AND INCREMENT FOR CODE Q-QUARTERLY.
 3725 C     ZFREQ         IFEQ      'Q'
+     C     ZFREQ         OREQ      'H'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
 3726 C                   MOVE      'IN'          ZINDE
 3727 C                   Z-ADD     ZMDAY         ZDAY
 3728 C     ZMTH          ADD       3             ZMTH
@@ -380,6 +391,8 @@
 3737 C**
 3738 C**   CHECK FOR AND INCREMENT FOR CODE Y-YEARLY.
 3739 C     ZFREQ         IFEQ      'Y'
+     C     ZFREQ         OREQ      'O'                                                        CGL184
+     C     CGL184        ANDEQ     'Y'                                                        CGL184
 3740 C                   MOVE      'IN'          ZINDE
 3734 C                   Z-ADD     ZMDAY         ZDAY
 3741 C     ZYEAR         ADD       1             ZYEAR
@@ -672,6 +685,19 @@
      C                   PARM                    ZMDAY
      C                   PARM                    BJDFIN
      C     SDGELR        PARM                    SDGELR
+                                                                                              CGL184
+      ** Check if CGL184 is installed.                                                        CGL184
+                                                                                              CGL184
+     C                   CALLB     'AOSARDR0'                                                 CGL184
+     C                   PARM      *BLANKS       PRtCd             7                          CGL184
+     C                   PARM      '*VERIFY'     POptn             7                          CGL184
+     C                   PARM      'CGL184'      PSard             6                          CGL184
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL184
+                                                                                              CGL184
+     C                   MOVE      'N'           CGL184            1                          CGL184
+     C                   IF        PRtCd = *BLANKS                                            CGL184
+     C                   EVAL      CGL184 = 'Y'                                               CGL184
+     C                   ENDIF                                                                CGL184
  
       ** Program, module and procedure names for database error processing.
       ** =================================================================

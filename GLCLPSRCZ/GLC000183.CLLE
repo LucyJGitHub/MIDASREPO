@@ -1,0 +1,75 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL User Access Audit File Purge')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000183 - User Access Audit File Purge                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*                                                                   */
+/*       Last Amend No. CGL183    *Create  Date 09Dec16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL183 - User Access Audit Account Enquiry functions        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2016')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Create data area in QTEMP */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             CHGJOB     SWS(XXXXXX00)
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+
+/** Call User Access Audit File Purge Program */
+
+             CALL       PGM(GL000183)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             ELSE       CMD(DO)
+             COMMIT
+
+/** Reorganize REEAUDPP */
+
+             CALL       PGM(SCC000060) PARM('REEAUDPP' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+             GOTO       ENDPGM
+             ENDDO
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000183 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ROLLBACK
+
+ ENDPGM:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF8350)
+             ENDPGM
+

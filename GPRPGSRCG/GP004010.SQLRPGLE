@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD035820           Date 11May16               *
-      *  Prev Amend No. AR1097353          Date 26Mar13               *
+      *  Last Amend No. CBF023             Date 04Jan17               *
+      *  Prev Amend No. MD035820           Date 11May16               *
+      *                 AR1097353          Date 26Mar13               *
       *                 AR1036892          Date 27Sep12               *
       *                 AR1037301          Date 26Sep12               *
       *                 AR1037258          Date 26Sep12               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *  MD035820 - Zone Details in report are not the same from the  *
       *             created User profile.                             *
       *  AR1097353 - No Event code Audit Report was generated.        *
@@ -129,6 +131,9 @@
       ** External DS for Bank Details
      D GZSDBANK      E DS                  EXTNAME(GZSDBANKPD)
 
+      ** External DS for SAR Details                                                          CBF023
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CBF023
+
       ** Short DS for Access Objects
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
@@ -157,6 +162,7 @@
      D  FCMOD                        26A
      D  FRECR                        26A
      D  FREAP                        26A                                                   AR1036892
+     D  FREDL                        26A                                                      CBF023
 
      D UserDS          DS
      D  FNAMEPK                      32A
@@ -241,11 +247,13 @@
      D PErms           S             50A
      D PCache          S              1A
      D PRecImage       S          32000A
+     D PSard           S              6A                                                      CBF023
 
       ** Null indicators
      D***NIRptDS***      S              5I 0 DIM(6)                                        AR1036892
      D***NIUserDS***     S              5I 0 DIM(17)                                       AR1032564
-     D NIRptDS         S              5I 0 DIM(7)                                          AR1036892
+     D***NIRptDS         S              5I 0 DIM(7)                                 AR1036892 CBF023
+     D NIRptDS         S              5I 0 DIM(8)                                             CBF023
      D NIUserDS        S              5I 0 DIM(18)                                         AR1032564
      D NIZoneDS        S              5I 0 DIM(2)
      D NIFRUNA         S              5I 0
@@ -280,6 +288,7 @@
      D  FRUNA          S             52A
      D  FLUCN          S              4S 0
 
+     D  CBF023         S              1A                                                      CBF023
       ** +--------------------------------------+
       ** ¦ Declared constants                   ¦
       ** ¦ ==================                   ¦
@@ -392,14 +401,18 @@
      C/exec sql
      C+ declare RptCursor cursor for
      C********select*USERID,*TYPE,*NAME,*DESC,*CMODDATE,*RECRTDON******                    AR1036892
-     C+       select USERID, TYPE, NAME, DESC, CMODDATE, RECRTDON, APRDATE                 AR1036892
+     C********select*USERID,*TYPE,*NAME,*DESC,*CMODDATE,*RECRTDON,*APRDATE          AR1036892 CBF023
+     C+       select USERID, TYPE, NAME, DESC, CMODDATE, RECRTDON, APRDATE,                   CBF023
+     C+            RDELDATE                                                                   CBF023
      C+       from
      C+       (
      C+       select A.BFNAMEPK as USERID, BFRSAFLAG, 'BOOKBR' as TYPE,
      C+            1 as SRTODR, C.A8BRCD as NAME, C.A8BRNM as DESC,
      C+            A.BFRECLASTMODIFIEDDATE AS CMODDATE, A.BFRECCREATEDON
      C*************AS RECRTDON*****************************************                    AR1036892
-     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE                             AR1036892
+     C*************as*RECRTDON,*A.BFRECAPPROVEDDATE*as*APRDATE*********             AR1036892 CBF023
+     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
+     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
      C+       from
      C+            MIVW_USER A
      C+            join GPBRCBPD B on A.BFNAMEPK = B.USRP
@@ -409,7 +422,9 @@
      C+            2 as SRTODR, C.A8BRCD as NAME, C.A8BRNM as DESC,
      C+            A.BFRECLASTMODIFIEDDATE AS CMODDATE, A.BFRECCREATEDON
      C*************AS RECRTDON*****************************************                    AR1036892
-     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE                             AR1036892
+     C*************as*RECRTDON,*.BFRECAPPROVEDDATE*as*APRDATE**********             AR1036892 CBF023
+     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
+     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
      C+       from
      C+            MIVW_USER A
      C+            join GPBRCOPD B on A.BFNAMEPK = B.USRP
@@ -419,7 +434,9 @@
      C+            3 as SRTODR, C.APCMCD as NAME, C.APCMNM as DESC,
      C+            A.BFRECLASTMODIFIEDDATE AS CMODDATE, A.BFRECCREATEDON
      C*************AS RECRTDON*****************************************                    AR1036892
-     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE                             AR1036892
+     C*************as*RECRTDON,*A.BFRECAPPROVEDDATE*as*APRDATE*********             AR1036892 CBF023
+     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
+     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
      C+       from
      C+            MIVW_USER A
      C+            join GPCMPSPD B on A.BFNAMEPK = B.USRP
@@ -430,7 +447,9 @@
      C+            C.BFGROUPDESCRIPTION as DESC,
      C+            A.BFRECLASTMODIFIEDDATE AS CMODDATE, A.BFRECCREATEDON
      C*************AS RECRTDON*****************************************                    AR1036892
-     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE                             AR1036892
+     C*************as*RECRTDON,*A.BFRECAPPROVEDDATE*as*APRDATE*********             AR1036892 CBF023
+     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
+     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
      C+       from
      C+            MIVW_USER A
      C+            join MIVW_OGUS B on A.BFNAMEPK = B.BFUSERNAME
@@ -441,7 +460,9 @@
      C+            C.BFDESCRIPTION as DESC,
      C+            A.BFRECLASTMODIFIEDDATE AS CMODDATE, A.BFRECCREATEDON
      C*************AS RECRTDON*****************************************                    AR1036892
-     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE                             AR1036892
+     C*************as*RECRTDON,*A.BFRECAPPROVEDDATE*as*APRDATE*********             AR1036892 CBF023
+     C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
+     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
      C+       from
      C+            MIVW_USER A
      C+            join MIVW_ZUSR B on A.BFNAMEPK = B.BFUSERID
@@ -566,11 +587,16 @@
 
       ** Change Date
 
+     C                   IF        FREDL <> '0'                                               CBF023
+     C                             AND CBF023 = 'Y'                                           CBF023
+     C                   EVAL      RCDAT = FCMOD                                              CBF023
+     C                   ELSE                                                                 CBF023
      C                   IF        FCMOD <> *BLANKS
      C                   EVAL      RCDAT = FCMOD
      C                   ELSE
      C                   EVAL      RCDAT = FRECR
      C                   ENDIF
+     C                   ENDIF                                                                CBF023
 
       ** Authorisation Date
 
@@ -578,19 +604,29 @@
 
       ** Last change Action
 
+     C                   IF        FREDL <> '0'                                               CBF023
+     C                             AND CBF023 = 'Y'                                           CBF023
+     C                   EVAL      RACTN = 'Delete'                                           CBF023
+     C                   ELSE                                                                 CBF023
      C                   IF        FCMOD = *BLANKS
      C                   EVAL      RACTN = 'Insert'
      C                   ELSE
      C                   EVAL      RACTN = 'Amend'
      C                   ENDIF
+     C                   ENDIF                                                                CBF023
 
       ** Change Timestamp
 
+     C                   IF        FREDL <> '0'                                               CBF023
+     C                             AND CBF023 = 'Y'                                           CBF023
+     C                   EVAL      RTIME = FCMOD                                              CBF023
+     C                   ELSE                                                                 CBF023
      C                   IF        FCMOD <> *BLANKS
      C                   EVAL      RTIME = FCMOD
      C                   ELSE
      C                   EVAL      RTIME = FRECR
      C                   ENDIF
+     C                   ENDIF                                                                CBF023
 
       ** Authorisation Timestamp
 
@@ -1352,6 +1388,28 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
+      ** Check if CBF023 is installed                                                         CBF023
+                                                                                              CBF023
+     C                   CALL      'AOSARDR0'                                                 CBF023
+     C                   PARM      *BLANKS       PRetCode                                     CBF023
+     C                   PARM      '*VERIFY'     POption                                      CBF023
+     C                   PARM      'CBF023'      PSard                                        CBF023
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CBF023
+                                                                                              CBF023
+     C                   IF        PRetCode <> *BLANKS                                        CBF023
+     C                             AND PRetCode <> '*NRF   '                                  CBF023
+     C     *LOCK         IN        LDA                                                        CBF023
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CBF023
+     C                   EVAL      DBKey = PSard                                              CBF023
+     C                   EVAL      DBase = 4                                                  CBF023
+     C                   OUT       LDA                                                        CBF023
+     C                   EXSR      *PSSR                                                      CBF023
+     C                   ENDIF                                                                CBF023
+                                                                                              CBF023
+     C                   EVAL      CBF023 = 'N'                                               CBF023
+     C                   IF        PRetCode = *BLANKS                                         CBF023
+     C                   EVAL      CBF023 = 'Y'                                               CBF023
+     C                   ENDIF                                                                CBF023
      C                   ENDSR
       *****************************************************************
       /EJECT

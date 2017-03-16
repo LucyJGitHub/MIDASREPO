@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD035836A          Date 11May16               *
-      *  Prev Amend No. MD035836           Date 11May16               *
+      *  Last Amend No. CBF023             Date 04Jan17               *
+      *  Prev Amend No. MD035836A          Date 11May16               *
+      *                 MD035836           Date 11May16               *
       *                 AR1097353          Date 26Mar13               *
       *                 AR1096060          Date 21Mar13               *
       *                 AR1036892          Date 27Sep12               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *  MD035836A - [UXP][UXP API]Application and Module in Event    *
       *              Code Audit Report are not descriptive/readable   *
       *              (Reopen)                                         *
@@ -104,6 +106,12 @@
       ** External DS for Bank Details
      D GZSDBANK      E DS                  EXTNAME(GZSDBANKPD)
 
+      ** External DS for SAR Details                                                          CBF023
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CBF023
+                                                                                              CBF023
+      ** Short DS for Access Objects                                                          CBF023
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CBF023
+
       ** File Information DS for Main PRTF
      D SPOOL1          DS
      D  SFILE1                83     92
@@ -174,9 +182,11 @@
      D  BFLSTMOD                     26A
      D  BFRAPRBY                     32A
      D  BFAPRDAT                     26A
+     D  BFDELDAT                     26A                                                      CBF023
 
      D*NullIndDs       S              5I 0 DIM(18)                                         MD035836A
-     D NullIndDs       S              5I 0 DIM(20)                                         MD035836A
+     D*NullIndDs       S              5I 0 DIM(20)                                  MD035836A CBF023
+     D NullIndDs       S              5I 0 DIM(21)                                            CBF023
 
       ** Input Parameter for ZDATEO
 
@@ -212,6 +222,7 @@
      D PErms           S             50A
      D PCache          S              1A
      D PRecImage       S          32000A
+     D PSard           S              6A                                                      CBF023
 
       ** Other Work Variables
 
@@ -233,6 +244,7 @@
      D TmpDat04        S               D   DATFMT(*ISO)                                    AR1096060
      D DatNum04        S              8S 0
 
+     D CBF023          S              1A                                                      CBF023
       ** +--------------------------------------+
       ** ¦ Declared Constants                   ¦
       ** ¦ ==================                   ¦
@@ -268,7 +280,9 @@
      C+  A.BFRECLASTMODIFIEDBY,
      C+  A.BFRECLASTMODIFIEDDATE,
      C+  A.BFRECAPPROVEDBY,
-     C+  A.BFRECAPPROVEDDATE
+     C***A.BFRECAPPROVEDDATE*******************************************                       CBF023
+     C+  A.BFRECAPPROVEDDATE,                                                                 CBF023
+     C+  A.BFRECDELETETDATE                                                                   CBF023
      C+
      C+  from MIVW_EVCD A
      C+  left outer join MIVW_EVCM B on B.BFEVENTCODEID=A.BFEVENTCODEIDPK
@@ -385,6 +399,13 @@
 
       ** Change Date
 
+     C                   IF        BFDELDAT <> '0'                                            CBF023
+     C                             AND CBF023 = 'Y'                                           CBF023
+     C                   IF        NullIndDs(18) = 0                                          CBF023
+     C                   EVAL      RCDAT = BFLSTMOD                                           CBF023
+     C                   ENDIF                                                                CBF023
+     C                   ELSE                                                                 CBF023
+                                                                                              CBF023
      C                   IF        BFLSTMOD <> *BLANKS
      C**********         IF        NullIndDs(16) = 0                                       MD035836A
      C                   IF        NullIndDs(18) = 0                                       MD035836A
@@ -396,9 +417,18 @@
      C                   EVAL      RCDAT = BFRCRTON
      C                   ENDIF
      C                   ENDIF
+                                                                                              CBF023
+     C                   ENDIF                                                                CBF023
 
       ** Change Timestamp
 
+     C                   IF        BFDELDAT <> '0'                                            CBF023
+     C                             AND CBF023 = 'Y'                                           CBF023
+     C                   IF        NullIndDs(18) = 0                                          CBF023
+     C                   EVAL      RTIME = BFLSTMOD                                           CBF023
+     C                   ENDIF                                                                CBF023
+     C                   ELSE                                                                 CBF023
+                                                                                              CBF023
      C                   IF        BFLSTMOD <> *BLANKS
      C**********         IF        NullIndDs(16) = 0                                       MD035836A
      C                   IF        NullIndDs(18) = 0                                       MD035836A
@@ -410,14 +440,21 @@
      C                   EVAL      RTIME = BFRCRTON
      C                   ENDIF
      C                   ENDIF
+                                                                                              CBF023
+     C                   ENDIF                                                                CBF023
 
       ** Last Change Action
 
+     C                   IF        BFDELDAT <> '0'                                            CBF023
+     C                             AND CBF023 = 'Y'                                           CBF023
+     C                   EVAL      RACTN = 'Delete'                                           CBF023
+     C                   ELSE                                                                 CBF023
      C                   IF        ZDayNo3 = 0
      C                   EVAL      RACTN = 'Insert'
      C                   ELSE
      C                   EVAL      RACTN = 'Amend'
      C                   ENDIF
+     C                   ENDIF                                                                CBF023
 
       ** Last Authorising User
 
@@ -682,6 +719,29 @@
      C                   EXSR      SrAudit
      C                   EXSR      *PSSR
      C                   ENDIF
+
+      ** Check if CBF023 is installed                                                         CBF023
+                                                                                              CBF023
+     C                   CALL      'AOSARDR0'                                                 CBF023
+     C                   PARM      *BLANKS       PRetCode                                     CBF023
+     C                   PARM      '*VERIFY'     POption                                      CBF023
+     C                   PARM      'CBF023'      PSard                                        CBF023
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CBF023
+                                                                                              CBF023
+     C                   IF        PRetCode <> *BLANKS                                        CBF023
+     C                             AND PRetCode <> '*NRF   '                                  CBF023
+     C     *LOCK         IN        LDA                                                        CBF023
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CBF023
+     C                   EVAL      DBKey = PSard                                              CBF023
+     C                   EVAL      DBase = 4                                                  CBF023
+     C                   OUT       LDA                                                        CBF023
+     C                   EXSR      *PSSR                                                      CBF023
+     C                   ENDIF                                                                CBF023
+                                                                                              CBF023
+     C                   EVAL      CBF023 = 'N'                                               CBF023
+     C                   IF        PRetCode = *BLANKS                                         CBF023
+     C                   EVAL      CBF023 = 'Y'                                               CBF023
+     C                   ENDIF                                                                CBF023
 
      C                   ENDSR
       *********************************************************************

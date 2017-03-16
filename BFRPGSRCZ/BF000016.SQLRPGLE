@@ -15,11 +15,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. AR1026104A         Date 13Sep12               *
-      *  Prev Amend No. AR884111A *CREATE  Date 25Jan12               *
+      *  Last Amend No. MD044342           Date 01Mar17               *
+      *  Prev Amend No. AR1026104A         Date 13Sep12               *
+      *                 AR884111A *CREATE  Date 25Jan12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044342 - Business date in BF is not being updated.         *
       *  AR1026104A - Rundates in BFMidas is not insynch with BFTC    *
       *  AR884111A - Update Business Date in BF                       *
       *                                                               *
@@ -129,7 +131,7 @@
        // *********************************************************
        //  Initiate BF web service
        // *********************************************************
- 
+
                exsr GetDetails;
                exsr ConvBDate;
                     AOSVALR0(SysValRet
@@ -155,14 +157,14 @@
                           :' '
                           );
                exsr FmtDetails;
- 
+
                wRc = BF000013(isURL
                               : isSpEnvAdd
                               : isSpXMLBody
                               : isSpAction
                               : isPPath
                               );
- 
+
             // HTTP Error returned?
                  if wRc <> 1;
                       if bfcrash = 'Y';
@@ -170,18 +172,18 @@
                            exsr *PSSR;          //                                        AR1026104A
                       endif;
                  endif;
- 
- 
- 
+
+
+
        // *********************************************************
        //  End Program
        // *********************************************************
- 
+
                *INLR = '1';
                Return;
- 
+
       /end-free
- 
+
       *****************************************************************
       *                                                               *
       *  GetDetails - Subroutine to fetch data from SDBANKPD for the  *
@@ -192,9 +194,9 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     GetDetails    BEGSR
- 
+
      C**********         CALL      'AOBANKR0'                                             AR1026104A
      C**********         PARM      *Blanks       PRTCD                                    AR1026104A
      C**********         PARM      '*FIRST '     POPTN                                    AR1026104A
@@ -209,9 +211,9 @@
      C/end-exec                                                                           AR1026104A
                                                                                           AR1026104A
      C                   EVAL      PDayNoIn = RunDt                                       AR1026104A
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -224,9 +226,9 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     ConvBDate     BEGSR
- 
+
      C                   CALLB     'ZDATE9'
      C                   PARM                    PDayNoIn
      C                   PARM      *ZERO         PDateOutZ9
@@ -244,9 +246,9 @@
      C                   EVAL      NewBDate = Temp3 + PDay
      C                   EVAL      NewBDate = %trim(NewBDate) +
      C                             ConsTime
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -258,9 +260,9 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     FmtDetails    BEGSR
- 
+
      C                   EVAL      isURL = '/bfweb/services/SetBusDateByZone'
      C                   EVAL      isSpEnvAdd = 'xmlns:att="http://' +
      C                             'www.misys.com/bankfusion/attributes" ' +
@@ -268,7 +270,8 @@
      C                             'misys.com/bankfusion/attributes/all"'
      C                   EVAL      isSpXMLBody = '<soapenv:Body>' +
      C                             '<web:SetBusinessDateByzone' +
-     C                             'ServiceMFRequest>' +
+     C**********                   'ServiceMFRequest>' +                                    MD044342
+     C                             'ServiceMF>' +                                           MD044342
      C                             '<zoneBusinessDate>' +
      C                             '<all:ZONENAME>' + %trim(wZPrefSVal) +
      C                             '</all:ZONENAME>' +
@@ -276,16 +279,17 @@
      C                             '</all:NEWBUSINESSDATE>' +
      C                             '</zoneBusinessDate>' +
      C                             '</web:SetBusinessDateByzone' +
-     C                             'ServiceMFRequest>' +
+     C**********                   'ServiceMFRequest>' +                                    MD044342
+     C                             'ServiceMF>' +                                           MD044342
      C                             '</soapenv:Body>'
      C                   EVAL      isSpAction = 'http://SetBusDateBy' +
      C                             'Zone/SetBusDateByZonePortType/' +
      C                             'SetBusinessDateByzone' +
      C                             'ServiceMFRequest'
      C                   EVAL      isPPath = ' '
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *********************************************************************
@@ -299,9 +303,9 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
      C                   DUMP
      C                   ENDSR
- 
+
       *****************************************************************

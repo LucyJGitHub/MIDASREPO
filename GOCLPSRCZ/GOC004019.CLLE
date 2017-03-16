@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Midas Users Housekeeping')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC004019 - Midas Users Housekeeping                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2017           */
+/*                                                                   */
+/*       Last Amend No. CBF023    *CREATE  Date 04Jan17              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CBF023 - Soft Delete Feature on Security Related Modules    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2017')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Create data area in QTEMP */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             CHGJOB     SWS(XXXXXX00)
+             SNDPGMMSG  MSG('GOC004019 - Midas Users Housekeeping') +
+                        TOMSGQ(MRUNQ MOPERQ)
+
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
+/** Call Midas Users Housekeeping program */
+
+             CALL       PGM(GP004019)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             ELSE       CMD(DO)
+             COMMIT
+
+/** Reorganize MUSERDD */
+
+             CALL       PGM(SCC000060) PARM('MUSERDD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Reorganize MBROSDD */
+
+             CALL       PGM(SCC000060) PARM('MBROSDD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Reorganize MBRBSDD */
+
+             CALL       PGM(SCC000060) PARM('MBRBSDD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Reorganize MCMPSDD */
+
+             CALL       PGM(SCC000060) PARM('MCMPSDD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             GOTO       ENDPGM
+             ENDDO
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GP004019 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ROLLBACK
+
+ ENDPGM:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF8350)
+             ENDPGM
+

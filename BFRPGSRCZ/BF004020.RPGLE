@@ -1,6 +1,6 @@
      H DEBUG
      H NOMAIN
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2017')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas BF Invoke BF Web Service Common')                *
@@ -8,25 +8,18 @@
       *                                                               *
       *  Midas - BankFusion Module                                    *
       *                                                               *
-      *  BF000013 - Invoke BF Web Service Common                      *
+      *  BF004020 - Invoke BF Web Service Common                      *
       *                                                               *
       *  Function:  This program invokes the BankFusion Web Service   *
       *             Calls by accessing the Web services               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Misys International Banking Systems Ltd. 2017            *
       *                                                               *
-      *  Last Amend No. MD044342           Date 01Mar17               *
-      *  Prev Amend No. MD033895           Date 16Apr15               *
-      *                 MD023747           Date 23Nov13               *
-      *                 AR884111A *CREATE  Date 25Jan12               *
+      *  Last Amend No. CBF023    *CREATE  Date 04Jan17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD044342 - Business date in BF is not being updated          *
-      *  MD033895 - Password retrieval issue during COB               *
-      *  MD023747 - HTTP call failure (Recompile due to CGL135        *
-      *             changes)                                          *
-      *  AR884111A - Update Business Date in BF                       *
+      *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -50,10 +43,8 @@
      D timeDelay       S             10U 0 INZ(5)
      D wRc1            S                   LIKE(WEB_INT)
      D wReturnCode     S              7A
-     D*wPass1          S            256A                                                    MD033895
-     D*wDescr          S             50A                                                    MD033895
-     D wPass1          S            600A                                                    MD033895
-     D wDescr          S           1000A                                                    MD033895
+     D wPass1          S            600A
+     D wDescr          S           1000A
       *
      D wRc             S                   LIKE(WEB_INT)
      D wUrl            S                   LIKE(WEB_STRVAR)
@@ -63,8 +54,7 @@
      D wIpAddrSVal     S            200A
      D wUserName       S             30A   VARYING
      D wUserNmSVal     S            200A
-     D*wUserNmVlDl     S            256A                                                    MD033895
-     D wUserNmVlDl     S            100A                                                    MD033895
+     D wUserNmVlDl     S            100A
      D wGPrefSVal      S            200A
      D wZonePrefix     S              2A
      D wZPrefSVal      S            200A
@@ -126,7 +116,7 @@
      D   P@OP02                      20A   CONST
      D   P@VL02                     200A
      D   P@OP03                      20A   CONST
-     D   P@VL03                     200A
+     D   P@VL03                     200A   CONST
      D   P@OP04                      20A   CONST
      D   P@VL04                     200A   CONST
      D   P@OP05                      20A   CONST
@@ -170,14 +160,10 @@
      D  PAction                       1A   CONST
      D  PValidList                   10A   CONST
      D  PLibrary                     10A
-     D**PuserName                   256A                                                    MD033895
-     D**PPass1                      256A                                                    MD033895
-     D**PPass2                      256A   CONST                                            MD033895
-     D**PDescr                       50A                                                    MD033895
-     D  PuserName                   100A                                                    MD033895
-     D  PPass1                      600A                                                    MD033895
-     D  PPass2                      600A   CONST                                            MD033895
-     D  PDescr                     1000A                                                    MD033895
+     D  PuserName                   100A
+     D  PPass1                      600A
+     D  PPass2                      600A   CONST
+     D  PDescr                     1000A
       *
       *  Call back procedure to call at the start of each XML element received
       *  - http_url_post_xml()
@@ -202,7 +188,7 @@
      D   pAttrs                        *   DIM(ELEM_ATTR)
      D                                     CONST OPTIONS(*varsize)
       *
-     D BF000013        PR            10I 0
+     D BF004020        PR            10I 0
      D   setURL                      64A
      D   setSpEnvAdd                500A
      D   setSpXMLBody              5000A
@@ -213,9 +199,9 @@
       *
       *  *ENTRY Interface for Main procedure
       *
-     P BF000013        B                   EXPORT
+     P BF004020        B                   EXPORT
       *
-     D BF000013        PI            10I 0
+     D BF004020        PI            10I 0
      D   setURL                      64A
      D   setSpEnvAdd                500A
      D   setSpXMLBody              5000A
@@ -243,10 +229,10 @@
                     GPAOSVALR0(SysValRet
                          :'BankFusionIPAddress'
                          :wIpAddrSVal
-                         :'BankFusionUserName'
-                         :wUserNmSVal
                          :'BrgMidasGlobalPrefix'
                          :wGPrefSVal
+                         :' '
+                         :' '
                          :' '
                          :' '
                          :' '
@@ -266,8 +252,8 @@
                     AOSVALR0(SysValRet
                          :'BrgMidasSystemPrefix'
                          :wZPrefSVal
-                         :' '
-                         :' '
+                         :'BatchProcPurgeWSUser'
+                         :wUserNmSVal
                          :' '
                          :' '
                          :' '
@@ -352,17 +338,13 @@
                    + '<password>'
                    +        %trim(RequestDS1.password)
                    + '</password>'
-                   + '<web:passCode></web:passCode>'                                      //MD044342
                    + '<web:userLocator></web:userLocator>'
                    + '</web:authentication>'
                    + '<BFHeader>'
                    + '<att:correlationID></att:correlationID>'
-          //       + '<att:zone></att:zone>'                                              //MD044342
-                   + '<att:zone>'                                                         //MD044342
-                   +        %trim(RequestDS1.zonePrefix)                                  //MD044342
-                   + '</att:zone>'                                                        //MD044342
-                   + '<att:autoAuthorize></att:autoAuthorize>'                            //MD044342
-                   + '<att:extension/>'                                                   //MD044342
+                   + '<att:zone>'
+                   +        %trim(requestDS1.zonePrefix)
+                   + '</att:zone>'
                    + '</BFHeader>'
                    + '</web:bfgenericsoapheader>'
                    + '</soapenv:Header>';

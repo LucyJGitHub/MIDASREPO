@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD021155           Date 08Jul13              */
-/*       Prev Amend No. MD07223            Date 04Apr13              */
+/*       Last Amend No. CBF023             Date 04Jan17              */
+/*       Prev Amend No. MD021155           Date 08Jul13              */
+/*                      MD07223            Date 04Apr13              */
 /*                      CCB023             Date 06Aug12              */
 /*                      CBF005             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CBF023 - Soft Delete Feature on Security Related Modules    */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Should not clear MACBRDD                         */
 /*       MD07223 - GLC4116 seq 20001 in MSGW                         */
@@ -68,9 +70,38 @@
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                                    /*CSF002*/
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                                    /*CSF002*/
 /**********  DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')   */          /*CSF002*/ /*CCB023*/
+             DCL        VAR(&RTNC) TYPE(*CHAR) LEN(7)                                     /*CBF023*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CBF023*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CBF023*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CBF023*/
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                                     /*CBF023*/
+             DCL        VAR(&CBF023) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CBF023*/
 /**/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
+
+/** Check if CBF023 is installed */                                                       /*CBF023*/
+             CHGVAR     VAR(&RTNC) VALUE('       ')                                       /*CBF023*/
+             CHGVAR     VAR(&SARD) VALUE('CBF023')                                        /*CBF023*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CBF023*/
+             CALL       PGM(AOSARDR0) PARM(&RTNC &OPTN &SARD &SFMT)                       /*CBF023*/
+                                                                                          /*CBF023*/
+/** Database error */                                                                     /*CBF023*/
+                                                                                          /*CBF023*/
+             IF         COND(&RTNC *NE '       ' *AND &RTNC *NE +
+                          '*NRF   ') THEN(DO)                                             /*CBF023*/
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)                                 /*CBF023*/
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)                                                  /*CBF023*/
+             GOTO       CMDLBL(ERROR)                                                     /*CBF023*/
+             ENDDO                                                                        /*CBF023*/
+                                                                                          /*CBF023*/
+             IF         COND(&RTNC *EQ '       ') THEN(CHGVAR +
+                          VAR(&CBF023) VALUE('Y'))                                        /*CBF023*/
+                                                                                          /*CBF023*/
+/** If CBF023 is switched on, purging will be done by GOC004019 */                        /*CBF023*/
+             IF         COND(&CBF023 *EQ 'Y') THEN(GOTO +
+                          CMDLBL(ENDPGM))                                                 /*CBF023*/
 /**/
 /**********  RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)             */                     /*CCB023*/
 /**/
@@ -184,10 +215,10 @@
 /************             TOFILE(&TOLIB/BMCMPSDD) CRTFILE(*YES) MBROPT(*REPLACE)       */ /*CSC012*/
 /************MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +                   */ /*CSC012*/
 /************             FILE(&TOLIB/BMCMPSDD))                                       */ /*CSC012*/
- 
+
 /**********  CPYF       FROMFILE(MUSERDD) TOFILE(&TOLIB/BMUSERDD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)           */          /*CSF002*/ /*CCB023*/
- 
+
 /**********  CPYF       FROMFILE(MACBRDD) TOFILE(&TOLIB/BMACBRDD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)   */                  /*CSC012*/ /*CBF005*/
 /**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
@@ -244,7 +275,7 @@
 /************             INCCHAR(RECI 1 *EQ D)                                           /*CSC012*/
 /************MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +                      /*CSC012*/
 /************             FILE(&TOLIB/MCMPSDD))                                           /*CSC012*/
- 
+
 /**********  CPYF       FROMFILE(BMUSERDD) TOFILE(MUSERDD) +
                           MBROPT(*REPLACE) INCCHAR(RECI 1 *EQ D)   */          /*CSF002*/ /*CCB023*/
 /**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
@@ -286,7 +317,7 @@
 /************DLTF       FILE(&TOLIB/BMBRBSDD)                                          */ /*CSC012*/
 /************DLTF       FILE(&TOLIB/BMBROSDD)                                          */ /*CSC012*/
 /************DLTF       FILE(&TOLIB/BMCMPSDD)                                          */ /*CSC012*/
- 
+
 /**********  DLTF       FILE(BMUSERDD)                             */          /*CSF002*/ /*CCB023*/
 /**********  DLTF       FILE(BMACBRDD)   */                                    /*CSC012*/ /*CBF005*/
 /**********  DLTF       FILE(BMBRBSDD)                             */          /*CSC012*/ /*CCB023*/

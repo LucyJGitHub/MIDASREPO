@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD020168           Date 23Apr13               *
-      *  Prev Amend No. AR1097353          Date 26Mar13               *
+      *  Last Amend No. CBF023             Date 04Jan17               *
+      *  Prev Amend No. MD020168           Date 23Apr13               *
+      *                 AR1097353          Date 26Mar13               *
       *                 AR1036892          Date 27Sep12               *
       *                 AR1034050          Date 20Sep12               *
       *                 AR1032571          Date 14Sep12               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *  MD020168 - Error in GOC004012 00001                          *
       *  AR1097353 - No Event code Audit Report was generated.        *
       *              Additional fix for AR1096060.                    *
@@ -75,21 +77,21 @@
       *              Number                                           *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas GP Role Audit Report
      FGP004012P1O    E             PRINTER USROPN
      F                                     INFSR(*PSSR)
      F                                     INFDS(SPOOL1)
- 
+
       ** Midas GP Role Audit Report - Audit
      FGP004012AUO    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOLU)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -113,22 +115,28 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for Bank Details
      D GZSDBANK      E DS                  EXTNAME(GZSDBANKPD)
- 
+
+      ** External DS for SAR Details                                                          CBF023
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CBF023
+                                                                                              CBF023
+      ** Short DS for Access Objects                                                          CBF023
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CBF023
+
       ** File Information DS for Main PRTF
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
       ** File Information DS for Audit PRTF
      D SPOOLU          DS
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
      D UsrRoleDs       DS
      D  BFUSERID                     32A
      D  BFUSRNAM                     52A
@@ -142,17 +150,18 @@
      D  BFRCRTON                     26A
      D  BFRAPRBY                     32A
      D  BFAPRDAT                     26A
- 
+     D  BFDELDAT                     26A                                                      CBF023
+
      D GrpNamDs        DS            64
      D  GrpNm1                 1     32A
      D  GrpNm2                33     64A
- 
+
      D EntValDs        DS            52
      D  EntVl1                 1     13A
      D  EntVl2                14     26A
      D  EntVl3                27     39A
      D  EntVl4                40     52A
- 
+
      D EntDscDs        DS           258
      D  EntDs1                 1     43A
      D  EntDs2                44     86A
@@ -160,33 +169,34 @@
      D  EntDs4               130    172A
      D  EntDs5               173    215A
      D  EntDs6               216    258A
- 
-     D NullIndDs       S              5I 0 DIM(12)
- 
+
+     D***NullIndDs       S              5I 0 DIM(12)                                          CBF023
+     D NullIndDs       S              5I 0 DIM(13)                                            CBF023
+
       ** Input Parameter for ZDATEO
      D                 DS
      D PDateIn                 1      8  0
- 
+
      D**ZDate***        S              6  0                                                AR1097353
      D ZDate           S              8S 0                                                 AR1097353
      D ZDayNo          S              5  0
      D ZError          S              2  0
- 
+
      D ZDayNo3         S              5P 0
      D***ZDayNo4***      S              5P 0                                              AR1036892
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for ZSFILE
      D PZSEnty         S              3
      D PZSFile         S             10
      D PZSNum          S              6  0
      D PZSErr          S              1
      D PZSSeq          S              5A
- 
+
       ** Parameters for Access Programs
      D POption         S              7A
      D PRetCode        S              7A
@@ -194,7 +204,8 @@
      D PErms           S             50A
      D PCache          S              1A
      D PRecImage       S          32000A
- 
+     D PSard           S              6A                                                      CBF023
+
       ** Other Work Variables
      D WRun            S              1A
      D Error           S              1A
@@ -207,42 +218,43 @@
      D*wUserID**       S             32A                                                   AR1034050
      D wUserID         S             32A   INZ('initial')                                  AR1034050
      D wZone           S             10A
- 
+
      D wFirst          S              1    INZ('Y')
      D wSecon          S              1    INZ('Y')
      D wNoRec          S              4S 0
      D RqdLn1          S              3  0
      D DifLn1          S              3  0
- 
+
      D**TmpDat03        S               D   DATFMT(*DMY)                                   AR1097353
      D TmpDat03        S               D   DATFMT(*ISO)                                    AR1097353
      D DatNum03        S              8S 0
- 
+
      D***TmpDat04***     S               D   DATFMT(*DMY)                                  AR1036892
      D***DatNum04***     S              8S 0                                               AR1036892
- 
+
      D wEntTyp         S             52A
- 
+     D CBF023          S              1A                                                      CBF023
+
       ** +--------------------------------------+
       ** ¦ Declared Constants                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D wNoEntl         S             32A   INZ('**********  ')
      D wNoDesc1        S             52A   INZ('  No Entitlement Permitted to +
      D                                     the User')
      D wNoRole         S             32A   INZ('**********')
      D wNoDesc2        S            258A   INZ('No Role Permitted To The +
      D                                     Entitlement Type')
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Read All Records from the Result Set of the SQL Statement
- 
+
      C/exec sql
      C+ declare mainCursor Cursor
      C+  for select
@@ -263,7 +275,9 @@
      C+  A.BFRECLASTMODIFIEDDATE,
      C+  A.BFRECCREATEDON,
      C+  A.BFRECAPPROVEDBY,
-     C+  A.BFRECAPPROVEDDATE
+     C***A.BFRECAPPROVEDDATE*******************************************                       CBF023
+     C+  A.BFRECAPPROVEDDATE,                                                                 CBF023
+     C+  A.BFRECDELETETDATE                                                                   CBF023
      C+
      C***from*MIVW_ENTL*A**********************************************                    AR1034050
      C***left*outer*join*MIVW_USER*B*on*B.BFNAMEPK*=*A.BFUSERNAME******                    AR1034050
@@ -282,26 +296,26 @@
      C+  B.BFENTITLEMENTTYPE,                                                              AR1034050
      C+  B.BFGROUPNAME                                                                     AR1034050
      C/end-exec
- 
+
      C/exec sql
      C+ open mainCursor
      C/end-exec
- 
+
       ** Read First Record
- 
+
      C                   EXSR      SrFetch
- 
+
      C                   DOW       %SUBST(SQLSTT:1:2) = '00' OR
      C                             %SUBST(SQLSTT:1:2) = '01'
      C                   EXSR      SrConvDat
- 
+
      C**********         IF        ZDayNo3  = BJRDNB OR                                    AR1036892
      C**********                   (ZDayNo4 = BJRDNB AND                                   AR1036892
      C**********                   ZDayNo3  = 0)                                           AR1036892
      C                   IF        ZDayNo3  = BJRDNB                                       AR1036892
- 
+
       ** If Different Event Group ID
- 
+
      C                   IF        BFUSERID <> wUserID
      C                   EVAL      wFlag =  ' '
      C                   EVAL      wFlgCtr = 0
@@ -310,15 +324,15 @@
      C                   EVAL      wEntTyp = *BLANKS
      C                   EVAL      wSecon  = 'Y'
      C                   ENDIF
- 
+
      C                   EXSR      SrPrint2
      C                   ENDIF
- 
+
      C                   EXSR      SrFetch
      C                   ENDDO
- 
+
      C                   EXSR      SrEnd
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -329,13 +343,13 @@
       *                                                               *
       *****************************************************************
      C     SrFetch       BEGSR
- 
+
      C/exec sql
      C+  fetch next
      C+   from mainCursor
      C+  into :UsrRoleDs indicator :NULLINDDS
      C/end-exec
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -345,20 +359,20 @@
       *                                                               *
       *****************************************************************
      C     SrPrint       BEGSR
- 
+
       ** Open Report File
- 
+
      C                   IF        NOT %OPEN(GP004012P1)
      C                   OPEN      GP004012P1
      C                   ENDIF
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PZSSeq
      C                   PARM      *BLANKS       PZSEnty
      C                   PARM      SFILE1        PZSFile
      C                   PARM      SFNUM1        PZSNum
      C                   PARM      *BLANK        PZSErr
- 
+
      C                   IF        PZSERR = 'Y'
      C                   EVAL      DBASE  = 2
      C                   EVAL      RFILE  = 'ZSFILE'
@@ -366,26 +380,33 @@
      C                   EVAL      Error = 'Y'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   DETAIL1                                   AR1028208
      C                   WRITE     HEADP1
      C                   EVAL      wFirst = 'Y'
- 
+
       ** Last Change User
- 
+
      C                   IF        BFMODDBY <> *BLANKS
      C                   EVAL      RUSER  = BFMODDBY
      C                   ELSE
      C                   EVAL      RUSER  = BFCRTDBY
      C                   ENDIF
- 
+
       ** Change Date
- 
+
      C**********         IF        BFLSTMOD <> *BLANKS                                     AR1029790
      C**********         IF        NullIndDs(9) = 0                                        AR1029790
      C**********         EVAL      RCDAT = BFLSTMOD                                        AR1029790
      C**********         ENDIF                                                             AR1029790
      C**********         ELSE                                                              AR1029790
+     C                   IF        BFDELDAT <> '0'                                            CBF023
+     C                             AND CBF023 = 'Y'                                           CBF023
+     C                   IF        NullIndDs(9) = 0                                           CBF023
+     C                   EVAL      RCDAT = BFLSTMOD                                           CBF023
+     C                   ENDIF                                                                CBF023
+     C                   ELSE                                                                 CBF023
+                                                                                              CBF023
      C                   IF        BFLSTMOD <> *BLANKS                                     AR1030958
      C                   IF        NullIndDs(9) = 0                                        AR1030958
      C                   EVAL      RCDAT = BFLSTMOD                                        AR1030958
@@ -400,14 +421,23 @@
      C                   ENDIF
      C**********         ENDIF                                                             AR1029790
      C                   ENDIF                                                             AR1030958
- 
+                                                                                              CBF023
+     C                   ENDIF                                                                CBF023
+
       ** Change Timestamp
- 
+
      C**********         IF        BFLSTMOD <> *BLANKS                                     AR1029790
      C**********         IF        NullIndDs(9) = 0                                        AR1029790
      C**********         EVAL      RTIME = BFLSTMOD                                        AR1029790
      C**********         ENDIF                                                             AR1029790
      C**********         ELSE                                                              AR1029790
+     C                   IF        BFDELDAT <> '0'                                            CBF023
+     C                             AND CBF023 = 'Y'                                           CBF023
+     C                   IF        NullIndDs(9) = 0                                           CBF023
+     C                   EVAL      RTIME = BFLSTMOD                                           CBF023
+     C                   ENDIF                                                                CBF023
+     C                   ELSE                                                                 CBF023
+                                                                                              CBF023
      C                   IF        BFLSTMOD <> *BLANKS                                     AR1030958
      C                   IF        NullIndDs(9) = 0                                        AR1030958
      C                   EVAL      RTIME = BFLSTMOD                                        AR1030958
@@ -422,45 +452,52 @@
      C                   ENDIF
      C**********         ENDIF                                                             AR1029790
      C                   ENDIF                                                             AR1030958
- 
+                                                                                              CBF023
+     C                   ENDIF                                                                CBF023
+
       ** Last Change Action
- 
+
      C**********         IF        ZDayNo3 = 0                                             AR1029790
      C**********         EVAL      RACTN = 'Insert'                                        AR1029790
      C**********         ELSE                                                              AR1029790
+     C                   IF        BFDELDAT <> '0'                                            CBF023
+     C                             AND CBF023 = 'Y'                                           CBF023
+     C                   EVAL      RACTN = 'Delete'                                           CBF023
+     C                   ELSE                                                                 CBF023
      C                   EVAL      RACTN = 'Amend'
+     C                   ENDIF                                                                CBF023
      C**********         ENDIF                                                             AR1029790
- 
+
       ** Last Authorising User
- 
+
      C                   EVAL      RAUTH = BFRAPRBY
- 
+
       ** Authorisation Date
- 
+
      C                   IF        NullIndDs(12) = 0
      C                   EVAL      RAUDT = BFAPRDAT
      C                   ENDIF
- 
+
       ** Authorisation Timestamp
- 
+
      C                   IF        NullIndDs(12) = 0                                       AR1028208
      C                   EVAL      RATIM = BFAPRDAT
      C                   ENDIF                                                             AR1028208
- 
+
       ** User ID
- 
+
      C                   EVAL      RUSID = BFUSERID
- 
+
       ** User Name
- 
+
      C                   EVAL      RNAME = BFUSRNAM
- 
+
      C                   EVAL      wUserID = BFUSERID
                                                                                            AR1027797
       ** Write User/Role Entitlement to Report                                             AR1027797
                                                                                            AR1027797
      C                   WRITE     DETAIL1
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -469,31 +506,31 @@
       *                                                               *
       *****************************************************************
      C     SrPrint2      BEGSR
- 
+
      C                   IF        BFENTTYP <> *BLANKS AND
      C                             BFENTTYP <> wEntTyp
      C                   EVAL      RENTL = BFENTTYP
      C                   EVAL      wEntTyp = BFENTTYP
      C                   EXSR      SrOvrFlw
      C                   WRITE     DETAIL2
- 
+
      C                   EVAL      WFlgCtr = WFlgCtr + 1
      C                   ELSE
- 
+
      C                   IF        WFlgCtr = 0
      C                   EVAL      RENTL = %Trim(wNoEntl) + wNoDesc1
      C                   EXSR      SrOvrFlw
      C                   WRITE     DETAIL2
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        BFENTTYP <> *BLANKS AND
      C                             BFENTTYP =  wEntTyp AND
      C                             WFlgCtr <> 0
      C                   EXSR      SrOvrFlw                                                 MD020168
      C                   EXSR      SrPrint3
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -503,7 +540,7 @@
       *                                                               *
       *****************************************************************
      C     SrPrint3      BEGSR
- 
+
      C                   IF        BFGRPNAM <> *BLANKS
      C                   EVAL      WFlgCtr2 =0                                              MD020168
      C                   EVAL      GrpNamDs = BFGRPNAM
@@ -511,18 +548,18 @@
      C                   EVAL      EntDscDs = BFENTDES
      C                   EVAL      WFlgCtr2 = WFlgCtr2 + 1
      C                   ELSE
- 
+
      C                   IF        wFlag2 <> 'Y'
      C                             AND WFlgCtr2 < 1
      C                   EVAL      GrpNamDs = wNoRole
      C                   EVAL      EntDscDs = wNoDesc2
      C                   EVAL      wFlag2 =  'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      SrOvrFlw2
- 
+
      C                   IF        GrpNm1 <> *Blanks OR
      C                             EntVl1 <> *Blanks OR
      C                             EntDs1 <> *Blanks
@@ -531,7 +568,7 @@
      C                   EVAL      REDES = EntDs1
      C                   WRITE     DETAIL3
      C                   ENDIF
- 
+
      C                   IF        GrpNm2 <> *Blanks OR
      C                             EntVl2 <> *Blanks OR
      C                             EntDs2 <> *Blanks
@@ -540,31 +577,31 @@
      C                   EVAL      REDES = EntDs2
      C                   WRITE     DETAIL3
      C                   ENDIF
- 
+
      C                   IF        EntVl3 <> *Blanks OR
      C                             EntDs3 <> *Blanks
      C                   EVAL      RENTV = EntVl3
      C                   EVAL      REDES = EntDs3
      C                   WRITE     DETAIL3
      C                   ENDIF
- 
+
      C                   IF        EntVl4 <> *Blanks OR
      C                             EntDs4 <> *Blanks
      C                   EVAL      RENTV = EntVl4
      C                   EVAL      REDES = EntDs4
      C                   WRITE     DETAIL3
      C                   ENDIF
- 
+
      C                   IF        EntDs5 <> *Blanks
      C                   EVAL      REDES = EntDs5
      C                   WRITE     DETAIL3
      C                   ENDIF
- 
+
      C                   IF        EntDs6 <> *Blanks
      C                   EVAL      REDES = EntDs6
      C                   WRITE     DETAIL3
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -574,16 +611,16 @@
       *                                                               *
       *****************************************************************
      C     SrOvrFlw      BEGSR
- 
+
      C                   EVAL      RqdLn1 = 6
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
      C                   IF        DifLn1 <= RqdLn1 OR
      C                             wFirst = 'Y'
      C                   WRITE     HEADP2
      C                   EVAL      wFirst = 'N'
      C                   ENDIF
- 
+
      C                   EVAL      RqdLn1 = 11                                             AR1027797
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1                                AR1027797
                                                                                            AR1027797
@@ -592,7 +629,7 @@
      C                   WRITE     HEADP1
      C                   WRITE     HEADP2
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -602,16 +639,16 @@
       *                                                               *
       *****************************************************************
      C     SrOvrFlw2     BEGSR
- 
+
      C                   EVAL      RqdLn1 = 6
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
      C                   IF        DifLn1 <= RqdLn1 OR
      C                             wSecon = 'Y'
      C                   WRITE     HEADP3
      C                   EVAL      wSecon = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -621,24 +658,24 @@
       *                                                               *
       *****************************************************************
      C     SrEnd         BEGSR
- 
+
       ** Close P1 and Write Trailer Record Format
- 
+
      C                   IF        %OPEN(GP004012P1)
- 
+
      C**********         EVAL      RqdLn1 = 4                                              AR1027797
      C                   EVAL      RqdLn1 = 6                                              AR1027797
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   WRITE     TRAILP1
      C                   CLOSE     GP004012P1
      C                   ENDIF
- 
+
      C                   EXSR      SRAudit
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -648,21 +685,21 @@
       *                                                               *
       *****************************************************************
      C     SrAudit       BEGSR
- 
+
      C                   IF        (Error <> 'Y')
      C                   IF        wNoRec = 0
- 
+
       ** Open and Register AU Report via RCF
- 
+
      C                   Z-ADD     SFNUMU        PZSNum
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM      *BLANKS       PZSSeq
      C                   PARM      *BLANKS       PZSEnty
      C                   PARM      SFILEU        PZSFile
      C                   PARM                    PZSNum
      C                   PARM      *BLANK        PZSErr
- 
+
      C                   IF        PZSERR = 'Y'
      C                   EVAL      DBASE  = 3
      C                   EVAL      RFILE  = 'ZSFILE'
@@ -671,26 +708,26 @@
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   ENDIF
- 
+
      C                   WRITE     HEADAU
- 
+
       ** Write No Details
- 
+
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** Write Database Error
- 
+
      C                   WRITE     HEADAU
      C                   WRITE     DBERROR
- 
+
      C                   IF        %OPEN(GP004012P1)
      C                   CLOSE     GP004012P1
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -701,10 +738,10 @@
       *                                                               *
       *****************************************************************
      C     SrConvdat     BEGSR
- 
+
      C                   EVAL      ZDayNo3 = 0
      C**********         EVAL      ZDayNo4 = 0                                             AR1036892
- 
+
      C**********         IF        NullIndDs(9) = 0                                        AR1036892
      C**********         EVAL      TmpDat03 = %DATE(%SUBST(BFLSTMOD:1:10):*ISO)            AR1036892
      C                   IF        NullIndDs(10) = 0                                       AR1036892
@@ -714,7 +751,7 @@
      C                   EXSR      SRZDateO
      C                   Z-ADD     ZDayNo        ZDayNo3
      C                   ENDIF
- 
+
      C**********         IF        NullIndDs(10) = 0                                       AR1036892
      C**********         EVAL      TmpDat04 = %DATE(%SUBST(BFRCRTON:1:10):*ISO)            AR1036892
      C**********         EVAL      DatNum04 = %DEC(TmpDat03)                               AR1025965
@@ -723,7 +760,7 @@
      C**********         EXSR      SRZDateO                                                AR1036892
      C**********         Z-ADD     ZDayNo        ZDayNo4                                   AR1036892
      C**********         ENDIF                                                             AR1036892
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -735,13 +772,13 @@
       *                                                               *
       *****************************************************************
      C     SrZDateO      BEGSR
- 
+
      C**********         CALL      'ZDATEO'                                                AR1097353
      C                   CALL      'ZDATE10'                                               AR1097353
      C                   PARM      PDateIN       ZDate
      C                   PARM                    ZDayNo
      C**********         PARM                    ZError                                    AR1097353
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -751,25 +788,25 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    wZone
- 
+
       ** Initialize Program Name
- 
+
      C                   EVAL      DBPGM = 'GP004012'
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'GPACSZBNK'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      *BLANKS       PErms
      C                   PARM      wZone         PZone
      C                   PARM      'N'           PCache
      C     GZSDBANK      PARM                    PRecImage
- 
+
       ** Database Error
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE  = 1
@@ -781,7 +818,30 @@
      C                   EXSR      SrAudit
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
+      ** Check if CBF023 is installed                                                         CBF023
+                                                                                              CBF023
+     C                   CALL      'AOSARDR0'                                                 CBF023
+     C                   PARM      *BLANKS       PRetCode                                     CBF023
+     C                   PARM      '*VERIFY'     POption                                      CBF023
+     C                   PARM      'CBF023'      PSard                                        CBF023
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CBF023
+                                                                                              CBF023
+     C                   IF        PRetCode <> *BLANKS                                        CBF023
+     C                             AND PRetCode <> '*NRF   '                                  CBF023
+     C     *LOCK         IN        LDA                                                        CBF023
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CBF023
+     C                   EVAL      DBKey = PSard                                              CBF023
+     C                   EVAL      DBase = 4                                                  CBF023
+     C                   OUT       LDA                                                        CBF023
+     C                   EXSR      *PSSR                                                      CBF023
+     C                   ENDIF                                                                CBF023
+                                                                                              CBF023
+     C                   EVAL      CBF023 = 'N'                                               CBF023
+     C                   IF        PRetCode = *BLANKS                                         CBF023
+     C                   EVAL      CBF023 = 'Y'                                               CBF023
+     C                   ENDIF                                                                CBF023
+
      C                   ENDSR
       *********************************************************************
       /EJECT
@@ -794,17 +854,17 @@
       *                                                                   *
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************

@@ -17,9 +17,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD044087           Date 14Feb17               *
-      *  Prev Amend No. MD023554           Date 19Nov13               *
-      *                 MD023412           Date 14Nov13               *
+      *  Last Amend No. MD023554           Date 19Nov13               *
+      *  Prev Amend No. MD023412           Date 14Nov13               *
       *                 MD021158           Date 30Sep13               *
       *                 MD019039           Date 30Sep13               *
       *                 AR1083172          Date 30Sep13               *
@@ -30,9 +29,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD044087 - Database Error Control is encountered when        *
-      *             accessing account via Account Movements           *
-      *             Enquiry screen                                    *
       *  MD023554 - Unable to proceed with the transaction            *
       *             (withdrawal) as it already hanged                 *
       *  MD023412 - DBERRCTL appears when making a withdrawal upon    *
@@ -63,12 +59,12 @@
       *                   ZDATE9Z1LE & ZDATE9Z4                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FGLACNTL3  IF   E           K DISK    INFSR(*PSSR)
       ** Midas GL Account Extension File
       *
@@ -86,24 +82,24 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for Currency Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short DS for access objects
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long DS for access programs
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays And Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D AVAIL_DATES     DS
      D  F1DAT0
      D  F1DAT1
@@ -118,7 +114,7 @@
      D*AvailDates                          Like(F1DAT0) Dim(10)                             MD023412
      D AvailDates                          Like(F1DAT0) Dim(10) INZ(0)                      MD023412
      D                                     Overlay(AVAIL_DATES)
- 
+
      D ACCT_BAL        DS
      D  F1BAV0
      D  F1BAV1
@@ -133,10 +129,10 @@
      D*AcctBal**                           Like(F1BAV0) Dim(10)                             MD023412
      D AcctBal                             Like(F1BAV0) Dim(10) INZ(0)                      MD023412
      D                                     Overlay(ACCT_BAL)
- 
+
      D*AccBal***                           Like(F1BAV0) Dim(10)                             MD023412
      D AccBal                              Like(F1BAV0) Dim(10) INZ(0)                      MD023412
- 
+
      D AVAIL_BAL       DS
      D  F1AVA0
      D  F1AVA1
@@ -151,28 +147,28 @@
      D*AvailBal*                           Like(F1AVA0) Dim(10)                             MD023412
      D AvailBal                            Like(F1AVA0) Dim(10) INZ(0)                      MD023412
      D                                     Overlay(AVAIL_BAL)
- 
+
      D*AvaBal***                           Like(F1AVA0) Dim(10)                             MD023412
      D AvaBal                              Like(F1AVA0) Dim(10) INZ(0)                      MD023412
      D*AvaBalOv*                           Like(F1AVA0) Dim(10)                             MD023412
      D AvaBalOv                            Like(F1AVA0) Dim(10) INZ(0)                      MD023412
- 
+
      D LDA             DS           256
       ** Local data area for database error details
- 
+
      D  DBFILE               134    141
      D  DBKEY                142    170
      D  DBPGM                171    180
      D  DBASE                181    183  0
      D  DBTXT                184    256
- 
+
      D RefDS           DS            50
      D  BRCA
      D  CNUM
      D  CCY
      D  ACOD
      D  ACSQ
- 
+
      D SQTabDS         DS
      D  SQRef                  1     50
      D  SQValDat              51     60D
@@ -188,16 +184,15 @@
      D   NullArray                    5I 0 DIM(4)                                           MD021158
      D                                     Overlay(Nulls)                                   MD021158
                                                                                             MD021158
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D SQAsstAmtX      S             15S 0                                                  MD021158
      D SQMatDatOK      S              1A                                                    MD021158
-     D********** PRtAcNum        S             10S 0                                        MD044087
-     D PRtAcNum        S             10  0                                                  MD044087
+     D PRtAcNum        S             10S 0
      D PCusn           S              6A
      D PCurr           S              3A
      D PACod           S             10S 0
@@ -212,9 +207,9 @@
      D PAvlBal         S             15S 0
      D PFailDat        S              5S 0
      D PFailBal        S             15S 0
- 
+
      D POptn           S              7A
- 
+
      D PRtCd           S              7A
      D PSysVal01       S             20A
      D PCurSet01       S            200A
@@ -236,16 +231,16 @@
      D PCurSet09       S            200A
      D PSysVal10       S             20A
      D PCurSet10       S            200A
- 
+
      D PRunDat         S              5  0
      D PChkDat         S              5  0                                                  MD019039
- 
+
      D KCusn           S                   Like(PCusn)
      D KCurr           S                   Like(PCurr)
      D KACod           S                   Like(PACod)
      D KASeq           S                   Like(PASeq)
      D KBrch           S                   Like(PBrch)
- 
+
      D WProcType       S              1A
      D WValDat         S              5S 0
      D WRun            S              1A
@@ -257,7 +252,7 @@
      D MINBX           S             15S 0
      D WSpDt           S              5S 0                                                  MD019039
      D WAvDt           S              5S 0                                                  MD019039
- 
+
       ** Arrays/variables for date conversion
      D/COPY ZSRSRC,ZDATE9Z1LE
      D/COPY ZSRSRC,ZDAT10Z1LE
@@ -267,7 +262,7 @@
                                                                                             MD019039
      D/COPY ZSRSRC,ZHOLELE                                                                  MD019039
      D/COPY ZSRSRC,ZHOLILE                                                                  MD019039
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -505,7 +500,7 @@
       *
      C                   EVAL      N2 = N1
      C                   EVAL      WRef = RefDS
- 
+
      c/Exec Sql
      c+ Declare RE001590Cur1 Cursor
      c+   for
@@ -515,18 +510,18 @@
      c****where RTREF = :WRef                                                               MD021158
      c+   where RTREF = :WRef and ABCUPD = 'N'                                              MD021158
      c/End-Exec
- 
+
      c/Exec Sql
      c+ Open RE001590Cur1
      c/End-Exec
- 
+
      c/Exec Sql
      c+ Fetch next
      c+   from RE001590Cur1
      c****into*:SQTabDS                                                                     MD021158
      c+   into :SQTabDS:NullArray                                                           MD021158
      c/End-Exec
- 
+
      C                   DOW       SQLSTT = '00000'
       *
       ** When record is found
@@ -582,20 +577,20 @@
      C                   EVAL      N2 = N2 + 1
      C                   ENDDO
      C                   EVAL      N2 = N1
- 
+
      c/Exec Sql
      c+ Fetch next
      c+   from RE001590Cur1
      c****into*:SQTabDS                                                                     MD021158
      c+   into :SQTabDS:NullArray                                                           MD021158
      c/End-Exec
- 
+
      C                   ENDDO
- 
+
      c/Exec Sql
      c+ Close RE001590Cur1
      c/End-Exec
- 
+
      C                   IF        PTrnTyp = 'BAL ENQY'                                     MD021158
      C                   EVAL      PAvlBal = AvaBal(2)                                      MD021158
      C                   ELSE                                                               MD021158
@@ -645,7 +640,7 @@
      C                   ENDIF
      C
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -672,7 +667,7 @@
       **        AOSVALR0                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
      C     *ENTRY        PLIST
@@ -780,7 +775,7 @@
      C                   ADD       1             WForward                                  AR1083172
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -795,7 +790,7 @@
       ** Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
       *
      C                   IF        WRun = *BLANKS
@@ -813,5 +808,5 @@
      C                   ENDSR
      C/COPY ZSRSRC,ZACCHLE                                                                  MD019039
      C/COPY ZSRSRC,ZFWDT_ILE                                                                MD019039
- 
+
       /COPY ZSRSRC,ZDATE9Z4

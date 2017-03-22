@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039280A          Date 18Oct16               *
-      *  Prev Amend No. MD039001           Date 12Aug16               *
+      *  Last Amend No. MD040758           Date 21Oct16               *
+      *  Prev Amend No. MD039280A          Date 18Oct16               *
+      *                 MD039001           Date 12Aug16               *
       *                 MD039280           Date 27Jul16               *
       *                 MD034990           Date 25May16               *
       *                 MD032185           Date 02Jun15               *
@@ -219,6 +220,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD040758 - Interest posting and tax posting in the main and  *
+      *             alternate account is incorrect when CDL013 is on  *
       *  MD039280A - Ensure that counterposting of tax to alternate   *
       *              is done correctly.                               *
       *  MD039001 - Incorrect multilanguage narrative for Interest    *
@@ -2899,9 +2902,18 @@
       **  If CR interest (not adjustment) and a/c liable for withholding                    AR978914
       **  tax, save alt. a/c details and post gross interest to main a/c.                   AR978914
       *                                                                                     AR978914
+     C                     MOVE ' '       ADJUST  1                                         MD040758
+     C           SHISD     IFLT CNCID                                                       MD040758
+     C           CDL013    ANDEQ'1'                                                         MD040758
+     C                     MOVE 'Y'       ADJUST                                            MD040758
+     C                     ENDIF                                                            MD040758
      C           WDRCR     IFEQ '1'                                                         AR978914
      C           ATITAX    ANDEQ'Y'                                                         AR978914
      C           SHISD     ANDEQCNCID                                                       AR978914
+     C           WDRCR     OREQ '1'                                                         MD040758
+     C           ATITAX    ANDNE'0'                                                         MD040758
+     C           SHISD     ANDLECNCID                                                       MD040758
+     C           CDL013    ANDEQ'1'                                                         MD040758
      C                     Z-ADDCAIC      @CRINT                                            AR978914
      C                     MOVE RBRCA     @CBRCA                                            AR978914
      C                     MOVE RCNUM     @CCNUM                                            AR978914
@@ -3068,6 +3080,10 @@
      C           WDRCR     IFEQ '1'                                                         AR978914
      C           ATITAX    ANDEQ'Y'                                                         AR978914
      C           SHISD     ANDEQCNCID                                                       AR978914
+     C           WDRCR     OREQ '1'                                                         MD040758
+     C           ATITAX    ANDNE'0'                                                         MD040758
+     C           SHISD     ANDEQCNCID                                                       MD040758
+     C           CDL013    ANDEQ'1'                                                         MD040758
      C                     Z-ADDCAIC      @CRINT                                            AR978914
      C                     MOVE AABRCA    @CBRCA                                            AR978914
      C                     MOVE AACNUM    @CCNUM                                            AR978914
@@ -3213,6 +3229,7 @@
      C                     END                             - E2
      C*
      C                     END                             - E1
+     C                     MOVE ' '       ADJUST                                            MD040758
       *                                                                   S01408
      C/COPY WNCPYSRC,RE3664CP36                                           S01408
       *                                                                   S01408
@@ -9126,6 +9143,13 @@
       *****************************************************************   CCB003
      C           CACPR     BEGSR                           **CACPR BEGSR**
      C*
+      *                                                                                     MD040758
+     C                     MOVE ' '       ADJUST                                            MD040758
+     C           SHISD     IFLT CNCID                                                       MD040758
+     C           CDL013    ANDEQ'1'                                                         MD040758
+     C                     MOVE 'Y'       ADJUST                                            MD040758
+     C                     ENDIF                                                            MD040758
+      *                                                                                     MD040758
      C/COPY WNCPYSRC,RE3664C166
      C           CRE002    IFEQ 'Y'                        B1             CRE002
      C                     Z-ADDCIIE      WPSTA                           CRE002
@@ -9148,10 +9172,17 @@
      C                     Z-SUBWPSTA     WPSTA                           CRE002
      C                     ENDIF                           E.2            CRE002
      C*                                                                   CRE002
+     C           ADJUST    IFEQ 'Y'                                                         MD040758
+     C                     MOVELNAR,12    INPNAR                                            MD040758
+     C                     MOVELNR16,12   INP16                                             MD040758
+     C                     MOVELDN07,12   INP07                                             MD040758
+     C                     MOVELMGD,12    ##MGID                                            MD040758
+     C                     ELSE                                                             MD040758
      C                     MOVELNAR,4     INPNAR
      C                     MOVELNR16,4    INP16
      C                     MOVELDN07,4    INP07
      C                     MOVELMGD,4     ##MGID                          189038
+     C                     ENDIF                                                            MD040758
      C/COPY WNCPYSRC,RE3664C149
      C*
      C***********          Z-ADDBICN      CNUM                            049320
@@ -9202,6 +9233,7 @@
      C                     EXSR GEICPR
      C                     MOVEL*BLANK    OTST                            CMX001
      C                     END
+     C                     MOVE ' '       ADJUST                                            MD040758
      C/COPY WNCPYSRC,RE3664C167
      C*
      C                     ENDSR                           **CACPR ENDSR**
@@ -11438,6 +11470,20 @@
      C** PROCESS ONLY IF TOTAL INTEREST IS CREDIT
      C*
      C/COPY WNCPYSRC,RE3664C189
+      *                                                                                     MD040758
+     C                     MOVE ' '       ADJUST                                            MD040758
+     C           SHISD     IFLT CNCID                                                       MD040758
+     C           CDL013    ANDEQ'1'                                                         MD040758
+     C                     MOVE 'Y'       ADJUST                                            MD040758
+     C                     ENDIF                                                            MD040758
+      *                                                                                     MD040758
+      ** The WTIWT should be postive for interest adjustment.                               MD040758
+      *                                                                                     MD040758
+     C           WTIWT     IFLT *ZERO                                                       MD040758
+     C           ADJUST    ANDEQ'Y'                                                         MD040758
+     C                     Z-SUBWTIWT     WTIWT                                             MD040758
+     C                     ENDIF                                                            MD040758
+      *                                                                                     MD040758
      C           WTIWT     IFLT *ZERO                      * B1
      C                     Z-ADD*ZERO     WTIWT            *
      C                     END                             * E1
@@ -11811,6 +11857,12 @@
       **interest*to*alt.*a/c.******************************************************   135809 135809R
       * If alt. a/c and CR interest for this cap., transfer net                             AR978914
       * interest to alt. a/c.                                                               AR978914
+      *                                                                                     MD040758
+     C           @CRINT    IFLT *ZERO                                                       MD040758
+     C           ADJUST    ANDEQ'Y'                                                         MD040758
+     C                     Z-SUB@CRINT    @CRINT                                            MD040758
+     C                     ENDIF                                                            MD040758
+      *                                                                                     MD040758
      C           CACP      IFNE *BLANKS                    ** B2
      C********** @CRINT    ANDNE*ZERO                                                 135809 135809R
      C********** @CRINT    SUB  CINW      @CRNET                                      135809 135809R
@@ -11879,8 +11931,18 @@
      C                     Z-ADDCNCID     HISD                                              AR978914
      C                     MOVE '1'       RIND                                              AR978914
      C                     MOVE 'R'       ATYP                                              AR978914
+     C           CDL013    IFEQ '1'                                                         MD040758
+     C           ADJUST    ANDEQ'Y'                                                         MD040758
+     C                     Z-SUB@CRNET    @CRNET                                            MD040758
+     C                     ENDIF                                                            MD040758
      C                     Z-ADD@CRNET    WPSTA                                             AR978914
+      *                                                                                     MD040758
+     C           CDL013    IFEQ '1'                                                         MD040758
+     C           ADJUST    ANDEQ'Y'                                                         MD040758
+     C                     Z-ADD12        #                                                 MD040758
+     C                     ELSE                                                             MD040758
      C                     Z-ADD13        #                                                 AR978914
+     C                     ENDIF                                                            MD040758
      C                     MOVELNAR,#     INPNAR                                            AR978914
      C                     MOVELNR16,#    INP16                                             AR978914
      C                     MOVELDN07,#    INP07                                             AR978914
@@ -12054,10 +12116,19 @@
      C                     ELSE                                                             AR978914
      C                     MOVE @CPRFC    PRFC                                              AR978914
      C                     END                                                              AR978914
+      *                                                                                     MD040758
+     C           CDL013    IFEQ '1'                                                         MD040758
+     C           ADJUST    ANDEQ'Y'                                                         MD040758
+     C                     MOVELNAR,12    INPNAR                                            MD040758
+     C                     MOVELNR16,12   INP16                                             MD040758
+     C                     MOVELDN07,12   INP07                                             MD040758
+     C                     MOVELMGD,12    ##MGID                                            MD040758
+     C                     ELSE                                                             MD040758
      C                     MOVELNAR,2     INPNAR                                            AR978914
      C                     MOVELNR16,2    INP16                                             AR978914
      C                     MOVELDN07,2    INP07                                             AR978914
      C                     MOVELMGD,2     ##MGID                                            AR978914
+     C                     ENDIF                                                            MD040758
      C                     EXSR SUBNAR                                                      AR978914
      C                     MOVELNARS      PNAR                                              AR978914
      C                     Z-SUB@CRNET    WPSTA                                             AR978914
@@ -12402,6 +12473,10 @@
      C                     Z-ADDCNCID     VALD             ****           060828
      C                     Z-ADDCNCID     HISD             ****           060828
      C*********************EXSR WVALD                      ****     LN0106093582
+     C           CDL013    IFEQ '1'                                                         MD040758
+     C           ADJUST    ANDEQ'Y'                                                         MD040758
+     C                     Z-SUBCINW      CINW                                              MD040758
+     C                     ENDIF                                                            MD040758
      C                     Z-ADDCINW      WPSTA            **
      C                     MOVE WOTACC    WTACC            **
      C                     MOVE WOTACT    WATYP            **
@@ -12417,10 +12492,18 @@
      C           BCINW     IFGT *ZERO
      C/COPY WNCPYSRC,REH00440
      C*
+     C           CDL013    IFEQ '1'                                                         MD040758
+     C           ADJUST    ANDEQ'Y'                                                         MD040758
+     C                     MOVELNAR,12    INPNAR                                            MD040758
+     C                     MOVELNR16,12   INP16                                             MD040758
+     C                     MOVELDN07,12   INP07                                             MD040758
+     C                     MOVELMGD,12    ##MGID                                            MD040758
+     C                     ELSE                                                             MD040758
      C                     MOVELNAR,5     INPNAR
      C                     MOVELNR16,5    INP16
      C                     MOVELDN07,5    INP07
      C                     MOVELMGD,5     ##MGID                          S01522
+     C                     ENDIF                                                            MD040758
      C/COPY WNCPYSRC,RE3664C152
      C*
      C*
@@ -12470,6 +12553,7 @@
       * Restore history balance                                           135809
      C**********           Z-ADD@RHISB    HISB                                        135809 135809R
      C                     Z-ADD@RHISB    HISB                                              AR978914
+     C                     MOVE ' '       ADJUST                                            MD040758
      C                     ENDSR
      C********************************************************************
      C/EJECT

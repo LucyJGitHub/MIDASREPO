@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD044400           Date 20Mar17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
       *                 MD027598           Date 24Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -84,6 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044400 - Error in deal amendment input                     *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -604,6 +606,7 @@
      D WPEAInd         S              1A                                                      CSC054
                                                                                             BUG10727
      D PDEAL#          S              6  0                                                  BUG10727
+     D CDL011          S              1A                                                    MD044400
                                                                                               CSC024
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -758,9 +761,12 @@
       *                                                                                      BUG6534
       * Distinguish loans from deposits for conditioning settlement tabs.                    BUG6534
       *                                                                                      BUG6534
-     C                   MOVEL     ' '           LONDEP                                      BUG6534
-     C                   MOVEL     ' '           DDCSNM                                     AR736874
-     C                   MOVEL     ' '           DDCCY                                      AR736874
+     C**********         MOVEL     ' '           LONDEP                             BUG6534 MD044400
+     C**********         MOVEL     ' '           DDCSNM                            AR736874 MD044400
+     C**********         MOVEL     ' '           DDCCY                             AR736874 MD044400
+     C                   MOVEL     *BLANKS       LONDEP                                     MD044400
+     C                   MOVEL     *BLANKS       DDCSNM                                     MD044400
+     C                   MOVEL     *BLANKS       DDCCY                                      MD044400
      C                   IF        DDDLNO <> *BLANKS                                         BUG6534
      C                   MOVEL     DDDLNO        DEALNR                                      BUG6534
      C     DEALNR        CHAIN     MMDEALLL                           30                     BUG6534
@@ -775,6 +781,7 @@
      C                   IF        RECORD = 'MMDELDP0'                                      AR736874
       *                                                                                    AR1092035
      C                   IF        CDL005 = 'Y'                                            AR1092035
+     C                             OR CDL011 = 'Y'                                          MD044400
      C                   MOVEL     HKCSNM        DDCSNM                                     AR736874
      C                   ELSE                                                              AR1092035
      C                   MOVEL     HKCNUM        DDCSNM                                    AR1092035
@@ -2143,6 +2150,30 @@
      C                   ENDIF                                                             AR1092035
                                                                                            AR1096000
      C                   ENDIF                                                             AR1096000
+      *                                                                                     MD044400
+      ** Check for CDL011 Expansion of Customer Number is ON                                MD044400
+      *                                                                                     MD044400
+     C                   CALL      'AOSARDR0'                                               MD044400
+     C                   PARM      *BLANKS       @RTCD                                      MD044400
+     C                   PARM      '*VERIFY'     @OPTN                                      MD044400
+     C                   PARM      'CDL011'      @SARD                                      MD044400
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD044400
+      *                                                                                     MD044400
+     C     @RTCD         IFEQ      *BLANK                                                   MD044400
+     C                   MOVE      'Y'           CDL011                                     MD044400
+     C                   ELSE                                                               MD044400
+     C                   EVAL      CDL011 = 'N'                                             MD044400
+      *                                                                                     MD044400
+     C                   IF        @RTCD <> '*NRF'                                          MD044400
+     C     *LOCK         IN        LDA                                                      MD044400
+     C                   EVAL      DBKEY = 'CDL011'                                         MD044400
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD044400
+     C                   EVAL      DBASE = 904                                              MD044400
+     C                   OUT       LDA                                                      MD044400
+     C                   EXSR      *PSSR                                                    MD044400
+     C                   ENDIF                                                              MD044400
+                                                                                            MD044400
+     C                   ENDIF                                                              MD044400
       *                                                                                    AR1092035
      C                   ENDSR
       ********************************************************************

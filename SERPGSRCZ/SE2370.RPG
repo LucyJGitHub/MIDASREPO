@@ -32,8 +32,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. 215959             Date 21Mar16               *
-      *  Prev Amend No. AR1067108          Date 11Dec12               *
+      *  Last Amend No. 260331             Date 31Mar16               *
+      *  Prev Amend No. 215959             Date 21Mar16               *
+      *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
       *                 251950A            Date 27Feb12               *
       *                 AR853119           Date 24Nov11               *
@@ -182,6 +183,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  260331 - Incorrect posting created due to a deleted diary    *
+      *           event. Applied fix 255857.                          *
+      *         - Applied for MD-37742.                               *
       *  215959 - Truncation error on event amount in SE2450P3.       *
       *           Recompiled due to changes in PF/SEKEYD.             *
       *         - Applied for MD-37439.                               *
@@ -2438,6 +2442,7 @@
      C                     MOVE '0'       *IN79
      C           *IN79     DOWEQ'0'
      C*
+     C                     MOVEL'N'       WRVPOS  1                                           260331
      C*
      C***STORE*NOM*CCY*FROM*SECTYD*AS*SEDEVDF*HAS*NMCY*FIELD*TOO*******   E20086
      C*
@@ -2543,6 +2548,13 @@
      C                     END                                            E15549
      C*                                                                   E15549
      C                     ELSE                                           E15549
+     C           RECI      IFEQ 'R'                                                           260331
+     C           SAAT      IFEQ 'DV'                                                          260331
+     C           SAAT      OREQ 'MP'                                                          260331
+     C           SAAT      OREQ 'PP'                                                          260331
+     C                     MOVEL'Y'       WRVPOS                                              260331
+     C                     ENDIF                                                              260331
+     C                     ENDIF                                                              260331
      C*                                                                   E15549
      C**IF*EVENT*ACTIONED*IN THIS RUN, SE2390 WILL DO THE POSN SETTE15549 051107
      C*********************                                        E15549 051107
@@ -2685,8 +2697,14 @@
      C           SDXD      ANDGTWFRMDT                                    S01510
      C           SDXD      ANDLEWTODAT                                    S01510
      C*                                                                   S01510
+     C                     MOVEL'N'       WRVPOS                                              260331
+      *                                                                                       260331
      C           SECDKY    CHAINSECACE               80                   S01510
      C           *IN80     IFEQ '0'                                       S01510
+     C           RECI      IFEQ 'R'                                                           260331
+     C           SAAT      ANDEQ'DV'                                                          260331
+     C                     MOVEL'Y'       WRVPOS                                              260331
+     C                     ENDIF                                                              260331
      C           AKRI      IFEQ 'Y'                                       S01510
      C                     Z-ADD0         SDAD                            S01510
      C                     END                                            S01510
@@ -4376,6 +4394,17 @@
      C                     ELSE
      C                     MOVE 'P'       PPRE
      C                     END
+      *                                                                                       260331
+     C           WRVPOS    IFEQ 'Y'                                                           260331
+     C           PPRE      IFEQ 'R'                                                           260331
+     C                     MOVE 'P'       PPRE                                                260331
+     C                     ELSE                                                               260331
+     C           PPRE      IFEQ 'P'                                                           260331
+     C                     MOVE 'R'       PPRE                                                260331
+     C                     ENDIF                                                              260331
+     C                     ENDIF                                                              260331
+     C                     ENDIF                                                              260331
+      *                                                                                       260331
      C                     EXSR W02
      C                     END
      C*
@@ -4682,6 +4711,17 @@
      C                     ELSE
      C                     MOVE 'P'       PPRE
      C                     END
+      *                                                                                       260331
+     C           WRVPOS    IFEQ 'Y'                                                           260331
+     C           PPRE      IFEQ 'R'                                                           260331
+     C                     MOVE 'P'       PPRE                                                260331
+     C                     ELSE                                                               260331
+     C           PPRE      IFEQ 'P'                                                           260331
+     C                     MOVE 'R'       PPRE                                                260331
+     C                     ENDIF                                                              260331
+     C                     ENDIF                                                              260331
+     C                     ENDIF                                                              260331
+      *                                                                                       260331
      C                     EXSR W02
       *
      C           ENDPPY    ENDSR                           ** ENDPPY **
@@ -4911,6 +4951,16 @@
      C                     ELSE                                           E20086
      C                     MOVE 'R'       PPRE                            E20086
      C                     END                                            E20086
+      *                                                                                       260331
+     C           WRVPOS    IFEQ 'Y'                                                           260331
+     C           PPRE      IFEQ 'R'                                                           260331
+     C                     MOVE 'P'       PPRE                                                260331
+     C                     ELSE                                                               260331
+     C           PPRE      IFEQ 'P'                                                           260331
+     C                     MOVE 'R'       PPRE                                                260331
+     C                     ENDIF                                                              260331
+     C                     ENDIF                                                              260331
+     C                     ENDIF                                                              260331
      C*                                                                   E20086
      C***  Amount posted should be positive.                              E20086
      C*                                                                   E20086

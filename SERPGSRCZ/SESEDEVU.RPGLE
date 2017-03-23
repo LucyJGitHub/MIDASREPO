@@ -30,12 +30,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD037742           Date 01Apr16               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE075             Date 17Nov05               *
       *                 237063             Date 20Nov05               *
       *                 CGL031             Date 05Jul04               *
@@ -50,6 +51,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037742 - Security diary events - pool factor reversal.     *
+      *             Patterned after 260331 changes in SESEDESIN.      *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
@@ -1181,6 +1184,16 @@
      C                   ELSE                                                                 CSE065
      C                   Z-ADD     *ZEROS        S2SDAL                                       CSE065
      C                   ENDIF                                                                CSE065
+      *                                                                                     MD037742
+      ** If Record Id is 'D', reset SDDT to zero                                            MD037742
+      *                                                                                     MD037742
+     C                   IF        S2RECI = 'D'                                             MD037742
+     C                   IF        S2SDET = 'MP' OR S2SDET = 'DV'                           MD037742
+     C                               OR S2SDET = 'PP'                                       MD037742
+     C                   Z-ADD     0             S2SDDT                                     MD037742
+     C                   ENDIF                                                              MD037742
+     C                   ENDIF                                                              MD037742
+      *                                                                                     MD037742
       *
       ** Record Id - update to 'C'.
      C                   EVAL      S2RECI = 'C'

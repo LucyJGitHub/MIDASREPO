@@ -22,7 +22,8 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *  Last Amend No. MD038918           Date 31May16               *
-      *  Prev Amend No. MD000091           Date 17May13               *
+      *  Prev Amend No. 260331             Date 31Mar16               *
+      *                 MD000091           Date 17May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,6 +49,9 @@
       *  MD038918 - Rate reset in Bank Fusion. Allow insertion of IR  *
       *             event for an FRN security with event date equal   *
       *             to the coupon array or the adjusted coupon date.  *
+      *  260331 - Incorrect posting created due to a deleted diary    *
+      *           event. Applied fix 255857.                          *
+      *         - Applied for MD-37742.                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -893,8 +897,19 @@
      C     SDSN          SETLL     POSETDF
      C     SDSN          READE     POSETDF                                02
      C                   DOW       NOT *IN02
-     C                   IF        F3RECI= 'D' AND SDED = F3PDUD
-     C                             AND SDET = F3PEVT
+      *                                                                                       260331
+     C     SDET          IFEQ      'MP'                                                       260331
+     C     SDET          OREQ      'DV'                                                       260331
+     C     S01512        ANDNE     'Y'                                                        260331
+     C                   Z-ADD     SDPD          WWPDUD            5 0                        260331
+     C                   ELSE                                                                 260331
+     C                   Z-ADD     SDED          WWPDUD                                       260331
+     C                   ENDIF                                                                260331
+      *                                                                                       260331
+     C**********         IF        F3RECI= 'D' AND SDED = F3PDUD                              260331
+     C**********                   AND SDET = F3PEVT                                          260331
+     C                   IF        F3RECI = 'D' AND WWPDUD = F3PDUD                           260331
+     C                             AND SDET = F3PEVT AND RECI = 'D'                           260331
      C                   MOVE      'N'           OKSDSN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDSN'
@@ -1892,6 +1907,19 @@
      C                   KFLD                    DDSDSN
      C                   KFLD                    WEvtDNo
      C                   KFLD                    DDSDET
+      *                                                                                       260331
+      ** Check if S01512 is installed                                                         260331
+      *                                                                                       260331
+     C                   CALL      'AOSARDR0'                                                 260331
+     C                   PARM      *BLANKS       @RTCD             7                          260331
+     C                   PARM      '*VERIFY'     @OPTN             7                          260331
+     C                   PARM      'S01512'      @SARD             6                          260331
+      *                                                                                       260331
+     C                   IF        @RTCD = *BLANKS                                            260331
+     C                   MOVE      'Y'           S01512            1                          260331
+     C                   ELSE                                                                 260331
+     C                   MOVE      'N'           S01512                                       260331
+     C                   ENDIF                                                                260331
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

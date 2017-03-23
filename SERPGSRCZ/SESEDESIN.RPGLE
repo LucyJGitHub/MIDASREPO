@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 260331             Date 31Mar16               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE075             Date 17Nov05               *
       *                 CGL031             Date 05Jul04               *
       *                 CSE065             Date 08Nov04               *
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260331 - Incorrect posting created due to a deleted diary    *
+      *           event. Applied fix 255857.                          *
+      *         - Applied for MD-37742.                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
@@ -1568,6 +1572,16 @@
       ** Action is delete - Update record id to 'C'.
       *
      C                   IF        DDACTN = 'D'
+      *                                                                                       260331
+      ** If Record Id is 'D', reset SDDT to zero                                              260331
+      *                                                                                       260331
+     C                   IF        S2RECI = 'D'                                               260331
+     C                   IF        S2SDET = 'MP' OR S2SDET = 'DV'                             260331
+     C                               OR S2SDET = 'PP'                                         260331
+     C                   Z-ADD     0             S2SDDT                                       260331
+     C                   ENDIF                                                                260331
+     C                   ENDIF                                                                260331
+      *                                                                                       260331
      C                   EVAL      S2RECI = 'C'
      C                   ENDIF
       *

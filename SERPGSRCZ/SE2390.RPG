@@ -33,8 +33,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. 215959             Date 21Mar16               *
-      *  Prev Amend No. AR1067108          Date 11Dec12               *
+      *  Last Amend No. MD037742           Date 04Apr16               *
+      *  Prev Amend No. 260331             Date 31Mar16               *
+      *                 215959             Date 21Mar16               *
+      *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
       *                 AR1001183          Date 14Jul12               *
       *                 251950A            Date 27Feb12               *
@@ -145,6 +147,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD037742 - Security diary events - pool factor reversal.     *
+      *             Additional fix to initialize tax fields to prevent*
+      *             garbage which cause decimal data error in COB.    *
+      *  260331 - Incorrect posting created due to a deleted diary    *
+      *           event. Applied fix 255857.                          *
+      *         - Applied for MD-37742.                               *
       *  215959 - Truncation error on event amount in SE2450P3.       *
       *           Recompiled due to changes in PF/SEKEYD.             *
       *         - Applied for MD-37439.                               *
@@ -2297,6 +2305,16 @@
      C** DO NOT OUPUT RECORDS IF AMOUNT DUE IS ZERO
      C*
      C           PAMD      CABEQ0         ENDW02
+      *                                                                                       260331
+     C           WSRECI    IFEQ 'R'                                                           260331
+     C           PPRE      IFEQ 'R'                                                           260331
+     C                     MOVEL'P'       PPRE                                                260331
+     C                     ELSE                                                               260331
+     C           PPRE      IFEQ 'P'                                                           260331
+     C                     MOVEL'R'       PPRE                                                260331
+     C                     ENDIF                                                              260331
+     C                     ENDIF                                                              260331
+     C                     ENDIF                                                              260331
      C*
      C**COUNT*RECORDS*WRITTEN**************************************       CSE023
      C*************************************************************       CSE023
@@ -2955,6 +2973,12 @@
      C           PEVT      ANDNE'DV'                                      CSE023
      C*                                                                   CSE023
      C           CRTT      OREQ *BLANKS                                   CSE023
+      *                                                                                     MD037742
+      ** Initialize tax fields to prevent garbage in POSETD                                 MD037742
+      *                                                                                     MD037742
+     C                     Z-ADD0         TAXA                                              MD037742
+     C                     Z-ADD0         TXNM                                              MD037742
+     C                     Z-ADD0         TXST                                              MD037742
      C*                                                                   CSE023
      C* COUNT RECORDS WRITTEN                                             CSE023
      C*                                                                   CSE023

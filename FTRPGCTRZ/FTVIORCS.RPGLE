@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD036567           Date 26Apr16               *
-      *  Prev Amend No. MD036189           Date 08Oct15               *
+      *  Last Amend No. MD041643           Date 27Sep16               *      
+      *  Prev Amend No. MD036567           Date 26Apr16               *
+      *                 MD036189           Date 08Oct15               *
       *                 MD033105           Date 07Aug15               *
       *                 AR924684           Date 10Nov14               *
       *                 MD023389           Date 13Nov13               *
@@ -86,6 +87,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041643 - Array index error because error array is used     *
+      *             instead of warning array.                         *      
       *  MD036567 - Error in incoming payment authorisation (PAUT).   *
       *             Ordering Customer type was left without a value   *
       *             when saving Ordering Customer details.            *
@@ -850,7 +853,8 @@
      C**********                   'Ordering Customer'                               CFT032 MD000091
      C                   EVAL      MsgDtaTmp = 'Ordering Customer'                          MD000091
      C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      WMsgDtXAr(Idx) = LenStr +%TRIM(MsgDtaTmp)                MD000091
+     C**********         EVAL      WMsgDtXAr(Idx) = LenStr +%TRIM(MsgDtaTmp)       MD000091 MD041643
+     C                   EVAL      WMsgDtXAr(WIx) = LenStr +%TRIM(MsgDtaTmp)                MD041643
      C                   SELECT                                                               CFT032
                                                                                               CFT032
       *  Invalid ISO country code                                                             CFT032

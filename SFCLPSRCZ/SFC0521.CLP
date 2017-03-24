@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CBF023             Date 04Jan17              */
-/*       Prev Amend No. MD021155           Date 08Jul13              */
+/*       Last Amend No. MD041858           Date 24Mar17              */
+/*       Prev Amend No. CBF023             Date 04Jan17              */
+/*                      MD021155           Date 08Jul13              */
 /*                      MD07223            Date 04Apr13              */
 /*                      CCB023             Date 06Aug12              */
 /*                      CBF005             Date 04Jul11              */
@@ -31,6 +32,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD041858 - CBCOBRPD is nw cleared by CBC0540.               */
 /*       CBF023 - Soft Delete Feature on Security Related Modules    */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Should not clear MACBRDD                         */
@@ -361,8 +363,8 @@
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ERROR))                                                  /*228542*/
                                                                                           /*228542*/
-             CLRPFM     FILE(CBCOBRPD)                                                    /*204813*/
-             MONMSG     MSGID(CPF0000)                                                    /*204813*/
+/*           CLRPFM     FILE(CBCOBRPD) */                                      /*204813* *MD041858*/
+/*           MONMSG     MSGID(CPF0000) */                                      /*204813* *MD041858*/
 /**/
 /*  Successful completion  */
 /**/

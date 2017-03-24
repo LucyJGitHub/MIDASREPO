@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
-/*       Prev Amend No. AR868386           Date 27Jul12              */
+/*       Last Amend No. AR1095768          Date 05Oct16              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*                      AR868386           Date 27Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/

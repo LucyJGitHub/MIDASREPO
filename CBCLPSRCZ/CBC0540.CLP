@@ -27,6 +27,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR1095768 - File CBCOBRPD should be clear every day.        */
+/*                 - Applied for MD041858                            */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       AR868386 - System shows an error during open of web-faced   */
 /*                  screens due to a leftover EOD msg on MSPECIAL.   */
@@ -109,6 +111,12 @@
  
              IF         COND(&PRINT *EQ ' ') THEN(GOTO +
                           CMDLBL(ABNOR))
+                                                                                       /*AR1095768*/
+/* Clear CBCOBRPD file */                                                              /*AR1095768*/
+                                                                                       /*AR1095768*/
+             CLRPFM     FILE(CBCOBRPD)                                                 /*AR1095768*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                 /*AR1095768*/
+                                                                                       /*AR1095768*/
  
 /* Set data area SDSTAT for next close of business run */
  

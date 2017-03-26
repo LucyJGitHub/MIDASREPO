@@ -32,7 +32,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD041858 - CBCOBRPD is nw cleared by CBC0540.               */
+/*       MD041858 - CBCOBRPD is now cleared by CBC0540.              */
 /*       CBF023 - Soft Delete Feature on Security Related Modules    */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Should not clear MACBRDD                         */

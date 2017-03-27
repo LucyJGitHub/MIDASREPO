@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. MD043086           Date 13Dec16               *      
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CER055             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043086 - IBAN should be non-amendable but gets cleared by  *
+      *           JMS GLAMAD API call when sending blanks.            *      
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -267,6 +270,18 @@
       *
       **   Screen 1, Account Master Details
       *
+     C*-----------------------------------------*                                           MD043086
+     C* IBAN                                    *                                           MD043086
+     C*-----------------------------------------*                                           MD043086
+     C** The IBAN field is not amendable                                                    MD043086
+     C*                                                                                     MD043086
+     C     DDIBAN        IFNE      @DDIBAN                                                  MD043086
+     C                   ADD       1             Idx                                        MD043086
+     C                   EVAL      FldNameArr(Idx) = 'DDIBAN'                               MD043086
+     C                   EVAL      MsgIDArr(Idx)   = 'RE72034'                              MD043086
+     C                   EVAL      DDIBANOK        = 'N'                                    MD043086
+     C                   ENDIF                                                              MD043086
+     C*                                                                                     MD043086
      C*-----------------------------------------*
      C* Number of Copies                        *
      C*-----------------------------------------*
@@ -653,6 +668,11 @@
       * Reset fields in error to 'current' values
       * SCREEN 1
       *
+      * IBAN                                                                                MD043086
+     C     DDIBANOK      IFEQ      'N'                                                      MD043086
+     C                   MOVEL     @DDIBAN       DDIBAN                                     MD043086
+     C                   END                                                                MD043086
+     C*                                                                                     MD043086
       * Number of Copies
      C     DDENOCOK      IFEQ      'N'
      C                   MOVEL     @DDENOC       DDENOC

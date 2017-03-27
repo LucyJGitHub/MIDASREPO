@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039859           Date 11Aug16               *
-      *  Prev Amend No. MD033630A          Date 25May16               *
+      *  Last Amend No. MD033964           Date 07Oct16               *
+      *  Prev Amend No. MD039859           Date 11Aug16               *
+      *                 MD033630A          Date 25May16               *
       *                 MD036967           Date 25May16               *
       *                 MD035554           Date 25May16               *
       *                 MD037061           Date 19Jan16               *
@@ -80,6 +81,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033964 - Batch Header must not be created automatically    *
+      *             Introduced sysval to condition checking.          *
+      *           - Applied for MD041905                              *
       *  MD039859 - Batch header is not updated when batch item is    *
       *             through API without batch number, but Front       *
       *             Office Id. Pattern AR1092517 done for BITH.       *
@@ -310,6 +314,7 @@
      F/COPY WNCPYSRC,GLH00457
      D*PSysVal1*       C                   CONST('OMEIndicator')                       CSC024 CSC054
      D PSysVal1        C                   CONST('PEAIndicator')                              CSC054
+     D PSysVal2        C                   CONST('MandatoryBchHdr')                         MD033964
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -491,6 +496,7 @@
      D*WOMEInd**       S              1A                                               CSC024 CSC054
      D CSC054          S              1A                                                      CSC054
      D WPEAInd         S              1A                                                      CSC054
+     D BchHdr          S              1A                                                    MD033964
      D PActnCde        S              1A                                                      CSC024
      D WPlayBack       S              1A                                                      CSC024
                                                                                               CSC024
@@ -635,7 +641,13 @@
       ** If record still doesn't exist, write new JE Header.
       *
      C     *IN01         IFEQ      *ON
+     C     BchHdr        IFEQ      'N'                                                      MD033964
      C                   EXSR      SRWrtRecord
+     C                   ELSE                                                               MD033964
+     C                   Eval      PRTCD = 'NOHEADR'                                        MD033964
+     C                   EVAL      *INLR = *ON                                              MD033964
+     C                   RETURN                                                             MD033964
+     C                   ENDIF                                                              MD033964
      C                   ENDIF
       *
      C                   ENDIF
@@ -2446,6 +2458,40 @@ E1   C                   ENDIF                                                  
      C                   EVAL      WPEAInd = 'Y'                                              CSC054
      C                   ENDIF                                                                CSC024
      C                   ENDIF                                                                CSC024
+     C                   CALL      'AOSVALR0'                                               MD033964
+     C                   PARM      *BLANKS       PRetCode                                   MD033964
+     C                   PARM      PSysVal2      P@OP01                                     MD033964
+     C                   PARM      *BLANKS       P@VL01                                     MD033964
+     C                   PARM      *BLANKS       P@OP02                                     MD033964
+     C                   PARM      *BLANKS       P@VL02                                     MD033964
+     C                   PARM      *BLANKS       P@OP03                                     MD033964
+     C                   PARM      *BLANKS       P@VL03                                     MD033964
+     C                   PARM      *BLANKS       P@OP04                                     MD033964
+     C                   PARM      *BLANKS       P@VL04                                     MD033964
+     C                   PARM      *BLANKS       P@OP05                                     MD033964
+     C                   PARM      *BLANKS       P@VL05                                     MD033964
+     C                   PARM      *BLANKS       P@OP06                                     MD033964
+     C                   PARM      *BLANKS       P@VL06                                     MD033964
+     C                   PARM      *BLANKS       P@OP07                                     MD033964
+     C                   PARM      *BLANKS       P@VL07                                     MD033964
+     C                   PARM      *BLANKS       P@OP08                                     MD033964
+     C                   PARM      *BLANKS       P@VL08                                     MD033964
+     C                   PARM      *BLANKS       P@OP09                                     MD033964
+     C                   PARM      *BLANKS       P@VL09                                     MD033964
+     C                   PARM      *BLANKS       P@OP10                                     MD033964
+     C                   PARM      *BLANKS       P@VL10                                     MD033964
+                                                                                            MD033964
+     C                   IF        PRetCode  <> *BLANKS                                     MD033964
+     C                   EVAL      DBFile = 'SDSVALPD'                                      MD033964
+     C                   EVAL      DBKEy = '*KEY   '                                        MD033964
+     C                   EVAL      DBase = 10                                               MD033964
+     C                   EXSR      *PSSR                                                    MD033964
+     C                   ENDIF                                                              MD033964
+      *                                                                                     MD033964
+     C                   EVAL      BchHdr = 'N'                                             MD033964
+     C                   IF        P@VL01 = 'Y'                                             MD033964
+     C                   EVAL      BchHdr = 'Y'                                             MD033964
+     C                   ENDIF                                                              MD033964
       *                                                                                     BUG23742
      C                   CALLB     'AOSARDR0'                                               BUG23742
      C**********         PARM      *BLANKS       PRtCd                             BUG23742 BUG26099

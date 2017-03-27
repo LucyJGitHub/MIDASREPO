@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD039859           Date 11Aug16               *
-      *  Prev Amend No. AR851481           Date 27Oct15               *
+      *  Last Amend No. MD033964           Date 07Oct16               *
+      *  Prev Amend No. MD039859           Date 21Jul16               *
+      *                 AR851481           Date 27Oct15               *
       *                 AR570314           Date 27Oct15               *
       *                 MD027587           Date 19Jun14               *
       *                 MD023635           Date 20Nov13               *
@@ -87,6 +88,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033964 - Batch Header must not be created automatically    *
+      *             Introduced sysval to condition checking.          *
+      *           - Applied for MD041905                              *
       *  MD039859 - Batch header is not updated when batch item is    *
       *             through API without batch number, but Front       *
       *             Office Id. Pattern AR1092517 done for BITH.       *
@@ -1025,12 +1029,19 @@
      C                   EXSR      SRUpdtExt                                                  CER001
      C                   ENDIF                                                                CER001
                                                                                               CER001
+     C                   IF        PRTCD = 'NOHEADR'                                        MD033964
+     C                   MOVEL     'DDBTNB'      FldNameArr(1)                              MD033964
+     C                   MOVEL     'GLX1004'     MsgIdArr(1)                                MD033964
+     C                   MOVE      'E'           DDDLIT                                     MD033964
+     C                   Z-ADD     1             Idx                                        MD033964
+     C                   ENDIF                                                              MD033964
      C/COPY WNCPYSRC,GLBITPXC06
       *
      C     PRTCD         IFNE      *BLANKS
      C     PRTCD         ANDNE     '*RECUPD'                                                  TCA102
      C     PRTCD         ANDNE     'CGL0002'                                                  TCA102
      C     PRTCD         ANDNE     'CGL0003'                                                  TCA102
+     C     PRTCD         ANDNE     'NOHEADR'                                                MD033964
      C                   MOVEL     '0'           APIRetc                                      TCA102
      C                   IF        (CSC022 = 'N')                                             CSC022
      C                             OR (CSC022 = 'Y') AND (WCMTSK = 'N')                       CSC022
@@ -1049,6 +1060,7 @@
       *
      C     PRTCD         IFNE      *BLANKS
      C     PRTCD         ANDNE     '*RECUPD'
+     C     PRTCD         ANDNE     'NOHEADR'                                                MD033964
      C                   EXSR      *PSSR
      C                   ENDIF
       *

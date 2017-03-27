@@ -10,13 +10,17 @@
      F*                                                               *
      F*  (c) Misys International Banking Systems Ltd 2010             *
      F*                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. AR864045           Date 20Nov11               *
+      *  Last Amend No. MD040971           Date 30Aug16               *     
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR864045           Date 20Nov11               *
       *                 AR821972           Date 07Sep11               *
       *                 CER049  *CREATE    Date 06Dec10               *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD040971 - GL0600 dumps due to account code set to zero.     *
+      *             Call AOACODR0 with DSSFY instead as SDACODPD      *
+      *             length is greated that 200.                       *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR864045 - Component GLC008140 00001 failed                  *
 /*    *  AR821972 - Stamp tax on debit interest did not generate      *
@@ -769,7 +773,8 @@
      C                   PARM                    @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM                    ##ACCD
-     C     SDACOD        PARM      *BLANK        DSFDY
+     C*****SDACOD        PARM      *BLANK        DSFDY                                      MD040971
+     C     SDACOD        PARM      *BLANK        DSSDY                                      MD040971
       *
       ** If no record is found on sdacodpd.
       *
@@ -1510,7 +1515,8 @@
      C                   PARM                    @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM                    ##ACCD
-     C     SDACOD        PARM      *BLANK        DSFDY
+     C*****SDACOD        PARM      *BLANK        DSFDY                                      MD040971
+     C     SDACOD        PARM      *BLANK        DSSDY                                      MD040971
       *
       ** If no record is found on sdacodpd.
       *
@@ -1636,7 +1642,8 @@
      C                   PARM                    @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM                    ##ACCD
-     C     SDACOD        PARM      *BLANK        DSFDY
+     C*****SDACOD        PARM      *BLANK        DSFDY                                      MD040971
+     C     SDACOD        PARM      *BLANK        DSSDY                                      MD040971
       *
       ** If no record is found on sdacodpd.
       *
@@ -2007,7 +2014,8 @@
      C                   PARM                    @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM                    ##ACCD
-     C     SDACOD        PARM      *BLANK        DSFDY
+     C*****SDACOD        PARM      *BLANK        DSFDY                                      MD040971
+     C     SDACOD        PARM      *BLANK        DSSDY                                      MD040971
       *
       ** If no record is found on sdacodpd.
       *

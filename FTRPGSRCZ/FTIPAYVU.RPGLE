@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD044395           Date 08Mar17               *
-      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *  Last Amend No. MD042042           Date 14Feb17               *
+      *  Prev Amend No. MD044395           Date 08Mar17               *
+      *                 AR1090283          Date 10Aug16               *
       *                 MD036159           Date 15Jul16               *
       *                 MD034973           Date 16Jul15               *
       *                 MD032077           Date 26Jan15               *
@@ -95,6 +96,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
+      *             populated with WIP authoriser. Use the WIP input  *
+      *             user profile instead.                             *
       *  MD044395 - Incorrect Customer Name on Inputs details for     *
       *             valid BIC entry                                   *
       *  AR1090283 - Customer details not visible for enquire.        *
@@ -944,6 +948,7 @@
      D PCNUM           S              6A                                                    MD034973
      D PPYTY           S              2A                                                    MD034973
      D PPYST           S              2A                                                    MD034973
+     D InputUser       S             10A                                                    MD042042
       ** +--------------------------------------+
       ** ¦ /COPYs                               ¦
       ** ¦ ======                               ¦
@@ -1168,8 +1173,11 @@
      C                                      TranInIPY9 +                                      CER049
      C                                      AAuth +                                           CAP211
      C                                      BtnPressed +                                   AR1090283
-     C                                      RegData +                                         CER001
-     C                                      ExtData
+     C                                      ExtData +                                       MD042042
+     C                                      InputUser +                                     MD042042
+     C                                      RegData                                         MD042042
+     C**********                            RegData +                                CER001 MD042042
+     C**********                            ExtData                                         MD042042
 
      C                   EVAL      *INLR = *ON
 
@@ -6712,7 +6720,8 @@
       ** Input Officer 1.
 
      C**********         EVAL      IPINUSR1 = PSUser                                         BUG1493
-     C                   EVAL      IPINUSR1 = PUSRID                                         BUG1493
+     C**********         EVAL      IPINUSR1 = PUSRID                                BUG1493 MD042042
+     C                   EVAL      IPINUSR1 = InputUser                                     MD042042
 
       ** Level 2 details have been processed.
 
@@ -6720,7 +6729,8 @@
 
       ** Input Officer 2.
      C**********         EVAL      IPINUSR2 = PSUser                                         BUG1493
-     C                   EVAL      IPINUSR2 = PUSRID                                         BUG1493
+     C**********         EVAL      IPINUSR2 = PUSRID                                BUG1493 MD042042
+     C                   EVAL      IPINUSR2 = InputUser                                     MD042042
       ** Level 2 Valid Indicator.
      C                   EVAL      IPINLVL2 = 'Y'
 
@@ -7057,6 +7067,7 @@
      C                   PARM                    @TimeStamp       26                         BUG4196
      C                   PARM                    NewButton         3                          255190
      C                   PARM                    AAuth             1                        BUG22146
+     C                   PARM                    InputUser                                  MD042042
 
       * Set up the names of the message files from which the message handler
       * will get the messages

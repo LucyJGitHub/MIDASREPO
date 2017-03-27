@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. CSW213             Date 03Jun13               *
+      *  Last Amend No. MD042042           Date 14Feb17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 CSW213             Date 03Jun13               *
       *                 AR1028639          Date 17Dec12               *
       *                 260510             Date 28Sep12               *
       *                 257125             Date 28Sep12               *
@@ -66,6 +67,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
+      *             populated with WIP authoriser. Use the WIP input  *
+      *             user profile instead.                             *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
@@ -384,6 +388,7 @@
      D  ##OMDIN               23     23                                                       CRE067
      D  ##ORATE               24     36P 8                                                    CRE067
  
+     D InputUser       S             10A                                                    MD042042
       **  Data Structure for input/output parameters
      D/COPY FTCPYSRC,FT0010D001
      D/COPY WNCPYSRC,FTH00253
@@ -1956,7 +1961,11 @@
      C                   Eval      OTLCD = BJRDNB
      C                   Eval      OTCHTP = 'I'
      C                   Eval      @USRID = WUSRID                                            CAP084
+     C                   IF        InputUser = *BLANKS                                      MD042042
      C                   Eval      OTINUSR2 = @USRID
+     C                   ELSE                                                               MD042042
+     C                   EVAL      OTINUSR2 = InputUser                                     MD042042
+     C                   ENDIF                                                              MD042042
      C                   EndIf
      C
  
@@ -1970,7 +1979,11 @@
      C                   Eval      OTAUP1 = *Blanks
      C                   Eval      OTLCD = BJRDNB
      C                   Eval      @USRID = WUSRID                                            CAP084
+     C                   IF        InputUser = *BLANKS                                      MD042042
      C                   Eval      OTINUSR2 = @USRID
+     C                   ELSE                                                               MD042042
+     C                   EVAL      OTINUSR2 = InputUser                                     MD042042
+     C                   ENDIF                                                              MD042042
      C                   EndIf
  
       ** If delete set up audit information
@@ -2027,6 +2040,7 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG          1            CFT009
+     C                   PARM                    InputUser                                  MD042042
  
      C     *LOCK         In        LDA
      C                   Movel     'FTOPAY4VL'   DBPGM

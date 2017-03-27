@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD042033           Date 30Sep16               *
-      *  Prev Amend No. MD043890           Date 06Feb17               *
+      *  Last Amend No. MD042042           Date 14Feb17               *
+      *  Prev Amend No. MD042033           Date 30Sep16               *
+      *                 MD043890           Date 06Feb17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 CSW216             Date 14Mar16               *
@@ -205,6 +206,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042042 - Input Officer 1 and Input Officer 2 in IPAY and   *
+      *             OPAY are being populated with WIP authoriser.     *
+      *             Use the WIP input user profile instead.           *
       *  MD042033 - Correct DECPRIF positioning based on new CLIP.xml.*
       *  MD043890 - Cannot insert term and notice (Recompile)         *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
@@ -878,6 +882,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D TempData#9      S             50A                                                    MD029663
      D GLFullAcct      S             24A                                                    MD026979
      D TempData7       S              1A                                                      CLE164
+     D InputUser       S             10A                                                    MD042042
 
      D*WCFSC1OLn       S              4P 0                                                   BUG4646
      D*WCFSC2OLn       S              4P 0                                                   BUG4646
@@ -1157,6 +1162,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   CLEAR                   InSwift2013                                  CSW213
      C***/COPY*OFCPYSRCZ,CAP090_002                                                    CAP090 CLE164
      C                   CLEAR                   SBJBParm                                     CLE164
+     C                   CLEAR                   InputUser                                  MD042042
      C/COPY OFCPYSRCZ,CGL135_042                                                             CGL135A
      C/COPY OFCPYSRCZ,CRE101_002                                                              CRE101
      C/COPY OFCPYSRCZ,CGL158_002                                                              CGL158
@@ -1421,12 +1427,18 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       1             Bfp                                       AR1002463
      C     10            SUBST     BUFFER:Bfp    BtnPressed                                AR1090283
      C                   ADD       10            Bfp                                       AR1090283
+      *                                                                                     MD042042
+     C     IPEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD042042
+     C                   ADD       IPEXLn        Bfp                                        MD042042
+      *                                                                                     MD042042
+     C     10            SUBST     BUFFER:Bfp    InputUser                                  MD042042
+     C                   ADD       10            Bfp                                        MD042042
      C/COPY WNCPYSRC,APH00058
       *                                                                                       CER049
      C     IPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       IPRXLn        Bfp                                          CER001
-     C     IPEXLn        SUBST     BUFFER:Bfp    ExtData
-     C                   ADD       IPEXLn        Bfp                                        BUG22140
+     C*****IPEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD042042
+     C**********         ADD       IPEXLn        Bfp                               BUG22140 MD042042
      C/COPY WNCPYSRC,APH00059
      C*****1****         SUBST     BUFFER:Bfp    AAuth                            BUG22140 AR1002463
      C**********         ADD       1             Bfp                              BUG22140 AR1002463
@@ -1468,6 +1480,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    @TimeStamp                                  BUG4196
      C                   PARM                    NewButton                                    255190
      C                   PARM                    AAuth                                      BUG22140
+     C                   PARM                    InputUser                                  MD042042
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'FTIPAYUPD'                                       CRE020
@@ -1547,6 +1560,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       1             Bfp2                                         CFT120
      C     10            SUBST     BUFFER:Bfp2   BtnPressed                                 MD039986
      C                   ADD       10            Bfp2                                       MD039986
+      *                                                                                     MD042042
+     C     OPEXLn        SUBST     BUFFER2:Bfp2  ExtData                                    MD042042
+     C                   ADD       OPEXLn        Bfp2                                       MD042042
+      *                                                                                     MD042042
+     C     10            SUBST     BUFFER2:Bfp2  InputUser                                  MD042042
+     C                   ADD       10            Bfp2                                       MD042042
       *                                                                                    AR1002463
      C*****2****         SUBST     BUFFER:Bfp    TempData#3                         CSF011 AR1005984
      C/COPY WNCPYSRC,APH00061
@@ -1566,8 +1585,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****1****         SUBST     BUFFER:Bfp    AAuth                               BUG22140 CSF011
      C**********         ADD       1             Bfp                                 BUG22140 CSF011
      C                   ADD       OPRXLn        Bfp2                                         CSF011
-     C     OPEXLn        SUBST     BUFFER2:Bfp2  ExtData                                      CSF011
-     C                   ADD       OPEXLn        Bfp2                                         CSF011
+     C*****OPEXLn        SUBST     BUFFER2:Bfp2  ExtData                             CSF011 MD042042
+     C**********         ADD       OPEXLn        Bfp2                                CSF011 MD042042
      C/COPY WNCPYSRC,APH00062
      C*****1****         SUBST     BUFFER2:Bfp2  AAuth                              CSF011 AR1002463
      C**********         ADD       1             Bfp2                               CSF011 AR1002463
@@ -1615,6 +1634,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4196
      C                   PARM                    AAuth                                      BUG22140
+     C                   PARM                    InputUser                                  MD042042
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'FTOPAYUPD'                                       CRE020

@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD044395           Date 08Mar17               *
-      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *  Last Amend No. MD042042           Date 14Feb17               *
+      *  Prev Amend No. MD044395           Date 08Mar17               *
+      *                 AR1090283          Date 10Aug16               *
       *                 MD041641           Date 04Oct16               *
       *                 MD033098           Date 23Feb15               *
       *                 MD030906           Date 13Nov14               *
@@ -102,6 +103,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
+      *             populated with WIP authoriser. Use the WIP input  *
+      *             user profile instead.                             *
       *  MD044395 - Incorrect Customer Name on Inputs details for     *
       *             valid BIC entry                                   *
       *  AR1090283 - Customer details not visible for enquire.        *
@@ -717,6 +721,7 @@
      D PFind           S              1                                                       CER001
      D CSW209          S              1                                                       CSW209
                                                                                               CSW209
+     D InputUser       S             10A                                                    MD042042
       *
      D TimeStampC      S             26A   INZ('0001-01-01-00.00.00.000000')                BUG18500
      D TimeStampZ      S             26Z                                                    BUG18500
@@ -970,9 +975,14 @@
      C                                           + TranInExtn1                                CFT120
                                                                                               CSF011
      C**********         EVAL      Buffer2 =  RegData2                                 CSF011 CFT120
-     C                   EVAL      Buffer2 =  TranInExtn2 + AAuth +                           CFT120
-     C                                        BtnPressed +                                  MD039986
-     C                                        RegData + ExtData                               CFT120
+     C**********         EVAL      Buffer2 =  TranInExtn2 + AAuth +                  CFT120 MD042042
+     C**********                              BtnPressed +                         MD039986 MD042042
+     C**********                              RegData + ExtData                      CFT120 MD042042
+     C                   EVAL      Buffer2 =  TranInExtn2 + AAuth                           MD042042
+     C                                        + BtnPressed                                  MD042042
+     C                                        + ExtData                                     MD042042
+     C                                        + InputUser                                   MD042042
+     C                                        + RegData                                     MD042042
                                                                                               CSF011
      C                   RETURN
 
@@ -1348,6 +1358,7 @@
      C                   PARM                    DEFVALIDX
       *  Funds Transfer Details                                                               257758
      C                   PARM                    SDFTFR                                       257758
+     C                   PARM                    InputUser                                  MD042042
                                                                                               257758
      C/COPY WNCPYSRC,FTOPAYVUC7
 
@@ -1534,6 +1545,7 @@
      C                   PARM                    ValidPmntB
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
+     C                   PARM                    InputUser                                  MD042042
 
 
      C                   ENDSR
@@ -1582,6 +1594,7 @@
       *
       ** Charges to the debit of - field changed (Y or blank)
      C                   PARM                    PCDROCHG          1
+     C                   PARM                    InputUser                                  MD042042
 
      C                   EndSr
 
@@ -2897,6 +2910,7 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4196
      C                   PARM                    AAuth             1                        BUG22150
+     C                   PARM                    InputUser                                  MD042042
 
       * Set up the names of the message files from which the message handler
       * will get the messages

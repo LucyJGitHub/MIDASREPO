@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD034973           Date 16Jul15               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD042042           Date 14Feb17               *
+      *  Prev Amend No. MD034973           Date 16Jul15               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 CSD089             Date 07Oct10               *
@@ -55,6 +56,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
+      *             populated with WIP authoriser. Use the WIP input  *
+      *             user profile instead.                             *
       *  MD034973 - FT Payment Charges defaulting error               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -272,6 +276,7 @@
       ** SWIFT 2001 switchable feature                                                        CSW201
      D Csw201          S              1A                                                      CSW201
  
+     D InputUser       S             10A                                                    MD042042
      D/COPY WNCPYSRC,FTH00564
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -1286,7 +1291,11 @@
      C                   Eval      OTLCD = BJRDNB
      C                   Eval      OTCHTP = 'I'
      C                   Eval      @USRID = WUSRID                                            CAP084
+     C                   IF        InputUser = *BLANKS                                      MD042042
      C                   Eval      OTINUSR2 = @USRID
+     C                   ELSE                                                               MD042042
+     C                   EVAL      OTINUSR2 = InputUser                                     MD042042
+     C                   ENDIF                                                              MD042042
      C                   End
      C
       * If amend set up audit information
@@ -1298,7 +1307,11 @@
      C                   Eval      OTAUP1 = *Blanks
      C                   Eval      OTLCD = BJRDNB
      C                   Eval      @USRID = WUSRID                                            CAP084
+     C                   IF        InputUser = *BLANKS                                      MD042042
      C                   Eval      OTINUSR2 = @USRID
+     C                   ELSE                                                               MD042042
+     C                   EVAL      OTINUSR2 = InputUser                                     MD042042
+     C                   ENDIF                                                              MD042042
      C                   End
  
       * If delete set up audit information
@@ -1365,6 +1378,7 @@
  
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
+     C                   PARM                    InputUser                                  MD042042
  
       *  Move program name into *LDA field.
      C     *LOCK         In        LDA

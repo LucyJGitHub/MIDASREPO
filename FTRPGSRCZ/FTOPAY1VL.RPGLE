@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037529           Date 26Apr16               *
-      *  Prev Amend No. CFT142             Date 20Feb15               *
+      *  Last Amend No. MD042042           Date 14Feb17               *
+      *  Prev Amend No. MD037529           Date 26Apr16               *
+      *                 CFT142             Date 20Feb15               *
       *                 AR900506           Date 04Nov14               *
       *                 CFT157             Date 29Aug14               *
       *                 AR663078           Date 19Aug14               *
@@ -102,6 +103,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
+      *             populated with WIP authoriser. Use the WIP input  *
+      *             user profile instead.                             *
       *  MD037529 - Incorrect defaulting of Add/deduct flag           *
       *  CFT142 - OPAY msg validation (LCO044)                        *
       *  AR900506 - Add/Deduct defaulting not occurring through API   *
@@ -511,6 +515,7 @@
      D ZADEC           S              1  0                                                  BUG15032
      D ZADIG           S              2  0                                                  BUG15032
       *                                                                                     BUG15032
+     D InputUser       S             10A                                                    MD042042
      D/COPY WNCPYSRC,FTH00239
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -2777,7 +2782,11 @@
 
       * Input Officer
      C                   Eval      @USRID   = WUSRID                                          CAP084
+     C                   IF        InputUser = *BLANKS                                      MD042042
      C                   Eval      OTINUSR1 = @USRID
+     C                   ELSE                                                               MD042042
+     C                   EVAL      OTINUSR1 = InputUser                                     MD042042
+     C                   ENDIF                                                              MD042042
 
      C                   If        SACTION = 'I'
       * Setup Original Entry date
@@ -2971,6 +2980,7 @@
                                                                                               257361
       *  Funds Transfer Details                                                               257361
      C                   PARM                    SDFTFR                                       257361
+     C                   PARM                    InputUser                                  MD042042
                                                                                               257361
      C/COPY WNCPYSRC,FTOPA1VC05
 

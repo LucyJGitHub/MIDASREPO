@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD043890           Date 06Feb17               *
-      *  Prev Amend No. MD039986           Date 10Aug16               *
+      *  Last Amend No. MD042033           Date 30Sep16               *
+      *  Prev Amend No. MD043890           Date 06Feb17               *
+      *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 CSW216             Date 14Mar16               *
       *                 AR701789           Date 26Sep16               *
@@ -204,6 +205,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042033 - Correct DECPRIF positioning based on new CLIP.xml.*
       *  MD043890 - Cannot insert term and notice (Recompile)         *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
       *  AR1090283 - Customer details not visible for enquire.        *
@@ -2353,8 +2355,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
       *                                                                                     MD030621
-     C     Bfp           Add       1             BfpTMP            4 0                      MD030621
-     C     1             SUBST     BUFFER:BfpTMP @DEPI                                      MD030621
+     C*****Bfp**         Add       1             BfpTMP            4 0             MD030621 MD042033
+     C*****1****         SUBST     BUFFER:BfpTMP @DEPI                             MD030621 MD042033
+     C     1             SUBST     BUFFER:Bfp    @DEPI                                      MD042033
+     C                   ADD       1             Bfp                                        MD042033
       *                                                                                     MD030621
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086

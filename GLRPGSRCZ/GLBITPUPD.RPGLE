@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033964           Date 07Oct16               *
-      *  Prev Amend No. MD039859           Date 11Aug16               *
+      *  Last Amend No. MD042040           Date 10Oct16               *
+      *  Prev Amend No. MD033964           Date 07Oct16               *
+      *                 MD039859           Date 11Aug16               *
       *                 MD033630A          Date 25May16               *
       *                 MD036967           Date 25May16               *
       *                 MD035554           Date 25May16               *
@@ -81,6 +82,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042040 - Ensure delay loop processed for API transactions. *
+      *           - Ensure correct chain for header update.           *
       *  MD033964 - Batch Header must not be created automatically    *
       *             Introduced sysval to condition checking.          *
       *           - Applied for MD041905                              *
@@ -629,13 +632,18 @@
                                                                                               247613
      C                   Z-ADD     0             COUNT             2 0                        247613
      C     *IN01         DOWEQ     *ON                                                        247613
-     C     JAVAUSER      ANDNE     'Y'                                                        247613
+     C*****JAVAUSER      ANDNE     'Y'                                               247613 MD042040
      C     COUNT         ANDLE     20                                                         247613
      C                   CALLB     'ZACDELAY'                                                 247613
      C                   ADD       1             COUNT                                        247613
      C**********         IF        CGL125 = 'N'                                     CSC054 AR1027164
+     C     JAVAUSER      IFEQ      'Y'                                                      MD042040
+     C     B2BTNB        ANDNE     *BLANKS                                                  MD042040
+     C     KJENH0        CHAIN     GLJENHL0                           01                    MD042040
+     C                   ELSE                                                               MD042040
      C     KJENH         CHAIN     GLJENHL3                           01                      247613
      C**********         ENDIF                                                      CSC054 AR1027164
+     C                   ENDIF                                                              MD042040
      C                   ENDDO                                                                247613
                                                                                               247613
       ** If record still doesn't exist, write new JE Header.

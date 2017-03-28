@@ -17,8 +17,9 @@
       ***(C)*Copyright*Midas-Kapiti*International*Ltd.*2002************                       LUC109
       *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
       *                                                               *
-      *  Last Amend No. LUC109             Date 25Jan17               *
-      *  Prev Amend No. LUC109             Date 21Sep16               *
+      *  Last Amend No. LUC109C            Date 09Mar17               *
+      *  Prev Amend No. LUC109             Date 25Jan17               *
+      *                 LUC109             Date 21Sep16               *
       *                 LUC013             Date 28May08               *
       *                 LONDON             Date 06Feb04               *
       *                 MUI009             Date 06Feb04               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109C - Check historic DL files prior to purge             *
       *  LUC109  -R306 Netting flag not available in Loans            *
       *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
       *  LUC013 - Increase account code to 10 long.                   *
@@ -81,6 +83,17 @@
      F                                     IGNORE(DEALSDCF)                     LUC109
      F                                     IGNORE(DEALSDDF)                     LUC109
      F                                     IGNORE(DEALSDFF)                     LUC109
+      *
+     FDEALSALL  IF   E           K DISK                                         LUC109C
+     F                                     IGNORE(DEALSDBF)                     LUC109C
+     F                                     IGNORE(DEALSDCF)                     LUC109C
+     F                                     IGNORE(DEALSDDF)                     LUC109C
+     F                                     IGNORE(DEALSDEF)                     LUC109C
+     F                                     IGNORE(DEALSDGF)                     LUC109C
+     F                                     IGNORE(MMDELDP0)                     LUC109C
+     F                                     IGNORE(MMDENBP0)                     LUC109C
+     F                                     IGNORE(MMDENSP0)                     LUC109C
+     F                                     IGNORE(FXDEALP0)                     LUC109C
       *
       * Country codes
      FSDCTRYX0  UF   E             DISK
@@ -433,6 +446,18 @@
       *
      C     FILEID        WHENEQ    4
      C     MDLNO         CHAIN     DEALSDCF                           98
+     C     *IN98         Ifeq      *On                                          LUC109C
+     C                   move      *Blanks       Found             1            LUC109C
+     C     MDLNO         Chain     DEALSALL                           98        LUC109C
+     C     *IN98         Doweq     *Off                                         LUC109C
+     C     Found         andeq     *Blanks                                      LUC109C
+     C     RCDT          Ifeq      'C'                                          LUC109C
+     C                   move      'Y'           Found                          LUC109C
+     C                   else                                                   LUC109C
+     C     MDLNO         reade     DEALSALL                               98    LUC109C
+     C                   Endif                                                  LUC109C
+     C                   Enddo                                                  LUC109C
+     C                   Endif                                                  LUC109C
       *
      C     FILEID        WHENEQ    5
      C     MCNCD         CHAIN     @A4REBS                            98
@@ -445,18 +470,66 @@
       *                                                                   MUI009
      C     FILEID        WHENEQ    8                                                           MUI00
      C     MDLNO         CHAIN     DEALSDDF                           98                       MUI00
+     C     *IN98         Ifeq      *On                                          LUC109C
+     C                   move      *Blanks       Found             1            LUC109C
+     C     MDLNO         Chain     DEALSALL                           98        LUC109C
+     C     *IN98         Doweq     *Off                                         LUC109C
+     C     Found         andeq     *Blanks                                      LUC109C
+     C     RCDT          Ifeq      'D'                                          LUC109C
+     C                   move      'Y'           Found                          LUC109C
+     C                   else                                                   LUC109C
+     C     MDLNO         reade     DEALSALL                               98    LUC109C
+     C                   Endif                                                  LUC109C
+     C                   Enddo                                                  LUC109C
+     C                   Endif                                                  LUC109C
       *                                                                   LONDON
      C     FILEID        WHENEQ    9                                                           LONDO
      C     LCUST         CHAIN     @BBREBG                            98                       LONDO
       *                                                                             LUC109
      C     FILEID        WHENEQ    10                                               LUC109
      C     MDLNO         CHAIN     DEALSDBF                           98            LUC109
+     C     *IN98         Ifeq      *On                                          LUC109C
+     C                   move      *Blanks       Found             1            LUC109C
+     C     MDLNO         Chain     DEALSALL                           98        LUC109C
+     C     *IN98         Doweq     *Off                                         LUC109C
+     C     Found         andeq     *Blanks                                      LUC109C
+     C     RCDT          Ifeq      'B'                                          LUC109C
+     C                   move      'Y'           Found                          LUC109C
+     C                   else                                                   LUC109C
+     C     MDLNO         reade     DEALSALL                               98    LUC109C
+     C                   Endif                                                  LUC109C
+     C                   Enddo                                                  LUC109C
+     C                   Endif                                                  LUC109C
       *                                                                             LUC109
      C     FILEID        WHENEQ    11                                               LUC109
      C     MDLNO         CHAIN     DEALSDGF                           98            LUC109
+     C     *IN98         Ifeq      *On                                          LUC109C
+     C                   move      *Blanks       Found             1            LUC109C
+     C     MDLNO         Chain     DEALSALL                           98        LUC109C
+     C     *IN98         Doweq     *Off                                         LUC109C
+     C     Found         andeq     *Blanks                                      LUC109C
+     C     RCDT          Ifeq      'G'                                          LUC109C
+     C                   move      'Y'           Found                          LUC109C
+     C                   else                                                   LUC109C
+     C     MDLNO         reade     DEALSALL                               98    LUC109C
+     C                   Endif                                                  LUC109C
+     C                   Enddo                                                  LUC109C
+     C                   Endif                                                  LUC109C
       *                                                                             LUC109
      C     FILEID        WHENEQ    12                                               LUC109
      C     MDLNO         CHAIN     DEALSDEF                           98            LUC109
+     C     *IN98         Ifeq      *On                                          LUC109C
+     C                   move      *Blanks       Found             1            LUC109C
+     C     MDLNO         Chain     DEALSALL                           98        LUC109C
+     C     *IN98         Doweq     *Off                                         LUC109C
+     C     Found         andeq     *Blanks                                      LUC109C
+     C     RCDT          Ifeq      'E'                                          LUC109C
+     C                   move      'Y'           Found                          LUC109C
+     C                   else                                                   LUC109C
+     C     MDLNO         reade     DEALSALL                               98    LUC109C
+     C                   Endif                                                  LUC109C
+     C                   Enddo                                                  LUC109C
+     C                   Endif                                                  LUC109C
       *
      C                   ENDSL
       *

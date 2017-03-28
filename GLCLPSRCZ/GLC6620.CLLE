@@ -1,0 +1,157 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Stamp Tax Initialization')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC6620 - Midas GL Stamp Tax Initialization                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*                                                                   */
+/*       Last Amend No. MD040278 *Create   Date 18Aug16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD040278 - Stamp Tax A/C Keys (GLC008131) is not task split.*/
+/*                  Complete rework of the component to allow task   */
+/*                  split.                                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CSEQC) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2016')
+
+/* Global Monitor Message */
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                             CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('GLC6620 - GL Stamp Tax Initialization') +
+                          TOMSGQ(MRUNQ)
+
+/** Check if restart*/
+/**/
+             CALL       CB0160 PARM(&CNAM &CSEQ &STAT)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+/**/
+/** Clear files*/
+             CHGPF      FILE(GLVCLSPD) MAXMBRS(*NOMAX)
+/**/
+             CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(STAMPRE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDPFM FILE(GLVCLSPD) +
+                          MBR(STAMPRE))
+/**/
+             CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(STAMPLE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDPFM FILE(GLVCLSPD) +
+                          MBR(STAMPLE))
+/**/
+             CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(STAMPDL)
+             MONMSG     MSGID(CPF9815) EXEC(ADDPFM FILE(GLVCLSPD) +
+                          MBR(STAMPDL))
+/**/
+             CLRPFM     FILE(GLVCLSIN)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSRE)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSDL)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSLE)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSCC)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSPD) MBR(STAMPRE)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSPD) MBR(STAMPLE)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSPD) MBR(STAMPDL)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLSTRPPD)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLSTCYPD)
+             MONMSG     MSGID(CPF0000)
+/**/
+/** No restart - save object */
+/**/
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+/**/
+             CHKOBJ     OBJ(&DILIB/SAVFGL8131) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTSAVF    FILE(&DILIB/SAVFGL8131) TEXT('Save of +
+                          Stamp Tax files before update')
+             ENDDO
+             CLRSAVF    FILE(&DILIB/SAVFGL8131)
+/**/
+/** Save data */
+/**/
+             SAVOBJ     OBJ(GLACNTQD DLDLDCQD CLONCLQD SDSTMDPD) +
+                        LIB(&DMLIB) DEV(*SAVF) SAVF(&DILIB/SAVFGL8131)
+/**/
+/** Set active flag */
+/**/
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+/**/
+             ENDDO
+             ELSE       CMD(DO)
+/**/
+/** Restore copy of SDSTM* Files */
+/**/
+             RSTOBJ     OBJ(GLACNTQD DLDLDCQD CLONCLQD SDSTMDPD) +
+                        SAVLIB(&DMLIB) DEV(*SAVF) SAVF(&DILIB/SAVFGL8131)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             DLYJOB     DLY(60)
+             ENDDO
+
+/* Remove all members from GLSTCYPD. */
+             RMVM       FILE(GLSTCYPD) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             SNDPGMMSG  MSG('Program GLC6620 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+
+END:
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDDO
+
+             DLTOVR     FILE(*ALL)
+
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             RETURN
+             ENDPGM

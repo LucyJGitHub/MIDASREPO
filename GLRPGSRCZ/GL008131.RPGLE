@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2010            *
       *                                                               *
-      *  Last Amend No. MD037319           Date 26Apr16               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. MD040278           Date 18Aug16               *
+      *  Prev Amend No. MD037319           Date 16Feb16               *
+      *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 17Feb15               *
       *                 CRE090             Date 14Feb14               *
       *                 CLE148             Date 23Jul12               *
@@ -39,6 +40,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD040278 - Stamp Tax A/C Keys (GLC008131) is not task split. *
+      *             Complete rework of the component to allow task    *
+      *             split.                                            *
       *  MD037319 - GLC008110 failed, DB error 001 on SDCURRPD.       *
       *             Missing event currency and customer code on input *
       *             file GLVCLSPD.                                    *
@@ -73,15 +77,28 @@
      FSDCUSQL0  IF   E           K DISK
       *
       ** Debit Interest Postings
-     FGEICPD    IF   E             DISK
+     F*GEICPD*** IF   E             DISK                                                    MD040278
+     FGEICDRPD  UF   E             DISK    COMMIT                                           MD040278
+     F                                     USROPN                                           MD040278
+     FGEICPD    IF   F  620        DISK    RECNO(RRN)                                       MD040278
       *
       ** Transaction charges and commissions
-     FREACCJL3  IF   E           K DISK
+     F*REACCJL3* IF   E           K DISK                                                    MD040278
+     FREIADRPD  UF   E             DISK    COMMIT PREFIX(R:1)                               MD040278
+     F                                     USROPN                                           MD040278
+     FREIACD    UF   F  233        DISK    RECNO(RRN)                                       MD040278
+     FRECOM     IF   E           K DISK    PREFIX(XX)                                       MD040278
       *
       ** Stamp Tax Summary Transactions Extension files
      FGLACNTL3  UF   E           K DISK
+     FGLACDRPD  UF   E             DISK    COMMIT PREFIX(Q:1)                               MD040278
+     F                                     USROPN                                           MD040278
+     FGLACNTQD  UF   F  414        DISK    RECNO(RRN)                                       MD040278
+     F                                     COMMIT                                           MD040278
      FDLDLDCL3  UF   E           K DISK
+     F                                     COMMIT                                           MD040278
      FCLONCLL1  UF   E           K DISK
+     F                                     COMMIT                                           MD040278
       *
       ** Retail Historic Files - all records
      FREHISDL   IF   E           K DISK
@@ -95,21 +112,27 @@
       *
       ** Retail a/c Keys Output file: Stamp Tax on Debit Interest
      FGLVCLSIN  O    E             DISK
+     F                                     COMMIT                                           MD040278
       *
       ** Retail a/c Keys Output file: Stamp Tax on averages
      FGLVCLSRE  O    E             DISK
+     F                                     COMMIT                                           MD040278
       *
       ** Deals a/c Keys Output file: Stamp Tax on averages
      FGLVCLSDL  O    E             DISK
+     F                                     COMMIT                                           MD040278
       *
       ** Loans a/c Keys Output file: Stamp Tax on averages
      FGLVCLSLE  O    E             DISK
+     F                                     COMMIT                                           MD040278
       *
       ** Retail a/c Keys Output file: Stamp Tax on Charges and Commissions
      FGLVCLSCC  O    E             DISK
+     F                                     COMMIT                                           MD040278
       *
       ** Stamp Tax Historic/Details file: Stamp Tax on averages
      FSDSTMDL0  UF A E           K DISK
+     F                                     COMMIT                                           MD040278
       *
       ** Accounts Being Closed Today
      FGLCLOSL0  IF   E           K DISK
@@ -118,10 +141,12 @@
       *
      F***GL8131CY  UF A E           K DISK                                                  AR824348
      FGLSTCYPD  UF A E           K DISK                                                     AR824348
+     F                                     COMMIT USROPN                                    MD040278
       *
       ** GL8131P2 c Keys Output file: Stamp Tax on averages
      F***GL8131PD  O    E             DISK                                                  AR824348
      FGLSTRPPD  O    E             DISK                                                     AR824348
+     F                                     COMMIT                                           MD040278
       *
      FGL008131AUO    E             PRINTER INFDS(SPOOLA) USROPN
      FGL008131P1O    E             PRINTER INFDS(SPOOL1) USROPN
@@ -310,7 +335,223 @@
      D  WORK15                 1     15  0
      D  ZS1                    1     15  0
      D                                     DIM(15)
-      *
+                                                                                            MD040278
+     D REC_CTR         S             10U 0 INZ                                              MD040278
+     D CBTASKSP      E DS                  DTAARA(CBTASKSP)                                 MD040278
+     D                                     EXTNAME(CBTASKSP)                                MD040278
+     D CommitSize                    10S 0 OVERLAY(CMTBLK)                                  MD040278
+     D True            C                   CONST(*ON)                                       MD040278
+     D False           C                   CONST(*OFF)                                      MD040278
+     D ForceCommit     S               N   INZ(False)                                       MD040278
+     D RRN             S                   INZ LIKE( GLFERN )                               MD040278
+     D LastRRN         S                   INZ LIKE( GLTERN )                               MD040278
+     D ALL9            S             10S 0 INZ(9999999999)                                  MD040278
+     D PerformLRPrc    S               N                                                    MD040278
+      *                                                                                     MD040278
+     IGEICPD    NS                                                                          MD040278
+     I                                  1    1  RECI                                        MD040278
+     I                                  2    7  CNUM                                        MD040278
+     I                                  8   10  CCY                                         MD040278
+     I                                 11   14 0ACODQQ                                      MD040278
+     I                                 15   16 0ACSQ                                        MD040278
+     I                                 17   22  IPDN                                        MD040278
+     I                                 23   32 0ACNO                                        MD040278
+     I                             P   33   35 0PSTD                                        MD040278
+     I                             P   36   38 0VALD                                        MD040278
+     I                                 39   43  TRAT                                        MD040278
+     I                                 44   73  PNAR                                        MD040278
+     I                             P   74   80 0PSTA                                        MD040278
+     I                                 81   81 0DRCR                                        MD040278
+     I                                 82   87  ASOC                                        MD040278
+     I                                 88   95 0CHQN                                        MD040278
+     I                                 96  102  SPOS                                        MD040278
+     I                                103  105  BRCA                                        MD040278
+     I                                106  106 0RIND                                        MD040278
+     I                             P  107  108 0REJC                                        MD040278
+     I                                109  111  DPMT                                        MD040278
+     I                             P  112  114 0RRNM                                        MD040278
+     I                                115  123  ZZ009                                       MD040278
+     I                                124  124  ATYP                                        MD040278
+     I                                125  126  ZZ002                                       MD040278
+     I                                127  127  EXIN                                        MD040278
+     I                                128  128  PRIN                                        MD040278
+     I                                129  129  GETP                                        MD040278
+     I                                130  130 0ACUM                                        MD040278
+     I                                131  134  PRFC                                        MD040278
+     I                                135  140 0PTIM                                        MD040278
+     I                                141  141 0VOIN                                        MD040278
+     I                                145  146  ACSC                                        MD040278
+     I                                147  147 0LTAI                                        MD040278
+     I                                148  154  ZZ007                                       MD040278
+     I                                155  160  RINO                                        MD040278
+     I                                161  176  SWCR                                        MD040278
+     I                                177  184  DLREF                                       MD040278
+     I                                185  194  FACO                                        MD040278
+     I                                195  200  DBCNUM                                      MD040278
+     I                                201  215  PREF                                        MD040278
+     I                                216  230  OTRFQQ                                      MD040278
+     I                                231  240  OTST                                        MD040278
+     I                                241  250  OTTP                                        MD040278
+     I                             P  251  258 0SDCB                                        MD040278
+     I                             P  259  266 0SDLB                                        MD040278
+     I                                267  268  BOKC                                        MD040278
+     I                             P  269  271 0NITMS                                       MD040278
+     I                                272  272  REBI                                        MD040278
+     I                             P  273  279 0CHGA                                        MD040278
+     I                                280  298  ZZ019                                       MD040278
+     I                                299  299  TLIN                                        MD040278
+     I                                300  302  TRCCY                                       MD040278
+     I                                303  303  STYP                                        MD040278
+     I                                304  304  CQRI                                        MD040278
+     I                                305  306  PBTT                                        MD040278
+     I                                307  309  ORBR                                        MD040278
+     I                             P  310  316 0ORAMT                                       MD040278
+     I                                317  319  XRFI                                        MD040278
+     I                                320  329 0XRFN                                        MD040278
+     I                                330  331  TRST                                        MD040278
+     I                                332  351  ACKEY                                       MD040278
+     I                                352  352  FEEFLG                                      MD040278
+     I                             P  353  359 0FEEVAL                                      MD040278
+     I                                360  364  FEEPCT                                      MD040278
+     I                                365  384  RORACT                                      MD040278
+     I                                385  386  RORCTY                                      MD040278
+     I                                387  406  RORBNK                                      MD040278
+     I                                407  417  RORCDE                                      MD040278
+     I                                418  437  PORACT                                      MD040278
+     I                                438  439  PORCTY                                      MD040278
+     I                                440  459  PORBNK                                      MD040278
+     I                                460  470  PORCDE                                      MD040278
+     I                                471  505  DSTACT                                      MD040278
+     I                                506  507  DSTCTY                                      MD040278
+     I                                508  527  DSTBNK                                      MD040278
+     I                             P  528  530 0SETDAT                                      MD040278
+     I                                531  540  TICKER                                      MD040278
+     I                                541  560  EXCHNG                                      MD040278
+     I                                561  573 2NOMINL                                      MD040278
+     I                                574  589  FDTRID                                      MD040278
+     I                                590  599 0ACOD                                        MD040278
+     I                                600  620  OTRF                                        MD040278
+                                                                                            MD040278
+     IGLACNTQD  NS                                                                          MD040278
+     I                                  1    6  F1CNUM                                      MD040278
+     I                                  7    9  F1CCY                                       MD040278
+     I                                 10   19 0F1ACOD                                      MD040278
+     I                                 20   21 0F1ACSQ                                      MD040278
+     I                                 22   24  F1BRCA                                      MD040278
+     I                             P   25   27 0F1FCHD                                      MD040278
+     I                             P   28   30 0F1LFCD                                      MD040278
+     I                             P   31   38 0F1ACBL                                      MD040278
+     I                             P   39   46 0F1TEXO                                      MD040278
+     I                             P   47   54 0F1TEOF                                      MD040278
+     I                             P   55   62 0F1TEOC                                      MD040278
+     I                                 63   63  F1IABC                                      MD040278
+     I                                 64   64  F1BCIN                                      MD040278
+     I                                 65   84  F1FRID                                      MD040278
+     I                             P   85   91 0F1TOLR                                      MD040278
+     I                             P   92   94 0F1DAT0                                      MD040278
+     I                             P   95   97 0F1DAT1                                      MD040278
+     I                             P   98  100 0F1DAT2                                      MD040278
+     I                             P  101  103 0F1DAT3                                      MD040278
+     I                             P  104  106 0F1DAT4                                      MD040278
+     I                             P  107  109 0F1DAT5                                      MD040278
+     I                             P  110  112 0F1DAT6                                      MD040278
+     I                             P  113  115 0F1DAT7                                      MD040278
+     I                             P  116  118 0F1DAT8                                      MD040278
+     I                             P  119  121 0F1DAT9                                      MD040278
+     I                             P  122  129 0F1BAV0                                      MD040278
+     I                             P  130  137 0F1BAV1                                      MD040278
+     I                             P  138  145 0F1BAV2                                      MD040278
+     I                             P  146  153 0F1BAV3                                      MD040278
+     I                             P  154  161 0F1BAV4                                      MD040278
+     I                             P  162  169 0F1BAV5                                      MD040278
+     I                             P  170  177 0F1BAV6                                      MD040278
+     I                             P  178  185 0F1BAV7                                      MD040278
+     I                             P  186  193 0F1BAV8                                      MD040278
+     I                             P  194  201 0F1BAV9                                      MD040278
+     I                             P  202  209 0F1AVA0                                      MD040278
+     I                             P  210  217 0F1AVA1                                      MD040278
+     I                             P  218  225 0F1AVA2                                      MD040278
+     I                             P  226  233 0F1AVA3                                      MD040278
+     I                             P  234  241 0F1AVA4                                      MD040278
+     I                             P  242  249 0F1AVA5                                      MD040278
+     I                             P  250  257 0F1AVA6                                      MD040278
+     I                             P  258  265 0F1AVA7                                      MD040278
+     I                             P  266  273 0F1AVA8                                      MD040278
+     I                             P  274  281 0F1AVA9                                      MD040278
+     I                                282  282  F1ZINS                                      MD040278
+     I                                283  283  F1TAX                                       MD040278
+     I                                284  284  F1CLOS                                      MD040278
+     I                                285  285  F1AVBL                                      MD040278
+     I                             P  286  288 0F1ADTE                                      MD040278
+     I                             P  289  295 0F1FREE                                      MD040278
+     I                             P  296  298 0F1FEDT                                      MD040278
+     I                                299  299  F1SINT                                      MD040278
+     I                             P  300  302 0F1IDTE                                      MD040278
+     I                                303  305  F1DBRC                                      MD040278
+     I                                306  311  F1DCST                                      MD040278
+     I                                312  314  F1DCCY                                      MD040278
+     I                                315  324 0F1DACD                                      MD040278
+     I                                325  326 0F1DASC                                      MD040278
+     I                             P  327  333 0F1STAB                                      MD040278
+     I                             P  334  340 0F1STAI                                      MD040278
+     I                             P  341  347 0F1TAXE                                      MD040278
+     I                             P  348  350 0F1CDTE                                      MD040278
+     I                                351  351  F1CCFL                                      MD040278
+     I                             P  352  354 0F1SDTE                                      MD040278
+     I                             P  355  361 0F1STCC                                      MD040278
+     I                                362  385  F1DACN                                      MD040278
+     I                             P  386  388 0F1OAD                                       MD040278
+     I                                389  390 0F1DECD                                      MD040278
+     I                                391  392 0F1DRFD                                      MD040278
+     I                                393  397 0F1DNFD                                      MD040278
+     I                                398  398  F1DNFF                                      MD040278
+     I                                399  400 0F1DNFM                                      MD040278
+     I                                401  402  F1DNFC                                      MD040278
+     I                                403  404 0F1CRFD                                      MD040278
+     I                                405  409 0F1CNFD                                      MD040278
+     I                                410  410  F1CNFF                                      MD040278
+     I                                411  412 0F1CNFM                                      MD040278
+     I                                413  414  F1CNFC                                      MD040278
+     I                                                                                      MD040278
+     IREIACD    NS                                                                          MD040278
+     I                                  1    1  RECI                                        MD040278
+     I                                  2    7  CNUM                                        MD040278
+     I                                  8   10  CCY                                         MD040278
+     I                                 11   14 0ACODQQ                                      MD040278
+     I                                 15   16 0ACSQ                                        MD040278
+     I                                 17   18 0DICT                                        MD040278
+     I                                 19   23 0DCST                                        MD040278
+     I                                 24   38  DACPQQ                                      MD040278
+     I                                 39   40  DICP                                        MD040278
+     I                                 41   42 0CICT                                        MD040278
+     I                                 43   47 0CCST                                        MD040278
+     I                                 48   62  CACPQQ                                      MD040278
+     I                                 63   64  CICP                                        MD040278
+     I                                 65   66 0CHGT                                        MD040278
+     I                                 67   71 0CHST                                        MD040278
+     I                                 72   86  CHACQQ                                      MD040278
+     I                                 87   87  PTRA                                        MD040278
+     I                                 88   88  PRCH                                        MD040278
+     I                             P   89   95 0NRCA                                        MD040278
+     I                             P   96  102 0RCA                                         MD040278
+     I                             P  103  110 0MCLB                                        MD040278
+     I                                111  113  BRCA                                        MD040278
+     I                                114  128  ZZ015                                       MD040278
+     I                             P  129  130 0NOALT                                       MD040278
+     I                             P  131  134 0TCHO                                        MD040278
+     I                                135  137  DRBR                                        MD040278
+     I                                138  140  CRBR                                        MD040278
+     I                                141  143  CHBR                                        MD040278
+     I                                144  144  PBKU                                        MD040278
+     I                                145  145  REPI                                        MD040278
+     I                                146  155 0ACOD                                        MD040278
+     I                                156  176 0DACP                                        MD040278
+     I                                177  197  CACP                                        MD040278
+     I                                198  218  CHAC                                        MD040278
+     I                             P  219  225 0TRCH                                        MD040278
+     I                                226  226  STPF1                                       MD040278
+     I                             P  227  233 0STCC                                        MD040278
+     I                                                                                      MD040278
      I@HPMPV1
       *
      I              T3OPAM                      HISB
@@ -319,18 +560,37 @@
       * MAIN
       *****************************************************************
       *
+     C     *ENTRY        PLIST                                                              MD040278
+     C                   PARM                    TYPE              1                        MD040278
       ** Initial Process
      C                   EXSR      STINIT
       *
+     C                   SELECT                                                             MD040278
       ** Stamp Tax on Debit Interest
+     C                   WHEN      TYPE = '1'                                               MD040278
+     C                   OPEN      GEICDRPD                                                 MD040278
      C                   EXSR      STDBRE
+     C                   CLOSE     GEICDRPD                                                 MD040278
       *
       ** Stamp Tax on Average Balances
+     C                   WHEN      TYPE = '2' or TYPE = '4'                                 MD040278
+     C                   OPEN      GLSTCYPD                                                 MD040278
+     C                   IF        TYPE = '2'                                               MD040278
+     C                   OPEN      GLACDRPD                                                 MD040278
+     C                   ENDIF                                                              MD040278
      C                   EXSR      STAVBL
+     C                   CLOSE     GLSTCYPD                                                 MD040278
+     C                   IF        TYPE = '2'                                               MD040278
+     C                   CLOSE     GLACDRPD                                                 MD040278
+     C                   ENDIF                                                              MD040278
       *
       ** Stamp Tax on Charges and Commissions
+     C                   WHEN      TYPE = '3'                                               MD040278
+     C                   OPEN      REIADRPD                                                 MD040278
      C                   EXSR      STCHCO
+     C                   CLOSE     REIADRPD                                                 MD040278
       *
+     C                   ENDSL                                                              MD040278
       ** End Process
      C                   EXSR      SRTERM
       *
@@ -394,9 +654,40 @@
       *
      C                   MOVE      *OFF          *IN40
       *
-     C                   READ      GEICPD                                 40
+     C**********         READ      GEICPD                                 40                MD040278
       *
-     C     *IN40         DOWEQ     *OFF
+     C******IN40         DOWEQ     *OFF                                                     MD040278
+     C     1             SETLL     GEICDRPD                                                 MD040278
+     C                   READ      GEICDRPD                                                 MD040278
+     C                   IF        %EOF(GEICDRPD)                                           MD040278
+     C                   EVAL      *INLR = *ON                                              MD040278
+     C                   GOTO      ENDSR1                                                   MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
+     C                   IF        GLFERN = ALL9                                            MD040278
+     C                   EVAL      RRN = GLFERN                                             MD040278
+     C                   EVAL      LastRRN = GLTERN                                         MD040278
+     C                   EVAL      PerformLRPrc = True                                      MD040278
+     C                   ELSE                                                               MD040278
+      *                                                                                     MD040278
+     C     GLTERN        IFNE      ALL9                                                     MD040278
+     C     PerformLRPrc  ANDNE     True                                                     MD040278
+     C     GLTERN        SETGT     GEICPD                                                   MD040278
+     C                   READP(N)  GEICPD                                                   MD040278
+     C                   IF        NOT %EOF                                                 MD040278
+     C                   EVAL      GLTERN = RRN                                             MD040278
+     C                   ENDIF                                                              MD040278
+     C                   ENDIF                                                              MD040278
+     C                   EVAL      LastRRN = GLTERN                                         MD040278
+     C                                                                                      MD040278
+     C     GLFERN        SETLL     GEICPD                                                   MD040278
+     C                   READ      GEICPD                                                   MD040278
+      *                                                                                     MD040278
+     C                   ENDIF                                                              MD040278
+      *                                                                                     MD040278
+     C                   DOW       NOT %EOF(GEICPD) AND RRN <= LastRRN                      MD040278
+     C                             AND NOT PerformLRPrc                                     MD040278
+
       *
       ** Determine whether record is to be selected:
       *
@@ -471,11 +762,39 @@
       *
       ** Update Stamp Tax summary record
      C  N42              EXCEPT    UPDAC
+     C  N42              EVAL      ForceCommit = True                                       MD040278
       *
      C                   END
      C                   END
       *
-     C                   READ      GEICPD                                 40
+     C**********         READ      GEICPD                                 40                MD040278
+                                                                                            MD040278
+     C                   EVAL      REC_CTR = REC_CTR + 1                                    MD040278
+     C                   IF        REC_CTR = CommitSize                                     MD040278
+     C                             OR ForceCommit                                           MD040278
+     C     1             CHAIN     GEICDRPD                                                 MD040278
+     C                   EVAL      GLFERN = RRN + 1                                         MD040278
+     C                   UPDATE    GEICDRF                                                  MD040278
+     C                   COMMIT                                                             MD040278
+     C                   EVAL      REC_CTR = 0                                              MD040278
+     C                   EVAL      ForceCommit = False                                      MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
+     C     RRN           IFLT      LastRRN                                                  MD040278
+     C                   READ      GEICPD                                                   MD040278
+     C                   ELSE                                                               MD040278
+     C     1             CHAIN     GEICDRPD                                                 MD040278
+                                                                                            MD040278
+     C                   IF        GLTERN <> *HIVAL                                         MD040278
+     C                   EVAL      GLFERN = GLTERN + 1                                      MD040278
+     C                   ELSE                                                               MD040278
+     C                   EVAL      GLFERN = GLTERN                                          MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
+     C                   UPDATE    GEICDRF                                                  MD040278
+     C                   LEAVE                                                              MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
      C                   ENDDO
       *
       ** End of Report GL008131P1 - account keys generated
@@ -495,7 +814,8 @@
      C                   MOVE      *BLANKS       @OPNREP1
      C                   ENDIF
       *
-     C                   ENDSR
+     C***********        ENDSR                                                              MD040278
+     C     ENDSR1        ENDSR                                                              MD040278
      C/EJECT
       *****************************************************************
       * STAVBL - Stamp Tax on Average Balances
@@ -516,13 +836,46 @@
      C                   Z-ADD     0             DRCR
      C                   Z-ADD     @ECMDT        VALD
       *
+     C                   SELECT                                                             MD040278
+     C                   WHEN      TYPE = '2'                                               MD040278
       ** Read Retail Stamp Tax Summary file, select records where the
       ** Avg indicator is 'Y'
       *
-     C     *LOVAL        SETLL     GLACNTL3
-     C                   READ      GLACNTL3                               40
+     C******LOVAL        SETLL     GLACNTL3                                                 MD040278
+     C**********         READ      GLACNTL3                               40                MD040278
       *
-     C     *IN40         DOWEQ     *OFF
+     C******IN40         DOWEQ     *OFF                                                     MD040278
+                                                                                            MD040278
+     C     1             SETLL     GLACDRPD                                                 MD040278
+     C                   READ      GLACDRPD                                                 MD040278
+     C                   IF        %EOF(GLACDRPD)                                           MD040278
+     C                   EVAL      *INLR = *ON                                              MD040278
+     C                   GOTO      ENDSR2                                                   MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
+     C                   IF        QLFERN = ALL9                                            MD040278
+     C                   EVAL      RRN = QLFERN                                             MD040278
+     C                   EVAL      LastRRN = QLTERN                                         MD040278
+     C                   EVAL      PerformLRPrc = True                                      MD040278
+     C                   ELSE                                                               MD040278
+      *                                                                                     MD040278
+     C     QLTERN        IFNE      ALL9                                                     MD040278
+     C     PerformLRPrc  ANDNE     True                                                     MD040278
+     C     QLTERN        SETGT     GLACNTQD                                                 MD040278
+     C                   READP(N)  GLACNTQD                                                 MD040278
+     C                   IF        NOT %EOF                                                 MD040278
+     C                   EVAL      QLTERN = RRN                                             MD040278
+     C                   ENDIF                                                              MD040278
+     C                   ENDIF                                                              MD040278
+     C                   EVAL      LastRRN = QLTERN                                         MD040278
+     C                                                                                      MD040278
+     C     QLFERN        SETLL     GLACNTQD                                                 MD040278
+     C                   READ      GLACNTQD                                                 MD040278
+      *                                                                                     MD040278
+     C                   ENDIF                                                              MD040278
+      *                                                                                     MD040278
+     C                   DOW       NOT %EOF(GLACNTQD) AND RRN <= LastRRN                    MD040278
+     C                             AND NOT PerformLRPrc                                     MD040278
       *
       **  determine whether record is to be selected:
       **   ....F1TAX  = Y - Stamp Tax liable
@@ -579,14 +932,44 @@
       *
      C                   END
       *
-     C                   EXCEPT    UPDAC
+     C**********         EXCEPT    UPDAC                                                    MD040278
+     C                   EXCEPT    UPDACX                                                   MD040278
+     C                   EVAL      ForceCommit = True                                       MD040278
       *
      C                   END
       *
       **  read next record from Retail Stamp Tax summary file
-     C                   READ      GLACNTL3                               40
+     C**********         READ      GLACNTL3                               40                MD040278
+                                                                                            MD040278
+     C                   EVAL      REC_CTR = REC_CTR + 1                                    MD040278
+     C                   IF        REC_CTR = CommitSize                                     MD040278
+     C                             OR ForceCommit                                           MD040278
+     C     1             CHAIN     GLACDRPD                                                 MD040278
+     C                   EVAL      QLFERN = RRN + 1                                         MD040278
+     C                   UPDATE    GLACDRF                                                  MD040278
+     C                   COMMIT                                                             MD040278
+     C                   EVAL      REC_CTR = 0                                              MD040278
+     C                   EVAL      ForceCommit = False                                      MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
+     C     RRN           IFLT      LastRRN                                                  MD040278
+     C                   READ      GLACNTQD                                                 MD040278
+     C                   ELSE                                                               MD040278
+     C     1             CHAIN     GLACDRPD                                                 MD040278
+                                                                                            MD040278
+     C                   IF        QLTERN <> *HIVAL                                         MD040278
+     C                   EVAL      QLFERN = QLTERN + 1                                      MD040278
+     C                   ELSE                                                               MD040278
+     C                   EVAL      QLFERN = QLTERN                                          MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
+     C                   UPDATE    GLACDRF                                                  MD040278
+     C                   LEAVE                                                              MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
      C                   ENDDO
       *
+     C                   WHEN      TYPE = '4'                                               MD040278
       ** Read Dealing Stamp Tax Summary file, select records where the
       ** Avg indicator is 'Y'
       *
@@ -688,8 +1071,11 @@
       ** Print Totals by ccy
       *
      C                   EXSR      STPRCY
+     C                   COMMIT                                                             MD040278
+     C                   ENDSL                                                              MD040278
       *
-     C                   ENDSR
+     C**********         ENDSR
+     C     ENDSR2        ENDSR                                                              MD040278
       *
      C/EJECT
       *****************************************************************
@@ -749,13 +1135,48 @@
       *
       ** Read REACCJL3 - Retail accounts joint logical file
       *
-     C                   DOU       %EOF(REACCJL3)
-     C                   READ      REACCJZ3
+     C**********         DOU       %EOF(REACCJL3)                                           MD040278
+     C**********         READ      REACCJZ3                                                 MD040278
+                                                                                            MD040278
+     C     1             SETLL     REIADRPD                                                 MD040278
+     C                   READ      REIADRPD                                                 MD040278
+     C                   IF        %EOF(REIADRPD)                                           MD040278
+     C                   EVAL      *INLR = *ON                                              MD040278
+     C                   GOTO      ENDSR3                                                   MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
+     C                   IF        RLFERN = ALL9                                            MD040278
+     C                   EVAL      RRN = RLFERN                                             MD040278
+     C                   EVAL      LastRRN = RLTERN                                         MD040278
+     C                   EVAL      PerformLRPrc = True                                      MD040278
+     C                   ELSE                                                               MD040278
+      *                                                                                     MD040278
+     C     RLTERN        IFNE      ALL9                                                     MD040278
+     C     PerformLRPrc  ANDNE     True                                                     MD040278
+     C     RLTERN        SETGT     REIACD                                                   MD040278
+     C                   READP(N)  REIACD                                                   MD040278
+     C                   IF        NOT %EOF                                                 MD040278
+     C                   EVAL      RLTERN = RRN                                             MD040278
+     C                   ENDIF                                                              MD040278
+     C                   ENDIF                                                              MD040278
+     C                   EVAL      LastRRN = RLTERN                                         MD040278
+                                                                                            MD040278
+     C     RLFERN        SETLL     REIACD                                                   MD040278
+     C                   READ      REIACD                                                   MD040278
+      *                                                                                     MD040278
+     C                   ENDIF                                                              MD040278
+      *                                                                                     MD040278
+     C                   DOW       NOT %EOF(REIACD) AND RRN <= LastRRN                      MD040278
+     C                             AND NOT PerformLRPrc                                     MD040278
       *
      C                   EVAL      @SEL = 'N'
-     C                   IF        NOT(%EOF(REACCJL3))
+     C**********         IF        NOT(%EOF(REACCJL3))                                      MD040278
+      ** Instead access RECOMD                                                              MD040278
+     C     KRECOM        CHAIN     RECOM                                                    MD040278
       *
      C                   IF        RECI <> 'C'
+     C                             and  %FOUND(RECOM)                                       MD040278
+     C                             and  STPF1 = 'Y' and XXSTPF2 = 'Y'                       MD040278
      C                   EVAL      @SEL = 'Y'
      C                   ENDIF
       *
@@ -803,7 +1224,8 @@
       *
      C                   MOVE      CCY           @ECCY
      C                   MOVE      CCY           ECCY
-     C                   EVAL      TotalCHG = TRCH + CHCO
+     C**********         EVAL      TotalCHG = TRCH + CHCO                                   MD040278
+     C                   EVAL      TotalCHG = TRCH + XXCHCO                                 MD040278
      C                   EVAL      @GROSS = TotalCHG
       *
       ** Reverse sign if Debit interest is being credited
@@ -827,8 +1249,35 @@
       *
      C                   ENDIF
       *
-     C                   ENDIF
+     C**********         ENDIF                                                              MD040278
       *
+                                                                                            MD040278
+     C                   EVAL      REC_CTR = REC_CTR + 1                                    MD040278
+     C                   IF        REC_CTR = CommitSize                                     MD040278
+     C                             OR ForceCommit                                           MD040278
+     C     1             CHAIN     REIADRPD                                                 MD040278
+     C                   EVAL      RLFERN = RRN + 1                                         MD040278
+     C                   UPDATE    REIADRF                                                  MD040278
+     C                   COMMIT                                                             MD040278
+     C                   EVAL      REC_CTR = 0                                              MD040278
+     C                   EVAL      ForceCommit = False                                      MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
+     C     RRN           IFLT      LastRRN                                                  MD040278
+     C                   READ      REIACD                                                   MD040278
+     C                   ELSE                                                               MD040278
+     C     1             CHAIN     REIADRPD                                                 MD040278
+                                                                                            MD040278
+     C                   IF        RLTERN <> *HIVAL                                         MD040278
+     C                   EVAL      RLFERN = RLTERN + 1                                      MD040278
+     C                   ELSE                                                               MD040278
+     C                   EVAL      RLFERN = RLTERN                                          MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
+     C                   UPDATE    REIADRF                                                  MD040278
+     C                   LEAVE                                                              MD040278
+     C                   ENDIF                                                              MD040278
+                                                                                            MD040278
      C                   ENDDO
       *
       ** End of Report GL008131P1 - account keys generated
@@ -848,7 +1297,8 @@
      C                   MOVE      *BLANKS       @OPNREP1
      C                   ENDIF
       *
-     C                   ENDSR
+     C**********         ENDSR                                                              MD040278
+     C     ENDSR3        ENDSR                                                              MD040278
      C/EJECT
       *****************************************************************
       * STAVRE - Stamp Tax on Retail Average Balances
@@ -3410,6 +3860,7 @@
      C     *DTAARA       DEFINE    SDSTAMPDA     STAMDA                                     AR820695
      C                   IN        STAMDA
       *
+     C                   IN        CBTASKSP                                                 MD040278
       * Define Fields
       *
      C                   MOVE      *ALL'-'       TRATT
@@ -3685,6 +4136,15 @@
      C                   KFLD                    @T3LNR
      C                   KFLD                    @T3DLN
       *
+      * RECOM                                                                               MD040278
+      *                                                                                     MD040278
+     C     KRECOM        KLIST                                                              MD040278
+     C                   KFLD                    BRCA                                       MD040278
+     C                   KFLD                    CNUM                                       MD040278
+     C                   KFLD                    CCY                                        MD040278
+     C                   KFLD                    ACOD                                       MD040278
+     C                   KFLD                    ACSQ                                       MD040278
+      *                                                                                     MD040278
      C     *DTAARA       DEFINE                  LDA
      C                   MOVEA     CPY@          BIS@             40
       *
@@ -4957,6 +5417,13 @@
      O                       F1TAX
      O                       F1TAXE
      O                       F1STCC
+     OGLACNTQD  E            UPDACX                                                         MD040278
+     O                       F1STAI             340P                                        MD040278
+     O                       F1STAB             333P                                        MD040278
+     O                       F1CLOS             284                                         MD040278
+     O                       F1TAX              283                                         MD040278
+     O                       F1TAXE             347P                                        MD040278
+     O                       F1STCC             361P                                        MD040278
       *
       * Summary Stamp Tax file: (DLDLDCQD)
      ODLDLDCD0  E            UPDDL

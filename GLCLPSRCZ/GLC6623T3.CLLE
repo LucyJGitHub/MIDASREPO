@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Balance Statements - TS End Subtask')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC6623T3 - Midas GL Stamp Tax REIACD - TS End Subtask      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*                                                                   */
+/*       Last Amend No. MD040278 *Create   Date 22Aug16              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD040278 - Stamp Tax A/C Keys (GLC008131) is not task split.*/
+/*                  Complete rework of the component to allow task   */
+/*                  split.                                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('REIASERVE')
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50) +
+                          VALUE('FINISH')
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2016')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Send message to MRUNQ */
+
+             SNDPGMMSG  MSG('GLC6623T3 - Stamp Tax REIACD - End +
+                          Subtask') TOMSGQ(MRUNQ)
+
+/* Send FINISH message to main data queue */
+
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Program GLC6623T3 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+
+END:
+             ENDPGM

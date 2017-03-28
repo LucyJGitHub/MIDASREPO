@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD042652           Date 06Feb17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CER071             Date 01Aug16               *
       *                 CER070             Date 03Dec14               *
       *                 CSW214             Date 03Dec14               *
       *                 MD030956           Date 09Oct14               *
@@ -135,6 +136,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042652 - FFC0800 FAILED IN COB                             *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -3033,6 +3035,15 @@
      C                   MOVEL     'USR1113'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   END
+                                                                                            MD042652
+      ** Customer is attached to an instrument type.                                        MD042652
+     C     WDS1045       IFEQ      'F'                                                      MD042652
+     C                   MOVEL     'N'           OKCUST                                     MD042652
+     C                   ADD       1             Ix                                         MD042652
+     C                   MOVEL     'DDCUSN'      FldNameArr(Ix)                             MD042652
+     C                   MOVEL     'USS0568'     MsgIDArr(Ix)                               MD042652
+     C                   GOTO      EVALAD                                                   MD042652
+     C                   ENDIF                                                              MD042652
                                                                                               CRN001
       * Regulatory Reporting checks:                                                          CRN001
       * Record exists on sdcustxb.                                                            CRN001

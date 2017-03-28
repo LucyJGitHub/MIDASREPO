@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. MD037870           Date 25May16               *
+      *  Last Amend No. MD042652           Date 06Feb17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 MD037870           Date 25May16               *
       *                 CER070             Date 25Nov14               *
       *                 MD030956           Date 09Oct14               *
       *                 CSD095             Date 08Apr14               *
@@ -73,6 +74,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042652 - FFC0800 FAILED IN COB.Dont allow deletion when    *
+      *             customer is in POSTNCD                            *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD037870 - Unable to delete customer                         *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -299,6 +302,10 @@
      F                                              KINFSR *PSSR                             BUG8616
       * RSQ : Midas SD Extended settlements by customer                                      BUG8616
       *                                                                                      BUG8616
+     FPOSTND  IF  E           K        DISK                           UC                    MD042652
+     F                                              KINFSR *PSSR                            MD042652
+      ** RTV:  FF Cust/broker positions                                                     MD042652
+      *
       *
      F/COPY WNCPYSRC,SD0011XF01
      E* Description     : Copyright notice for inclusion in all programs
@@ -1427,6 +1434,20 @@
      C                     END                             *FI
       * End of change 077335
      C                     END                             *FI
+      ** POSTNC                                                                             MD042652
+     C                     EXSR SEPOSN                                                      MD042652
+     C           W0RTN     IFEQ 'USS0568'                                                   MD042652
+     C                     MOVEL*BLANK    P2DELS           CUSTOMER DELETE                  MD042652
+     C                     MOVEL'REJECT'  P2DELS           Customer Delete                  MD042652
+     C                     MOVEL'F'       WUD045           Customer Deln F                  MD042652
+      ** Quit the program if the quit parameter is 'Y'.                                     MD042652
+      ** CASE: PAR.Quit program on REJECT is Quit on REJECT                                 MD042652
+     C           P8QPGM    IFEQ 'Y'                        *IF                              MD042652
+     C                     MOVELWUCDS1    P3CDS1                                            MD042652
+     C                     MOVEL*BLANK    P0RTN            *Return code                     MD042652
+     C                     EXSR ZYEXPG                                                      MD042652
+     C                     END                             *FI                              MD042652
+     C                     ENDIF                                                            MD042652
       * SDEXSTPD - Extended Settlements file checks.
       * Check for Customer Del. - Extended Settlements  *
      C           P1CUST    CHAINSDEXSTLB             91                                      BUG8616
@@ -2252,6 +2273,19 @@
      C                     END
       *================================================================
      CSR         SEEXIT    ENDSR
+      /EJECT                                                                                MD042652
+     CSR         SEPOSN    BEGSR                                                            MD042652
+      *================================================================                     MD042652
+      ** Retrieve by customer - FF Cust/broker positions  *                                 MD042652
+      *================================================================                     MD042652
+     C                     MOVEL*BLANK    W0RTN   7                                         MD042652
+     C           P1CUST    CHAINPOSTNCDF             90    *                                MD042652
+     C           *IN90     IFEQ '0'                                                         MD042652
+      ** Data record found                                                                  MD042652
+     C                     MOVEL'USS0568' W0RTN   7                                         MD042652
+     C                     ENDIF                                                            MD042652
+      *================================================================                     MD042652
+     CSR         SVEXIT    ENDSR                                                            MD042652
       /EJECT
      CSR         SFRVGN    BEGSR
       *================================================================
@@ -3297,6 +3331,7 @@
      C                     OPEN SDRELCL1
      C                     OPEN SDBRCHL9                                                     BUG7195
      C                     OPEN SDEXSTLB                                                     BUG8616
+     C                     OPEN POSTND                                                      MD042652
      C/COPY WNCPYSRC,SD0011XC07
       * Signal that files are now open
      C                     MOVE 'Y'       W0OPN   1

@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD043890           Date 06Feb17               *
-      *  Prev Amend No. MD042713           Date 05Dec16               *
+      *  Last Amend No. MD044546           Date 20Mar17               *
+      *  Prev Amend No. MD043890           Date 06Feb17               *
+      *                 MD042713           Date 05Dec16               *
       *                 222427             Date 05Dec16               *      
       *                 MD040328           Date 16Aug16               *
       *                 MD040146           Date 11Aug16               *
@@ -131,6 +132,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044546 - Enable the ABC flag when CAP205 is on.            *
       *  MD043890 - Cannot insert term and notice                     *
       *  MD042713 - Display Default Statement commission.             *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
@@ -796,6 +798,7 @@
      D CRE015          S              1A                                                      CRE015
      D CER055          S              1A                                                      CER055
      D CRE010          S              1A                                                    MD028970
+     D CAP205          S              1A                                                    MD044546
                                                                                               240312
       ** Flag to indicate whether defaulting is required                                      240312
      D DefaultFlag     S              1A                                                      240312
@@ -1617,6 +1620,7 @@
       *
       ** Set up Enable Account Balance Check Flag                                             CRE010
      C                   IF        CRE010 = 'Y'                                             MD028970
+     C                             or CAP205 = 'Y'                                          MD044546
      C                   EXSR      SREnableABC                                                CRE010
      C                   ENDIF                                                              MD028970
                                                                                               CRE010
@@ -3901,6 +3905,31 @@
      C                   IF        @RTCD = *BLANKS                                          MD028970
      C                   EVAL      CRE010 = 'Y'                                             MD028970
      C                   ENDIF                                                              MD028970
+      *                                                                                     MD044546
+      ** Check if CAP205 is installed.                                                      MD044546
+      *                                                                                     MD044546
+     C                   EVAL      CAP205 = 'N'                                             MD044546
+     C                   CALL      'AOSARDR0'                                               MD044546
+     C                   PARM      *BLANKS       @RTCD                                      MD044546
+     C                   PARM      '*VERIFY'     @OPTN                                      MD044546
+     C                   PARM      'CAP205'      @SARD                                      MD044546
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD044546
+                                                                                            MD044546
+     C                   IF        @RTCD <> *BLANKS AND                                     MD044546
+     C                             @RTCD <> '*NRF'                                          MD044546
+     C     *LOCK         IN        LDA                                                      MD044546
+     C                   EVAL      DBPGM = 'GLAMADVU'                                       MD044546
+     C                   EVAL      DBKEY = 'CAP205'                                         MD044546
+     C                   EVAL      DBFILE ='SCSARDPD'                                       MD044546
+     C                   EVAL      DBASE  = 905                                             MD044546
+     C                   OUT       LDA                                                      MD044546
+     C                   EXSR      *PSSR                                                    MD044546
+     C                   ENDIF                                                              MD044546
+                                                                                            MD044546
+     C                   IF        @RTCD = *BLANKS                                          MD044546
+     C                   EVAL      CAP205 = 'Y'                                             MD044546
+     C                   ENDIF                                                              MD044546
+      *                                                                                     MD044546
      C/COPY OFCPYSRCZ,CRE101_009                                                              CRE101
      C/COPY WNCPYSRC,GLH00652
       **  Define key list to access ACCPTFR

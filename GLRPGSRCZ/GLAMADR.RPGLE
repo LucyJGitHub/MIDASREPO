@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. 222427             Date 05Dec16               *
-      *  Prev Amend No. MD039546           Date 26Jan17               *
+      *  Last Amend No. MD044546           Date 20Mar17               *
+      *  Prev Amend No. 222427             Date 05Dec16               *
+      *                 MD039546           Date 26Jan17               *
       *                 LLN022A            Date 03Jun15               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
@@ -64,6 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044546 - Enable the ABC flag when CAP205 is on.            *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
       *           value is 0.00.  Data structure which includes       *
       *           DDSTFQ should be included in the parameter list on  *
@@ -253,6 +255,7 @@
      D CSC011          S              1A   INZ('N')
      D CRE015          S              1A   INZ('N')                                           CRE015
      D CRE010          S              1A   INZ('N')                                         MD028970
+     D CAP205          S              1A   INZ('N')                                         MD044546
      D WProcDate       S                   LIKE(BJRDNB)
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
@@ -861,6 +864,31 @@
      C                   IF        @RTCD = *BLANKS                                          MD028970
      C                   EVAL      CRE010 = 'Y'                                             MD028970
      C                   ENDIF                                                              MD028970
+      *                                                                                     MD044546
+      ** Check if CAP205 is installed.                                                      MD044546
+      *                                                                                     MD044546
+     C                   EVAL      CAP205 = 'N'                                             MD044546
+     C                   CALL      'AOSARDR0'                                               MD044546
+     C                   PARM      *BLANKS       @RTCD                                      MD044546
+     C                   PARM      '*VERIFY'     @OPTN                                      MD044546
+     C                   PARM      'CAP205'      @SARD                                      MD044546
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD044546
+                                                                                            MD044546
+     C                   IF        @RTCD <> *BLANKS AND                                     MD044546
+     C                             @RTCD <> '*NRF'                                          MD044546
+     C     *LOCK         IN        LDA                                                      MD044546
+     C                   EVAL      DBPGM = 'GLAMADR'                                        MD044546
+     C                   EVAL      DBKEY = 'CAP205'                                         MD044546
+     C                   EVAL      DBFILE ='SCSARDPD'                                       MD044546
+     C                   EVAL      DBASE  = 904                                             MD044546
+     C                   OUT       LDA                                                      MD044546
+     C                   EXSR      *PSSR                                                    MD044546
+     C                   ENDIF                                                              MD044546
+                                                                                            MD044546
+     C                   IF        @RTCD = *BLANKS                                          MD044546
+     C                   EVAL      CAP205 = 'Y'                                             MD044546
+     C                   ENDIF                                                              MD044546
+      *                                                                                     MD044546
      C/COPY WNCPYSRC,GLAMADAC02
       *
      C                   MOVE      'N'           LLN007            1                         LLN022A
@@ -1327,6 +1355,7 @@
       *
       ** Set up Enable Account Balance Check Flag                                             CRE010
      C     CRE010        IFEQ      'Y'                                                      MD028970
+     C     CAP205        OREQ      'Y'                                                      MD044546
      C                   EXSR      SREnableABC                                                CRE010
      C                   ENDIF                                                              MD028970
                                                                                               CRE010

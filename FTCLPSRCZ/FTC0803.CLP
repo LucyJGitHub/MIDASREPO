@@ -10,14 +10,15 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Amend No. MD041081           Date 05Sep16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CRE020             Date 20Jan04              */
+/*       Prev Amend No. CRE020             Date 20Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. CFT008             Date 04Jan00              */
+/*                      CFT008             Date 04Jan00              */
 /*                      CFT006             Date 16Sep99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CPK009             Date 09Aug99              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD041081 - Reset DATARA when it reaches 9999.               */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
 /*       CFT008 - Funds Transfer addition of MT102 messages          */
 /*       CFT006 - Funds Transfer addition of MT101 messages          */
@@ -35,21 +37,21 @@
 /*                CFT078/068151/IMP039/DBF148/HUB01B                 */
 /*                                                                   */
 /*********************************************************************/
- 
+
   PGM          PARM(&RSEQ &RLVL &RBCH)
- 
+
 /* Parameters received from FT0803 & RCF */
              DCL        VAR(&RSEQ)  TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLVL)  TYPE(*CHAR) LEN(1)
              DCL        VAR(&RBCH)  TYPE(*CHAR) LEN(3)
              DCL        VAR(&RPAR2) TYPE(*CHAR) LEN(144)
              DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
- 
+
 /* Used for query selection criteria */
              DCL        VAR(&ALL)   TYPE(*CHAR) LEN(500)
              DCL        VAR(&BAN1)  TYPE(*CHAR) LEN(4)
              DCL        VAR(&BANO)  TYPE(*DEC) LEN(4)
- 
+
 /* Used to break down &RPAR2 into individual selection criteria */
              DCL        VAR(&RPAU) TYPE(*CHAR) LEN(1)  /* REPT/AUTHO */
              DCL        VAR(&FTRN) TYPE(*CHAR) LEN(15) /* FROM TRNO */
@@ -81,7 +83,7 @@
              DCL        VAR(&E)     TYPE(*DEC)  LEN(3 0) VALUE(1)
              DCL        VAR(&F)     TYPE(*DEC)  LEN(3 0) VALUE(1)
              DCL        VAR(&BANOA) TYPE(*CHAR) LEN(4)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')
@@ -96,7 +98,7 @@
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1) +
                           VALUE(' ')                                                      /*CRE020*/
                                                                                           /*CRE020*/
- 
+
 /* Global monitor message */
              MONMSG  MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ERR)
                                                                                           /*CRE020*/
@@ -110,20 +112,20 @@
                                                                                           /*CRE020*/
              IF         COND(&RTNCDE *EQ '       ') THEN(CHGVAR +
                           VAR(&CRE020) VALUE('Y'))                                        /*CRE020*/
- 
- 
+
+
 /* Set-off Data Base Error switches. */
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Start Commitment Control. */
 /**********  STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))            /*CPK009*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                              /*CPK009*/
- 
+
 /* Retrieve parameters from internal data area *LDA */
- 
+
              RTVDTAARA  DTAARA(*LDA (1 144)) RTNVAR(&RPAR2)
- 
+
 /* Break RPAR2 into individual components  */
              CHGVAR     VAR(&RPAU) VALUE(%SST(&RPAR2 1 1))
              CHGVAR     VAR(&FTRN) VALUE(%SST(&RPAR2 2 15))
@@ -147,10 +149,10 @@
              CHGVAR     VAR(&OPR4) VALUE(%SST(&RPAR2 111 10))
              CHGVAR     VAR(&OPR5) VALUE(%SST(&RPAR2 121 10))
              CHGVAR     VAR(&BCNO) VALUE(%SST(&RPAR2 141 4))
- 
- 
+
+
 /*           CALL       PGM(PAUSEDQ) PARM('Pause     ')    */
- 
+
 /**/
 /* Check if request is Authorise or Reporting */
 /**/
@@ -158,18 +160,22 @@
              THEN(DO)
              RTVDTAARA  DTAARA(FTBDTA (1 4)) RTNVAR(&BAN1)
              CHGVAR     VAR(&BANO) VALUE(&BAN1)
-             CHGVAR     VAR(&BANO) VALUE(&BANO + 1)
+/*           CHGVAR     VAR(&BANO) VALUE(&BANO + 1) */                                  /*MD041081*/
+/* Reset FTBDTA when reaches 9999 */                                                    /*MD041081*/
+             IF         COND(&BANO *EQ 9999) THEN(CHGVAR VAR(&BANO) +
+                          VALUE(1))                                                     /*MD041081*/
+             ELSE       CMD(CHGVAR VAR(&BANO) VALUE(&BANO + 1))                         /*MD041081*/
              CHGVAR     VAR(&BAN1) VALUE(&BANO)
              CHGDTAARA  DTAARA(FTBDTA (1 4)) VALUE(&BAN1)
 /**/
 /* Set-up OPNQRY command for OTPAYXJ0 - for FT0806 */
 /**/
- 
+
              CHGVAR     VAR(%SST(&ALL &C 12)) VALUE('(RECI = "D")')
              CHGVAR     VAR(&C) VALUE(&C + 13)
              CHGVAR     VAR(%SST(&ALL &C 1)) VALUE('&')
              CHGVAR     VAR(&C) VALUE(&C + 2)
- 
+
              IF         COND((&FTRN *NE ' ') *AND (&TTRN *NE ' ')) +
                           THEN(DO)
              CHGVAR     VAR(%SST(&ALL &C 16)) VALUE('(PREF = %RANGE("')
@@ -276,7 +282,7 @@
              CHGVAR     VAR(%SST(&ALL &C 1)) VALUE('&')
              CHGVAR     VAR(&C) VALUE(&C + 1)
                           ENDDO
- 
+
              IF         COND(&CPIN *NE ' ') +
                           THEN(DO)
              CHGVAR     VAR(%SST(&ALL &C 11)) VALUE('(INSTPI = "')
@@ -297,22 +303,22 @@
              CHGVAR     VAR(&C) VALUE(&C + 11)
              CHGVAR     VAR(%SST(&ALL &C 1)) VALUE(&PAGI)
              CHGVAR     VAR(&C) VALUE(&C + 1)
- 
+
              IF         COND(&PAGI *NE 'Y') THEN(DO)
                CHGVAR     VAR(%SST(&ALL &C 15)) VALUE('" *OR INAUTO = ')
                CHGVAR     VAR(&C) VALUE(&C + 15)
                CHGVAR     VAR(%SST(&ALL &C 4)) VALUE('" ")')
                CHGVAR     VAR(&C) VALUE(&C + 5)
              ENDDO
- 
+
              ELSE CMD(DO)
                CHGVAR     VAR(%SST(&ALL &C 2)) VALUE('")')
                CHGVAR     VAR(&C) VALUE(&C + 3)
              ENDDO
- 
+
              CHGVAR     VAR(%SST(&ALL &C 1)) VALUE('&')
              CHGVAR     VAR(&C) VALUE(&C + 2)
- 
+
              ENDDO
 /**/
              IF         COND((&RBCH *NE ' ') *AND (&RBCH *NE 'ALL')) +
@@ -426,9 +432,9 @@
              CHGVAR     VAR(%SST(&ALL &C 27)) VALUE('(LVL1 = "Y") & +
                           (LVL2 = "Y")')
              CHGVAR     VAR(&C) VALUE(&C + 28)
- 
+
 /* Change INSETM to STMT, INSTPI to OPSTPI and INAUTO to OPAUTO for OTPAYXJ0. */
- 
+
              IF         COND(&SETM *NE ' ') +
                           THEN(DO)
                 CHGVAR     VAR(%SST(&ALL &D 7)) VALUE('STMT = ')
@@ -437,7 +443,7 @@
                 CHGVAR     VAR(&D) VALUE(&D + 2)
                 CHGVAR     VAR(%SST(&ALL &D 5)) VALUE(')    ')
              ENDDO
- 
+
              IF         COND(&CPIN *NE ' ') +
                           THEN(DO)
                 CHGVAR     VAR(%SST(&ALL &E 11)) VALUE('(OPSTPI = "')
@@ -446,26 +452,26 @@
                 CHGVAR     VAR(&E) VALUE(&E + 1)
                 CHGVAR     VAR(%SST(&ALL &E 2)) VALUE('")')
              ENDDO
- 
+
              IF         COND(&PAGI *NE ' ') +
                           THEN(DO)
              CHGVAR     VAR(%SST(&ALL &F 11)) VALUE('(OPAUTO = "')
              CHGVAR     VAR(&F) VALUE(&F + 11)
              CHGVAR     VAR(%SST(&ALL &F 1)) VALUE(&PAGI)
              CHGVAR     VAR(&F) VALUE(&F + 1)
- 
+
              IF         COND(&PAGI *NE 'Y') THEN(DO)
                CHGVAR     VAR(%SST(&ALL &F 15)) VALUE('" *OR OPAUTO = ')
                CHGVAR     VAR(&F) VALUE(&F + 15)
                CHGVAR     VAR(%SST(&ALL &F 4)) VALUE('" ")')
                CHGVAR     VAR(&F) VALUE(&F + 5)
              ENDDO
- 
+
              ELSE CMD(DO)
                CHGVAR     VAR(%SST(&ALL &F 2)) VALUE('")')
                CHGVAR     VAR(&F) VALUE(&F + 3)
              ENDDO
- 
+
              CHGVAR     VAR(%SST(&ALL &F 1)) VALUE('&')
              ENDDO
 /**/
@@ -855,9 +861,9 @@
              OVRDBF     FILE(OTPAYJ2) TOFILE(QTEMP/OTPAYJ2)
              OVRDBF     FILE(FT101X0) TOFILE(QTEMP/FT101X0)          /*CFT006*/
              OVRDBF     FILE(FT102X0) TOFILE(QTEMP/FT102X0)          /*CFT008*/
- 
+
              CALL       PGM(FT0806)
- 
+
 /* If database error detected recover data from LDA and send message */
 /* to MOPERQ                                                         */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -865,7 +871,7 @@
                  SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
                               TOMSGQ(MOPERQ)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
              DLTOVR     FILE(INPAYJ2)
              MONMSG MSGID(CPF0000 MCH0000)
@@ -883,7 +889,7 @@
              MONMSG MSGID(CPF0000 MCH0000)                           /*CFT006*/
              CLOF    OPNID(CCTHDXD0)                                 /*CFT008*/
              MONMSG MSGID(CPF0000 MCH0000)                           /*CFT008*/
- 
+
              CHGVAR     VAR(&ALL) VALUE(' ')
              CHGVAR     VAR(&RDAT) VALUE('       ')
              CHGVAR     VAR(%SST(&ALL 1 11)) VALUE('(INBANO = "')
@@ -906,7 +912,7 @@
                           JFLD((PREF INPREF)) OPNID(INPAYXJ0)
              CPYFRMQRYF FROMOPNID(INPAYXJ0) TOFILE(QTEMP/INPAYJ2) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
- 
+
              CHGVAR     VAR(&ALL) VALUE(' ')
              CHGVAR     VAR(&RDAT) VALUE('       ')
              CHGVAR     VAR(%SST(&ALL 1 11)) VALUE('(OPBANO = "')
@@ -920,7 +926,7 @@
 /* Copy out records from static select to improve performance of              */
 /* open query processing                                                      */
 /* */
- 
+
              CPYF       FROMFILE(OTPAYXL1) TOFILE(QTEMP/Q_OTPAYXPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           INCREL((*IF OPBANO *EQ &BANOA))
@@ -955,9 +961,9 @@
                           QRYSLT(&ALL) OPNID(CCTHDXD0)               /*CFT008*/
              CPYFRMQRYF FROMOPNID(CCTHDXD0) TOFILE(QTEMP/FT102X0) +
                           MBROPT(*REPLACE) CRTFILE(*YES)             /*CFT008*/
- 
+
              ENDDO
- 
+
              ENDDO
 /**/
 /* If request is authorise select only records with AUIN *NE "Y"  */
@@ -965,7 +971,7 @@
 /**/
              IF         COND(&RPAU *EQ X) +
              THEN(DO)
- 
+
 /* Select Incoming Payments                                       */
              CHGVAR     VAR(&ALL) VALUE(' ')
              CHGVAR     VAR(&C) VALUE(1)
@@ -983,8 +989,8 @@
              CHGVAR     VAR(&C) VALUE(&C + 10)
              CHGVAR     VAR(%SST(&ALL &C 2)) VALUE('")')
              CHGVAR     VAR(&C) VALUE(&C + 3)
- 
- 
+
+
 /* */
 /* Copy out records from static select to improve performance of              */
 /* open query processing                                                      */
@@ -999,8 +1005,8 @@
                           JFLD((PREF INPREF)) OPNID(INPAYXJ0)
              CPYFRMQRYF FROMOPNID(INPAYXJ0) TOFILE(QTEMP/INPAYJ2) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
- 
- 
+
+
 /* Select Outgoing Payments                                       */
              CHGVAR     VAR(&ALL) VALUE(' ')
              CHGVAR     VAR(&C) VALUE(1)
@@ -1018,8 +1024,8 @@
              CHGVAR     VAR(&C) VALUE(&C + 10)
              CHGVAR     VAR(%SST(&ALL &C 2)) VALUE('")')
              CHGVAR     VAR(&C) VALUE(&C + 3)
- 
- 
+
+
              CPYF       FROMFILE(OTPAYXL1) TOFILE(QTEMP/Q_OTPAYXPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           INCREL((*IF OPBANO *EQ &BANOA))
@@ -1066,9 +1072,9 @@
              OVRDBF     FILE(OTPAYJ2) TOFILE(QTEMP/OTPAYJ2)
              OVRDBF     FILE(FT101X0) TOFILE(QTEMP/FT101X0)          /*CFT006*/
              OVRDBF     FILE(FT102X0) TOFILE(QTEMP/FT102X0)          /*CFT008*/
- 
+
              CALL       PGM(FT0803) PARM(&RSEQ &RLVL &RBCH &RPARM)
- 
+
 /* If database error detected recover data from LDA and send message */
 /* to MOPERQ                                                         */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -1077,7 +1083,7 @@
                               TOMSGQ(MOPERQ)
                  GOTO CMDLBL(ERR)
              ENDDO
- 
+
              COMMIT
 /* */
 /* Call FTC0804 to control submit of Pay/Receive */
@@ -1087,9 +1093,9 @@
              CALL       PGM(FTC0804)
              ENDDO
 /* */
- 
+
              GOTO END
- 
+
  ERR:        SNDPGMMSG  MSG('Call to Payments Reporting/Autho+
                           risation ENDED ABNORMALLY') TOPGMQ(*EXT) +
                           TOMSGQ(MOPERQ MRUNQ)
@@ -1098,7 +1104,7 @@
 /**/
              ROLLBACK
              DMPCLPGM
- 
+
  END:        CLOF    OPNID(OTPAYXJ0)
              MONMSG MSGID(CPF0000 MCH0000)
              CLOF    OPNID(INPAYXJ0)
@@ -1107,13 +1113,13 @@
              MONMSG MSGID(CPF0000 MCH0000)                           /*CFT006*/
              CLOF    OPNID(CCTHDXD0)                                 /*CFT008*/
              MONMSG MSGID(CPF0000 MCH0000)                           /*CFT008*/
- 
+
 /**/
 /* End Commitment Control. */
 /**/
              ENDCMTCTL
              MONMSG MSGID(CPF0000 MCH0000 RPG0000)
- 
+
              RCLRSC
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')

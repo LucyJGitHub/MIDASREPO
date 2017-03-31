@@ -25,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD028899 - Skip closed accounts.                             *
+      *           - Applied for MD043097.
       *  CRE095 - Rate fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
       *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
@@ -256,6 +258,8 @@
  
       ** If the account is not found ignore
      C     *IN89         IFEQ      *OFF
+     C     RECI          ANDNE     'C'                                                      MD028899
+     C     ACST          ANDNE     'C'                                                      MD028899
  
       ** Ignore if interest frequency between debit and credit
      C     DRIF          ANDEQ     CRIF

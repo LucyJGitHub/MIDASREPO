@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD033964           Date 07Oct16               *
-      *  Prev Amend No. MD039859           Date 21Jul16               *
+      *  Last Amend No. MD042436           Date 07Nov16               *
+      *  Prev Amend No. MD033964           Date 07Oct16               *
+      *                 MD039859           Date 21Jul16               *
       *                 AR851481           Date 27Oct15               *
       *                 AR570314           Date 27Oct15               *
       *                 MD027587           Date 19Jun14               *
@@ -88,6 +89,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042436 - Postings can still be added to Accepted batches   *
+      *             when using multi-threading which causes imbalance.*
       *  MD033964 - Batch Header must not be created automatically    *
       *             Introduced sysval to condition checking.          *
       *           - Applied for MD041905                              *
@@ -567,13 +570,18 @@
       ** Retrieve original batch item details                                                 249585
       *                                                                                       249585
      C                   EVAL      WBTNB = DDBTNB                                             249585
-     C                   MOVE      DDBTNB        WBINB                                        249585
+     C**********         MOVE      DDBTNB        WBINB                               249585 MD042436
+     C                   MOVE      DDBINB        WBINB                                      MD042436
      C     KBITP         CHAIN     GLJENPL1                           01                      249585
      C                   IF        %FOUND(GLJENPL1)                                           249585
      C                   EVAL      B2FRNT = BTFRNT                                            249585
      C                   EVAL      B2AFRT = BTAFRT                                            249585
      C                   ENDIF                                                                249585
      C                   ENDIF                                                             AR1092119
+      *                                                                                     MD042436
+      ** Only process is batch status is not authorised                                     MD042436
+      *                                                                                     MD042436
+     C     BRBTSF        IFNE      'A'                                                      MD042436
       *
       ** Process transaction.
       ** Check to see whether the header is in use
@@ -664,6 +672,15 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     MD042436
+      ** Else error since batch status already authorised                                   MD042436
+      *                                                                                     MD042436
+     C                   ELSE                                                               MD042436
+     C                   MOVEL     'DDBTNB'      FldNameArr(1)                              MD042436
+     C                   MOVEL     'GLX1005'     MsgIDArr(1)                                MD042436
+     C                   MOVE      'E'           DDDLIT                                     MD042436
+     C                   Z-ADD     1             Idx                                        MD042436
+     C                   ENDIF                                                              MD042436
       *
       ** If errors exist, set Valid Indicator to 'N'; otherwise, set
       ** Valid Indicator to 'Y' and Transaction Status to S (Success).
@@ -951,6 +968,8 @@
       *
      C                   MOVE      ' '           B3DUMP
      C                   UPDATE    GLBTNOD0
+     C                   ELSE                                                               MD042436
+     C                   UNLOCK    GLBTNOL0                                                 MD042436
      C                   ENDIF
      C/COPY WNCPYSRC,GLH00750
       *

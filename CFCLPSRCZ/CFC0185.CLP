@@ -9,8 +9,11 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
-/*       Prev Amend No. AR796078           Date 28Jun11              */
+/*       Last Amend No. 262207             Date 09Oct09              */
+/*       Prev Amend No. 247251             Date 22Apr08              */
+/*                      CSW051             Date 12Nov07              */
+/*                      CCB020             Date 06Aug12              */
+/*                      AR796078           Date 28Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      245314A            Date 29Jun07              */
@@ -43,6 +46,12 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       262207 - Commit transactions written by CSW052. Otherwise   */
+/*                messages may rollback onto the queues.             */
+/*       247251 - Do not call CF0120 as MMM sends confs to TRAM      */
+/*                instead. Also no need to copy to CFWOCMPD as no    */
+/*                longer used and will only create large journals.   */
+/*       CSW051 - Send Confirmation from MMM to TRAM                 */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       AR796078 - Applied GEMS 263114.                             */
 /*       263114 - CFC0181 failed in COB due to incomplete            */
@@ -107,11 +116,11 @@
 /*/COPY WNCPYSRC,CFC0185001                                         */
 /*                                                    End of S01408 */
              PGM        PARM(&TRAMID &O350 &T350 &MPHAS &GCHAS &RTNVAR)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')
- 
+
              DCL        VAR(&LOOP) TYPE(*DEC) LEN(1 0) VALUE(1)      /*065979*/
              DCL        VAR(&MSGREPLY) TYPE(*CHAR) LEN(1)            /*065979*/
              DCL        VAR(&TRAMID) TYPE(*CHAR) LEN(3)
@@ -132,47 +141,55 @@
              DCL        VAR(&TEMP1) TYPE(*CHAR) LEN(10)               /*167839*/
              DCL        VAR(&TEMP2) TYPE(*CHAR) LEN(10)               /*167839*/
              DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSW025*/
- 
+             DCL        VAR(&CPYSTATUS) TYPE(*CHAR) LEN(7)                                /*CSW051*/
+             DCL        VAR(&CSW051) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSW051*/
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)                                  /*262207*/
+
 /* QOpenSys files and QDLS folder strings */                                              /*CSW025*/
              DCL        VAR(&IFSFILES) TYPE(*CHAR) LEN(256)                               /*CSW025*/
              DCL        VAR(&QDLSFLR) TYPE(*CHAR) LEN(256)                                /*CSW025*/
 /*/COPY WNCPYSRC,CFC0185012                                          */
- 
+
 /* Global monitor messages                                           */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) +
                           EXEC(GOTO ABNOR)
- 
+
              CALL (AOSARDR0) PARM(&PRTCD '*VERIFY' 'CSW025')                              /*CSW025*/
              IF (&PRTCD *EQ ' ') (CHGVAR (&CSW025) VALUE('Y'))                            /*CSW025*/
- 
+
+             CALL (AOSARDR0) PARM(&PRTCD '*VERIFY' 'CSW051')                              /*CSW051*/
+             IF (&PRTCD *EQ ' ') (CHGVAR (&CSW051) VALUE('Y'))                            /*CSW051*/
+                                                                                          /*CSW051*/
 /* Notify data area that processing is active */
 /**********  IF         COND(&MPHAS *EQ 'A') THEN(CHGDTAARA +
                           DTAARA(CFSTAT (49 6)) VALUE('ACTIVE'))                       */ /*CCB020*/
              IF         COND(&MPHAS *EQ 'A' *OR &MPHAS *EQ 'G') +
                           THEN(CHGDTAARA DTAARA(CFSTAT (49 6)) +
                           VALUE('ACTIVE'))                                                /*CCB020*/
- 
+
 /* Call CF0185 to pick up next TRAM system to action */
  EXDEAL:     CALL       PGM(CF0185) PARM(&TRAMID &TERM)
- 
+
 /* If no TRAM systems remain 'T' returned - exit program */
              IF         COND(&TERM *EQ 'T') THEN(GOTO EXIT)
- 
+
 /*/COPY WNCPYSRC,CFC0185004                                          */
 /* If folder does not exist - error */
              CHGVAR     VAR(&FLR) VALUE('CFFLR.' *CAT &TRAMID)
- 
+
              CRTFLR     FLR(&FLR)
              MONMSG     MSGID(CPF8A85 CPF8A18) EXEC(GOTO CONT)
              GOTO ABNOR
- 
+
  CONT:       CHKOBJ     OBJ(*LIBL/CFBUSYPD) OBJTYPE(*FILE)
- 
+
 /* For data coming in via Midas Message Manager, the files to process */                  /*CSW025*/
 /* will be in a directory in QOpenSys, not a QDLS folder.  We just    */                  /*CSW025*/
 /* move everything from the one to the other.                         */                  /*CSW025*/
- 
-             IF         COND(&CSW025 = 'Y') THEN(DO)                                      /*CSW025*/
+
+/**********  IF         COND(&CSW025 = 'Y') THEN(DO)                           /*CSW025*/ /*CSW051*/
+             IF         COND((&CSW025 = 'Y') *AND (&CSW051 *NE 'Y')) +
+                          THEN(DO)                                                        /*CSW051*/
                                                                                           /*CSW025*/
 /**********  CHGVAR     VAR(&IFSFILES) VALUE('/QOpenSys/tram/' *CAT +
                            &FLR *CAT '/*')                                        /*CSW025 245314A*/
@@ -185,8 +202,34 @@
                           Delay wait.') TOMSGQ(MOPERQ))                                   /*207006*/
              MONMSG     MSGID(CPFA093)                                                   /*BUG3557*/
              MONMSG     MSGID(CPFA0A9)                                                    /*263114*/
-             ENDDO                                                                        /*CSW025*/
+             ENDDO       /*CSW025*/
                                                                                           /*CSW025*/
+/* Alternatively the data from Message Manager may be coming in from */                   /*CSW051*/
+/* a queue. In which case call the program which reads from the queue */                  /*CSW051*/
+/* into PF/CFTRAMPD.                                                  */                  /*CSW051*/
+             IF         COND((&CSW025 = 'Y') *AND (&CSW051 = 'Y')) +
+                          THEN(DO)                                                        /*CSW051*/
+                                                                                          /*CSW051*/
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)                                   /*262207*/
+             MONMSG     MSGID(CPF8351)                                                    /*262207*/
+             CALL       CFG003                                                            /*CSW051*/
+             CHGVAR     VAR(&CPYSTATUS) VALUE('PENDING')                                  /*CSW051*/
+             CHGVAR     VAR(&QDLSFLR) VALUE(&FLR)                                         /*CSW051*/
+             CPYTOPCD   FROMFILE(*LIBL/CFTRAMPD) TOFLR(&QDLSFLR) +
+                          TODOC(TRAMHOST.DAT)                                             /*CSW051*/
+             MONMSG     MSGID(IWS1612 CPF9999) EXEC(DO)
+             SNDMSG     MSG('Duplicate TRAM Host file or path name +
+                          not valid. Going to Delay wait.') +
+                          TOMSGQ(MOPERQ)                                                  /*CSW051*/
+             CHGVAR     VAR(&CPYSTATUS) VALUE('DELAYED')                                  /*CSW051*/
+             ENDDO       /*CSW051*/
+             MONMSG     MSGID(CPFA093) EXEC(DO)                                           /*CSW051*/
+             CHGVAR     VAR(&CPYSTATUS) VALUE('DELAYED')                                  /*CSW051*/
+             ENDDO       /*CSW051*/
+             IF         COND(&CPYSTATUS *NE 'DELAYED') THEN(CLRPFM +
+                          FILE(CFTRAMPD))                                                 /*CSW051*/
+             ENDDO       /*CSW051*/
+                                                                                          /*CSW051*/
 /* Loop until PC is not using folder - TRAM.DAT not found */
 RETRY:       CHGVAR     VAR(&LOOP) VALUE(1)                           /*108872*/
  TRY:        CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFBUSYPD) +
@@ -221,7 +264,7 @@ RETRY:       CHGVAR     VAR(&LOOP) VALUE(1)                           /*108872*/
 /* Sharing Violation.                                              */ /*108872*/
              DLYJOB     DLY(60)                                       /*108872*/
              GOTO TRY
- 
+
 ENDTRY:                                                               /*108872*/
 /* After 5 loops check if TRAMHOST.DAT, TRAMSWFT.DAT and                108872*/
 /* TRAMCPTY.DAT exist.  If they don't, it is safe to delete             108872*/
@@ -232,37 +275,37 @@ ENDTRY:                                                               /*108872*/
                  GOTO COPY                                            /*108872*/
                  ENDDO                                                /*108872*/
              CHGVAR  &CHKMSGRPLY VALUE(' ')                           /*108872*/
- 
+
 CHECKDOC:    CHGVAR  &TRAMHOSTF VALUE('Y')                            /*108872*/
              CHGVAR  &TRAMSWFTF VALUE('Y')                            /*108872*/
              CHGVAR  &TRAMCPTYF VALUE('Y')                            /*108872*/
- 
+
              CHKDLO  DLO(TRAMHOST.DAT) FLR(&FLR)                      /*108872*/
              MONMSG (CPF8A82) +
                     EXEC(CHGVAR &TRAMHOSTF VALUE('N'))                /*108872*/
- 
+
              CHKDLO  DLO(TRAMSWFT.DAT) FLR(&FLR)                      /*108872*/
              MONMSG (CPF8A82) +
                     EXEC(CHGVAR &TRAMSWFTF VALUE('N'))                /*108872*/
- 
+
              CHKDLO  DLO(TRAMCPTY.DAT) FLR(&FLR)                      /*108872*/
              MONMSG (CPF8A82) +
                     EXEC(CHGVAR &TRAMCPTYF VALUE('N'))                /*108872*/
- 
+
 /* If the other documents do not exist then delete TRAM.DAT marker    /*108872*/
              IF   ((&TRAMHOSTF *EQ 'N') *AND +
                    (&TRAMSWFTF *EQ 'N') *AND +
                    (&TRAMCPTYF *EQ 'N')) THEN(DO)                     /*108872*/
                   GOTO DLTDOC                                         /*108872*/
                   ENDDO                                               /*108872*/
- 
+
 /* If the 'Continue' reply was taken to the 'Check PC not in Auto'    /*108872*/
 /* message. (And there other documents still exist i.e PC not now     /*108872*/
 /* taken out of AUTO mode). Then delete TRAM.DAT marker               /*108872*/
              IF   (&CHKMSGRPLY *EQ 'C') THEN(DO)                      /*108872*/
                   GOTO DLTDOC                                         /*108872*/
                   ENDDO                                               /*108872*/
- 
+
 /* Send message and await for reply. When reply received the document   108872*/
 /* PC maybe not be using the folder any more. If it still is then       108872*/
 /* recheck which other Folders are present. If reply is not Continue    108872*/
@@ -276,7 +319,7 @@ CHECKDOC:    CHGVAR  &TRAMHOSTF VALUE('Y')                            /*108872*/
                           TRNFMT(*NOTEXT)                             /*108872*/
                  MONMSG  (CPF3137) EXEC(GOTO ABNOR)                   /*108872*/
                  MONMSG  (CPF8A82 IWS168B IWS1611) EXEC(GOTO COPY)    /*108872*/
- 
+
              IF   ((&MSGREPLY *EQ 'C') *OR +
                    (&MSGREPLY *EQ 'c')) THEN(DO)                      /*108872*/
                    CHGVAR &CHKMSGRPLY VALUE('C')                      /*108872*/
@@ -286,11 +329,11 @@ CHECKDOC:    CHGVAR  &TRAMHOSTF VALUE('Y')                            /*108872*/
                    CHGVAR &CHKMSGRPLY VALUE(&MSGREPLY)                /*108872*/
                    GOTO RETRY                                         /*108872*/
                    ENDDO                                              /*108872*/
- 
+
 DLTDOC:
             DLTDLO  DLO(TRAM.DAT) FLR(&FLR)                           /*108872*/
             MONMSG (CPF8A82 CPF8A16)  EXEC(GOTO COPY)                 /*108872*/
- 
+
 /* If TRAM.DAT deleted here then send messages to MOPERQ for            108872*/
 /* diagnostics                                                          108872*/
             SNDPGMMSG  MSG('TRAM PC was taken out of Auto mode +
@@ -315,7 +358,7 @@ DLTDOC:
                      when Message was answered in CFC0185')   +
                      TOMSGQ(MOPERQ)                                   /*108872*/
                 ENDDO                                                 /*108872*/
- 
+
 /* Allocate folder by creating MIDAS.DAT document */
  COPY:      CPYTOPCD  FROMFILE(*LIBL/CFBUSYPD) TOFLR(&FLR) +
                       TODOC(MIDAS.DAT) REPLACE(*YES) TRNFMT(*NOTEXT)
@@ -324,7 +367,7 @@ DLTDOC:
              DLYJOB     DLY(30)                                      /*098361*/
              GOTO       TRY                                          /*098361*/
              ENDDO                                                   /*098361*/
- 
+
 /* Check that PC hasn't started using the folder whilst AS/400 */
 /* was trying to start using it.                               */
              DLYJOB     DLY(60)
@@ -334,16 +377,18 @@ DLTDOC:
              MONMSG     MSGID(CPF3130 CPF4286)                       /*062770*/
              MONMSG     MSGID(CPF3137) EXEC(GOTO CMDLBL(ABNOR))
              MONMSG     MSGID(CPF8A82 IWS168B IWS1611) EXEC(GOTO CONT2)
- 
+
 /* If copy successful, TRAM.DAT exists and PC is busy,      */
 /* so delete MIDAS.DAT document just created and try again. */
              DLTDLO     DLO(MIDAS.DAT) FLR(&FLR)
              MONMSG     MSGID(CPF8A82 CPF8A16)                       /*062770*/
              GOTO TRY
- 
+
 /* Clear temporary file  */
-CONT2:       CLRPFM     FILE(CFWOCMPD)
- 
+/****CONT2:       CLRPFM     FILE(CFWOCMPD)           */           /*247251*/
+CONT2:       IF (&CSW025 *NE 'Y') THEN(DO)                         /*247251*/
+             CLRPFM     FILE(CFWOCMPD)                             /*247251*/
+
 /* If folder has not been collected, copy back to file to add new ones */
              CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFWOCMPD) +
                           FROMDOC(TRAMHOST.DAT) TRNFMT(*NOTEXT)
@@ -355,9 +400,9 @@ CONT2:       CLRPFM     FILE(CFWOCMPD)
                                                                    /* E40238 */
              CHGVAR     VAR(&CMPREC) VALUE(Y)
              GOTO FULL
- 
+
  EMPTY:      CHGVAR     VAR(&CMPREC) VALUE(N)
- 
+
 /* Call CF0120 to extract outgoing messages */
 /*/COPY WNCPYSRC,CFC0185005                                          */
 /**********  IF         COND(&CSW025 *NE 'Y') THEN(DO)                             /*CSW025 245314*/
@@ -371,11 +416,12 @@ CONT2:       CLRPFM     FILE(CFWOCMPD)
                           CMDLBL(ABNOR))                           /* E42976 */
              IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +
                           CMDLBL(ABNOR))                           /* E42976 */
- 
+
 /*/COPY WNCPYSRC,CFC0185013                                          */
 /**********  CPYTOPCD   FROMFILE(CFWOCMPD) TOFLR(&FLR) +
 /**********               TODOC(TRAMHOST.DAT) REPLACE(*YES) +
 /**********               TRNFMT(*NOTEXT)                                                /*245314A*/
+              ENDDO       /*247251*/
 /*/COPY WNCPYSRC,CFC0185014                                          */
                                                                      /*CCF001*/
                                                                      /*CCF001*/
@@ -435,10 +481,10 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
              ENDDO                                                   /*CCF001*/
                                                                      /*CCF001*/
              CHGDTAARA  DTAARA(CFSTAT (1 3)) VALUE(&TRAMID)
- 
+
 /* Clear temporary file  */
              CLRPFM     FILE(CFWICMPD)
- 
+
 /* If folder has not been collected, copy back to file to add new ones */
              CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFWICMPD) +
                           FROMDOC(TRAMSWFT.DAT) TRNFMT(*NOTEXT)
@@ -450,9 +496,9 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
                                                                     /* E40238 */
              CHGVAR     VAR(&CMPREC) VALUE(Y)
              GOTO FULL2
- 
+
  EMPTY2:     CHGVAR     VAR(&CMPREC) VALUE(N)
- 
+
 /**/                                                                /*167839*/
 /*Try to allocate file CFWICMPD before calling CF0186*/             /*167839*/
 /**/                                                                /*167839*/
@@ -474,12 +520,12 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
                           CMDLBL(ABNOR))                            /* E42976 */
              IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +
                           CMDLBL(ABNOR))                            /* E42976 */
- 
+
              CPYTOPCD   FROMFILE(CFWICMPD) TOFLR(&FLR) +
                           TODOC(TRAMSWFT.DAT) REPLACE(*YES) +
                           TRNFMT(*NOTEXT) /*S01304*/
              CHGDTAARA  DTAARA(CFSTAT (4 3)) VALUE(&TRAMID)
- 
+
 /* Copy feedback */
              CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFWFEDPD) +
                           FROMDOC(TRAMFEED.DAT) MBROPT(*ADD)
@@ -490,10 +536,10 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
 /*/COPY WNCPYSRC,CFC0185003                                          */
              DLTDLO     DLO(MIDAS.DAT) FLR(&FLR)
              MONMSG     MSGID(CPF8A82 CPF8A16)
- 
+
 /* End of loop for each TRAM system */
              GOTO EXDEAL
- 
+
 /*/COPY WNCPYSRC,CFC0185009                                          */
  EXIT:       CALL       PGM(CF0140)
 /*/COPY WNCPYSRC,CFC0185010                                          */
@@ -508,7 +554,7 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
                              CMDLBL(ALC_ERR))                        /*062640*/
              CLRPFM     FILE(CFWFEDPD)
              DLCOBJ     OBJ((CFWFEDPD *FILE *EXCL *FIRST))           /*062640*/
- 
+
 /* Generate Chasers for Timed out Confirmations if required */
              IF         COND(&GCHAS *EQ 'Y') THEN(DO)
 /************SBMJOB     CMD(CALL PGM(CFC0060)) JOB(CHASERS) +      */ /*E40688*/
@@ -519,7 +565,7 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
              IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +
                           CMDLBL(ABNOR))                             /*E43951*/
              ENDDO
- 
+
              GOTO END
  ALC_ERR:    CHGVAR     VAR(&RTNVAR) VALUE('1')                      /*062640*/
              SNDPGMMSG  MSG('Cannot allocate object CFWFEDPD') +
@@ -527,12 +573,12 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
              GOTO       CMDLBL(END)                                  /*062640*/
  ABNOR:      CHGVAR     VAR(&RTNVAR) VALUE('1')
              CHGJOB     SWS(XXXXXX11)                         /*E33221*/
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
- 
+
  END:        ENDPGM
 /*                                                  Start of S01408 */
 /*/COPY WNCPYSRC,CFC0185002                                         */
 /*                                                    End of S01408 */
- 
+

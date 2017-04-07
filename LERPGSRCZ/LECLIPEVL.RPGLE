@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039016           Date 26May16               *
-      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *  Last Amend No. MD045010           Date 05Apr17               *
+      *  Prev Amend No. MD039016           Date 26May16               *
+      *                 CLE141A            Date 28Apr16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD025521           Date 19Aug14               *
       *                 AR804863           Date 10Dec12               *
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045010 - Component LEC06A 10008 looping during COB caused  *
+      *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  MD039016 - Different event codes for BDC validation in       *
       *             various Lending APIs                              *
       *  CLE141A - CLE141 Change Control 1                            *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL184             Date 07Dec16               *
-      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *  Last Amend No. MD045010           Date 05Apr17               *
+      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045010 - Component LEC06A 10008 looping during COB caused  *
+      *             by missed code in CGL184. Amended due to changes  *
+      *             made in /CPY ZFRQB3.                              *
       *  CGL184 - New Frequencies for Account Statements              *
       *  CLE064 - Enhancement of Lending Frequencies                  *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -319,6 +323,10 @@
       ** Reformat date and ensure valid for non-daily frequency
       *
      C     ZFREQ         IFNE      'D'
+     C     CGL184        ANDEQ     'N'                                                      MD045010
+     C     ZFREQ         ORNE      'D'                                                      MD045010
+     C     ZFREQ         ANDNE     'K'                                                      MD045010
+     C     CGL184        ANDEQ     'Y'                                                      MD045010
       *
       ** Validate month
       *

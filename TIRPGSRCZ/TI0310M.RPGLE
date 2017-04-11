@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CRE095             Date 25Apr14               *
-      *  Prev Amend No. CRE090             Date 14Feb14               *
+      *  Last Amend No. MD045010           Date 05Apr17               *
+      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
       *                 AR899028           Date 25Jan12               *
       *                 AR847269           Date 09Nov11               *
@@ -81,6 +82,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045010 - Component LEC06A 10008 looping during COB caused  *
+      *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  CRE095 - Rate Fixing for RE Accounts                         *
       *  CRE090 - Delay Capitalisation of Interest                    *
       *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *

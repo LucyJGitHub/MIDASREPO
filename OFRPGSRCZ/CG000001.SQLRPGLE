@@ -16,12 +16,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD032380           Date 12Feb15               *
-      *  Prev Amend No. MD032091           Date 26Jan15               *
+      *  Last Amend No. MD045010           Date 05Apr17               *
+      *  Prev Amend No. MD032380           Date 12Feb15               *
+      *                 MD032091           Date 26Jan15               *
       *                 CRE101  *Create    Date 06Oct14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD045010 - Component LEC06A 10008 looping during COB caused  *
+      *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  MD032380 - Next IIS date not updated when on holiday         *
       *  MD032091 - New flag for back-valuations                      *
       *  CRE101 - Interim Interest Statement on a Frequency           *

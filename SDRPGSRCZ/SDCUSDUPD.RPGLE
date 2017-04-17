@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD043029           Date 05Dec16               *
-      *  Prev Amend No. MD042407           Date 08Nov16               *
+      *  Last Amend No. MD045218           Date 17Apr17               *
+      *  Prev Amend No. MD043029           Date 05Dec16               *
+      *                 MD042407           Date 08Nov16               *
       *                 MD038401B          Date 05Oct16               *
       *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
@@ -131,6 +132,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045218 - Account Review is not displayed in listview       *
       *  MD043029 - Serious Midas Error encountered during            *
       *             authorisation of CUSD amend                       *
       *  MD042407 - Creation Date field is missing when CGL132 is     *
@@ -3226,10 +3228,11 @@
      C                             ARSCDT = KSCDT                                             CGL132
      C                   EVAL      AVSEQN = ARSEQN + 1                                        CGL132
      C                   ELSE                                                                 CGL132
+     C                   CLEAR                   SDACRVDF                                   MD045218
      C                   EVAL      AVSEQN = 1                                                 CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
-     C                   CLEAR                   SDACRVDF                                     CGL132
+     C**********         CLEAR                   SDACRVDF                            CGL132 MD045218
                                                                                               CGL132
      C                   EVAL      ARCUST = FACUST                                            CGL132
      C                   EVAL      ARSEQN = AVSEQN                                            CGL132
@@ -4496,10 +4499,11 @@
      C                             ARSCDT = KSCDT                                             CGL132
      C                   EVAL      AVSEQN = ARSEQN + 1                                        CGL132
      C                   ELSE                                                                 CGL132
+     C                   CLEAR                   SDACRVDF                                   MD045218
      C                   EVAL      AVSEQN = 1                                                 CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
-     C                   CLEAR                   SDACRVDF                                     CGL132
+     C**********         CLEAR                   SDACRVDF                            CGL132 MD045218
                                                                                               CGL132
      C                   EVAL      ARCUST = FACUST                                            CGL132
      C                   EVAL      ARSEQN = AVSEQN                                            CGL132

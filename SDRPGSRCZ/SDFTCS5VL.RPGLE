@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD042966           Date 20Dec16               *
-      *  Prev Amend No. MD042794           Date 21Nov16               *
+      *  Last Amend No. MD045238           Date 24Apr17               *
+      *  Prev Amend No. MD042966           Date 20Dec16               *
+      *                 MD042794           Date 21Nov16               *
       *                 MD042692           Date 20Dec16               *
       *                 MD036380           Date 03Nov15               *
       *                 MD036375           Date 02Nov15               *
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045238 - Authority Holder is not recognized as Controlling *
+      *             Person                                            *
       *  MD042966 - FATCA US Indicia are not updated upon             *
       *             complete                                          *
       *  MD042692 - Serious midas error occurred after pressing       *
@@ -95,12 +98,12 @@
       *           Classification - Master                             *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Customer FATCA Info Retrieval Index                                                MD027454
      F***SDFTCSL1  IF   E           K DISK    INFSR(*PSSR)                         MD027454 MD042692
                                                                                             MD027454
@@ -111,53 +114,58 @@
       ** +--------------------------------------+
       **
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D/COPY ZACPYSRC,STDDECLARE
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Additional Customer Details Screen Format                                          MD036375
      D CrTrnScFmt    E DS                  EXTNAME(SDACUDPD)                                MD036375
      D                                     PREFIX(C_)                                       MD036375
                                                                                             MD036375
       ** FATCA Customer Details in screen format
      D CrFaScnFmt    E DS                  EXTNAME(SDFTCRPD)
- 
+
       ** FATCA Customer Details in screen format (Previous)
      D PrFaScnFmt    E DS                  EXTNAME(SDFTCRPD)
      D                                     PREFIX(P_)
- 
+
       ** Additional Customer details
      D CrCuScnFmt    E DS                  EXTNAME (SDCUADPD)
      D                                     PREFIX(AD)
+      ** (Current) Customer Authority Holder details in file Format                         MD045238
+     D ValidCUAH     E DS                  EXTNAME(SDVCUAHPD)                               MD045238
+     D                                     PREFIX(V_)                                       MD045238
+     D V_CUAHArr       S                   DIM(50) LIKE(ValidCUAH)                          MD045238
+
      D CrFoScnFmt      DS                                                                   MD036375
      D  WCDESC1                1     50                                                     MD036375
      D  WPDESC1               51    100                                                     MD036375
@@ -168,32 +176,32 @@
      D  DDCDOM               145    146                                                     MD036375
      D  DDACCZ               147    148                                                     MD036375
      D  DDUTNN               149    173                                                     MD036375
- 
+
       ** FATCA Customer Details OK indicators
      D OKFATCAdet    E DS                  EXTNAME(SDEFTCSPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D ZMUSER          DS            17
      D  WUSRID                 1     10                                                    MD026835A
      D  USRBCH                11     13
- 
+
      D ValidFATCA    E DS                  EXTNAME(SDVFTCSPD)
       ** Valid Customer Details layout
- 
+
       ** External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       * Ext Customer in File Format                                                         MD026497
      D NwXcFilFmt    E DS                  EXTNAME(SDVCUXCPD)                               MD026497
                                                                                             MD026497
@@ -215,12 +223,12 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
      DSYSVAL1          C                    'FATCAEffectStartDate'                          MD027454
                                                                                             MD027454
      D PRtCd           S              7A
@@ -253,7 +261,7 @@
      D DDBBTH          S              6A                                                    MD036380
      D PHasIndicia     S              1A   INZ('N')                                         MD042692
      D POrigin         S              1A                                                    MD042692
- 
+
       ** Parameters for AOSVAL                                                              MD027454
      D PRetCode        S             20A   INZ(*BLANKS)                                     MD027454
      D POP01           S             20A   INZ(*BLANKS)                                     MD027454
@@ -270,24 +278,24 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C**********         CALL      'QCMDEXC'                                       MD027454 MD042692
      C**********         PARM                    ##OV1                             MD027454 MD042692
      C**********         PARM                    WMsgLen                           MD027454 MD042692
@@ -324,49 +332,49 @@
       ** Check Customer Indicia                                                             MD042692
      C                   EXSR      SrChkIndicia                                             MD042692
                                                                                             MD042692
- 
+
       ** Validate FATCA Customer Type
      C                   EXSR      SrVCSTY
- 
+
       ** Validate High Value Account
      C                   EXSR      SrVHVAC
- 
+
       ** Validate FATCA Customer Sub type
      C                   EXSR      SrVCSST
- 
+
       ** Validate Subject to Reporting
      C                   EXSR      SrVSRPT
- 
+
       ** Validate FATCA Classification Code and Date
      C                   EXSR      SrVCLASS
                                                                                             MD029805
       ** Validate GIIN Number                                                               MD029805
      C                   EXSR      SrVGIINN                                                 MD029805
- 
+
       ** Validate GIIN Last Verification Date
      C                   EXSR      SrVGIIND
- 
+
       ** Validate GIIN Owner
      C                   EXSR      SrVGIINO
- 
+
       ** Validate Mailing Country
      C                   EXSR      SrVMAIL
- 
+
       ** Validate US Phone Number
      C                   EXSR      SrVPHON
- 
+
       ** Validate US Green Card
      C                   EXSR      SrVGRENC
- 
+
       ** Validate Reporting Type and Reporting Type Remark
      C                   EXSR      SrVRPTT
- 
+
       ** Validate Exempt Flag and Remark
      C                   EXSR      SrVEXEM
- 
+
       ** Validate FATCA Information Complete
      C                   EXSR      SrVFTIC
- 
+
       ** Process Exception of customer
      C                   IF        Idx = 0
      C                   EVAL      FVCUST = DDCUST
@@ -393,13 +401,13 @@
      C                   EVAL      DDEXID = FVEXID                                         MD026790A
      C                   EVAL      DDEXMA = FVEXMA                                         MD026790A
      C                   ENDIF
- 
+
      C**********         CALL      'QCMDEXC'                                       MD027454 MD042692
      C**********         PARM                    ##OV2                             MD027454 MD042692
      C**********         PARM                    WMsgLen                           MD027454 MD042692
                                                                                             MD027454
      C                   RETURN
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************                     MD042692
@@ -426,52 +434,52 @@
       *****************************************************************
       * SrVCLASS - Validate FATCA Classification Code
       *****************************************************************
- 
+
      C     SrVCLASS      BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate FATCA Classification Code and Date
- 
+
      C                   CALLB     'SDVCLASS'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** FATCA Classification Code (Original)
      C                   PARM                    P_DDCLAC
- 
+
       ** FATCA Classification Code
      C                   PARM                    DDCLAC
      C                   PARM                    DDPCLA
- 
+
       ** FATCA Classification Date (Original)
      C                   PARM                    P_DDCLAF
- 
+
       ** FATCA Classification Date
      C                   PARM                    DDCLAF
      C                   PARM                    BJDFIN            1
      C                   PARM                    BJRDNB            5 0
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIdXAr
      C                   PARM                    WMsgDtXAr
- 
+
       ** FATCA Classification Date - OK
      C                   PARM                    DDCLADOK          1
- 
+
       ** FATCA Classification Code - OK
      C                   PARM                    DDCLACOK
      C                   PARM                    DDUSIA            1
@@ -486,41 +494,41 @@
      C                   IF        WCLAFlag = 'Y'                                           MD027561
      C                   EVAL      DDCSTD = 'Y'                                             MD027561
      C                   ENDIF                                                              MD027561
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVEXEM - Validate Exempt Flag and Remark
       *****************************************************************
- 
+
      C     SrVEXEM       BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate Exempt Flag and Remark
- 
+
      C                   CALLB     'SDVEXEM'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** Exempt Flag (Original)
      C                   PARM                    P_DDEXEM
- 
+
       ** Current run date
      C                   PARM                    BJRDNB
      C                   PARM                    BJDFIN
- 
+
       ** User ID
      C                   PARM                    DDUSID           10
      C                   PARM                    DDEXEM            1
@@ -530,21 +538,21 @@
      C                   PARM                    DDEXE2           64
      C                   PARM                    DDEXE3           64
      C                   PARM                    DDEXE4           64
- 
+
      C                   PARM                    DDEXEF
      C                   PARM                    DDEXET
      C                   PARM                    DDEXEU
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Exempt - OK
      C                   PARM                    DDEXEMOK          1
- 
+
       ** Exempt Remark - OK
      C                   PARM                    DDEXEROK          1
      C                   PARM                    FVEXEM
@@ -553,63 +561,63 @@
      C                   PARM                    FVEXEU           10
      C                   PARM                    FVEXDF            6
      C                   PARM                    FVEXER
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVRPTT - Validate Reporting Type and Remarks
       *****************************************************************
- 
+
      C     SrVRPTT       BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate Reporting Type and Remarks
- 
+
      C                   CALLB     'SDVRPTT'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** Exempt Flag (Original)
      C                   PARM                    P_DDRPTT
- 
+
       ** Current run date
      C                   PARM                    BJRDNB
      C                   PARM                    BJDFIN
- 
+
       ** User ID
      C                   PARM                    DDUSID           10
      C                   PARM                    DDRPTT            1
      C                   PARM                    DDRPT1           64
      C                   PARM                    DDRPT2           64
- 
+
      C                   PARM                    DDRPTD
      C**********         PARM                    DDRPTT                                    MD026507A
      C                   PARM                    DDRPTM            8                       MD026507A
      C                   PARM                    DDRPTU
      C                   PARM                    DDRPDE
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Exempt - OK
      C                   PARM                    DDRPTTOK          1
- 
+
       ** Exempt Remark - OK
      C                   PARM                    DDRPTROK          1
      C                   PARM                    FVRPTT
@@ -618,11 +626,11 @@
      C                   PARM                    FVRPTU           10
      C                   PARM                    FVRPTF            6
      C                   PARM                    FVRPTR
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
                                                                                             MD029805
       *****************************************************************                     MD029805
@@ -667,336 +675,336 @@
      C                   EXSR      UPDATERRS                                                MD029805
                                                                                             MD029805
      C                   ENDSR                                                              MD029805
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVGIIND - Validate GIIN Last Verification Date
       *****************************************************************
- 
+
      C     SrVGIIND      BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate GIIN Last Verification Date
- 
+
      C                   CALLB     'SDVGIIND'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** GIIN Last Verification Date
      C                   PARM                    DDGIIF            6
      C                   PARM                    BJRDNB            5 0
      C                   PARM                    BJDFIN            1
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** GIIN Last Verification Date - OK
      C                   PARM                    DDGIIDOK          1
      C                   PARM                    FVGIID
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVGIINO - GIIN Owner
       *****************************************************************
- 
+
      C     SrVGIINO      BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate GIIN Owner
- 
+
      C                   CALLB     'SDVGIINO'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** GIIN Owner
      C                   PARM                    DDGIIO           10
- 
+
       ** FATCA Customer Sub type
      C                   PARM                    DDCSST            2
      C                   PARM                    DDCSSTOK          1
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** GIIN Owner - OK
      C                   PARM                    DDGIIOOK          1
      C                   PARM                    FVGIIO
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVMAIL - Validate Mailing Country
       *****************************************************************
- 
+
      C     SrVMAIL       BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate Mailing Country
- 
+
      C                   CALLB     'SDVMAIL'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** Mailing Address
      C                   PARM                    DDMAIL
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Mailing Address - OK
      C                   PARM                    DDMAILOK          1
      C                   PARM                    FVMAIL
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVPHON - Validate US Phone Number
       *****************************************************************
- 
+
      C     SrVPHON       BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate US Phone Number
- 
+
      C                   CALLB     'SDVPHON'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** US Phone Number
      C                   PARM                    DDPHON            1
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** US Phone Number - OK
      C                   PARM                    DDPHONOK          1
      C                   PARM                    FVPHON
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVGRENC - Validate US Green Card
       *****************************************************************
- 
+
      C     SrVGRENC      BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate US Green Card
- 
+
      C                   CALLB     'SDVGRENC'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** US Green Card
      C                   PARM                    DDGREC            1
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** US Green Card - OK
      C                   PARM                    DDGRECOK          1
      C                   PARM                    FVGREC
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVHVAC - Validate High Value Account
       *****************************************************************
- 
+
      C     SrVHVAC       BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate High Value Account
- 
+
      C                   CALLB     'SDVHVAC'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** High Value Account (Original)
      C                   PARM                    P_DDHVAC
- 
+
       ** High Value Account
      C                   PARM                    DDHVAC            1
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Warning fields/message IDs/message data (arrays)
       ** from/to caller
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
- 
+
       ** High Value Account - OK
      C                   PARM                    DDHVACOK          1
      C                   PARM                    FVHVAC
- 
- 
+
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVCSTY - Validate FATCA Customer Type
       *****************************************************************
- 
+
      C     SrVCSTY       BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate FATCA Customer Type
- 
+
      C                   CALLB     'SDVCSTY'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** FATCA Customer Type
      C                   PARM                    DDCSTP            1
- 
+
       ** FATCA Customer Type Description
      C                   PARM                    DDCSTD
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** FATCA Customer Type - OK
      C                   PARM                    DDCST1OK          1
      C                   PARM                    FVCSTY
- 
- 
+
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVCSST - Validate FATCA Customer Sub type
       *****************************************************************
- 
+
      C     SrVCSST       BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate FATCA Customer Sub type
- 
+
      C                   CALLB     'SDVCSST'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** FATCA Customer Sub type
      C                   PARM                    DDCSST            2
      C                   PARM                    DDCSTP            1
@@ -1004,88 +1012,88 @@
                                                                                             MD027252
       ** FATCA Customer Sub type (Previous)                                                 MD027252
      C                   PARM                    P_DDCSTP                                   MD027252
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** FATCA Customer Sub type - OK
      C                   PARM                    DDCSSTOK          1
      C                   PARM                    FVCSST
- 
- 
+
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVSRPT - Validate Subject to Reporting Flag
       *****************************************************************
- 
+
      C     SrVSRPT       BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate Subject to Reporting Flag
- 
+
      C                   CALLB     'SDVSRPT'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
- 
+
       ** Subject to Reporting Flag
      C                   PARM                    DDREPT            1
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Subject to Reporting Flag - OK
      C                   PARM                    DDREPTOK          1
      C                   PARM                    FVREPT
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVFTIC - Validate FATCA Information Complete
       *****************************************************************
- 
+
      C     SrVFTIC       BEGSR
- 
+
      C                   EVAL      DDBTHT = C_DDBTHT                                        MD036380
      C                   EVAL      DDCBTH = C_DDBTHC                                        MD036380
      C                   EVAL      DDBBTH = C_DDDBTH                                        MD036380
 
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate FATCA Information Complete
- 
+
      C                   CALLB     'SDVFTIC'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
      C                   PARM                    DDINFC
@@ -1145,54 +1153,54 @@
      C**********         PARM                    DDCUST                            MD027140 MD042692
      C                   PARM                    PHasIndicia                                MD042692
      C                   PARM      'C'           POrigin                                    MD042692
- 
+
       ** OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Warning fields/message IDs/message data (arrays)
       ** from/to caller
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
- 
+
       ** FATCA Information Complete - OK
      C                   PARM                    DDINFCOK          1
      C                   PARM                    FVINFC            1
      C                   PARM                    PIsNew                                     MD027454
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SrVEXCP - Process Exception of Customer
       *****************************************************************
- 
+
      C     SrVEXCP       BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
      C                   EVAL      BirthDate = C_DDDBTH                                     MD036375
      C                   EVAL      BirthTown = C_DDBTHT                                     MD036375
      C                   EVAL      BirthCtry = C_DDBTHC                                     MD036375
 
       ** Process Exception of Customer
- 
+
      C                   CALLB     'SDVEXCP'
- 
+
       ** INPUTS
- 
+
       ** Return Code
      C                   PARM                    RetCodeOut
      C                   PARM                    ValidFATCA
@@ -1201,10 +1209,11 @@
      C                   PARM      ADDDACTN      P_ACTN            1                       MD026790A
      C                   PARM                    BJDFIN                                     MD026997
      C                   PARM                    PHasIndicia                                MD042692
- 
+     C                   PARM                    V_CUAHArr                                  MD045238
+
       ** Warning fields/message IDs/message data (arrays)
       ** from/to caller
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
@@ -1214,24 +1223,24 @@
      C                   PARM      ADDDBRTH      DDDBTH                                     MD027064
      C                   PARM      ADDDBTHT      DDBTHT                                     MD027064
      C                   PARM      ADDDBTHC      DDBTHC            2                        MD027064
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
- 
+
       ** Reset error & warning fields/message IDs/message data (arrays)
      C                   MOVEL     *BLANK        FldNamXAr
      C                   MOVEL     *BLANK        MsgIDXAr
@@ -1239,20 +1248,20 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
- 
+
       ** Update error fields/message IDs/message data (arrays)
- 
+
      C                   Z-ADD     1             I                 3 0
      C     *BLANK        LOOKUP    FldNameArr(I)                          99
      C     *IN99         IFEQ      '1'
@@ -1260,15 +1269,15 @@
      C                   MOVEA     MsgIDXAr      MsgIdArr(I)
      C                   MOVEA     MsgDtaXAr     MsgDtaArr(I)
      C                   END
- 
+
       ** Set Error Index
- 
+
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    FldNameArr(I)                          99
      C     I             SUB       1             Idx
- 
+
       ** Update warning fields/message IDs/message data (arrays)
- 
+
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    WFldNamArr(I)                          99
      C     *IN99         IFEQ      '1'
@@ -1276,14 +1285,14 @@
      C                   MOVEA     WMsgIDXAr     WMsgIDArr(I)
      C                   MOVEA     WMsgDtXAr     WMsgDtaArr(I)
      C                   END
- 
+
       ** Set Warning Index
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    WFldNamArr(I)                          99
      C     I             SUB       1             WIdx
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1291,16 +1300,16 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUTS
- 
+
       ** Response mode
      C                   PARM                    RespMode          1
- 
+
       ** FATCA Customer Details
      C                   PARM                    CrFaScnFmt
      C                   PARM                    PrFaScnFmt
@@ -1309,58 +1318,59 @@
      C                   PARM                    WWCOLC                                     MD026693
      C                   PARM                    NwXcFilFmt                                 MD026497
      C                   PARM                    PAPARM                                     MD036356
- 
+     C                   PARM                    V_CUAHArr                                  MD045238
+
       ** OUTPUTS
- 
+
       ** FATCA Customer Details OK inds
      C                   PARM                    OKFATCAdet
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** Valid FATCA Customer details layout (DS) from/to caller
      C                   PARM                    ValidFATCA
                                                                                            MD026835A
       ** Retrieve ZMUSER details.                                                          MD026835A
      C******DTAARA       DEFINE                  ZMUSER                           MD026835A MD042692
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     '001'         DBASE
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Check if switchable feature CGL132 is switched on.
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CGL132'      @SARD             6
- 
+
       ** Database error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF   '
      C                   MOVEL     'CGL132'      DBKEY
@@ -1368,15 +1378,15 @@
      C                   MOVEL     '002'         DBASE
      C                   EXSR      SRERR
      C                   END
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           CGL132            1
      C                   ELSE
      C                   MOVE      'N'           CGL132
      C                   END
- 
+
      C                   EVAL      WRunDay = BJRDNB
- 
+
       ** Check FATCA Effective Date system value                                            MD027454
      C                   CALL      'AOSVALR0'                                               MD027454
      C                   PARM      *BLANKS       PRetCode                                   MD027454
@@ -1419,7 +1429,7 @@
      C                   ENDIF                                                              MD027454
                                                                                             MD027454
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1428,19 +1438,19 @@
       * SRERR - EXCEPTION ERRORS                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRERR         BEGSR
- 
+
      C                   MOVEL     'SDFTCS5VL'   DBPGM
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
      C                   DUMP
- 
+
       **  Terminate the program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

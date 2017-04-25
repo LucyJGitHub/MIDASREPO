@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD042966           Date 20Dec16               *
-      *  Prev Amend No. MD042692           Date 20Dec16               *
+      *  Last Amend No. MD045238           Date 24Apr17               *
+      *  Prev Amend No. MD042966           Date 20Dec16               *
+      *                 MD042692           Date 20Dec16               *
       *                 MD042407           Date 07Nov16               *
       *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
@@ -135,6 +136,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045238 - Authority Holder is not recognized as Controlling *
+      *             Person                                            *
       *  MD042966 - FATCA US Indicia are not updated upon             *
       *             complete                                          *
       *  MD042692 - Serious midas error occurred after pressing       *
@@ -5640,6 +5643,7 @@
      C                   PARM      DDCOLC        PPCOLC                                     MD026693
      C                   PARM                    ValidCuxc                                  MD026497
      C                   PARM                    PAPARM                                     MD042692
+     C                   PARM                    V_CUAHArr                                  MD045238
                                                                                               CGL132
       ** OUTPUTS                                                                              CGL132
       ** FATCA Customer Details OK inds                                                       CGL132

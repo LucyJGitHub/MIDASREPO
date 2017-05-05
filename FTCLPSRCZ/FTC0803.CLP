@@ -10,12 +10,13 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD041081           Date 05Sep16              */
+/*       Last Amend No. MD045438           Date 02May17              */
+/*       Prev Amend No. MD041081           Date 05Sep16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CRE020             Date 20Jan04              */
+/*                      CRE020             Date 20Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CFT008             Date 04Jan00              */
@@ -26,6 +27,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD045438 - Unable to start COB due to Outstanding Payments  */
+/*                  issue.                                           */
 /*       MD041081 - Reset DATARA when it reaches 9999.               */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
 /*       CFT008 - Funds Transfer addition of MT102 messages          */
@@ -159,6 +162,7 @@
              IF         COND(&RPAU *EQ 'R')  +
              THEN(DO)
              RTVDTAARA  DTAARA(FTBDTA (1 4)) RTNVAR(&BAN1)
+             IF         COND(&BAN1 *EQ '    ') THEN(CHGVAR VAR(&BAN1) VALUE('0000'))    /*MD045438*/
              CHGVAR     VAR(&BANO) VALUE(&BAN1)
 /*           CHGVAR     VAR(&BANO) VALUE(&BANO + 1) */                                  /*MD041081*/
 /* Reset FTBDTA when reaches 9999 */                                                    /*MD041081*/

@@ -11,14 +11,17 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD033948           Date 01Apr15               *
-      *  Prev Amend No. MD033141           Date 26Feb14               *
+      *  Last Amend No. MD045191           Date 09May17               *
+      *  Prev Amend No. MD033948           Date 01Apr15               *
+      *                 MD033141           Date 26Feb14               *
       *                 CGL154             Date 13Oct14               *
       *                 MD036917A          Date 20Jan16               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD045191 - Global records are rolled back when job ends.     *
+      *             Added commitment procedure.                       *
       *  MD033948 - Return to detail screen after selection of '?'    *
       *  MD033141 - Inappropriate Input Fields are displayed in FATCA *
       *             Classification Code insert screen                 *
@@ -28,7 +31,7 @@
       *           Classification - Master                             *
       *                                                               *
       *****************************************************************
- 
+
       *
       ** +--------------------------------------+
       ** ¦ File and Screen Formats              ¦
@@ -38,14 +41,15 @@
       ** Maintenance Screen Display
      FSD000201DFCF   E             WORKSTN INFSR(*PSSR)
      F
- 
+
       ** Classification Codes File - Update
      F***SDFATCL0  UF   E           K DISK    RENAME(SDFATCD0:FCLSU)                       MD036917A
-     FSDFATCL0  UF A E           K DISK    RENAME(SDFATCD0:FCLSU)                          MD036917A
- 
+     F***SDFATCL0  UF A E           K DISK    RENAME(SDFATCD0:FCLSU)              MD036917A MD045191
+     FSDFATCL0  UF A E           K DISK    RENAME(SDFATCD0:FCLSU) COMMIT                    MD045191
+
       ** Classification Codes File - Output
      F***SDFATCL1  O    E             DISK                                                 MD036917A
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -61,23 +65,23 @@
      D FatCDS        E DS                  EXTNAME(SDFATCPD)
       ** External DS for SAR Details                                                          CGL154
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL154
- 
+
      DPSDS            SDS
- 
+
       ** Procedure name
      D PSProcName        *PROC
       ** Job name
      D PSJobName             244    253
       ** User name
      D PSUser                254    263
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       *
      D Actn            S              1A
      D Mode            S              7A
@@ -118,14 +122,14 @@
      C                   PARM                    Mode
      C                   PARM                    RetCode
      C                   PARM                    ClsCode
- 
- 
+
+
      C                   EXSR      Init
- 
+
       ** Pre-validation for Create Actn
      C                   IF        Actn  = 'I'
      C                   EXSR      InpValCode
- 
+
      C                   ELSEIF    Actn = 'A' or Actn = 'D'
       ** Check if classifcation is active
      C                   EXSR      ValClsCode
@@ -133,41 +137,41 @@
      C                   GOTO      EndPgm
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Display Details Screen (Input / Display)
      C     ScreenFlow    TAG
      C                   EVAL      ValErr = 1
      C                   EVAL      *INKE = *ON
      C                   EVAL      *IN70 = *ON
- 
+
      C                   DOW       *INKL = *OFF and ValErr = 1
      C                             and *INKC = *OFF and *INKJ = *OFF
- 
+
      C                   IF        *INKE = *ON
       ** Retrieve original data (Database / Default)
      C                   EXSR      RtvDetails
      C                   EVAL      *INKE = *OFF
      C                   ENDIF
- 
+
      C                   EXSR      DspDetails
      C                   EXSR      RstInd
- 
+
      C                   IF        *INKC = *OFF and *INKL = *OFF
      C                   EXSR      ValDetails
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Apply Input/Updates to Database, if any. Recycle screens for E and D
      C                   IF        *INKC = *OFF and *INKL = *OFF
- 
+
      C                   IF        Actn = 'E'
      C                             or (Actn = 'D' and *INKJ = *OFF)
      C                   GOTO      Screenflow
      C                   ENDIF
- 
+
      C                   EXSR      WriteUpd
- 
+
       ** Send report to 'SD000200'
      C
      C                   MOVEL     'SD000200'    ZAPGM
@@ -175,13 +179,13 @@
      C                   MOVEL     'USS0312'     ZAMSID
      C                   EVAL      ZAMSDA = DCCODE + Action
      C                   EXSR      ZASNMS
- 
+
      C                   ENDIF
- 
+
      C                   IF        *INKC = *ON
      C                   EVAL      RetCode = 'Exit'
      C                   ENDIF
- 
+
      C     EndPgm        TAG
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -207,7 +211,7 @@
      C                   ELSEIF    Mode = '*ENQRY'
      C                   EVAL      *IN76 = *ON
      C                   ENDIF
- 
+
      C                   EXSR      ClrMsgQue
      C                   WRITE     #MSGCTL
       *
@@ -251,9 +255,9 @@
      C                   EVAL      *IN77 = *ON                                                CGL154
      C                   ENDIF                                                                CGL154
      C                   ENDIF                                                                CGL154
- 
+
      C     InitE         ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -263,7 +267,7 @@
       *
      C     InpValCode    BEGSR
      C                   EVAL      ValErr = 1
- 
+
      C                   DOW       ValErr = 1
      C                             and *INKL = *OFF
      C                             and *INKC = *OFF
@@ -273,9 +277,9 @@
      C                   WRITE     #MSGCTL
      C                   EXSR      ValClsCode
      C                   ENDDO
- 
+
      C     InpValCodeE   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -284,7 +288,7 @@
       *****************************************************************
       *
      C     ValClsCode    BEGSR
- 
+
       ** Classification Code should not be blank.
      C                   IF        %len(%trim(DCCODE)) <  1
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
@@ -294,7 +298,7 @@
      C                   WRITE     #MSGCTL
      C                   GOTO      ValClsCodeE
      C                   ENDIF
- 
+
       ** Classification Code should not be *ALL.
      C                   IF        DCCODE = '*ALL'
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
@@ -303,7 +307,7 @@
      C                   WRITE     #MSGCTL
      C                   GOTO      ValClsCodeE
      C                   ENDIF
- 
+
      C     DCCODE        CHAIN     FCLSU
       ** Code should not already exists for Insert
      C                   IF        Actn = 'I'
@@ -328,13 +332,13 @@
      C*                  EXSR      DelNotice
      C*                  GOTO      ValClsCodeE
      C*                  ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      ValErr = 0
      C
      C     ValClsCodeE   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -355,7 +359,7 @@
      C                   EVAL      *IN22 = *OFF                                               CGL154
      C*                  EVAL      *IN71 = *OFF
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -403,7 +407,7 @@
      C                   EXFMT     SD000201D1
      C                   EXSR      ClrMsgQue
      C                   WRITE     #MSGCTL
- 
+
      C     DspDetailsE   ENDSR
       /EJECT
       *****************************************************************
@@ -413,10 +417,10 @@
       *****************************************************************
       *
      C     RtvDetails    BEGSR
- 
+
      C                   IF        Actn <> 'I'
      C     DCCODE        CHAIN     FCLSU
- 
+
      C                   IF        ScrLvl = 1
       ** Basic Details
      C                   EVAL      DCDESC = FCDESC
@@ -457,9 +461,9 @@
      C                   ENDIF                                                                CGL154
                                                                                               CGL154
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     RtvDetailsE   ENDSR
       /EJECT
       *****************************************************************
@@ -475,7 +479,7 @@
      C                   IF        DCUSIA <> 'Y' and DCUSIA <> 'N'
      C                   EVAL      *IN19 = *ON
      C                   EVAL      ValErr = 1
- 
+
      C                   MOVEL     'USS0311'     ZAMSID
      C                   EVAL      ZAMSDA = 'US Indicia Allowed indicator'
      C                   EXSR      ZASNMS
@@ -644,7 +648,7 @@
       *****************************************************************
       *
      C     WriteUpd      BEGSR
- 
+
       ** Basic Details
       *
      C                   EVAL      FCRECI = 'D'
@@ -677,26 +681,32 @@
      C                   IF        Actn = 'I' and ReUseCode = 'Y'
      C                   EVAL      Actn = 'A'
      C                   ENDIF
- 
+
+     C                   SETOFF                                       99                    MD045191
      C                   SELECT
      C                   WHEN      Actn = 'I'
       *
       ** Create new record
       *
      C**********         WRITE     SDFATCD0                                                MD036917A
-     C                   WRITE     FCLSU                                                   MD036917A
+     C**********         WRITE     FCLSU                                          MD036917A MD045191
+     C                   WRITE     FCLSU                                99                  MD045191
       ** Update existing / Reuse
      C                   WHEN      Actn = 'A'
-     C                   UPDATE    FCLSU
+     C**********         UPDATE    FCLSU                                                    MD045191
+     C                   UPDATE    FCLSU                                99                  MD045191
       *
       ** Flag-Delete
       *
      C                   WHEN      Actn = 'D'
      C                   EVAL      FCRECI = '*'
-     C                   UPDATE    FCLSU
- 
+     C**********         UPDATE    FCLSU                                                    MD045191
+     C                   UPDATE    FCLSU                                99                  MD045191
+
      C                   ENDSL
- 
+     C  N99              COMMIT                                                             MD045191
+     C   99              ROLBK                                                              MD045191
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -706,12 +716,12 @@
       *****************************************************************
       *
      C     ClrMsgQue     BEGSR
- 
+
       * Clear messages from program message queue
      C                   CALL      'Y2CLMSC'
      C                   PARM                    ZAPGM
      C                   PARM      '*SAME'       ZAPGRL
- 
+
      C                   ENDSR
       /EJECT
       *******************************************************************

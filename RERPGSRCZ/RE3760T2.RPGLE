@@ -12,15 +12,18 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD034384A          Date 08Dec15               *
-      *  Prev Amend No. MD034384           Date 27Nov15               *
+      *  Last Amend No. MD044973           Date 22May17               *
+      *  Prev Amend No. MD034384A          Date 08Dec15               *
+      *                 MD034384           Date 27Nov15               *
       *                 MD022097           Date 30Aug13               *
       *                 CRE083BU *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044973 - Undefined record type. Recompile to re-deliver    *
+      *             source with MD034384A fix.                        *
       *  MD034384A - Reversed MD034384 fix as it is not applicable    *
-      *              for core especially if feature CGL002 is         *                             
+      *              for core especially if feature CGL002 is         *
       *              switched Off                                     *
       *  MD034384 - REC3760T2/00001 - Undefined record type           *
       *  MD022097 - Low performance of REC3760T2                      *

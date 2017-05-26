@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033630A          Date 25May16               *
-      *  Prev Amend No. MD036967           Date 25May16               *
+      *  Last Amend No. MD045854           Date 25May17               *
+      *  Prev Amend No. MD033630A          Date 25May16               *
+      *                 MD036967           Date 25May16               *
       *                 MD035554           Date 25May16               *
       *                 AR922022A          Date 26Apr16               *
       *                 AR922022           Date 26Apr16               *
@@ -72,6 +73,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045854 - Batch Detail cannot be entered with message       *
+      *             Batch Header already accepted. Removed CAP209     *
+      *             conditioning from AR1092517 fix.                  *
       *  MD033630A - Corrected discrepancy in MD033630 codes.         *
       *  MD036967 - Conflict betwen CAP207 and CRE023. Update files   *
       *             for Credit after accept when both feat are ON.    *
@@ -497,7 +501,7 @@
       *
      C     B1FRNT        IFEQ      *BLANKS
      C*****CGL125        ANDEQ     'N'                                              CSC054 AR1092517
-     C     CAP209        ANDEQ     'N'                                                     AR1092517
+     C*****CAP209        ANDEQ     'N'                                            AR1092517 MD045854
      C                   MOVEL     B1FRNT        DBKEY
      C                   MOVEL(P)  'GLVBITHPD'   DBFILE
      C                   Z-ADD     001           DBASE
@@ -623,7 +627,7 @@
                                                                                               237621
       ** Front office only updated from 3rd party                                             CSC054
      C**********         IF        CGL125 = 'N'                                     CSC054 AR1092517
-     C                   IF        CAP209 = 'N'                                            AR1092517
+     C**********         IF        CAP209 = 'N'                                   AR1092517 MD045854
                                                                                               CSC054
       ** Journal entry - non-retail                                                           237621
      C                   If        INDX = '0000002745'                                        237621
@@ -634,7 +638,7 @@
      C                   Eval      BRFRNT = %trimr(BRFRNT) + 'Y'                              237621
      C                   EndIf                                                                237621
                                                                                               CSC054
-     C                   ENDIF                                                                CSC054
+     C**********         ENDIF                                                       CSC054 MD045854
                                                                                               CSC054
      C                   EndIf                                                                237621
       *                                                                                       CAP084
@@ -894,11 +898,11 @@
       *                                                                                       CSC054
       ** Front office only updated from 3rd party                                             CSC054
      C**********         IF        CGL125 = 'N'                                     CSC054 AR1092517
-     C                   IF        CAP209 = 'N'                                            AR1092517
+     C**********         IF        CAP209 = 'N'                                   AR1092517 MD045854
      C                   MOVE      *BLANKS       FRNTID            9                          CAP084
      C                   MOVEL     B1FRNT        FRNTID                                       CAP084
      C     FRNTID        CAT       BRBTNB        BRFRNT                                       CAP084
-     C                   ENDIF                                                                CSC054
+     C**********         ENDIF                                                       CSC054 MD045854
                                                                                               CSC054
      C                   MOVE      BRBTNB        B1BTNB                                       CAP084
       *                                                                                      BUG9009
@@ -911,7 +915,7 @@
       *                                                                                      BUG9009
       ** Front office only updated from 3rd party                                             CSC054
      C**********         IF        CGL125 = 'N'                                     CSC054 AR1092517
-     C                   IF        CAP209 = 'N'                                            AR1092517
+     C**********         IF        CAP209 = 'N'                                   AR1092517 MD045854
                                                                                               CSC054
       ** Journal entry - non-retail                                                          BUG9009
      C                   If        INDX = '0000002745'                                       BUG9009
@@ -922,7 +926,7 @@
      C                   Eval      BRFRNT = %trimr(BRFRNT) + 'Y'                             BUG9009
      C                   EndIf                                                               BUG9009
                                                                                               CSC054
-     C                   ENDIF                                                                CSC054
+     C**********         ENDIF                                                       CSC054 MD045854
                                                                                               CSC054
      C                   EndIf                                                               BUG9009
      C                   ENDIF                                                                CAP084
@@ -958,7 +962,7 @@
                                                                                               CSC011
      C                   IF        CSC011 = 'Y'                                               CSC011
      C**********                   AND CGL125 = 'N'                                 CSC054 AR1092517
-     C                             AND CAP209 = 'N'                                        AR1092517
+     C**********                   AND CAP209 = 'N'                               AR1092517 MD045854
      C                   IF        BRFRNT = *BLANKS                                           CSC011
      C                   EVAL      BRFRNT = 'MD' + BRBTNB                                     CSC011
      C                   ENDIF                                                                CSC011
@@ -1577,31 +1581,31 @@
      C                   EVAL      DBASE  = 14                                             AR792734A
      C                   EXSR      *PSSR                                                   AR792734A
      C                   ENDIF                                                             AR792734A
-      *                                                                                    AR1092517
-      ** Access SAR details file to see if CAP209 is installed.                            AR1092517
-      *                                                                                    AR1092517
-     C                   MOVE      'N'           CAP209            1                       AR1092517
-     C                   CALL      'AOSARDR0'                                              AR1092517
-     C                   PARM      *BLANKS       PRTCD                                     AR1092517
-     C                   PARM      '*VERIFY'     POPTN                                     AR1092517
-     C                   PARM      'CAP209'      PSARD                                     AR1092517
-     C     SCSARD        PARM      SCSARD        DSFDY                                     AR1092517
-      *                                                                                    AR1092517
-     C                   IF        PRTCD <> *BLANKS AND                                    AR1092517
-     C                             PRTCD <> '*NRF'                                         AR1092517
-     C     *LOCK         IN        LDA                                                     AR1092517
-     C                   EVAL      DBPGM = 'GLBITHVU'                                      AR1092517
-     C                   EVAL      DBKEY = 'CAP209'                                        AR1092517
-     C                   EVAL      DBFILE ='SCSARDPD'                                      AR1092517
-     C                   EVAL      DBASE  = 5                                              AR1092517
-     C                   OUT       LDA                                                     AR1092517
-     C                   EXSR      *PSSR                                                   AR1092517
-     C                   ENDIF                                                             AR1092517
-      *                                                                                    AR1092517
-     C                   IF        PRTCD = *BLANKS                                         AR1092517
-     C                   EVAL      CAP209 = 'Y'                                            AR1092517
-     C                   ENDIF                                                             AR1092517
-      *                                                                                    AR1092517
+      *****************************************************************           AR1092517 MD045854
+      ***Access*SAR*details*file*to*see*if*CAP209*is*installed.********           AR1092517 MD045854
+      *****************************************************************           AR1092517 MD045854
+     C**********         MOVE      'N'           CAP209            1              AR1092517 MD045854
+     C**********         CALL      'AOSARDR0'                                     AR1092517 MD045854
+     C**********         PARM      *BLANKS       PRTCD                            AR1092517 MD045854
+     C**********         PARM      '*VERIFY'     POPTN                            AR1092517 MD045854
+     C**********         PARM      'CAP209'      PSARD                            AR1092517 MD045854
+     C*****SCSARD        PARM      SCSARD        DSFDY                            AR1092517 MD045854
+      *                                                                           AR1092517 MD045854
+     C**********         IF        PRTCD <> *BLANKS AND                           AR1092517 MD045854
+     C**********                   PRTCD <> '*NRF'                                AR1092517 MD045854
+     C******LOCK         IN        LDA                                            AR1092517 MD045854
+     C**********         EVAL      DBPGM = 'GLBITHVU'                             AR1092517 MD045854
+     C**********         EVAL      DBKEY = 'CAP209'                               AR1092517 MD045854
+     C**********         EVAL      DBFILE ='SCSARDPD'                             AR1092517 MD045854
+     C**********         EVAL      DBASE  = 5                                     AR1092517 MD045854
+     C**********         OUT       LDA                                            AR1092517 MD045854
+     C**********         EXSR      *PSSR                                          AR1092517 MD045854
+     C**********         ENDIF                                                    AR1092517 MD045854
+      *                                                                           AR1092517 MD045854
+     C**********         IF        PRTCD = *BLANKS                                AR1092517 MD045854
+     C**********         EVAL      CAP209 = 'Y'                                   AR1092517 MD045854
+     C**********         ENDIF                                                    AR1092517 MD045854
+      **********                                                                  AR1092517 MD045854
      C/COPY WNCPYSRC,GLH00709
       *
      C/COPY OFCPYSRCZ,CGL135_015                                                             CGL135A

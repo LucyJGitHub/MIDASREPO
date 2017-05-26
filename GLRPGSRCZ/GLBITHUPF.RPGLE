@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR1092517          Date 14Mar13               *
-      *  Prev Amend No. AR1003955          Date 13Jul12               *
+      *  Last Amend No. MD045854           Date 25May17               *
+      *  Prev Amend No. AR1092517          Date 14Mar13               *
+      *                 AR1003955          Date 13Jul12               *
       *                 CSC054             Date 23Feb12               *
       *                 249585             Date 16May12               *
       *                 263436             Date 20Jan10               *
@@ -34,6 +35,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045854 - Batch Detail cannot be entered with message       *
+      *             Batch Header already accepted. Removed CAP209     *
+      *             conditioning from AR1092517 fix.                  *
       *  AR1092517 - Transaction is not populated in List View for    *
       *              transactions with blank batch number             *
       *  AR1003955 - Background job DBU_BITH is dumping due to        *
@@ -192,8 +196,8 @@
      C     BRFRNT9       IFNE      'APCTRANVU'                                  CAP084
      C*****CGL125        ANDEQ     'N'                                             CSC054  AR1092517
      C*****CGL125        OREQ      'Y'                                             CSC054  AR1092517
-     C     CAP209        ANDEQ     'N'                                                     AR1092517
-     C     CAP209        OREQ      'Y'                                                     AR1092517
+     C*****CAP209        ANDEQ     'N'                                            AR1092517 MD045854
+     C*****CAP209        OREQ      'Y'                                            AR1092517 MD045854
      C     BRFRNT        ANDNE     *BLANKS                                                    CSC054
      C                   EXSR      SRProces
      C                   ENDIF                                                  CAP084
@@ -519,30 +523,31 @@
      C                   ELSE                                                                 CSC054
      C                   MOVE      'N'           CGL125                                       CSC054
      C                   ENDIF                                                                CSC054
-      *                                                                                       CSC054
-      ** Access SAR details file to see if CAP209 is installed.                            AR1092517
-      *                                                                                    AR1092517
-     C                   MOVE      'N'           CAP209            1                       AR1092517
-     C                   CALL      'AOSARDR0'                                              AR1092517
-     C                   PARM      *BLANKS       PRTCD                                     AR1092517
-     C                   PARM      '*VERIFY'     POPTN                                     AR1092517
-     C                   PARM      'CAP209'      PSARD                                     AR1092517
-     C     SCSARD        PARM      SCSARD        DSFDY                                     AR1092517
-      *                                                                                    AR1092517
-     C                   IF        PRTCD <> *BLANKS AND                                    AR1092517
-     C                             PRTCD <> '*NRF'                                         AR1092517
-     C     *LOCK         IN        LDA                                                     AR1092517
-     C                   EVAL      DBPGM = 'GLBITHVU'                                      AR1092517
-     C                   EVAL      DBKEY = 'CAP209'                                        AR1092517
-     C                   EVAL      DBFILE ='SCSARDPD'                                      AR1092517
-     C                   EVAL      DBASE  = 5                                              AR1092517
-     C                   OUT       LDA                                                     AR1092517
-     C                   EXSR      *PSSR                                                   AR1092517
-     C                   ENDIF                                                             AR1092517
-      *                                                                                    AR1092517
-     C                   IF        PRTCD = *BLANKS                                         AR1092517
-     C                   EVAL      CAP209 = 'Y'                                            AR1092517
-     C                   ENDIF                                                             AR1092517
+      *****************************************************************              CSC054 MD045854
+      ***Access*SAR*details*file*to*see*if*CAP209*is*installed.********           AR1092517 MD045854
+      *****************************************************************           AR1092517 MD045854
+     C**********         MOVE      'N'           CAP209            1              AR1092517 MD045854
+     C**********         CALL      'AOSARDR0'                                     AR1092517 MD045854
+     C**********         PARM      *BLANKS       PRTCD                            AR1092517 MD045854
+     C**********         PARM      '*VERIFY'     POPTN                            AR1092517 MD045854
+     C**********         PARM      'CAP209'      PSARD                            AR1092517 MD045854
+     C*****SCSARD        PARM      SCSARD        DSFDY                            AR1092517 MD045854
+      *                                                                           AR1092517 MD045854
+     C**********         IF        PRTCD <> *BLANKS AND                           AR1092517 MD045854
+     C**********                   PRTCD <> '*NRF'                                AR1092517 MD045854
+     C******LOCK         IN        LDA                                            AR1092517 MD045854
+     C**********         EVAL      DBPGM = 'GLBITHVU'                             AR1092517 MD045854
+     C**********         EVAL      DBKEY = 'CAP209'                               AR1092517 MD045854
+     C**********         EVAL      DBFILE ='SCSARDPD'                             AR1092517 MD045854
+     C**********         EVAL      DBASE  = 5                                     AR1092517 MD045854
+     C**********         OUT       LDA                                            AR1092517 MD045854
+     C**********         EXSR      *PSSR                                          AR1092517 MD045854
+     C**********         ENDIF                                                    AR1092517 MD045854
+      *                                                                           AR1092517 MD045854
+     C**********         IF        PRTCD = *BLANKS                                AR1092517 MD045854
+     C**********         EVAL      CAP209 = 'Y'                                   AR1092517 MD045854
+     C**********         ENDIF                                                    AR1092517 MD045854
+      **********                                                                  AR1092517 MD045854
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

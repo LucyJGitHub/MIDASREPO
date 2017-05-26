@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD000091           Date 07May13               *
-      *  Prev Amend No. AR1092517          Date 14Mar13               *
+      *  Last Amend No. MD045854           Date 25May17               *
+      *  Prev Amend No. MD000091           Date 07May13               *
+      *                 AR1092517          Date 14Mar13               *
       *                 AR1078953          Date 18Jan13               *
       *                 CLE134             Date 01Aug12               *
       *                 CSC054             Date 23Feb12               *
@@ -73,6 +74,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045854 - Batch Detail cannot be entered with message       *
+      *             Batch Header already accepted. Removed CAP209     *
+      *             conditioning from AR1092517 fix.                  *
       *  MD000091 - Event Codes Substitution                          *
       *  AR1092517 - Transaction is not populated in List View for    *
       *              transactions with blank batch number             *
@@ -302,7 +306,7 @@
       *
       ** Timestamp for the transaction
      D PTimeStamp      S               Z
- 
+
      D DBerrUpd        C                   CONST('DB error in BITH API update')
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
@@ -460,9 +464,9 @@
      C                   ELSE
      C                   EVAL      B1VALI = 'Y'
      C                   ENDIF
- 
+
       *  Write to database
- 
+
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      WriteToDB
@@ -472,9 +476,9 @@
      C**********                                 + PExtData                                   CAP086
      C                                           + PEAHeader                                  CSC054
      C                                           + PInfData + PExtData                        CAP086
- 
+
      C                   SETON                                        LR
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -659,12 +663,12 @@
       /EJECT
       *****************************************************************
      C     WriteToDB     BEGSR
- 
+
      C     Idx           IFEQ      0
      C                   EXSR      SRSetOFld
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -673,7 +677,7 @@
       * UPDATEDB - Update Database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
       ** Update JE Headers file.
@@ -721,12 +725,12 @@
       *
       ** If update not done due to record being updated by another
       *  workstation send message to screen.
- 
+
      C     PRTCD         IFEQ      '*RECUPD'
- 
+
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     DBerrUpd      MsgIdArr(1)
- 
+
      C                   END
       *
       ** If update not done due to user not been authorised (CGL008) send message
@@ -761,11 +765,11 @@
      C                   ADD       1             Idx
      C                   ENDIF
      C**********         ENDIF                                                               BUG1898
- 
+
       ** Batch Number to pass back to APTRANVU on insert mode
- 
+
      C                   EVAL                    DDBTNB = B1BTNB
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -786,7 +790,8 @@
       ** Front office only updated from 3rd party                                             CSC054
       *                                                                                       CSC054
      C**********         IF        CGL125 = 'Y'                                     CSC054 AR1092517
-     C                   IF        CAP209 = 'Y'                                            AR1092517
+     C**********         IF        CAP209 = 'Y'                                   AR1092517 MD045854
+     C                   IF        APFOTranID <> *BLANKS                                    MD045854
      C                   EVAL      B1FRNT = APFOTranID                                        CSC054
      C                   ENDIF                                                                CSC054
      C                   EVAL      B1AFRT = APFOAsocID
@@ -798,7 +803,7 @@
       ** Front office only updated from 3rd party                                             CSC054
       *                                                                                       CSC054
      C**********         IF        CGL125 = 'N'                                     CSC054 AR1092517
-     C                   IF        CAP209 = 'N'                                            AR1092517
+     C**********         IF        CAP209 = 'N'                                   AR1092517 MD045854
                                                                                               CSC054
      C     DDBTNB        IFNE      *BLANKS
      C     B1FRNT        ANDEQ     'APCTRANVU'                                                249585
@@ -807,7 +812,7 @@
      C     FRNTID        CAT       DDBTNB        B1FRNT
      C                   ENDIF
                                                                                               CSC054
-     C                   ENDIF                                                                CSC054
+     C**********         ENDIF                                                       CSC054 MD045854
       *
       ** If current batch has dumped already, set to allow to dump again
       *
@@ -829,7 +834,8 @@
       *  Checking JE Headers master file to see if already exists
       *
      C**********         IF        CGL125 = 'N'                                     CSC054 AR1092517
-     C                   IF        CAP209 = 'N'                                            AR1092517
+     C**********         IF        CAP209 = 'N'                                   AR1092517 MD045854
+     C                   IF        B1FRNT <> *BLANKS                                        MD045854
      C     B1FRNT        CHAIN     GLJENHL3                           20
      C                   ENDIF                                                                CSC054
       *
@@ -903,12 +909,12 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'GLUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,GLBITH02
       *
@@ -1076,31 +1082,31 @@
      C                   IF        PRTCD = *BLANKS                                            CSC054
      C                   MOVE      'Y'           CGL125            1                          CSC054
      C                   ENDIF                                                                CSC054
-      *                                                                                       CSC054
-      ** Access SAR details file to see if CAP209 is installed.                            AR1092517
-      *                                                                                    AR1092517
-     C                   MOVE      'N'           CAP209            1                       AR1092517
-     C                   CALL      'AOSARDR0'                                              AR1092517
-     C                   PARM      *BLANKS       PRTCD                                     AR1092517
-     C                   PARM      '*VERIFY'     POPTN                                     AR1092517
-     C                   PARM      'CAP209'      PSARD                                     AR1092517
-     C     SCSARD        PARM      SCSARD        DSFDY                                     AR1092517
-      *                                                                                    AR1092517
-     C                   IF        PRTCD <> *BLANKS AND                                    AR1092517
-     C                             PRTCD <> '*NRF'                                         AR1092517
-     C     *LOCK         IN        LDA                                                     AR1092517
-     C                   EVAL      DBPGM = 'GLBITHVU'                                      AR1092517
-     C                   EVAL      DBKEY = 'CAP209'                                        AR1092517
-     C                   EVAL      DBFILE ='SCSARDPD'                                      AR1092517
-     C                   EVAL      DBASE  = 5                                              AR1092517
-     C                   OUT       LDA                                                     AR1092517
-     C                   EXSR      *PSSR                                                   AR1092517
-     C                   ENDIF                                                             AR1092517
-      *                                                                                    AR1092517
-     C                   IF        PRTCD = *BLANKS                                         AR1092517
-     C                   EVAL      CAP209 = 'Y'                                            AR1092517
-     C                   ENDIF                                                             AR1092517
-      *                                                                                    AR1092517
+      *****************************************************************              CSC054 MD045854
+      ***Access*SAR*details*file*to*see*if*CAP209*is*installed.********           AR1092517 MD045854
+      *****************************************************************           AR1092517 MD045854
+     C**********         MOVE      'N'           CAP209            1              AR1092517 MD045854
+     C**********         CALL      'AOSARDR0'                                     AR1092517 MD045854
+     C**********         PARM      *BLANKS       PRTCD                            AR1092517 MD045854
+     C**********         PARM      '*VERIFY'     POPTN                            AR1092517 MD045854
+     C**********         PARM      'CAP209'      PSARD                            AR1092517 MD045854
+     C*****SCSARD        PARM      SCSARD        DSFDY                            AR1092517 MD045854
+      *                                                                           AR1092517 MD045854
+     C**********         IF        PRTCD <> *BLANKS AND                           AR1092517 MD045854
+     C**********                   PRTCD <> '*NRF'                                AR1092517 MD045854
+     C******LOCK         IN        LDA                                            AR1092517 MD045854
+     C**********         EVAL      DBPGM = 'GLBITHVU'                             AR1092517 MD045854
+     C**********         EVAL      DBKEY = 'CAP209'                               AR1092517 MD045854
+     C**********         EVAL      DBFILE ='SCSARDPD'                             AR1092517 MD045854
+     C**********         EVAL      DBASE  = 5                                     AR1092517 MD045854
+     C**********         OUT       LDA                                            AR1092517 MD045854
+     C**********         EXSR      *PSSR                                          AR1092517 MD045854
+     C**********         ENDIF                                                    AR1092517 MD045854
+      *                                                                           AR1092517 MD045854
+     C**********         IF        PRTCD = *BLANKS                                AR1092517 MD045854
+     C**********         EVAL      CAP209 = 'Y'                                   AR1092517 MD045854
+     C**********         ENDIF                                                    AR1092517 MD045854
+      **********                                                                  AR1092517 MD045854
      C                   MOVE      *BLANKS       PRTCD                                       BUG9713
                                                                                              BUG9713
      C/COPY WNCPYSRC,GLBITH05                                                                 GOC001

@@ -10,11 +10,14 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. MD033115           Date 27Jul16              */
-/*       Prev Amend No. CGL127AY *CREATE   Date 06Aug12              */
+/*       Last Amend No. MD044909           Date 10Jan17              */
+/*       Prev Amend No. MD033115           Date 11Sep15              */
+/*                      CGL127AY *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD044909 - Allocate GLACPHL to prevent GLC4450 starting     */
+/*                 whilst system is updating access path.            */
 /*       MD033115 - GLC4450 fails. preventive fix to avoid using     */
 /*                  same record in GLACPHPD.                         */
 /*                  Applied for MD038076.                            */
@@ -40,6 +43,30 @@
              DCL        VAR(&NAME2_C) TYPE(*CHAR) LEN(5) VALUE('00001')
              DCL        VAR(&NAME2_N) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&LOOP) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&GLCDLY) TYPE(*DEC) LEN(5)                                  /*MD044909*/
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE('       +
+                          ')                                                            /*MD044909*/
+             DCL        VAR(&POP01) TYPE(*CHAR) LEN(20) +
+                          VALUE('GlacDelayTime')                                        /*MD044909*/
+             DCL        VAR(&POP02) TYPE(*CHAR) LEN(20)                                 /*MD044909*/
+             DCL        VAR(&POP03) TYPE(*CHAR) LEN(20)                                 /*MD044909*/
+             DCL        VAR(&POP04) TYPE(*CHAR) LEN(20)                                 /*MD044909*/
+             DCL        VAR(&POP05) TYPE(*CHAR) LEN(20)                                 /*MD044909*/
+             DCL        VAR(&POP06) TYPE(*CHAR) LEN(20)                                 /*MD044909*/
+             DCL        VAR(&POP07) TYPE(*CHAR) LEN(20)                                 /*MD044909*/
+             DCL        VAR(&POP08) TYPE(*CHAR) LEN(20)                                 /*MD044909*/
+             DCL        VAR(&POP09) TYPE(*CHAR) LEN(20)                                 /*MD044909*/
+             DCL        VAR(&POP10) TYPE(*CHAR) LEN(20)                                 /*MD044909*/
+             DCL        VAR(&PVL01) TYPE(*CHAR) LEN(200)                                /*MD044909*/
+             DCL        VAR(&PVL02) TYPE(*CHAR) LEN(200)                                /*MD044909*/
+             DCL        VAR(&PVL03) TYPE(*CHAR) LEN(200)                                /*MD044909*/
+             DCL        VAR(&PVL04) TYPE(*CHAR) LEN(200)                                /*MD044909*/
+             DCL        VAR(&PVL05) TYPE(*CHAR) LEN(200)                                /*MD044909*/
+             DCL        VAR(&PVL06) TYPE(*CHAR) LEN(200)                                /*MD044909*/
+             DCL        VAR(&PVL07) TYPE(*CHAR) LEN(200)                                /*MD044909*/
+             DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)                                /*MD044909*/
+             DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)                                /*MD044909*/
+             DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)                                /*MD044909*/
  
              DCLF       FILE(CBCMPNLC)
  
@@ -126,6 +153,30 @@
  
  START:
  
+
+/**/                                                                                    /*MD044909*/
+/* Check if the current setting of 'Time Allocation for GLACPHL'             */         /*MD044909*/
+/**/                                                                                    /*MD044909*/
+             CALL       PGM(AOSVALR0) PARM(&PRTCD &POP01 &PVL01 +
+                          &POP02 &PVL02 &POP03 &PVL03 &POP04 &PVL04 +
+                          &POP05 &PVL05 &POP06 &PVL06 &POP07 &PVL07 +
+                          &POP08 &PVL08 &POP09 &PVL09 &POP10 &PVL10)                    /*MD044909*/
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)                             /*MD044909*/
+               CHGVAR     VAR(&GLCDLY) VALUE(%SUBSTRING(&PVL01 1 5))                    /*MD044909*/
+             ENDDO                                                                      /*MD044909*/
+             ELSE       CMD(DO)                                                         /*MD044909*/
+               SNDPGMMSG  MSG('Database Error in File SDSVALPD, Key +
+                          GlacDelayTime') TOMSGQ(MRUNQ)                                 /*MD044909*/
+               GOTO       CMDLBL(END)                                                   /*MD044909*/
+             ENDDO                                                                      /*MD044909*/
+
+/* Allocate GLACPHL to ensure access paths rebuilt before GLC4450* continues  */        /*MD044909*/
+                                                                                        /*MD044909*/
+             ALCOBJ     OBJ((GLACPHL *FILE *EXCL)) WAIT(&GLCDLY)                        /*MD044909*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))                         /*MD044909*/
+             DLCOBJ     OBJ((GLACPHL *FILE *EXCL))                                      /*MD044909*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD044909*/
+                                                                                        /*MD044909*/
              GOTO       CMDLBL(END)
  
  ABNOR:      SNDPGMMSG  MSG('Program GLC4450T1 ended abnormally') +

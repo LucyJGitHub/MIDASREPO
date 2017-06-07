@@ -26,8 +26,9 @@
      F*  RECORDS READ FROM THE FILE DKEYSDP AND RECORDS WRITTEN TO    *
      F*  HISTSAA ARE PRODUCED ON THE AUDIT REPORT.                    *
       *                                                               *
-      *  Last Amend No. MD031565           Date 06Aug15               *
-      *  Prev Amend No. MD020257           Date 26Jun15               *
+      *  Last Amend No. MD033615           Date 29Dec16               *
+      *  Prev Amend No. MD031565           Date 06Aug15               *
+      *                 MD020257           Date 26Jun15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -88,6 +89,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD033615 - Backvalued deal amendment caused incorrect        *
+      *             principal.  Updated necessary records.            *
       *  MD031565 - DL Interest History does not show Withholding Tax *
       *             and 2nd Tax deduction if taxable interest is      *
       *             capitalised                                       *
@@ -234,7 +237,8 @@ EA001F            DEALSDGF                          KIGNORE
      F*********** TABLET2F                          KIGNORE               S01390
      F*********** TABLET5F                          KIGNORE               S01390
      F*********** TABLETXF                          KIGNORE               S01390
-     FHIST1   IF  E           K        DISK                               213159
+     F***HIST1   IF  E        K        DISK                                          213159 MD033615
+     FHIST1   UF  E           K        DISK                                                 MD033615
      F            HISTSAAF                          KRENAMEHISTSA1F       213159
      F/COPY WNCPYSRC,DL9005FFP1                                           S01408
      F*
@@ -876,6 +880,10 @@ EA001F            DEALSDGF                          KIGNORE
      C                     END                                            085050
      C*                                                                   085050
      C                     WRITEHISTSAAF
+     C           EDAT      IFLT BJRDNB                                                      MD033615
+     C           RTYP      ANDEQ'PI'                                                        MD033615
+     C                     EXSR HISTD                                                       MD033615
+     C                     ENDIF                                                            MD033615
      C                     EXSR HISTC
      C                     ADD  1         HCNT
      C*
@@ -1179,6 +1187,10 @@ EA001C                     MOVE 'Y'       INTC                            E36008
      C           EDAT      CASLTDNWDM1    SUBRTS
      C                     END
      C                     WRITEHISTSAAF
+     C           EDAT      IFLT BJRDNB                                                      MD033615
+     C           RTYP      ANDEQ'PD'                                                        MD033615
+     C                     EXSR HISTD                                                       MD033615
+     C                     ENDIF                                                            MD033615
      C                     EXSR HISTC
      C                     ADD  1         HCNT
      C                     END
@@ -1528,6 +1540,44 @@ EA001C                     MOVE 'Y'       INTC                            E36008
      C                     END                                            085050
      C*                                                                   085050
      C                     ENDSR
+     C/EJECT
+      *****************************************************************                     MD033615
+      *                                                               *                     MD033615
+      *  HISTD - This is to update succeeding records following       *                     MD033615
+      *          a backvalued deal amendment.                         *                     MD033615
+      *                                                               *                     MD033615
+      *****************************************************************                     MD033615
+     C           HISTD     BEGSR                                                            MD033615
+      *                                                                                     MD033615
+     C           HISKY1    KLIST                                                            MD033615
+     C                     KFLD           WCNUM                                             MD033615
+     C                     KFLD           WDLNO                                             MD033615
+      *                                                                                     MD033615
+     C                     MOVE *BLANKS   WCNUM   6                                         MD033615
+     C                     Z-ADD0         WDLNO   60                                        MD033615
+     C                     Z-ADD0         WPCPL  150                                        MD033615
+     C                     Z-ADD0         WEDAT   50                                        MD033615
+     C                     MOVE CNUM      WCNUM                                             MD033615
+     C                     Z-ADDDLNO      WDLNO                                             MD033615
+     C                     Z-ADDPCPL      WPCPL                                             MD033615
+     C                     Z-ADDEDAT      WEDAT                                             MD033615
+      *                                                                                     MD033615
+     C           WDLNO     SETLLHIST1                                                       MD033615
+     C                     READ HIST1                    83                                 MD033615
+     C           *IN83     DOWEQ'0'                                                         MD033615
+     C           WDLNO     IFEQ HDLNO                                                       MD033615
+     C           WEDAT     ANDLEHEDAT                                                       MD033615
+     C           WPCPL     ANDNEHPCPL                                                       MD033615
+     C                     Z-ADDWPCPL     HPCPL                                             MD033615
+     C           HRTYP     IFEQ 'OB'                                                        MD033615
+     C                     Z-ADDWPCPL     HEAMT                                             MD033615
+     C                     ENDIF                                                            MD033615
+     C                     UPDATHISTSA1F                                                    MD033615
+     C                     ENDIF                                                            MD033615
+     C                     READ HIST1                    83                                 MD033615
+     C                     ENDDO                                                            MD033615
+      *                                                                                     MD033615
+     C                     ENDSR                                                            MD033615
      C/EJECT
      C*****************************************************************   059962
      C*                                                               *   059962

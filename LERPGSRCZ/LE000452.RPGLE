@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD025590           Date 19Aug14               *
-      *  Prev Amend No. MD023181           Date 22Apr14               *
+      *  Last Amend No. MD045071           Date 06Apr17               *
+      *  Prev Amend No. MD025590           Date 19Aug14               *
+      *                 MD023181           Date 22Apr14               *
       *                 MD022465           Date 24Sep13               *
       *                 MD021423E          Date 12Sep13               *
       *                 MD020343           Date 18May13               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045071 - Receiver value too small to hold result.          *
       *  MD025590 - Make sure that only processed record is on        *
       *             LE000452P1.                                       *
       *  MD023181 - System error message was not shown in the report. *
@@ -294,6 +296,7 @@
      C                   EVAL      Xevtcode = *BLANKS
      C                   EVAL      WEROR = *BLANKS
      C                   EVAL      Ctr = 0
+     C                   EVAL      ArrayCtr = 0                                             MD045071
      C                   EVAL      WPOS = *BLANKS                                           MD023181
       *
      C     LGFRNT        CHAIN     ZATRNERRL0

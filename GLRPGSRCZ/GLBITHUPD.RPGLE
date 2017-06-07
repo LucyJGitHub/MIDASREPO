@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD045854           Date 25May17               *
-      *  Prev Amend No. MD033630A          Date 25May16               *
+      *  Last Amend No. MD042261           Date 07Jun17               *
+      *  Prev Amend No. MD045854           Date 25May17               *
+      *                 MD033630A          Date 25May16               *
       *                 MD036967           Date 25May16               *
       *                 MD035554           Date 25May16               *
       *                 AR922022A          Date 26Apr16               *
@@ -73,6 +74,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042261 - Records from GLJENP1D were not reversed when      *
+      *             deleting a batch. Remove record if batch is delete*
       *  MD045854 - Batch Detail cannot be entered with message       *
       *             Batch Header already accepted. Removed CAP209     *
       *             conditioning from AR1092517 fix.                  *
@@ -243,6 +246,9 @@
       *                                                                                     AR992022
       ** MIDAS RE Settled Transaction Index file                                            AR992022
       *                                                                                     AR992022
+     FGLJENPI2  UF   E           K DISK    INFSR(*PSSR)                                     MD042261
+     F                                     COMMIT                                           MD042261
+      ** Midas GL Journal Entry - Posting Date                                              MD042261
      F/COPY WNCPYSRC,GLH00301
       *****************************************************************
       /EJECT
@@ -717,6 +723,24 @@
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
      C                   SETOFF                                       9899                    CER001
+      *                                                                                     MD042261
+      ** Delete batch items in extension file GLJENP1D                                      MD042261
+      *                                                                                     MD042261
+     C     CGL135        IFEQ      'Y'                                                      MD042261
+     C                   MOVEL     BJRDNB        BTPTDT                                     MD042261
+     C                   MOVEL     BRBTNB        BTBTNB                                     MD042261
+     C     KJEN1P        SETLL     GLJENPD0                           99                    MD042261
+     C     *IN99         IFEQ      *OFF                                                     MD042261
+     C     KJEN1P        READE     GLJENPD0                               98                MD042261
+      *                                                                                     MD042261
+     C     *IN98         DOWEQ     *OFF                                                     MD042261
+     C                   DELETE    GLJENPD0                                                 MD042261
+     C     KJEN1P        READE     GLJENPD0                               98                MD042261
+     C                   ENDDO                                                              MD042261
+      *                                                                                     MD042261
+     C                   ENDIF                                                              MD042261
+     C                   SETOFF                                       9899                  MD042261
+     C                   ENDIF                                                              MD042261
       ** If CER030 is installed, delete Multicash Narratives if                             BUG26246
       ** present in PF/GLMNARPD.                                                            BUG26246
       *                                                                                     BUG26246
@@ -1194,6 +1218,10 @@
      C     KLDLSB        KLIST                                                              BUG26246
      C                   KFLD                    BTBTNB                                     BUG26246
      C**********         KFLD                    BTBINB                           BUG26246 BUG26246A
+      *                                                                                     MD042261
+     C     KJEN1P        KLIST                                                              MD042261
+     C                   KFLD                    BTPTDT                                     MD042261
+     C                   KFLD                    BTBTNB                                     MD042261
                                                                                               CSC011
       ** Check if Midas 24x7 Availability is installed.                                       CSC011
      C                   CALLB     'AOSARDR0'                                                 CSC011
@@ -1480,6 +1508,18 @@
      C                   MOVE      'N'           CGL125                                       CSC054
      C                   ENDIF                                                                CSC054
       *                                                                                       CSC054
+      ** Access SAR details file to see if CGL135 is installed.                             MD042261
+      *                                                                                     MD042261
+     C                   MOVE      'N'           CGL135            1                        MD042261
+     C                   CALL      'AOSARDR0'                                               MD042261
+     C                   PARM      *BLANKS       PRTCD                                      MD042261
+     C                   PARM      '*VERIFY'     POPTN                                      MD042261
+     C                   PARM      'CGL135 '     PSARD                                      MD042261
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD042261
+      *                                                                                     MD042261
+     C                   IF        PRTCD = *BLANKS                                          MD042261
+     C                   EVAL      CGL135 = 'Y'                                             MD042261
+     C                   ENDIF                                                              MD042261
      C**********         MOVE      *BLANKS       PRTCD                              BUG9713 MD020144
       **********                                                                    BUG9713 MD020144
      C/COPY WNCPYSRC,GLH00447

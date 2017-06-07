@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CSD095CC1          Date 13Sep16               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD044506           Date 28Mar17               *
+      *  Prev Amend No. CSD095CC1          Date 13Sep16               *
+      *                 CSW216             Date 14Mar16               *
       *                 MD035359           Date 06Aug15               *
       *                 MD031584           Date 10Dec14               *
       *                 MD029165           Date 25Nov14               *
@@ -95,6 +96,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044506 - MT300 98D trade execution date can not be before  *
+      *             value date.                                       *
       *  CSD095CC1 - Allow Deal Sub-Type and Branch for IRS, FRA and  *
       *              CCF SSIs                                         *
       *  CSW216 - SWIFT Changes 2016                                  *
@@ -188,16 +191,16 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDLDGUPFE  O    E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLDGREF:DLDGREFF)
      F                                     COMMIT
- 
+
      FDLDGUPL1  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
      F**********IRVDTSCPD UF A E             DISK    INFSR(*PSSR)                            BUG5449
      F**********                                     COMMIT                                  BUG5449
       **********                                                                             BUG5449
@@ -235,7 +238,7 @@
      FDLPCSCL0  UF   E           K DISK    RENAME(DLPCSCD0:DLPCSCX0)                         BUG5449
      F                                               PREFIX(XX)                              BUG5449
      F                                     COMMIT                                            BUG5449
- 
+
                                                                                               244254
      FSDEXSTL1  IF   E           K DISK                                                       244254
       *****************************************************************
@@ -256,58 +259,58 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D********** OurRDTSC        S            492A   DIM(ArrayMax)                           BUG5449
      D********** OurIDTSC        S            492A   DIM(ArrayMax)                           BUG5449
      D********** ThrRDTSC        S            492A   DIM(ArrayMax)                           BUG5449
@@ -429,18 +432,18 @@
      D  DteMth                 1      2A                                                     BUG5449
      D  DteDay                 3      4A                                                     BUG5449
      D  DteYr                  5      6A                                                     BUG5449
- 
+
      D HeadIn        E DS                  EXTNAME(APHEADPD)
       * Incoming Header
      D WMSGTYPE                1      6
- 
+
      D TranIn        E DS                  EXTNAME(IRCIRSPD)
      D**********PBDCCcy                243    306                                    BUG5449 BUG6472
      D PBDCCcy               288    317                                                      BUG6472
       * Incoming Transaction
      D**********WBDCLeg1              243    272                                             BUG6472
      D**********WBDCLeg2              307    336                                             BUG6472
- 
+
      D ValidDeal     E DS                  EXTNAME(IRVCIRSPD)
       * Valid Deals layout
      D CIRSRecIns            716    784
@@ -452,7 +455,7 @@
                                                                                              BUG5291
      D ValidXDeal    E DS                  EXTNAME(IRVXSIRPD)                                BUG5291
       * Valid Deals layout                                                                   BUG5291
- 
+
      D DealFilFmt    E DS                  EXTNAME(DEALSDG)
       * (Current) Deal in File Format
      D DGRecIns              716    784
@@ -464,11 +467,11 @@
                                                                                              BUG5291
      D DealXFilFmt   E DS                  EXTNAME(DLDLDGQD)                                 BUG5291
       ** Deal Extension File Format                                                          BUG5291
- 
+
      D DealScnFmt    E DS                  EXTNAME(IRCIRSPD)
      D                                     PREFIX(@)
       * (Current) Deal in Screen Format
- 
+
      D**********OurRatChgD    E DS                  EXTNAME(IRDTSCPD)                        BUG5449
       **Our*Rate*Change Dates (IRCs)                                                         BUG5449
      D**********                                    PREFIX(OR)                               BUG5449
@@ -610,170 +613,170 @@
       **********                                                                             BUG5449
      D**********ValidDates      S            246A   INZ(*BLANKS)                             BUG5449
       ***IRC*valid dates returned from IRVIRCVAL                                             BUG5449
- 
+
      D*ValidExt******E DS                  EXTNAME(IRVXSETPD)  PREFIX(EX)                    BUG6326
      D**ExRSet********        10     84                                                      BUG6326
      D**ExPSet********        85    653                                                      BUG6326
- 
+
      D ExtSetV       E DS                  EXTNAME(IRVXSETPD)
      D                                     PREFIX(VD)
      D**ExRValDat*****        10     84                                                      BUG6326
      D**ExPValDat*****        85    653                                                      BUG6326
      D  ExRValDat             10     90                                                      BUG6326
      D  ExPValDat             91    665                                                      BUG6326
- 
+
      D ExtSetM       E DS                  EXTNAME(IRVXSETPD)
      D                                     PREFIX(MD)
      D**ExRMatDat*****        10     84                                                      BUG6326
      D**ExPMatDat*****        85    653                                                      BUG6326
      D  ExRMatDat             10     90                                                      BUG6326
      D  ExPMatDat             91    665                                                      BUG6326
- 
+
      D ExtSetI       E DS                  EXTNAME(IRVXSETPD)
      D                                     PREFIX(ID)
      D  ExRIntDat             10     90                                                      BUG6326
      D  ExPIntDat             91    665                                                      BUG6326
      D  ExFIntDat            666   1315                                                      BUG6326
- 
+
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
       * Pay Settlement Instructions - Input
- 
+
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)
       * Receive Settlement Instructions - Input
- 
+
      D InFRASttmt    E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS Settlement Instructions - Input
- 
+
      D InPayStmtE    E DS                  EXTNAME(SDESSPPD)
      D                                     PREFIX(E)
       * Pay Settlement Instructions - Extra Settlements
- 
+
      D InRecStmtE    E DS                  EXTNAME(SDESSRPD)
      D                                     PREFIX(E)
       * Receive Settlement Instructions - Extra Settlements
- 
+
      D InFRAStmtE    E DS                  EXTNAME(SDESSFPD)
      D                                     PREFIX(E)
       * FRA/IRS Settlement Instructions - Extra Settlements
- 
+
      D InPayStmtV    E DS                  EXTNAME(SDESSPPD)
      D                                     PREFIX(V)
       * Pay Settlement Instructions - Value date
- 
+
      D InRecStmtV    E DS                  EXTNAME(SDESSRPD)
      D                                     PREFIX(V)
       * Receive Settlement Instructions - Vaue Date
- 
+
      D InPayStmtM    E DS                  EXTNAME(SDESSPPD)
      D                                     PREFIX(M)
       * Pay Settlement Instructions - Maturity Date
- 
+
      D InRecStmtM    E DS                  EXTNAME(SDESSRPD)
      D                                     PREFIX(M)
       * Receive Settlement Instructions - Maturity Date
- 
+
      D CrPayStmtE    E DS                  EXTNAME(SDESSPPD) PREFIX(C)
       * Pay Settlement Instructions - Current  (Extra)
- 
+
      D CrRecStmtE    E DS                  EXTNAME(SDESSRPD) PREFIX(C)
       * Receive Settlement Instructions - Current  (Extra)
- 
+
      D CrFRAStmtE    E DS                  EXTNAME(SDESSFPD) PREFIX(C)
       * FRA/IRS Settlement Instructions - Current (Extra)
- 
+
      D CrPaySttmt    E DS                  EXTNAME(SDESSPPD) PREFIX(@)
       * Pay Settlement Instructions - Current
- 
+
      D CrRecSttmt    E DS                  EXTNAME(SDESSRPD) PREFIX(@)
       * Receive Settlement Instructions - Current
- 
+
      D CrFRASttmt    E DS                  EXTNAME(SDESSFPD) PREFIX(@)
       * FRA/IRS Settlement Instructions - Current
- 
+
      D DBPaySttmt    E DS                  EXTNAME(SDESFPPD)
       * Pay Settlement Instructions - File (D/B) format
- 
+
      D DBRecSttmt    E DS                  EXTNAME(SDESFRPD)
       * Receive Settlement Instructions - File (D/B) format
- 
+
      D DBFRASttmt    E DS                  EXTNAME(SDESFFPD)
       * FRA/IRS Settlement Instructions - File (D/B) format
- 
+
      D DBPayStmtE    E DS                  EXTNAME(SDESFPPD)
      D                                     PREFIX(E)
       * Pay Settlement Instructions - File (D/B) format (Extra)
- 
+
      D DBRecStmtE    E DS                  EXTNAME(SDESFRPD)
      D                                     PREFIX(E)
       * Receive Settlement Instructions - File (D/B) format (Extra)
- 
+
      D DBFRAStmtE    E DS                  EXTNAME(SDESFFPD)
      D                                     PREFIX(E)
       * FRA/IRS Settlement Instructions - File (D/B) format (Extra)
- 
+
      D DBPayStmtV    E DS                  EXTNAME(SDESFPPD)
      D                                     PREFIX(V)
       * Pay Settlement Instructions - File (D/B) format (Value date)
- 
+
      D DBRecStmtV    E DS                  EXTNAME(SDESFRPD)
      D                                     PREFIX(V)
       * Receive Settlement Instructions - File (D/B) format (Value date)
- 
+
      D DBPayStmtM    E DS                  EXTNAME(SDESFPPD)
      D                                     PREFIX(M)
       * Pay Settlement Instructions - File (D/B) format (Maturity date)
- 
+
      D DBRecStmtM    E DS                  EXTNAME(SDESFRPD)
      D                                     PREFIX(M)
       * Receive Settlement Instructions - File (D/B) format (Maturity date)
- 
+
       ** FRA/IRS Interface Non-Screen Data
      D InfData       E DS                  EXTNAME(IRRXIFPD)
- 
+
      D ExtData       E DS                  EXTNAME(IRCSEXPD)
       * IR Cross Ccy IRS Extra Data - File (D/B) format
- 
+
      D ValIRCData    E DS                  EXTNAME(IRVDTSCPD)
       * Valid Interest Rate Calendar Dates
- 
+
      D DBORatChgD    E DS                  EXTNAME(IRVDTSCPD)
       * Our Rate Change Dates (IRCs) - Midas Day Number format
      D                                     PREFIX(OR)
      D ORFoTran      E                     EXTFLD(XFOTRANID)
      D ORDates                23    268A
      D ORConfH               269    350A
- 
+
      D DBOIntPayD    E DS                  EXTNAME(IRVDTSCPD)
       * Our Interest Payment Dates (IRCs) - Midas Day Number format
      D                                     PREFIX(OP)
      D OPFoTran      E                     EXTFLD(XFOTRANID)
      D OPDates                23    268A
      D OPConfH               269    350A
- 
+
      D DBTRatChgD    E DS                  EXTNAME(IRVDTSCPD)
       * Their Rate Change Dates (IRCs) - Midas Day Number format
      D                                     PREFIX(TR)
      D TRFoTran      E                     EXTFLD(XFOTRANID)
      D TRDates                23    268A
      D TRConfH               269    350A
- 
+
      D DBTIntPayD    E DS                  EXTNAME(IRVDTSCPD)
       * Their Interest Payment Dates (IRCs) - Midas Day Number format
      D                                     PREFIX(TP)
      D TPFoTran      E                     EXTFLD(XFOTRANID)
      D TPDates                23    268A
      D TPConfH               269    350A
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access programs - short data structure
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                 BUG5449
       ** Midas Modules Details Accessed via access program                                   BUG5449
- 
+
       ** External DS for Deal details                                                         245692
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  245692
      D W#ACCD        E                     EXTFLD(QQACCD)                                     245692
@@ -805,10 +808,10 @@
       *
       ** First DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status data area
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
       *                                                                                      BUG5449
@@ -872,36 +875,36 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       ** RPIF Error File - Screen 3                                                           CSW213
      D DLError3      E DS                  EXTNAME(DLERI3PD)                                  CSW213
                                                                                               CSW213
- 
+
       ** RPIF Error File - Screen 4                                                           CSW214
      D DLError4      E DS                  EXTNAME(DLERI4PD)                                  CSW214
                                                                                               CSW214
      D/COPY QWINDSRC,IRCIRSGDTA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Field (500A) to receive the incoming transaction
      D*Trans500********S            500A                                                      CDL028
      D Trans1000       S           1000A                                                      CDL028
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Field (500A) to receive the incoming Interface Non-Screen Data
      D InfData500      S            500A
- 
+
       ** Fields (500A) to receive the incoming Interest Rate Calendar info
      D TransB500       S            500A
      D TransC500       S            500A
@@ -910,15 +913,15 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D TransF500       S            500A
      D TransG500       S            500A
      D TransH500       S            500A
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
       ** These have been declared for all DL1602 fields, some may not
       **  actually be needed if the field is not used/not validated
@@ -1054,17 +1057,17 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D**SCpRBkOK**********************1A   INZ('Y')                                           CDL038
      D**SFAcOOK***********************1A   INZ('Y')                                           CDL038
      D**SSPiOK************************1A   INZ('Y')                                           CDL038
- 
+
       ** Flag to indicate if Exchange Indicators are valid
      D  SExInOK                       1A   INZ('Y')
- 
+
       ** Flag to indicate Base Currency Equivalent fields are within
       ** 10% of each other
      D  SBCcyEqOK                     1A   INZ('Y')
- 
+
       ** Flag(s) to indicate if combinations of transaction fields are valid
      D  DDDltStpOK                    1A   INZ('Y')
- 
+
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
      D OKPayInsDS      DS
@@ -1095,7 +1098,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D  DDBtb4OK                      1A   INZ('Y')
      D  DDBtb5OK                      1A   INZ('Y')
      D  DDBtb6OK                      1A   INZ('Y')
- 
+
       ** Flags to indicate whether Receive Settlement instruction fields
       **  are valid
      D OKRecInsDS      DS
@@ -1106,7 +1109,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D  DDRobnOK                      1A   INZ('Y')
      D  DDRibnOK                      1A   INZ('Y')
      D  DDRibaOK                      1A   INZ('Y')
- 
+
       ** Flags to indicate whether FRA/IRS instruction fields are valid
      D OKCIRSInDS      DS
      D  DDDsr1OK                      1A   INZ('Y')
@@ -1131,7 +1134,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D  DDAgtyOK                      1A   INZ('Y')
      D  DDAgdtOK                      1A   INZ('Y')
      D  DDAgvvOK                      1A   INZ('Y')
- 
+
       ** Flags to indicate whether Extra Pay Settlement instruction fields
       **  are valid
      D OKPayInsDSE     DS
@@ -1162,7 +1165,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D  DDBtb4OKE                     1A   INZ('Y')
      D  DDBtb5OKE                     1A   INZ('Y')
      D  DDBtb6OKE                     1A   INZ('Y')
- 
+
       ** Flags to indicate whether Extra Receive Settlement instruction fields
       **  are valid
      D OKRecInsDSE     DS
@@ -1173,7 +1176,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D  DDRobnOKE                     1A   INZ('Y')
      D  DDRibnOKE                     1A   INZ('Y')
      D  DDRibaOKE                     1A   INZ('Y')
- 
+
       ** Flags to indicate whether Extra FRA/IRS instruction fields are valid
      D OKCIRSInDSE     DS
      D  DDDsr1OKE                     1A   INZ('Y')
@@ -1198,27 +1201,27 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D  DDAgtyOKE                     1A   INZ('Y')
      D  DDAgdtOKE                     1A   INZ('Y')
      D  DDAgvvOKE                     1A   INZ('Y')
- 
+
       ** Flags to indicate outcome of calls to lower level modules
      D AmendOK         S              1A   INZ('Y')
      **********                                                                              BUG5449
      ****Flag*to indicate whether Interest Rate Calendars data valid                         BUG5449
      D*OKInRatCal**    S              1A   INZ('Y')                                          BUG5449
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A
- 
+
       ** Numeric version of spread/rate
      D @SPRD           S             11P 7
- 
+
       ** A code to indicate the calling function to the lower level modules
      D CIRS            S              4A   INZ('CIRS')
- 
+
       ** Payment & Receipt dates, passed to Settlements Validation routine.
       ** spaces in parameter list not used by this function
      D PayDat          S              5P 0 INZ(99999)
      D RecDat          S              5P 0 INZ(99999)
- 
+
       ** Blank fields, passed to Settlements Defaulting routine, to fill
       ** spaces in parameter list not used by this function
      D Blank2          S              2A   INZ(*BLANKS)
@@ -1227,13 +1230,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D Blank6          S              6A   INZ(*BLANKS)
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
- 
+
       ** Error Flag for call to Standard routines (equates to *IN99)
      D ErrorFlag       S              1A   INZ('N')
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Receive / Pay Settlement Method & Nostro
      D RecSetCcy       S              3A
      D RecSetMeth      S              2S 0
@@ -1243,10 +1246,10 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D PaySetMeth      S              2S 0
      D PayNostro       S             18A                                                      CDL038
      D*PayNostro*******S             12A                                                      CDL038
- 
+
       ** Validate Business Day Convention flag
      D WValBDC         S              1A   INZ('N')
- 
+
       ** Switchable Feature Parameter
      D CIR001          S              1A
      D CIR002          S              1A
@@ -1258,7 +1261,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D CAP056          S              1A
      D CAP051          S              1A                                                     BUG6671
      D CLE025          S              1    INZ('N')                                          BUG5291
- 
+
      D PWUCDP          S              1P 0
      D PWTCDP          S              1P 0
      D PWPSCY          S              3A
@@ -1266,9 +1269,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D PWPNLOC         S              3A
      D PWRNLOC         S              3A
      D I#SDLNO         S                   LIKE(SDLNO) INZ(*BLANKS)
- 
+
       ** Fields defined for CSC011
- 
+
      D CSC011          S              1A
      D TRANSDTL        S           5800A
      D PDealNum        S             18A
@@ -1276,7 +1279,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D PRtCd           S              7A
      D POptn           S              7A
      D PSard           S              6A
- 
+
      D ModeofOp        S              6
      D ScreenInpt      S              1
      D APIRetc         S              1
@@ -1291,7 +1294,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D BufferEx8       S           9999                                                      BUG5449
      D BufferEx9       S           9999                                                      BUG5449
      D UpdateYN        S              1
- 
+
       ** Fields defined
      D OKCshFlw        S              1A   INZ('Y')
      D OKPrcChg        S              1A   INZ('Y')
@@ -1317,7 +1320,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D WOurTheir       S              1A
      D X               S              3  0
      D PCtlDate        S              5P 0
- 
+
      D ##ACTN          S              1
      D ##ValIter       S              3
      D CurDATA         S           2000
@@ -1404,7 +1407,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D RIdx            S              3P 0                                                    CSW213
      D WRIdx           S              3P 0                                                    CSW213
      D DUpdateYN       S              1A                                                      CSW213
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -1440,9 +1443,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,IRCIRSC001
- 
+
       ** Incoming transaction is in a 500A field, so that a common CLP
       ** can be used between this module and the one that read the MQ queue.
       ** This module needs to break that 500A by loading it into the
@@ -1729,13 +1732,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         EVAL      TPCSAST=%SUBST(BufferEx7:9443)+BufferEx8+         CSW214 MD035359
      C**********                                       BufferEx9                     CSW214 MD035359
       *                                                                                     MD035359
-     C**********         EVAL      ORDATEAST=%SUBST(Buffer2:2299)                    MD035359 CSW216 
+     C**********         EVAL      ORDATEAST=%SUBST(Buffer2:2299)                    MD035359 CSW216
      C**********                   + BufferEx2                                       MD035359 CSW216
      C**********         EVAL      OPDATEAST=%SUBST(BufferEx2:3100)                  MD035359 CSW216
      C**********         EVAL      TRDATEAST=%SUBST(BufferEx2:7900)                  MD035359 CSW216
      C**********                   + BufferEx3                                       MD035359 CSW216
      C**********         EVAL      TPDATEAST=%SUBST(BufferEx3:2701)                  MD035359 CSW216
-     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:7501)                    MD035359 CSW216 
+     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:7501)                    MD035359 CSW216
      C**********                   + BufferEx4 + BufferEx5                           MD035359 CSW216
      C**********         EVAL      TCFSAST=%SUBST(BufferEx5:703)                     MD035359 CSW216
      C**********                   + BufferEx6                                       MD035359 CSW216
@@ -1755,7 +1758,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                             + BufferEx6                                                CSW216
      C                   EVAL      OPCSAST=%SUBST(BufferEx6:3944)+BufferEx7                   CSW216
      C                   EVAL      TPCSAST=%SUBST(BufferEx7:8945)+BufferEx8+                  CSW216
-     C                                                 BufferEx9                              CSW216 
+     C                                                 BufferEx9                              CSW216
       *                                                                                      BUG5449
      C                   MOVEA     ORDATEAST     ORDATEA                                     BUG5449
      C                   MOVEA     OPDATEAST     OPDATEA                                     BUG5449
@@ -1765,7 +1768,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   MOVEA     TCFSAST       TCFSA                                       BUG5449
      C                   MOVEA     OPCSAST       OPCSA                                       BUG5449
      C                   MOVEA     TPCSAST       TPCSA                                       BUG5449
- 
+
       ** If CAP041 is installed, move Fees/Buy-Outs fields to one DS for
       ** processing later.
      C                   IF        CAP041 = 'Y'
@@ -1780,26 +1783,26 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      ASBUYA  = SBUYA
      C                   EVAL      ASBOPR  = SBOPR
      C                   ENDIF
- 
+
       ** Generate a timestamp for this transaction
      C                   RESET                   ReturnCode
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       ** Some fields from the common header DS are renamed to prevent compile
       **  problems, as they are used on other Data Structures.
       ** Data from these must be copied over to the fields used for output
       **  or parameters.
- 
+
       ** Reset variables gradually updated, once only at start
      C                   EXSR      RESETCYCLE
- 
+
       ** Validate Action Code
- 
+
      C                   EXSR      ValidateAc
- 
+
       ** If error in validation of action code, fail this input
- 
+
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
@@ -1809,17 +1812,17 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * Retrieve TRAM details                                                                BUG6512
       *                                                                                      BUG6512
      C                   EXSR      ZACFFEERTV                                                BUG6512
- 
+
       ** Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
      C                   WHEN      SACCD = 'I'
       ** Processing for Inserts
      C                   EXSR      DftSettmts
      C                   EXSR      ValidateTr
      C                   EXSR      ValidateSt
- 
+
      C                   IF        CIR003 = 'Y'
      C                   IF        SVDEI = 'Y'
      C                             OR SPDEI = 'Y'
@@ -1827,7 +1830,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EXSR      ValidateEx
      C                   ENDIF
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,IRCIRSC008
       ** If IRCs on in system and no previous errors validate IRC dates
      C                   IF        CIR001 = 'Y'
@@ -1837,10 +1840,10 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         EXSR      ValidateIC2                                               BUG5449
      C**********         ENDIF                                                               BUG5449
      C                   ENDIF
- 
+
       ** If CAP041 (APIs for Fees/Buy-Outs/Processing Method/Next Principal Change
       ** Date) is installed and no previous errors, then perform validation of fields.
- 
+
      C**********         IF        CAP041 = 'Y' AND Idx = 0                                  BUG6517
      C                   IF        CAP041 = 'Y'                                              BUG6517
      C                   EXSR      ValidateFE
@@ -1848,7 +1851,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EXSR      ValidateIC3
      C**********         ENDIF                                                               BUG6517
      C                   ENDIF
- 
+
      C                   WHEN      SACCD = 'A'
       ** Processing for Amends
      C                   IF        GHSUBS <> *Blank
@@ -1857,12 +1860,12 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EXSR      TDtDtaSubs
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EXSR      SetupAmend
      C                   EXSR      ValdateAmd                                                BUG6876
      C                   EXSR      ValidateTr
      C                   EXSR      ValidateSt
- 
+
      C                   IF        CIR003 = 'Y'
      C                   IF        SVDEI = 'Y'
      C                             OR SPDEI = 'Y'
@@ -1870,7 +1873,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EXSR      ValidateEx
      C                   ENDIF
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,IRCIRSC012
       ** If IRCs on in system and no previous errors validate IRC dates
      C                   IF        CIR001 = 'Y'
@@ -1880,10 +1883,10 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         EXSR      ValidateIC2                                               BUG5449
      C**********         ENDIF                                                               BUG5449
      C                   ENDIF
- 
+
       ** If CAP041 (APIs for Fees/Buy-Outs/Processing Method/Next Principal Change
       ** Date) is installed and no previous errors, then perform validation of fields.
- 
+
      C**********         IF        CAP041 = 'Y' AND Idx = 0                                  BUG6517
      C                   IF        CAP041 = 'Y'                                              BUG6517
      C                   EXSR      ValidateFE
@@ -1891,7 +1894,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EXSR      ValidateIC3
      C**********         ENDIF                                                               BUG6517
      C                   ENDIF
- 
+
      C**********         EXSR      ValdateAmd                                                BUG6876
                                                                                              BUG6494
      C                   WHEN      SACCD  = 'X'                                              BUG6494
@@ -1927,9 +1930,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EXSR      ValidateIC3                                               BUG6494
      C                   ENDIF                                                               BUG6494
      C                   ENDIF                                                               BUG6494
- 
+
      C                   ENDSL
- 
+
      C     INVALID       TAG
                                                                                               CSW213
       ** Call DLRPIFVU - Midas DL Reporting Information Validate and Update                   CSW213
@@ -1938,19 +1941,19 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                             UPDateYN <> 'Y'                                            CSW213
      C                   EXSR      SRCIRSVU                                                   CSW213
      C                   ENDIF                                                                CSW213
- 
+
      C                   IF        UpdateYN = 'Y'
      C                             AND Idx = 0
- 
+
      C                   IF        Idx = 0
- 
+
      C                   IF        SACCD = 'I'
      C                   EXSR      SETUPDEALN
      C                   ENDIF
- 
+
      C                   EXSR      SETUPVALID
      C                   EXSR      SrValidEx
- 
+
       ** If Interest Rate Calendars are in use write to valid IRC file
       ** (dont bother setting up for delete)
      C                   IF        CIR001 = 'Y'
@@ -1960,13 +1963,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EXSR      SUPVALICP
      C**********         ENDIF                                                               BUG5449
      C                   ENDIF
- 
+
      C                   EXSR      UpdateDB
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
      C                   IF        UpdateYN = 'Y' and Idx = 0                                BUG6377
       *                                                                                      BUG6377
      C                   MOVE      RXDLNO        DDDLNO_IN                                   BUG6377
@@ -2203,11 +2206,11 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                                      + OPCSAST                                         CSW216
      C                   EVAL      BufferEx7=%SUBST(OPCSAST:6057)+TPCSAST                     CSW216
      C                   EVAL      BufferEx8=%SUBST(TPCSAST:1056)                             CSW216
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11055)                            CSW216 
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11055)                            CSW216
      C                   ENDIF                                                               BUG6377
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       ********************************************************************
@@ -2390,88 +2393,88 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *    transaction IDs supplied                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateAc    BEGSR
- 
+
       ** Validate action code versus transaction IDs supplied
       ** This function will set the Midas deal number
       ** The deal in file format from the database is retrieved as well.
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'IRCIRSRTV'
- 
+
       ** INPUTS
- 
+
       * Return code
      C                   PARM                    ReturnCode
- 
+
       * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       * Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
      C                   PARM                    ModeofOp
       *
       * Response mode
      C                   PARM      'S'           APRESPMODE
- 
+
       * Action Code
      C                   PARM                    SACCD
- 
+
       * Front Office Transaction ID
      C                   PARM                    APFOTranID
- 
+
       * Front Office Associated Transaction Id
      C                   PARM                    APFOAsocID
- 
+
       * (Midas) Deal Number
      C                   PARM                    SDLNO
- 
+
       * (Midas) Associated Deal Number
      C                   PARM                    SLNKDN
- 
+
       * Booking branch
      C                   PARM                    SBRCA
- 
+
       ** Switchable feature CIR008
- 
+
      C                   PARM                    CIR008
- 
+
       * OUTPUTS
- 
+
       * (Current) deal in file format
      C                   PARM                    DealFilFmt
      C                   PARM                    DealXFilFmt
- 
+
       * OK - Action code
      C                   PARM                    SAccdOK
- 
+
       * OK - Deal Number
      C                   PARM                    SDlNoOK
- 
+
       * OK - Booking branch
      C                   PARM                    SBrcaOK
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
      C                   PARM                    CIR003
      C                   PARM                    ExtSetV
      C                   PARM                    ExtSetI
      C                   PARM                    ExtSetM
- 
+
       ** Warning flds/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    WIdx
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2481,9 +2484,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *    if none have been supplied                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     DftSettmts    BEGSR
- 
+
       ** Set up ISDA fields so that defaulting module will not change them if                BUG5967
       ** have been entered already.                                                          BUG5967
       ** But only overwrite the defaulted values from ICD if the screen details are not blankBUG6940
@@ -2507,7 +2510,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       **  routine.
       ** Otherwise, use modules which will use Standard Settlement
       **  Instructions to apply defaults.
- 
+
      C                   IF        InRecSttmt = *blank
      C                             AND InPaySttmt = *blank
      C                             AND InFraSttmt = *blank                                   BUG8997
@@ -2516,7 +2519,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         MOVE      DDAGTY        DDAGTYSV          6                         BUG5967
      C**********         MOVE      DDAGDT        DDAGDTSV          6                         BUG5967
      C**********         MOVE      DDAGVV        DDAGVVSV          4                         BUG5967
- 
+
      C                   CALLB     'ZASETINDFT'
       *
       ** Output
@@ -2541,7 +2544,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    BQAGDT
       ** Version of ISDA Agreement
      C                   PARM                    BQAGVV
- 
+
       ** Version of ISDA Agreement century
      C                   PARM                    BQAGVC
                                                                                               CSD095
@@ -2559,30 +2562,30 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    DBRecSttmt
       ** Defaulted FRA/IRS Settlement Instruction in file format
      C                   PARM                    DBFRASttmt
- 
+
       *  The defaulted instructions are in file format, but the
       *  Settlements validation requires that they are in the input format.
       *  Therefore run them through a conversion module.
- 
+
      C                   CALLB     'ZASETINCVT'
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    DBPaySttmt
      C                   PARM                    DBRecSttmt
      C                   PARM                    DBFRASttmt
- 
+
       ** Defaulted Settlement Instruction in input format
      C                   PARM                    InPaySttmt
      C                   PARM                    InRecSttmt
      C                   PARM                    InFRASttmt
      C                   PARM      STCUCY        InRCCY                                      CSF011A
      C                   PARM      SUCUCY        InPCCY                                      CSF011A
- 
+
       **Restore*the saved ISBA fields                                                        BUG5967
      C**********         MOVE      DDISDASV      DDISDA            4                         BUG5967
      C**********         MOVE      DDAGTYSV      DDAGTY            6                         BUG5967
      C**********         MOVE      DDAGDTSV      DDAGDT            6                         BUG5967
      C**********         MOVE      DDAGVVSV      DDAGVV            4                         BUG5967
- 
+
      C                   Else                                                                BUG5967
       ***Even*if*settlement details have been entered, default the ISDA fields if theBUG5967 BUG6940
       ***haven't*been*entered.  Call settlement default module again but this time onBUG5967 BUG6940
@@ -2635,7 +2638,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EndIf                                                             BUG5962RP
                                                                                            BUG5962RP
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2645,13 +2648,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *    of Amendments.                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SetupAmend    BEGSR
- 
+
       ** For Amends, put the complete (pre-existing) IRS into the Valid
       ** file record - fields in this will be updated during  processing
      C                   MOVEL     DealFilFmt    ValidDeal
- 
+
      C                   Eval      %SUBST(DBRecSttmt:21:55) =
      C                               %SUBST(CIRSRecIns:15:55)
      C                   Eval      FLRSTM = RXRSTM
@@ -2669,55 +2672,55 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      DBFraSttmt = CIRSFraIns
      C                   MOVE      RXAGVC        FLAGVC
      C                   MOVEL     *BLANK        RXAUTH                                     AR981707
- 
+
       ** .... and then convert these to the screen format
      C                   CALLB     'ZASETINCVT'
- 
+
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    DBPaySttmt
      C                   PARM                    DBRecSttmt
      C                   PARM                    DBFRASttmt
- 
+
       ** Current Settlement Instruction in input format
      C                   PARM                    CrPaySttmt
      C                   PARM                    CrRecSttmt
      C                   PARM                    CrFRASttmt
      C                   PARM      @STCUCY       InRCCY                                      CSF011A
      C                   PARM      @SUCUCY       InPCCY                                      CSF011A
- 
+
       ** If no Payment or Receive instructions have been supplied
       ** Default them to those currently on the deal.
- 
+
      C                   IF            (InPaySttmt = *blank)
      C                   EVAL      InPaySttmt = CrPaySttmt
      C                   ENDIF
- 
+
      C                   IF            (InRecSttmt = *blank)
      C                   EVAL      InRecSttmt = CrRecSttmt
      C                   ENDIF
- 
+
      C                   IF            (InFRASttmt = *blank)
      C                   EVAL      InFRASttmt = CrFRASttmt
      C                   ENDIF
- 
+
       ** Do data substitution for Settlement Instructions
- 
+
      C                   IF        GHSUBS <> *Blank
      C     GHSUBS        SCAN      InPaySttmt                             99
- 
+
      C                   IF        *IN99 = *OFF
      C     GHSUBS        SCAN      InRecSttmt                             99
      C                   ENDIF
- 
+
      C                   IF        *IN99 = *OFF
      C     GHSUBS        SCAN      InFRASttmt                             99
      C                   ENDIF
- 
+
      C                   IF        *IN99 = *ON
      C                   EXSR      SDtDtaSubs
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        CIR003 = 'Y'
      C                   CLEAR                   DBFRAStmtE
      C                   IF        SVDEI = 'Y'
@@ -2725,19 +2728,19 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      DBRecStmtE = ExRValDat
      C                   EVAL      DBPayStmtE = ExPValDat
      C                   EXSR      SrAmdCvt
- 
+
      C                   IF        InPayStmtV = *blanks
      C                   EVAL      InPayStmtV = CrPayStmtE
      C                   ENDIF
- 
+
      C                   IF        InRecStmtV = *blanks
      C                   EVAL      InRecStmtV = CrRecStmtE
      C                   ENDIF
      C                   EVAL      InPayStmtE = InPayStmtV
      C                   EVAL      InRecStmtE = InRecStmtV
- 
+
       ** Do data substitution for Settlement Instructions
- 
+
      C                   IF        GHSUBS <> *blanks
      C     GHSUBS        SCAN      InPayStmtV                             99
      C                   IF        *IN99 = *OFF
@@ -2747,27 +2750,27 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EXSR      SExDtaSubs
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        SMDEI = 'Y'
      C                             OR   SPDEI = 'Y'
      C                   EVAL      DBRecStmtE = ExRMatDat
      C                   EVAL      DBPayStmtE = ExPMatDat
      C                   EXSR      SrAmdCvt
- 
+
      C                   IF        InPayStmtM = *blanks
      C                   EVAL      InPayStmtM = CrPayStmtE
      C                   ENDIF
- 
+
      C                   IF        InRecStmtM = *blanks
      C                   EVAL      InRecStmtM = CrRecStmtE
      C                   ENDIF
      C                   EVAL      InPayStmtE = InPayStmtM
      C                   EVAL      InRecStmtE = InRecStmtM
- 
+
       ** Do data substitution for Settlement Instructions
- 
+
      C                   IF        GHSUBS <> *blanks
      C     GHSUBS        SCAN      InPayStmtM                             99
      C                   IF        *IN99 = *OFF
@@ -2777,10 +2780,10 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EXSR      SExDtaSubs
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2789,13 +2792,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *  ValidateTr - Routine to validate the main transaction details*
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateTr    BEGSR
- 
+
       ** Set up the settlemnt information needed for holidays validation:
       ** - default fields for Inserts
       ** - existing d/b fields for Amends
- 
+
      C                   IF        SACCD = 'I'
       ** This block assumes that Settlement Instructions are never received
      C                   EVAL      RecSetMeth = RXRSTM
@@ -2803,21 +2806,21 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      PaySetMeth = RXPSTM
      C                   EVAL      PayNostro  = RXPONS
      C                   ENDIF
- 
+
      C                   IF        SACCD = 'A'
      C                   EVAL      RecSetMeth = RXRSTM
      C                   EVAL      RecNostro  = RXRONS
      C                   EVAL      PaySetMeth = RXPSTM
      C                   EVAL      PayNostro  = RXPONS
      C                   ENDIF
- 
+
       ** Business Day Convention enhancement is installed, allow
       ** validation of dates through currency conventions, otherwise
       ** validation against BDC not needed.
      C                   IF        CIR005 = 'Y'
      C                   EVAL      WValBDC = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'IRCIRSVAL'
      C                   PARM                    ModeOfOp
       ** Response mode (1A), from source system common header
@@ -2857,10 +2860,10 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    SACCD
      C                   PARM                    USLIP
      C                   PARM                    TSLIP
- 
+
       ** Current Deal in Screen Format
      C                   PARM                    DealScnfmt
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2869,26 +2872,26 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *  ValidateSt - Routine to validate the settlemnt instructions  *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateSt    BEGSR
- 
+
       ** The called module requires that the customer number/name is valid,
       **  if it is not, exit from this subroutine.
      C                   IF        NOT (SCNumOK = 'Y')
      C                   GOTO      ValSetExit
      C                   ENDIF
- 
+
       ** Set pay and receive dates to run date
      C                   EVAL      PayDat = BJRDNB
      C                   EVAL      RecDat = BJRDNB
- 
+
       * Store number of errors before call to settlement validation module                   BUG7209
      C                   Eval      BfIdx = Idx                                               BUG7209
      C                   Eval      BfWIdx = WIdx                                             BUG7209
                                                                                              BUG7209
      C                   RESET                   ReturnCode
      C                   CALLB     'ZASETINVAL'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
       ** Following parameters are output to called module
@@ -2921,7 +2924,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    ##PPAY            1
       * Protect Receipt Field
      C                   PARM                    ##PREC            1
- 
+
       ** Following parameters are returned by called module
       ** Payment Instruction OK flag
      C                   PARM                    OKPayInsDS
@@ -2948,7 +2951,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      SACCD         ##ACTN
       ** Validation Iteration
      C                   PARM      '1ST'         ##ValIter
- 
+
       * Setup correct field names if there are any settlement errors                         BUG7209
      C                   Eval      AfIdx = Idx                                               BUG7209
      C                   Eval      SetPrfx = 'A'                                             BUG7209
@@ -2963,7 +2966,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EndIf                                                               BUG7209
                                                                                              BUG7209
      C     ValSetExit    TAG
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2972,14 +2975,14 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *  TDtDtaSubs - Transaction Details Data Substitution           *
       *                                                               *
       *****************************************************************
- 
+
      C     TDtDtaSubs    BEGSR
- 
+
       ** Conversion of file fields to screen format
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'IRCIRSCVT'
- 
+
       ** INPUTS
       * Return Code
      C                   PARM                    ReturnCode
@@ -2988,18 +2991,18 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    DealXFilFmt
       ** Switchable feature CIR008
      C                   PARM                    CIR008
- 
+
       ** OUTPUTS
       ** (Current) Deal in screen format
      C                   PARM                    DealScnfmt
       ** Deal Status
      C                   PARM                    DDSTS
- 
+
       ** Data Sunstitution
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
       ** Substitution character
@@ -3008,9 +3011,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      TranIn        IncDATA
       ** Current Data
      C                   PARM      DealScnfmt    CurDATA
- 
+
      C                   MOVEL     IncDATA       TranIn
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3019,13 +3022,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *  SDtDtaSubs - Settlement Details Data Substitution            *
       *                                                               *
       *****************************************************************
- 
+
      C     SDtDtaSubs    BEGSR
- 
+
       ** PAYMENT INSTRUCTIONS
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
       ** Substitution character
@@ -3034,13 +3037,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      InPaySttmt    IncDATA
       ** Current Data
      C                   PARM      CrPaySttmt    CurDATA
- 
+
      C                   MOVEL     IncDATA       InPaySttmt
- 
+
       ** RECEIPT INSTRUCTIONS
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
       ** Substitution character
@@ -3049,13 +3052,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      InRecSttmt    IncDATA
       ** Current Data
      C                   PARM      CrRecSttmt    CurDATA
- 
+
      C                   MOVEL     IncDATA       InRecSttmt
- 
+
       ** FRA/IRS INSTRUCTIONS
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
       ** Substitution character
@@ -3064,9 +3067,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      InFRASttmt    IncDATA
       ** Current Data
      C                   PARM      CrFRASttmt    CurDATA
- 
+
      C                   MOVEL     IncDATA       InFRASttmt
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3075,11 +3078,11 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *  ValidateIC - Routine to validate Interest Rate Calendars     *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateIC    BEGSR
- 
+
       ** Validate Our Rate Change Dates
- 
+
       ***Invalid if Our Rate Change Frequency indicator not 'Z'                              BUG5449
       **********                                                                             BUG5449
      C**********         IF        ORDatesAlp <> *BLANKS                                     BUG5449
@@ -5024,7 +5027,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * ValidateIC3 - Routine to validate Principal Change Dates      *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateIC3   BEGSR
       **********                                                                             BUG5449
       ***Retrieve Our Principal Change records                                               BUG5449
@@ -5419,9 +5422,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449
- 
+
       * Their Principle Change Date
- 
+
      C     STNPCD        IFNE      *BLANKS                                                   BUG5449
      C     TPCSA(1)      ORNE      *blanks                                                   BUG7046
      C                   EVAL      PValType = 'P'                                            BUG5449
@@ -5664,7 +5667,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449
      C                   ENDSR
- 
+
       *****************************************************************
       * CheckDate - Routine to validate date schedules                *                      BUG5449
       *****************************************************************                      BUG5449
@@ -6499,59 +6502,59 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *  ValidateFE - Routine to validate Fees\Buy-Outs fields        *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateFE    BEGSR
- 
+
      C**********         IF        SACCD = 'I'
      C**********         EXSR      SETUPDEALN
      C**********         ENDIF
- 
+
       ** Set up details of DS DATA before calling validation.
      C/COPY QWINDSRC,IRCIRSMOV1                                                              BUG5449
- 
+
       ** Set up Our/Their number of decimal places.
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtcd             7
      C                   PARM      '*KEY   '     POptn             7
      C                   PARM      #1UCUC        PCcy              3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   EVAL      PWUCDP = A6NBDP
- 
+
      C                   IF        #1TCUC <> *BLANKS
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      #1TCUC        PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   EVAL      PWTCDP = A6NBDP
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PWTCDP = A6NBDP
- 
+
      C                   ENDIF
- 
+
       ** Set up Settlement & Receivers currency.
- 
+
      C                   IF        CEU003 = 'Y' and #1PSCY <> *BLANKS
      C                   MOVEL     #1PSCY        PWPSCY
      C                   ELSE
      C                   MOVEL     #1UCUC        PWPSCY
      C                   ENDIF
- 
+
      C                   IF        CEU003 = 'Y' and #1RSCY <> *BLANKS
      C                   MOVEL     #1RSCY        PWRSCY
      C                   ELSE
      C                   MOVEL     #1TCUC        PWRSCY
      C                   ENDIF
- 
+
       ** Access nostro location for our-effective-settlement-currency
- 
+
      C                   IF        PWPSCY <> *BLANKS
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
@@ -6564,19 +6567,19 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      *BLANKS       PCssn
      C                   PARM      *BLANKS       Pinoy
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVE      A7NOSN        PWPNLOC
      C                   ELSE
      C                   MOVE      *BLANKS       PWPNLOC
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Access nostro location for their-effective-settlement-currency
- 
+
      C                   IF        PWRSCY <> *BLANKS
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
@@ -6589,72 +6592,72 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      *BLANKS       PCssn            10
      C                   PARM      *BLANKS       Pinoy             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVE      A7NOSN        PWRNLOC
      C                   ELSE
      C                   MOVE      A7NOSN        PWRNLOC
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'IRCFBOVAL'
- 
+
       ** INPUTS
       ** ======
- 
+
       * Response mode
      C                   PARM      'S'           APRespMode
- 
+
       ** Transaction Details
      C                   PARM                    NwFBScnFmt
- 
+
       ** (Midas) Deal Number                                                                BUG11950
      C                   PARM                    SDLNO                                      BUG11950
                                                                                             BUG11950
       ** OTHERS
       ** ======
- 
+
       ** Decimal Places based on Up-Front Pay/Receive (Our)
       ** Decimal Places based on Up-Front Pay/Receive (Their)
      C                   PARM                    PWUCDP
      C                   PARM                    PWTCDP
- 
+
       ** Settlement currency
       ** Receivers currency
      C                   PARM                    PWPSCY
      C                   PARM                    PWRSCY
- 
+
       ** Nostro Locations
      C                   PARM                    PWPNLOC
      C                   PARM                    PWRNLOC
- 
+
       ** OUTPUTS
       ** =======
- 
+
       ** Transaction Details OK inds
      C                   PARM                    OKFBScnFmt
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
       *
       ** Deal info passed from calling programs
      C                   PARM                    Data
      C                   PARM                    BNDCSP                                       245692
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -6664,31 +6667,31 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *    are amendable.                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     ValdateAmd    BEGSR
- 
+
       ** This subroutine calls a procedure which checks whether it
       ** was valid to amend any of the fields which have been
       ** changed.  Some are never amendable and some depend upon ICD
       ** settings as to whether they are amendable.
- 
+
       ** To determine which fields have changed, the current fields
       ** on file must be converted to a 'screen' format.
- 
+
       ** These fields are then compared with the fields on the input
       ** transaction.
- 
+
       ** Any errors detected by the called procedure take precedence
       ** over any errors found during the validation of the complete
       ** transaction.  The errors from the called procedure are kept
       ** separately and, if any are found, these errors will REPLACE
       ** the normal validation errors.
- 
+
       ** Conversion of file fields to screen format
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'IRCIRSCVT'
- 
+
       * INPUTS
       * Return Code
      C                   PARM                    ReturnCode
@@ -6697,16 +6700,16 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    DealXFilFmt
       ** Switchable feature CIR008
      C                   PARM                    CIR008
- 
+
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
       * Deal Status
      C                   PARM                    DDSTS            24
- 
+
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'IRCIRSAMD'
       * INPUTS
       * Return Code
@@ -6717,7 +6720,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    DealScnfmt
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
- 
+
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
@@ -6732,7 +6735,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * Reset of Fields in Error Required (Y/N)
      C*******************PARM      'N'           ResetErrs         1                          CDL038
      C                   PARM      'Y'           ResetErrs         1                          CDL038
- 
+
      C                   IF        CAP041 = 'Y' and AmIdx = 0
       *
      C                   EVAL      BSOIPM  = @SOIPM
@@ -6810,7 +6813,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -6820,30 +6823,30 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *    updated during each run of this program                    *
       *                                                               *
       *****************************************************************
- 
+
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   RESET                   OKFlagsDS
- 
+
      C                   RESET                   AmendOK
- 
+
      C                   RESET                   OKPayInsDS
      C                   RESET                   OKRecInsDS
      C                   RESET                   OKCIRSInDS
@@ -6853,13 +6856,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   RESET                   OKCshFlw
      C                   RESET                   OKPrcChg
      C                   MOVE      *ALL'Y'       OKFBScnFmt
- 
+
      C                   RESET                   PayDat
      C                   RESET                   RecDat
- 
+
      C                   CLEAR                   ValidDeal
      C                   CLEAR                   ValidXDeal
- 
+
       ** Numeric fields within 'ValidDeal' have to be reset explicitly as
       **  there are long alpha fileds overlapping these which cause the
       **  CLEAR to put blanks in the numeric fields
@@ -6873,7 +6876,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         Z-ADD     *ZERO         RXPOCN                                       CSD027
      C                   EVAL      RXPOBN=*BLANKS                                             CSD027
      C                   EVAL      RXPOCN=*BLANKS                                             CSD027
- 
+
       ** Have to clear the settlement data structure, or the packed numeric
       ** fields are not initialised correctly.
      C                   CLEAR                   DBPaySttmt
@@ -6886,16 +6889,16 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   CLEAR                   DBRecStmtV
      C                   CLEAR                   DBPayStmtM
      C                   CLEAR                   DBRecStmtM
- 
+
      C                   CLEAR                   ValIRCData
      C**********         CLEAR                   VldCashFlw                                  BUG5449
      C**********         CLEAR                   VldPrinChg                                  BUG5449
- 
+
      C                   CLEAR                   DBORatChgD
      C                   CLEAR                   DBOIntPayD
      C                   CLEAR                   DBTRatChgD
      C                   CLEAR                   DBTIntPayD
- 
+
      C                   IF        CLE025 = 'Y'
      C                   CLEAR                   DealXFilFmt
      C                   ENDIF
@@ -6919,7 +6922,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   Z-ADD     0             #1BOVD
      C                   Z-ADD     0             #1BOAM
      C                   Z-ADD     0             #1ORED
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -6928,11 +6931,11 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * SUPVALICP - Set up valid Principal Change                        *
       *                                                                  *
       ********************************************************************
- 
+
      C     SUPVALICP     BEGSR
- 
+
       ** Interest Rate Calendar
- 
+
      C*****APFOTRANID    SETLL     IRTDTSCL0                                                 BUG5449
      C*****APFOTRANID    READE     IRTDTSCL0                                                 BUG5449
       **********                                                                             BUG5449
@@ -7097,7 +7100,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDDO                                                               BUG5449
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5610
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7106,14 +7109,14 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * SUPVALIRC  - Set up valid Interest Rate Calendar details      *
       *                                                               *
       *****************************************************************
- 
+
      C     SUPVALIRC     BEGSR
- 
+
      C                   IF        SACCD = 'A' OR SACCD = 'R'                                BUG5449
      C                   MOVEL     RXDLNO        WDEALNO                                     BUG5449
      C                   EXSR      CLEARIRCS                                                 BUG5449
      C                   ENDIF                                                               BUG5449
- 
+
       ***Our*Rate Change Dates.                                                              BUG5449
      C*****RXUICFR       IFEQ      'Z'                                                       BUG5449
      C**********         EVAL      ORFOtran   = APFOTranID                                   BUG5449
@@ -7153,7 +7156,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         MOVE      DBTIntPayD    ValIRCData                                  BUG5449
      C**********         WRITE     IRVDTSCD0                                                 BUG5449
      C**********         ENDIF                                                               BUG5449
- 
+
      C                   IF        SACCD = 'I' OR SACCD = 'A'                                BUG5449
      C                   MOVEL     RXDLNO        DLNO                                        BUG5449
       ** Our Rate Change Dates.                                                              BUG5449
@@ -7273,7 +7276,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ADD       1             I                                           BUG5449
      C                   ENDDO                                                               BUG5449
      C                   ENDIF                                                               BUG5449
- 
+
      C                   ENDIF                                                               BUG5449
      C                   ENDSR
       *****************************************************************                      BUG5449
@@ -7411,7 +7414,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         ENDIF                                                               BUG5449
       **********                                                                             BUG5449
      C**********         ENDSR                                                               BUG5449
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -7419,39 +7422,39 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * SETUPDEALN - Set up Deal Number for Inserts                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPDEALN    BEGSR
- 
+
      C     SDLNO         IFEQ      *BLANKS
      C     SDLNO         OREQ      *ZEROS
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'CAGETNXTDL'
      C                   PARM                    ReturnCode
      C                   PARM                    MSG1
      C                   PARM                    SDLNO
      C                   PARM                    RXDLNO
- 
+
       ** Set up extension file deal number
      C                   Eval      RDLNO = SDLNO
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SDLNO'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SDlnoOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
      C                   ELSE
      C                   MOVE      SDLNO         RXDLNO
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7461,15 +7464,15 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * For Inserts and Amends, put the Settlement Instructions (input or
       *  defaulted) into the Valid file record.
       * Two DSs (one Pay, one Receive) contain the Settlement Instructions
       *  in contiguous areas, which must be placed into the correct parts
       *  of the Valid file record
- 
+
      C                   IF        SACCD = 'I'
      C                             OR (SACCD = 'A')
      C                   Eval      RXPSTM = FLPSTM
@@ -7488,33 +7491,33 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   MOVE      FLIC72        RXIC72
      C                   MOVEL     DBFraSttmt    CIRSFraIns
      C                   MOVE      FLAGVC        RXAGVC
- 
+
       ** Ensure numeric fields are zero if not entered.
      C     FLISDA        IFEQ      *BLANKS
      C                   Z-ADD     *ZEROS        RXISDA
      C                   END
- 
+
      C     FLAGDT        IFEQ      *BLANKS
      C                   Z-ADD     *ZEROS        RXAGDT
      C                   END
- 
+
      C     FLAGVV        IFEQ      *BLANKS
      C                   Z-ADD     *ZEROS        RXAGVV
      C                   END
- 
+
      C     FLAGVC        IFEQ      *BLANKS
      C                   Z-ADD     *ZEROS        RXAGVC
      C                   END
- 
+
      C                   ENDIF
- 
+
       ** For Deletes & Authorises, put the complete (pre-existing) deal
       *  into the Valid file record
      C                   IF        SACCD = 'R'
      C                             OR CIR008 = 'Y' AND SACCD = 'X'
      C                   MOVEL     DealFilFmt    ValidDeal
      C                   ENDIF
- 
+
       * Set Fees/Buy-Outs fields for update to the valids file if CAP041 is installed.
      C                   IF        CAP041 = 'Y'
      C                   EXSR      SRFileFlds
@@ -7525,10 +7528,10 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDIF                                                                240412
                                                                                               240412
      C                   ENDIF
- 
+
       * Set Valid file field(s) that are needed for all Action Codes
      C                   EVAL      RXCHTP = SACCD
- 
+
       * Include Header fields that need to be o/p to the Valid file
      C**********         EVAL      RXFRNT = APFOTranID                                        248489
      C**********         EVAL      RXREPA = APRprLocn                                         248489
@@ -7537,16 +7540,16 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDIF                                                              MD029596
                                                                                             MD029596
      C                   EVAL      RXTMESTMP = TimeStamp
- 
+
       ** Setup the Valid file with 'Authomatic Authorisation' from
       ** Interface file IRRXIFPD
- 
+
      C                   IF        CAP056 = 'Y'
      C                             OR CAP051 = 'Y' and                                       BUG6671
      C                             AUTH = 'Y'                                                BUG6671
      C                   EVAL      RXAUTH = AUTH
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7570,11 +7573,11 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ELSE
      C                   EVAL      #1CNRQ = 'N'
      C                   ENDIF
- 
+
      C/COPY QWINDSRC,IRCIRSMOV2
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -7614,7 +7617,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                               *
       *****************************************************************
      C     ValidateEx    BEGSR
- 
+
       ** For value date settlements
      C                   IF        SVDEI = 'Y'
      C                             OR  SPDEI = 'Y'
@@ -7630,7 +7633,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      DBRecStmtV = DBRecStmtE
      C                   EVAL      DBPayStmtV = DBPayStmtE
      C                   ENDIF
- 
+
       ** For maturity date settlements
      C                   IF        SMDEI = 'Y'
      C                             OR  SPDEI = 'Y'
@@ -7646,7 +7649,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      DBRecStmtM = DBRecStmtE
      C                   EVAL      DBPayStmtM = DBPayStmtE
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7656,16 +7659,16 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                               *
       *****************************************************************
      C     SrDftExS      BEGSR
- 
+
       ** If ANY of the Settlements fields have been entered, bypass this
       **  routine.
       ** Otherwise, use modules which will use Standard Settlement
       **  Instructions to apply defaults.
- 
+
      C                   IF        InRecStmtE = *blanks
      C                             AND  InPayStmtE = *blanks
      C                             AND  SACCD = 'I'                                          BUG6326
- 
+
      C                   CALLB     'ZASETINDFT'
       *
       ** Output
@@ -7700,7 +7703,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       ** Branch                                                                               CSD095
      C********           PARM      *BLANK        BlankBRCA                          CSD095 CSD095CC1
      C                   PARM      SBRCA         BlankBRCA                                 CSD095CC1
- 
+
       ** Return
       ** Defaulted Payment Settlement Instruction in file format
      C                   PARM                    DBPayStmtE
@@ -7708,31 +7711,31 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    DBRecStmtE
       ** Defaulted FRA/IRS Settlement Instruction in file format
      C                   PARM                    DBFRAStmtE
- 
+
       *  The defaulted instructions are in file format, but the
       *   Settlements validation requires that they are in the input format.
       *  Therefore run them through a conversion module.
- 
+
      C                   CALLB     'ZASETINCVT'
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    DBPayStmtE
      C                   PARM                    DBRecStmtE
      C                   PARM                    DBFRAStmtE
- 
+
       ** Defaulted Settlement Instruction in input format
      C                   PARM                    InPayStmtE
      C                   PARM                    InRecStmtE
      C                   PARM                    InFRAStmtE
      C                   PARM      STCUCY        PRCcy                                       CSF011A
      C                   PARM      SUCUCY        PPCcy                                       CSF011A
- 
+
       ** else, if pay/rec details are manually entered on the screen,                         244254
       ** try to retrieve and default the ISDA details.                                        244254
      C                   ELSE                                                                 244254
      C                   EXSR      DefISDA                                                    244254
                                                                                               244254
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7742,7 +7745,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                               *
       *****************************************************************
      C     SrValExS      BEGSR
- 
+
      C                   RESET                   ReturnCode
      C                   EVAL       OKPayInsDSE = *ALL'Y'
      C                   EVAL       OKRecInsDSE = *ALL'Y'
@@ -7750,9 +7753,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
                                                                                              BUG7209
      C                   Eval      BfIdx = Idx                                               BUG7209
      C                   Eval      BfWIdx = WIdx                                             BUG7209
- 
+
      C                   CALLB     'ZASETINVAL'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
       ** Following parameters are output to called module
@@ -7779,14 +7782,14 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    InPayStmtE
      C                   PARM                    InRecStmtE
      C                   PARM                    InFRAStmtE
- 
+
       ** Action Code
      C                   PARM                    SACCD
       * Protect Payment Field
      C                   PARM                    ##PPAY            1
       * Protect Receipt Field
      C                   PARM                    ##PREC            1
- 
+
       ** Following parameters are returned by called module
       ** Payment Instruction OK flag
      C                   PARM                    OKPayInsDSE
@@ -7828,7 +7831,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   If        AfWIdx <> BfWIdx                                          BUG7209
      C                   EXSR      SettWrnMsg                                                BUG7209
      C                   EndIf                                                               BUG7209
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7839,7 +7842,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                               *
       *****************************************************************
      C     SrValidEx     BEGSR
- 
+
       ** For value date settlement
      C                   IF        SVDEI = 'Y'
      C                             OR  SPDEI = 'Y'
@@ -7859,7 +7862,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   Eval      VDRXFRNT = APFOTranID                                     BUG6326
      C                   Eval      VDRXTMESTMP = TimeStamp                                   BUG6326
      C                   ENDIF
- 
+
       ** For maturity date settlement
      C                   IF        SMDEI = 'Y'
      C                             OR  SPDEI = 'Y'
@@ -7890,7 +7893,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   MOVEL     'INT'         IDRXEDCD                                    BUG6326
      C                   Eval      IDRXFRNT = APFOTranID                                     BUG6326
      C                   Eval      IDRXTMESTMP = TimeStamp                                   BUG6326
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7900,20 +7903,20 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                               *
       *****************************************************************
      C     SrAmdCvt      BEGSR
- 
+
      C                   CALLB     'ZASETINCVT'
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    DBPayStmtE
      C                   PARM                    DBRecStmtE
      C                   PARM                    DBFRAStmtE
- 
+
       ** Current Settlement Instruction in input format
      C                   PARM                    CrPayStmtE
      C                   PARM                    CrRecStmtE
      C                   PARM                    CrFRAStmtE
      C                   PARM      @STCUCY       InRCCY                                      CSF011A
      C                   PARM      @SUCUCY       InPCCY                                      CSF011A
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7923,11 +7926,11 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                               *
       *****************************************************************
      C     SExDtaSubs    BEGSR
- 
+
       ** PAYMENT INSTRUCTIONS
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       * Return Code
      C                   PARM                    ReturnCode
       * Substitution character
@@ -7936,13 +7939,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      InPayStmtE    IncDATA
       * Current Data
      C                   PARM      CrPayStmtE    CurDATA
- 
+
      C                   MOVEL     IncDATA       InPayStmtE
- 
+
       ** RECEIPT INSTRUCTIONS
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       * Return Code
      C                   PARM                    ReturnCode
       * Substitution character
@@ -7951,9 +7954,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      InRecStmtE    IncDATA
       * Current Data
      C                   PARM      CrRecStmtE    CurDATA
- 
+
      C                   MOVEL     IncDATA       InRecStmtE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7963,9 +7966,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                               *
       *****************************************************************
      C     UpdateDB      BEGSR
- 
+
      C                   MOVEL     SACCD         RXCHTP
- 
+
      C                   CALLB     'IRCIRSUPD'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      *BLANKS       ModeofOp
@@ -7984,7 +7987,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   IF        CSW213 = 'Y'                                               CSW213
      C                   EXSR      SRCIRSVU                                                   CSW213
      C                   ENDIF                                                                CSW213
- 
+
       ** If there were any errors in the update function, rollback any
       ** updates and end this program. Otherwise, commit the updates
       *
@@ -8015,7 +8018,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   MOVEL     'MMM1067'     MsgIdArr(1)
      C
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                 BUG7209
@@ -8195,7 +8198,12 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      RLAPID = 'CIRS'                                            CSW213
      C                   EVAL      RLDTYP = SDTYP                                             CSW213
      C                   EVAL      RLDLST = SDLST                                             CSW213
-     C                   EVAL      RLVALD = SVDAT                                             CSW213
+      *                                                                                     MD044506
+      ** Change RLVALD from Value Date to Deal Date                                         MD044506
+      *                                                                                     MD044506
+     C**********         EVAL      RLVALD = SVDAT                                    CSW213 MD044506
+     C                   EVAL      RLVALD = SDDAT                                           MD044506
+      *                                                                                     MD044506
      C                   EVAL      RLTRRF = SDLNO                                             CSW213
      C                   EVAL      RLLTRF = SLNKDN                                            CSW213
      C                   EVAL      RLFOID  = APFOTranID                                       CSW213
@@ -8280,16 +8288,16 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
       * Transaction information in a single large field from source system
      C****************** PARM                    Trans500                                     CDL028
      C                   PARM                    Trans1000                                    CDL028
- 
+
       ** Payment/Receipt/FRA/IRS Settlement Instruction from source system
      C                   PARM                    InPaySttmt
      C                   PARM                    InRecSttmt
@@ -8298,8 +8306,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    InRecStmtV
      C                   PARM                    InPayStmtM
      C                   PARM                    InRecStmtM
- 
- 
+
+
      C                   PARM                    InfData500                                  BUG6671
      C                   PARM                    ExtData500
      C                   PARM                    InSwift2013                                  CSW213
@@ -8327,39 +8335,39 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    BufferEx9                                   BUG5449
       ** API Return Code
      C                   PARM                    APIRetc
- 
+
       ** Set up the name of the MSGF from which the message handler will
       **  get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
- 
+
       *  Set up the Module ID, used to make the Transaction number unique
      C                   EVAL      ModuleID = 'IR'
- 
+
       ***Define key lists for retrieving records from work file                              BUG5449
       **********                                                                             BUG5449
      C*****KDTSCList     KLIST                                                               BUG5449
      C**********         KFLD                    APFOAsocID                                  BUG5449
      C**********         KFLD                    WOurTheir                                   BUG5449
      C**********         KFLD                    WRatePay                                    BUG5449
- 
+
      C*****KCFPCList     KLIST                                                               BUG5449
      C**********         KFLD                    APFOAsocID                                  BUG5449
      C**********         KFLD                    WOurTheir                                   BUG5449
- 
+
       ** Access Bank details via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access API ICD via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       ** Call Access Program for FRA/IRS I.C.D. details
       *
      C                   CALLB     'AOFAISR0'
@@ -8373,7 +8381,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM      *BLANKS       @RTCD                                       BUG5449
      C                   PARM      '*FIRST '     @OPTN                                       BUG5449
      C     SDMMOD        PARM      SDMMOD        DSFDY                                       BUG5449
- 
+
       ** Access Dealing details                                                               245692
                                                                                               245692
      C                   CALL      'AODEALR1'                                                 245692
@@ -8485,15 +8493,15 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ELSE
      C                   MOVEL     'N'           CIR003
      C                   ENDIF
- 
+
       **  Access SAR details file to determine if CIR008 is installed.
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CIR008'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS and PRTCD <> '*NRF   '
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -8502,21 +8510,21 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CIR008 = 'Y'
      C                   ELSE
      C                   EVAL      CIR008 = 'N'
      C                   ENDIF
- 
+
       **  Access SAR details file to determine if CAP056 is installed.
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CAP056'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS and PRTCD <> '*NRF   '
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -8525,13 +8533,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CAP056 = 'Y'
      C                   ELSE
      C                   EVAL      CAP056 = 'N'
      C                   ENDIF
- 
+
       *
       **  Access SAR details file to determine if CAP041 is installed.
       *
@@ -8601,15 +8609,15 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ELSE
      C                   MOVEL     'N'           CIR006
      C                   ENDIF
- 
+
       **  Access SAR details file to determine if CIR007 is installed.
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CIR007'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS and PRTCD <> '*NRF   '
      C     *LOCK         IN        LDA
      C                   MOVEL     'SCSARDPD'    DBFILE
@@ -8618,28 +8626,28 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   MOVEL     'Y'           CIR007
      C                   ELSE
      C                   MOVEL     'N'           CIR007
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *Blanks
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SDSTAT
      C                   IN        SC24X7
      C                   ELSE
      C                   EVAL      CSC011 = 'N'
- 
+
      C                   IF        PRtCd <> '*NRF'
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = 'CSC011'
@@ -8648,17 +8656,17 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check if enhancement CLE025 (Credit Lines) is on
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CLE025'      PSarD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS AND PRtCd <> '*NRF   '
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = 'CLE025'
@@ -8667,7 +8675,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CLE025 = 'Y'
      C                   ELSE
@@ -8767,7 +8775,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   KFLD                    WDealNo                                     BUG5449
      C                   KFLD                    POurTheir                                   BUG5449
      C                   KFLD                    WRatePay                                    BUG5449
- 
+
       *                                                                                       CSW213
       ** Check if SWIFT 2013  is on                                                           CSW213
       *                                                                                       CSW213

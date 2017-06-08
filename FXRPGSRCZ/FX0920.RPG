@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD041420A          Date 04Jan17               *
-      *  Prev Amend No. MD041420           Date 07Oct16               *
+      *  Last Amend No. MD036826           Date 18Jan16               *
+      *  Prev Amend No. MD041420A          Date 04Jan17               *
+      *                 MD041420           Date 07Oct16               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -74,6 +75,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036826 - Error in project account movements for deals      *
+      *             involved in Nets.                                 *
       *  MD041420A - initial fix incomplete. The three files should   *
       *              also be udpated for 'NT' transaction types.      *
       *  MD041420 - Todays Projected Closing balance incorrect        *
@@ -3055,9 +3058,20 @@
      C                     MOVELDLNO      @TNMR                                             MD021333
      C                     MOVELAMCCYD    @CCYD                                             MD021333
       *                                                                                     MD021333
-     C           RSACKY    CHAINRSACMTLF             11                                     MD021333
+     C********** RSACKY    CHAINRSACMTLF             11                            MD021333 MD036826
+      *                                                                                     MD036826
+      ** Read through RSACMTPD file until correct projection for the                        MD036826
+      ** deal is determined.                                                                MD036826
+      *                                                                                     MD036826
+     C                     MOVE 'N'       EXTFLG  1                                         MD036826
+     C           RSACKY    SETLLRSACMTLF                                                    MD036826
+     C           RSACKY    READERSACMTLF                 11                                 MD036826
       *                                                                                     MD021333
-     C           *IN11     IFEQ *OFF                                                        MD021333
+     C********** *IN11     IFEQ *OFF                                               MD021333 MD036826
+     C           *IN11     DOWEQ*OFF                                                        MD036826
+     C           EXTFLG    ANDEQ'N'                                                         MD036826
+      *                                                                                     MD036826
+     C           DTYP      IFEQ TRYP                                                        MD036826
       *                                                                                     MD021333
       ** Reverse the Debit/Credit Indicator                                                 MD021333
       *                                                                                     MD021333
@@ -3084,7 +3098,16 @@
      C                     EXSR UPDMEM                                                      MD041420
      C                     EXSR UPDPRN                                                      MD041420
      C                     EXSR UPDOLP                                                      MD041420
+      ** Move 'Y' to exit flag variable.                                                    MD036826
+      *                                                                                     MD036826
+     C                     MOVE 'Y'       EXTFLG                                            MD036826
+      *                                                                                     MD036826
      C                     ENDIF                                                            MD021333
+      *                                                                                     MD036826
+      ** Read next available record.                                                        MD036826
+      *                                                                                     MD036826
+     C           RSACKY    READERSACMTLF                 11                                 MD036826
+     C                     ENDDO                                                            MD036826
       *                                                                                     MD021333
      C                     ENDSR                                                            MD021333
       *****************************************************************                     MD021333

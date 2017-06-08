@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
-/*       Last Amend No. MD031966          Date 27Jul15               */
-/*       Prev Amend No. CGL158            Date 20Aug14               */
+/*       Last Amend No. CGL027            Date 04Apr17               */
+/*       Prev Amend No. MD031966          Date 27Jul15               */
+/*                      CGL158            Date 20Aug14               */
 /*                      CSC056            Date 06Aug12               */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CGL030            Date 18Dec09              */
@@ -53,6 +54,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       CGL027 - Shadow Postings and Sufficient Funds Check        */
 /*       MD031966 - BFM GL3572P1 issue                              */
 /*       CGL158 - Nostro Sweeping Rules Maintenance                 */
 /*       CSC056 - COB Restructure - SC COB Optimisation Phase 1     */
@@ -416,10 +418,24 @@
              CLRPFM     FILE(GETX2ZZ)                                                     /*CAP204*/
              ENDDO                                                                        /*CAP204*/
 /*/COPY OFCPYSRCZ,CGL158_006                                         */                   /*CGL158*/
- 
+
+/**/                                                                                      /*CGL027*/
+/* Check if CGL027 is ON                                            */                    /*CGL027*/
+/**/                                                                                      /*CGL027*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' +
+                          'CGL027' &AOFMT)                                                /*CGL027*/
+/**/                                                                                      /*CGL027*/
+/* Clear GL Shadow Posting Interface Files                          */                    /*CGL027*/
+/**/                                                                                      /*CGL027*/
+             IF         COND(&RTCD *EQ ' ') THEN(DO)                                      /*CGL027*/
+                CLRPFM     FILE(SHDINPTD)                                                 /*CGL027*/
+                CLRPFM     FILE(SHDOUTTD)                                                 /*CGL027*/
+             ENDDO                                                                        /*CGL027*/
+/**/                                                                                      /*CGL027*/
+
              SNDPGMMSG  TOMSGQ(MRUNQ) +
                                MSG('General Ledger Daily Files Cleared')
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
              ENDPGM     /* END CL PGM */

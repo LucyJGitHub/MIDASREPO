@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT142             Date 20Feb15               *
-      *  Prev Amend No. AR924563           Date 05Nov14               *
+      *  Last Amend No. MD044074           Date 19Apr17               *
+      *  Prev Amend No. CFT142             Date 20Feb15               *
+      *                 AR924563           Date 05Nov14               *
       *                 MD000091           Date 15May13               *
       *                 AR924725           Date 14Dec12               *
       *                 259953A            Date 23Jan13               *
@@ -110,6 +111,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044074 - Serious Midas Error in Outgoing Payment.          *
       *  CFT142 - OPAY msg validation (LCO044)                        *
       *  AR924563 - '-' should not be present in 1st character of     *
       *             outgoing payments fields 50, 57D, 59, 70 and 72.  *
@@ -1318,18 +1320,18 @@ E3   C**********         End                                                    
      C                   Movel     'MMA0935'     MsgIdXAr(Idx)
  
      C                   Else
-      * Check for block debits on account                                                    BUG4581
-     C                   TESTB     '2'           RETB                     51                 BUG4581
-     C                   If        *in51 = *ON                                               BUG4581
+      **Check*for*block*debits*on*account                                           BUG4581 MD044074
+     C**********         TESTB     '2'           RETB                     51        BUG4581 MD044074
+     C**********         If        *in51 = *ON                                      BUG4581 MD044074
      C**********         Move      'N'           OKOrc1                               BUG4581 CSD089
      C**********         Add       1             Idx                                  BUG4581 CSD089
      C**********         Movel     'SORC1'       FldNamXAr(Idx)                       BUG4581 CSD089
      C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                        BUG4581 CSD089
-     C                   Move      'W'           OKOrc1                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Movel     'SORC1'       WFldNmXAr(WIx)                               CSD089
-     C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                               CSD089
-     C                   End                                                                 BUG4581
+     C**********         Move      'W'           OKOrc1                              CSD089 MD044074
+     C**********         Add       1             WIx                                 CSD089 MD044074
+     C**********         Movel     'SORC1'       WFldNmXAr(WIx)                      CSD089 MD044074
+     C**********         Movel     'FTM0014'     WMsgIdXAr(WIx)                      CSD089 MD044074
+     C**********         End                                                        BUG4581 MD044074
      C     SORBK         IFEQ      *BLANKS                                                    240689
      C                   MOVE      RETB          WRETB                                        240689
      C                   ENDIF                                                                240689
@@ -1715,18 +1717,18 @@ E2   C                   EndIf                                                  
      C                   Movel     'MMA0935'     MsgIdXAr(Idx)
  
      C                   Else
-      * Check for block debits on account                                                    BUG4581
-     C                   TESTB     '2'           RETB                     51                 BUG4581
-     C                   If        *in51 = *ON                                               BUG4581
+      **Check*for*block*debits*on*account                                           BUG4581 MD044074
+     C**********         TESTB     '2'           RETB                     51        BUG4581 MD044074
+     C**********         If        *in51 = *ON                                      BUG4581 MD044074
      C**********         Move      'N'           OKOrc1                               BUG4581 CSD089
      C**********         Add       1             Idx                                  BUG4581 CSD089
      C**********         Movel     'SORC1'       FldNamXAr(Idx)                       BUG4581 CSD089
      C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                        BUG4581 CSD089
-     C                   Move      'W'           OKOrc1                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Movel     'SORC1'       WFldNmXAr(WIx)                               CSD089
-     C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                               CSD089
-     C                   End                                                                 BUG4581
+     C**********         Move      'W'           OKOrc1                              CSD089 MD044074
+     C**********         Add       1             WIx                                 CSD089 MD044074
+     C**********         Movel     'SORC1'       WFldNmXAr(WIx)                      CSD089 MD044074
+     C**********         Movel     'FTM0014'     WMsgIdXAr(WIx)                      CSD089 MD044074
+     C**********         End                                                        BUG4581 MD044074
      C     SORBK         IFEQ      *BLANKS                                                    240689
      C                   MOVE      RETB          WRETB                                        240689
      C                   ENDIF                                                                240689

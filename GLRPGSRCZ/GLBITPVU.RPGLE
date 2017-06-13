@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD042436           Date 07Nov16               *
-      *  Prev Amend No. MD033964           Date 07Oct16               *
+      *  Last Amend No. MD027817           Date 06Apr17               *
+      *  Prev Amend No. MD042436           Date 07Nov16               *
+      *                 MD033964           Date 07Oct16               *
       *                 MD039859           Date 21Jul16               *
       *                 AR851481           Date 27Oct15               *
       *                 AR570314           Date 27Oct15               *
@@ -89,6 +90,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027817 - Values of Additional Info and Multicash Narrative *
+      *             are lost during amendment. Prevent clearing of    *
+      *             the fields during edit.                           *
+      *           - Applied for MD-45092                              *
       *  MD042436 - Postings can still be added to Accepted batches   *
       *             when using multi-threading which causes imbalance.*
       *  MD033964 - Batch Header must not be created automatically    *
@@ -530,7 +535,11 @@
      C                   IF        CGL013 = 'Y'                                               246418
       *                                                                                       246418
      C                   IF        DDADIN = 'N'                                               246418
+     C                   IF        DDACTN = 'A' and PAddInfo <> *BLANKS                     MD027817
+     C                   EVAL      DDADIN = 'Y'                                             MD027817
+     C                   ELSE                                                               MD027817
      C                   CLEAR                   PAddInfo                                     246418
+     C                   ENDIF                                                              MD027817
      C                   ENDIF                                                                246418
       *                                                                                       246418
      C                   IF        DDADIN = 'Y' and PAddInfo = *blanks                        246418
@@ -542,7 +551,11 @@
      C                   IF        CER030 = 'Y'                                             BUG23742
       *                                                                                     BUG23742
      C                   IF        WADIN = 'N'                                              BUG23742
+     C                   IF        DDACTN = 'A' AND GLMNAR <> *BLANKS                       MD027817
+     C                   EVAL      WADIN = 'Y'                                              MD027817
+     C                   ELSE                                                               MD027817
      C                   CLEAR                   GLMNAR                                     BUG23742
+     C                   ENDIF                                                              MD027817
      C                   ENDIF                                                              BUG23742
       *                                                                                     BUG23742
      C                   IF        WADIN = 'Y' AND                                          BUG23742

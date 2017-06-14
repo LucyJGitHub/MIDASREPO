@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD044408           Date 30Mar17               *
-      *  Prev Amend No. MD044592           Date 28Mar17               *
+      *  Last Amend No. MD045437           Date 10May17               *
+      *  Prev Amend No. MD044408           Date 30Mar17               *
+      *                 MD044592           Date 28Mar17               *
       *                 MD036826           Date 18Jan16               *
       *                 MD041420A          Date 04Jan17               *
       *                 MD041420           Date 07Oct16               *
@@ -77,6 +78,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045437 - When transaction is amended, no new projections   *
+      *             were created by the system.  During amend,        *
+      *             reverse old projections and create new ones.      *
       *  MD044408 - DLC0350 report on MSGW due to file locking        *
       *             Ensure files are released after program exit      *
       *  MD044592 - FX netting is absent in Unconfirmed currency nets *
@@ -1500,6 +1504,13 @@
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     ENDIF
+      *                                                                                     MD045437
+      ** Determine if new projections have to be created.                                   MD045437
+      * Reverse old projections before fields are updated.                                  MD045437
+      *                                                                                     MD045437
+     C           PMRONS    IFNE AMOURN                                                      MD045437
+     C                     EXSR RSCRV2                                                      MD045437
+     C                     ENDIF                                                            MD045437
       *
      C                     EXSR UPDFLD
       *  UPDATE PAY/REC FLAG IF ALREADY GENERATED
@@ -1544,6 +1555,12 @@
      C                     MOVE SUSER     CMTUSR           User Id                          MD044408
      C                     TIME           CMTTIM           Time                             MD044408
      C           CMTTXT    COMIT                           Commit updates                   MD044408
+      *                                                                                     MD045437
+      ** Determine if new projections have to be created.                                   MD045437
+      *                                                                                     MD045437
+     C           AMOURN    IFNE BCOURN                                                      MD045437
+     C                     EXSR RSCNT2                                                      MD045437
+     C                     ENDIF                                                            MD045437
      C                     ENDIF
       *
       * If 'Enter' Display Extended Settlements                           127084
@@ -3550,6 +3567,170 @@
      C                     EXSR *PSSR                                                       MD041420
      C                     ENDIF                                                            MD041420
      C                     ENDSR                                                            MD041420
+      *****************************************************************                     MD045437
+      * Subroutine  :  RSCRV2                                         *                     MD045437
+      * Function    :  Reverse projections during amend               *                     MD045437
+      *                                                               *                     MD045437
+      * Called by   :                                                 *                     MD045437
+      * Calls       :  None                                           *                     MD045437
+      *****************************************************************                     MD045437
+     C           RSCRV2    BEGSR                                                            MD045437
+      *                                                                                     MD045437
+      ** Verify first old settlement account                                                MD045437
+      *                                                                                     MD045437
+     C           AMSETM    IFEQ 1                                                           MD045437
+     C           AMSETM    OREQ 2                                                           MD045437
+     C           AMSETM    OREQ 7                                                           MD045437
+     C           AMSETM    OREQ 8                                                           MD045437
+     C           AMSETM    OREQ 12                                                          MD045437
+     C                     MOVEL'N'       C#ATYP                                            MD045437
+     C                     ELSE                                                             MD045437
+     C           AMSETM    IFEQ 14                                                          MD045437
+     C                     MOVEL'R'       C#ATYP                                            MD045437
+     C                     MOVELAMOURN    C#ACNO                                            MD045437
+     C                     ELSE                                                             MD045437
+     C           AMSETM    IFEQ 4                                                           MD045437
+     C           AMSETM    OREQ 5                                                           MD045437
+     C                     MOVEL'P'       C#ATYP                                            MD045437
+     C                     MOVELAMOURN    ##SETA                                            MD045437
+     C                     ENDIF                                                            MD045437
+     C                     ENDIF                                                            MD045437
+     C                     ENDIF                                                            MD045437
+     C                     MOVE AMCCYD    C#CCY                                             MD045437
+     C                     MOVELAMOURN    ##SETA                                            MD045437
+     C                     EXSR CHKACT                                                      MD045437
+      *                                                                                     MD045437
+     C           NRECI     IFEQ 'D'                                                         MD045437
+     C                     MOVELAMNETR    AMNET  20                                         MD045437
+     C                     MOVE 'N'       EXTFLG                                            MD045437
+     C           AMNET     SETLLRSACMTLG                                                    MD045437
+     C           AMNET     READERSACMTLG            N    12                                 MD045437
+     C           *IN12     DOWEQ'0'                                                         MD045437
+     C           EXTFLG    ANDEQ'N'                                                         MD045437
+      *                                                                                     MD045437
+     C           TNMR      IFEQ '000000'                                                    MD045437
+     C           TRYP      ANDEQ'NT'                                                        MD045437
+     C           CUSN      ANDEQCNUM                                                        MD045437
+     C           CCYD      ANDEQNCCY                                                        MD045437
+     C           ACDE      ANDEQACOD                                                        MD045437
+     C           ASNC      ANDEQACSQ                                                        MD045437
+     C           BRCA      ANDEQNBRCA                                                       MD045437
+      *                                                                                     MD045437
+      ** Reverse the Debit/Credit Indicator                                                 MD045437
+      *                                                                                     MD045437
+     C           DORC      IFEQ 1                                                           MD045437
+     C                     Z-ADD0         DORC                                              MD045437
+     C                     ELSE                                                             MD045437
+     C                     Z-ADD1         DORC                                              MD045437
+     C                     ENDIF                                                            MD045437
+      *                                                                                     MD045437
+     C                     Z-ADDBJRDNB    PTDT                                              MD045437
+     C                     MOVELAMNETR    OTR1                                              MD045437
+      *                                                                                     MD045437
+     C                     WRITEQACMTLG                                                     MD045437
+      *                                                                                     MD045437
+      ** Update MEMOS, PRONO, OLPOS                                                         MD045437
+      *                                                                                     MD045437
+     C                     EXSR UPDMEM                                                      MD045437
+     C                     EXSR UPDPRN                                                      MD045437
+     C                     EXSR UPDOLP                                                      MD045437
+      *                                                                                     MD045437
+     C                     MOVE 'Y'       EXTFLG                                            MD045437
+     C                     ENDIF                                                            MD045437
+      *                                                                                     MD045437
+     C           AMNET     READERSACMTLG            N    12                                 MD045437
+      *                                                                                     MD045437
+     C                     ENDDO                                                            MD045437
+     C                     ENDIF                                                            MD045437
+      *                                                                                     MD045437
+     C                     ENDSR                                                            MD045437
+      *****************************************************************                     MD045437
+      /EJECT                                                                                MD045437
+      *****************************************************************                     MD045437
+      * Subroutine  :  RSCNT2                                         *                     MD045437
+      * Function    :  Generate projections during amend              *                     MD045437
+      *                                                               *                     MD045437
+      * Called by   :                                                 *                     MD045437
+      * Calls       :                                                 *                     MD045437
+      *****************************************************************                     MD045437
+     C           RSCNT2    BEGSR                                                            MD045437
+      *                                                                                     MD045437
+     C                     MOVEL'NT'      TRYP                                              MD045437
+     C                     MOVELAMNETR    NRTD                                              MD045437
+     C                     MOVEL'000000'  TNMR                                              MD045437
+     C                     Z-ADDAMDBUY    MVAM                                              MD045437
+     C                     MOVELAMNETR    OTR1                                              MD045437
+     C                     Z-ADDBJRDNB    PTDT                                              MD045437
+     C                     Z-ADDAMVALD    VUDT                                              MD045437
+     C                     MOVELAMCCYD    ##CCY                                             MD045437
+     C           AMBSIN    IFEQ 'B'                                                         MD045437
+     C                     Z-ADD0         DORC                                              MD045437
+     C                     ELSE                                                             MD045437
+     C                     Z-ADD1         DORC                                              MD045437
+     C                     ENDIF                                                            MD045437
+      *                                                                                     MD045437
+     C           AMSETM    IFEQ 1                                                           MD045437
+     C           AMSETM    OREQ 2                                                           MD045437
+     C           AMSETM    OREQ 7                                                           MD045437
+     C           AMSETM    OREQ 8                                                           MD045437
+     C           AMSETM    OREQ 12                                                          MD045437
+     C                     MOVEL'N'       C#ATYP                                            MD045437
+     C                     ELSE                                                             MD045437
+     C           AMSETM    IFEQ 14                                                          MD045437
+     C                     MOVEL'R'       C#ATYP                                            MD045437
+     C                     ELSE                                                             MD045437
+     C           AMSETM    IFEQ 4                                                           MD045437
+     C           AMSETM    OREQ 5                                                           MD045437
+     C                     MOVEL'P'       C#ATYP                                            MD045437
+     C                     ENDIF                                                            MD045437
+     C                     ENDIF                                                            MD045437
+     C                     ENDIF                                                            MD045437
+     C                     MOVELAMCCYD    C#CCY                                             MD045437
+     C                     MOVELAMOURN    ##SETA                                            MD045437
+     C                     EXSR CHKACT                                                      MD045437
+      *                                                                                     MD045437
+     C           NRECI     IFEQ 'D'                                                         MD045437
+     C                     MOVELCNUM      CUSN                                              MD045437
+     C                     MOVELNCCY      CCYD                                              MD045437
+     C                     MOVELACSQ      ASNC                                              MD045437
+     C                     MOVELNBRCA     BRCA                                              MD045437
+     C                     MOVELACOD      ACDE                                              MD045437
+      *                                                                                     MD045437
+     C                     WRITEQACMTLF                                                     MD045437
+     C                     EXSR UPDMEM                                                      MD045437
+     C                     EXSR UPDPRN                                                      MD045437
+     C                     EXSR UPDOLP                                                      MD045437
+     C                     ENDIF                                                            MD045437
+      *                                                                                     MD045437
+      ** If settlement method is 00, use netting account.                                   MD045437
+      *                                                                                     MD045437
+     C           AMSETM    IFEQ 0                                                           MD045437
+     C                     CALL 'AOBRCHR1'                                                  MD045437
+     C                     PARM *BLANKS   @RTCD                                             MD045437
+     C                     PARM '*KEY   ' @OPTN                                             MD045437
+     C                     PARM AMBRCA    @BRCA                                             MD045437
+     C           SDBRCH    PARM SDBRCH    SDSSDY                                            MD045437
+      *                                                                                     MD045437
+     C           @RTCD     IFNE *BLANK                                                      MD045437
+     C                     Z-ADD5         DBASE                                             MD045437
+     C                     MOVEL'SDBRCHPD'DBFILE                                            MD045437
+     C                     MOVELNBRCA     DBKEY                                             MD045437
+     C                     OUT  LDA                                                         MD045437
+     C                     EXSR *PSSR                                                       MD045437
+     C                     ELSE                                                             MD045437
+     C                     MOVELA8BICN    CUSN                                              MD045437
+     C                     MOVELAMCCYD    CCYD                                              MD045437
+     C                     MOVEL'01'      ASNC                                              MD045437
+     C                     MOVELAMBRCA    BRCA                                              MD045437
+     C                     MOVELBNNEAC    ACDE                                              MD045437
+     C                     WRITEQACMTLF                                                     MD045437
+     C                     EXSR UPDMEM                                                      MD045437
+     C                     EXSR UPDPRN                                                      MD045437
+     C                     EXSR UPDOLP                                                      MD045437
+     C                     ENDIF                                                            MD045437
+     C                     ENDIF                                                            MD045437
+     C                     ENDSR                                                            MD045437
+      *****************************************************************                     MD045437
       /EJECT                                                                                  CSD015
       *****************************************************************                       CSD015
      C           *INZSR    BEGSR

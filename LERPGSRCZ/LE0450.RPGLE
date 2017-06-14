@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD045010           Date 05Apr17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. MD039672           Date 12May17               *
+      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *                 CGL184             Date 07Dec16               *
       *                 MD038365           Date 20Apr16               *
       *                 MD037915           Date 24Feb16               *
       *                 MD012157           Date 23Oct13               *
@@ -371,6 +372,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039672 - Block LOTA3S and LOTA4 wrong output position      *
+      *             causing data corruption in file MCLONCL for field *
+      *           - Applied for MD-45031                              *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  CGL184 - New Frequencies for Account Statements (Recompile)  *
@@ -2560,6 +2564,8 @@ L118 I                             P   72   77 7RTSPL
 0159 I                                252  252  BMDI
 0160 I                                253  253  FMDI
 0161 I                             P  254  260 0PDIN
+     I                             P  261  262 0LSWCL                                       MD039672
+     I                             P  263  264 0LSWSL                                       MD039672
      I                                265  267  OSDB                            S01117
      I                                268  270  OMDB                            S01117
      I                                271  273  ORBR                            S01117
@@ -2837,7 +2843,9 @@ L118 I                             P   72   77 7RTSPL
      I**********                           15611776 LOTA3S                           CER020 BUG22966
      I**********                           15611782 LOTA3S                         BUG22966 BUG23094
      I**********                           15611776 LOTA3S                           BUG23094 CRE073
-     I                               1561 1829  LOTA3S
+     I**********                     1561 1829  LOTA3S                                      MD039672
+     I                               1561 1773  LOTA3S                                      MD039672
+     I                               1780 1811  LOTA4A                                      MD039672
      I                               1830 1905  LOTA4                                         CLE134
      I                               1906 2025  LOTA5                                         CLE141
 0270 I**                                                                  S01117
@@ -20292,11 +20300,13 @@ C    C                   ENDIF                                                  
      O                       FCXR               138P                            S01270
 0139 O                       SDST               140                             S01270
 0140 O**********               OSDA     152                                            S01270 CGL029
-0140 O                       OSDA              1511
+0140 O**********             OSDA              1511                                         MD039672
+0140 O                       OSDA              1578                                         MD039672
 0141 O                       TSTN               162                             S01270
 0142 O                       MDST               164                             S01270
 0143 O**********               OMDA     176                                            S01270 CGL029
-     O                       OMDA              1529
+     O**********             OMDA              1529                                         MD039672
+     O                       OMDA              1596                                         MD039672
 0144 O                       TMAN               186                             S01270
      O                       FACOL              196                             S01270
 3414 O                       RLDT               199P                            S10227
@@ -20315,6 +20325,8 @@ C    C                   ENDIF                                                  
 0159 O                       BMDI               252                             S01270
 0160 O                       FMDI               253                             S01270
 3427 O                       PDIN               260P                            S10227
+     O                       LSWCL              262P                                        MD039672
+     O                       LSWSL              264P                                        MD039672
 3427 O                       OSDB               267                             S10227
 3427 O                       OMDB               270                             S10227
 3427 O                       ORBR               273                             S10227
@@ -20361,6 +20373,7 @@ C    C                   ENDIF                                                  
      O                       ADDI               410                             128054
      O***********      25      NIPD     456P                       S01465 090155
      O***********      25      NMDT     459P                       S01465 090155
+     O                       OMDT               451P                                        MD039672
      O               25      NIPD               454P                            090155
      O               25      NMDT               457P                            090155
      O                       APMI               458                             090155
@@ -20389,7 +20402,9 @@ C    C                   ENDIF                                                  
      O**********               LOTA3S  1677                                            CAS009 CLE106
      O*************************LOTA3S  1681                                            CLE106 CLE042
      O**********               LOTA3S  1773                                            CLE042 CER020
-     O                       LOTA3S            1776
+     O**********             LOTA3S            1776                                         MD039672
+     O                       LOTA3S            1773                                         MD039672
+     O                       LOTA4A            1805                                         MD039672
      O                       LOTA4             1881                                           CLE134
      O                       LOTA5             2001                                           CLE141
      O                       FSRPL             1098P                            CAC001
@@ -20443,6 +20458,8 @@ C    C                   ENDIF                                                  
      O**********               AFRT    1533                                           CAP074 BUG5047
      O**********               REPA    1534                                           CAP074 BUG5047
      O**********               TMST    1560                                           CAP074 BUG5047
+     O                       FRNTL             1513                                         MD039672
+     O                       AFRTL             1533                                         MD039672
      O                       TMST              1560                                               BU
      O                       SLTP              1759
      O                       SLST              1761

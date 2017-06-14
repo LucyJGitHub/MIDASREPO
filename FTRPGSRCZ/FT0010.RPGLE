@@ -43,8 +43,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD030406           Date 27Oct14               *
-      *  Prev Amend No. 258369             Date 06Jun13               *
+      *  Last Amend No. MD045094           Date 10May17               *
+      *  Prev Amend No. MD030406           Date 27Oct14               *
+      *                 258369             Date 06Jun13               *
       *                 AR787421           Date 27Sep12               *
       *                 AR737259           Date 27Sep12               *
       *                 CRE072             Date 30Jun11               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045094 - Credit and Debit amount are incorrect             *
       *  MD030406 - Cross Currency Outgoing Payment, pay amount not   *
       *             automatically calculated & show 0 in confirmation *
       *             screen. FT0010 should not return to calling       *
@@ -213,6 +215,7 @@
      D NBDP            S              1  0 DIM(4)
       ** Array containing Currency number of d.p.'s
       *
+     D WINVER          S              1A                                                    MD045094
       /SPACE 3
       *
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -924,6 +927,7 @@
      C                   ENDSL
      C                   MOVE      '1'           *IN07                                        171706
      C                   ENDIF
+     C                   EVAL      WINVER = 'N'                                             MD045094
      C                   Z-ADD     0             WGRATE                                     AR787421
      C     P#RATE        IFNE      0                                                        AR787421
      C     P#RATE        IFLT      1                                                        AR787421
@@ -932,6 +936,7 @@
      C     ZRATEX        ANDLT     1                                                        AR787421
      C                   Z-ADD     P#RATE        WGRATE                                     AR787421
      C     1             DIV       P#RATE        P#RATE                                     AR787421
+     C                   EVAL      WINVER = 'Y'                                             MD045094
      C                   ENDIF                                                              AR787421
      C                   ENDIF                                                              AR787421
       *
@@ -1622,6 +1627,19 @@
       *
      C     P#RATE        IFNE      *ZERO
      C                   Z-ADD     P#RATE        ZCRSRT                         Cross Ccy Exch
+      *                                                                                     MD045094
+      ** If rate is inverse, use the original rate for calculation,                         MD045094
+      ** then inverse M/D indicator for precision                                           MD045094
+      *                                                                                     MD045094
+     C                   IF        WINVER = 'Y'                                             MD045094
+     C                   EVAL      ZCRSRT = WGRATE                                          MD045094
+     C     ZMDIX         IFEQ      'M'                                                      MD045094
+     C                   MOVE      'D'           ZMDIX                                      MD045094
+     C                   ELSE                                                               MD045094
+     C                   MOVE      'M'           ZMDIX                                      MD045094
+     C                   ENDIF                                                              MD045094
+     C                   ENDIF                                                              MD045094
+      *                                                                                     MD045094
      C                   ELSE
      C                   Z-ADD     ZRATEX        ZCRSRT
      C                   ENDIF

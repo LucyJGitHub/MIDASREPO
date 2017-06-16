@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039672           Date 12May17               *
-      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *  Last Amend No. MD045091           Date 10May17               *
+      *  Prev Amend No. MD039672           Date 12May17               *
+      *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD038365           Date 20Apr16               *
       *                 MD037915           Date 24Feb16               *
@@ -372,6 +373,15 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045091 - When loan matures, system generates separate      *
+      *             partial repayment and maturity postings on same   *
+      *             value date. Introduce new system value            *
+      *             'RepayDateOnMaturity' to control clearing of      *
+      *             repayment details, with the following settings:   *
+      *             1.'A' which means repayment details cleared if    *
+      *             next date is AFTER maturity date.                 *
+      *             2.'O' which means repayment details cleared if    *
+      *             next date is ON or AFTER maturity date.           *
       *  MD039672 - Block LOTA3S and LOTA4 wrong output position      *
       *             causing data corruption in file MCLONCL for field *
       *           - Applied for MD-45031                              *
@@ -1867,6 +1877,7 @@
      D AMLPRI          C                   CONST('ZAAMLSETLE')
      D SECTN1          C                   CONST('LE0450001')                                 CFC006
      D SECTN2          C                   CONST('LE0450002')                                 CFC006
+     D WPARML1         S             20A   INZ('RepayDateOnMaturity')                       MD045091
      I*                                                                   S01408
       *                                                                                       CLE134
      ILKEYF1DF                                                                                CLE134
@@ -5097,6 +5108,44 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                     MD027475
       ** Save value of SplitPrinInterestFlg in a one character field                        MD027475
      C                   MOVEL     P@VL01        SPLITF            1                        MD027475
+      *                                                                                     MD045091
+     C                   CALL      'AOSVALR0'                                               MD045091
+     C                   PARM      *BLANKS       @RTCD                                      MD045091
+     C                   PARM      WPARML1       P@OP01                                     MD045091
+     C                   PARM      *BLANKS       P@VL01                                     MD045091
+     C                   PARM      *BLANKS       P@OP02                                     MD045091
+     C                   PARM      *BLANKS       P@VL02                                     MD045091
+     C                   PARM      *BLANKS       P@OP03                                     MD045091
+     C                   PARM      *BLANKS       P@VL03                                     MD045091
+     C                   PARM      *BLANKS       P@OP04                                     MD045091
+     C                   PARM      *BLANKS       P@VL04                                     MD045091
+     C                   PARM      *BLANKS       P@OP05                                     MD045091
+     C                   PARM      *BLANKS       P@VL05                                     MD045091
+     C                   PARM      *BLANKS       P@OP06                                     MD045091
+     C                   PARM      *BLANKS       P@VL06                                     MD045091
+     C                   PARM      *BLANKS       P@OP07                                     MD045091
+     C                   PARM      *BLANKS       P@VL07                                     MD045091
+     C                   PARM      *BLANKS       P@OP08                                     MD045091
+     C                   PARM      *BLANKS       P@VL08                                     MD045091
+     C                   PARM      *BLANKS       P@OP09                                     MD045091
+     C                   PARM      *BLANKS       P@VL09                                     MD045091
+     C                   PARM      *BLANKS       P@OP10                                     MD045091
+     C                   PARM      *BLANKS       P@VL10                                     MD045091
+      *                                                                                     MD045091
+     C     @RTCD         IFNE      *BLANKS                                                  MD045091
+     C                   MOVEL     'LE0450  '    DBPGM                                      MD045091
+     C                   MOVEL     'SDSVALPD'    DBFILE                                     MD045091
+     C                   MOVEL     WPARML1       DBKEY                                      MD045091
+     C                   Z-ADD     26            DBASE                                      MD045091
+     C                   MOVE      *ON           *INU7                                      MD045091
+     C                   MOVE      *ON           *INU8                                      MD045091
+     C                   MOVE      *ON           *INLR                                      MD045091
+     C                   GOTO      ENDDBE                                                   MD045091
+     C                   ENDIF                                                              MD045091
+      *                                                                                     MD045091
+      ** Save value of 'RepayDateOnMaturity'                                                MD045091
+      *                                                                                     MD045091
+     C                   MOVEL     P@VL01        REDATM            1                        MD045091
       *                                                                                       CLE034
       ** Access SAR details to check if CLE034 is installed                                   CLE034
       *                                                                                       CLE034
@@ -13417,13 +13466,26 @@ C    C                   ENDIF                                                  
      C*****CPAM*         OREQ      *ZERO                                                      259708
      C**********         Z-ADD     *ZEROS        RBDT                                         259708
      C**********         Z-ADD     *ZEROS        NRPD                                         259708
+      *                                                                                     MD045091
+      ** If next repayment date falls on the same as maturity and                           MD045091
+      ** setting of system value 'RepayDateOnMaturity' is 'O', blank                        MD045091
+      ** out the repayment details.                                                         MD045091
+      *                                                                                     MD045091
+     C     REDATM        IFEQ      'O'                                                      MD045091
+     C     ZDYNBR        ANDEQ     MDAT                                                     MD045091
+     C                   Z-ADD     *ZEROS        RBDT                                       MD045091
+     C                   Z-ADD     *ZEROS        NRPD                                       MD045091
      C     CLE028        IFEQ      'N'
      C     PTYP          ORNE      80
      C**********         Z-ADD     *ZEROS        RDYN                                         259708
      C**********         MOVE      ' '           RFRQ                                         259708
+     C                   Z-ADD     *ZEROS        RDYN                                       MD045091
+     C                   MOVE      ' '           RFRQ                                       MD045091
      C                   ENDIF
      C**********         Z-ADD     *ZEROS        RAMT                                         259708
      C**********         ELSE                                                                 259708
+     C                   Z-ADD     *ZEROS        RAMT                                       MD045091
+     C                   ELSE                                                               MD045091
       *                                                                   189035
       ** Prevent Update of Next Repayment date if payment from a          189035
       ** multi-ccy rollover.                                              189035
@@ -13441,6 +13503,8 @@ C    C                   ENDIF                                                  
 1933 C                   Z-ADD     AMOUNT        RAMT
      C**********         ENDIF                                                                259708
       **********                                                                       209805 259708
+     C                   ENDIF                                                              MD045091
+      *                                                                                     MD045091
      C/COPY WNCPYSRC,LE0450C019
 1934 C**
 1935 C**   RESET BIT SETTINGS

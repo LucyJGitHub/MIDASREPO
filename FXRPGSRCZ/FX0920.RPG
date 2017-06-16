@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD032914           Date 17Apr15               *
-      *  Prev Amend No. MD045437           Date 10May17               *
+      *  Last Amend No. MD044815           Date 13Apr17               *
+      *  Prev Amend No. MD032914           Date 17Apr15               *
+      *                 MD045437           Date 10May17               *
       *                 MD044408           Date 30Mar17               *
       *                 MD044592           Date 28Mar17               *
       *                 MD036826           Date 18Jan16               *
@@ -79,6 +80,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044815 - System did not generate reversal projections when *
+      *             FX netting transaction was reversed.  Ensure      *
+      *             complete set of projections are created by the    *
+      *             system during reversal.                           *
       *  MD032914 -  Error in project account movements for netting   *
       *              settlement account                               *
       *  MD045437 - When transaction is amended, no new projections   *
@@ -651,6 +656,16 @@
      ISDSTAT    E DSSDSTAT                                                                    CSD015
       ** SD Status Data Area.                                                                 CSD015
       *                                                                                       CSD015
+     IFXFX      E DSFXDEALPP                                                                MD044815
+     I              QQRONS                          RONS2                                   MD044815
+     I              QQPONS                          PONS2                                   MD044815
+      *                                                                                     MD044815
+      ** Data structures to define long parameters for AOOUFXU0                             MD044815
+     IZ#BSTS    E DSZ#BST                                                                   MD044815
+     IZ#ASTS    E DSZ#AST                                                                   MD044815
+     IZ#WSTS    E DSZ#WST                                                                   MD044815
+     IZ#XSTS    E DSZ#XST                                                                   MD044815
+      *                                                                                     MD044815
      IWXPCKT      DS                            400                                           CSD015
      IPFFS        DS                           9999                                           CSD015
       ** Data Structures used by the Compliance Watch Subroutine.                             CSD015
@@ -2683,6 +2698,12 @@
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     ENDIF
+      *                                                                                     MD044815
+      ** If deal inserted on an earlier date, need to regenerate projections.               MD044815
+      *                                                                                     MD044815
+     C           ORED      IFLT BJRDNB                                                      MD044815
+     C                     EXSR RSCGEN                                                      MD044815
+     C                     ENDIF                                                            MD044815
       *
      C                     ENDIF
       *
@@ -3100,6 +3121,22 @@
       *                                                                                     MD021333
      C                     MOVELDLNO      @TNMR                                             MD021333
      C                     MOVELAMCCYD    @CCYD                                             MD021333
+      *                                                                                     MD044815
+      ** Get branch internal customer.                                                      MD044815
+      *                                                                                     MD044815
+     C                     CALL 'AOBRCHR1'                                                  MD044815
+     C                     PARM *BLANKS   @RTCD                                             MD044815
+     C                     PARM '*KEY   ' @OPTN                                             MD044815
+     C                     PARM AMBRCA    @BRCA                                             MD044815
+     C           SDBRCH    PARM SDBRCH    SDSSDY                                            MD044815
+      *                                                                                     MD044815
+     C           @RTCD     IFNE *BLANK                                                      MD044815
+     C                     Z-ADD5         DBASE                                             MD044815
+     C                     MOVEL'SDBRCHPD'DBFILE                                            MD044815
+     C                     MOVELNBRCA     DBKEY                                             MD044815
+     C                     OUT  LDA                                                         MD044815
+     C                     EXSR *PSSR                                                       MD044815
+     C                     ENDIF
       *                                                                                     MD021333
      C********** RSACKY    CHAINRSACMTLF             11                            MD021333 MD036826
       *                                                                                     MD036826
@@ -3115,6 +3152,17 @@
      C           EXTFLG    ANDEQ'N'                                                         MD036826
       *                                                                                     MD036826
      C           DTYP      IFEQ TRYP                                                        MD036826
+      *                                                                                     MD044815
+      ** If projection is already on FX netting ICD, no need to reverse.                    MD044815
+      *                                                                                     MD044815
+     C                     MOVE BNNEAC    WACDE  100                                        MD044815
+     C           A8BICN    IFEQ CUSN                                                        MD044815
+     C           ASNC      ANDEQ1                                                           MD044815
+     C           ACDE      ANDEQWACDE                                                       MD044815
+     C           AMBRCA    ANDEQBRCA                                                        MD044815
+     C           AMCCYD    ANDEQCCYD                                                        MD044815
+     C                     MOVE 'Y'       EXTFLG                                            MD044815
+     C                     ELSE                                                             MD044815
       *                                                                                     MD021333
       ** Reverse the Debit/Credit Indicator                                                 MD021333
       *                                                                                     MD021333
@@ -3141,10 +3189,29 @@
      C                     EXSR UPDMEM                                                      MD041420
      C                     EXSR UPDPRN                                                      MD041420
      C                     EXSR UPDOLP                                                      MD041420
+      *                                                                                     MD044815
+      ** Post to FX netting ICD account.                                                    MD044815
+      *                                                                                     MD044815
+     C                     MOVELA8BICN    CUSN                                              MD044815
+     C                     MOVELAMCCYD    CCYD                                              MD044815
+     C                     MOVEL'01'      ASNC                                              MD044815
+     C                     MOVELAMBRCA    BRCA                                              MD044815
+     C                     MOVELBNNEAC    ACDE                                              MD044815
+     C           DORC      IFEQ 1                                                           MD044815
+     C                     Z-ADD0         DORC                                              MD044815
+     C                     ELSE                                                             MD044815
+     C                     Z-ADD1         DORC                                              MD044815
+     C                     ENDIF                                                            MD044815
+     C                     WRITEQACMTLF                                                     MD044815
+     C                     EXSR UPDMEM                                                      MD044815
+     C                     EXSR UPDPRN                                                      MD044815
+     C                     EXSR UPDOLP                                                      MD044815
+      *                                                                                     MD021333
       ** Move 'Y' to exit flag variable.                                                    MD036826
       *                                                                                     MD036826
      C                     MOVE 'Y'       EXTFLG                                            MD036826
       *                                                                                     MD036826
+     C                     ENDIF                                                            MD044815
      C                     ENDIF                                                            MD021333
       *                                                                                     MD036826
       ** Read next available record.                                                        MD036826
@@ -3576,6 +3643,61 @@
      C                     EXSR *PSSR                                                       MD041420
      C                     ENDIF                                                            MD041420
      C                     ENDSR                                                            MD041420
+      *****************************************************************                     MD044815
+      /EJECT                                                                                MD044815
+      *****************************************************************                     MD044815
+      * Subroutine  :  RSCGEN                                         *                     MD044815
+      * Function    :  Regenerate projections for FX deal             *                     MD044815
+      *                                                               *                     MD044815
+      * Called by   :                                                 *                     MD044815
+      * Calls       :  None                                           *                     MD044815
+      *****************************************************************                     MD044815
+     C           RSCGEN    BEGSR                                                            MD044815
+      *                                                                                     MD044815
+     C                     MOVE *BLANKS   Z#BSTS                                            MD044815
+     C                     MOVE *BLANKS   Z#ASTS                                            MD044815
+     C                     MOVE *BLANKS   Z#WSTS                                            MD044815
+     C                     MOVE *BLANKS   Z#XSTS                                            MD044815
+      *                                                                                     MD044815
+      ** Blank the other side so there will be no duplicate projections.                    MD044815
+      *                                                                                     MD044815
+     C           BSNREF    IFEQ 'B'                                                         MD044815
+     C                     MOVE *BLANKS   FHDOPM                                            MD044815
+     C                     Z-ADD0         FHMOPM                                            MD044815
+     C                     MOVE *BLANKS   FHPSTM                                            MD044815
+     C                     MOVE *BLANKS   FHPOCN                                            MD044815
+     C                     MOVE *BLANKS   FHPOBR                                            MD044815
+     C                     MOVE *BLANKS   FHMOPI                                            MD044815
+     C                     MOVE *BLANKS   FHDOPI                                            MD044815
+     C                     MOVE *BLANKS   FHPONS                                            MD044815
+     C                     ELSE                                                             MD044815
+     C                     MOVE *BLANKS   FHDORM                                            MD044815
+     C                     Z-ADD0         FHORCM                                            MD044815
+     C                     MOVE *BLANKS   FHRSTM                                            MD044815
+     C                     MOVE *BLANKS   FHROCN                                            MD044815
+     C                     MOVE *BLANKS   FHROBR                                            MD044815
+     C                     MOVE *BLANKS   FHMORI                                            MD044815
+     C                     MOVE *BLANKS   FHDORI                                            MD044815
+     C                     MOVE *BLANKS   FHRONS                                            MD044815
+     C                     ENDIF                                                            MD044815
+      *                                                                                     MD044815
+     C                     MOVELFXFX      Z#ASTS                                            MD044815
+      *                                                                                     MD044815
+     C                     CALL 'AOOUFXU0'                                                  MD044815
+     C                     PARM           ##RTCD  7                                         MD044815
+     C                     PARM           Z#BSTS                                            MD044815
+     C                     PARM           Z#ASTS                                            MD044815
+     C                     PARM           Z#WSTS                                            MD044815
+     C                     PARM           Z#XSTS                                            MD044815
+     C           ##RTCD    IFEQ '*ERROR*'                                                   MD044815
+     C                     MOVE '*FIRST ' DBKEY                                             MD044815
+     C                     MOVEL'SDCURRPD'DBFILE                                            MD044815
+     C                     Z-ADD44        DBASE                                             MD044815
+     C                     EXSR *PSSR                                                       MD044815
+     C                     ENDIF                                                            MD044815
+      *                                                                                     MD044815
+     C                     ENDSR                                                            MD044815
+      *****************************************************************                     MD044815
       *****************************************************************                     MD045437
       * Subroutine  :  RSCRV2                                         *                     MD045437
       * Function    :  Reverse projections during amend               *                     MD045437

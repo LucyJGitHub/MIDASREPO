@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD036589A          Date 22Feb17               *
-      *  Prev Amend No. MD036589           Date 14Feb16               *
+      *  Last Amend No. MD044815           Date 13Apr17               *
+      *  Prev Amend No. MD036589A          Date 22Feb17               *
+      *                 MD036589           Date 14Feb16               *
       *                 CLE154             Date 06Aug12               *
       *                 AR1071639          Date 12Mar15               *
       *                 AR847588           Date 12Mar15               *
@@ -157,6 +158,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044815 - System did not generate reversal projections when *
+      *             FX netting transaction was reversed.  Ensure      *
+      *             complete set of projections are created by the    *
+      *             system during reversal.                           *
       *  MD036589A - Reopened. Correct the transaction ref for FX     *
       *              netting event.                                   *
       *  MD036589 - Create nostro event for FX nets.                  *
@@ -1465,12 +1470,12 @@
      I@NOSN       DS
      I                                        1   20NOSN                  S01194
      I                                        1   2 @NOSNA                S01194
-      *                                                                                     MD036589
-      ** Data structure for FX nets reference                                               MD036589
-     IWNETR2      DS                             19                                         MD036589
-     I                                        1   7 W7                                      MD036589
-     I                                        8  10 WCCY                                    MD036589
-     I                                       11  19 W19                                     MD036589
+      *****************************************************************            MD036589 MD044815
+      ***Data*structure*for*FX*nets*reference**************************            MD036589 MD044815
+     I***WNETR2   DS                             19                                MD036589 MD044815
+     I**********                              1   7 W7                             MD036589 MD044815
+     I**********                              8  10 WCCY                           MD036589 MD044815
+     I**********                             11  19 W19                            MD036589 MD044815
       *                                                                   CRE009
      ILDA       E DSLDA                         256                       CRE009
       *                                                                   CRE009
@@ -2090,6 +2095,7 @@
      C** Initialise RSACMTPD fields                                       178438
      C                     MOVE *BLANKS   NRTD                            178438
      C                     MOVE *BLANKS   NRTC                                              MD036589
+     C                     MOVE *BLANKS   OTR1                                              MD044815
      C*                                                                   178438
      C/COPY WNCPYSRC,GL0580CP18                                           S01408
      C*                                                                   S01408
@@ -2940,15 +2946,24 @@
      C                     MOVELZZ023     NRTD                                              MD036589
      C                     MOVE '000000'  TNMR                                              MD036589
      C**********           MOVE '1'       *IN89                                   MD036589 MD036589A
-     C           OTHC      IFNE *BLANKS                                                     MD036589
-     C                     MOVELZZ023     WNETR1 19                                         MD036589
-     C                     MOVELWNETR1    W7                                                MD036589
-     C                     MOVE WNETR1    W19                                               MD036589
-     C                     MOVE OTHC      WCCY                                              MD036589
-     C                     MOVE WNETR2    OTR1                                              MD036589
-     C                     ENDIF                                                            MD036589
+     C********** OTHC      IFNE *BLANKS                                            MD036589 MD044815
+     C**********           MOVELZZ023     WNETR1 19                                MD036589 MD044815
+     C**********           MOVELWNETR1    W7                                       MD036589 MD044815
+     C**********           MOVE WNETR1    W19                                      MD036589 MD044815
+     C**********           MOVE OTHC      WCCY                                     MD036589 MD044815
+     C**********           MOVE WNETR2    OTR1                                     MD036589 MD044815
+     C                     MOVELZZ023     OTR1                                              MD044815
+     C**********           ENDIF                                                   MD036589 MD044815
      C                     ENDIF                                                            MD036589
       *                                                                                     MD036589
+     C           ETYP      IFEQ '11V1'                                                      MD044815
+     C           ETYP      OREQ '11V2'                                                      MD044815
+     C           ETYP      OREQ '12V2'                                                      MD044815
+     C           ETYP      OREQ '13V2'                                                      MD044815
+     C           ETYP      OREQ '14V1'                                                      MD044815
+     C           ETYP      OREQ '14V2'                                                      MD044815
+     C                     MOVELZZ023     OTR1                                              MD044815
+     C                     ENDIF                                                            MD044815
      C   15                MOVE LTYP      TRYP                            S01154
      C   15                MOVE LNRF      TNMR                            S01154
      C*                                                                                     BUG12888

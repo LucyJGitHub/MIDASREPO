@@ -16,11 +16,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. MD036589A          Date 22Feb17               *
-      *  Prev Amend No. MD036589 *CREATE   Date 14Feb16               *
+      *  Last Amend No. MD045382           Date 20Apr17               *
+      *  Prev Amend No. MD036589A          Date 22Feb17               *
+      *                 MD036589 *CREATE   Date 14Feb16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045382 - No contra posting on FX netting ICD for nostro    *
+      *             settling on a different branch.  Always correctly *
+      *             set branch code.                                  *
       *  MD036589A - Reopen.  Project also entries from netting       *
       *              account code.                                    *
       *  MD036589 - New program to create nostro events for FX        *
@@ -829,6 +833,7 @@
       ** Set up the fields.                                                                MD036589A
       *                                                                                    MD036589A
      C                   EVAL      CNUM = A8BICN                                           MD036589A
+     C                   EVAL      BRCA = AMBRCA                                            MD045382
      C                   EVAL      SETP = 08                                               MD036589A
      C                   EVAL      OSAC1 = Netnos                                          MD036589A
      C                   EVAL      OSACQQ = *Blanks                                        MD036589A

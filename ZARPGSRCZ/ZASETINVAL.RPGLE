@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD040199           Date 05Aug16               *
-      *  Prev Amend No. MD039348           Date 17Jun16               *
+      *  Last Amend No. MD032089           Date 28Apr15               *
+      *  Prev Amend No. MD040199           Date 05Aug16               *
+      *                 MD039348           Date 17Jun16               *
       *                 MD033870           Date 17Apr15               *
       *                 AR892347           Date 25Nov14               *
       *                 MD030342           Date 25Nov14               *
@@ -126,6 +127,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032089  - PSTM and PONS lost when amended via SOAP with    *
+      *              auto AUTH = 'Y'. Error due to clear of received  *
+      *              ##PAYF, ##PAYR and ##PRIF on *INZSR and will not *
+      *              execute SR/PAYMNT.  Remove CLEAR on *INZSR.      *
+      *              They will be cleared as needed on specific SRs.  *
       *  MD040199 - ISDA Agreement Version reflected incorrectly in   *
       *             MT reports and deals enquiry. Reverse MD-33870.   *
       *  MD039348 - Error message "Settlement Payments fields cannot  *
@@ -8858,9 +8864,13 @@
       **MIDAS*Our*Receive/ Pay Instructions (for Settlm Meth = 04 )                    179510 200400
      C************       PARM                    @MORPI                                179510 200400
       ************                                                                     179510 200400
-     C                   CLEAR                   ##PAYF                                       CLE031
-     C                   CLEAR                   ##RECF                                       CLE031
-     C                   CLEAR                   ##FRIF                                       CLE031
+      *
+      ** Remove CLEAR of passed parameter values; they will be cleared when
+      ** needed on specific subroutines (PAYMNT, RECEIP, VLFRIR)
+      *
+     C**********         CLEAR                   ##PAYF                              CLE031 MD032089
+     C**********         CLEAR                   ##RECF                              CLE031 MD032089
+     C**********         CLEAR                   ##FRIF                              CLE031 MD032089
       *
       ** READ DATA AREA - RUNDAT
       *

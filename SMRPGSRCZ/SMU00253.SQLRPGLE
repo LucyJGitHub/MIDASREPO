@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD040956           Date 01Sep16               *
-      *  Prev Amend No. MD039358           Date 05May16               *
+      *  Last Amend No. MD045498           Date 01Jun17               *
+      *  Prev Amend No. MD040956           Date 01Sep16               *
+      *                 MD039358           Date 05May16               *
       *                 AR1085447D         Date 29Mar13               *
       *                 AR1085447          Date 06Feb13               *
       *                 AR1078292          Date 31Jan13               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045498 - Incorrect concatenation for leading blanks.       *
       *  MD040956 - SQL syntax incorrect.                             *
       *           - Incorrect files/fields referenced based on        *
       *             SMLOANPD.                                         *
@@ -81,7 +83,8 @@
       ** Update PSTTOM
      C                   EVAL      SQLSTRING =
      C                             'UPDATE PSTTOM SET ' +
-     C                             'LKLNNO= '''' CONCAT SUBSTR(LKLNNO,2,5)' +
+     C**********                   'LKLNNO= '''' CONCAT SUBSTR(LKLNNO,2,5)' +               MD045498
+     C                             'LKLNNO= '' '' CONCAT SUBSTR(LKLNNO,2,5)' +              MD045498
      C                             'WHERE LKRECI = ''F'' WITH NC'
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
@@ -695,7 +698,8 @@
       ** Update GTEESGT
      C                   EVAL      SQLSTRING =
      C                             'UPDATE GTEESGT SET ' +
-     C                             'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+
+     C**********                   'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+                  MD045498
+     C                             'FCLN = '' ''  CONCAT SUBSTR(FCLN,2,5)'+                 MD045498
      C                             'WHERE SUBSTR(FCLN,1,1) = ''F'' WITH NC'
 
      C/Exec SQL
@@ -705,7 +709,8 @@
       ** Update GTREFGR
      C                   EVAL      SQLSTRING =
      C                             'UPDATE GTREFGR SET ' +
-     C                             'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+
+     C**********                   'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+                  MD045498
+     C                             'FCLN = '' ''  CONCAT SUBSTR(FCLN,2,5)'+                 MD045498
      C                             'WHERE SUBSTR(FCLN,1,1) = ''F'' WITH NC'
 
      C/Exec SQL
@@ -717,7 +722,8 @@
      C                             'UPDATE LEGUX1PD SET ' +
      C******************           'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+                  MD040956
      C******************           'WHERE SUBSTR(FCLN, 1, 1) = ''F'' WITH NC'               MD040956
-     C                             'WHFCLN = ''''  CONCAT SUBSTR(WHFCLN,2,5)'+              MD040956
+     C**********                   'WHFCLN = ''''  CONCAT SUBSTR(WHFCLN,2,5)'+     MD040956 MD045498
+     C                             'WHFCLN = '' ''  CONCAT SUBSTR(WHFCLN,2,5)'+             MD045498
      C                             'WHERE SUBSTR(WHFCLN, 1, 1) = ''F'' WITH NC'             MD040956
 
      C/Exec SQL
@@ -729,7 +735,8 @@
      C                             'UPDATE LEGUX2PD SET ' +
      C******************           'FCLN = ''''  CONCAT SUBSTR(FCLN,2,5)'+                  MD040956
      C******************           'WHERE SUBSTR(FCLN, 1, 1) = ''F'' WITH NC'               MD040956
-     C                             'WHFCLN = ''''  CONCAT SUBSTR(WHFCLN,2,5)'+              MD040956
+     C**********                   'WHFCLN = ''''  CONCAT SUBSTR(WHFCLN,2,5)'+     MD040956 MD045498
+     C                             'WHFCLN = '' ''  CONCAT SUBSTR(WHFCLN,2,5)'+             MD045498
      C                             'WHERE SUBSTR(WHFCLN, 1, 1) = ''F'' WITH NC'             MD040956
 
      C/Exec SQL

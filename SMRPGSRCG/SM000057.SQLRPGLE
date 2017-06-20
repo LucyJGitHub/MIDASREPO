@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
-      *  Last Amend No. AR989186           Date 23Aug12               *
-      *  Prev Amend No. AR883210           Date 21Dec11               *
+      *  Last Amend No. MD033413           Date 19May15               *
+      *  Prev Amend No. AR989186           Date 23Aug12               *
+      *                 AR883210           Date 21Dec11               *
       *                 CBF005   *CREATE   Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033413 - New Role is not assigned to the users via API     *
       *  AR989186 - Insert record only if not already existing        *
       *           - Applied for AR1085933                             *
       *  AR883210 - Additional Deliverables for BF                    *
@@ -26,6 +28,7 @@
       *****************************************************************
       *
      D GrpID           S             30
+     D WrkGrpId        S              8                                                     MD033413
      D Count           S              5  0 INZ(0)
      D VerNum          S              9  0 INZ(1)
      D ORGGRPCNT       S              5  0 INZ(0)                                           AR989186
@@ -70,11 +73,15 @@
      C                   IF        SQLCODE = 0
      C                             AND ORGGRPCNT = 0                                        AR989186
      C
+     C                   EVAL      WrkGrpId = *BLANKS                                       MD033413
+     C                   EVAL      WrkGrpId = GrpID                                         MD033413
+      *                                                                                     MD033413
      C/EXEC SQL
      C+ INSERT INTO BFTB_ORGGROUPUSER(
      C+ BFSEQUENCEIDPK, BFGROUPID, BFUSERNAME, VERSIONNUM)
      C+ VALUES(
-     C+ CONCAT(CONCAT('mi',TRIM(:GrpID)),TRIM(:UBUSER)), :GrpID,
+     C***+*CONCAT(CONCAT('mi',TRIM(:GrpID)),TRIM(:UBUSER)),*:GrpID,                         MD033413
+     C+ CONCAT(CONCAT('mi',TRIM(:WrkGrpId)),TRIM(:UBUSER)), :GrpID,                         MD033413
      C+ :UBUSER, :VerNum)
      C/END-EXEC
       *

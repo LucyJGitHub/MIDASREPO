@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CCB023             Date 06Aug12              */
+/*       Last Amend No. MD045831           Date 02Jun17              */
+/*       Prev Amend No. CCB023             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 28May08              */
+/*                      BG18886            Date 28May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD045831 - Report shows all teller transaction even though  */
+/*                  single teller is specified in selection criteria */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
 /*                Restructuring                                      */
 /*       BG18886 - Amend non-standard codes.                         */
@@ -111,6 +114,7 @@
                 SCRUNSQL   SQL('CREATE ALIAS' *BCAT &ATBID *BCAT ' FOR +
                           TTRANPD(' *CAT &TBID *CAT ')')                                  /*CCB023*/
                                                                                           /*CCB023*/
+                CLRPFM     FILE(TTRANX)                                                 /*MD045831*/
 /* Execute the SQL command                                         */                     /*CCB023*/
                                                                                           /*CCB023*/
                 SCRUNSQL   SQL('INSERT INTO TTRANX SELECT * FROM' *BCAT +

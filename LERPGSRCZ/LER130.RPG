@@ -19,8 +19,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD045509           Date 08May17               *
-      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *  Last Amend No. MD029938A          Date 08May15               *
+      *  Prev Amend No. AR317401           Date 08May15               *
+      *                 MD045509           Date 08May17               *
+      *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
       *                 251069             Date 27Jul16               *
       *                 CLE141A            Date 28Apr16               *
@@ -187,6 +189,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD029938A - Added CLE148 changes on SR/FEECHG and formalised *
+      *              reversal of MD023863.                            *
+      *  AR317401 - Loan fee subtype change enhancement.              *
+      *           - Applied for MD029938A to synchronise bank and     *
+      *             Misys source.                                     *
       *  MD045509 - LE: Incorrect account sequence for loan fee       *
       *             reversal.                                         *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
@@ -603,6 +610,7 @@
      FLEPXTAA O   E                    DISK         KINFSR *PSSR      UC  CLE007
      FLEPXTAB O   E                    DISK         KINFSR *PSSR      UC  CLE007
      FLEPXTAC O   E                    DISK         KINFSR *PSSR      UC  CLE007
+     FLEHISTV3IF  E           K        DISK                                                 AR317401
      FLEPK3DPDO   E                    DISK         KINFSR *PSSR                              CLE134
      F            LKEYFEDF                          KRENAMELKEYF3DF                           CLE134
      FLEPK3HH IF  E                    DISK         KINFSR *PSSR A                            CLE134
@@ -805,6 +813,24 @@
      I              PCOB                            MCPCOB                                    260961
      I              LSWC                            MCLSWC                                    260961
      I              LSWS                            MCLSWS                                    260961
+      *                                                                                     AR317401
+     IHISTSHPF                                                                              AR317401
+      *                                                                                     AR317401
+      ** Rename fields.                                                                     AR317401
+      *                                                                                     AR317401
+     I              RECI                            RECIHP                                  AR317401
+     I              RCDT                            RCDTHP                                  AR317401
+     I              BRCA                            BRCAHP                                  AR317401
+     I              CNUM                            CNUMHP                                  AR317401
+     I              LNRF                            LNRFHP                                  AR317401
+     I              VDAT                            VDATHP                                  AR317401
+     I              PRSQ                            PRSQHP                                  AR317401
+     I              LASN                            LASNHP                                  AR317401
+     I              CCY                             CCYHP                                   AR317401
+     I              AMTP                            AMTPHP                                  AR317401
+     I              LTYP                            LTYPHP                                  AR317401
+     I              SUTP                            SUTPHP                                  AR317401
+     I              LCD                             LCDHP                                   AR317401
      I/COPY WNCPYSRC,LEH01080
       *                                                                                       CGL020
       ** Rename Facility fields                                                               CGL020
@@ -1776,6 +1802,73 @@
       ********************************************************************
       *
      C           DETAIL    BEGSR
+      *                                                                                     AR317401
+      ** Before any processing, check first if the loan has                                 AR317401
+      ** LS amendment actioned today.                                                       AR317401
+      *                                                                                     AR317401
+     C                     MOVE '0'       *IN78                                             AR317401
+      *                                                                                     AR317401
+     C           KEYHP1    SETGTLEHISTV3                                                    AR317401
+     C           KEYHP1    REDPELEHISTV3                 78                                 AR317401
+     C           *IN78     IFEQ '0'                                                         AR317401
+     C           SUTPHP    ANDNEFESUTP                                                      AR317401
+     C           FECALT    ANDEQ*BLANKS                                                     AR317401
+     C           FEPYON    ANDNE'N'                                                         AR317401
+      *                                                                                     AR317401
+     C                     SELEC                                                            AR317401
+      *                                                                                     AR317401
+      ** Existing loan fees.                                                                AR317401
+      *                                                                                     AR317401
+     C           FEORED    WHLT BJRDNB                                                      AR317401
+     C           FEPSTD    ANDLTWAPDAT                                                      AR317401
+     C           FEPEND    ANDGEWAPDAT                                                      AR317401
+     C           FEPYON    ANDEQ'E'                                                         AR317401
+     C           FEORED    ORLT BJRDNB                                                      AR317401
+     C           FEPSTD    ANDLTWAPDAT                                                      AR317401
+     C           FEPEND    ANDLTWAPDAT                                                      AR317401
+     C           FEPYON    ANDEQ'E'                                                         AR317401
+     C           FEAUTO    ANDEQ'N'                                                         AR317401
+     C           FEORED    ORLT BJRDNB                                                      AR317401
+     C           FEPSTD    ANDLTWAPDAT                                                      AR317401
+     C           FEPYON    ANDEQ'S'                                                         AR317401
+     C           FEAUTO    ANDEQ'N'                                                         AR317401
+     C           FEORED    ORLT BJRDNB                                                      AR317401
+     C           FEPSTD    ANDLTWAPDAT                                                      AR317401
+     C           FEPYON    ANDEQ' '                                                         AR317401
+     C           FEAUTO    ANDEQ'N'                                                         AR317401
+      *                                                                                     AR317401
+      ** Setup amount to be reverse for the old subtype.                                    AR317401
+      *                                                                                     AR317401
+     C                     Z-ADD1         LKREVI                                            AR317401
+     C                     EXSR FEECHG                                                      AR317401
+      *                                                                                     AR317401
+      ** Setup amount to be repost for the new subtype.                                     AR317401
+      *                                                                                     AR317401
+     C                     MOVE SUTPHP    FESUTP                                            AR317401
+     C                     Z-ADD0         LKREVI                                            AR317401
+     C                     EXSR FEECHG                                                      AR317401
+      *                                                                                     AR317401
+      ** Newly inserted loan fees.                                                          AR317401
+      *                                                                                     AR317401
+     C           FEORED    WHEQ BJRDNB                                                      AR317401
+     C           FEPEND    ANDGEVDATHP                                                      AR317401
+     C           FEPYON    ANDEQ'E'                                                         AR317401
+     C           FEORED    OREQ BJRDNB                                                      AR317401
+     C           FEPSTD    ANDGEVDATHP                                                      AR317401
+     C           FEPYON    ANDNE'E'                                                         AR317401
+     C           FEAUTO    ANDNE'N'                                                         AR317401
+     C           FEORED    OREQ BJRDNB                                                      AR317401
+     C           FEPSTD    ANDLTVDATHP                                                      AR317401
+     C           FEPYON    ANDEQ'S'                                                         AR317401
+     C           FEAUTO    ANDEQ'N'                                                         AR317401
+     C           FEORED    OREQ BJRDNB                                                      AR317401
+     C           FEPEND    ANDLTVDATHP                                                      AR317401
+     C           FEAUTO    ANDEQ'N'                                                         AR317401
+     C           FEPSTD    ORGE WAPDAT                                                      AR317401
+     C                     MOVE SUTPHP    FESUTP                                            AR317401
+      *                                                                                     AR317401
+     C                     ENDSL                                                            AR317401
+     C                     ENDIF                                                            AR317401
      C/COPY WNCPYSRC,LEH01081
      C********** CLE134    IFEQ 'Y'                                             AR1080660 AR1076968B
      C********** FEAUTO    ANDEQ'C'                                             AR1080660 AR1076968B
@@ -3482,7 +3575,7 @@
      C                     EXSR *PSSR
      C                     ELSE
      C                     MOVE LTYP      FELTYP
-     C                     MOVE SUTP      FESUTP
+     C**********           MOVE SUTP      FESUTP                                            AR317401
      C                     MOVE CLAS      FECLAS                                              CLE042
      C                     END
      C**********           END                                                         0103 MD045509
@@ -3826,7 +3919,7 @@
      C**********           ENDIF                                                     CLE025 BUG13031
      C**********           ENDIF                                                     CLE025 BUG13031
      C           FEPEND    IFLE WAPDAT                                    248821
-     C           FEPEND    ANDLEBJRDNB                                                      MD023863
+     C********** FEPEND    ANDLEBJRDNB                                            MD023863 MD029938A
      C                     Z-ADDBJRDNB    LKEDAT                          248821
      C                     ENDIF                                          248821
       *                                                                   CLE005
@@ -4308,7 +4401,7 @@
      C                     EXSR *PSSR
      C                     ELSE
      C                     MOVE LTYP      FELTYP
-     C                     MOVE SUTP      FESUTP
+     C**********           MOVE SUTP      FESUTP                                            AR317401
      C                     MOVE CLAS      FECLAS                                              CLE042
      C                     END
      C**********           ENDD                                                               232319
@@ -6649,6 +6742,14 @@
      C                     KFLD           FEFACL                                              260345
      C                     KFLD           FELOAN                                              260345
      C                     KFLD           FEFSEQ                                              260345
+      * Key to retrieve LS in HISTSHP.                                                      AR317401
+      *                                                                                     AR317401
+     C           KEYHP1    KLIST                                                            AR317401
+     C                     KFLD           FEBRCA                                            AR317401
+     C                     KFLD           FECNUM                                            AR317401
+     C                     KFLD           FELOAN                                            AR317401
+     C                     KFLD           BJRDNB                                            AR317401
+      *                                                                                     AR317401
       ** Keylist for LEFHST                                                                AR632103A
       *                                                                                    AR632103A
      C           HFEE      KLIST                                                           AR632103A
@@ -7320,6 +7421,222 @@
       *                                                                                       219275
      C                     ENDSR                                                              219275
       *                                                                                       219275
+      *****************************************************************                     AR317401
+     C/TITLE SR/FEECHG                                                *                     AR317401
+      *****************************************************************                     AR317401
+      *                                                               *                     AR317401
+      *  FEECHG - Loan Fee subtype change processing.                 *                     AR317401
+      *                                                               *                     AR317401
+      *  This SR will add the functionality of reversing fee accruals *                     AR317401
+      *  posted but not paid from the old subtype and repost the      *                     AR317401
+      *  total amount to the new subtype. Valid for loan fees only.   *                     AR317401
+      *                                                               *                     AR317401
+      *  CALLED FROM: SR/DETAIL                                       *                     AR317401
+      *                                                               *                     AR317401
+      *  CALLS: OPNFIL, CHKCCY                                        *                     AR317401
+      *                                                               *                     AR317401
+      *****************************************************************                     AR317401
+      *                                                                                     AR317401
+     C           FEECHG    BEGSR                                                            AR317401
+      *                                                                                     AR317401
+     C                     Z-ADD0         LKEAMT                                            AR317401
+     C                     Z-ADDFELPAM    LKEAMT                                            AR317401
+      *                                                                                     AR317401
+     C           LKEAMT    IFNE 0                                                           AR317401
+     C                     MOVE '1'       *IN34                                             AR317401
+     C                     MOVE 'L'       LKRECI                                            AR317401
+     C**********           Z-ADDFELOAN    LKLNNO                                  AR317401 MD029938A
+     C                     MOVELFELOAN    LKLNNO                                           MD029938A
+     C                     MOVE 'A'       AKY,3                                             AR317401
+     C                     MOVEAFELTYP    AKY,1                                             AR317401
+     C                     MOVEAFESUTP    AKY,4                                             AR317401
+     C                     MOVEAFECLAS    AKY,11                                            AR317401
+      *                                                                                     AR317401
+      ** Pos. 7 Recourse Ind. (R = With Recourse).                                          AR317401
+      *                                                                                     AR317401
+     C           RCSI      IFEQ 'R'                                                         AR317401
+     C           RCSI      OREQ 'Y'                                                         AR317401
+     C                     MOVE 'R'       AKY,7                                             AR317401
+     C                     ELSE                                                             AR317401
+     C                     MOVE ' '       AKY,7                                             AR317401
+     C                     END                                                              AR317401
+     C*                                                                                     AR317401
+     C                     MOVEAWFCOD     AKY,8                                             AR317401
+     C                     MOVE 'F'       AKY,10                                            AR317401
+     C                     MOVE ' '       AKY,6                                             AR317401
+      *                                                                                     AR317401
+     C           FEPYON    IFEQ 'S'                                                         AR317401
+     C                     MOVE 'S'       AKY,6                                             AR317401
+     C                     END                                                              AR317401
+      *                                                                                     AR317401
+     C                     MOVEAAKY       LKAKEY                                            AR317401
+     C                     MOVE OLNO      LKOLNO                                            AR317401
+      *                                                                                     AR317401
+     C           CLE004    IFEQ 'Y'                                                         AR317401
+     C           CLE005    ANDEQ'Y'                                                         AR317401
+     C           PTFI      IFEQ 'I'                                                         AR317401
+     C                     MOVE 'I'       AKY,7                                             AR317401
+     C                     ENDIF                                                            AR317401
+     C           PTFI      IFEQ 'P'                                                         AR317401
+     C           PTFI      OREQ 'S'                                                         AR317401
+     C           PTFI      OREQ 'R'                                                         AR317401
+     C                     MOVE 'P'       AKY,7                                             AR317401
+     C                     ENDIF                                                            AR317401
+     C                     ENDIF                                                            AR317401
+     C                     MOVEAAKY       LKAKEY                                            AR317401
+      *                                                                                     AR317401
+      ** Set up fields for output.                                                          AR317401
+      *                                                                                     AR317401
+     C                     MOVE *BLANKS   LKSCCY                                            AR317401
+      *                                                                                     AR317401
+     C           FESTTL    IFNE 09                                                          AR317401
+     C           CLE033    ORNE 'Y'                                                         AR317401
+     C           SET09     ORNE 'T'                                                         AR317401
+      *                                                                                     AR317401
+     C           CEU004    IFEQ 'Y'                                                         AR317401
+     C           FESCCY    ANDNE'   '                                                       AR317401
+     C           FESCCY    ANDNEFEFCCY                                                      AR317401
+     C           LKEAMT    ANDNE0                                                           AR317401
+     C                     MOVE FESCCY    LKSCCY                                            AR317401
+      *                                                                                     AR317401
+     C                     ENDIF                                                            AR317401
+     C                     ENDIF                                                            AR317401
+     C                     MOVE FECNUM    LKCNUM                                            AR317401
+     C                     MOVE FEFCCY    LKECCY                                            AR317401
+     C                     MOVELFEOURS    LKOSAC                                            AR317401
+      *                                                                                     AR317401
+      ** Determine AML Pay/Receive Instructions.                                            AR317401
+      *                                                                                     AR317401
+     C           CGL020    IFEQ 'Y'                                                         AR317401
+     C                     EXSR SRAMLI                                                      AR317401
+     C                     ENDIF                                                            AR317401
+      *                                                                                     AR317401
+     C                     Z-ADDFESTTL    LKSETP                                            AR317401
+     C                     Z-ADDWAPDAT    LKEDAT                                            AR317401
+      *                                                                                     AR317401
+      * Setup start date or last interest date variable (LKSLID).                           AR317401
+      *                                                                                     AR317401
+     C                     Z-ADDFEPSTD    LKSLID                                            AR317401
+      *                                                                                     AR317401
+     C           CAS009    IFEQ 'Y'                                                         AR317401
+     C                     Z-ADDWRKSTR    LKSLID                                            AR317401
+     C                     ENDIF                                                            AR317401
+     C                     MOVE FEBRCA    LKBRCD                                            AR317401
+     C                     MOVE *BLANKS   LKOSBR                                            AR317401
+     C                     Z-ADDLASQ      LKACSQ                                            AR317401
+      *                                                                                     AR317401
+      * Setup start date or last interest date variable (LKSLID).                           AR317401
+      *                                                                                     AR317401
+     C                     Z-ADDFEPSTD    LKSLID                                            AR317401
+      *                                                                                     AR317401
+     C           CLE031    IFEQ 'Y'                                                         AR317401
+     C                     Z-ADDWRKSTR    LKSLID                                            AR317401
+     C                     ENDIF                                                            AR317401
+      *                                                                                     AR317401
+      ** Set indicator for decimal places.                                                  AR317401
+      *                                                                                     AR317401
+     C                     Z-ADD1         B       30                                        AR317401
+     C           FEFCCY    LOKUPWCYA,B                   56                                 AR317401
+     C           WDPA,B    COMP 1                    323031                                 AR317401
+     C           WDPA,B    COMP 2                    33  32                                 AR317401
+      *                                                                                     AR317401
+     C           BGN0ST    IFEQ 'Y'                                                         AR317401
+     C           BGN0ST    OREQ 'N'                                                         AR317401
+     C           BKPRCU    ANDEQ'Y'                                                         AR317401
+     C           FEPRFC    ANDNE*BLANKS                                                     AR317401
+     C                     MOVE FEPRFC    LKPRFC                                            AR317401
+     C                     ENDIF                                                            AR317401
+      *                                                                                     AR317401
+     C                     EXSR OPNFIL                                                      AR317401
+      *                                                                                     AR317401
+      **  If CLE005 is switched on, setup settlement details.                               AR317401
+      *                                                                                     AR317401
+     C           CLE005    IFEQ 'Y'                                                         AR317401
+      *                                                                                     AR317401
+     C           CLE004    IFEQ 'N'                                                         AR317401
+     C           CLE004    OREQ 'Y'                                                         AR317401
+     C           PTFI      ANDEQ*BLANK                                                      AR317401
+     C                     MOVE RONS      LKOSAC                                            AR317401
+     C                     MOVE RSTM      LKSETP                                            AR317401
+      *                                                                                     AR317401
+      ** Determine AML Pay/Receive Instructions.                                            AR317401
+      *                                                                                     AR317401
+     C           CGL020    IFEQ 'Y'                                                         AR317401
+     C                     MOVELSTLNS2    STLNS1                                            AR317401
+     C                     EXSR SRAMPR                                                      AR317401
+     C                     ENDIF                                                            AR317401
+      *                                                                                     AR317401
+     C                     ENDIF                                                            AR317401
+     C           CLE004    IFEQ 'Y'                                                         AR317401
+     C           PTFI      IFEQ 'P'                                                         AR317401
+     C           PTFI      OREQ 'S'                                                         AR317401
+     C           PTFI      OREQ 'R'                                                         AR317401
+     C                     MOVE PONS      LKOSAC                                            AR317401
+     C                     MOVE PSTM      LKSETP                                            AR317401
+      *                                                                                     AR317401
+      ** Determine AML Pay/Receive Instructions.                                            AR317401
+      *                                                                                     AR317401
+     C           CGL020    IFEQ 'Y'                                                         AR317401
+     C                     MOVELSTLNS2    STLNS1                                            AR317401
+     C                     EXSR SRAMPR                                                      AR317401
+     C                     ENDIF                                                            AR317401
+      *                                                                                     AR317401
+     C                     ENDIF                                                            AR317401
+     C           PTFI      IFEQ 'I'                                                         AR317401
+     C                     MOVE *BLANKS   LKOSAC                                            AR317401
+     C                     MOVE *BLANKS   LKSETP                                            AR317401
+      *                                                                                     AR317401
+      ** Determine AML Pay/Receive Instructions.                                            AR317401
+      *                                                                                     AR317401
+     C           CGL020    IFEQ 'Y'                                                         AR317401
+     C                     MOVEL*BLANKS   STLNS1                                            AR317401
+     C                     EXSR SRAMPR                                                      AR317401
+     C                     ENDIF                                                            AR317401
+      *                                                                                     AR317401
+     C                     ENDIF                                                            AR317401
+     C                     ENDIF                                                            AR317401
+     C                     ENDIF                                                            AR317401
+      *                                                                                     AR317401
+      ** Write record to account key file then report details.                              AR317401
+      *                                                                                     AR317401
+     C                     WRITELKEYFEDF                                                    AR317401
+      *                                                                                     AR317401
+     C                     EXSR CHKCCY                                                      AR317401
+      *                                                                                     AR317401
+     C                     Z-ADDLKEAMT    EAMT0                                             AR317401
+     C                     WRITELER130D1                                                    AR317401
+      *                                                                                     AR317401
+      ** Work field for number account keys generated.                                      AR317401
+      *                                                                                     AR317401
+     C                     ADD  1         LKNOR0                                            AR317401
+      *                                                                                     AR317401
+      ** If overflow indictor is on output headers for new page.                            AR317401
+      *                                                                                     AR317401
+     C           *IN80     IFEQ '1'                                                         AR317401
+     C                     WRITELER130H1                                                    AR317401
+     C                     WRITELER130H2                                                    AR317401
+     C                     MOVE '0'       *IN80                                             AR317401
+     C                     END                                                              AR317401
+      *                                                                                     AR317401
+      ** Details on print file indicator.                                                   AR317401
+      *                                                                                     AR317401
+     C                     MOVE '1'       *IN21                                             AR317401
+      *                                                                                     AR317401
+     C                     Z-ADD1         Z                                                 AR317401
+     C                     Z-ADD1         S                                                 AR317401
+      *                                                                                     AR317401
+      ** Calculate hash total for trailer.                                                  AR317401
+      *                                                                                     AR317401
+     C           LKEAMT    DIV  1000      ZZAMT                                             AR317401
+     C                     Z-ADDLKVLRF    ZZTOTI                                            AR317401
+     C                     Z-ADDLKVLRL    ZZTOTD                                            AR317401
+     C                     EXSR ZHASH                                                       AR317401
+     C                     Z-ADDZZTOTI    LKVLRF                                            AR317401
+     C                     Z-ADDZZTOTD    LKVLRL                                            AR317401
+     C                     ENDIF                                                            AR317401
+      *                                                                                     AR317401
+     C                     ENDSR                                                            AR317401
+      *                                                                                     AR317401
       *****************************************************************                     AR800866
      C/TITLE SR/SRFCTY                                                *                     AR800866
       *****************************************************************                     AR800866

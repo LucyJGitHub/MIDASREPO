@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. AR943686           Date 23Sep16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. AR848765           Date 30Jun15               *
+      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *                 CLE141             Date 08Feb16               *
       *                 AR547813           Date 13Nov15               *
       *                 MD026167           Date 13May14               *
       *                 MD025467           Date 08May14               *
@@ -96,6 +97,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR848765 - During amend of Principal Increase, value of OSAC *
+      *             is not updated correctly, Instead of PONS/RONS,   *
+      *             LAPONS/LARONS will be moved to field OSAC.        *
+      *           - Applied for MD034480                              *
       *  AR943686 - CLE031: System generating wrong projected move-   *
       *             ment. Populate value of SCCY to convert amount    *
       *             to account currency.                              *
@@ -1365,9 +1370,11 @@
       *
      C     WSOLD         IFEQ      'Y'                                                       BUG3054
      C     PDCLI         OREQ      'Y'                                                      MD023787
-     C                   MOVE      RONS          LAOSAC                                      BUG3054
+     C**********         MOVE      RONS          LAOSAC                             BUG3054 AR848765
+     C                   MOVE      LARONS        LAOSAC                                     AR848765
      C                   ELSE                                                                BUG3054
-     C                   MOVE      PONS          LAOSAC                                      BUG3054
+     C**********         MOVE      PONS          LAOSAC                             BUG3054 AR848765
+     C                   MOVE      LAPONS        LAOSAC                                     AR848765
      C                   ENDIF                                                               BUG3054
                                                                                              BUG3054
       ** Check if before and after image of the record of LOAMSDK is different               BUG3760

@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD045091           Date 10May17               *
-      *  Prev Amend No. MD039672           Date 12May17               *
+      *  Last Amend No. MD033575           Date 20Jun17               *
+      *  Prev Amend No. MD045091           Date 10May17               *
+      *                 MD039672           Date 12May17               *
       *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD038365           Date 20Apr16               *
@@ -373,6 +374,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033575 - Added interest part of LS on split narrative      *
+      *             introduced by MD027475.                           *
       *  MD045091 - When loan matures, system generates separate      *
       *             partial repayment and maturity postings on same   *
       *             value date. Introduce new system value            *
@@ -11283,7 +11286,13 @@ L118 I                             P   72   77 7RTSPL
      C                   Z-ADD     VDAT          ACDATE                                     MD012157
      C                   Z-ADD     ANYR          ACAMNT                                        S0127
      C                   MOVEA     LTYP          AKY(1)                                        S0127
+      *                                                                                     MD033575
+     C     SPLITF        IFne      'Y'                                                      MD033575
      C                   MOVE      'A'           AKY(3)                                        S0127
+     C                   Else                                                               MD033575
+     C                   Move      'T'           AKY(3)                                     MD033575
+     C                   EndIF                                                              MD033575
+      *                                                                                     MD033575
      C                   MOVEA     SUTP          AKY(4)                                        S0127
 0781 C                   MOVEA     CLAS          AKY(11)
      C                   MOVEA     BKAKY         AKY(6)                                        S0127
@@ -11322,7 +11331,13 @@ L118 I                             P   72   77 7RTSPL
      C**********         Z-ADD     RUND          ACDATE                              CAC001 MD012157
      C                   Z-ADD     VDAT          ACDATE                                     MD012157
      C                   MOVEA     LTYP          AKY(1)                                        CAC00
+      *                                                                                     MD033575
+     C     SPLITF        IFne      'Y'                                                      MD033575
      C                   MOVE      'A'           AKY(3)                                        CAC00
+     C                   Else                                                               MD033575
+     C                   Move      'T'           AKY(3)                                     MD033575
+     C                   EndIF                                                              MD033575
+      *                                                                                     MD033575
      C                   MOVEA     SUTP          AKY(4)                                        CAC00
 0781 C                   MOVEA     CLAS          AKY(11)
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
@@ -11406,7 +11421,13 @@ L118 I                             P   72   77 7RTSPL
      C                   Z-ADD     VDAT          ACDATE                                     MD012157
      C                   Z-ADD     WNYR          ACAMNT                                        S0127
      C                   MOVEA     LTYP          AKY(1)                                        S0127
+      *                                                                                     MD033575
+     C     SPLITF        IFne      'Y'                                                      MD033575
      C                   MOVE      'A'           AKY(3)                                        S0127
+     C                   Else                                                               MD033575
+     C                   Move      'T'           AKY(3)                                     MD033575
+     C                   EndIF                                                              MD033575
+      *                                                                                     MD033575
      C                   MOVEA     SUTP          AKY(4)                                        S0127
 0781 C                   MOVEA     CLAS          AKY(11)
      C                   MOVEA     BKAKY         AKY(6)                                        S0127
@@ -11598,7 +11619,13 @@ L118 I                             P   72   77 7RTSPL
      C                   Z-ADD     VDAT          ACDATE                                     MD012157
      C*********************Z-ADDDPAM      ACAMNT                    S01270BH3409
      C                   MOVEA     LTYP          AKY(1)                                        S0127
+      *                                                                                     MD033575
+     C     SPLITF        IFne      'Y'                                                      MD033575
      C                   MOVE      'A'           AKY(3)                                        S0127
+     C                   Else                                                               MD033575
+     C                   Move      'T'           AKY(3)                                     MD033575
+     C                   EndIF                                                              MD033575
+      *                                                                                     MD033575
      C                   MOVEA     SUTP          AKY(4)                                        S0127
 0781 C                   MOVEA     CLAS          AKY(11)
      C                   MOVEA     BKAKY         AKY(6)                                        S0127
@@ -11635,7 +11662,13 @@ L118 I                             P   72   77 7RTSPL
      C     AMDS          IFNE      0
      C                   Z-ADD     VDAT          ACDATE
      C                   MOVEA     LTYP          AKY(1)
+      *                                                                                     MD033575
+     C     SPLITF        IFne      'Y'                                                      MD033575
      C                   MOVE      'A'           AKY(3)
+     C                   Else                                                               MD033575
+     C                   Move      'T'           AKY(3)                                     MD033575
+     C                   EndIF                                                              MD033575
+      *                                                                                     MD033575
      C                   MOVEA     SUTP          AKY(4)
 0781 C                   MOVEA     CLAS          AKY(11)
      C                   MOVE      'N'           AKY(6)
@@ -11729,7 +11762,13 @@ L118 I                             P   72   77 7RTSPL
      C                   Z-ADD     RUND          ACDATE
      C                   Z-ADD     FEFAMT        ACAMNT
      C                   MOVEA     LTYP          AKY(1)
+      *                                                                                     MD033575
+     C     SPLITF        IFne      'Y'                                                      MD033575
      C                   MOVE      'R'           AKY(3)
+     C                   Else                                                               MD033575
+     C                   Move      'T'           AKY(3)                                     MD033575
+     C                   EndIF                                                              MD033575
+      *                                                                                     MD033575
      C                   MOVEA     SUTP          AKY(4)
 0781 C                   MOVEA     CLAS          AKY(11)
      C     CLE004        IFEQ      'Y'
@@ -11767,7 +11806,13 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       233887
       ** Generate Nonlinear fee income on new account                                         233887
      C                   Z-ADD     FEAMTD        ACAMNT
+      *                                                                                     MD033575
+     C     SPLITF        IFne      'Y'                                                      MD033575
      C                   MOVE      'A'           AKY(3)
+     C                   ELSE                                                               MD033575
+     C                   MOVE      'T'           AKY(3)                                     MD033575
+     C                   EndIF                                                              MD033575
+      *                                                                                     MD033575
      C     CAS009        IFEQ      'Y'
      C                   MOVE      'N'           AKY(6)
      C                   ENDIF

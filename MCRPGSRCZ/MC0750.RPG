@@ -10,12 +10,13 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
+      *  Last Amend No. MD000627           Date 02Jun17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSW037A            Date 02May05               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
       *                 CSW037             Date 15Dec04               *
       *                 CSW036             Date 15Dec04               *
@@ -35,6 +36,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD000627 - Additional fix to 173956. Do the same processing  *
+      *             for closed customers too                          *
+      *           - Applied for MD-45929                              *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
       *  CSD025 - Customer De-Activation                              *
@@ -112,7 +116,8 @@
      F/EJECT
      E                    CPY@    1   1 80
      E***********         NAR     1  24 30               NARRATIVES       173956
-     E                    NAR     1  25 30               NARRATIVES       173956
+     E**********          NAR     1  25 30               NARRATIVES                  173956 MD000627
+     E                    NAR     1  26 30               NARRATIVES                         MD000627
      E                    TABSEC  1   8  2   TABSED 30   SECTIONS
      E                    FLG        20  1               LEVEL FLAGS
      E********            NAM        20 47               LEVEL NAMES      CSD005
@@ -858,15 +863,29 @@
      C                     MOVELNAR,25    XBCRNM                          173956
      C                     MOVEL*BLANKS   XBCRTN                          173956
      C                     ELSE                             X002          173956
+     C           @RTCD     IFEQ '*CUSCLS'                                                   MD000627
+     C                     MOVELCUSTD     XBCUST                                            MD000627
+     C                     MOVELNAR,26    XBCRNM                                            MD000627
+     C                     MOVEL*BLANKS   XBCRTN                                            MD000627
+     C                     ELSE                                                             MD000627
+     C           @RTCD     IFEQ '*CUSDEL'                                                   MD000627
+     C                     MOVELCUSTD     XBCUST                                            MD000627
+     C                     MOVELNAR,25    XBCRNM                                            MD000627
+     C                     MOVEL*BLANKS   XBCRTN                                            MD000627
+     C                     ELSE                                                             MD000627
      C                     MOVELBBCUST    XBCUST
      C                     MOVELBBCRNM    XBCRNM
      C                     MOVELBBCRTN    XBCRTN
      C                     ENDIF                           * E002         173956
+     C                     ENDIF                                                            MD000627
+     C                     ENDIF                                                            MD000627
      C*
      C** If error in access program, exit via DBERR subroutine
      C*
      C           @RTCD     IFNE *BLANKS                    * B002
      C           @RTCD     ANDNE'*NRF'                                    173956
+     C           @RTCD     ANDNE'*CUSDEL'                                                   MD000627
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD000627
      C           *LOCK     IN   LDA                                    *
      C                     MOVEL'MC0750'  DBPGM            ************
      C                     MOVEL'007'     DBASE              DBERR 007 *
@@ -2067,6 +2086,7 @@ Currency conversion
 Averages to
 For the Period
 - Customer Deleted -                                                      173956
+- Customer Closed -                                                                         MD000627
 ** TABSEC/TABSED
 ASASSET SECTION
 LILIABILITY SECTION

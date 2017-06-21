@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
 0008 F*                                                               *
-      *  Last Amend No. MD023830A          Date 19Aug14               *
-      *  Prev Amend No. AR1093201          Date 23Sep13               *
+      *  Last Amend No. MD023830B          Date 20Jul15               *
+      *  Prev Amend No. MD023830A          Date 18Mar14               *
+      *                 AR1093201          Date 23Sep13               *
       *                 AR1071448          Date 23Sep13               *
       *                 CLE134             Date 01Aug12               *
       *                 AR322731           Date 23Jul12               *
@@ -35,6 +36,8 @@
 0008 F*                                                               *
 0011 F*---------------------------------------------------------------*
 0008 F*                                                               *
+      *  MD023830B - Send message to MOPERQ on each lock and exit     *
+      *              processing when system has tried five times.     *
       *  MD023830A - LEC0213 in MSGW status during I/C                *
       *  AR1093201 - MT202 not generated on IC of loan creation.      *
       *              Reversed part of AR1071448 to ensure that loan   *
@@ -96,7 +99,8 @@
 0023 F*       41      CHAIN FAILURE
 0025 F*       43      LOOP CONTROL
      E                    CPY@    1   1 80
-     E                    MESSG   1   1 50                                                 MD023830A
+     E**********          MESSG   1   1 50                                       MD023830A MD023830B
+     E                    MESSG   1   2 50                                                 MD023830B
 0026 F/EJECT
 0027 I*****TABLE*FILE***INSTALLATION*CONTROL*DATA*RECORD*1.               S01194
 0028 I**********                                                          S01194
@@ -508,17 +512,24 @@
      C                     MOVE *BLANKS   EXTTAG  6                                        MD023830A
      C           FSTAT     IFEQ 01218                                                      MD023830A
       ** Loop count                                                                        MD023830A
-     C           COUNT     IFEQ 5                                                          MD023830A
-     C                     MOVEAMESSG     MESS1  50                                        MD023830A
-     C           MESS1     DSPLY'MOPERQ'                                                   MD023830A
-     C                     Z-ADD0         COUNT                                            MD023830A
-     C                     END                                                             MD023830A
+     C********** COUNT     IFEQ 5                                                MD023830A MD023830B
+     C**********           MOVEAMESSG     MESS1  50                              MD023830A MD023830B
+     C                     MOVEAMESSG,1   MESS1  50                                        MD023830B
+     C           MESS1     DSPLY'MOPERQ'                                         MD023830A MD023830B
+     C**********           Z-ADD0         COUNT                                  MD023830A MD023830B
+     C**********           END                                                             MD023830A
       *                                                                                    MD023830A
      C                     ADD  1         COUNT   20                                       MD023830A
+     C           COUNT     IFLE 4                                                          MD023830B
      C                     GOTO RETRY                                                      MD023830A
      C                     ELSE                                                            MD023830A
-     C                     EXSR *PSSR                                                      MD023830A
+     C**********           EXSR *PSSR                                                      MD023830A
+     C                     MOVEAMESSG,2   MESS1                                            MD023830A
+     C           MESS1     DSPLY'MOPERQ'                                                   MD023830B
+     C                     SETON                     LR                                    MD023830B
+     C                     GOTO END                                                        MD033830B
      C                     END                                                             MD023830A
+     C                     ENDIF                                                           MD023830B
       *                                                                                    MD023830A
      C                     ENDSREXTTAG                                                     MD023830A
      C********************************************************************
@@ -587,3 +598,4 @@
 (c) Misys International Banking Systems Ltd. 2001
 ** MESSG  **      LTRIX File Locking                                                       MD023830A
 LEC0213 program may loop due to LTRIX locking.                                             MD023830A
+LEC0213 extract terminated after five tries.                                               MD023830B

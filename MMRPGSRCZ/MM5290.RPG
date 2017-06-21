@@ -18,8 +18,10 @@
       *                                                               *
       *  (C) Copyright MISYS INTERNATIONAL BANKING SYSTEMS LTD 2008   *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD021669A          Date 21Jun17               *
+      *  Prev Amend No. MD021669           Date 21Jun17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CDL093             Date 08Apr14               *
       *                 MD022252           Date 11Sep13               *
@@ -37,6 +39,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021669A - Additional test case wherein penalty rate was    *
+      *              amended.                                         *
+      *            – Applied for MD-30199.                            *
+      *  MD021669 - Incorrect total penalty interest. Derive the      *
+      *             penalty interest, regardless of any events        *
+      *             affecting the accrued interest to control date by *
+      *             using the formula of ratio and proportion.        *
+      *           – Applied for MD-30199.                             *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -1246,18 +1256,40 @@
      C                     MOVE ZFIELD    SPRAT
       *
       ** Total Interest - Adjusted
-     C                     Z-ADDW#VDAT    ZZBEG
-     C                     Z-ADDBJRDNB    ZZEND
-     C           HKFLID    IFEQ 'Y'
-     C                     ADD  1         ZZEND
-     C                     END
-     C                     MOVE HKICMT    ZZCALC
-     C                     Z-ADDHKAMNP    II@AMT
-     C                     Z-ADDW#PRAT    II@RAT
-     C                     MOVE HKRDFC    II@RDI
-     C                     EXSR SRINTR
-     C                     Z-ADDIO@INT    W#ADJI
-     C                     Z-ADDIO@INT    F#INTA
+     C**********           Z-ADDW#VDAT    ZZBEG                                             MD021669
+     C**********           Z-ADDBJRDNB    ZZEND                                             MD021669
+     C********** HKFLID    IFEQ 'Y'                                                         MD021669
+     C**********           ADD  1         ZZEND                                             MD021669
+     C**********           END                                                              MD021669
+     C**********           MOVE HKICMT    ZZCALC                                            MD021669
+     C**********           Z-ADDHKAMNP    II@AMT                                            MD021669
+     C**********           Z-ADDW#PRAT    II@RAT                                            MD021669
+     C**********           MOVE HKRDFC    II@RDI                                            MD021669
+     C**********           EXSR SRINTR                                                      MD021669
+     C**********           Z-ADDIO@INT    W#ADJI                                            MD021669
+     C**********           Z-ADDIO@INT    F#INTA                                            MD021669
+      *                                                                                     MD021669
+      ** Use ratio and proportion to get the penalty interest.                              MD021669
+      ** Get the deal rate, penalty rate, and total interest as per deal rate.              MD021669
+     C                     Z-ADD0         IIRT1  117                                        MD021669
+     C                     Z-ADD0         IIRT2  117                                        MD021669
+     C                     Z-ADD0         IO@IN1 150                                        MD021669
+     C                     Z-ADD0         IO@IN2 150                                        MD021669
+     C                     Z-ADD0         IO@WRK 210                                        MD021669
+     C                     Z-ADDHKINTR    IIRT1                                             MD021669
+     C                     Z-ADDW#PRAT    IIRT2                                             MD021669
+     C                     Z-ADDIO@INT    IO@IN1                                            MD021669
+      *                                                                                     MD021669
+      ** Calculate penalty interest.                                                        MD021669
+      *                                                                                     MD021669
+     C           IO@IN1    MULT IIRT2     IO@WRK    H                                       MD021669
+     C           II@RDI    IFEQ 'Y'                                                         MD021669
+     C           IO@WRK    DIV  IIRT1     IO@IN2                                            MD021669
+     C                     ELSE                                                             MD021669
+     C           IO@WRK    DIV  IIRT1     IO@IN2    H                                       MD021669
+     C                     ENDIF                                                            MD021669
+     C                     Z-ADDIO@IN2    W#ADJI                                            MD021669
+     C                     Z-ADDIO@IN2    F#INTA                                            MD021669
       *
      C                     MOVE *BLANKS   ZFIELD
      C                     Z-ADD*ZEROS    ZADEC

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD041917           Date 20Dec16               *
-      *  Prev Amend No. MD040412           Date 17Aug16               *
+      *  Last Amend No. MD034840           Date 10Feb17               *
+      *  Prev Amend No. MD041917           Date 20Dec16               *
+      *                 MD040412           Date 17Aug16               *
       *                 MD039304           Date 19Jul16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
@@ -110,6 +111,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034840 - No error issued for input of base rate even if    *
+      *             Base Rate Change Facility ICD is set to 'N'.      *
       *  MD041917 - Total interest is calculated as zero when fixed   *
       *             rate has value and contractual spread is zero.    *
       *             Move DDFXRT to WSVRS to calculate TOTI accurately.*
@@ -1198,6 +1201,7 @@
       *
      C     @RTCD         IFNE      *BLANKS
      C*****BPBRCF        ORNE      'Y'                                                      AR826115
+     C     BPBRCF        ORNE      'Y'                                                      MD034840
      C     CCLCCY        ORNE      BACYCD
      C                   MOVE      'N'           DDBRTTOK
      C                   ADD       1             Idx

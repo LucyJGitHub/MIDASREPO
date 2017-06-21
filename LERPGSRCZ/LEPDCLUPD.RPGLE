@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD030621           Date 26Feb15               *
+      *  Last Amend No. MD034840           Date 10Feb17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD030621           Date 26Feb15               *
       *                 CLE164             Date 18Aug14               *
       *                 AR1054914          Date 19Aug14               *
       *                 AR1001250          Date 06Jun13               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034840 - No error issued for input of base rate even if    *
+      *             Base Rate Change Facility ICD is set to 'N'.      *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  MD030621 - Aligned parameter when calling LECLIPUPD. Added   *
@@ -3931,6 +3934,7 @@
 
      C                   IF        @RTCD <> *BLANKS OR
      C**********                   BPBRCF <> 'Y' OR                                         AR826115
+     C                             BPBRCF <> 'Y' OR                                         MD034840
      C                             L_CLCCY <> BACYCD
      C     @KEY1         CAT       @KEY2         DBKEY
      C                   EVAL      DBFILE = 'SDBSRTPD'
@@ -3958,19 +3962,19 @@
      C                   ELSE
      C                   EVAL      L_CLRTSP = AUCRSP
      C                   ENDIF
-                                                                                            AR826115
-     C                   IF        BPBRCF = 'N'                                             AR826115
-     C                   EVAL      L_CLBRTT = 0                                             AR826115
-     C                   EVAL      L_CLBRTE = 0                                             AR826115
-      *                                                                                     AR826115
-     C                   IF        L_CLSPIN = 'A'                                           AR826115
-     C                   EVAL      L_CLRTSP = C_BRTE + C_RTSP                               AR826115
-     C                   ELSE                                                               AR826115
-     C                   EVAL      L_CLRTSP = C_BRTE - C_RTSP                               AR826115
-     C                   ENDIF                                                              AR826115
-      *                                                                                     AR826115
-     C                   EVAL      L_CLSPIN    = ' '                                        AR826115
-     C                   ENDIF                                                              AR826115
+      **********                                                                   AR826115 MD034840
+     C**********         IF        BPBRCF = 'N'                                    AR826115 MD034840
+     C**********         EVAL      L_CLBRTT = 0                                    AR826115 MD034840
+     C**********         EVAL      L_CLBRTE = 0                                    AR826115 MD034840
+      **********                                                                   AR826115 MD034840
+     C**********         IF        L_CLSPIN = 'A'                                  AR826115 MD034840
+     C**********         EVAL      L_CLRTSP = C_BRTE + C_RTSP                      AR826115 MD034840
+     C**********         ELSE                                                      AR826115 MD034840
+     C**********         EVAL      L_CLRTSP = C_BRTE - C_RTSP                      AR826115 MD034840
+     C**********         ENDIF                                                     AR826115 MD034840
+      **********                                                                   AR826115 MD034840
+     C**********         EVAL      L_CLSPIN    = ' '                               AR826115 MD034840
+     C**********         ENDIF                                                     AR826115 MD034840
 
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLMARG = C_MARG

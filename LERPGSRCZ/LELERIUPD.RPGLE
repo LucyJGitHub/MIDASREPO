@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. 243232             Date 13Mar15               *
-      *  Prev Amend No. MD028338           Date 25Nov14               *
+      *  Last Amend No. MD034840           Date 10Feb17               *
+      *  Prev Amend No. 243232             Date 13Mar15               *
+      *                 MD028338           Date 25Nov14               *
       *                 AR826115           Date 07Dec12               *
       *                 CLE134             Date 01Aug12               *
       *                 AR322732           Date 23Jul12               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034840 - No error issued for input of base rate even if    *
+      *             Base Rate Change Facility ICD is set to 'N'.      *
       *  243232 - Frontoffice Id on CLOANCL corrupted by rollover.    *
       *  MD028338 - Interest calculation has rounding difference for  *
       *             Rollover of Facility Exchange Rate only. Add new  *
@@ -799,21 +802,21 @@
      C**********         EVAL      FRNT=L_CLFRNT                                              243232
       ** Associated Front Office ID
      C                   EVAL      AFRT=L_CLAFRT
-      *                                                                                     AR826115
-      ** Check Base rate change facility flag from ICD                                      AR826115
-      *                                                                                     AR826115
-     C                   IF        BPBRCF = 'N'                                             AR826115
-     C                   EVAL      BRTT = 0                                                 AR826115
-     C                   EVAL      BRTE = 0                                                 AR826115
-      *                                                                                     AR826115
-     C                   IF        L_CLSPIN = 'A'                                           AR826115
-     C                   EVAL      RTSP = L_CLBRTE + L_CLRTSP                               AR826115
-     C                   ELSE                                                               AR826115
-     C                   EVAL      RTSP = L_CLBRTE - L_CLRTSP                               AR826115
-     C                   ENDIF                                                              AR826115
-      *                                                                                     AR826115
-     C                   EVAL      SPIN = ' '                                               AR826115
-     C                   ENDIF                                                              AR826115
+      **********                                                                   AR826115 MD034840
+      ***Check*Base*rate*change*facility*flag*from*ICD*                            AR826115 MD034840
+      **********                                                                   AR826115 MD034840
+     C**********         IF        BPBRCF = 'N'                                    AR826115 MD034840
+     C**********         EVAL      BRTT = 0                                        AR826115 MD034840
+     C**********         EVAL      BRTE = 0                                        AR826115 MD034840
+      **********                                                                   AR826115 MD034840
+     C**********         IF        L_CLSPIN = 'A'                                  AR826115 MD034840
+     C**********         EVAL      RTSP = L_CLBRTE + L_CLRTSP                      AR826115 MD034840
+     C**********         ELSE                                                      AR826115 MD034840
+     C**********         EVAL      RTSP = L_CLBRTE - L_CLRTSP                      AR826115 MD034840
+     C**********         ENDIF                                                     AR826115 MD034840
+      **********                                                                   AR826115 MD034840
+     C**********         EVAL      SPIN = ' '                                      AR826115 MD034840
+     C**********         ENDIF                                                     AR826115 MD034840
  
       *
       ** Update Record

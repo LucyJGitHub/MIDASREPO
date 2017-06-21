@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE154             Date 10Aug12               *
-      *  Prev Amend No. MD039304           Date 19Jul16               *      
+      *  Last Amend No. MD034840           Date 10Feb17               *
+      *  Prev Amend No. CLE154             Date 10Aug12               *
+      *                 MD039304           Date 19Jul16               *      
       *                 MD039017           Date 26May16               *
       *                 CLE141             Date 08Feb16               *
       *                 AR702532           Date 13Jan15               *
@@ -107,6 +108,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034840 - No error issued for input of base rate even if    *
+      *             Base Rate Change Facility ICD is set to 'N'.      *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD039304 - Prevent a combination of zero spread rate and a   *
       *             spread indicator equal to percentage.             *      
@@ -2716,7 +2719,9 @@
       *****************************************************************                     AR826115
      C*****BPBRCF        WHENNE    'Y'                                                      AR826115
      C*****DDNBRAB       ORNE      *BLANKS                                                  AR826115
-     C     DDNBRAB       WHENNE    *BLANKS                                                  AR826115
+     C*****DDNBRAB       WHENNE    *BLANKS                                         AR826115 MD034840
+     C     BPBRCF        WHENNE    'Y'                                                      MD034840
+     C     DDNBRAB       ORNE      *BLANKS                                                  MD034840
      C     WNBRA1        ANDNE     '?'
      C     *IN85         ANDEQ     *OFF
      C     DDACTN        ANDEQ     'A'

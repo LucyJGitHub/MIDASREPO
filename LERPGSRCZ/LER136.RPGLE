@@ -18,8 +18,9 @@
       *                                                               *
       *  (C) Copyright Misys International Banking Systems Ltd. 2007  *
       *                                                               *
-      *  Last Amend No. AR632102B          Date 21Dec12               *
-      *  Prev Amend No. AR632103B          Date 21Dec12               *
+      *  Last Amend No. MD043383           Date 30Mar17               *
+      *  Prev Amend No. AR632102B          Date 21Dec12               *
+      *                 AR632103B          Date 21Dec12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043383 - Only the fee maturity event should have a record  *
+      *             ID equal to 'M' for proper display in the enquiry.*
       *  AR632102B - For matured fees, there are still records in PF/ *
       *              LEFHST with fee sequence not equal to '00'.      *
       *              Amended program to ensure that fee sequence of   *
@@ -78,7 +81,7 @@
       *
      C                   DOW       *IN01 = '0'
       *
-     C                   EVAL      HIRECI = 'M'
+     C**********         EVAL      HIRECI = 'M'                                             MD043383
       *                                                                                    AR632102B
      C     WPGM          IFEQ      'LER130'                                                AR632102B
      C                   EVAL      HIFSEQ = 0

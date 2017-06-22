@@ -13,12 +13,13 @@
 /*                                                                   */                 /*CGL127AM*/
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CGL127AM           Date 06Aug12              */
+/*       Last Amend No. MD045372           Date 23May17              */
+/*       Prev Amend No. CGL127AM           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 228542             Date 05Aug04              */
+/*                      228542             Date 05Aug04              */
 /*                      CPK016             Date 04Jun03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
@@ -42,6 +43,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD045372 - Execute CGL010 process by a new component.       */
 /*       CGL127AM - COB Restructure - GL COB Optimisation Phase 1    */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       CPK016 - Externalise STRCMTCTL code for ease of later       */
@@ -109,10 +111,10 @@
              DCLF       FILE(SDGELRPD)                                /*S01117*/
 /**/
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /************CHGDTAARA  DTAARA(*LDA) VALUE('  ')           /*S01117*/ /*CCB003*/
 /**/
              SNDPGMMSG  MSG('GLC26 - Batch Transaction file split') +
@@ -258,7 +260,9 @@ LOOP:                                                                 /*CCB003*/
              ELSE (DO)
 /*/COPY WNCPYSRC,GLC26003                                            */
 /**/                                                                  /*CGL010*/
-             IF         COND(&CGL010 *EQ 'Y') THEN(DO)                /*CGL010*/
+/**********  IF         COND(&CGL010 *EQ 'Y') THEN(DO)                /*CGL010*/        /*MD045372*/
+/* Replace CGL010 process by new COB componenet GLC0533 */                              /*MD045372*/
+             IF         COND(&CGL010 *EQ 'X') THEN(DO)                                  /*MD045372*/
 /**/                                                                  /*CGL010*/
              CALL       PGM(GL0533)                                   /*CGL010*/
 /**/                                                                  /*CGL010*/

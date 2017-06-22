@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD036165           Date 25May16               *
-      *  Prev Amend No. CGL127AM           Date 06Aug12               *
+      *  Last Amend No. MD045372           Date 23May17               *
+      *  Prev Amend No. MD036165           Date 25May16               *
+      *                 CGL127AM           Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045372 - Reverse MD036165 as it is causing error in COB    *
+      *             (MSGW) and duplicate postings. CGL010 process     *
+      *             is now done is a separate component (GLC0533).    *
       *  MD036165 - Forward journal entries did not reverse.          *
       *             GLC26 ignored the process because batch is empty. *
       *  CGL127AM - COB Restructure - GL Module Optimisation Phase 2  *
@@ -58,7 +62,7 @@
      F**********  @BRREMA                           KRENAMEINDEXF                           CGL127AM
      F            GLBATHD0                          KRENAMEINDEXF                           CGL127AM
      F                                              KCOMIT
-     FGLVALPL2IF  E           K        DISK         KINFSR *PSSR      UC                    MD036165
+     F*GLVALPL2IF  E           K        DISK         KINFSR *PSSR      UC          MD036165 MD045372
       *
       *****************************************************************
       *                                                               *
@@ -68,7 +72,7 @@
       *     50 - Indicator for dummy read of GLBATHPD                 *
       *     80 - CHAIN indicator for GLJNHIPD                         *
       *     81 - CHAIN indicator for GLJENHL2                         *
-      *     83 - READE indicator for GLVALPL2                         *                     MD036165
+      ******83 - READE indicator for GLVALPL2**************************            MD036165 MD045372
       *                                                               *
       *  U7+U8 - Database error occurs                                *
       *                                                               *
@@ -136,10 +140,10 @@
      I                                     *PROGRAM PGM
      I                                      244 253 WSID
      I                                      254 263 USER
-     IDSFDY     E DSDSFDY                                                                   MD036165
+     I*DSFDY**** E DSDSFDY                                                         MD036165 MD045372
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                                 MD036165
       *                                                                                     MD036165
-     ISDBANK    E DSSDBANKPD                                                                MD036165
+     I*SDBANK*** E DSSDBANKPD                                                      MD036165 MD045372
       ** EXTERNAL DATA STRUCTURES FOR BANK DETAILS                                          MD036165
       *
       *****************************************************************
@@ -172,9 +176,9 @@
       *****************************************************************
      C           TSPLIT    BEGSR
       *                                                                                     MD036165
-     C                     OPEN GLVALPL2                                                    MD036165
-     C           BJRDNB    READEGLVALPL2            N    83                                 MD036165
-     C                     CLOSEGLVALPL2                                                    MD036165
+     C**********           OPEN GLVALPL2                                           MD036165 MD045372
+     C********** BJRDNB    READEGLVALPL2            N    83                        MD036165 MD045372
+     C**********           CLOSEGLVALPL2                                           MD036165 MD045372
       *
      C                     Z-ADD0         TOT     70
       *
@@ -319,7 +323,7 @@
       ** If end of file on GLJENHL2 set return code to notify server
       *
      C           *IN81     IFEQ '1'
-     C           *IN83     ANDEQ'1'                                                         MD036165
+     C********** *IN83     ANDEQ'1'                                                MD036165 MD045372
      C           TOT       IFEQ 0                                                           CGL127AM
      C                     MOVE 'NRF'     RTCODE                                            CGL127AM
      C                     ELSE                                                             CGL127AM
@@ -358,13 +362,13 @@
      C           *IN50     IFEQ '1'
      C                     READ GLBATHPD                 50
      C                     ENDIF
-      *                                                                                     MD036165
-      **  CALL ACCESS PROGRAM FOR BANK DETAILS                                              MD036165
-      *                                                                                     MD036165
-     C                     CALL 'AOBANKR0'                                                  MD036165
-     C                     PARM *BLANK    WRTCD   7                                         MD036165
-     C                     PARM '*FIRST ' WOPTN   7                                         MD036165
-     C           SDBANK    PARM SDBANK    DSFDY                                             MD036165
+      *                                                                            MD036165 MD045372
+      ****CALL*ACCESS PROGRAM FOR BANK DETAILS                                     MD036165 MD045372
+      **********                                                                   MD036165 MD045372
+     C**********           CALL 'AOBANKR0'                                         MD036165 MD045372
+     C**********           PARM *BLANK    WRTCD   7                                MD036165 MD045372
+     C**********           PARM '*FIRST ' WOPTN   7                                MD036165 MD045372
+     C********** SDBANK    PARM SDBANK    DSFDY                                    MD036165 MD045372
       *
      C                     ENDSR
       *****************************************************************

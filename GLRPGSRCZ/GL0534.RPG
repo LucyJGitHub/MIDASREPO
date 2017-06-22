@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD036165           Date 25May16               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD045372           Date 23May17               *
+      *  Prev Amend No. MD036165           Date 25May16               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG25260           Date 31Jul09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -44,6 +45,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045372 - Reverse MD036165 as it is causing error in COB    *
+      *             (MSGW) and duplicate postings. CGL010 process     *
+      *             is now done is a separate component (GLC0533).    *
       *  MD036165 - Forward journal entries did not reverse.          *
       *             GLC26 ignored the process because batch is empty. *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -66,7 +70,8 @@
      F                                              KCOMIT
       ** Future postings sorted by value date - prefix V1
       *
-     FGLBATHPAUF  E                    DISK         KINFSR *PSSR
+     F*GLBATHPAUF  E                    DISK         KINFSR *PSSR                           MD045372
+     FGLBATHPAUF  E                    DISK         KINFSR *PSSR A                          MD045372
      F                                              KCOMIT
       ** Batch Transaction file split trailer
       *
@@ -467,8 +472,12 @@
      C**********           Z-ADD007       #DBASE                       MD036165
      C**********           EXSR DBERR                                  MD036165
      C**********           ENDIF                                       MD036165
+     C           *IN13     IFEQ *ON                                                         MD045372
+     C                     ADD  2         WWRCNO                                            MD045372
+     C                     MOVEL'T'       RECI                                              MD045372
+     C                     ENDIF                                                            MD045372
       *                                                                MD036165
-     C           *IN13     IFEQ *OFF                                   MD036165
+     C********** *IN13     IFEQ *OFF                                   MD036165             MD045372
       *
       **  Add hash totals to trailer record
       *
@@ -486,7 +495,11 @@
       *
       **  Update trailer record
       *
+     C           *IN13     IFEQ *ON                                                         MD045372
+     C                     WRITEAPOSTZZF               13                                   MD045372
+     C                     ELSE                                                             MD045372
      C                     UPDATAPOSTZZF               13
+     C                     ENDIF                                                            MD045372
       *
      C           *IN13     IFEQ *ON
      C                     MOVEL'MANPOZZ '#DBFIL
@@ -494,7 +507,7 @@
      C                     EXSR DBERR
      C                     ENDIF
       *                                                                 MD036165
-     C                     ENDIF                                        MD036165
+     C**********           ENDIF                                        MD036165            MD045372
       *
      C                     ENDIF
       *

@@ -12,10 +12,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD045155           Date 17May17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 247103             Date 22May07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -29,6 +30,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045155 - Remove the initialization of CP_CSNT and CP_CSNV  *
+      *             to make sure that the nominal on CPOSND is equal  *
+      *             with the nominal on GPPOSNPD.                     *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  247103 - Execute subroutine *PSSR if an error occurs         *
@@ -189,8 +193,8 @@
       *  Obtain the position prior to the back-value date
       *
      C                   Z-ADD     BVDate        CP_CSDA
-     C                   Z-ADD     0             CP_CSNT
-     C                   Z-ADD     0             CP_CSNV
+     C**********         Z-ADD     0             CP_CSNT                                    MD045155
+     C**********         Z-ADD     0             CP_CSNV                                    MD045155
  
      C     CPOSHK        SETGT     CPOSH
      C     CPOSHP        READPE    CPOSH                                  99

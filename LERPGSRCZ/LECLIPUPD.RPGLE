@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD045480           Date 12May17               *
-      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *  Last Amend No. MD034363           Date 30Jun15               *
+      *  Prev Amend No. MD045480           Date 12May17               *            
+      *                 AR943686           Date 23Sep16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD034771           Date 23Jun15               *
       *                 CGL165             Date 17Mar15               *
@@ -144,6 +145,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034363 - Reversal projected movements were generated during*
+      *             Input Cycle, change value of RAMT to CPAM when    *
+      *             RAMT value is less than CPAM.                     *
       *  MD045480 - Redefine RLOIC from numeric to character field.   *
       *  AR943686 - CLE031: System generating wrong projected move-   *
       *             ment. Populate value of SCCY to convert amount    *
@@ -2030,6 +2034,14 @@
      C                   Z-ADD     BJRDNB        MDAT                                       AR819476
      C                   ENDIF                                                              AR819476
       *                                                                                     AR819476
+      ** Change before repayment amount value if CPAM is less than RAMT                     MD034363
+      *                                                                                     MD034363
+     C                   IF        (CPAM < RAMT AND REPT = 1) or                            MD034363
+     C                             (CPAM < RAMT AND REPT = 2) or                            MD034363
+     C                             (RAMT > (OINTR+CPAM) AND REPT = 3)                       MD034363
+     C                   Z-ADD     CPAM          RAMT                                       MD034363
+     C                   ENDIF                                                              MD034363
+      *                                                                                     MD034363
      C                   MOVEL     LoanL         Z#BSTS
       *                                                                                     AR819476
      C                   IF        MDAT00 = 'Y'                                             AR819476

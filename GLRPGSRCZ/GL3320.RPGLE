@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. 253181             Date 26Apr16               *
-      *  Prev Amend No. MD031642           Date 15Dec14               *
+      *  Last Amend No. MD033583           Date 03Jun15               *
+      *  Prev Amend No. 253181             Date 26Apr16               *
+      *                 MD031642           Date 15Dec14               *
       *                 CRE095             Date 25Apr14               *
       *                 MD033737           Date 05May15               *
       *                 CGL165             Date 17Feb15               *
@@ -81,6 +82,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD033583 - Performance - ABEXAG - Reuse deleted records      *
+      *             (Recompile)                                       *     
       *  253181 - Delete record from the shadow file REMEMLPD when    *
       *           account has been dropped from ACCNTAB               *
       *         - Applied for MD022061                                *

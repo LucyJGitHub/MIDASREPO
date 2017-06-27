@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2010            *
       *                                                               *
-      *  Last Amend No. MD030959           Date 17Jun15               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. MD034451C          Date 02Mar16               *      
+      *  Prev Amend No. MD030959           Date 17Jun15               *
+      *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 MD023738           Date 06Dec13               *
       *                 AR1095876          Date 30Sep13               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034451C - API: Repeated Held Item reversals are allowed.   *
+      *              Recompiled due to changed PF/HELDIHB.            *      
       *  MD030959 - Recompiled due to changed PF/HELDIHC.             *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *

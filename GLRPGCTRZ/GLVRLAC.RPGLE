@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD041157           Date 09Aug16               *
-      *  Prev Amend No. MD030959           Date 17Jun15               *
+      *  Last Amend No. MD034451C          Date 02Mar16               *      
+      *  Prev Amend No. MD041157           Date 09Aug16               *
+      *                 MD030959           Date 17Jun15               *
       *                 AR648606           Date 30Oct14               *
       *                 MD000091           Date 08May13               *
       *                 AR401983           Date 11Dec12               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034451C - Recompiled due to changed PF/HELDIHB             *      
       *  MD041157 - Failure to close an account.  Check correct       *
       *             network files during account closure.             *
       *  MD030959 - Recompiled due to changed PF/HELDIHC.             *

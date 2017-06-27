@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD030959           Date 17Jun15               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD034451C          Date 02Mar16               *
+      *  Prev Amend No. MD030959           Date 18Nov14               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27532           Date 26Apr10               *
       *                 CAP205             Date 23Mar10               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034451C - Recompiled due to changed PF/HELDIHB.            *
       *  MD030959 - Recompiled due to changed PF/HELDIHC.             *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG27532 - Several fields are blanks in confirmation page    *

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CLE154             Date 02Aug12               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. MD032213           Date 06Aug15               *
+      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *                 CDL094             Date 01Sep14               *
       *                 MD025105B          Date 16Apr14               *
       *                 CSD095             Date 08Apr14               *
       *                 MD021356           Date 24Jul13               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032213 - SOAP RPSC UPDATE unexpected error                 *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -1356,6 +1358,30 @@
      C                   EVAL      DDSAMT = DDLCPR                                            CLE106
      C                   ENDIF                                                                CLE106
  
+     C                   IF        DDLNRF = *Blanks                                         MD032213
+     C                   EVAL      DDLNRF = @DDLNRF                                         MD032213
+     C                   ENDIF                                                              MD032213
+                                                                                            MD032213
+     C                   IF        DDSEQN = *Blanks                                         MD032213
+     C                   EVAL      DDSEQN = @DDSEQN                                         MD032213
+     C                   ENDIF                                                              MD032213
+                                                                                            MD032213
+     C                   IF        DDVDAT = *Blanks                                         MD032213
+     C                   EVAL      DDVDAT = @DDVDAT                                         MD032213
+     C                   ENDIF                                                              MD032213
+                                                                                            MD032213
+     C                   IF        DDCUST = *Blanks                                         MD032213
+     C                   EVAL      DDCUST = @DDCUST                                         MD032213
+     C                   ENDIF                                                              MD032213
+                                                                                            MD032213
+     C                   IF        DDCURR = *Blanks                                         MD032213
+     C                   EVAL      DDCURR = @DDCURR                                         MD032213
+     C                   ENDIF                                                              MD032213
+                                                                                            MD032213
+     C                   IF        DDSAMT = *Blanks                                         MD032213
+     C                   EVAL      DDSAMT = @DDSAMT                                         MD032213
+     C                   ENDIF                                                              MD032213
+                                                                                            MD032213
      C                   RESET                   ReturnCode
  
      C                   CALLB     'LERPSCAMD'

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039016           Date 26May16               *
-      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *  Last Amend No. MD028931           Date 13May14               *
+      *  Prev Amend No. MD039016           Date 26May16               *
+      *                 CLE141A            Date 28Apr16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD039613           Date 05Jul16               *
       *                 MD036962           Date 26Apr16               *
@@ -103,6 +104,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD028931 - Incorrect defaulting of exhange rate for loan fees*
+      *             Added check on FA_FCCY not equal to blank to      *
+      *             suppress unncessary default process.              *  
       *  MD039016 - Different event codes for BDC validation in       *
       *             various Lending APIs                              *
       *  CLE141A - CLE141 Change Control 1                            *
@@ -2341,6 +2345,7 @@
      C     DDECUROK      IFEQ      'Y'
      C     *IN77         ANDEQ     '0'
      C     DDECUR        ANDNE     FA_FCCY
+     C     FA_FCCY       ANDNE     *BLANKS                                                  MD028931
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANK        PRTCD
      C                   PARM      '*KEY   '     POPTN
@@ -2388,6 +2393,7 @@
      C     DDEXRT        IFEQ      *BLANKS
      C     DDMDIN        ANDEQ     *BLANKS
      C     DDECUR        ANDNE     FA_FCCY
+     C     FA_FCCY       ANDNE     *BLANKS                                                  MD028931
      C                   MOVE      ZMDIX         WMDIN
       *                                                                                      BUG8565
      C                   EVAL      ZFLD15=WERAT*100000000                                    BUG8565

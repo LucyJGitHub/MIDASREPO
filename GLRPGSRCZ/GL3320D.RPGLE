@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD031993           Date 07Aug15               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD029673           Date 17Jun15               *
+      *  Prev Amend No. MD031993           Date 07Aug15               *
+      *                 CGL165             Date 17Feb15               *
       *                 MD020565           Date 21May13               *
       *                 CGL142             Date 06Aug12               *
       *                 CGL120             Date 20Sep10               *
@@ -46,6 +47,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD029673 - Multiple calls of UTCHOBJEX inside GLC3320.       *
+      *             Initialization should be done on first call only. *
       *  MD031993 - Component GLC0000602 00001 failed in COB.         *
       *             Drop records from GLFORITD linked to accounts.    *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -298,7 +301,7 @@
      C                   MOVE      'N'           @FIRST            1
      C                   MOVEL     'GL3320D'     DBPGM
      C                   Z-ADD     0             WDEL              5 0                        CGL120
-     C                   ENDIF
+     C**********         ENDIF                                                              MD029673
       *                                                                   CRE001
       ** Define LDA                                                       CRE001
       *                                                                   CRE001
@@ -452,6 +455,7 @@
      C     @KEY6         KLIST                                                                137916
      C                   KFLD                    XACNO                                        137916
      C/COPY WNCPYSRC,GL3320DC03
+     C                   ENDIF                                                              MD029673
      C     #AEND         ENDSR                                                  **#AEND TAG**
      C*****************************************************************
      C*                                                               *

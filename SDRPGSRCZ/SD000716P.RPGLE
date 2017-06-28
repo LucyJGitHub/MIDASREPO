@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD030151           Date 05Sep14               *
-      *  Prev Amend No. MD030165           Date 03Sep14               *
+      *  Last Amend No. MD041709           Date 28Sep16               *      
+      *  Prev Amend No. MD030151           Date 05Sep14               *
+      *                 MD030165           Date 03Sep14               *
       *                 MD027545           Date 01Aug14               *
       *                 MD027439           Date 18Jun14               *
       *                 MD024592           Date 28Jan14               *
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041709 - Component SDC000716 failure. Adjusted customer    *
+      *             counter to 10 numeric.                            *      
       *  MD030151 - Exceptions with JACM Update - The customer is not *
       *             exempt and flagged as joint account but there is  *
       *             no joint account members defined                  *
@@ -189,8 +192,10 @@
      D WRUN            S              1
      D DRUND           S              5  0
      D SENTY           S              3
-     D WCustCtr        S              5  0
-     D WCustCnt        S              5  0
+     D***WCustCtr      S              5  0                                                  MD041709
+     D***WCustCnt      S              5  0                                                  MD041709
+     D WCustCtr        S             10  0                                                  MD041709
+     D WCustCnt        S             10  0                                                  MD041709
      D WTempDate       S              5  0
      D @PFTC           S              5
      D WReqLin         S              4P 0

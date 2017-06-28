@@ -11,15 +11,17 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CSD083             Date 27May10               *
+      *  Last Amend No. MD041172           Date 20Sep16               *
+      *  Prev Amend No. CSD083             Date 27May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD015  *CREATE    Date 14Oct02               *
+      *                 CSD015  *CREATE    Date 14Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041172 - WLC Bulk Customer Watchlist Gap
       *  CSD083 - Watch List Compliance Upgrade                       *
       *  CSD015 - Midas Compliance Watch - Watch List Checking        *
       *                                                               *
@@ -172,6 +174,7 @@
  
      C                   IF        #1FUNC <> 'MESSGENT'
      C                   IF        CSD083 = 'N'                                               CSD083
+     C                             OR CSD083 = 'Y' AND #1FUNC = 'SDCUSD'                    MD041172
  
       ** Validate Periodic Watch List Checking Frequency
  

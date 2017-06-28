@@ -16,13 +16,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD027474           Date 11Jun14               *
-      *  Prev Amend No. MD027483           Date 16Jun14               *
+      *  Last Amend No. MD041709           Date 28Sep16               *
+      *  Prev Amend No. MD027474           Date 11Jun14               *
+      *                 MD027483           Date 16Jun14               *
       *                 MD024592           Date 28Jan14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041709 - Component SDC000715 failure. Adjusted customer    *
+      *             counter to 10 numeric.                            *
       *  MD027474 - Report is not arranged by Expiry Date (CUAP/NAHO) *
       *           - Applied fix MD025536                              *
       *  MD027483 - Report includes Customers/NAHL with blank         *
@@ -189,13 +192,17 @@
       ** +--------------------------------------+
  
      D WRUN            S              1
-     D WCalcCust       S              5  0
-     D WCalcNaho       S              5  0
+     D***WCalcCust     S              5  0                                                  MD041709
+     D***WCalcNaho     S              5  0                                                  MD041709
+     D WCalcCust       S             10  0                                                  MD041709
+     D WCalcNaho       S             10  0                                                  MD041709
      D DRUND           S              5  0
      D SENTY           S              3
      D WWTMST          S             26A
-     D WCustCnt        S              5  0
-     D WNahoCnt        S              5  0
+     D***WCustCnt      S              5  0                                                  MD041709
+     D***WNahoCnt      S              5  0                                                  MD041709
+     D WCustCnt        S             10  0                                                  MD041709
+     D WNahoCnt        S             10  0                                                  MD041709
      D WInputDate      S              5  0
      D WExpiryDate     S              5  0
      D WStrNotDate     S              5  0

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2010            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 15Feb17               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD039470           Date 28Jun16               *
+      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
       *                 AR895153           Date 31Jan12               *
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039470 - Serious Midas Error encountered on OPAY using     *
+      *             invalid SWIFT ID.                                 *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -1048,7 +1051,8 @@
      C                              FldLstArr(3) = *BLANKS  AND
      C                              FldLstArr(4) = *BLANKS)
  
-     C                   EVAL      Iy = %LOOKUP('W6MSGR':FldKeyArr)
+     C**********         EVAL      Iy = %LOOKUP('W6MSGR':FldKeyArr)                         MD039470
+     C                   EVAL      Iy = %LOOKUP('W6PMSGR':FldKeyArr)                        MD039470
      C                   MOVEL     FldValArr(Iy) WOTOPMSGR
  
      C                   IF        WOTOPMSGR > 0

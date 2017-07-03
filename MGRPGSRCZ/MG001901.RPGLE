@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
-      *  Last Amend No. MD000091           Date 14May13               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD044271           Date 21Mar17               *
+      *  Prev Amend No. MD000091           Date 14May13               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26840           Date 11Dec09               *
       *                 BUG26511           Date 29Oct09               *
       *                 BUG26435           Date 20Oct09               *
@@ -29,6 +30,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044271 - (1) if MT940 is not to be generated, default      *
+      *             network to PAPER                                  *
+      *             (2) allow ':' as valid character for PAPER network*
       *  MD000091 - Event Codes Substitution                          *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26840 - 22x35 EN is not in the advice                     *
@@ -393,7 +397,9 @@
       *
      C     KAcct         CHAIN     GLNW94L8
      C                   IF        NOT %FOUND (GLNW94L8)
-     C                   EVAL      KNwrk = 'SWIFT'
+      ** If MT940 is not to be generated, default network to PAPER                          MD044271
+     C**********         EVAL      KNwrk = 'SWIFT'                                          MD044271
+     C                   EVAL      KNwrk = 'PAPER'                                          MD044271
      C                   ELSE
       *
       ** Loop to get First network with Extended naarative flag as 'Y'
@@ -448,6 +454,12 @@
       *
      C                   IF        PRtCdIn <> *BLANKS
       *
+      ** If network was defaulted to PAPER and does not exist, return                       MD044271
+     C                   IF        KNwrk = 'PAPER'                                          MD044271
+     C                   EVAL      *INLR = *ON                                              MD044271
+     C                   RETURN                                                             MD044271
+     C                   ENDIF                                                              MD044271
+                                                                                            MD044271
      C     *LOCK         IN        LDA
       *
      C                   EVAL      DBASE = 999
@@ -537,6 +549,8 @@
                                                                                             BUG25476
       ** ':' is not a valid character if it is the first character                          BUG25476
       ** in the line                                                                        BUG25476
+      ** allow ':' as first character if PAPER netwok                                       MD044271
+     C                   IF        EDNWRK <> 'PAPER'                                        MD044271
                                                                                             BUG25476
      C                   DO        22                                                       BUG25476
      C                   EVAL      WPosCl = *ZEROS                                          BUG25476
@@ -555,6 +569,7 @@
      C                   IF        WError = 'Y'                                             BUG25476
      C                   LEAVESR                                                            BUG25476
      C                   ENDIF                                                              BUG25476
+     C                   ENDIF                                                              MD044271
       *                                                                                     BUG25476
      C                   ENDIF
       *

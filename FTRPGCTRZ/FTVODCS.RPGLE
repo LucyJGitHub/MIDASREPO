@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD044074           Date 19Apr17               *
-      *  Prev Amend No. CFT142             Date 20Feb15               *
+      *  Last Amend No. MD045920           Date 31May17               *
+      *  Prev Amend No. MD044074           Date 19Apr17               *
+      *                 CFT142             Date 20Feb15               *
       *                 AR924563           Date 05Nov14               *
       *                 MD000091           Date 15May13               *
       *                 AR924725           Date 14Dec12               *
@@ -111,6 +112,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045920 - Ordering Customer account number is missing from  *
+      *             FT SWIFT payment.                                 *
+      *           - Validation of ACOUNTLINE for OMFM is not being    *
+      *             invoked.                                          *
       *  MD044074 - Serious Midas Error in Outgoing Payment.          *
       *  CFT142 - OPAY msg validation (LCO044)                        *
       *  AR924563 - '-' should not be present in 1st character of     *
@@ -2338,7 +2343,7 @@ E2   C                   EndIf                                                  
      C**********                   CSW207 = 'N'                                       CSW207 250804A
      C                   If        CSW207 = 'N' or                                           250804A
      C                             PFlag <> 'E'                                              250804A
-     C                             and PRtCd <> *Blanks                                      250804A
+     C**********                   and PRtCd <> *Blanks                             250804A MD045920
       *                                                                                      250804A
      C                   Eval      WFieldTag = ':50K:'                                       250804A
                                                                                               CSW207
@@ -2386,7 +2391,7 @@ E2   C                   EndIf                                                  
      C**********                    @ODMTT = 'A')                                    CFT032 BUG14771
      C                             (@ORCT  = 'S' Or @ORCT  = 'C' Or                         BUG14771
      C                              @ORCT  = 'A')                                           BUG14771
-     C                              And PFlag = 'E'                                         BUG15045
+     C**********                    And PFlag = 'E'                                BUG15045 MD045920
      C                   Eval      Idx = Idx + 1                                              CFT032
      C                   Eval      FldNamXAr(Idx) = 'ORDCST'                                  CFT032
      C                   Eval      MsgIdXAr(Idx) = 'MMA1412'                                  CFT032

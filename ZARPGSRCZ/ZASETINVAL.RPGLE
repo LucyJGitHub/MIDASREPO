@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD032089           Date 28Apr15               *
-      *  Prev Amend No. MD040199           Date 05Aug16               *
+      *  Last Amend No. MD024884A          Date 04Jul17               *
+      *  Prev Amend No. MD032089           Date 28Apr15               *
+      *                 MD040199           Date 05Aug16               *
       *                 MD039348           Date 17Jun16               *
       *                 MD033870           Date 17Apr15               *
       *                 AR892347           Date 25Nov14               *
@@ -127,6 +128,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024884A - Incorrect Payment and Receipt accounts           *
       *  MD032089  - PSTM and PONS lost when amended via SOAP with    *
       *              auto AUTH = 'Y'. Error due to clear of received  *
       *              ##PAYF, ##PAYR and ##PRIF on *INZSR and will not *
@@ -2450,6 +2452,7 @@
       *
      C     DDRSTM        IFEQ      '05'
       *
+     C                   MOVEL     DDRONX        WDRONX           21                       MD024884A
      C     DDRONX        IFNE      *BLANKS                                                  BUG12624
      C     A#ACSQ        IFEQ      *BLANKS
      C     A#ACSQ        OREQ      '00'
@@ -2546,6 +2549,9 @@
       *
      C                   END
      C                   ENDIF                                                              BUG12624
+     C                   IF        DDRonxOK = 'N'                                          MD024884A
+     C                   MOVEL     WDRONX        DDRONX                                    MD024884A
+     C                   ENDIF                                                             MD024884A
      C                   END
       *
       ** IF SETL TYPE IS 14, NOSTRO MUST CONTAIN A 10 DIGIT NUMBER
@@ -4267,6 +4273,7 @@
       *
      C     DDPSTM        IFEQ      '05'
       *
+     C                   MOVEL     DDPONX        WDPONX           21                       MD024884A
      C     DDPONX        IFNE      *BLANKS                                                  BUG12624
      C     A#ACSQ        IFEQ      *BLANKS
      C     A#ACSQ        OREQ      '00'
@@ -4353,6 +4360,9 @@
       *
      C                   END
      C                   ENDIF                                                              BUG12624
+     C                   IF        DDPonxOK = 'N'                                          MD024884A
+     C                   MOVEL     WDPONX        DDPONX                                    MD024884A
+     C                   ENDIF                                                             MD024884A
      C                   END
       *
       ** IF SETL TYPE IS 14, NOSTRO MUST CONTAIN A 10 DIGIT NUMBER

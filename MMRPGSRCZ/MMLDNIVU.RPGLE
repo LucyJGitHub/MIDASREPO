@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD044873           Date 23Mar17               *
-      *  Prev Amend No. MD042711           Date 22Nov16               *
+      *  Last Amend No. MD024884A          Date 04Jul17               *
+      *  Prev Amend No. MD044873           Date 23Mar17               *
+      *                 MD042711           Date 22Nov16               *
       *                 MD033924           Date 27Mar15               *
       *                 AR701789           Date 26Sep16               *
       *                 MD037869A          Date 28Mar16               *
@@ -130,6 +131,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024884A - Incorrect Payment and Receipt accounts           *
       *  MD044873 - Serious Midas Error is encountered when completing*
       *             transaction in LDNI. Reverse MD042711.            *
       *  MD042711 - Database error and serious midas error encountered*
@@ -2653,6 +2655,7 @@
      C     DDACTN        OREQ      'X'                                                       260428A
      C                   MOVEL     'Y'           ##PPAY                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
+     C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A
      C                   EXSR      SrPayAmnd                                                MD022656
      C                   ENDIF                                                              MD022656
      C                   ELSE                                                                 260428
@@ -2663,6 +2666,7 @@
      C     DDACTN        OREQ      'X'                                                       260428A
      C                   MOVEL     'Y'           ##PREC                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
+     C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A
      C                   EXSR      SrRecAmnd                                                MD022656
      C                   ENDIF                                                              MD022656
      C                   ELSE                                                                 260428

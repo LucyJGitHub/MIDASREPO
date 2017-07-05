@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CCB023             Date 06Aug12              */
-/*       Prev Amend No. AR868386           Date 27Jul12              */
+/*       Last Amend No. MD027054B          Date 07Apr16              */
+/*       Prev Amend No. CCB023             Date 06Aug12              */
+/*                      AR868386           Date 27Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD027054B - Impossible to work on HATS during secondary COB */
+/*                   System shows an error during open of HATS       */
+/*                   screens due to a leftover EOD message on        */
+/*                   MSPECIAL.                                       */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
 /*                Restructuring                                      */
 /*       AR868386 - System shows an error during open of web-faced   */
@@ -47,9 +52,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /*/COPY WNCPYSRC,SCC0501INT                                          */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')
@@ -63,14 +68,14 @@
              DCL        VAR(&DTQDLEN) TYPE(*DEC) LEN(5) VALUE(1)
              DCL        VAR(&SPECIAL) TYPE(*CHAR) LEN(6)
              DCL        VAR(&CONT) TYPE(*LGL) LEN(1)
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*/COPY WNCPYSRC,SCC0501MPS                                          */
- 
+
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
 /**/
 /*    RESET ALL FILE AND ACTIVITY INDICATORS                       */
@@ -81,7 +86,7 @@
 /**********     CHGVAR     VAR(%SUBSTRING(&DLSTAT 6 2)) VALUE('NN')*/                     /*CCB023*/
 /**********     CHGDTAARA  DTAARA(DLSTAT) VALUE(&DLSTAT)           */                     /*CCB023*/
 /**********  ENDDO                                                 */                     /*CCB023*/
- 
+
 /**********  IF         COND(((%SST(&MMOD 16 1)) *EQ 'Y') *OR +
                           (%SST(&MMOD 23 1)) *EQ 'Y') THEN(DO)     */                     /*CCB023*/
 /**********     ALCOBJ     ((RESTAT *DTAARA *EXCLRD))              */                     /*CCB023*/
@@ -92,7 +97,7 @@
 /**********     CHGDTAARA  DTAARA(RESTAT) VALUE(&RESTAT)           */                     /*CCB023*/
 /**********     DLCOBJ     ((RESTAT *DTAARA *EXCLRD))              */                     /*CCB023*/
 /**********  ENDDO                                                 */                     /*CCB023*/
- 
+
 /**********  IF         COND((%SUBSTRING(&MMOD 4 1)) *EQ 'Y') THEN(DO)*/                  /*CCB023*/
 /**********     RTVDTAARA  DTAARA(CLSTAT) RTNVAR(&CLSTAT)          */                     /*CCB023*/
 /**********     CHGVAR     VAR(%SUBSTRING(&CLSTAT 1 1)) VALUE('N') */                     /*CCB023*/
@@ -100,14 +105,14 @@
 /**********     IF         COND(%SST(&MMOD 5 1) = 'Y') THEN(CHGDTAARA +
                              DTAARA(STSTAT (1 5)) VALUE(OLDNN))    */                     /*CCB023*/
 /**********  ENDDO                                                 */                     /*CCB023*/
- 
+
 /**********  IF        COND((%SUBSTRING(&MMOD 10 1)) *EQ 'Y') THEN(DO)*/                  /*CCB023*/
 /**********    RTVDTAARA  DTAARA(LESTAT) RTNVAR(&LESTAT)           */                     /*CCB023*/
 /**********    CHGVAR     VAR(%SUBSTRING(&LESTAT 6 2)) VALUE('NN') */              /*099376 CCB023*/
 /**********    CHGVAR     VAR(%SUBSTRING(&LESTAT 13 5)) VALUE('NNNNN')*/                  /*CCB023*/
 /**********    CHGDTAARA  DTAARA(LESTAT) VALUE(&LESTAT)            */                     /*CCB023*/
 /**********  ENDDO                                                 */                     /*CCB023*/
- 
+
 /**/
 /****RESET*DTAARA*FOR*CHIPS/MIDAS*ONLINE*INTERFACE******************/                     /*CCB023*/
 /**/
@@ -115,7 +120,7 @@
                           (%SST(&CPSTAT 11 2) = 'YY')) THEN(DO)    */                     /*CCB023*/
 /**********     CHGDTAARA  DTAARA(CPSTAT (13 3)) VALUE(NNN)        */                     /*CCB023*/
 /**********  ENDDO                                                 */                     /*CCB023*/
- 
+
 /**/
 /***CHECK*FOR*CHIPS*DEALING*MSG*FILE*NOT*TRANSMITTED***/                                  /*CCB023*/
 /**/
@@ -123,7 +128,7 @@
 /**********     CALL PGM(CHEOD)                                    */                     /*CCB023*/
 /**********     IF COND(%SWITCH(XXXXXXX1)) THEN(GOTO ABNOR)        */                     /*CCB023*/
 /**********  ENDDO                                                 */                     /*CCB023*/
- 
+
 /**/
 /***CHECK*FOR*CHIPS*LENDING*MSG*FILE*NOT*TRANSMITTED****/                                 /*CCB023*/
 /**/
@@ -132,7 +137,7 @@
 /**********     IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +
                              CMDLBL(ABNOR))                        */                     /*CCB023*/
 /**********  ENDDO                                                 */                     /*CCB023*/
- 
+
 /**/
 /* GL PROCESSING  */
 /**/
@@ -142,7 +147,7 @@
                           VALUE('NNNNNNNNNNN')
              CHGVAR     VAR(%SUBSTRING(&GLSTAT 57 1)) VALUE('N')
              CHGDTAARA  DTAARA(GLSTAT) VALUE(&GLSTAT)
- 
+
 /**/
 /**IF*FUNDS*TRANSFER*PRESENT***/                                                          /*CCB023*/
 /**/
@@ -165,48 +170,50 @@
  SENDT:                                                                                  /*241469A*/
              CALL       PGM(QSNDDTAQ) PARM('FCDTAQ' '*LIBL' &DTQDLEN +
                           'T')
- 
+
  LOOP3:
              ALCOBJ     OBJ((FC0100 *DTAARA *EXCL)) WAIT(30)
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(LOOP3))
              DLCOBJ     OBJ((FC0100 *DTAARA *EXCL))
- 
+
 /**********  CHGVAR     VAR(&SPECIAL) VALUE('EOD  ') */                                 /*AR868386*/
 /**********  SNDMSG     TOMSGQ(MSPECIAL) MSG(&SPECIAL) */                               /*AR868386*/
 /**/
 /* REMOVE 'TERM' MSG FROM MSPECIAL                                 */
 /**/
+             ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL)) WAIT(*CLS)                         /*MD027054B*/
              CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
              RCVMSG     MSGQ(MSPECIAL) MSG(&SPECIAL)
              CHGVAR     VAR(&SPECIAL) VALUE('EOD  ')                                    /*AR868386*/
              SNDMSG     TOMSGQ(MSPECIAL) MSG(&SPECIAL)                                  /*AR868386*/
+             DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))                                    /*MD027054B*/
              CHGVAR     VAR(&CONT) VALUE('0')
              CALL       PGM(SCRUNQP) PARM(P)
- 
+
 /**/
 /* Reclaim resources to unlock files                               */
 /**/
              RCLRSC
- 
+
 /*/COPY WNCPYSRC,SCC0501MPE                                          */
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
 /*/COPY WNCPYSRC,SCC0501ERR                                          */
- 
+
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SCC0501 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  END:
 /*/COPY WNCPYSRC,SCC0501END                                          */
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
- 
+
              ENDPGM

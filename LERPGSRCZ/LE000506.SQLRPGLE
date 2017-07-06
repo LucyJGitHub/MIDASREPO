@@ -12,10 +12,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. CLE164 *CREATE     Date 18Aug14               *
+      *  Last Amend No. MD036704B          Date 11Aug15               *
+      *  Prev Amend No. CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD036704B - System allows input of loans with identical      *
+      *              FrontOfficeID.                                   *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *                                                               *
       *****************************************************************
@@ -99,6 +102,10 @@
      D QUO             C                   CONST('''')
      D pUser           S             10A
  
+     C/EXEC SQL                                                                            MD036704B
+     C+ SET OPTION COMMIT = *CHG                                                           MD036704B
+     C/END-EXEC                                                                            MD036704B
+
       /free
  
        // +--- Start of Main processing -----------------------------+

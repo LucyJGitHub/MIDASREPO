@@ -13,9 +13,8 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. MD027447           Date 28Jun17              */
-/*       Prev Amend No. MD036885           Date 11May16              */
-/*                      MD024006A *REWRITE Date 08Jan14              */
+/*       Last Amend No. MD036885           Date 11May16              */
+/*       Prev Amend No. MD024006A *REWRITE Date 08Jan14              */
 /*                      MD024006           Date 12Dec13              */
 /*                      MD023005A          Date 31Oct13              */
 /*                      MD023005           Date 23Oct13              */
@@ -29,9 +28,6 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD027447 - No recovery process during component failure.    */
-/*                  Delete duplicate records before RVMV issued and  */
-/*                  make sure CPF message is handled correctly.      */
 /*       MD036885 - Close of business component CBC022001            */
 /*       MD024006A - Rewrite to simplify generic component again     */
 /*       MD024006 - Inefficiency in COB File Manager                 */
@@ -67,7 +63,6 @@
              DCL        VAR(&ADDMBRRTN) TYPE(*INT)
              DCL        VAR(&RMVRTN) TYPE(*INT)
              DCL        VAR(&ERRFOUND) TYPE(*CHAR) LEN(1)                               /*MD036885*/
-             DCL        VAR(&SPARM) TYPE(*CHAR) LEN(150)                                /*MD027447*/
 
              DCLF       FILE(CHG022001T) OPNID(CHG)
              DCLF       FILE(RGZ022001T) OPNID(RGZ)
@@ -310,10 +305,6 @@
                 CHGVAR     VAR(&RMVRTN) VALUE(1)
                 GOTO       CMDLBL(RMVEND)
              ENDDO
-                                                                                        /*MD027447*/
-/** Delete duplicate records from MBR before issuing RMVM.  */                          /*MD027447*/
-                                                                                        /*MD027447*/
-             CALLSUBR   SUBR(DELDUP)                                                    /*MD027447*/
 
 /** Read list and remove members; note that this may try to */
 /** remove the same member more than once.                  */
@@ -328,13 +319,12 @@
  RMVM:
              IF         COND(&LOOPCOUNT *NE 3) THEN(DO)
                 RMVM       FILE(&MBR_MBFILE) MBR(&MBR_MBNAME)
-/**********     MONMSG     MSGID(CPF7310) EXEC(DO)                                   */ /*MD027447*/
-/**********        RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)                           */ /*MD027447*/
+                MONMSG     MSGID(CPF7310) EXEC(DO)
+                   RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)
 
 /** If the member has already been removed. */
 
-/**********        IF         COND(&MSGID *EQ 'CPF5815') THEN(DO)                    */ /*MD027447*/
-                MONMSG MSGID(CPF7310 CPF5815) EXEC(DO)                                  /*MD027447*/
+                   IF         COND(&MSGID *EQ 'CPF5815') THEN(DO)
                       GOTO       CMDLBL(RMVREAD)
                    ENDDO
 /** If there is an allocation problem. */
@@ -344,11 +334,8 @@
                       DLYJOB     DLY(10)
                       GOTO       CMDLBL(RMVM)
                    ENDDO
-                   ELSE DO                                                              /*MD027447*/
-                   IF         COND(&MSGID *NE '       ') THEN(DO)                       /*MD027447*/
                    CHGVAR     VAR(&RMVRTN) VALUE(1)
                    GOTO       CMDLBL(RMVEND)
-                   ENDDO                                                                /*MD027447*/
                 ENDDO
              ENDDO
              ELSE       CMD(DO)
@@ -489,22 +476,6 @@
 
  LFRMVEND:
              ENDSUBR    RTNVAL(&LFRMVRTN)
-
-/******************************************************************************/        /*MD027447*/
-/*                                                                            */        /*MD027447*/
-/* Subroutine to delete duplicate records before RMVM.                        */        /*MD027447*/
-/*                                                                            */        /*MD027447*/
-/******************************************************************************/        /*MD027447*/
-             SUBR       SUBR(DELDUP)                                                    /*MD027447*/
-                                                                                        /*MD027447*/
-             CHGVAR VAR(&SPARM) +
-                    VALUE('DELETE From MBR022001T A +
-                         Where RRN(A) > +
-                         (Select Min(RRN(B)) From MBR022001T B +
-                          Where A.MBFILE = B.MBFILE and +
-                                A.MBNAME = B.MBNAME)')                                  /*MD027447*/
-             RUNSQL SQL(&SPARM) COMMIT(*NONE)                                           /*MD027447*/
-             ENDSUBR                                                                    /*MD027447*/
 
 /******************************************************************************/
 /*                                                                            */

@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE154             Date 06Aug12               *      
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. AR743357           Date 22Apr15               *
+      *  Prev Amend No. CLE154             Date 06Aug12               *      
+      *                 CGL165             Date 17Feb15               *
       *                 AR920581           Date 03Dec14               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -123,6 +124,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR743357 - Include principal movements in report when PDEI=  *
+      *             Y and prevent unnecessary IRS events.             *
+      *           - Applied for MD033602                              *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *      
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  AR920581 - Branch on report headings is becomes incorrect    *
@@ -316,6 +320,13 @@
      FDPEVEA  IF  E                    DISK
      FBPEVEA  IF  E                    DISK
      FDRSDEALSIF  F    1074  6AI     2 DISK                               S01392
+     FDEALS   IF  E           K        DISK                                                 AR743357
+     F            DEALSDAF                          KIGNORE                                 AR743357
+     F            DEALSDBF                          KIGNORE                                 AR743357
+     F            DEALSDCF                          KIGNORE                                 AR743357
+     F            DEALSDDF                          KIGNORE                                 AR743357
+     F            DEALSDEF                          KIGNORE                                 AR743357
+     F            DEALSDFF                          KIGNORE                                 AR743357
      FLEFEED  IF  E           K        DISK                               BH3528
      FCLOAN   IF  E           K        DISK                           UC  CLE004
      F            CLOANHHF                          KIGNORE               CLE004
@@ -1159,6 +1170,26 @@
      C                     ELSE                                                               CLE028
      C                     MOVE 'N'       CLE028                                              CLE028
      C                     ENDIF                                                              CLE028
+      *                                                                                     AR743357
+     C                     CALL 'AOSARDR0'                                                  AR743357
+     C                     PARM *BLANK    PRTCD   7                                         AR743357
+     C                     PARM '*VERIFY' POPTN   7                                         AR743357
+     C                     PARM 'CIR003'  PSARD   6                                         AR743357
+      *                                                                                     AR743357
+     C           PRTCD     IFNE *BLANKS                                                     AR743357
+     C           PRTCD     ANDNE'*NRF   '                                                   AR743357
+      *                                                                                     AR743357
+     C                     MOVEL'SCSARDPD'DBFILE                                            AR743357
+     C                     MOVEL'17'      DBASE                                             AR743357
+     C                     MOVEL'CIR003'  DBKEY                                             AR743357
+     C                     EXSR *PSSR                                                       AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C           PRTCD     IFEQ *BLANKS                                                     AR743357
+     C                     MOVE 'Y'       CIR003  1                                         AR743357
+     C                     ELSE                                                             AR743357
+     C                     MOVE 'N'       CIR003                                            AR743357
+     C                     ENDIF                                                            AR743357
       *                                                                                       CAP204
       ** Check if enhancement CAP204 is installed                                             CAP204
       *                                                                                       CAP204
@@ -1577,7 +1608,55 @@
       ** spool file                                                       LN0597
      C                     MOVE '1'       *IN41                           LN0597
      C*                                                                   LN0597
+     C           CIR003    IFEQ 'Y'                                                         AR743357
+     C           DTYP      ANDEQ'RX'                                                        AR743357
+      *                                                                                     AR743357
+     C           *LIKE     DEFN DLNO      TDLNO                                             AR743357
+     C                     Z-ADDDLNO      TDLNO                                             AR743357
+     C           TDLNO     CHAINDEALS                05                                     AR743357
+     C           *IN05     IFEQ '1'                                                         AR743357
+     C                     MOVEL'DEALS   'DBFILE                                            AR743357
+     C                     MOVEL'16'      DBASE                                             AR743357
+     C                     MOVELDLNO      DBKEY                                             AR743357
+     C                     EXSR *PSSR                                                       AR743357
+     C                     MOVE '1'       *IN99                                             AR743357
+     C                     GOTO END                                                         AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C           ETYP      IFEQ '23S3'                                                      AR743357
+     C           ETYP      OREQ '23C3'                                                      AR743357
+      *                                                                                     AR743357
+     C           VDEI      IFEQ 'Y'                                                         AR743357
+     C           EDAT      ANDEQVDAT                                                        AR743357
+     C           PDEI      OREQ 'Y'                                                         AR743357
+     C           EDAT      ANDNEVDAT                                                        AR743357
+     C                     MOVE '0'       *IN41                                             AR743357
+     C                     ELSE                                                             AR743357
+     C                     GOTO END                                                         AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C                     ELSE                                                             AR743357
+      *                                                                                     AR743357
+     C           ETYP      IFEQ '23S4'                                                      AR743357
+     C           ETYP      OREQ '23C4'                                                      AR743357
+      *                                                                                     AR743357
+     C           MDEI      IFEQ 'Y'                                                         AR743357
+     C           EDAT      ANDEQMDAT                                                        AR743357
+     C           PDEI      OREQ 'Y'                                                         AR743357
+     C           EDAT      ANDNEMDAT                                                        AR743357
+     C                     MOVE '0'       *IN41                                             AR743357
+     C                     ELSE                                                             AR743357
+     C                     GOTO END                                                         AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C                     ELSE                                                             AR743357
+     C                     GOTO END                                                         AR743357
+     C                     ENDIF                                                            AR743357
+     C                     ENDIF                                                            AR743357
+     C                     ELSE                                                             AR743357
+      *                                                                                     AR743357
      C                     GOTO END                                       S01221
+     C                     ENDIF                                                            AR743357
      C*                                                                   S01221
      C                     END                                            S01221
      C/COPY WNCPYSRC,GL0551C006

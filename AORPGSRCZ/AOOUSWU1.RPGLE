@@ -12,8 +12,10 @@
       *                                                                  *
       *  (c) Misys International Banking Systems Ltd. 2001               *
       *                                                                  *
-      *  Last Amend No. AR1089180          Date 10Oct13               *
-      *  Prev Amend No. AR740564           Date 06Jun13               *
+      *  Last Amend No. MD033602           Date 06Jul17               *
+      *  Prev Amend No. AR743357           Date 06Jul17               *
+      *                 AR1089180          Date 10Oct13               *
+      *                 AR740564           Date 06Jun13               *
       *                 AR812349           Date 23Oct12               *
       *                 AR318276           Date 01Oct12               *
       *                 CLE134             Date 01Aug12               *
@@ -35,6 +37,10 @@
       *                                                                  *
       *------------------------------------------------------------------*
       *                                                                  *
+      *  MD033602 - FRA/IRS: Projected movements are missing          *
+      *  AR743357 - Incorrect projection of maturity principal for    *
+      *             CIR003                                            *
+      *           - Applied for MD033602                              *
       *  AR1089180 - Make sure that correct settlement details will   *
       *              be passed. Program should not use -amount in     *
       *              determining pay/receive side. (Child: AR1089181) *
@@ -1356,6 +1362,168 @@
      C                   ENDDO
       *
      C                   ENDIF
+      *                                                                                     AR743357
+      ** Principal Exchange on Maturity date, use pay settlement for                        AR743357
+      ** our side and receipt settlement for their side.                                    AR743357
+      *                                                                                     AR743357
+     C     MDEI          IFEQ      'Y'                                                      AR743357
+      *                                                                                     AR743357
+     C     CIR003        IFEQ      'Y'                                                      AR743357
+     C     BOVD          ANDNE     *ZEROS                                                   AR743357
+     C                   MOVE      BOVD          ##VDAT                                     AR743357
+     C                   ELSE                                                               AR743357
+     C                   MOVE      MDAT          ##VDAT                                     AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     ##BEAF        IFEQ      'B'                                                      AR743357
+     C                   MOVEL     Z#XSTS        SETIN                                      AR743357
+     C                   ELSE                                                               AR743357
+     C                   MOVEL     Z#ZSTS        SETIN                                      AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C                   MOVE      DLNO          KDLNO                                      AR743357
+     C                   MOVE      'U'           KOTIN                                      AR743357
+     C     ##BEAF        IFEQ      'B'                                                      AR743357
+     C     KDLPC         SETGT     DLPCSCRX                             87                  AR743357
+     C                   ELSE                                                               AR743357
+     C     KDLPC         SETGT     DLPCSCL0                             87                  AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     *IN87         IFEQ      '0'                                                      AR743357
+     C     ##BEAF        IFEQ      'B'                                                      AR743357
+     C     KDLPC         READPE    DLPCSCRX                               88                AR743357
+     C                   ELSE                                                               AR743357
+     C     KDLPC         READPE    DLPCSCL0                               88                AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     *IN88         IFEQ      '0'                                                      AR743357
+     C                   Z-ADD     PAMT          UPAMT                                      AR743357
+     C                   ENDIF                                                              AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C                   MOVE      UPAMT         ##AMT                                      AR743357
+     C                   MOVE      UCUCY         ##CCY                                      AR743357
+     C                   MOVE      'P'           ##PYRC                                     AR743357
+      *                                                                                     AR743357
+      ** Ensure that correct settlement details                                             AR743357
+      *                                                                                     AR743357
+     C     RXPSTM        IFEQ      00                                                       AR743357
+     C     RXPSTM        OREQ      01                                                       AR743357
+     C     RXPSTM        OREQ      02                                                       AR743357
+     C     RXPSTM        OREQ      03                                                       AR743357
+     C     RXPSTM        OREQ      04                                                       AR743357
+     C     RXPSTM        OREQ      05                                                       AR743357
+     C     RXPSTM        OREQ      06                                                       AR743357
+     C     RXPSTM        OREQ      07                                                       AR743357
+     C     RXPSTM        OREQ      08                                                       AR743357
+     C     RXPSTM        OREQ      09                                                       AR743357
+     C     RXPSTM        OREQ      12                                                       AR743357
+     C     RXPSTM        OREQ      14                                                       AR743357
+     C                   MOVE      RXPSTM        ##SETM                                     AR743357
+     C                   ELSE                                                               AR743357
+     C                   MOVE      PSTM          ##SETM                                     AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     RXPONS        IFNE      *BLANKS                                                  AR743357
+     C                   MOVE      RXPONS        ##SETA                                     AR743357
+     C                   ELSE                                                               AR743357
+     C                   MOVE      PONS          ##SETA                                     AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     RXPOBR        IFNE      *BLANKS                                                  AR743357
+     C                   MOVE      RXPOBR        ##BRCA                                     AR743357
+     C                   ELSE                                                               AR743357
+     C                   MOVE      POBR          ##BRCA                                     AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C                   MOVE      '004'         ##RPNB                                     AR743357
+     C                   MOVE      ##NAR(4)      ##NARR                                     AR743357
+      *                                                                                     AR743357
+      ** Replace currency and convert movement amount to settlement                         AR743357
+      ** currency equivalent.                                                               AR743357
+      *                                                                                     AR743357
+     C     CEU003        IFEQ      'Y'                                                      AR743357
+     C                   MOVE      'M'           WEVFLG                                     AR743357
+     C                   EXSR      SRCNVT                                                   AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     CAP205        IFEQ      'Y'                                                      MD033602
+     C                   MOVEL     'F'           ##MTYP                                     MD033602
+     C                   ENDIF                                                              MD033602
+     C                   EXSR      SRMOVE                                                   AR743357
+      *                                                                                     AR743357
+     C                   MOVE      DLNO          KDLNO                                      AR743357
+     C                   MOVE      'T'           KOTIN                                      AR743357
+     C     ##BEAF        IFEQ      'B'                                                      AR743357
+     C     KDLPC         SETGT     DLPCSCRX                             87                  AR743357
+     C                   ELSE                                                               AR743357
+     C     KDLPC         SETGT     DLPCSCL0                             87                  AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     *IN87         IFEQ      '0'                                                      AR743357
+     C     ##BEAF        IFEQ      'B'                                                      AR743357
+     C     KDLPC         READPE    DLPCSCRX                               88                AR743357
+     C                   ELSE                                                               AR743357
+     C     KDLPC         READPE    DLPCSCL0                               88                AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     *IN88         IFEQ      '0'                                                      AR743357
+     C                   Z-ADD     PAMT          UPAMT                                      AR743357
+     C                   ENDIF                                                              AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C                   MOVE      TPAMT         ##AMT                                      AR743357
+     C                   MOVE      TCUCY         ##CCY                                      AR743357
+     C                   MOVE      'R'           ##PYRC                                     AR743357
+      *                                                                                     AR743357
+      ** Ensure that correct settlement details                                             AR743357
+      *                                                                                     AR743357
+     C     RXRSTM        IFEQ      00                                                       AR743357
+     C     RXRSTM        OREQ      01                                                       AR743357
+     C     RXRSTM        OREQ      02                                                       AR743357
+     C     RXRSTM        OREQ      03                                                       AR743357
+     C     RXRSTM        OREQ      04                                                       AR743357
+     C     RXRSTM        OREQ      05                                                       AR743357
+     C     RXRSTM        OREQ      06                                                       AR743357
+     C     RXRSTM        OREQ      07                                                       AR743357
+     C     RXRSTM        OREQ      08                                                       AR743357
+     C     RXRSTM        OREQ      09                                                       AR743357
+     C     RXRSTM        OREQ      12                                                       AR743357
+     C     RXRSTM        OREQ      14                                                       AR743357
+     C                   MOVE      RXRSTM        ##SETM                                     AR743357
+     C                   ELSE                                                               AR743357
+     C                   MOVE      RSTM          ##SETM                                     AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     RXRONS        IFNE      *BLANKS                                                  AR743357
+     C                   MOVE      RXRONS        ##SETA                                     AR743357
+     C                   ELSE                                                               AR743357
+     C                   MOVE      RONS          ##SETA                                     AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     RXROBR        IFNE      *BLANKS                                                  AR743357
+     C                   MOVE      RXROBR        ##BRCA                                     AR743357
+     C                   ELSE                                                               AR743357
+     C                   MOVE      ROBR          ##BRCA                                     AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C                   MOVE      '004'         ##RPNB                                     AR743357
+     C                   MOVE      ##NAR(4)      ##NARR                                     AR743357
+      *                                                                                     AR743357
+      ** Replace currency and convert movement amount to settlement                         AR743357
+      ** currency equivalent.                                                               AR743357
+      *                                                                                     AR743357
+     C     CEU003        IFEQ      'Y'                                                      AR743357
+     C                   MOVE      'M'           WEVFLG                                     AR743357
+     C                   EXSR      SRCNVT                                                   AR743357
+     C                   ENDIF                                                              AR743357
+      *                                                                                     AR743357
+     C     CAP205        IFEQ      'Y'                                                      MD033602
+     C                   MOVEL     'F'           ##MTYP                                     MD033602
+     C                   ENDIF                                                              MD033602
+     C                   EXSR      SRMOVE                                                   AR743357
+      *                                                                                     AR743357
+     C                   ENDIF                                                              AR743357
       *
      C                   MOVE      'N'           WFLAG1
      C                   ENDIF

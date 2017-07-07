@@ -9,8 +9,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD045010           Date 05Apr17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. AR743357           Date 06Jul17               *
+      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *                 CGL184             Date 07Dec16               *
       *                 MD039107           Date 01Aug16               *
       *                 CIR018             Date 12Aug14               *
       *                 CIR017             Date 10Apr14               *
@@ -116,6 +117,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR743357 - Make sure that principal exchanges and interest   *
+      *             are correct for CIR003.                           *
+      *           - Applied for MD033602                              *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  CGL184 - New Frequencies for Account Statements (Recompile)  *
@@ -3171,24 +3175,24 @@
       *                                                                   CIR003
      C                     ENDIF                                          CIR003
       *                                                                   CIR003
-     C           MDEI      IFEQ 'Y'                                       CIR003
-     C                     MOVE 'O'       IOIND                           CIR003
-      *                                                                   CIR003
-     C           HEDIN     IFEQ 'N'                                       CIR003
-     C                     MOVE '23S4'    ETYP                            CIR003
-     C                     ELSE                                           CIR003
-     C                     MOVE '23C4'    ETYP                            CIR003
-     C                     ENDIF                                          CIR003
-      *                                                                   CIR003
-     C                     MOVE MDAT      EDAT                            CIR003
-     C                     MOVE WPAMT     EAMT                            CIR003
-     C                     MOVE WCUCY     ECCY                            CIR003
-      *                                                                   CIR003
-     C           EDAT      IFGE DNWD                                      CIR003
-     C                     EXSR EVENT                                     CIR003
-     C                     ENDIF                                          CIR003
-      *                                                                   CIR003
-     C                     ENDIF                                          CIR003
+     C********** MDEI      IFEQ 'Y'                                                  CIR003 AR743357
+     C**********           MOVE 'O'       IOIND                                      CIR003 AR743357
+      ****************************************************************               CIR003 AR743357
+     C********** HEDIN     IFEQ 'N'                                                  CIR003 AR743357
+     C**********           MOVE '23S4'    ETYP                                       CIR003 AR743357
+     C**********           ELSE                                                      CIR003 AR743357
+     C**********           MOVE '23C4'    ETYP                                       CIR003 AR743357
+     C**********           ENDIF                                                     CIR003 AR743357
+      ****************************************************************               CIR003 AR743357
+     C**********           MOVE MDAT      EDAT                                       CIR003 AR743357
+     C**********           MOVE WPAMT     EAMT                                       CIR003 AR743357
+     C**********           MOVE WCUCY     ECCY                                       CIR003 AR743357
+      ****************************************************************               CIR003 AR743357
+     C********** EDAT      IFGE DNWD                                                 CIR003 AR743357
+     C**********           EXSR EVENT                                                CIR003 AR743357
+     C**********           ENDIF                                                     CIR003 AR743357
+      ****************************************************************               CIR003 AR743357
+     C**********           ENDIF                                                     CIR003 AR743357
       *                                                                   CIR003
       ** Get principal changes from file                                  CIR003
       *                                                                   CIR003
@@ -3198,10 +3202,12 @@
      C                     MOVE OURTHR    OTIN                            CIR003
      C                     MOVE UNPCD     PRDT                            CIR003
       *                                                                   CIR003
-     C           PCSKEY    SETLLDLPCSCD0               87                 CIR003
+     C********** PCSKEY    SETLLDLPCSCD0               87                            CIR003 AR743357
+     C           PCLKEY    SETLLDLPCSCD0               87                                   AR743357
       *                                                                   CIR003
      C           *IN87     IFEQ *OFF                                      CIR003
-     C           PCSKEY    READEDLPCSCD0                 88               CIR003
+     C********** PCSKEY    READEDLPCSCD0                 88                          CIR003 AR743357
+     C           PCLKEY    READEDLPCSCD0                 88                                 AR743357
      C                     ENDIF                                          CIR003
       *                                                                   CIR003
      C                     Z-ADDWPAMT     WWAMT  130                      CIR003
@@ -3247,11 +3253,49 @@
       *                                                                   CIR003
      C                     Z-ADDPAMT      WWAMT                           CIR003
       *                                                                   CIR003
-     C           PCSKEY    READEDLPCSCD0                 88               CIR003
+     C********** PCSKEY    READEDLPCSCD0                 88                          CIR003 AR743357
+     C           PCLKEY    READEDLPCSCD0                 88                                 AR743357
       *                                                                   CIR003
      C                     ENDDO                                          CIR003
       *                                                                   CIR003
      C                     ENDIF                                          CIR003
+      *                                                                                     AR743357
+     C           MDEI      IFEQ 'Y'                                                         AR743357
+     C                     MOVE 'O'       IOIND                                             AR743357
+      *                                                                                     AR743357
+     C           HEDIN     IFEQ 'N'                                                         AR743357
+     C                     MOVE '23S4'    ETYP                                              AR743357
+     C                     ELSE                                                             AR743357
+     C                     MOVE '23C4'    ETYP                                              AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C                     MOVE MDAT      EDAT                                              AR743357
+      *                                                                                     AR743357
+      ** Search for the last principal change date and amount for the                       AR743357
+      ** swap.  This is the principal at maturity date.                                     AR743357
+      *                                                                                     AR743357
+     C           PCLKEY    KLIST                                                            AR743357
+     C                     KFLD           DLNO                                              AR743357
+     C                     KFLD           OTIN                                              AR743357
+      *                                                                                     AR743357
+     C           PCLKEY    SETGTDLPCSCD0               87                                   AR743357
+      *                                                                                     AR743357
+     C           *IN87     IFEQ '0'                                                         AR743357
+     C           PCLKEY    REDPEDLPCSCD0                 88                                 AR743357
+      *                                                                                     AR743357
+     C           *IN88     IFEQ '0'                                                         AR743357
+     C                     MOVE PAMT      WPAMT                                             AR743357
+     C                     ENDIF                                                            AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C                     MOVE WPAMT     EAMT                                              AR743357
+     C                     MOVE WCUCY     ECCY                                              AR743357
+      *                                                                                     AR743357
+     C           EDAT      IFGE DNWD                                                        AR743357
+     C                     EXSR EVENT                                                       AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C                     ENDIF                                                            AR743357
       *                                                                   CIR003
       ** Process Their side of the swap                                   CIR003
       *                                                                   CIR003
@@ -3276,24 +3320,24 @@
       *                                                                   CIR003
      C                     ENDIF                                          CIR003
       *                                                                   CIR003
-     C           MDEI      IFEQ 'Y'                                       CIR003
-     C                     MOVE 'I'       IOIND                           CIR003
-      *                                                                   CIR003
-     C           HEDIN     IFEQ 'N'                                       CIR003
-     C                     MOVE '23S4'    ETYP                            CIR003
-     C                     ELSE                                           CIR003
-     C                     MOVE '23C4'    ETYP                            CIR003
-     C                     ENDIF                                          CIR003
-      *                                                                   CIR003
-     C                     MOVE MDAT      EDAT                            CIR003
-     C                     MOVE WPAMT     EAMT                            CIR003
-     C                     MOVE WCUCY     ECCY                            CIR003
-      *                                                                   CIR003
-     C           EDAT      IFGE DNWD                                      CIR003
-     C                     EXSR EVENT                                     CIR003
-     C                     ENDIF                                          CIR003
-      *                                                                   CIR003
-     C                     ENDIF                                          CIR003
+     C********** MDEI      IFEQ 'Y'                                                  CIR003 AR743357
+     C**********           MOVE 'I'       IOIND                                      CIR003 AR743357
+      ****************************************************************               CIR003 AR743357
+     C********** HEDIN     IFEQ 'N'                                                  CIR003 AR743357
+     C**********           MOVE '23S4'    ETYP                                       CIR003 AR743357
+     C**********           ELSE                                                      CIR003 AR743357
+     C**********           MOVE '23C4'    ETYP                                       CIR003 AR743357
+     C**********           ENDIF                                                     CIR003 AR743357
+      ****************************************************************               CIR003 AR743357
+     C**********           MOVE MDAT      EDAT                                       CIR003 AR743357
+     C**********           MOVE WPAMT     EAMT                                       CIR003 AR743357
+     C**********           MOVE WCUCY     ECCY                                       CIR003 AR743357
+      ****************************************************************               CIR003 AR743357
+     C********** EDAT      IFGE DNWD                                                 CIR003 AR743357
+     C**********           EXSR EVENT                                                CIR003 AR743357
+     C**********           ENDIF                                                     CIR003 AR743357
+      ****************************************************************               CIR003 AR743357
+     C**********           ENDIF                                                     CIR003 AR743357
       *                                                                   CIR003
       ** Get principal changes from file                                  CIR003
       *                                                                   CIR003
@@ -3303,10 +3347,12 @@
      C                     MOVE OURTHR    OTIN                            CIR003
      C                     MOVE TNPCD     PRDT                            CIR003
       *                                                                   CIR003
-     C           PCSKEY    SETLLDLPCSCD0               87                 CIR003
+     C********** PCSKEY    SETLLDLPCSCD0               87                            CIR003 AR743357
+     C           PCLKEY    SETLLDLPCSCD0               87                                   AR743357
       *                                                                   CIR003
      C           *IN87     IFEQ *OFF                                      CIR003
-     C           PCSKEY    READEDLPCSCD0                 88               CIR003
+     C********** PCSKEY    READEDLPCSCD0                 88                          CIR003 AR743357
+     C           PCLKEY    READEDLPCSCD0                 88                                 AR743357
      C                     ENDIF                                          CIR003
       *                                                                   CIR003
      C                     Z-ADDWPAMT     WWAMT                           CIR003
@@ -3352,11 +3398,45 @@
       *                                                                   CIR003
      C                     Z-ADDPAMT      WWAMT                           CIR003
       *                                                                   CIR003
-     C           PCSKEY    READEDLPCSCD0                 88               CIR003
+     C********** PCSKEY    READEDLPCSCD0                 88                          CIR003 AR743357
+     C           PCLKEY    READEDLPCSCD0                 88                                 AR743357
       *                                                                   CIR003
      C                     ENDDO                                          CIR003
       *                                                                   CIR003
      C                     ENDIF                                          CIR003
+      *                                                                                     AR743357
+     C           MDEI      IFEQ 'Y'                                                         AR743357
+     C                     MOVE 'I'       IOIND                                             AR743357
+      *                                                                                     AR743357
+     C           HEDIN     IFEQ 'N'                                                         AR743357
+     C                     MOVE '23S4'    ETYP                                              AR743357
+     C                     ELSE                                                             AR743357
+     C                     MOVE '23C4'    ETYP                                              AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C                     MOVE MDAT      EDAT                                              AR743357
+      *                                                                                     AR743357
+      ** Search for the last principal change date and amount for the                       AR743357
+      ** swap.  This is the principal at maturity date.                                     AR743357
+      *                                                                                     AR743357
+     C           PCLKEY    SETGTDLPCSCD0               87                                   AR743357
+      *                                                                                     AR743357
+     C           *IN87     IFEQ '0'                                                         AR743357
+     C           PCLKEY    REDPEDLPCSCD0                 88                                 AR743357
+      *                                                                                     AR743357
+     C           *IN88     IFEQ '0'                                                         AR743357
+     C                     MOVE PAMT      WPAMT                                             AR743357
+     C                     ENDIF                                                            AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C                     MOVE WPAMT     EAMT                                              AR743357
+     C                     MOVE WCUCY     ECCY                                              AR743357
+      *                                                                                     AR743357
+     C           EDAT      IFGE DNWD                                                        AR743357
+     C                     EXSR EVENT                                                       AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C                     ENDIF                                                            AR743357
       *                                                                   CIR003
      C                     ENDIF                                          CIR003
       *                                                                   S01393
@@ -5547,34 +5627,46 @@
       ** use GLINTC to calculate interest.                                CIR001
       *                                                                   CIR001
      C           WIPFR     IFNE 'C'                                       CIR001
-      *                                                                   CIR001
-      ** Access the previous non-processed record on                      CIR001
-      ** principal change schedule.                                       CIR001
-      *                                                                   CIR001
+     C                     Z-ADD0         ZINTX                                             AR743357
+     C                     MOVE ' '       PDIND                                             AR743357
+      *                                                                                     AR743357
+      ** If principal change schedule exist for the period                                  AR743357
+      ** calculate the interest based on exchanges                                          AR743357
+      *                                                                                     AR743357
+     C           WNPCD     IFNE 0                                                           AR743357
+     C           ECD       ANDLEWNPCD                                                       AR743357
+     C                     EXSR PCCHG                                                       AR743357
+     C                     MOVE 'Y'       PDIND   1                                         AR743357
+     C                     ENDIF                                                            AR743357
+      ****************************************************************               CIR001 AR743357
+      ***Access*the*previous*non-processed*record*on******************               CIR001 AR743357
+      ***principal*change*schedule.***********************************               CIR001 AR743357
+      ****************************************************************               CIR001 AR743357
      C           PCSKEY    KLIST                                          CIR001
      C                     KFLD           DLNO                            CIR001
      C                     KFLD           OTIN                            CIR001
      C                     KFLD           PRDT                            CIR001
       *                                                                   CIR001
-     C                     MOVE *BLANKS   OTIN                            CIR001
-     C           DTYP      IFEQ 'RX'                                      CIR001
-     C                     MOVELOURTHR    OTIN                            CIR001
-     C                     END                                            CIR001
-     C                     Z-ADDZIBEG     PRDT                            CIR001
-      *                                                                   CIR001
-     C           PCSKEY    SETGTDLPCSCD0                                  CIR001
-     C                     READPDLPCSCD0                 85               CIR001
-      *                                                                   CIR001
-     C           *IN85     IFEQ '0'                                       CIR001
-     C           DTPR      ANDNE'Y'                                       CIR001
-     C           PCDLNO    ANDEQDLNO                                      CIR001
-     C           PCOTIN    ANDEQOTIN                                      CIR001
-     C                     MOVE PAMT      ZIAMT                           CIR001
-     C                     ELSE                                           CIR001
+     C**********           MOVE *BLANKS   OTIN                                       CIR001 AR743357
+     C********** DTYP      IFEQ 'RX'                                                 CIR001 AR743357
+     C**********           MOVELOURTHR    OTIN                                       CIR001 AR743357
+     C**********           END                                                       CIR001 AR743357
+     C**********           Z-ADDZIBEG     PRDT                                       CIR001 AR743357
+      ****************************************************************               CIR001 AR743357
+     C********** PCSKEY    SETGTDLPCSCD0                                             CIR001 AR743357
+     C**********           READPDLPCSCD0                 85                          CIR001 AR743357
+      ****************************************************************               CIR001 AR743357
+     C********** *IN85     IFEQ '0'                                                  CIR001 AR743357
+     C********** DTPR      ANDNE'Y'                                                  CIR001 AR743357
+     C********** PCDLNO    ANDEQDLNO                                                 CIR001 AR743357
+     C********** PCOTIN    ANDEQOTIN                                                 CIR001 AR743357
+     C**********           MOVE PAMT      ZIAMT                                      CIR001 AR743357
+     C**********           ELSE                                                      CIR001 AR743357
       *                                                                   CIR001
       ** If interest is capitalised, add the accumulated interest         CIR001
       **   to the principal.                                              CIR001
       *                                                                   CIR001
+     C                     Z-ADDWICED     ZIEND                                             AR743357
      C           WINPM     IFEQ 'C'                                       CIR001
      C           WINPM     OREQ 'K'                                       CIR001
      C           WINPM     OREQ 'A'                                       CIR006
@@ -5608,10 +5700,11 @@
      C                     ADD  WUSA      ZIAMT                           CIR002
      C                     END                                            CIR002
       *                                                                   CIR001
-     C                     END                                            CIR001
+     C**********           END                                                       CIR001 AR743357
       *                                                                   CIR001
      C/COPY WNCPYSRC,DL0401C045
      C                     EXSR GLINTC                                    CIR001
+     C           ZINTX     ADD  ZINTR     ZINTR                                             AR743357
      C/COPY WNCPYSRC,DL0401C046
      C                     ELSE                                           CIR001
       *                                                                   CIR001
@@ -6860,25 +6953,38 @@
      C                     Z-ADDWICBS     ZICALC
      C                     Z-ADDWPAMT     ZIAMT
      C           CIR001    IFEQ 'Y'                                       CIR001
-      *                                                                   CIR001
-      ** Access the previous non-processed record on                      CIR001
-      ** principal change schedule.                                       CIR001
-      *                                                                   CIR001
-     C                     MOVE *BLANKS   OTIN                            CIR001
-     C           DTYP      IFEQ 'RX'                                      CIR001
-     C                     MOVELOURTHR    OTIN                            CIR001
-     C                     END                                            CIR001
-     C                     Z-ADDZIBEG     PRDT                            CIR001
-      *                                                                   CIR001
-     C           PCSKEY    SETGTDLPCSCD0                                  CIR001
-     C                     READPDLPCSCD0                 85               CIR001
-      *                                                                   CIR001
-     C           *IN85     IFEQ '0'                                       CIR001
-     C           DTPR      ANDNE'Y'                                       CIR001
-     C           PCDLNO    ANDEQDLNO                                      CIR001
-     C           PCOTIN    ANDEQOTIN                                      CIR001
-     C                     MOVE PAMT      ZIAMT                           CIR001
-     C                     ELSE                                           CIR001
+      ****************************************************************               CIR001 AR743357
+      ***Access*the*previous*non-processed*record*on******************               CIR001 AR743357
+      ***principal*change*schedule.***********************************               CIR001 AR743357
+      ****************************************************************               CIR001 AR743357
+     C                     Z-ADD0         ZINTX                                             AR743357
+     C                     MOVE ' '       PDIND                                             AR743357
+      *                                                                                     AR743357
+      ** If principal change schedule exist for the period                                  AR743357
+      ** calculate the interest based on exchanges                                          AR743357
+      *                                                                                     AR743357
+     C           WNPCD     IFNE 0                                                           AR743357
+     C           ECD       ANDLEWNPCD                                                       AR743357
+     C                     EXSR PCCHG                                                       AR743357
+     C                     MOVE 'Y'       PDIND   1                                         AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C**********           MOVE *BLANKS   OTIN                                       CIR001 AR743357
+     C********** DTYP      IFEQ 'RX'                                                 CIR001 AR743357
+     C**********           MOVELOURTHR    OTIN                                       CIR001 AR743357
+     C**********           END                                                       CIR001 AR743357
+     C**********           Z-ADDZIBEG     PRDT                                       CIR001 AR743357
+      ****************************************************************               CIR001 AR743357
+     C********** PCSKEY    SETGTDLPCSCD0                                             CIR001 AR743357
+     C**********           READPDLPCSCD0                 85                          CIR001 AR743357
+      ****************************************************************               CIR001 AR743357
+     C********** *IN85     IFEQ '0'                                                  CIR001 AR743357
+     C********** DTPR      ANDNE'Y'                                                  CIR001 AR743357
+     C********** PCDLNO    ANDEQDLNO                                                 CIR001 AR743357
+     C********** PCOTIN    ANDEQOTIN                                                 CIR001 AR743357
+     C**********           MOVE PAMT      ZIAMT                                      CIR001 AR743357
+     C**********           ELSE                                                      CIR001 AR743357
+     C                     Z-ADDWICED     ZIEND                                             AR743357
       *                                                                   CIR001
       ** If interest is capitalised, add the accumulated interest         CIR001
       **   to the principal.                                              CIR001
@@ -6915,7 +7021,7 @@
      C                     ADD  WUSI      ZIAMT                           CIR002
      C                     ADD  WUSA      ZIAMT                           CIR002
      C                     END                                            CIR002
-     C                     END                                            CIR001
+     C**********           END                                                       CIR001 AR743357
      C                     ELSE                                           CIR001
      C           CIR002    IFEQ 'Y'                                       CIR002
      C/COPY WNCPYSRC,DL0401C110
@@ -6926,6 +7032,7 @@
      C                     Z-ADDWEINR     ZIRATE
      C/COPY WNCPYSRC,DL0401C041
      C                     EXSR GLINTC
+     C           ZINTX     ADD  ZINTR     ZINTR                                             AR743357
      C/COPY WNCPYSRC,DL0401C042
      C                     END                                            CIR001
      C                     END                                            CIR001
@@ -6980,6 +7087,7 @@
      C                     Z-ADDUIPRD     WIPRD  130
      C                     MOVE UDNSI     WDNSI   1
      C                     MOVE UDSTI     WDSTI   1
+     C                     Z-ADDUNPCD     WNPCD   50                                        AR743357
       *                                                                   S01117
      C                     MOVE POBR      WSBR    3                       S01117
      C                     MOVE 'P'       @SETI   1                       S01195
@@ -7087,6 +7195,7 @@
      C                     Z-ADDTIPRD     WIPRD  130
      C                     MOVE TDNSI     WDNSI   1
      C                     MOVE TDSTI     WDSTI   1
+     C                     Z-ADDTNPCD     WNPCD                                             AR743357
      C*                                                                   S01117
      C                     MOVE ROBR      WSBR    3                       S01117
      C                     MOVE 'R'       @SETI   1                       S01195
@@ -10377,6 +10486,55 @@
       *                                                                                       CIR007
      C                     ENDSR                                                              CIR007
       *****************************************************************                       CIR007
+      /EJECT                                                                                AR743357
+      *****************************************************************                     AR743357
+      *                                                               *                     AR743357
+      * PCCHG  - Computes for the interest of a interest period based *                     AR743357
+      *          on DLPCSCPD.                                         *                     AR743357
+      *                                                               *                     AR743357
+      *****************************************************************                     AR743357
+     C           PCCHG     BEGSR                                                            AR743357
+      *                                                                                     AR743357
+     C           *LIKE     DEFN ZINTR     ZINTX                                             AR743357
+     C                     Z-ADDZIBEG     PRDT                                              AR743357
+     C                     Z-ADDZIBEG     PREV                                              AR743357
+     C                     MOVE *BLANKS   OTIN                                              AR743357
+     C           DTYP      IFEQ 'RX'                                                        AR743357
+     C                     MOVELOURTHR    OTIN                                              AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C           PCSKEY    SETLLDLPCSCD0                                                    AR743357
+     C           PCLKEY    READEDLPCSCD0                 85                                 AR743357
+      *                                                                                     AR743357
+     C           *IN85     DOWEQ'0'                                                         AR743357
+     C           PRDT      ANDLTWICED                                                       AR743357
+      *                                                                                     AR743357
+     C                     Z-ADDWPAMT     ZIAMT                                             AR743357
+     C           CIR002    IFEQ 'Y'                                                         AR743357
+     C           WINPM     OREQ 'A'                                                         AR743357
+     C           CIR006    ANDEQ'Y'                                                         AR743357
+     C           WINPM     OREQ 'I'                                                         AR743357
+     C           CIR006    ANDEQ'Y'                                                         AR743357
+     C           WINPM     OREQ 'L'                                                         AR743357
+     C           CIR006    ANDEQ'Y'                                                         AR743357
+     C                     ADD  WUSI      ZIAMT                                             AR743357
+     C                     ADD  WUSA      ZIAMT                                             AR743357
+     C                     ENDIF                                                            AR743357
+      *                                                                                     AR743357
+     C                     Z-ADDPREV      ZIBEG                                             AR743357
+     C                     Z-ADDPRDT      ZIEND                                             AR743357
+     C                     EXSR GLINTC                                                      AR743357
+     C                     ADD  ZINTR     ZINTX                                             AR743357
+      *                                                                                     AR743357
+     C                     Z-ADDPAMT      WPAMT                                             AR743357
+     C                     Z-ADDPRDT      PREV    50                                        AR743357
+      *                                                                                     AR743357
+     C           PCLKEY    READEDLPCSCD0                 85                                 AR743357
+     C                     ENDDO                                                            AR743357
+     C                     Z-ADDWPAMT     ZIAMT                                             AR743357
+     C                     Z-ADDPREV      ZIBEG                                             AR743357
+     C                     ENDSR                                                            AR743357
+      *****************************************************************                     AR743357
       /EJECT                                                                                MD039107
       *****************************************************************                     MD039107
       *                                                               *                     MD039107

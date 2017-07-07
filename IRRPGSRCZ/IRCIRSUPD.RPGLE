@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. AR743357           Date 22Apr15               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025244           Date 09May14               *
       *                 AR1041215A         Date 28Dec12               *
@@ -112,6 +113,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR743357 - Reverse 246966. Error for 246966 should be put to *
+      *             DLC02A.                                           *
+      *           - Applied for MD033602                              *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -583,8 +587,8 @@
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
  
-     D OVRDLPCSC       C                   Const('OVRDBF DLPCSCRX DLPCSCPD +                  246966
-     D                                     OVRSCOPE(*JOB)')                                   246966
+     D***OVRDLPCSC       C                   Const('OVRDBF DLPCSCRX DLPCSCPD +       246966 AR743357
+     D**********                           OVRSCOPE(*JOB)')                          246966 AR743357
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -1570,13 +1574,18 @@
      C                   MOVEL     L1AMCN        WL1AMC            2            CIR005
      C                   MOVEL     L2AMCN        WL2AMC            2            CIR005
  
-     C                   CALLB     'DL2900'
-     C                   PARM      *BLANK        PRTCD
-     C                   PARM                    PDLNO
-     C                   PARM      'B'           PBEAF
+     C**********         CALLB     'DL2900'                                                 AR743357
+     C**********         PARM      *BLANK        PRTCD                                      AR743357
+     C**********         PARM                    PDLNO                                      AR743357
+     C**********         PARM      'B'           PBEAF                                      AR743357
+     C                   CALLB     'DL2901'                                                 AR743357
+     C                   PARM      *BLANK        PRTCD                                      AR743357
+     C                   PARM                    PDLNO                                      AR743357
+     C                   PARM      'B'           PBEAF                                      AR743357
       *
      C     PRTCD         IFEQ      '*ERROR'
-     C                   MOVEL     'DL2900'      DBFILE
+     C**********         MOVEL     'DL2900'      DBFILE                                     AR743357
+     C                   MOVEL     'DL2901'      DBFILE                                     AR743357
      C                   MOVEL     '993'         DBASE
      C                   MOVEL     *BLANK        DBKEY
      C                   EXSR      *PSSR
@@ -2045,7 +2054,8 @@
       *                                                                                       CIR003
      C                   ENDIF                                                                CIR003
       *                                                                                       CIR003
-     C     RXCHTP        IFEQ      'R'                                                        CIR003
+     C*****RXCHTP        IFEQ      'R'                                               CIR003 AR743357
+     C     WkActn        IFEQ      'R'                                                      AR743357
       *                                                                                       CIR003
       ** If reverse, keep 'after' status for both value and maturity date                     CIR003
       ** extra settlement records.                                                            CIR003
@@ -2121,13 +2131,18 @@
      C                   MOVEL     IRVCIRS       Z#BSTS
      C                   MOVE      RXDLNO        PDLNO
  
-     C                   CALLB     'DL2900'
-     C                   PARM      *BLANK        PRTCD
-     C                   PARM                    PDLNO
-     C                   PARM      'B'           PBEAF
+     C**********         CALLB     'DL2900'                                                 AR743357
+     C**********         PARM      *BLANK        PRTCD                                      AR743357
+     C**********         PARM                    PDLNO                                      AR743357
+     C**********         PARM      'B'           PBEAF                                      AR743357
+     C                   CALLB     'DL2901'                                                 AR743357
+     C                   PARM      *BLANK        PRTCD                                      AR743357
+     C                   PARM                    PDLNO                                      AR743357
+     C                   PARM      'B'           PBEAF                                      AR743357
       *
      C     PRTCD         IFEQ      '*ERROR'
-     C                   MOVEL     'DL2900'      DBFILE
+     C**********         MOVEL     'DL2900'      DBFILE                                     AR743357
+     C                   MOVEL     'DL2901'      DBFILE                                     AR743357
      C                   MOVEL     '995'         DBASE
      C                   MOVEL     *BLANK        DBKEY
      C                   EXSR      *PSSR
@@ -3885,11 +3900,11 @@
      C****************************************************************
      C     UPDOLP        BEGSR
       *
-      * Make sure overrides exist                                                             246966
-     C                   Eval      QCMD = OVRDLPCSC                                           246966
-     C                   Call      'QCMDEXC'                                                  246966
-     C                   Parm                    QCMD            100                          246966
-     C                   Parm      100           QCMDLEN          15 5                        246966
+      **Make*sure*overrides*exist**************************************              246966 AR743357
+     C**********         Eval      QCMD = OVRDLPCSC                                  246966 AR743357
+     C**********         Call      'QCMDEXC'                                         246966 AR743357
+     C**********         Parm                    QCMD            100                 246966 AR743357
+     C**********         Parm      100           QCMDLEN          15 5               246966 AR743357
      C**********         CALL      'AOOUSWU0'                                                BUG6373
      C                   CALL      'AOOUSWU1'                                                BUG6373
      C                   PARM      *BLANK        ##RTCD            7

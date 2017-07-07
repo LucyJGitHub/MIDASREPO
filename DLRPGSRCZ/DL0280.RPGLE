@@ -20464,6 +20464,17 @@
      C*                                                                   S01119
      C     *INU1         IFNE      '1'                                                         S0111
      C/COPY WNCPYSRC,DL0280C483
+      *                                                                                       235079
+     C     CIR001        IFEQ      'Y'                                                        235079
+     C     TNPCD         IFNE      0                                                          235079
+     C                   GOTO      RXPRCT                                                     235079
+     C                   ELSE                                                                 235079
+     C     UNPCD         IFNE      0                                                          235079
+     C                   GOTO      RXPRCU                                                     235079
+     C                   ENDIF                                                                235079
+     C                   ENDIF                                                                235079
+     C                   END                                                                  235079
+      *                                                                                       235079
      C     WNIPDT        CABLE     EVCD          RXSHD1                                        S0111
      C     WNIPDU        CABLE     EVCD          RXSHD2                                        S0111
      C*                                                                   CIR001
@@ -20857,6 +20868,26 @@
      C                   END                                                                   CIR00
      C                   MOVE      ' '           AKY(8)                                        14578
      C                   END                                                                   CIR00
+      *                                                                                       235079
+     C     *INU1         IFNE      '1'                                                        235079
+      *                                                                                       235079
+     C     CIR001        IFEQ      'Y'                                                        235079
+     C     UNPCD         ANDNE     0                                                          235079
+     C                   GOTO      RXPRCU                                                     235079
+     C                   ENDIF                                                                235079
+      *                                                                                       235079
+     C     WNIPDT        CABLE     EVCD          RXSHD1                                       235079
+     C     WNIPDU        CABLE     EVCD          RXSHD2                                       235079
+      *                                                                                       235079
+      ** If no interest payments are due, go to tag RXMDAT to                                 235079
+      ** process the buy-out payment                                                          235079
+      *                                                                                       235079
+     C     CIR001        IFEQ      'Y'                                                        235079
+     C                   GOTO      RXMDAT                                                     235079
+     C                   END                                                                  235079
+      *                                                                                       235079
+     C                   GOTO      RXSEND                                                     235079
+     C                   END                                                                  235079
       *                                                                   184906
       ** Set deals file update indicator                                  184906
       *                                                                   184906
@@ -21150,6 +21181,20 @@
      C                   END                                                                   CIR00
      C                   MOVE      ' '           AKY(8)                                        14578
      C                   END                                                                   CIR00
+      *                                                                                       235079
+     C     *INU1         IFNE      '1'                                                        235079
+     C     WNIPDT        CABLE     EVCD          RXSHD1                                       235079
+     C     WNIPDU        CABLE     EVCD          RXSHD2                                       235079
+      *                                                                                       235079
+      ** If no interest payments are due, go to tag RXMDAT to                                 235079
+      ** process the buy-out payment                                                          235079
+      *                                                                                       235079
+     C     CIR001        IFEQ      'Y'                                                        235079
+     C                   GOTO      RXMDAT                                                     235079
+     C                   ENDIF                                                                235079
+      *                                                                                       235079
+     C                   GOTO      RXSEND                                                     235079
+     C                   ENDIF                                                                235079
      C*                                                                   CIR001
      C** SET DEALS FILE UPDATE INDICATOR                                  CIR001
      C*                                                                   CIR001
@@ -22693,8 +22738,14 @@
      C*                                                                   CIR001
      C/COPY WNCPYSRC,DL0280C485
      C** Do not produce any more maturity date keys if shadow post mode   CIR001
+      ** Unless Principal Exchange at Maturity Date is "Y".                                   235079
      C*                                                                   CIR001
+     C     CIR003        IFEQ      'Y'                                                        235079
+     C     MDEI          ANDEQ     'Y'                                                        235079
+     C     *INU1         ANDEQ     '0'                                                        235079
+     C                   ELSE                                                                 235079
      C  NU1              GOTO      RXSEND                                                      CIR00
+     C                   ENDIF                                                                235079
      C*                                                                   CIR001
      C                   END                                                                   CIR00
      C*                                                                   CIR001
@@ -22767,6 +22818,10 @@
      C                   MOVE      *BLANKS       AKY(8)                                        CIR00
      C                   ENDIF                                                                 CIR00
      C* OUR EXPOSURE                                                      S01119
+      ** Only generate exposure and base currency equivalent account                          235079
+      ** keys if non-shadow postings mode.                                                    235079
+      *                                                                                       235079
+     C     *INU1         IFEQ      '1'                                                        235079
      C                   Z-ADD     UAEXA         KYAMT                                         S0111
      C                   MOVE      'E'           AKY(10)                                       S0111
      C                   EXSR      EXCP                                                        S0111
@@ -22815,6 +22870,8 @@
      C                   MOVEA     *BLANKS       AKY(8)                                        CIR00
      C                   MOVEA     '  '          AKY(6)                                        19815
      C                   ENDIF                                                                 CIR00
+      *                                                                                       235079
+     C                   ENDIF                                                                235079
       *                                                                   CIR003
      C* THEIR PRINCIPAL                                                   S01119
      C                   MOVEA     'TA'          AKY(9)                                        S0111
@@ -22865,6 +22922,10 @@
      C                   MOVE      *BLANKS       AKY(8)                                        CIR00
      C                   ENDIF                                                                 CIR00
      C* THEIR EXPOSURE                                                    S01119
+      ** Only generate exposure and base currency equivalent account                          235079
+      ** keys if non-shadow postings mode.                                                    235079
+      *                                                                                       235079
+     C     *INU1         IFEQ      '1'                                                        235079
      C                   Z-ADD     TAEXA         KYAMT                                         S0111
      C                   MOVE      'E'           AKY(10)                                       S0111
      C                   EXSR      EXCP                                                        S0111
@@ -22912,6 +22973,15 @@
      C                   EXSR      EXCP                                                        CIR00
      C                   MOVEA     '   '         AKY(6)                                        19815
      C                   ENDIF                                                                 CIR00
+      *                                                                                       235079
+     C                   ENDIF                                                                235079
+      *                                                                                       235079
+      ** Do not produce any more maturity date keys if shadow post                            235079
+      ** mode.                                                                                235079
+      *                                                                                       235079
+     C     *INU1         IFEQ      '0'                                                        235079
+     C                   GOTO      RXSEND                                                     235079
+     C                   ENDIF                                                                235079
      C*                                                                   S01328
      C/COPY WNCPYSRC,DL0280C486
      C** IF UNREALIZED PROFIT/LOSS POSTED IS NOT ZERO, THEN REVERSE IT    S01328

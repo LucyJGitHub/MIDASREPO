@@ -16,13 +16,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 15Feb17               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD036510           Date 10Jul17               *
+      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR571692 *CREATE   Date 05Sep12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036510 - Possibility to close Nostro Account with live     *
+      *             Fees linked to it                                 *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -74,6 +77,9 @@
  
      FTRSET     IF   E           K DISK
  
+     FLEFEEDL0  IF   E           K DISK                                                     MD036510
+     F                                     PREFIX(A)                                        MD036510
+                                                                                            MD036510
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -83,7 +89,8 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
  
-     D @Txt            S             25A   DIM(8) CTDATA PERRCD(1)
+     D***@Txt***       S             25A   DIM(8) CTDATA PERRCD(1)                          MD036510
+     D @Txt            S             25A   DIM(9) CTDATA PERRCD(1)                          MD036510
  
      D  AccOne         DS
      D  ##Brca                 1      3
@@ -544,7 +551,48 @@
      C                   READ      CLOAN                                  05
      C                   ENDDO
       *
-     C                   ENDIF
+     C                   ENDIF                                                              MD036510
+      *                                                                                     MD036510
+      *                                                                                     MD036510
+      ** Fees                                                                               MD036510
+      *                                                                                     MD036510
+     C                   IF        XxRtn = 'N'                                              MD036510
+      *                                                                                     MD036510
+     C                   EVAL      WMsgD = *BLANKS                                          MD036510
+     C                   EVAL      MsgD1 = @Txt(9)                                          MD036510
+      *                                                                                     MD036510
+     C     *LOVAL        SETLL     LEFEEDL0                                                 MD036510
+     C                   READ      LEFEEDL0                               20                MD036510
+      *                                                                                     MD036510
+     C                   DOW       *IN20 = '0' AND XxRtn = 'N'                              MD036510
+      *                                                                                     MD036510
+     C                   IF        AFESTTL = 1 OR AFESTTL = 2 OR AFESTTL = 7                MD036510
+     C                             OR AFESTTL = 8 OR AFESTTL = 12                           MD036510
+     C                   IF        AFERECI = 'D' AND AFEFCCY = XxCcy                        MD036510
+     C                             AND ARONS = XxNost                                       MD036510
+     C                   EVAL      XxRtn = 'R'                                              MD036510
+     C                   MOVEL(P)  AFECNUM       MsgD2                                      MD036510
+     C                   LEAVE                                                              MD036510
+     C                   ENDIF                                                              MD036510
+     C                   ENDIF                                                              MD036510
+      *                                                                                     MD036510
+     C                   IF        XxRtn = 'N'                                              MD036510
+     C                   IF        AFESTTL = 1 OR AFESTTL = 2 OR AFESTTL = 7                MD036510
+     C                             OR AFESTTL = 8 OR AFESTTL = 12                           MD036510
+     C                   IF        AFERECI = 'D' AND AFEFCCY = XxCcy                        MD036510
+     C                             AND APONS = XxNost                                       MD036510
+     C                   EVAL      XxRtn = 'P'                                              MD036510
+     C                   MOVEL(P)  AFECNUM       MsgD2                                      MD036510
+     C                   LEAVE                                                              MD036510
+     C                   ENDIF                                                              MD036510
+     C                   ENDIF                                                              MD036510
+     C                   ENDIF                                                              MD036510
+      *                                                                                     MD036510
+     C                   READ      LEFEEDL0                               20                MD036510
+     C                   ENDDO                                                              MD036510
+      *                                                                                     MD036510
+     C                   ENDIF                                                              MD036510
+      *                                                                                     MD036510
       *
       ** Loan Amendments
       *
@@ -880,3 +928,4 @@ Security Trade
 FT Incoming Payment
 FT Outgoing Payment
 FF Trade
+Fee - Customer Number

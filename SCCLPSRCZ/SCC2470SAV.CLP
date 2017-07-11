@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2009           */
 /*                                                                   */
-/*       Last Amend No. AR855839           Date 25Nov12              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD036915           Date 06Jan16              */
+/*       Prev Amend No. AR855839           Date 25Nov12              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      260790  *CREATE    Date 19Jun09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD036915 - COB: COBJRNMON is not ready for IASP.            */
 /*       AR855839 - Reopen of Input cycle gives MSGW in COBJRNMON.   */
 /*                  Fix is to CALL CB0602X and AOSARDR0 only when    */
 /*                  CBACOBL1 and SCSARDL1 are not allocated.         */
@@ -186,9 +188,16 @@
 /**/
 /* Create the SAVF for this receiver to be saved */
 /**/
+             IF (&ASP < '33') DO                                                        /*MD036915*/
                  CRTSAVF    FILE(&DILIB/&SAVF_NAME) TEXT('Save file for +
                           Auto COB') ASP(&ASP)
                  MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO                                                                      /*MD036915*/
+             ELSE DO                                                                    /*MD036915*/
+                 CRTSAVF    FILE(&DILIB/&SAVF_NAME) TEXT('Save file for +
+                          Auto COB') ASP(*LIBASP)                                       /*MD036915*/
+                 MONMSG MSGID(CPF0000 MCH0000)                                          /*MD036915*/
+             ENDDO                                                                      /*MD036915*/
 /**/
 /* Now save the receiver */
 /**/

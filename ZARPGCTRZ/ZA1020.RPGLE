@@ -19,7 +19,8 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD037890           Date 25May16               *
+      *  Last Amend No. MD031458           Date 20Jan16               *      
+      *  Prev Amend No. MD037890           Date 25May16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031458 - Display negative amounts correctly. Partially     *
+      *             due to existing fix MD-37890.                     *
       *  MD037890 - Display negative amounts correctly.               *
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
@@ -154,6 +157,7 @@
      C                   MOVEA     *BLANKS       @D
      C                   MOVEA     *BLANKS       @E
      C**  Take modulus of input amount.
+     C                   MOVE      '0'           *IN60                                      MD031458     
      C     @@IAMT        IFLT      *ZERO                                        B1
      C                   Z-SUB     @@IAMT        @@IAMT                         *1
      C                   MOVE      '1'           *IN60                                      MD037890

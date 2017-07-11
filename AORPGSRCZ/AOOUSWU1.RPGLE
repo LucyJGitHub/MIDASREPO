@@ -889,128 +889,128 @@
      C                   EXSR      SRMOVE
       *
      C                   ENDIF
-      *
-      ** Principal Exchange on Maturity date, use pay settlement for
-      ** our side and receipt settlement for their side.
-      *
-     C     MDEI          IFEQ      'Y'
-      *
-     C     CIR003        IFEQ      'Y'
-     C     BOVD          ANDNE     *ZEROS
-     C                   MOVE      BOVD          ##VDAT
-     C                   ELSE
-     C                   MOVE      MDAT          ##VDAT
-     C                   ENDIF
-      *
-     C     ##BEAF        IFEQ      'B'
-     C                   MOVEL     Z#XSTS        SETIN
-     C                   ELSE
-     C                   MOVEL     Z#ZSTS        SETIN
-     C                   ENDIF
-      *
-     C                   MOVE      UPAMT         ##AMT
-     C                   MOVE      UCUCY         ##CCY
-     C                   MOVE      'P'           ##PYRC
-      *
-      ** Ensure that correct settlement details
-      *
-     C     RXPSTM        IFEQ      00
-     C     RXPSTM        OREQ      01
-     C     RXPSTM        OREQ      02
-     C     RXPSTM        OREQ      03
-     C     RXPSTM        OREQ      04
-     C     RXPSTM        OREQ      05
-     C     RXPSTM        OREQ      06
-     C     RXPSTM        OREQ      07
-     C     RXPSTM        OREQ      08
-     C     RXPSTM        OREQ      09
-     C     RXPSTM        OREQ      12
-     C     RXPSTM        OREQ      14
-     C                   MOVE      RXPSTM        ##SETM
-     C                   ELSE
-     C                   MOVE      PSTM          ##SETM
-     C                   ENDIF
-      *
-     C     RXPONS        IFNE      *BLANKS
-     C                   MOVE      RXPONS        ##SETA
-     C                   ELSE
-     C                   MOVE      PONS          ##SETA
-     C                   ENDIF
-      *
-     C     RXPOBR        IFNE      *BLANKS
-     C                   MOVE      RXPOBR        ##BRCA
-     C                   ELSE
-     C                   MOVE      POBR          ##BRCA
-     C                   ENDIF
-      *
-     C                   MOVE      '004'         ##RPNB
-     C                   MOVE      ##NAR(4)      ##NARR
-      *
-      ** Replace currency and convert movement amount to settlement
-      ** currency equivalent.
-      *
-     C     CEU003        IFEQ      'Y'
-     C                   MOVE      'M'           WEVFLG
-     C                   EXSR      SRCNVT
-     C                   ENDIF
-      *
-     C     CAP205        IFEQ      'Y'                                                        CAP205
-     C                   MOVEL     'F'           ##MTYP                                       CAP205
-     C                   ENDIF                                                                CAP205
-     C                   EXSR      SRMOVE
-      *
-     C                   MOVE      TPAMT         ##AMT
-     C                   MOVE      TCUCY         ##CCY
-     C                   MOVE      'R'           ##PYRC
-      *
-      ** Ensure that correct settlement details
-      *
-     C     RXRSTM        IFEQ      00
-     C     RXRSTM        OREQ      01
-     C     RXRSTM        OREQ      02
-     C     RXRSTM        OREQ      03
-     C     RXRSTM        OREQ      04
-     C     RXRSTM        OREQ      05
-     C     RXRSTM        OREQ      06
-     C     RXRSTM        OREQ      07
-     C     RXRSTM        OREQ      08
-     C     RXRSTM        OREQ      09
-     C     RXRSTM        OREQ      12
-     C     RXRSTM        OREQ      14
-     C                   MOVE      RXRSTM        ##SETM
-     C                   ELSE
-     C                   MOVE      RSTM          ##SETM
-     C                   ENDIF
-      *
-     C     RXRONS        IFNE      *BLANKS
-     C                   MOVE      RXRONS        ##SETA
-     C                   ELSE
-     C                   MOVE      RONS          ##SETA
-     C                   ENDIF
-      *
-     C     RXROBR        IFNE      *BLANKS
-     C                   MOVE      RXROBR        ##BRCA
-     C                   ELSE
-     C                   MOVE      ROBR          ##BRCA
-     C                   ENDIF
-      *
-     C                   MOVE      '004'         ##RPNB
-     C                   MOVE      ##NAR(4)      ##NARR
-      *
-      ** Replace currency and convert movement amount to settlement
-      ** currency equivalent.
-      *
-     C     CEU003        IFEQ      'Y'
-     C                   MOVE      'M'           WEVFLG
-     C                   EXSR      SRCNVT
-     C                   ENDIF
-      *
-     C     CAP205        IFEQ      'Y'                                                        CAP205
-     C                   MOVEL     'F'           ##MTYP                                       CAP205
-     C                   ENDIF                                                                CAP205
-     C                   EXSR      SRMOVE
-      *
-     C                   ENDIF
+      *****************************************************************                     AR743357
+      ***Principal*Exchange*on*Maturity*date,*use*pay*settlement*for***                     AR743357
+      ***our*side*and*receipt*settlement*for*their*side.***************                     AR743357
+      *****************************************************************                     AR743357
+     C*****MDEI*         IFEQ      'Y'                                                      AR743357
+      *****************************************************************                     AR743357
+     C*****CIR003        IFEQ      'Y'                                                      AR743357
+     C*****BOVD*         ANDNE     *ZEROS                                                   AR743357
+     C**********         MOVE      BOVD          ##VDAT                                     AR743357
+     C**********         ELSE                                                               AR743357
+     C**********         MOVE      MDAT          ##VDAT                                     AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C*****##BEAF        IFEQ      'B'                                                      AR743357
+     C**********         MOVEL     Z#XSTS        SETIN                                      AR743357
+     C**********         ELSE                                                               AR743357
+     C**********         MOVEL     Z#ZSTS        SETIN                                      AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C**********         MOVE      UPAMT         ##AMT                                      AR743357
+     C**********         MOVE      UCUCY         ##CCY                                      AR743357
+     C**********         MOVE      'P'           ##PYRC                                     AR743357
+      *****************************************************************                     AR743357
+      ***Ensure*that*correct*settlement*details************************                     AR743357
+      *****************************************************************                     AR743357
+     C*****RXPSTM        IFEQ      00                                                       AR743357
+     C*****RXPSTM        OREQ      01                                                       AR743357
+     C*****RXPSTM        OREQ      02                                                       AR743357
+     C*****RXPSTM        OREQ      03                                                       AR743357
+     C*****RXPSTM        OREQ      04                                                       AR743357
+     C*****RXPSTM        OREQ      05                                                       AR743357
+     C*****RXPSTM        OREQ      06                                                       AR743357
+     C*****RXPSTM        OREQ      07                                                       AR743357
+     C*****RXPSTM        OREQ      08                                                       AR743357
+     C*****RXPSTM        OREQ      09                                                       AR743357
+     C*****RXPSTM        OREQ      12                                                       AR743357
+     C*****RXPSTM        OREQ      14                                                       AR743357
+     C**********         MOVE      RXPSTM        ##SETM                                     AR743357
+     C**********         ELSE                                                               AR743357
+     C**********         MOVE      PSTM          ##SETM                                     AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C*****RXPONS        IFNE      *BLANKS                                                  AR743357
+     C**********         MOVE      RXPONS        ##SETA                                     AR743357
+     C**********         ELSE                                                               AR743357
+     C**********         MOVE      PONS          ##SETA                                     AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C*****RXPOBR        IFNE      *BLANKS                                                  AR743357
+     C**********         MOVE      RXPOBR        ##BRCA                                     AR743357
+     C**********         ELSE                                                               AR743357
+     C**********         MOVE      POBR          ##BRCA                                     AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C**********         MOVE      '004'         ##RPNB                                     AR743357
+     C**********         MOVE      ##NAR(4)      ##NARR                                     AR743357
+      *****************************************************************                     AR743357
+      ***Replace*currency*and*convert*movement*amount*to*settlement****                     AR743357
+      ***currency*equivalent.******************************************                     AR743357
+      *****************************************************************                     AR743357
+     C*****CEU003        IFEQ      'Y'                                                      AR743357
+     C**********         MOVE      'M'           WEVFLG                                     AR743357
+     C**********         EXSR      SRCNVT                                                   AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C*****CAP205        IFEQ      'Y'                                               CAP205 AR743357
+     C**********         MOVEL     'F'           ##MTYP                              CAP205 AR743357
+     C**********         ENDIF                                                       CAP205 AR743357
+     C**********         EXSR      SRMOVE                                                   AR743357
+      *****************************************************************                     AR743357
+     C**********         MOVE      TPAMT         ##AMT                                      AR743357
+     C**********         MOVE      TCUCY         ##CCY                                      AR743357
+     C**********         MOVE      'R'           ##PYRC                                     AR743357
+      *****************************************************************                     AR743357
+      ***Ensure*that*correct*settlement*details************************                     AR743357
+      *****************************************************************                     AR743357
+     C*****RXRSTM        IFEQ      00                                                       AR743357
+     C*****RXRSTM        OREQ      01                                                       AR743357
+     C*****RXRSTM        OREQ      02                                                       AR743357
+     C*****RXRSTM        OREQ      03                                                       AR743357
+     C*****RXRSTM        OREQ      04                                                       AR743357
+     C*****RXRSTM        OREQ      05                                                       AR743357
+     C*****RXRSTM        OREQ      06                                                       AR743357
+     C*****RXRSTM        OREQ      07                                                       AR743357
+     C*****RXRSTM        OREQ      08                                                       AR743357
+     C*****RXRSTM        OREQ      09                                                       AR743357
+     C*****RXRSTM        OREQ      12                                                       AR743357
+     C*****RXRSTM        OREQ      14                                                       AR743357
+     C**********         MOVE      RXRSTM        ##SETM                                     AR743357
+     C**********         ELSE                                                               AR743357
+     C**********         MOVE      RSTM          ##SETM                                     AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C*****RXRONS        IFNE      *BLANKS                                                  AR743357
+     C**********         MOVE      RXRONS        ##SETA                                     AR743357
+     C**********         ELSE                                                               AR743357
+     C**********         MOVE      RONS          ##SETA                                     AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C*****RXROBR        IFNE      *BLANKS                                                  AR743357
+     C**********         MOVE      RXROBR        ##BRCA                                     AR743357
+     C**********         ELSE                                                               AR743357
+     C**********         MOVE      ROBR          ##BRCA                                     AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C**********         MOVE      '004'         ##RPNB                                     AR743357
+     C**********         MOVE      ##NAR(4)      ##NARR                                     AR743357
+      *****************************************************************                     AR743357
+      ***Replace*currency*and*convert*movement*amount*to*settlement****                     AR743357
+      ***currency*equivalent.******************************************                     AR743357
+      *****************************************************************                     AR743357
+     C*****CEU003        IFEQ      'Y'                                                      AR743357
+     C**********         MOVE      'M'           WEVFLG                                     AR743357
+     C**********         EXSR      SRCNVT                                                   AR743357
+     C**********         ENDIF                                                              AR743357
+      *****************************************************************                     AR743357
+     C*****CAP205        IFEQ      'Y'                                               CAP205 AR743357
+     C**********         MOVEL     'F'           ##MTYP                              CAP205 AR743357
+     C**********         ENDIF                                                       CAP205 AR743357
+     C**********         EXSR      SRMOVE                                                   AR743357
+      *****************************************************************                     AR743357
+     C**********         ENDIF                                                              AR743357
       *
       ** Principal change on "our" side.
       *

@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
       *****************************************************************
 /***D ***RPG***********************************************************
-/*OVRF*: OVRDBF DLPCSCRX DLPCSCPD
+/*OVRF*: OVRDBF DLPCSCRX DLPCSCPD                                     *
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL IR determine deal actvty for O-L updates')    *
      F*****************************************************************

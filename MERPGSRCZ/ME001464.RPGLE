@@ -17,11 +17,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD022738           Date 08Oct13               *
-      *  Prev Amend No. CFT050  *CREATE    Date 03Jun13               *
+      *  Last Amend No. MD036453           Date 12Nov15               *
+      *  Prev Amend No. MD022738           Date 08Oct13               *
+      *                 CFT050  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036453 - Last 5 characters of B3CPS1 CPS 1 from MEBIB3PD   *
+      *             are dropped when moved to BDLOC1 Location 1.      *
       *  MD022738 - The file MEBICDPD must only be loaded with records*
       *             having a SWIFT address.                           *
       *  CFT050 - SWIFTRef Directories upload                         *
@@ -245,8 +248,14 @@
      C                   MOVEL(P)  B3ADD3        D_BDAPH3
      C                   MOVEL(P)  B3ADD4        D_BDAPH4
      C                   MOVEL(P)  B3ZIP         D_BDZIP
-     C                   MOVEL(P)  B3CPS1        D_BDLOC1
+     C**********         MOVEL(P)  B3CPS1        D_BDLOC1                                   MD036453
+     C     25            SUBST(P)  B3CPS1:1      D_BDLOC1                                   MD036453
+     C                   IF        %SUBST(B3CPS1:26:5) <> *BLANKS                           MD036453
+     C     5             SUBST(P)  B3CPS1:26     D_BDLOC2                                   MD036453
+     C                   MOVE      B3CPS2        D_BDLOC2                                   MD036453
+     C                   ELSE                                                               MD036453
      C                   MOVEL(P)  B3CPS2        D_BDLOC2
+     C                   ENDIF                                                              MD036453
      C                   MOVEL(P)  B3CPS3        D_BDLOC3
      C                   MOVEL(P)  B3CNT1        D_BDCTY1
      C                   MOVEL(P)  B3CNT2        D_BDCTY2

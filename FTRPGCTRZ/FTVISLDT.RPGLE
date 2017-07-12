@@ -21,8 +21,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CFT120             Date 28Sep12               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. MD036683A          Date 12Apr16               *
+      *  Prev Amend No. MD036683           Date 06Jan16               *
+      *                 CFT120             Date 28Sep12               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +46,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036683A - Validate the settlement value date against the   *
+      *              DACO even if the value date is holiday.          *
+      *  MD036683 - Validate the settlement value date against the    *
+      *             opening date of the account (DACO) not only for   *
+      *             retail accounts but for all types of accounts.    *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -233,12 +240,12 @@
       *
      C                   EVAL      WZDATE = ZDATE
      C                   EVAL      IPSLDTD1 = ZDATE
- 
+
      C                   IF        CFT009 = 'N' OR                              CFT009
      C                             CFT009 = 'Y' AND DDSLDT <> *BLANKS           CFT009
      C                   MOVE      ZDATE         DDSLDT
      C                   ENDIF                                                  CFT009
- 
+
      C                   Else
      C                   EVAL      IPSLDTD1 = *Zeros
      C                   ENDIF
@@ -406,7 +413,8 @@
       ** Check if settle date is in the future and if the account
       ** is closing today (if settle value date is valid)
       *
-     C                   IF        OKSLDT = 'Y' and
+     C**********         IF        OKSLDT = 'Y' and                                        MD036683A
+     C                   IF        OKSLDT <> 'N' and                                       MD036683A
      C                             OKSND1 = 'Y' and
      C*****                        OKRCCO = 'Y'                                 CFT014
      C                             OKRCO1 = 'Y'                                 CFT014
@@ -431,7 +439,8 @@
       *
      C                   ENDIF
       *                                                                         CFT014
-     C                   IF        OKSLDT = 'Y'                                 CFT014
+     C**********         IF        OKSLDT = 'Y'                                     CFT014 MD036683A
+     C                   IF        OKSLDT <> 'N'                                           MD036683A
      C                             AND OKTRIB = 'Y'                             CFT014
      C                             AND CFT014 = 'Y'                             CFT014
       *                                                                         CFT014
@@ -453,12 +462,14 @@
       ** Third Reimbursement Institution precedes Sender and                    CFT014
       ** Receiver's Correspondent if CFT014 is installed.                       CFT014
       *
-     C                   IF        OKSLDT = 'Y' and
+     C**********         IF        OKSLDT = 'Y' and                                        MD036683A
+     C                   IF        OKSLDT <> 'N' and                                       MD036683A
      C                             OKSND1 = 'Y' and
      C*****                        OKRCCO = 'Y'                                 CFT014
      C                             OKRCO1 = 'Y'                                 CFT014
      C                             AND CFT014 ='N'                              CFT014
-     C                             OR (OKSLDT = 'Y'                             CFT014
+     C**********                   OR (OKSLDT = 'Y'                                 CFT014 MD036683A
+     C                             OR (OKSLDT <> 'N'                                       MD036683A
      C                             AND OKSND1 = 'Y'                             CFT014
      C                             AND OKRCO1 = 'Y'                             CFT014
      C                             AND OKTRIB = 'Y'                             CFT014
@@ -470,7 +481,7 @@
      C                             AND (CFT014 = 'Y')                           CFT014
       *                                                                         CFT014
       ** Third Reimbursement Institution                                        CFT014
-     C                   IF        PAtyp3 = 'R'                                 CFT014
+     C**********         IF        PAtyp3 = 'R'                                      CFT014 MD036683
       *                                                                         CFT014
      C                   IF        WSLDT < BVLD                                 CFT014
      C                   MOVE      'N'           OKTRIB                         CFT014
@@ -486,7 +497,7 @@
      C                   EndIf                                                  CFT014
      C                   ENDIF                                                  CFT014
       *                                                                         CFT014
-     C                   ENDIF                                                  CFT014
+     C**********         ENDIF                                                       CFT014 MD036683
       *                                                                         CFT014
      C                   ELSE                                                   CFT014
       *                                                                         CFT014
@@ -494,7 +505,7 @@
      C                   IF        DDRCO1 = *BLANKS                             CFT014
       *
       ** Use Sender fields
-     C                   IF        PAtyp1 = 'R'
+     C**********         IF        PAtyp1 = 'R'                                             MD036683
       *
      C                   IF        WSLDT < BVLD
      C                   MOVE      'N'           OKSND1
@@ -510,12 +521,12 @@
      C                   EndIf
      C                   ENDIF
       *
-     C                   ENDIF
+     C**********         ENDIF                                                              MD036683
       *
      C                   ELSE
       *
       ** Use Receiver's correspondent fields
-     C                   IF        PAtyp2 = 'R'
+     C**********         IF        PAtyp2 = 'R'                                            MD036683A
       *
      C                   IF        WSLDT < BVLD
      C*****              MOVE      'N'           OKRCCO                         CFT014
@@ -535,7 +546,7 @@
      C                   EndIf
      C                   ENDIF
       *
-     C                   ENDIF
+     C**********         ENDIF                                                             MD036683A
       *
      C                   ENDIF
       *                                                                         CFT014

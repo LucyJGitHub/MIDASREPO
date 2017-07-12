@@ -21,8 +21,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CFT120             Date 28Sep12               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. MD036683A          Date 12Apr16               *
+      *  Prev Amend No. MD036683           Date 06Jan16               *
+      *                 CFT120             Date 28Sep12               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -46,6 +48,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036683A - Validate the settlement value date against the   *
+      *              DACO even if the value date is holiday.          *
+      *  MD036683 - Validate the payment value date against the       *
+      *             opening date of the account (DACO) not only for   *
+      *             retail accounts but for all types of accounts.    *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -426,7 +433,8 @@
       ** Check if Pay Value Date is in the future and if the
       ** account is closing today (if pay date is valid)
       *
-     C                   IF        OKPYDT = 'Y' and
+     C**********         IF        OKPYDT = 'Y' and                                        MD036683A
+     C                   IF        OKPYDT <> 'N' and                                       MD036683A
      C                             OKBNC1 = 'Y' and
      C                             OKACBK = 'Y'
       *
@@ -454,7 +462,8 @@
       ** date nor before the date the account was opened for the
       ** account that must be in pay currency.
       *
-     C                   IF        OKPYDT = 'Y' and
+     C**********         IF        OKPYDT = 'Y' and                                        MD036683A
+     C                   IF        OKPYDT <> 'N' and                                       MD036683A
      C                             OKBNC1 = 'Y' and
      C                             OKACBK = 'Y'
       *
@@ -463,7 +472,7 @@
      C                   IF        DDACBK = *Blanks
       *
       ** Use Beneficiary customer fields
-     C                   IF        PAtyp3 = 'R'
+     C**********         IF        PAtyp3 = 'R'                                             MD036683
      C                   IF        WPYDT < BVLD
      C                   MOVE      'N'           OKBNC1
      C                   ADD       1             IDx
@@ -477,12 +486,12 @@
      C                   MOVEL     'FTA0033'     MsgIdXAr(IDx)
      C                   EndIf
      C                   ENDIF
-     C                   ENDIF
+     C**********         ENDIF                                                              MD036683
       *
      C                   ELSE
       *
       ** Use Account with Bank Fields
-     C                   IF        PAtyp4 = 'R'
+     C**********         IF        PAtyp4 = 'R'                                             MD036683
      C                   IF        WPYDT < BVLD
      C                   MOVE      'N'           OKACBK
      C                   ADD       1             IDx
@@ -496,7 +505,7 @@
      C                   MOVEL     'FTA0035'     MsgIdXAr(IDx)
      C                   EndIf
      C                   ENDIF
-     C                   ENDIF
+     C**********         ENDIF                                                              MD036683
       *
      C                   ENDIF
       *

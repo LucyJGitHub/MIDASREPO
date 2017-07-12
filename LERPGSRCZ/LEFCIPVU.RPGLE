@@ -27,8 +27,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. LLN022A            Date 03Jun15               *
-      *  Prev Amend No. LLN022             Date 03Jun15               *
+      *  Last Amend No. MD031146           Date 08Apr16               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *                 LLN022             Date 03Jun15               *
       *                 CDL094             Date 01Sep14               *
       *                 MD024398           Date 11May14               *
       *                 CSD095             Date 08Apr14               *
@@ -78,6 +79,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031146 - Amended program to populate FRNT and AFRT fields  *
+      *             in FCLTYFN.                                       *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  LLN022 - BOE Upgrade to MidasPlus                            *
@@ -1839,6 +1842,8 @@
      C                   EVAL      LVFOID   = APFOAsocID                                      CER001
      C                   EVAL      LVRPLC   = APRprLocn                                       CER001
      C                   EVAL      LVTMSP   = TimeStamp                                       CER001
+     C                   EVAL      V_FNFRNT = V_FPFRNT                                      MD031146
+     C                   EVAL      V_FNAFRT = V_FPAFRT                                      MD031146
  
      C                   EXSR      SRSTAT                                                    BUG8870
  

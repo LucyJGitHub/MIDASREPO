@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL184             Date 07Dec16               *
-      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *  Last Amend No. MD044620           Date 10Apr17               *
+      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *                 CLE154             Date 07Aug12               *
       *                 240697             Date 06Mar15               *
       *                 AR936915           Date 07Oct14               *
       *                 AR830785           Date 07May13               *
@@ -86,6 +87,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044620 - Temporary files of LEFCENPD & LEFATRPD are being  *
+      *             created in XPLIB. Remove previous defined array:  *
+      *             'CLRPFM FILE(          )' and instead, clear new  *
+      *             members passed. Remove part of fix AR936915.      *
       *  CGL184 - New Frequencies for Account Statements (Recompile)  *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  240697 - Recompiled due to changed LF/LEFCAML8.              *
@@ -282,7 +287,8 @@
      E**********          CMD     1   1 21               QCMDEXC Cmd      189088
      E**********          CMD     1   1 27               QCMDEXC Cmd                   189088 189343
      E**********          CMD     1   2 27               QCMDEXC Cmd                 189343 AR936915
-     E                    CMD     1   1 27               QCMDEXC Cmd                        AR936915
+     E**********          CMD     1   1 27               QCMDEXC Cmd               AR936915 MD044620
+     E                    CMD     1   1 39               QCMDEXC Cmd                        MD044620
      E/COPY ZSRSRC,ZDATE9Z1                                               CLE014
      E/COPY ZSRSRC,ZFREQBZ1                                                                   207963
      E/COPY ZSRSRC,ZHOLE                                                                      207963
@@ -451,8 +457,10 @@
      I                                    P   7  130WRRAMT                CLE014
       *                                                                   CLE014
      I            DS                                                                        AR936915
-     I                                        1  27 CMD                                     AR936915
+     I**********                              1  27 CMD                            AR936915 MD044620
+     I                                        1  39 CMD                                     MD044620
      I                                       13  22 FLNAME                                  AR936915
+     I                                       29  38 MBNAME                                  MD044620
       *                                                                                     AR936915
      ILDA       E DSLDA                         256
       *
@@ -498,6 +506,8 @@
       ** File Status Data Structure
       *
      I                                     *RECORD  FREC
+     I              'LEFCENPD'            C         FILE1                                   MD044620
+     I              'LEFATRPD'            C         FILE2                                   MD044620
      I/COPY ZSRSRC,ZINTDYZ1                                               CLE014
      I/COPY ZSRSRC,ZDATE9Z2                                               CLE014
      I/COPY ZSRSRC,ZDAT10Z1                                               CLE014
@@ -690,19 +700,25 @@
      C                     ENDIF                                                              207963
       *
      C**********           MOVELCMD,1     PCMD                                              AR936915
-     C                     MOVELPNWPF1    FLNAME                                            AR936915
+     C**********           MOVELPNWPF1    FLNAME                                   AR936915 MD044620
+     C                     MOVELFILE1     FLNAME                                            MD044620
+     C                     MOVELPNWPF1    MBNAME                                            MD044620
      C                     CALL 'QCMDEXC'              04
      C**********           PARM           PCMD   21                       189088
      C**********           PARM 21        PLEN   155                      189088
      C**********           PARM           PCMD   27                                  189088 AR936915
      C                     PARM           CMD                                               AR936915
-     C                     PARM 27        PLEN   155                      189088
+     C**********           PARM 27        PLEN   155                                 189088 MD044620
+     C                     PARM 39        PLEN   155                                        MD044620
      C**********           MOVELCMD,2     PCMD                                       189343 AR936915
-     C                     MOVELPNWPF2    FLNAME                                            AR936915
+     C**********           MOVELPNWPF2    FLNAME                                   AR936915 MD044620
+     C                     MOVELFILE2     FLNAME                                            MD044620
+     C                     MOVELPNWPF2    MBNAME                                            MD044620
      C                     CALL 'QCMDEXC'              06                                     189343
      C**********           PARM           PCMD   27                                  189343 AR936915
      C                     PARM           CMD                                               AR936915
-     C                     PARM 27        PLEN   155                                          189343
+     C**********           PARM 27        PLEN   155                                 189343 MD044620
+     C                     PARM 39        PLEN   155                                        MD044620
       *
       ** Read in Installation Data
       *
@@ -2546,7 +2562,7 @@
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2001
 ** CMD - QCMDEXC COMMAND
-CLRPFM FILE(          )                                                                     AR936915
+CLRPFM FILE(          ) MBR(          )                                                     MD044620
 ** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN    CLE014
 00366007310109601461                                                      CLE014
 ** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR       CLE014

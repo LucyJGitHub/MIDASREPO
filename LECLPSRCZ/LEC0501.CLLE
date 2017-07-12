@@ -9,44 +9,66 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. CCB023   *CREATE   Date 06Aug12              */
+/*       Last Amend No. MD044620           Date 10Apr17              */
+/*       Prev Amend No. CCB023   *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD044620 - Temporary files of LEFCENPD & LEFATRPD are being */
+/*                  created in XPLIB. Remove added members from the  */
+/*                  files.                                           */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
 /*                Restructuring                                      */
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              COPYRIGHT  TEXT('(c) Misys International Banking +
                           Systems Ltd. 2012')
              DCL        VAR(&LESTAT) TYPE(*CHAR) LEN(256)
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*    RESET ALL LE FILE AND ACTIVITY INDICATORS                     */
- 
+
              RTVDTAARA  DTAARA(LESTAT) RTNVAR(&LESTAT)
              CHGVAR     VAR(%SUBSTRING(&LESTAT 6 2)) VALUE('NN')
              CHGVAR     VAR(%SUBSTRING(&LESTAT 13 5)) VALUE('NNNNN')
              CHGDTAARA  DTAARA(LESTAT) VALUE(&LESTAT)
- 
+
+             RMVM       FILE(LEFCENL0) MBR(*ALL)                                        /*MD044620*/
+             MONMSG     MSGID(CPF7301 CPF7310 CPF3219)                                  /*MD044620*/
+             RMVM       FILE(LEFCENPD) MBR(*ALL)                                        /*MD044620*/
+             MONMSG     MSGID(CPF7301 CPF7310 CPF3219)                                  /*MD044620*/
+             ADDLFM     FILE(LEFCENL0) MBR(LEFCENL0)                                    /*MD044620*/
+             MONMSG     MSGID(CPF5812 CPF7306)                                          /*MD044620*/
+             ADDPFM     FILE(LEFCENPD) MBR(LEFCENPD)                                    /*MD044620*/
+             MONMSG     MSGID(CPF5812 CPF7306)                                          /*MD044620*/
+                                                                                        /*MD044620*/
+             RMVM       FILE(LEFATRL0) MBR(*ALL)                                        /*MD044620*/
+             MONMSG     MSGID(CPF7301 CPF7310 CPF3219)                                  /*MD044620*/
+             RMVM       FILE(LEFATRPD) MBR(*ALL)                                        /*MD044620*/
+             MONMSG     MSGID(CPF7301 CPF7310 CPF3219)                                  /*MD044620*/
+             ADDLFM     FILE(LEFATRL0) MBR(LEFATRL0)                                    /*MD044620*/
+             MONMSG     MSGID(CPF5812 CPF7306)                                          /*MD044620*/
+             ADDPFM     FILE(LEFATRPD) MBR(LEFATRPD)                                    /*MD044620*/
+             MONMSG     MSGID(CPF5812 CPF7306)                                          /*MD044620*/
+                                                                                        /*MD044620*/
              RCLRSC
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           REC0501 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  END:
              ENDPGM

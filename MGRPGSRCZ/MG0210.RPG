@@ -10,9 +10,11 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD038505           Date 19Jan17               *
-      *  Prev Amend No. MD035921           Date 16Oct15               *
-      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. MD037924           Date 13Jul17               *
+      *  Prev Amend No. MD037305           Date 13Jul17               *
+      *                 MD038505           Date 19Jan17               *
+      *                 MD035921           Date 16Oct15               *
+      *                 CSW215             Date 06Apr15               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -84,6 +86,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037924 - Additional fix to ensure that deletion of message *
+      *             will only be done when read is done successfully. *
+      *             Related to MD037305.                              *
+      *  MD037305 - Value too long for tag :20: of MT210              *
       *  MD038505 - Missing account number for IRS                    *
       *  MD035921 - MT210 missing tag 25 - Account Identification     *
       *  CSW215 - SWIFT Changes 2015                                  *
@@ -596,6 +602,17 @@
       **  Do While records found on the MT210 extract file
       *
      C           *IN10     DOWEQ'0'
+      *                                                                                     MD037305
+      ** Get Interest Message Indicator from Transaction Number                             MD037305
+      *                                                                                     MD037305
+     C                     MOVE ' '       INTMSG  1                                         MD037305
+     C           MGCHTP    IFEQ 'A'                                                         MD037305
+     C           MGCHTP    OREQ 'I'                                                         MD037305
+     C                     MOVE MGTNUM    INTMSG                                            MD037305
+     C           INTMSG    IFEQ 'I'                                                         MD037305
+     C                     MOVE ' '       MGTNUM                                            MD037305
+     C                     ENDIF                                                            MD037305
+     C                     ENDIF                                                            MD037305
       *
       **  Initialise non-constant fields
       *
@@ -633,6 +650,10 @@
       **  Return back to the previous message so it can be processed
       *
      C                     READPMGF210L0                 10
+      *                                                                                     MD037924
+     C           INTMSG    IFEQ 'I'                                                         MD037924
+     C                     MOVE ' '       MGTNUM                                            MD037924
+     C                     ENDIF                                                            MD037924
       *
       **  Matching criteria is met
      C           MATCH     IFEQ 'Y'
@@ -3381,7 +3402,14 @@
      C           SAVNUM    DOUEQMGTNUM
      C           *IN10     OREQ '1'
      C                     READ MGF210L0                 10
+      *                                                                                     MD037305
+     C           INTMSG    IFEQ 'I'                                                         MD037305
+     C                     MOVE ' '       MGTNUM                                            MD037305
+     C                     ENDIF                                                            MD037305
+      *                                                                                     MD037305
+     C           *IN10     IFEQ '0'                                                         MD037924
      C                     DELETMGF210L0               16
+     C                     ENDIF                                                            MD037924
       *
       **  Error on delete of record.
       *
@@ -3693,6 +3721,17 @@
       *                                                                   S01408
       *
      C                     MOVE MGCHTP    AORR                                                CSW025
+     C           MGCHTP    IFEQ 'A'                                                         MD037305
+     C           INTMSG    IFEQ 'I'                                                         MD037305
+     C                     MOVE 'T'       AORR                                              MD037305
+     C                     ENDIF                                                            MD037305
+     C                     ENDIF                                                            MD037305
+     C           MGCHTP    IFEQ 'I'                                                         MD037305
+     C           INTMSG    IFEQ 'I'                                                         MD037305
+     C                     MOVE 'P'       AORR                                              MD037305
+     C                     ENDIF                                                            MD037305
+     C                     ENDIF                                                            MD037305
+      *                                                                                     MD037305
      C                     WRITEMGOREFD0               05
       *
       **  Error on write to PF/MGOREFPD (message reference file)

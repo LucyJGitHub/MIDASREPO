@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR1090283          Date 10Aug16               *
-      *  Prev Amend No. MD025111           Date 10May14               *
+      *  Last Amend No. MD036089           Date 23Oct15               *      
+      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *                 MD025111           Date 10May14               *
       *                 CFT151             Date 21Mar14               *
       *                 MD022652           Date 07Oct13               *
       *                 MD023247           Date 03Dec13               *
@@ -100,6 +101,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036089 - Incorrect values appeared in FT IPN1              *      
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
       *            - Applied for MD-39986.                            *
@@ -354,7 +356,8 @@
       ** Incoming Payments Lvl 1 Scrn details from incoming  transaction
       ** - screen format
      D NwIP1ScnFmt   E DS                  EXTNAME(FTIPY1PD)
-     D  NwDetailScrn          20    480
+     D***NwDetailScrn          20    480                                                    MD036089
+     D  NwDetailScrn          20    706                                                     MD036089
       *
       ** Incoming Payments Lvl 2 Scrn 1/1 details from incoming  transaction
       ** - screen format
@@ -12484,7 +12487,7 @@
       *
      C                   MOVEL     'IN'          PPYTP
      C                   MOVEL     'N'           DDSWPC
-     C                   MOVEL     'D'           DDADDC
+     C**********         MOVEL     'D'           DDADDC                                     MD036089
                                                                                 CFT009
      C                   IF        CFT009 = 'N'                                 CFT009
      C                   MOVEL     WRUNDAY       DDSLDT

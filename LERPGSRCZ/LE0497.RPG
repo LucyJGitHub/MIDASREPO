@@ -15,9 +15,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD030379           Date 29Oct14               *
-      *  Prev Amend No. MD021855           Date 27Oct14               *
-      *                 MD030126           Date 27Oct14               *
+      *  Last Amend No. MD024229           Date 18Apr16               *
+      *  Prev Amend No. AR1059786          Date 18Apr16               *
+      *                 MD030379           Date 13Oct14               *
+      *                 MD021855           Date 15Sep14               *
+      *                 MD030126           Date 15Sep14               *
       *                 CLE075AR           Date 06Aug12               *
       *                 AR1056323          Date 14Nov12               *
       *                 CLE134             Date 01Aug12               *
@@ -75,6 +77,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024229 - If accounting is to be generated for Credit       *
+      *             Agreement, Revolving Indicator of the Tranche     *
+      *             must be taken into account.                       *
+      *           - Applied for MD-31474                              *
+      *  AR1059786 - Bank wants to generate contingent accounting for *
+      *              Credit Agreements so need to reverse fix 141460. *
+      *              Introduce system value 'GenCAContingentAcctg'    *
+      *              to make this option available. (Child: AR1060643)*
+      *            - Applied for MD-31474                             *
       *  MD030379 - Condition CFA processing for reversed, closed and *
       *             expired facilities on first run of LEC0497        *
       *             Also moved ACSQ to WACSQ on SR/SRREV to ensure    *
@@ -420,6 +431,13 @@
      I                                        1   1 LTYP1                                   MD021855
      I                                        2   2 LTYP2                                   MD021855
       *
+      ** Data structure for AOSVALR0.                                                      AR1059786
+      *                                                                                    AR1059786
+     ISVAL1       DS                            200                                        AR1059786
+     I                                        1   1 SVALNY                                 AR1059786
+      *                                                                                    AR1059786
+     I              'GenCAContingentAcctg'C         SVALUE                                 AR1059786
+      *                                                                                    AR1059786
      I/COPY ZSRSRC,ZHASHZ2
       *
      ISDBANK    E DSSDBANKPD
@@ -506,6 +524,13 @@
      C           FALOAN    CHAINCLOANCLF             83                                       210051
      C           *IN83     IFEQ '0'                                                           210051
       *                                                                                       210051
+      ** Save Loan Facility key                                                             MD024229
+      *                                                                                     MD024229
+     C                     MOVELFCLB      YFCLB                                             MD024229
+     C                     MOVELXFCUS     YFCUS                                             MD024229
+     C                     MOVELXFTYP     YFTYP                                             MD024229
+     C                     MOVELXFSEQ     YFSEQ                                             MD024229
+      *                                                                                     MD024229
       * Do not set ZPROC to N for Part. Sold or IPP actions at the Participant Facility Level 247912
       *                                                                                       247912
      C           PTYP      IFEQ 66                                                            210051
@@ -587,6 +612,12 @@
      C/COPY WNCPYSRC,LE0497C001
      C           TRCA      IFNE 'CA'                                      141460
      C           WPROC2    ANDEQ'Y'                                                           240202
+      *                                                                                    AR1059786
+      ** Generate for Credit Agreements if system value is 'Y'                             AR1059786
+      *                                                                                    AR1059786
+     C           TRCA      OREQ 'CA'                                                       AR1059786
+     C           GENCA     ANDEQ'Y'                                                        AR1059786
+     C           WPROC2    ANDEQ'Y'                                                        AR1059786
      C                     EXSR SRDETL
       *
      C                     MOVE 'Y'       FACFGI
@@ -813,6 +844,42 @@
      C                     EXSR *PSSR                                                         CLE025
      C                     ENDIF                                                              CLE025
      C                     ENDIF                                                              CLE025
+      *                                                                                    AR1059786
+      ** Check current setting of system value.                                            AR1059786
+      *                                                                                    AR1059786
+     C                     CALL 'AOSVALR0'                                                 AR1059786
+     C                     PARM           PRTCD                                            AR1059786
+     C                     PARM SVALUE    SVALK1 20                                        AR1059786
+     C                     PARM           SVAL1 200                                        AR1059786
+     C                     PARM *BLANK    SVALK2 20                                        AR1059786
+     C                     PARM           SVAL2 200                                        AR1059786
+     C                     PARM *BLANK    SVALK3 20                                        AR1059786
+     C                     PARM           SVAL3 200                                        AR1059786
+     C                     PARM *BLANK    SVALK4 20                                        AR1059786
+     C                     PARM           SVAL4 200                                        AR1059786
+     C                     PARM *BLANK    SVALK5 20                                        AR1059786
+     C                     PARM           SVAL5 200                                        AR1059786
+     C                     PARM *BLANK    SVALK6 20                                        AR1059786
+     C                     PARM           SVAL6 200                                        AR1059786
+     C                     PARM *BLANK    SVALK7 20                                        AR1059786
+     C                     PARM           SVAL7 200                                        AR1059786
+     C                     PARM *BLANK    SVALK8 20                                        AR1059786
+     C                     PARM           SVAL8 200                                        AR1059786
+     C                     PARM *BLANK    SVALK9 20                                        AR1059786
+     C                     PARM           SVAL9 200                                        AR1059786
+     C                     PARM *BLANK    SVALK0 20                                        AR1059786
+     C                     PARM           SVAL10200                                        AR1059786
+      *                                                                                    AR1059786
+     C           PRTCD     IFNE *BLANK                                                     AR1059786
+     C           *LOCK     IN   LDA                                                        AR1059786
+     C                     MOVEL'*KEY    'DBKEY                                            AR1059786
+     C                     MOVEL'SDSVALPD'DBFILE           ************                    AR1059786
+     C                     Z-ADD14        DBASE            * DBERR 14 *                    AR1059786
+     C                     OUT  LDA                        ************                    AR1059786
+     C                     EXSR *PSSR                                                      AR1059786
+     C                     ELSE                                                            AR1059786
+     C                     MOVE SVALNY    GENCA   1                                        AR1059786
+     C                     ENDIF                                                           AR1059786
       *
       ** RCF Processing for Audit File.
       *
@@ -870,6 +937,13 @@
      C           FAFCTY    DIV  100       WFACT   30
      C                     Z-ADDFAFCTY    WFCNO   20
       *
+      ** Save Facility key                                                                  MD024229
+      *                                                                                     MD024229
+     C                     MOVELWBRCA     SBRCA   3                                         MD024229
+     C                     MOVELWCNUM     SCNUM   6                                         MD024229
+     C                     Z-ADDWFACT     SFACT   30                                        MD024229
+     C                     Z-ADDWFCNO     SFCNO   20                                        MD024229
+      *                                                                                     MD024229
       ** Retrieve facility details.
       *
      C           KEYFCL    CHAINFCLTYL1              81
@@ -919,6 +993,66 @@
       *
      C                     MOVE *BLANKS   ACKEY
       *
+     C                     MOVEL*BLANKS   RVCR2   1                                         MD024229
+      *                                                                                     MD024229
+      ** In case of Repayment, Write off, Maturity                                          MD024229
+     C           FAACTN    IFEQ 'RE'                                                        MD024229
+     C           FAACTN    OREQ 'WO'                                                        MD024229
+     C           FAACTN    OREQ 'MT'                                                        MD024229
+      *                                                                                     MD024229
+      ** if Revolving Indicator is 'T', use revolving indicator                             MD024229
+      ** of loan facility                                                                   MD024229
+      *                                                                                     MD024229
+     C           TRCA      IFEQ 'CA'                                                        MD024229
+     C           RVCR      ANDEQ'T'                                                         MD024229
+      *                                                                                     MD024229
+     C           YKEY      KLIST                                                            MD024229
+     C                     KFLD           YFCLB   3                                         MD024229
+     C                     KFLD           YFCUS   6                                         MD024229
+     C                     KFLD           YFTYP   30                                        MD024229
+     C                     KFLD           YFSEQ   20                                        MD024229
+      *                                                                                     MD024229
+     C           YKEY      CHAINFCLTYL1              81                                     MD024229
+     C           *IN81     IFEQ '1'                                                         MD024229
+     C           YKEY      CHAINPEFCLFL1             81                                     MD024229
+     C                     ENDIF                                                            MD024229
+      *                                                                                     MD024229
+     C           *IN81     IFEQ '1'                                                         MD024229
+     C           *LOCK     IN   LDA                                                         MD024229
+     C                     MOVEL'FCLTYFM 'DBFILE           ***************                  MD024229
+     C                     Z-ADD034       DBASE            * DB ERROR 34 *                  MD024229
+     C                     MOVELDSFCL     DBKEY            ***************                  MD024229
+     C                     OUT  LDA                                                         MD024229
+     C                     EXSR *PSSR                                                       MD024229
+     C                     ENDIF                                                            MD024229
+      *                                                                                     MD024229
+      ** Save Revolving credit indicator from Tranche                                       MD024229
+     C                     MOVELRVCR      RVCR2                                             MD024229
+      *                                                                                     MD024229
+      ** Re-access CA facility                                                              MD024229
+     C                     MOVELSBRCA     YFCLB                                             MD024229
+     C                     MOVELSCNUM     YFCUS                                             MD024229
+     C                     Z-ADDSFACT     YFTYP                                             MD024229
+     C                     Z-ADDSFCNO     YFSEQ                                             MD024229
+      *                                                                                     MD024229
+     C           YKEY      CHAINFCLTYL1              81                                     MD024229
+     C           *IN81     IFEQ '1'                                                         MD024229
+     C           YKEY      CHAINPEFCLFL1             81                                     MD024229
+     C                     ENDIF                                                            MD024229
+      *                                                                                     MD024229
+     C           *IN81     IFEQ '1'                                                         MD024229
+     C           *LOCK     IN   LDA                                                         MD024229
+     C                     MOVEL'FCLTYFM 'DBFILE           ***************                  MD024229
+     C                     Z-ADD035       DBASE            * DB ERROR 35 *                  MD024229
+     C                     MOVELDSFCL     DBKEY            ***************                  MD024229
+     C                     OUT  LDA                                                         MD024229
+     C                     EXSR *PSSR                                                       MD024229
+     C                     ENDIF                                                            MD024229
+      *                                                                                     MD024229
+     C                     ENDIF                                                            MD024229
+      *                                                                                     MD024229
+     C                     ENDIF                                                            MD024229
+      *                                                                                     MD024229
       ** Check History Action Type.
       *
      C                     SELEC
@@ -1032,6 +1166,24 @@
      C           FAACTN    OREQ 'MT'                                                        MD021855
      C           FARCIN    ANDEQ'Y'                                                         MD021855
       *                                                                   157604
+     C           FAACTN    OREQ 'RE'                                                        MD024229
+     C           TRCA      ANDEQ'CA'                                                        MD024229
+     C           RVCR      ANDEQ'T'                                                         MD024229
+     C           RVCR2     ANDEQ'Y'                                                         MD024229
+     C           GENCA     ANDEQ'Y'                                                         MD024229
+      *                                                                                     MD024229
+     C           FAACTN    OREQ 'WO'                                                        MD024229
+     C           TRCA      ANDEQ'CA'                                                        MD024229
+     C           RVCR      ANDEQ'T'                                                         MD024229
+     C           RVCR2     ANDEQ'Y'                                                         MD024229
+     C           GENCA     ANDEQ'Y'                                                         MD024229
+      *                                                                                     MD024229
+     C           FAACTN    OREQ 'MT'                                                        MD024229
+     C           TRCA      ANDEQ'CA'                                                        MD024229
+     C           RVCR      ANDEQ'T'                                                         MD024229
+     C           RVCR2     ANDEQ'Y'                                                         MD024229
+     C           GENCA     ANDEQ'Y'                                                         MD024229
+      *                                                                                     MD024229
      C                     MOVE 'R'       WTYPE
      C           FAACTN    IFEQ 'RE'
      C                     MOVEAATP@,12   RACTN

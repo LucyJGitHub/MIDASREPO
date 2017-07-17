@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD034990           Date 25May16               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD045526           Date 23Jun17               *
+      *  Prev Amend No. MD034990           Date 25May16               *
+      *                 CGL165             Date 17Feb15               *
       *                 CRE100             Date 21Mar14               *
       *                 MD026036           Date 28Mar14               *
       *                 CRE083BC           Date 06Aug12               *
@@ -54,6 +55,9 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD045526 - Check the correct variable for currency in #P02.  *
+      *             Corrected the if-block in #P03. Added a flag to   *
+      *             prevent consecutive READ of REFXAJL0.             *
       *  MD034990 - Postings not posted against account sequence of   *
       *             the retail account.                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -475,6 +479,7 @@
       ** Set pointer to the first record for process                                        CRE083BC
      C                     MOVE CCY       @CCY                                              CRE083BC
      C                     MOVE '0'       *IN50                                             CRE083BC
+     C                     MOVE 'N'       WREAD   1                                         MD045526
      C           NXTKEY    IFGT ENDKEY                                                      CRE083BC
      C           NXTKEY    OREQ ENDKEY                                                      CRE083BC
      C           PROT      ANDEQ'C'                                                         CRE083BC
@@ -490,6 +495,7 @@
      C                     END                                                              CRE083BC
       *                                                                                     CRE083BC
      C                     READ REFXAJL0                 50                                 CRE083BC
+     C                     MOVE 'Y'       WREAD                                             MD045526
      C                     ENDIF                                                            CRE083BC
      C*
      C**   Perform detail processing if account charge date is less
@@ -501,7 +507,9 @@
      C*
      C***********          READ REFXAJL0                 50               CCB003
      C**********           READ REFACGPD                 50               CCB003     CCB003 CRE083BC
+     C           WREAD     IFNE 'Y'                                                         MD045526
      C                     READ REFXAJL0                 50                                 CRE083BC
+     C                     ENDIF                                                            MD045526
      C*
      C**   Detail processing if end of file not reached
      C*
@@ -654,7 +662,8 @@
       *                                                                                    AR1005267
       ** Are the details for this CCY already stored in the arrays?                        AR1005267
       *                                                                                    AR1005267
-     C                     MOVEL@CCY      ##KC                                             AR1005267
+     C**********           MOVEL@CCY      ##KC                                    AR1005267 MD045526
+     C                     MOVELKKCCY     ##KC                                              MD045526
      C                     EXSR ##CHKC                                                     AR1005267
      C           ##FIC     IFEQ 'Y'                                                        AR1005267
       *                                                                                    AR1005267
@@ -1125,6 +1134,7 @@
      C           BGN0ST    IFEQ 'Y'                                       CAC001
      C                     MOVELWMPRFC    PRFC                            CAC001
      C                     ENDIF                                          CAC001
+     C                     ENDIF                                                            MD045526
      C*
      C**   If account to post debit charges is blanks then settlement
      C*****fields*come*from*LF/REFXAJL0                                   CCB003
@@ -1149,7 +1159,7 @@
      C                     MOVE 'GB00180' ##MGID                          S01522
      C                     END                                            S01522
       *                                                                                     CRE083BC
-     C                     ENDIF                                                            CRE083BC
+     C**********           ENDIF                                                   CRE083BC MD045526
      C*
      C**   Generate a standard debit posting
      C*

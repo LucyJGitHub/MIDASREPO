@@ -14,13 +14,17 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. AR830785           Date 07May13               *
-      *  Prev Amend No. MD020076           Date 17Apr13               *
+      *  Last Amend No. MD036918           Date 18Jan16               *
+      *  Prev Amend No. AR830785           Date 07May13               *
+      *                 MD020076           Date 17Apr13               *
       *                 263840             Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036918 - Additional screen with PDCL details is absent for *
+      *             fee                                               *
+      *           - Added Fee code detail                             *
       *  AR830785 - Looping on insert of accrued interest adjustment  *
       *             Extended core fix 263533. (Child: AR830786)       *
       *  MD020076 - Missing Loan number details in PDCL details       *
@@ -246,7 +250,8 @@
      C     PDLNRF        CHAIN     LEPDUEL1
      C                   ENDIF
  
-     C                   IF        NOT %FOUND(LEPDUEL1)
+     C**********         IF        NOT %FOUND(LEPDUEL1)                                     MD036918
+     C                   IF        NOT %FOUND                                               MD036918
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
@@ -260,13 +265,13 @@
  
      C                   IF        PDLOANTYP1 = 'Z'
      C                             OR  PDLOANTYP1 = ' '
-     C                   IF        PDTYPE = *BLANKS                                         MD020076
+     C**********         IF        PDTYPE = *BLANKS                                MD020076 MD036918
      C                   IF        YPORG = *BLANKS
      C                   EVAL      PDTYPE = 'FFEE'
      C                   ELSE
      C                   EVAL      PDTYPE = 'LFEE'
      C                   ENDIF
-     C                   ENDIF                                                              MD020076
+     C**********         ENDIF                                                     MD020076 MD036918
      C                   ENDIF
  
      C                   IF        PDLOANTYP1 <>' '
@@ -765,6 +770,7 @@
      C     #1BIDT        PARM      *BLANKS       @DATE7
  
      C                   EVAL      #1BCAT = %EDITC(FEBCAT: 'X')
+     C                   MOVEL     FEFCOD        #1FCOD                                     MD036918
      C                   ENDIF
  
      C                   ENDSR

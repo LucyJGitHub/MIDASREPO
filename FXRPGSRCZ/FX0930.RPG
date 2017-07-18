@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD040996           Date 10Oct16               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD037465           Date 12Feb16               *
+      *  Prev Amend No. MD036927           Date 16Sep15               *      
+      *                 MD040996           Date 10Oct16               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -39,6 +41,14 @@
       *                 CDL002             Date 06Mar97               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD037465- MD036927 caused FXC0930 to fail. Redesigned fix to *
+      *            address issue. Reversed MD036927                   *
+      *          - Reinstate 237403 and extend to Sell as well        *
+      *          - Use a different indicator for COB.                 *
+      *          - In I/C populate subfile by evaluating FHNBRF and   *
+      *            FHNSRF to check if net is confirmed                *
+      *  MD036927- Reverse 237403. Causes Buy Net not to be displayed *
+      *            on Unconfirmed Nets                                *      
       *  MD040996 - Unconfirmed Nets problem searching by value date  *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -80,6 +90,7 @@
       *       34         SFLEND INDICATOR                             *
       *       35         CLEAR SUBFILE                                *
       *       36         SFLNXTCHG INDICATOR                          *
+      *       37         Fail during I/C termination                  *                     MD036927
       *       40         INPUT CYCLE TERM MODE. CHANGE SCREEN LAYOUT  *
       *       70         EOF ON READE DEALSDBL                        *
       *       71         CHAIN FAIL ON CUSTOMER FILES                 *
@@ -810,7 +821,9 @@
      C                     MOVE FHCCY1    KYCCY
      C           KINTIP    CHAINFXNTIPPD            N88
      C********** *IN88     IFEQ '1'                                                           237403
-     C           *IN88     IFEQ '0'                                                           237403
+     C********** *IN88     IFEQ '0'                                                  237403 MD036927
+     C********** *IN88     IFEQ '1'                                                MD036927 MD037465
+     C           *IN88     IFEQ '0'                                                MD036927 MD037465
       * IF RECORD FOUND HERE, THEN ANOTHER USER IS NETTING THIS DEAL
      C                     MOVE 'Y'       PROBUY
      C                     END
@@ -822,16 +835,26 @@
       * CHECK NETTING NOT IN PROGRESS FOR APPROPRIATE SIDE
      C                     MOVE FHCCY2    KYCCY
      C           KINTIP    CHAINFXNTIPPD            N88
-     C           *IN88     IFEQ '1'
+     C********** *IN88     IFEQ '1'                                                         MD037465
+     C           *IN88     IFEQ '0'                                                         MD037465
       * IF RECORD FOUND HERE, THEN ANOTHER USER IS NETTING THIS DEAL
      C                     MOVE 'Y'       PROSEL
      C                     END
      C                     END
      C/COPY WNCPYSRC,FX0930C003
-     C           PROBUY    IFEQ 'Y'
-     C           PROSEL    OREQ 'Y'
+      * If either FHNBRF OR FHNBRF is blank, then the net is unconfirmed                    MD037465
+      * In which case, populate the subfile                                                 MD037465
+     C           FHNBRF    IFEQ *BLANKS                                                     MD037465
+     C           FHNSRF    OREQ *BLANKS                                                     MD037465
+     C********** PROBUY    IFEQ 'Y'                                                         MD037465
+     C********** PROSEL    OREQ 'Y'                                                         MD037465
       *  One record read
      C                     MOVE '1'       *IN32
+      *
+     C           PROBUY    IFEQ 'Y'                                                         MD037465
+     C           PROSEL    OREQ 'Y'                                                         MD037465
+     C                     MOVE '1'       *IN37                                             MD037465
+     C                     ENDIF                                                            MD037465
       * ALSO REQUIRE THAT DATE DIFFERS FROM PREVIOUS VALUE
      C                     MOVE FHVDAT    DDVALD
      C           DDVALD    IFNE SVVALD
@@ -966,7 +989,8 @@
       *
       *  SET RETURN CODE IF NO SCREEN TO BE DISPLAYED BUT RECORDS EXIST
      C           PDMODE    IFEQ 'T'
-     C           *IN32     ANDEQ'1'
+     C********** *IN32     ANDEQ'1'                                                         MD037465
+     C           *IN37     ANDEQ'1'                                                         MD037465
      C                     MOVE 'NETDEALS'PLRTRN
      C                     END
       *

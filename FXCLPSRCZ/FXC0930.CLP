@@ -10,25 +10,28 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*      Last Amend No. MD037598           Date 18Jul17               */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*      Last Amend No. CSD013             Date 29Aug02               */
+/*      Prev Amend No. CSD013             Date 29Aug02               */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*      Prev Amend No. CDL002             DATE 29APR97               */
+/*                     CDL002             Date 29Apr97               */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD037598 - Deal absent in FX nets summary.  Commit all      */
+/*                  files for update.                                */
 /*      CSD013 - Replace dtaara CBPROMPT values with SDSVALPD record */
 /*               values.                                             */
 /*      CDL002 - FX Netting                                          */
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&RTRN) TYPE(*CHAR) LEN(8)
              DCL        VAR(&#1NTRC) TYPE(*CHAR) LEN(1)
  /********** DCL        VAR(&CBPROMPT) TYPE(*CHAR) LEN(256) **/                           /*CSD013*/
@@ -56,24 +59,28 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')
- 
- 
+
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
- 
- 
+
+
 /*  Call FX0931 to remove outstandind links to incomplete nets  */
- 
+
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) CMTSCOPE(*JOB) +
+                          /*MD037598*/
+             MONMSG     MSGID(CPF8351)                                                  /*MD037598*/
+
              CALL       PGM(FX0931) PARM(&RTRN)
- 
+
              IF         COND(&RTRN *EQ ' ') THEN(DO)
              CALL       PGM(FX0930) PARM('T' &RTRN)
- 
+
 /*     Send message warning that unconfirmed net deals still exist     */
- 
+
                 IF         COND(&RTRN *EQ 'NETDEALS') THEN(DO)
                    SNDPGMMSG  MSGID(FXM5048) MSGF(DRSMM) +
                                 TOPGMQ(*SAME) TOMSGQ(MOPERQ)
@@ -100,22 +107,22 @@
                    GOTO       CMDLBL(ABNOR)
                 ENDDO
              ENDDO
- 
+
              IF         COND(&RTRN *NE ' ' *AND &RTRN *NE +
                           'NETDEALS') THEN(DO)
- 
+
 /*     General error                                                   */
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /*  If chosen to continue with ICT, FXC0950 will remove references       */
 /*  to net from deals                                               */
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:      CHGJOB     SWS(XXXXXX11)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
- 
+
              ENDPGM

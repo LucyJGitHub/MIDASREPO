@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR1097467B         Date 17Apr13               *
-      *  Prev Amend No. AR1097467          Date 08Apr13               *
+      *  Last Amend No. MD036599A          Date 10Feb16               *
+      *  Prev Amend No. MD036599           Date 05Jan16               *
+      *                 AR1097467B         Date 17Apr13               *
+      *                 AR1097467          Date 08Apr13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CCB016             Date 24Apr07               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036599A - COB performance enhancement for component MXC0580*
+      *  MD036599 - COB performance enhancement for component MXC0580 *
       *  AR1097467B - Expected 15% COB run optimization not met       *
       *  AR1097467 - Expected 15% COB run optimization not met        *
       *  CCB016 - CoB Performance Enhancements                        *
@@ -47,29 +51,29 @@
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
- 
+
      F***MXMEGLL2  IP A E           K DISK    RENAME(MXDEGLP0: MXMEGLP0)                   AR1097467
      F***MXMEGLL3  IP A E           K DISK    RENAME(MXDEGLP0: MXMEGLP0)        AR1097467 AR1097467B
      FMXMEGLL2  IP A E           K DISK    RENAME(MXDEGLP0: MXMEGLP0)                     AR1097467B
      F                                     INFSR(*PSSR)
       * Monthly Events - General Ledger module
- 
+
      F***MXMEGLPL2 IS A E           K DISK    RENAME(MXDEGLP0: MXMEGLP1)                   AR1097467
      F***MXMEGLPL3 IS A E           K DISK    RENAME(MXDEGLP0: MXMEGLP1)        AR1097467 AR1097467B
      FMXMEGLPL2 IS A E           K DISK    RENAME(MXDEGLP0: MXMEGLP1)                     AR1097467B
      F                                     INFSR(*PSSR)
       * Monthly Events - General Ledger module (PREVIOUS MONTH)
- 
+
      FMXBLGLPD  O    E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(P_)
       * Balances - General Ledger module
- 
+
      FMXDGDTPD  IF   E           K DISK    INFSR(*PSSR)
      FMXDGECPD  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FMXBLACAU  O    E             PRINTER INFSR(*PSSR)  USROPN
       * Balance Accumulation Audit Report
- 
+
      FSDACODL0  IF   E           K DISK    INFSR(*PSSR)                                   AR1097467B
       ** Midas SD Account codes file                                                      AR1097467B
                                                                                           AR1097467B
@@ -90,36 +94,40 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
- 
-     D CC              S              2    DIM(99)
-     D CP              S              1    DIM(99)
- 
-     D ACODR           S             10    DIM(7000)                                      AR1097467B
-     D ACODTP          S              1    DIM(7000)                                      AR1097467B
- 
+
+
+     D*CC********      S              2    DIM(99)                                          MD036599
+     D*CC********      S              2    DIM(99)   ASCEND                       MD036599 MD036599A
+     D CC              S              2    DIM(99)   DESCEND                               MD036599A
+     D*CP********      S              1    DIM(99)                                          MD036599
+
+     D*ACODR****       S             10    DIM(7000)                             AR1097467B MD036599
+     D ACODR           S             10    DIM(9999) DESCEND                                MD036599
+     D*ACODTP***       S              1    DIM(7000)                             AR1097467B MD036599
+     D ACODTP          S              1    DIM(9999)                                        MD036599
+
      D BV_AMT          S             13  0 DIM(12)
- 
+
      D I#ACOD          S             10S 0                                                    242925
      D SDACOD        E DS                  EXTNAME(SDACODPD)                               AR1097467
- 
+
       ** External DS for BANK details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)                                  AR1097467
       ** Second DS for Access Programs, Long Data Structure                                AR1097467
- 
- 
+
+
      IMXMEGLP0      01
      I**********                                ACOD            M6              AR1097467 AR1097467B
      I**********                                BRCA            M6                         AR1097467
@@ -150,32 +158,32 @@
      I                                          ACOD            M3                        AR1097467B
      I                                          ACSQ            M2
      I                                          PSTD            M1
- 
- 
+
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
       * INPUTS
      C                   PARM                    I#DTAG            4
- 
+
       * On change of account ID
       * -----------------------
- 
+
      C     BRCA          IFNE      P_BRCA
      C     CNUM          ORNE      P_CNUM
      C     CCY           ORNE      P_CCY
      C     ACOD          ORNE      P_ACOD
      C     ACSQ          ORNE      P_ACSQ
- 
+
       * If any principal increases or decreases were read
       * Write a balance record for the last account
- 
+
      C     Inc_Dec       IFEQ      'Y'
      C                   WRITE     MXBLGLP0
      C                   ADD       1             WBal_cnt
      C                   MOVEL     *BLANK        Inc_Dec
      C                   ENDIF
- 
+
      C                   MOVEL     BRCA          P_BRCA
      C                   MOVEL     CNUM          P_CNUM
      C                   MOVEL     CCY           P_CCY
@@ -184,7 +192,7 @@
      C                   Z-ADD     *ZERO         P_BAL
      C                   Z-ADD     *ZERO         BV_AMT
      C                   ENDIF
- 
+
       * On change of account code                                                             CCB016
                                                                                               CCB016
      C     ACOD          IFNE      I#ACOD                                                     CCB016
@@ -194,8 +202,11 @@
       *                                                                                    AR1097467
      C                   MOVE      ACOD          @ACOD            10                       AR1097467
      C                   Z-ADD     ARINDX        X                                        AR1097467B
-     C     @ACOD         LOOKUP    ACODR(X)                               08              AR1097467B
-     C     *IN08         IFEQ      '1'                                                    AR1097467B
+      *                                                                                     MD036599
+     C**** @ACOD         LOOKUP    ACODR(X)                               08     AR1097467B MD036599
+     C**** *IN08         IFEQ      '1'                                           AR1097467B MD036599
+     C                   EVAL      X = %LOOKUP(@ACOD:ACODR:ARINDX)               AR1097467B MD036599
+     C                   IF        X > 0                                         AR1097467B MD036599
      C                   MOVE      ACODTP(X)     Acc_Type                                 AR1097467B
      C                   ELSE                                                             AR1097467B
      C                   CALLB     'AOACODR0'                                              AR1097467
@@ -223,33 +234,36 @@
       * -----------------
       * If any principal increases or decreases were read
       * Write a balance record for the last account
- 
+
      C     PSTD          IFNE      P_DATE
      C     Inc_Dec       ANDEQ     'Y'
      C                   WRITE     MXBLGLP0
      C                   ADD       1             WBal_cnt
      C                   MOVEL     *BLANK        Inc_Dec
      C                   ENDIF
- 
+
       * Set balance fields
       * ------------------
- 
+
      C                   Z-ADD     PSTD          P_DATE
      C     DRCR          IFEQ      1
      C                   Z-SUB     SPSTA         CHG_P_BAL        15 0
      C                   ELSE
      C                   Z-ADD     SPSTA         CHG_P_BAL
      C                   ENDIF
- 
+
       * Look up the category code
       * If the category code is a principal increase or decrease
       * Update the running balance
       * --------------------------
- 
-     C                   Z-ADD     1             @X                3 0
-     C     DECATC        LOOKUP    CC(@X)                                 99    *
- 
-     C     *in99         IFEQ      '1'
+
+     C****               Z-ADD     1             @X                3 0                      MD036599
+     C**** DECATC        LOOKUP    CC(@X)                                 99    *           MD036599
+
+     C**** *in99         IFEQ      '1'                                                      MD036599
+     C                   EVAL      @X1 = %LOOKUP(DECATC:CC:1:@X)                            MD036599
+     C                   IF        @X1 > 0                                                  MD036599
+      *                                                                                     MD036599
       ************                                                                            CCB016
       **Only*process account codes whose account type is NOT retail                           CCB016
       ************                                                                            CCB016
@@ -264,29 +278,29 @@
      C                   ENDIF
                                                                                               CCB016
      C                   ENDIF                                                                CCB016
- 
+
       * Final Processing
- 
+
      CLR                 EXSR      FINAL
- 
+
      C/SPACE 5
       *********************************************************************
       * Final Processing
       *********************************************************************
      C     FINAL         BEGSR
- 
+
       * If any principal increases or decreases were read
       * Write a balance record for the previous account
- 
+
      C     Inc_Dec       IFEQ      'Y'
      C                   WRITE     MXBLGLP0
      C                   ADD       1             WBal_cnt
      C                   ENDIF
- 
+
       * Output audit report totals
- 
+
      C                   WRITE     TOTALS
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -294,45 +308,45 @@
       * Update the running balance
       *********************************************************************
      C     UPD_BL        BEGSR
- 
+
       * Increment count of input events
- 
+
      C                   ADD       1             IEvt_cnt
- 
+
       * If this is a start of month event
- 
+
      C     DECATC        IFEQ      '01'
- 
+
       * Initialize the balance
- 
+
      C                   Z-ADD     CHG_P_BAL     P_BAL
- 
+
       * Adjust the balance with the back-valued amounts
       * for the month
- 
+
      C                   Z-ADD     PSTD          ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVEL     ZDATEN        MM                2 0
- 
+
      C                   ADD       BV_AMT(MM)    P_BAL
      C                   Z-ADD     *ZERO         BV_AMT(MM)
- 
+
       * Otherwise
       * Do balance accumulation
- 
+
      C                   ELSE
- 
+
      C                   ADD       CHG_P_BAL     P_BAL
- 
+
       * If the posting date is less than the event generation date
       * Check for back-valuation into a previous month
- 
+
      C     PSTD          IFLT      EAEVGD
      C                   EXSR      CHK_BV
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -340,21 +354,21 @@
       * Check for back-valuation into a previous month
       ********************************************************************
      C     CHK_BV        BEGSR
- 
+
       * A back-valuation into a previous month has occurred
       * if the posting date month is not equal
       * to the event generation date month.
- 
+
      C                   Z-ADD     PSTD          ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVEL     ZDATEN        MMPD              2 0
- 
+
      C                   Z-ADD     EAEVGD        ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVEL     ZDATEN        MMEG              2 0
- 
+
       * If so, add to the total of back-valued amounts
- 
+
      C     MMPD          IFNE      MMEG
      C                   ADD       CHG_P_BAL     BV_AMT(MMEG)
      C                   ENDIF
@@ -378,14 +392,14 @@
       * Throw page headings (if required)
       ********************************************************************
      C     PAG           BEGSR
- 
+
      C                   ADD       CHLINE        LINENO
      C     LINENO        IFGT      59
      C                   ADD       1             PAGNUM
      C                   WRITE     PAGEHEAD
      C     4             ADD       CHLINE        LINENO            3 0
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
      C/SPACE 5
@@ -393,27 +407,28 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEL     'C'           I#EXTT            1
- 
+
       *  Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
- 
+
+
       * Load account codes for export
- 
+
      C**********         MOVE      'L'           I#LD                                      AR1097467
      C**********         Z-ADD     *ZERO         I#ACOD                                    AR1097467
      C**********         EXSR      ACOD_FLT                                                AR1097467
- 
+
                                                                                           AR1097467B
       ** Cache Account Codes                                                              AR1097467B
                                                                                           AR1097467B
-     C                   Z-ADD     7000          X                 4 0                    AR1097467B
+     C**********         Z-ADD     7000          X                 4 0           AR1097467B MD036599
+     C                   Z-ADD     9999          X                 4 0                      MD036599
      C                   READ      SDACODL0                               09              AR1097467B
      C     *IN09         DOWEQ     '0'                                                    AR1097467B
      C     X             ANDGT     0                                                      AR1097467B
@@ -423,22 +438,23 @@
      C                   READ      SDACODL0                               09              AR1097467B
      C                   ENDDO                                                            AR1097467B
                                                                                           AR1097467B
-     C                   Z-ADD     X             ARINDX            3 0                    AR1097467B
+     C**********         Z-ADD     X             ARINDX            3 0           AR1097467B MD036599
+     C                   Z-ADD     X             ARINDX            4 0                      MD036599
      C                   ADD       1             ARINDX                                   AR1097467B
      C                   SETOFF                                       09                  AR1097467B
- 
+
       * Get Data Group Details
- 
+
      C     I#DTAG        CHAIN     MXDGDTP0                           99        *
      C     *in99         IFEQ      '1'
      C                   EVAL      I#ERMS = 'NO RECORD ON MXDGDTPD FOR ' +
      C                                      I#DTAG
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Get data group event categories
       * for principal increases and decreases
- 
+
      C                   Z-ADD     0             @X                3 0
      C     I#DTAG        SETLL     MXDGECP0
      C     I#DTAG        READE     MXDGECP0                               99    *
@@ -447,37 +463,39 @@
      C     DECAPI        OREQ      'D'
      C                   ADD       1             @X
      C                   MOVEL     DECATC        CC(@X)
-     C                   MOVEL     DECAPI        CP(@X)
+     C**********         MOVEL     DECAPI        CP(@X)                                     MD036599
      C                   ENDIF
      C     I#DTAG        READE     MXDGECP0                               99    *
      C                   ENDDO
- 
- 
- 
+
+     C                   Z-ADD     0             @X1               3 0                      MD036599
+     C                   SORTA     CC                                                       MD036599
+
+
       * Set the report description
- 
+
      C                   MOVEL     DGDESC        ZZDESC
- 
- 
+
+
       * Open the printer file
- 
+
      C                   OPEN      MXBLACAU
- 
+
       * Initialize time
- 
+
      C                   TIME                    #TIME
- 
+
       * Output audit report page headings
- 
+
      C                   Z-ADD     *ZERO         CHLINE            3 0
      C                   Z-ADD     99            LINENO
      C                   EXSR      PAG
- 
+
       * Zeroize counts of events
- 
+
      C                   Z-ADD     *ZERO         IEvt_cnt          6 0
      C                   Z-ADD     *ZERO         WBal_cnt          6 0
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

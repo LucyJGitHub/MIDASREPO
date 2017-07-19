@@ -23,12 +23,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. MD045894           Date 23Jun17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 234300             Date 22Sep06               *
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. 234300             Date 22Sep06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045894 - PCAM utility override value of RECI               *
       *  234300 - Recompiled over changed in PF/HSTTRD.               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -203,6 +205,17 @@
      D KeyTrBrch       S              3
      D KeyTrSeSN       S             10
  
+     ISEPCCDF                                                                               MD045894
+     I              RECI                        CRECI                                       MD045894
+     I              LCD                         CLCD                                        MD045894
+     I              CHTP                        CCHTP                                       MD045894
+     I              TNLU                        CTNLU                                       MD045894
+     I              PTFR                        CPTFR                                       MD045894
+     ISEPCBDF                                                                               MD045894
+     I              RECI                        BRECI                                       MD045894
+     I              LCD                         BLCD                                        MD045894
+     I              CHTP                        BCHTP                                       MD045894
+     I              TNLU                        BTNLU                                       MD045894
       *****************************************************************
       /EJECT
       *****************************************************************

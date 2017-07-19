@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. AR943686           Date 23Sep16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD034020           Date 19Jul17               *
+      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *                 CLE141             Date 08Feb16               *
       *                 CLE164             Date 28Nov14               *
       *                 MD030700           Date 28Nov14               *
       *                 260783             Date 19Aug14               *
@@ -78,6 +79,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034020 - Rename settlement fields of CLOANCL to prevent    *
+      *             missing projections when fee customer also has    *
+      *             defined customer swiftID.                         *
       *  AR943686 - CLE031: System generating wrong projected move-   *
       *             ments. Add missing CLE031 enhancement to convert  *
       *             amount to account currency. (Child: AR943687)     *
@@ -690,6 +694,40 @@
       **  Catch all                                                                           CSW208
       *                                                                                       CSW208
      I**********                        1    1  RECID                                CSW208 AR322732
+     ICLOANCLF                                                                              MD034020
+     I              OSDB                        COSDB                                       MD034020
+     I              OMDB                        COMDB                                       MD034020
+     I              RSTM                        CRSTM                                       MD034020
+     I              RONS                        CRONS                                       MD034020
+     I              RIBN                        CRIBN                                       MD034020
+     I              RIBA                        CRIBA                                       MD034020
+     I              ROBN                        CROBN                                       MD034020
+     I              ROCN                        CROCN                                       MD034020
+     I              PSTM                        CPSTM                                       MD034020
+     I              PONS                        CPONS                                       MD034020
+     I              PIBN                        CPIBN                                       MD034020
+     I              PIBA                        CPIBA                                       MD034020
+     I              POBN                        CPOBN                                       MD034020
+     I              POCN                        CPOCN                                       MD034020
+     I              RCRN                        CRCRN                                       MD034020
+     I              RCRA                        CRCRA                                       MD034020
+     I              RVNO                        CRVNO                                       MD034020
+     I              AWBN                        CAWBN                                       MD034020
+     I              AWBA                        CAWBA                                       MD034020
+     I              BENN                        CBENN                                       MD034020
+     I              BENA                        CBENA                                       MD034020
+     I              DTP1                        CDTP1                                       MD034020
+     I              DTP2                        CDTP2                                       MD034020
+     I              DTP3                        CDTP3                                       MD034020
+     I              DTP4                        CDTP4                                       MD034020
+     I              DCHG                        CDCHG                                       MD034020
+     I              BTB1                        CBTB1                                       MD034020
+     I              BTB2                        CBTB2                                       MD034020
+     I              BTB3                        CBTB3                                       MD034020
+     I              BTB4                        CBTB4                                       MD034020
+     I              BTB5                        CBTB5                                       MD034020
+     I              BTB6                        CBTB6                                       MD034020
+     I              CVMR                        CCVMR                                       MD034020
       *
       /EJECT
      C*****************************************************************

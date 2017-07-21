@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD019914           Date 10Apr13               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD037223           Date 20Jul17               *
+      *  Prev Amend No. MD019914           Date 10Apr13               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 CSD089             Date 07Oct10               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037223 - Retrieve DACO for all types of account to be used *
+      *             in validation.                                    *
       *  MD019914 - Serious midas error occured                       *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -95,14 +98,14 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(ACCNTAAF)
      F                                     IGNORE(ACCNTACF)
- 
+
      FACNUMA    IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACNUMAF)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -121,49 +124,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
       *                                                                                       240689
@@ -179,37 +182,37 @@
       *                                                                                       240689
       ** Array of Warning message data.                                                       240689
       *                                                                                       240689
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       * External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       * External DS for Midas modules details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
- 
+
       ** External data structure for Nostro customer number
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External data structure for Nostro customer number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External data structure for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Data structure redefining Account key fields
      D**********       DS            18                                                       CGL029
      D                 DS                                                                     CGL029
@@ -225,7 +228,7 @@
      D*K#ACSQ***              14     15  0                                                    CGL029
      D*K#BRCA***              16     18                                                       CGL029
      D*AKEYF****               1     18                                                       CGL029
- 
+
       * Data structure redefining Ordering Bank details
      D*SORBKDS**       DS            12                                                       CGL029
      D SORBKDS         DS                                                                     CGL029
@@ -236,10 +239,10 @@
      D  ORSQ                  17     18                                                       CGL029
      D**ORCD****               7     10                                                       CGL029
      D**ORSQ****              11     12                                                       CGL029
- 
+
      D  OR02R                  3     12
      D  OR10R                 11     12
- 
+
       *  Define full account to be passed for FT IMM update
      D*#ORBDS***       DS            18                                                       CGL029
      D #ORBDS          DS                                                                     CGL029
@@ -257,12 +260,12 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       *                                                                                       240689
@@ -270,7 +273,7 @@
       *                                                                                       240689
       ** Index for arrays of warning message ids etc.                                         240689
       *                                                                                       240689
- 
+
      D*C#ACCD***       S              4                                                       CGL029
      D C#ACCD          S             10                                                       CGL029
      D C#ACSN          S              2
@@ -284,7 +287,7 @@
      D C#OPTN          S              7
      D C#PNOI          S              1
      D C#RTCD          S              7
- 
+
      D WNUMA           S              6
      D WNUML           S              7P 0
      D*WCODA****       S              4                                                       CGL029
@@ -295,7 +298,7 @@
      D WRETL           S             11  0
      D WSEQA           S              2
      D WSEQL           S              3  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -310,7 +313,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *BlankS
@@ -322,18 +325,18 @@
      C                   Eval      WMsgDtaXAr = *Blanks                                       240689
      C                   Eval      Idx = 0
      C                   Eval      WIx = 0                                                    240689
- 
+
       * Order Customer
       *
      C                   Exsr      VORDBNK
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKOrbk = 'N' or
      C                             OKOrbb = 'N'
      C                   Eval      RetCodeIn = 'Error'
      C                   End
- 
+
       * RETURN
       *
      C                   RETURN
@@ -344,13 +347,13 @@
       ******************************************************************
      C*
      C     VORDBNK       BEGSR
- 
+
      C                   Eval      SORBKDS = SORBK
- 
+
       * Check for entry of '?'
      C                   Eval      *IN90 = *Off
      C     '?'           Scan      SORBK                                  90
- 
+
       * If '?' found....
      C                   If        *IN90 = *On
       * Send error to screen
@@ -359,18 +362,18 @@
      C                   Movel     'SORBK'       FldNamXAr(Idx)
      C                   Movel     'MMA0963'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   BITOFF    '01234567'    WRETB             1                          240689
      C                   If        OKOrbk = 'Y'
- 
+
      C                   Eval      @ORBT = *Blank
      C                   Eval      @ACST4 = *Blank
      C                   Eval      @OBOPN = 0
- 
+
      C                   If        SORBK = *Blanks
- 
+
       * If Blank and Ordering Customer is type A, C or S error
- 
+
      C                   If        @ORCT = 'A' or
      C                             @ORCT = 'C' or
      C                             @ORCT = 'S'
@@ -381,38 +384,38 @@
      C                   Movel     'SORBK'       FldNamXAr(Idx)
      C                   Movel     'MMA0964'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   Eval      @ORBT = *Blanks
- 
+
      C                   Else
      C                   If        OKOrbk = 'Y'
- 
+
      C* If less than 3 char have been entered could be a NOSTRO
      C                   If        OR02R = *Blanks and
      C                             SORBB = *Blanks
      C                   Exsr      VNOSTRO
- 
+
      C                   Else
      C* If less than 11 char have been entered could be a RETAIL
      C                   If        OR10R = *Blanks and
      C                             SORBB = *Blanks
      C                   Exsr      VRETAIL
- 
+
      C                   Else
       * Validate for Partial account
      C                   Exsr      VPARTIAL
- 
+
      C                   End
      C                   End
      C                   End
      C                   End
      C                   End
- 
+
       * If a valid account has been entered,
       * store full account details for FT Transaction Status File
       * record update.
      C                   If        OKOrbk = 'Y'
- 
+
      C                   If        @ORBT = 'N' or
      C                             @ORBT = 'R' or
      C                             @ORBT = 'P'
@@ -431,7 +434,7 @@
       *
      C                   If        SORC1 = 'MT202' and
      C                             SORC2 = *Blanks
- 
+
      C                   If        @ORBT = 'N' or
      C                             @ORBT = 'R' or
      C                             @ORBT = 'P'
@@ -465,7 +468,7 @@
      C                   End
       *
      C                   End
- 
+
       * If Ordering Bank entered and Ordering Customer an
       * account then error.
       *
@@ -587,7 +590,7 @@
       ******************************************************************
      C*
      C     VNOSTRO       BEGSR
- 
+
      C                   CALLB     'AONOSTR0'
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
@@ -600,7 +603,7 @@
      C                   Parm      *Blanks       C#CSSN
      C                   Parm      *Blanks       C#PNOI
      C     SDNOST        Parm      SDNOST        DSFDY
- 
+
      C                   If        C#RTCD = *Blanks
       * Move new SYNON field names to old field names
      C                   Move      A7CUST        K#CNUM
@@ -615,10 +618,10 @@
      C                   Movel     'SORBK'       FldNamXAr(Idx)
      C                   Movel     'MMA0965'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   If        OKOrbk = 'Y'
      C                   Eval      @ORBT = 'N'
- 
+
       * Find if retail
      C                   Eval      K#CCY = SSMCY
      C                   Eval      @CCY = SSMCY
@@ -646,14 +649,14 @@
      C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                               CSD089
      C                   End                                                                 BUG4581
      C                   End
- 
+
      C                   Eval      @ACST4 = ACST
- 
-     C                   If        ATYP = 'R'
+
+     C**********         If        ATYP = 'R'                                               MD037223
      C                   Eval      @OBOPN = DACO
+     C**********         End                                                                MD037223
      C                   End
-     C                   End
- 
+
      C                   ENDSR
      C************************************************************
      C* END OF NOSTRO VALIDATION
@@ -662,9 +665,9 @@
      C******************************************************************
      C* VRETAIL - VALIDATION OF RETAIL ACCOUNT                         *
       ******************************************************************
- 
+
      C     VRETAIL       BEGSR
- 
+
      C                   Movel     ORRT          WRETL
      C                   Movel     WRETL         WRETA
      C                   If        ORRT = WRETA
@@ -672,9 +675,9 @@
      C     ACNO          Chain     ACNUMAF                            90
      C                   Eval      @CCY = CCY
      C                   End
- 
+
       * Check to see if retail account number is allowed
- 
+
      C                   If        BMRANR = 'N'
       * Send error to screen
      C                   Move      'N'           OKOrbk
@@ -682,7 +685,7 @@
      C                   Add       1             Idx
      C                   Movel     'SORBK'       FldNamXAr(Idx)
      C                   Movel     'MMA0943'     MsgIdXAr(Idx)
- 
+
      C                   Else
      C                   If        ORRT <> WRETA or
      C                             RECI <> 'D'  or
@@ -695,7 +698,7 @@
      C                   Movel     'MMA0966'     MsgIdXAr(Idx)
      C                   End
      C                   End
- 
+
      C                   If        OKOrbk = 'Y'
      C                   MOVE      RETB          WRETB                                        240689
       * Check for block debits on account                                                    BUG4581
@@ -710,7 +713,7 @@
      C                   Movel     'SORBK'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                               CSD089
      C                   End                                                                 BUG4581
- 
+
      C                   If        @CCY <> SSMCY
       * Send error to screen
      C                   Move      'N'           OKOrbk
@@ -720,24 +723,24 @@
      C                   Movel     'MMA0967'     MsgIdXAr(Idx)
      C                   End
      C                   End
- 
+
      C                   If        OKOrbk = 'Y'
      C                             OR OKOrbk = 'W'                                          MD019914
- 
+
      C                   Eval      K#CNUM = CNUM
      C                   Eval      K#CCY= @CCY
      C                   Eval      K#ACOD = ACOD
      C                   Eval      K#ACSQ = ACSQ
      C                   Eval      K#BRCA = BRCA
- 
+
      C                   Eval      @ORBT = 'R'
      C                   Eval      @ACST4 = ACST
- 
-     C                   If        ATYP = 'R'
+
+     C**********         If        ATYP = 'R'                                               MD037223
      C                   Eval      @OBOPN = DACO
+     C**********         End                                                                MD037223
      C                   End
-     C                   End
- 
+
      C                   ENDSR
      C************************************************************
      C* END OF RETAIL ACCOUNT VALIDATION
@@ -748,14 +751,14 @@
      C*****************************************************************
      C*
      C     VPARTIAL      BEGSR
- 
+
      C***********        Movel     ORNM          WNUML                                        CSD027
      C***********        Movel     WNUML         WNUMA                                        CSD027
      C                   Movel     ORCD          WCODL
      C                   Movel     WCODL         WCODA
      C                   Movel     ORSQ          WSEQL
      C                   Movel     WSEQL         WSEQA
- 
+
      C***********        If        ORNM = WNUMA and                                           CSD027
      C***********                  ORCD = WCODA and                                           CSD027
      C                   IF        ORCD = WCODA and                                           CSD027
@@ -765,17 +768,17 @@
      C                   Eval      @CCY = SSMCY
      C                   Move      ORCD          K#ACOD
      C                   Move      ORSQ          K#ACSQ
- 
+
      C                   If        @MBIN = 'Y'
      C                   Eval      K#BRCA = SORBB
      C                   Else
      C                   Eval      K#BRCA = BJSBRC
      C                   Eval      SORBB = BJSBRC
      C                   End
- 
+
      C     AKEY          CHAIN     ACCNTABF                           90
      C                   End
- 
+
      C***********        If        ORNM <> WNUMA or                                          CSD027
      C***********                  ORCD <> WCODA or                                          CSD027
      C                   If        ORCD <> WCODA or                                          CSD027
@@ -808,9 +811,9 @@
      C                   Eval      @ACST4 = ACST
      C                   MOVE      RETB          WRETB                                        240689
       *
-     C                   If        ATYP = 'R'
+     C**********         If        ATYP = 'R'                                               MD037223
      C                   Eval      @OBOPN = DACO
-     C                   End
+     C**********         End                                                                MD037223
      C                   End
      C*
      C                   ENDSR
@@ -823,16 +826,16 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       ** Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -842,13 +845,13 @@
      C                   Parm                    WFldNmXAr                                    240689
      C                   Parm                    WMsgIDXAr                                    240689
      C                   Parm                    WMsgDtaXAr                                   240689
- 
+
       ** OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -890,7 +893,7 @@
      C                   Parm      '*FIRST'      @OPTN
      C     SDRETL        Parm      SDRETL        DSFDY
      C                   End
- 
+
       * Key list for account validation
      C     AKEY          KLIST
      C                   KFLD                    K#CNUM
@@ -903,9 +906,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

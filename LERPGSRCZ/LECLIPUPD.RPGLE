@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD034363           Date 30Jun15               *
-      *  Prev Amend No. MD045480           Date 12May17               *            
+      *  Last Amend No. MD039449           Date 04Jul16               *      
+      *  Prev Amend No. MD034363           Date 30Jun15               *
+      *                 MD045480           Date 12May17               *            
       *                 AR943686           Date 23Sep16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD034771           Date 23Jun15               *
@@ -145,6 +146,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039449 - CLE164: Unable to change loan autosettle          *
+      *             indicator from N to C                             *      
       *  MD034363 - Reversal projected movements were generated during*
       *             Input Cycle, change value of RAMT to CPAM when    *
       *             RAMT value is less than CPAM.                     *
@@ -9962,7 +9965,8 @@
       *****************************************************************                       CLE164
      C     WriteExtFile  BEGSR                                                                CLE164
                                                                                               CLE164
-     C                   IF        CLE134 = *OFF                                              CLE164
+     C**********         IF        CLE134 = *OFF                                     CLE164 MD039449
+     C                   IF        CLE134 = 'N'                                             MD039449
      C                   LEAVESR                                                              CLE164
      C                   ENDIF                                                                CLE164
                                                                                               CLE164
@@ -10074,7 +10078,8 @@
       *****************************************************************                       CLE164
      C     UpdateExtFile BEGSR                                                                CLE164
                                                                                               CLE164
-     C                   IF        CLE134 = *OFF                                              CLE164
+     C**********         IF        CLE134 = *OFF                                     CLE164 MD039449
+     C                   IF        CLE134 = 'N'                                             MD039449
      C                   LEAVESR                                                              CLE164
      C                   ENDIF                                                                CLE164
                                                                                               CLE164
@@ -10106,7 +10111,8 @@
       *****************************************************************                       CLE164
      C     DeleteExtFile BEGSR                                                                CLE164
                                                                                               CLE164
-     C                   IF        CLE134 = *ON                                               CLE164
+     C**********         IF        CLE134 = *ON                                      CLE164 MD039449
+     C                   IF        CLE134 = 'N'                                             MD039449
      C                   LEAVESR                                                              CLE164
      C                   ENDIF                                                                CLE164
      C                   EVAL      wFTPDPGrpID = *BLANKS                                      CLE164

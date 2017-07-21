@@ -20,11 +20,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
-      *  Last Amend No. AR1005609          Date 25Nov12               *
-      *  Prev Amend No. CSF011  *CREATE    Date 12Sep11               *
+      *  Last Amend No. MD038887           Date 05Jul16               *
+      *  Prev Amend No. AR1005609          Date 25Nov12               *
+      *                 CSF011  *CREATE    Date 12Sep11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038887 - GOC000110 failed due to the RecordCount field     *
       *  AR1005609- GOC000110 failed in EOM June run                  *
       *             (Child: AR1005610)                                *
       *  CSF011 - Customer Name on Inputs                             *
@@ -127,7 +129,8 @@
      D MaxRptLine      S              3  0
      D CurRptLine      S              3  0
      D FirstPage       S              1A
-     D RecordCount     S              5  0
+     D*RecordCount     S              5  0                                                  MD038887
+     D RecordCount     S              6  0                                                  MD038887
  
      D ReptSeq         S              5A
      D Entity          S              3A

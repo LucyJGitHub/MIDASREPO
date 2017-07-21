@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD034776           Date 10Jul15               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD036475           Date 04Dec15               *      
+      *  Prev Amend No. MD034776           Date 10Jul15               *
+      *                 CLE164             Date 18Aug14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025009B          Date 12May14               *
       *                 MD024398           Date 11May14               *
@@ -90,6 +91,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036475 - System error in MR loan events. Put an additional *
+      *             validation on settlement account for blocked      *
+      *             debit and blocked credit.                         *      
       *  MD034776 - Reverse AR805843 to consider negative interest    *
       *             rate.                                             *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -527,6 +531,13 @@
 
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
+     D W1              S                   LIKE(Idx)                                        MD036475
+     D W2              S                   LIKE(Idx)                                        MD036475
+     D PrvIdx          S                   LIKE(Idx)                                        MD036475
+     D WMsgId          S                   LIKE(#MsgID)                                     MD036475
+     D TmpFldArr       S             10A   DIM(ArrayMax)                                    MD036475
+     D TmpMsgArr       S                   DIM(ArrayMax)                                    MD036475
+     D                                     LIKE(#MsgID)                                     MD036475
 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
@@ -1915,6 +1926,37 @@
      C                   EVAL      InRecSttmt = *Blanks                                       CLE034
      C                   ENDIF                                                                CLE034
                                                                                               CLE034
+      ** Since ZASETINVAL validates for both blocked debit and credit                       MD036475
+      ** Below additional check on account is needed.                                       MD036475
+      ** For Normal Loan, only issue 'Settlement Account is blocked' if:                    MD036475
+      **   MR sign is negative and Account is blocked credit                                MD036475
+      **   MR sign is positive and Account is blocked debit                                 MD036475
+      ** For Part Sold Loan, issue error if:                                                MD036475
+      **   MR sign is negative and Account is blocked debit                                 MD036475
+      **   MR sign is positive and Account is blocked credit                                MD036475
+      ** Error ESM0991 = Account has blocked debit status                                   MD036475
+      ** Error ESM0992 = Account has blocked credit status                                  MD036475
+                                                                                            MD036475
+     C                   SELECT                                                             MD036475
+     C                   WHEN      V_MRPTYP = 61 or V_MRPTYP = 62 or                        MD036475
+     C                             V_MRPTYP = 63 or V_MRPTYP = 64 or                        MD036475
+     C                             V_MRPTYP = 65 or V_MRPTYP = 68 or                        MD036475
+     C                             V_MRPTYP = 70 or V_MRPTYP = 71                           MD036475
+     C                   IF        DDRSIG = '-'                                             MD036475
+     C                   EVAL      WMsgId = 'ESM0991'                                       MD036475
+     C                   ELSE                                                               MD036475
+     C                   EVAL      WMsgId = 'ESM0992'                                       MD036475
+     C                   ENDIF                                                              MD036475
+     C                   WHEN      V_MRPTYP = 66 or V_MRPTYP = 67 or                        MD036475
+     C                             V_MRPTYP = 69 or V_MRPTYP = 72                           MD036475
+     C                   IF        DDRSIG = '-'                                             MD036475
+     C                   EVAL      WMsgId = 'ESM0992'                                       MD036475
+     C                   ELSE                                                               MD036475
+     C                   EVAL      WMsgId = 'ESM0991'                                       MD036475
+     C                   ENDIF                                                              MD036475
+     C                   ENDSL                                                              MD036475
+                                                                                            MD036475
+     C                   EXSR      SrChkBlkAcc                                              MD036475
       *
       ***  update valid Manual Repayment settlement instructions
       *
@@ -2710,7 +2752,78 @@
      C                   PARM      *BLANKS       C#KYST                                      CSF011A
      C     SDCUST        PARM      SDCUST        DSSDY                                       CSF011A
      C                   ENDSR                                                               CSF011A
-      *****************************************************************                      CSF011A
+      *****************************************************************                     MD036475
+      /EJECT                                                                                MD036475
+      *****************************************************************                     MD036475
+      *                                                               *                     MD036475
+      * SrChkBlkAcc - Check Settlement Account for Blocked DR/CR      *                     MD036475
+      *                                                               *                     MD036475
+      *****************************************************************                     MD036475
+     C     SrChkBlkAcc   BEGSR                                                              MD036475
+                                                                                            MD036475
+      ** Remove error if value of WMsgId1 found in array                                    MD036475
+                                                                                            MD036475
+     C                   EVAL      PrvIdx = Idx                                             MD036475
+     C                   EVAL      W1 = 1                                                   MD036475
+     C     WMsgId        LOOKUP    MsgIDArr(W1)                           98                MD036475
+     C                   IF        *IN98 = *ON                                              MD036475
+                                                                                            MD036475
+     C                   EVAL      Idx = Idx - 1                                            MD036475
+     C                   EVAL      FldNameArr(W1) = *BLANKS                                 MD036475
+     C                   EVAL      MsgIDArr(W1) = *BLANKS                                   MD036475
+                                                                                            MD036475
+     C                   IF        ##PREC = ' '                                             MD036475
+     C     'DDRONX    '  LOOKUP    FldNameArr(1)                          96                MD036475
+     C     'DDRONX    '  LOOKUP    WFldNamArr(1)                          97                MD036475
+     C                   IF        *IN96 = '0' and                                          MD036475
+     C                             *IN97 = '1'                                              MD036475
+     C                   EVAL      DDRonxOK = 'W'                                           MD036475
+     C                   ENDIF                                                              MD036475
+     C                   IF        *IN96 = '0' and                                          MD036475
+     C                             *IN97 = '0'                                              MD036475
+     C                   EVAL      DDRonxOK = 'Y'                                           MD036475
+     C                   ENDIF                                                              MD036475
+     C                   ENDIF                                                              MD036475
+                                                                                            MD036475
+     C                   IF        ##PPAY = ' '                                             MD036475
+     C     'DDPONX    '  LOOKUP    FldNameArr(1)                          96                MD036475
+     C     'DDPONX    '  LOOKUP    WFldNamArr(1)                          97                MD036475
+     C                   IF        *IN96 = '0' and                                          MD036475
+     C                             *IN97 = '1'                                              MD036475
+     C                   EVAL      DDPonxOK = 'W'                                           MD036475
+     C                   ENDIF                                                              MD036475
+     C                   IF        *IN96 = '0' and                                          MD036475
+     C                             *IN97 = '0'                                              MD036475
+     C                   EVAL      DDPonxOK = 'Y'                                           MD036475
+     C                   ENDIF                                                              MD036475
+     C                   ENDIF                                                              MD036475
+                                                                                            MD036475
+     C                   ENDIF                                                              MD036475
+                                                                                            MD036475
+      ** Reorganize error array                                                             MD036475
+                                                                                            MD036475
+     C                   EVAL      W1 = 1                                                   MD036475
+     C     *BLANKS       LOOKUP    FldNameArr(W1)                         98                MD036475
+     C                   IF        W1 < PrvIdx                                              MD036475
+     C                   RESET                   TmpFldArr                                  MD036475
+     C                   RESET                   TmpMsgArr                                  MD036475
+     C                   EVAL      W1 = 1                                                   MD036475
+     C                   EVAL      W2 = 1                                                   MD036475
+     C                   DOW       W1 <= PrvIdx                                             MD036475
+     C                   IF        FldNameArr(W1) <> *BLANKS and                            MD036475
+     C                             MsgIDArr(W1) <> *BLANKS                                  MD036475
+     C                   EVAL      TmpFldArr(W2) = FldNameArr(W1)                           MD036475
+     C                   EVAL      TmpMsgArr(W2) = MsgIDArr(W1)                             MD036475
+     C                   EVAL      W2 = W2 + 1                                              MD036475
+     C                   ENDIF                                                              MD036475
+     C                   EVAL      W1 = W1 + 1                                              MD036475
+     C                   ENDDO                                                              MD036475
+     C                   MOVEA(P)  TmpFldArr     FldNameArr                                 MD036475
+     C                   MOVEA(P)  TmpMsgArr     MsgIDArr                                   MD036475
+     C                   ENDIF                                                              MD036475
+                                                                                            MD036475
+     C                   ENDSR                                                              MD036475
+      *****************************************************************
       /EJECT                                                                                 BUG3114
       *****************************************************************
       /EJECT

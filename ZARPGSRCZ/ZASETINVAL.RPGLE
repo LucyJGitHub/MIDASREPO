@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD024884A          Date 04Jul17               *
-      *  Prev Amend No. MD032089           Date 28Apr15               *
+      *  Last Amend No. MD036475           Date 04Dec15               *      
+      *  Prev Amend No. MD024884A          Date 04Jul17               *
+      *                 MD032089           Date 28Apr15               *
       *                 MD040199           Date 05Aug16               *
       *                 MD039348           Date 17Jun16               *
       *                 MD033870           Date 17Apr15               *
@@ -128,6 +129,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036475 - System error in MR loan events. Check account for *
+      *             both blocked debit/credit when CALP is MAPY.      *      
       *  MD024884A - Incorrect Payment and Receipt accounts           *
       *  MD032089  - PSTM and PONS lost when amended via SOAP with    *
       *              auto AUTH = 'Y'. Error due to clear of received  *
@@ -2091,6 +2094,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  182114
      C                   MOVE      'N'           DDRonxOK                                     182114
      C                   END                                                                  182114
+     C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
      C                   END
                                                                                               CRE008
@@ -2393,6 +2397,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  182114
      C                   MOVE      'N'           DDRonxOK                                     182114
      C                   END                                                                  182114
+     C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
       *
       ** IF NOT MULTIBRANCHING NOSTRO MUST BE IN SINGLE BRANCH
@@ -2534,6 +2539,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  182114
      C                   MOVE      'N'           DDRonxOK                                     182114
      C                   END                                                                  182114
+     C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
      C                   END
                                                                                               CRE008
@@ -2636,6 +2642,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'
      C                   MOVE      'N'           DDRonxOK
      C                   END
+     C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
       *
       ** SET UP SETTLEMENT BRANCH
@@ -3923,6 +3930,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0992'                                  182114
      C                   MOVE      'N'           DDPonxOK                                     182114
      C                   END                                                                  182114
+     C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
      C                   END
       *
@@ -4225,6 +4233,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0992'                                  182114
      C                   MOVE      'N'           DDPonxOK                                     182114
      C                   END                                                                  182114
+     C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
       *
       ** IF NOT MULTIBRANCHING NOSTRO MUST BE IN SINGLE BRANCH
@@ -4355,6 +4364,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0992'                                  182114
      C                   MOVE      'N'           DDPonxOK                                     182114
      C                   END                                                                  182114
+     C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
      C                   END
       *
@@ -4448,6 +4458,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0992'
      C                   MOVE      'N'           DDPonxOK
      C                   END
+     C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
       *
       ** SET UP SETTLEMENT BRANCH
@@ -8767,7 +8778,45 @@
      C                   ENDIF                                                                CGL014
                                                                                               CGL014
      C                   ENDSR                                                                CGL014
-      *****************************************************************                       CGL014
+      *****************************************************************                     MD036475
+      /EJECT                                                                                MD036475
+      *****************************************************************                     MD036475
+      *                                                               *                     MD036475
+      *  SRExtChkBlkAc - Extra Check on Account for Blocked DR/CR     *                     MD036475
+      *                                                               *                     MD036475
+      *****************************************************************                     MD036475
+     C     SRExtChkBlkAc BEGSR                                                              MD036475
+                                                                                            MD036475
+     C                   IF        ##CALP = 'MAPY'                                          MD036475
+                                                                                            MD036475
+      ** Also check for blocked credit on Receive Side                                      MD036475
+                                                                                            MD036475
+     C     ##PREC        IFNE      'Y'                                                      MD036475
+     C                   TESTB     '3'           RETB                     92                MD036475
+     C     *IN92         IFEQ      '1'                                                      MD036475
+     C                   ADD       1             Idx                                        MD036475
+     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                               MD036475
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0992'                                MD036475
+     C                   MOVE      'N'           DDRonxOK                                   MD036475
+     C                   END                                                                MD036475
+     C                   ENDIF                                                              MD036475
+                                                                                            MD036475
+      ** Also check for blocked debit on Payment Side                                       MD036475
+                                                                                            MD036475
+     C     ##PPAY        IFNE      'Y'                                                      MD036475
+     C                   TESTB     '2'           RETB                     91                MD036475
+     C     *IN91         IFEQ      '1'                                                      MD036475
+     C                   ADD       1             Idx                                        MD036475
+     C                   EVAL      FldNameArr(Idx) = 'DDPONX'                               MD036475
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                MD036475
+     C                   MOVE      'N'           DDPonxOK                                   MD036475
+     C                   END                                                                MD036475
+     C                   ENDIF                                                              MD036475
+                                                                                            MD036475
+     C                   ENDIF                                                              MD036475
+                                                                                            MD036475
+     C                   ENDSR                                                              MD036475
+      *****************************************************************
       /EJECT
       *****************************************************************
       *                                                               *

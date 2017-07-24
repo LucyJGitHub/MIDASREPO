@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039988           Date 08Aug16               *
-      *  Prev Amend No. MD039702           Date 14Jul16               *
+      *  Last Amend No. MD046682           Date 14Jul17               *
+      *  Prev Amend No. MD039988           Date 08Aug16               *
+      *                 MD039702           Date 14Jul16               *
       *                 MD029074           Date 21Nov14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR792734A          Date 14Sep11               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046682 - Credit amount should not be displayed with '-'.   *
       *  MD039988 - Discrepancy of Balances between enquiry screens.  *
       *             Amend to reconcile all screens.                   *
       *  MD039702 - Batch number can hold alpha characters. Test      *
@@ -157,6 +159,7 @@
      D                 DS
      D ZOUT21                  1     21
      D ZOUT21Sign             21     21
+     D ZOUT2122CR             21     22                                                     MD046682
       *                                                                                     BUG13352
       ** Position 21-22 was overriden by CR/Blanks, adjust length of                        BUG13352
       ** ZOUT21Edit from 21 to 23 to accomodate moving of CR/Blanks.                        BUG13352
@@ -840,9 +843,11 @@
      C                   Z-ADD     A6NBDP        ZDECS
      C                   EXSR      ZSEDIT
      C                   IF        BFBAL < 0                                                MD029074
-     C                   MOVE      'CR'          ZOUT21Edit                                 MD029074
+     C**********         MOVE      'CR'          ZOUT21Edit                        MD029074 MD046682
+     C                   MOVE      'CR'          ZOUT2122CR                                 MD046682
      C                   ELSE                                                               MD029074
      C                   MOVE      '  '          ZOUT21Edit                                 MD029074
+     C                   MOVE      '  '          ZOUT2122CR                                 MD046682
      C                   ENDIF                                                              MD029074
      C                   MOVE      ZOUT21Edit    EPSTA
 
@@ -898,9 +903,11 @@
      C                   Z-ADD     A6NBDP        ZDECS
      C                   EXSR      ZSEDIT
      C                   IF        BFBAL < 0                                                MD029074
-     C                   MOVE      'CR'          ZOUT21Edit                                 MD029074
+     C*********          MOVE      'CR'          ZOUT21Edit                        MD029074 MD046682
+     C                   MOVE      'CR'          ZOUT2122CR                                 MD046682
      C                   ELSE                                                               MD029074
      C                   MOVE      '  '          ZOUT21Edit                                 MD029074
+     C                   MOVE      '  '          ZOUT2122CR                                 MD046682
      C                   ENDIF                                                              MD029074
      C                   MOVE      ZOUT21Edit    EPSTA
 
@@ -949,7 +956,7 @@
 
      C     DRCR          IFEQ      1
      C                   Z-SUB     PSTA          W_AMT            13 0
-     C                   MOVE      'CR'          ZOUT21Edit                                 BUG13387
+     C**********         MOVE      'CR'          ZOUT21Edit                        BUG13387 MD046682
      C                   ELSE
      C                   Z-ADD     PSTA          W_AMT
      C                   MOVE      '  '          ZOUT21Edit                                 BUG13387
@@ -958,6 +965,11 @@
      C                   MOVE      W_AMT         ZFLD15
      C                   Z-ADD     A6NBDP        ZDECS
      C                   EXSR      ZSEDIT
+     C     DRCR          IFEQ      1                                                        MD046682
+     C                   MOVE      'CR'          ZOUT2122CR                                 MD046682
+     C                   ELSE                                                               MD046682
+     C                   MOVE      '  '          ZOUT2122CR                                 MD046682
+     C                   ENDIF                                                              MD046682
      C                   MOVE      ZOUT21Edit    EPSTA
 
       * Source of posting
@@ -1211,9 +1223,11 @@
      C                   Z-ADD     A6NBDP        ZDECS
      C                   EXSR      ZSEDIT
      C                   IF        CFBAL < 0                                                MD029074
-     C                   MOVE      'CR'          ZOUT21Edit                                 MD029074
+     C**********         MOVE      'CR'          ZOUT21Edit                        MD029074 MD046682
+     C                   MOVE      'CR'          ZOUT2122CR                                 MD046682
      C                   ELSE                                                               MD029074
      C                   MOVE      '  '          ZOUT21Edit                                 MD029074
+     C                   MOVE      '  '          ZOUT2122CR                                 MD046682
      C                   ENDIF                                                              MD029074
      C                   MOVE      ZOUT21Edit    EPSTA
 
@@ -1271,9 +1285,11 @@
      C                   Z-ADD     A6NBDP        ZDECS
      C                   EXSR      ZSEDIT
      C                   IF        CFBAL < 0                                                MD029074
-     C                   MOVE      'CR'          ZOUT21Edit                                 MD029074
+     C**********         MOVE      'CR'          ZOUT21Edit                        MD029074 MD046682
+     C                   MOVE      'CR'          ZOUT2122CR                                 MD046682
      C                   ELSE                                                               MD029074
      C                   MOVE      '  '          ZOUT21Edit                                 MD029074
+     C                   MOVE      '  '          ZOUT2122CR                                 MD046682
      C                   ENDIF                                                              MD029074
      C                   MOVE      ZOUT21Edit    EPSTA
 

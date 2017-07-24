@@ -20,8 +20,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amedn No. MD043383           Date 30Mar17               *
-      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *  Last Amedn No. MD036596           Date 24Jul17               *
+      *  Prev Amend No. AR1007106          Date 24Jul17               *
+      *                 MD043383           Date 30Mar17               *
+      *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
       *                 CLE154             Date 06Aug12               *
       *                 CLE141A            Date 28Apr16               *
@@ -172,6 +174,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD036596 - Reverse fix MD022296.
+      *  AR1007106 - Error in Fee Details Enquiry. Reverse codes of   *
+      *              fix BUG23230 and part of fix BUG23523 to get     *
+      *              the right Available Amount for the fee period    *
+      *              in parallel to LER135.                           *
+      *              (Child: AR1007107)                               *
+      *            - Applied for MD036596.
       *  MD043383 - Display only the fee maturity for matured fee.    *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
@@ -6635,8 +6644,8 @@
      C** NDAYS is the number of days in this accrual.                     BH3414
      C*                                                                   BH3414
      C                     MOVE '0'       *IN18                           BH3414
-     C           *LOVAL    SETLLFACHSAL1                                                    BUG23230
-     C           HSAKY2    SETLLFACHSAL1                                                    BUG23230
+     C********** *LOVAL    SETLLFACHSAL1                                          BUG23230 AR1007106
+     C********** HSAKY2    SETLLFACHSAL1                                          BUG23230 AR1007106
      C           *IN18     DOWEQ'0'                                       BH3414
      C           HSAKY2    READEFACHSAL1                 18               BH3414
      C*                                                                   BH3414
@@ -6649,14 +6658,14 @@
      C                     MOVE '1'       *IN18                           BH3414
      C                     END                                            BH3414
      C*                                                                   BH3414
-      *                                                                                     MD022296
-      ** Save drawn amount of FS (Facility Start) which might be needed                     MD022296
-      ** in calculation of accrual.                                                         MD022296
-      *                                                                                     MD022296
-     C           FAACTN    IFEQ 'FS'                                                        MD022296
-     C                     Z-ADDFAUNDR    OFAUDR 150                                        MD022296
-     C                     ENDIF                                                            MD022296
-      *                                                                                     MD022296
+      **********                                                                   MD022296 MD036596
+      ***Save*drawn*amount*of*FS*(Facility*Start)*which*might*be*needed*********   MD022296 MD036596
+      ***in*calculation*of*accrual.*********************************************   MD022296 MD036596
+      **********                                                                   MD022296 MD036596
+     C********** FAACTN    IFEQ 'FS'                                               MD022296 MD036596
+     C**********           Z-ADDFAUNDR    OFAUDR 150                               MD022296 MD036596
+     C**********           ENDIF                                                   MD022296 MD036596
+      **********                                                                   MD022296 MD036596
      C********** FADATE    SUB  STDATE    NDAYS   50               BH3414 CLE013
      C                     Z-ADDSTDATE    ZZBEG                           CLE013
      C                     Z-ADDFADATE    ZZEND                           CLE013
@@ -6668,48 +6677,48 @@
      C                     ELSE                                                               212048
      C                     Z-ADDZZINDY    NDAYS   50                      CLE013
      C                     END                                                                212048
-     C*                                                                                     BUG23230
-     C** Make sure that current amount from history file is use based on Calculation type.  BUG23230
-     C*                                                                                     BUG23230
-     C*                                                                                     BUG23230
-     C           *IN18     IFEQ '0'                                                         BUG23523
-     C           FECALT    IFEQ '01'                                                        BUG23230
-     C           FECALT    OREQ '02'                                                        BUG23230
-     C           FECALT    OREQ '03'                                                        BUG23230
-     C           FECALT    OREQ '04'                                                        BUG23230
-     C           FECALT    OREQ '05'                                                        BUG23230
-     C           FECALT    OREQ '06'                                                        BUG23230
-     C           FAUNDR    IFGE 0                                                           BUG23230
-     C                     Z-ADDFAUNDR    NEWAMT                                            BUG23230
-     C           AAMT      IFNE NEWAMT                                                      BUG23230
-     C                     Z-ADDNEWAMT    AAMT                                              BUG23230
-     C                     ENDIF                                                            BUG23230
-     C                     ENDIF                                                            BUG23230
-     C                     ENDIF                                                            BUG23230
-     C*                                                                                     BUG23230
-     C           FECALT    IFEQ '11'                                                        BUG23230
-     C           FECALT    OREQ '12'                                                        BUG23230
-     C           FECALT    OREQ '13'                                                        BUG23230
-     C           FECALT    OREQ '14'                                                        BUG23230
-     C           FECALT    OREQ '15'                                                        BUG23230
-     C           FECALT    OREQ '16'                                                        BUG23230
-     C           FADRAM    IFGE 0                                                           BUG23230
-     C                     Z-ADDFADRAM    NEWAMT                                            BUG23230
-     C           AAMT      IFNE NEWAMT                                                      BUG23230
-     C                     Z-ADDNEWAMT    AAMT                                              BUG23230
-     C                     ENDIF                                                            BUG23230
-     C                     ENDIF                                                            BUG23230
-     C                     ENDIF                                                            BUG23230
-     C*                                                                                     BUG23230
-     C           FAACTN    IFEQ 'FI'                                                        BUG23230
-     C           FAACTN    OREQ 'FD'                                                        BUG23230
-     C           FECALT    IFEQ '21'                                                        BUG23230
-     C           FECALT    OREQ '22'                                                        BUG23230
-     C                     Z-ADDFACFAM    NEWAMT 130                                        BUG23230
-     C                     ENDIF                                                            BUG23230
-     C                     ENDIF                                                            BUG23230
-     C*                                                                                     BUG23523
-     C                     ENDIF                                                            BUG23523
+     C**********                                                                  BUG23230 AR1007106
+     C***Make*sure*that*current*amount*from*history*file*is*use*based*on*CalculatiBUG23230 AR1007106
+     C**********                                                                  BUG23230 AR1007106
+     C**********                                                                  BUG23230 AR1007106
+     C********** *IN18     IFEQ '0'                                               BUG23523 AR1007106
+     C********** FECALT    IFEQ '01'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '02'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '03'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '04'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '05'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '06'                                              BUG23230 AR1007106
+     C********** FAUNDR    IFGE 0                                                 BUG23230 AR1007106
+     C**********           Z-ADDFAUNDR    NEWAMT                                  BUG23230 AR1007106
+     C********** AAMT      IFNE NEWAMT                                            BUG23230 AR1007106
+     C**********           Z-ADDNEWAMT    AAMT                                    BUG23230 AR1007106
+     C**********           ENDIF                                                  BUG23230 AR1007106
+     C**********           ENDIF                                                  BUG23230 AR1007106
+     C**********           ENDIF                                                  BUG23230 AR1007106
+     C**********                                                                  BUG23230 AR1007106
+     C********** FECALT    IFEQ '11'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '12'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '13'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '14'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '15'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '16'                                              BUG23230 AR1007106
+     C********** FADRAM    IFGE 0                                                 BUG23230 AR1007106
+     C**********           Z-ADDFADRAM    NEWAMT                                  BUG23230 AR1007106
+     C********** AAMT      IFNE NEWAMT                                            BUG23230 AR1007106
+     C**********           Z-ADDNEWAMT    AAMT                                    BUG23230 AR1007106
+     C**********           ENDIF                                                  BUG23230 AR1007106
+     C**********           ENDIF                                                  BUG23230 AR1007106
+     C**********           ENDIF                                                  BUG23230 AR1007106
+     C**********                                                                  BUG23230 AR1007106
+     C********** FAACTN    IFEQ 'FI'                                              BUG23230 AR1007106
+     C********** FAACTN    OREQ 'FD'                                              BUG23230 AR1007106
+     C********** FECALT    IFEQ '21'                                              BUG23230 AR1007106
+     C********** FECALT    OREQ '22'                                              BUG23230 AR1007106
+     C**********           Z-ADDFACFAM    NEWAMT 130                              BUG23230 AR1007106
+     C**********           ENDIF                                                  BUG23230 AR1007106
+     C**********           ENDIF                                                  BUG23230 AR1007106
+     C**********                                                                  BUG23523 AR1007106
+     C**********           ENDIF                                                  BUG23523 AR1007106
      C*                                                                   BH3414
      C           NDAYS     IFGT 0                                         BH3414
      C           NDAYS2    ORGT 0                                                           BUG21892
@@ -6737,10 +6746,11 @@
      C                     ENDIF                                                            BUG21892
      C                     ELSE                                                               204320
      C**********           Z-ADDAAMT      WAMT                                       204320 MD022296
-      *                                                                                     MD022296
-      ** Use the previous amount in accrual computation in this period                      MD022296
-      *                                                                                     MD022296
-     C                     Z-ADDOFAUDR    WAMT                                              MD022296
+     C                     Z-ADDAAMT      WAMT                                              MD036596
+      **********                                                                   MD022296 MD036596
+      ***Use*the*previous*amount*in*accrual*computation*in*this*period**********   MD022296 MD036596
+      **********                                                                   MD022296 MD036596
+     C**********           Z-ADDOFAUDR    WAMT                                     MD022296 MD036596
      C                     ENDIF                                                              204320
      C                     Z-ADDFADATE    STDATE                          BH3414
      C                     END                                            BH3414
@@ -6770,12 +6780,12 @@
      C                     ELSE                                           BH3414
      C           FECALT    IFEQ '21'                                      BH3414
      C           FECALT    OREQ '22'                                                          204320
-     C           FACFAM    IFNE NEWAMT                                                      BUG23230
-     C           NEWAMT    ANDGT*ZERO                                                       BUG23230
-     C                     Z-ADDNEWAMT    AAMT                                              BUG23230
-     C                     ELSE                                                             BUG23230
+     C********** FACFAM    IFNE NEWAMT                                            BUG23230 AR1007106
+     C********** NEWAMT    ANDGT*ZERO                                             BUG23230 AR1007106
+     C**********           Z-ADDNEWAMT    AAMT                                    BUG23230 AR1007106
+     C**********           ELSE                                                   BUG23230 AR1007106
      C                     Z-ADDFACFAM    AAMT                            BH3414
-     C                     ENDIF                                                            BUG23230
+     C**********           ENDIF                                                  BUG23230 AR1007106
      C                     END                                            BH3414
      C                     END                                            BH3414
      C                     END                                            BH3414
@@ -6795,15 +6805,15 @@
      C**********           ENDIF                                                   MD027397 MD030669
      C                     ENDIF                                                              204320
       *                                                                                       204320
-      ** Save the drawn amount. This will be used in the computation of                     MD022296
-      ** next period accrual.                                                               MD022296
-      *                                                                                     MD022296
-     C           FADATE    IFGT OFADAT                                                      MD022296
-     C           FAUNDR    ORNE OFAUDR                                                      MD022296
-     C                     Z-ADDFAUNDR    OFAUDR 150                                        MD022296
-     C                     Z-ADDFADATE    OFADAT  50                                        MD022296
-     C                     ENDIF                                                            MD022296
-      *                                                                                     MD022296
+      ***Save*the*drawn*amount.*This*will*be*used*in*the*computation*of*********   MD022296 MD036596
+      ***next*period*accrual.***************************************************   MD022296 MD036596
+      **********                                                                   MD022296 MD036596
+     C********** FADATE    IFGT OFADAT                                             MD022296 MD036596
+     C********** FAUNDR    ORNE OFAUDR                                             MD022296 MD036596
+     C**********           Z-ADDFAUNDR    OFAUDR 150                               MD022296 MD036596
+     C**********           Z-ADDFADATE    OFADAT  50                               MD022296 MD036596
+     C**********           ENDIF                                                   MD022296 MD036596
+      **********                                                                   MD022296 MD036596
      C                     END                                            BH3414
      C                     Z-ADDENDATE    STDATE                                             BUG8762
      C           LEFKEY    READELEFHSTOM            N    27                                  BUG8762

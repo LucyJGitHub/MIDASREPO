@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL154             Date 13Oct14               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD038989           Date 11Jul16               *      
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 LLN022A            Date 03Jun15               *
       *                 MD027587           Date 19Jun14               *
       *                 MD024475           Date 07May14               *
       *                 AR1093096          Date 30Sep13               *
@@ -163,6 +164,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038989 - Journal Entry is allowed for Blocked Nostro a/c.  *
+      *             Ensure that RETB will be validated for nostro a/cs*      
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -5464,6 +5467,8 @@ E1   C                     ENDIF                                          CGL016
      C***********URRE01    IFNE 'Y'                                 CGL002158805
      C********** URRE01    IFEQ 'Y'                                                  158805 AR802562
      C           URRE01    IFNE 'Y'                                                         AR802562
+     C           CGL002    OREQ 'Y'                                                         MD038989
+     C           WUACTY    ANDEQ'G'                                                         MD038989
      C           WUAUTH    ANDNE'Y'                                       CGL002
      C                     MOVELURRIHF    @IH,U1                          CGL002
      C                     SETON                     91                   CGL002
@@ -5489,6 +5494,8 @@ E1   C                     ENDIF                                          CGL016
      C***********URRE02    IFNE 'Y'                                 CGL002158805
      C********** URRE02    IFEQ 'Y'                                                  158805 AR802562
      C           URRE02    IFNE 'Y'                                                         AR802562
+     C           CGL002    OREQ 'Y'                                                         MD038989
+     C           WUACTY    ANDEQ'G'                                                         MD038989
      C           WUAUTH    ANDNE'Y'                                       CGL002
      C                     MOVELURRIHF    @IH,U1                          CGL002
      C                     SETON                     91                   CGL002
@@ -5514,6 +5521,8 @@ E1   C                     ENDIF                                          CGL016
      C***********URRE03    IFNE 'Y'                                 CGL002158805
      C********** URRE03    IFEQ 'Y'                                                  158805 AR802562
      C           URRE03    IFNE 'Y'                                                         AR802562
+     C           CGL002    OREQ 'Y'                                                         MD038989
+     C           WUACTY    ANDEQ'G'                                                         MD038989
      C           WUAUTH    ANDNE'Y'                                       CGL002
      C                     MOVELURRIHF    @IH,U1                          CGL002
      C                     SETON                     91                   CGL002
@@ -5540,6 +5549,8 @@ E1   C                     ENDIF                                          CGL016
      C***********URRE04    IFNE 'Y'                                 CGL002158805
      C********** URRE04    IFEQ 'Y'                                                  158805 AR802562
      C           URRE04    IFNE 'Y'                                                         AR802562
+     C           CGL002    OREQ 'Y'                                                         MD038989
+     C           WUACTY    ANDEQ'G'                                                         MD038989
      C           WUAUTH    ANDNE'Y'                                       CGL002
      C                     MOVELURRIHF    @IH,U1                          CGL002
      C                     SETON                     91                   CGL002
@@ -7850,8 +7861,11 @@ E1   C                     ENDIF                                          CGL016
       **  If Block GL Accounts Enhancement feature is switched on         CGL002
       **  and account type is GL, check overrideable GL errors            CGL002
       *                                                                   CGL002
+     C                     EXSR SRNOST                                                      MD038989
      C           CGL002    IFEQ 'Y'                                       CGL002
      C           WUACTY    ANDEQ'G'                                       CGL002
+     C           WUACTY    OREQ 'N'                                                         MD038989
+     C           NSTFLG    OREQ 'Y'                                                         MD038989
      C                     EXSR SRGLOV                                    CGL002
      C                     ELSE                                           CGL002
       *                                                                   CGL002
@@ -7995,6 +8009,38 @@ E1   C                     ENDIF                                          CGL016
       *================================================================
      CSR         UNEXIT    ENDSR
      C/EJECT                                                              076566
+      *================================================================                     MD038989
+      * Validate If account is a Nostro                               *                     MD038989
+      *================================================================                     MD038989
+     CSR         SRNOST    BEGSR                                                            MD038989
+      *                                                                                     MD038989
+     C                     TESTN          UKACM2     72                                     MD038989
+     C           *IN72     IFEQ '0'                                                         MD038989
+     C                     CALL 'AONOSTR0'                                                  MD038989
+     C                     PARM           XXAPRC  7                                         MD038989
+     C                     PARM '*KEY'    XXAPOP  7                                         MD038989
+     C                     PARM BTCUST    XXCUST  6                                         MD038989
+     C                     PARM BTCYCD    XXCYCD  3                                         MD038989
+     C                     PARM BTACCD    XXACCD 10                                         MD038989
+     C                     PARM BTACSN    XXACSN  2                                         MD038989
+     C                     PARM           XXNONB  2                                         MD038989
+     C                     PARM BTIBCA    XXBRCD  3                                         MD038989
+     C                     PARM           XXCSSN 10                                         MD038989
+     C                     PARM           XXPNOI  1                                         MD038989
+     C                     PARM           UUFDY                                             MD038989
+      *                                                                                     MD038989
+     C           XXAPRC    IFEQ '      '                                                    MD038989
+     C                     MOVEL'Y'       NSTFLG  1                                         MD038989
+     C                     ELSE                                                             MD038989
+     C                     MOVEL'N'       NSTFLG                                            MD038989
+     C                     END                                                              MD038989
+      *                                                                                     MD038989
+     C                     ELSE                                                             MD038989
+     C                     MOVEL'Y'       NSTFLG                                            MD038989
+     C                     ENDIF                                                            MD038989
+      *                                                                                     MD038989
+     CSR                   ENDSR                                                            MD038989
+     C/EJECT                                                                                MD038989
      CSR         TRANSV    BEGSR                                          076566
      C*================================================================   076566
      C* Validate Transaction Type entry                                   076566

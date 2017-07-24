@@ -26,8 +26,9 @@
       *================================================================
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. CGL154             Date 13Oct14               *
-      *  Prev Amend No. MD027557           Date 25Jun14               *
+      *  Last Amend No. MD038989           Date 11Jul16               *     
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 MD027557           Date 25Jun14               *
       *                 MD027587           Date 19Jun14               *
       *                 AR1093096          Date 30Sep13               *
       *                 AR802562           Date 07Sep11               *
@@ -75,6 +76,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD038989 - Journal Entry is allowed for Blocked Nostro a/c.  *
+      *             Ensure that RETB will be validated for nostro a/cs*     
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD027557 - The credit amount input becomes blank once press  *
       *             enter(Recompile)                                  *
@@ -1368,8 +1371,11 @@
       **  If Block GL Accounts Enhancement feature is switched on         CGL002
       **  and account type is GL, check overrideable GL errors            CGL002
       *                                                                   CGL002
+     C                     EXSR SRNOST                                                      MD038989
      C           CGL002    IFEQ 'Y'                                       CGL002
      C           WUACTY    ANDEQ'G'                                       CGL002
+     C           WUACTY    OREQ 'N'                                                         MD038989
+     C           NSTFLG    OREQ 'Y'                                                         MD038989
      C                     EXSR SRGLOV                                    CGL002
      C                     ELSE                                           CGL002
       *                                                                   CGL002
@@ -2346,6 +2352,8 @@
       *                                                                   CGL002
      C           *IN90     IFEQ '1'                                       CGL002
      C           URRE01    IFNE 'Y'                                       CGL002
+     C           CGL002    OREQ 'Y'                                                         MD038989
+     C           WUACTY    ANDEQ'G'                                                         MD038989
      C           WUAUTH    ANDNE'Y'                                       CGL002
      C                     MOVELURRIHF    @IH,U1                          CGL002
      C                     SETON                     91                   CGL002
@@ -2369,6 +2377,8 @@
       *                                                                   CGL002
      C           *IN90     IFEQ '1'                                       CGL002
      C           URRE02    IFNE 'Y'                                       CGL002
+     C           CGL002    OREQ 'Y'                                                         MD038989
+     C           WUACTY    ANDEQ'G'                                                         MD038989
      C           WUAUTH    ANDNE'Y'                                       CGL002
      C                     MOVELURRIHF    @IH,U1                          CGL002
      C                     SETON                     91                   CGL002
@@ -2392,6 +2402,8 @@
       *                                                                   CGL002
      C           *IN90     IFEQ '1'                                       CGL002
      C           URRE03    IFNE 'Y'                                       CGL002
+     C           CGL002    OREQ 'Y'                                                         MD038989
+     C           WUACTY    ANDEQ'G'                                                         MD038989
      C           WUAUTH    ANDNE'Y'                                       CGL002
      C                     MOVELURRIHF    @IH,U1                          CGL002
      C                     SETON                     91                   CGL002
@@ -2416,6 +2428,8 @@
       *                                                                   CGL002
      C           *IN90     IFEQ '1'                                       CGL002
      C           URRE04    IFNE 'Y'                                       CGL002
+     C           CGL002    OREQ 'Y'                                                         MD038989
+     C           WUACTY    ANDEQ'G'                                                         MD038989
      C           WUAUTH    ANDNE'Y'                                       CGL002
      C                     MOVELURRIHF    @IH,U1                          CGL002
      C                     SETON                     91                   CGL002
@@ -3938,6 +3952,38 @@
       *================================================================
      CSR         UNEXIT    ENDSR
       /EJECT
+      *================================================================                     MD038989
+      * Validate If account is a Nostro                               *                     MD038989
+      *================================================================                     MD038989
+     CSR         SRNOST    BEGSR                                                            MD038989
+      *                                                                                     MD038989
+     C                     TESTN          UKACM2     72                                     MD038989
+     C           *IN72     IFEQ '0'                                                         MD038989
+     C                     CALL 'AONOSTR0'                                                  MD038989
+     C                     PARM           XXAPRC  7                                         MD038989
+     C                     PARM '*KEY'    XXAPOP  7                                         MD038989
+     C                     PARM BTCUST    XXCUST  6                                         MD038989
+     C                     PARM BTCYCD    XXCYCD  3                                         MD038989
+     C                     PARM BTACCD    XXACCD 10                                         MD038989
+     C                     PARM BTACSN    XXACSN  2                                         MD038989
+     C                     PARM           XXNONB  2                                         MD038989
+     C                     PARM BTIBCA    XXBRCD  3                                         MD038989
+     C                     PARM           XXCSSN 10                                         MD038989
+     C                     PARM           XXPNOI  1                                         MD038989
+     C                     PARM           UUFDY                                             MD038989
+      *                                                                                     MD038989
+     C           XXAPRC    IFEQ '      '                                                    MD038989
+     C                     MOVEL'Y'       NSTFLG  1                                         MD038989
+     C                     ELSE                                                             MD038989
+     C                     MOVEL'N'       NSTFLG                                            MD038989
+     C                     END                                                              MD038989
+      *                                                                                     MD038989
+     C                     ELSE                                                             MD038989
+     C                     MOVEL'Y'       NSTFLG                                            MD038989
+     C                     ENDIF                                                            MD038989
+      *                                                                                     MD038989
+     CSR                   ENDSR                                                            MD038989
+     C/EJECT                                                                                MD038989
      CSR         UOSUBR    BEGSR
       *================================================================
       * Save Value dates

@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD031673           Date 17Dec14              */
-/*       Prev Amend No. CSW214             Date 25Nov14              */
+/*       Last Amend No. MD039542           Date 30Jun16              */
+/*       Prev Amend No. MD031673           Date 17Dec14              */
+/*                      CSW214             Date 25Nov14              */
 /*                      MD021693A          Date 29Aug13              */
 /*                      CSW213             Date 03Jun13              */
 /*                      CMG003             Date 04Oct12              */
@@ -67,6 +68,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD039542 - Commitment definition control error              */
 /*       MD031673 - Component DLC0400 00001 failed during COB run    */
 /*       CSW214 - SWIFT Changes 2014                                 */
 /*       MD021693A - DLC0400 seq 00001 failed                        */
@@ -564,7 +566,11 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
 /* Process foreign exchange confirmations */
              IF         COND(&CSW097 = 'N') THEN( +
              CALL       PGM(MG0300))                                  /*CSW097*/
-             ELSE       CMD(CALL PGM(MG0300A))                        /*CSW097*/
+/**********  ELSE       CMD(CALL PGM(MG0300A))                      */           /*CSW097 MD039542*/
+             ELSE       DO                                                              /*MD039542*/
+                OVRDBF     FILE(DEALS) SHARE(*NO)                                       /*MD039542*/
+                CALL       PGM(MG0300A)                                                 /*MD039542*/
+             ENDDO                                                                      /*MD039542*/
 /*********** CALL       PGM(MG0300)                                */ /*CSW097*/
 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +

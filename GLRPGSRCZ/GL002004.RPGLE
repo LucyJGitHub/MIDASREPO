@@ -14,9 +14,9 @@
       *  Last Amend No. MD046682           Date 14Jul17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG13285           Date 11Feb07               *
+      *  Prev Amend No. BUG13285           Date 11Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
@@ -29,7 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD046682 - Credit amount should not be displayed with '-'.   *                             
+      *  MD046682 - Credit amount should not be displayed with '-'.   *
       *  BUG13285 - Amount defaulted are in one decimal place only    *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

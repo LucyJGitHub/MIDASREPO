@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. MD039656           Date 11Jul16               *      
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CSW214             Date 25Nov14               *
       *                 MD024179           Date 19Dec13               *
       *                 MD024166           Date 19Dec13               *
       *                 MD024151           Date 18Dec13               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039656 - Unable to reverse an authorised deal              *      
       *  CSW216 - SWIFT Changes 2016                                  *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  MD024179 - Reporting party party ID defaulted again after    *
@@ -438,20 +440,20 @@
      C                   MOVE      FValidOK      R2RPP1OK                                   MD022393
      C                   MOVE      BBCUST        R2CUS1                                     MD022393
      C                   IF        R2RPP1OK = *BLANKS                                       MD022393
-     C                   IF        R2RPN1 = *BLANKS AND                                     MD022393
-     C                             R2TRC1 = *BLANKS AND                                     MD022393
-     C                             R2RPS1 = *BLANKS AND                                     MD022393
-     C                             R2RPL1 = *BLANKS OR                                      MD022393
-     C                             R2RPN1 = BBCRNM AND                                      MD022393
-     C                             R2TRC1 = BBCRTN AND                                      MD022393
-     C                             R2RPS1 = BBCSID AND                                      MD022393
-     C                             R2RPL1 = CSLEIC                                          MD022393
+     C**********         IF        R2RPN1 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2TRC1 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2RPS1 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2RPL1 = *BLANKS OR                             MD022393 MD039656
+     C**********                   R2RPN1 = BBCRNM AND                             MD022393 MD039656
+     C**********                   R2TRC1 = BBCRTN AND                             MD022393 MD039656
+     C**********                   R2RPS1 = BBCSID AND                             MD022393 MD039656
+     C**********                   R2RPL1 = CSLEIC                                 MD022393 MD039656
      C                   EVAL      R2RPN1 = BBCRNM                                          MD022393
      C                   EVAL      R2TRC1 = BBCRTN                                          MD022393
      C                   EVAL      R2RPS1 = BBCSID                                          MD022393
      C                   EVAL      R2RPL1 = CSLEIC                                          MD022393
      C                   EVAL      WR2DFTR1 = 'Y'                                           MD022393
-     C                   ENDIF                                                              MD022393
+     C**********         ENDIF                                                     MD022393 MD039656
      C                   ENDIF                                                              MD022393
      C                   ENDIF                                                              MD022393
                                                                                             MD022393
@@ -504,29 +506,31 @@
      C                   EVAL      R2RPP1OK  = 'N'
      C                   EXSR      UpdatErrs
      C                   ENDIF
+     C                   ENDIF                                                              MD039656
       *
      C                   EVAL      WR2DFTR1 = 'N'                                           MD022120
                                                                                             MD022120
+     C                   IF        R2RPP1 <> *BLANKS                                        MD039656
      C                   EVAL      FValid  = R2RPP1
      C                   EVAL      FValFld = 'R2RPP1'
      C                   EXSR      VRppt
      C                   EVAL      R2RPP1OK = FValidOK
      C                   MOVE      BBCUST        R2CUS1
      C                   IF        R2RPP1OK = *BLANKS                                       MD022120
-     C                   IF        R2RPN1 = *BLANKS AND                                     MD022120
-     C                             R2TRC1 = *BLANKS AND                                     MD022120
-     C                             R2RPS1 = *BLANKS AND                                     MD022120
-     C                             R2RPL1 = *BLANKS OR                                      MD022120
-     C                             R2RPN1 = BBCRNM AND                                      MD022120
-     C                             R2TRC1 = BBCRTN AND                                      MD022120
-     C                             R2RPS1 = BBCSID AND                                      MD022120
-     C                             R2RPL1 = CSLEIC                                          MD022120
+     C**********         IF        R2RPN1 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2TRC1 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2RPS1 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2RPL1 = *BLANKS OR                             MD022120 MD039656
+     C**********                   R2RPN1 = BBCRNM AND                             MD022120 MD039656
+     C**********                   R2TRC1 = BBCRTN AND                             MD022120 MD039656
+     C**********                   R2RPS1 = BBCSID AND                             MD022120 MD039656
+     C**********                   R2RPL1 = CSLEIC                                 MD022120 MD039656
      C                   EVAL      R2RPN1 = BBCRNM                                          MD022120
      C                   EVAL      R2TRC1 = BBCRTN                                          MD022120
      C                   EVAL      R2RPS1 = BBCSID                                          MD022120
      C                   EVAL      R2RPL1 = CSLEIC                                          MD022120
      C                   EVAL      WR2DFTR1 = 'Y'                                           MD022120
-     C                   ENDIF                                                              MD022120
+     C**********         ENDIF                                                     MD022120 MD039656
      C                   ENDIF                                                              MD022120
       *
      C                   ENDIF
@@ -534,31 +538,31 @@
      C                   IF        WCUSNO1 <> R2RPP1                                        MD022633
      C                   EXSR      SRTransType                                              MD022633
      C                   ENDIF                                                              MD022633
-      *
-      ** Validate Reporting Party Name 1
-      *
-     C                   IF        R2RPN1 <> *BLANKS
-     C                             AND WR2DFT1 = 'N'
-     C                             AND WR2DFTR1 = 'N'                                       MD022120
-      *
-     C                   IF        R2RPP1 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPN1'
-     C                   EVAL      MsgIDXAr  = '5046062'
-     C                   EVAL      R2RPN1OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
-      *
-     C                   MOVEL     R2RPN1        FldChk
-     C                   EXSR      SWSet
-     C                   IF        *IN99 = *ON
-     C                   EVAL      FldNamXAr = 'R2RPN1'
-     C                   EVAL      MsgIDXAr  = '5046063'
-     C                   EVAL      R2RPN1OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
-      *
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*Name*1*                                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN1 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT1 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR1 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP1 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPN1'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046062'                                    MD039656
+     C**********         EVAL      R2RPN1OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2RPN1        FldChk                                     MD039656
+     C**********         EXSR      SWSet                                                    MD039656
+     C**********         IF        *IN99 = *ON                                              MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPN1'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046063'                                    MD039656
+     C**********         EVAL      R2RPN1OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
       *                                                                                     MD022251
       ** Default Transaction Id type first before validating                                MD022251
       ** UTI Namespace and Transaction Id                                                   MD022251
@@ -689,40 +693,40 @@
      C                   ENDIF
       *
      C                   ENDIF
-      *
-      ** Validate Reporting Party City 1
-      *
-     C                   IF        R2TRC1 <> *BLANKS
-     C                             AND WR2DFT1 = 'N'
-     C                             AND WR2DFTR1 = 'N'                                       MD022120
-      *
-     C                   IF        R2RPN1 = *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC1'
-     C                   EVAL      MsgIDXAr  = '5046069'
-     C                   EVAL      R2TRC1OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
-      *
-     C                   IF        R2RPP1 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC1'
-     C                   EVAL      MsgIDXAr  = '5046070'
-     C                   EVAL      R2TRC1OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
-      *
-     C                   MOVEL     R2TRC1        FldChk
-     C                   EXSR      SWSet
-     C                   IF        *IN99 = *ON
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC1'
-     C                   EVAL      MsgIDXAr  = '5046071'
-     C                   EVAL      R2TRC1OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
-      *
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*City*1*                                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2TRC1 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT1 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR1 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN1 = *BLANKS                                         MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC1'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046069'                                    MD039656
+     C**********         EVAL      R2TRC1OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP1 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC1'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046070'                                    MD039656
+     C**********         EVAL      R2TRC1OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2TRC1        FldChk                                     MD039656
+     C**********         EXSR      SWSet                                                    MD039656
+     C**********         IF        *IN99 = *ON                                              MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC1'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046071'                                    MD039656
+     C**********         EVAL      R2TRC1OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
       *
       ** Validate Transaction Identifier Type 1
       *
@@ -852,68 +856,68 @@
      C                   ENDIF
  
      C                   ENDIF
-      *
-      ** Validate Reporting Party SWIFT Identification 1
-      *
-     C                   IF        R2RPS1 <> *BLANKS
-     C                             AND WR2DFT1 = 'N'
-     C                             AND WR2DFTR1 = 'N'                                       MD022120
-      *
-     C                   EXSR      ResetErrs
-      *
-     C                   IF        R2RPP1 <> *BLANKS
-     C
-     C                   EVAL      FldNamXAr = 'R2RPS1'
-     C                   EVAL      MsgIDXAr  = '5046090'
-     C                   EVAL      R2RPS1OK  = 'N'
-     C                   EXSR      UpdatErrs
-      *
-     C                   ELSE
-      *
-     C                   EVAL      WRpSwf  = R2RPS1
-     C                   EVAL      FValFld = 'R2RPS1'
-     C                   EXSR      VRpSwft
-     C                   EVAL      R2RPS1OK = R2RPSOK
-      *
-     C                   ENDIF
-      *
-     C                   ENDIF
-      *
-      ** Validate Reporting Party LEI 1
-      *
-     C                   IF        R2RPL1 <> *BLANKS
-     C                             AND WR2DFT1 = 'N'
-     C                             AND WR2DFTR1 = 'N'                                       MD022120
-      *
-     C                   IF        R2RPN1 = *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL1'
-     C                   EVAL      MsgIDXAr  = '5046080'
-     C                   EVAL      R2RPL1OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
-      *
-     C                   IF        R2RPP1 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL1'
-     C                   EVAL      MsgIDXAr  = '5046081'
-     C                   EVAL      R2RPL1OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
-      *
-     C                   MOVEL     R2RPL1        F18Chr
-     C     AlphaN        CHECK     F18Chr                                 98
-     C     Digits        CHECK     R2RPL1:19                              99
-      *
-     C                   IF        *IN98 = *ON OR *IN99 = *ON
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL1'
-     C                   EVAL      MsgIDXAr  = '5046082'
-     C                   EVAL      R2RPL1OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*SWIFT*Identification*1*                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPS1 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT1 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR1 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP1 <> *BLANKS                                        MD039656
+     C**********                                                                            MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPS1'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046090'                                    MD039656
+     C**********         EVAL      R2RPS1OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+      **********                                                                            MD039656
+     C**********         ELSE                                                               MD039656
+      **********                                                                            MD039656
+     C**********         EVAL      WRpSwf  = R2RPS1                                         MD039656
+     C**********         EVAL      FValFld = 'R2RPS1'                                       MD039656
+     C**********         EXSR      VRpSwft                                                  MD039656
+     C**********         EVAL      R2RPS1OK = R2RPSOK                                       MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+      ** Validate Reporting Party LEI 1                                                     MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPL1 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT1 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR1 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN1 = *BLANKS                                         MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL1'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046080'                                    MD039656
+     C**********         EVAL      R2RPL1OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP1 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL1'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046081'                                    MD039656
+     C**********         EVAL      R2RPL1OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2RPL1        F18Chr                                     MD039656
+     C*****AlphaN        CHECK     F18Chr                                 98                MD039656
+     C*****Digits        CHECK     R2RPL1:19                              99                MD039656
+      **********                                                                            MD039656
+     C**********         IF        *IN98 = *ON OR *IN99 = *ON                               MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL1'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046082'                                    MD039656
+     C**********         EVAL      R2RPL1OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
       *
       ** Validate Reporting Party's Party ID 1
       *
@@ -988,20 +992,20 @@
      C                   MOVE      FValidOK      R2RPP2OK                                   MD022393
      C                   MOVE      BBCUST        R2CUS2                                     MD022393
      C                   IF        R2RPP2OK = *BLANKS                                       MD022393
-     C                   IF        R2RPN2 = *BLANKS AND                                     MD022393
-     C                             R2TRC2 = *BLANKS AND                                     MD022393
-     C                             R2RPS2 = *BLANKS AND                                     MD022393
-     C                             R2RPL2 = *BLANKS OR                                      MD022393
-     C                             R2RPN2 = BBCRNM AND                                      MD022393
-     C                             R2TRC2 = BBCRTN AND                                      MD022393
-     C                             R2RPS2 = BBCSID AND                                      MD022393
-     C                             R2RPL2 = CSLEIC                                          MD022393
+     C**********         IF        R2RPN2 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2TRC2 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2RPS2 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2RPL2 = *BLANKS OR                             MD022393 MD039656
+     C**********                   R2RPN2 = BBCRNM AND                             MD022393 MD039656
+     C**********                   R2TRC2 = BBCRTN AND                             MD022393 MD039656
+     C**********                   R2RPS2 = BBCSID AND                             MD022393 MD039656
+     C**********                   R2RPL2 = CSLEIC                                 MD022393 MD039656
      C                   EVAL      R2RPN2 = BBCRNM                                          MD022393
      C                   EVAL      R2TRC2 = BBCRTN                                          MD022393
      C                   EVAL      R2RPS2 = BBCSID                                          MD022393
      C                   EVAL      R2RPL2 = CSLEIC                                          MD022393
      C                   EVAL      WR2DFTR2 = 'Y'                                           MD022393
-     C                   ENDIF                                                              MD022393
+     C**********         ENDIF                                                     MD022393 MD039656
      C                   ENDIF                                                              MD022393
      C                   ENDIF                                                              MD022393
                                                                                             MD022393
@@ -1054,29 +1058,31 @@
      C                   EVAL      R2RPP2OK  = 'N'
      C                   EXSR      UpdatErrs
      C                   ENDIF
+     C                   ENDIF                                                              MD039656
  
      C                   EVAL      WR2DFTR2 = 'N'                                           MD022120
                                                                                             MD022120
+     C                   IF        R2RPP2 <> *BLANKS                                        MD039656
      C                   MOVE      R2RPP2        FValid
      C                   MOVE      'R2RPP2'      FValFld
      C                   EXSR      VRppt
      C                   MOVE      FValidOK      R2RPP2OK
      C                   MOVE      BBCUST        R2CUS2
      C                   IF        R2RPP2OK = *BLANKS                                       MD022120
-     C                   IF        R2RPN2 = *BLANKS AND                                     MD022120
-     C                             R2TRC2 = *BLANKS AND                                     MD022120
-     C                             R2RPS2 = *BLANKS AND                                     MD022120
-     C                             R2RPL2 = *BLANKS OR                                      MD022120
-     C                             R2RPN2 = BBCRNM AND                                      MD022120
-     C                             R2TRC2 = BBCRTN AND                                      MD022120
-     C                             R2RPS2 = BBCSID AND                                      MD022120
-     C                             R2RPL2 = CSLEIC                                          MD022120
+     C**********         IF        R2RPN2 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2TRC2 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2RPS2 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2RPL2 = *BLANKS OR                             MD022120 MD039656
+     C**********                   R2RPN2 = BBCRNM AND                             MD022120 MD039656
+     C**********                   R2TRC2 = BBCRTN AND                             MD022120 MD039656
+     C**********                   R2RPS2 = BBCSID AND                             MD022120 MD039656
+     C**********                   R2RPL2 = CSLEIC                                 MD022120 MD039656
      C                   EVAL      R2RPN2 = BBCRNM                                          MD022120
      C                   EVAL      R2TRC2 = BBCRTN                                          MD022120
      C                   EVAL      R2RPS2 = BBCSID                                          MD022120
      C                   EVAL      R2RPL2 = CSLEIC                                          MD022120
      C                   EVAL      WR2DFTR2 = 'Y'                                           MD022120
-     C                   ENDIF                                                              MD022120
+     C**********         ENDIF                                                     MD022120 MD039656
      C                   ENDIF                                                              MD022120
  
      C                   ENDIF
@@ -1084,31 +1090,31 @@
      C                   IF        WCUSNO2 <> R2RPP2                                        MD022633
      C                   EXSR      SRTransType                                              MD022633
      C                   ENDIF                                                              MD022633
-      *
-      ** Validate Reporting Party Name 2
-      *
-     C                   IF        R2RPN2 <> *BLANKS
-     C                             AND WR2DFT2 = 'N'
-     C                             AND WR2DFTR2 = 'N'                                       MD022120
- 
-     C                   IF        R2RPP2 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPN2'
-     C                   EVAL      MsgIDXAr  = '5046062'
-     C                   EVAL      R2RPN2OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   MOVEL     R2RPN2        FldChk
-     C                   EXSR      SWSet
-     C                   IF        *IN99 = *ON
-     C                   EVAL      FldNamXAr = 'R2RPN2'
-     C                   EVAL      MsgIDXAr  = '5046063'
-     C                   EVAL      R2RPN2OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*Name*2*                                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN2 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT2 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR2 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP2 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPN2'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046062'                                    MD039656
+     C**********         EVAL      R2RPN2OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2RPN2        FldChk                                     MD039656
+     C**********         EXSR      SWSet                                                    MD039656
+     C**********         IF        *IN99 = *ON                                              MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPN2'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046063'                                    MD039656
+     C**********         EVAL      R2RPN2OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
       *                                                                                     MD022251
       ** Default Transaction Id type first before validating                                MD022251
       ** UTI Namespace and Transaction Id                                                   MD022251
@@ -1239,40 +1245,40 @@
      C                   ENDIF
  
      C                   ENDIF
-      *
-      ** Validate Reporting Party City 2
-      *
-     C                   IF        R2TRC2 <> *BLANKS
-     C                             AND WR2DFT2 = 'N'
-     C                             AND WR2DFTR2 = 'N'                                       MD022120
- 
-     C                   IF        R2RPN2 = *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC2'
-     C                   EVAL      MsgIDXAr  = '5046069'
-     C                   EVAL      R2TRC2OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   IF        R2RPP2 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC2'
-     C                   EVAL      MsgIDXAr  = '5046070'
-     C                   EVAL      R2TRC2OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   MOVEL     R2TRC2        FldChk
-     C                   EXSR      SWSet
-     C                   IF        *IN99 = '1'
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC2'
-     C                   EVAL      MsgIDXAr  = '5046071'
-     C                   EVAL      R2TRC2OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*City*2*                                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2TRC2 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT2 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR2 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN2 = *BLANKS                                         MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC2'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046069'                                    MD039656
+     C**********         EVAL      R2TRC2OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP2 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC2'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046070'                                    MD039656
+     C**********         EVAL      R2TRC2OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2TRC2        FldChk                                     MD039656
+     C**********         EXSR      SWSet                                                    MD039656
+     C**********         IF        *IN99 = '1'                                              MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC2'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046071'                                    MD039656
+     C**********         EVAL      R2TRC2OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********        ENDIF                                                               MD039656
       *
       ** Validate Transaction Identifier Type 2
       *
@@ -1402,68 +1408,68 @@
      C                   ENDIF
  
      C                   ENDIF
-      *
-      ** Validate Reporting Party SWIFT Identification 2
-      *
-     C                   IF        R2RPS2 <> *BLANKS
-     C                             AND WR2DFT2 = 'N'
-     C                             AND WR2DFTR2 = 'N'                                       MD022120
- 
-     C                   EXSR      ResetErrs
- 
-     C                   IF        R2RPP2 <> *BLANKS
-     C
-     C                   EVAL      FldNamXAr = 'R2RPS2'
-     C                   EVAL      MsgIDXAr  = '5046077'
-     C                   EVAL      R2RPS2OK  = 'N'
-     C                   EXSR      UpdatErrs
- 
-     C                   ELSE
- 
-     C                   EVAL      WRpSwf  = R2RPS2
-     C                   EVAL      FValFld = 'R2RPS2'
-     C                   EXSR      VRpSwft
-     C                   EVAL      R2RPS2OK = R2RPSOK
- 
-     C                   ENDIF
- 
-     C                   ENDIF
-      *
-      ** Validate Reporting Party LEI 2
-      *
-     C                   IF        R2RPL2 <> *BLANKS
-     C                             AND WR2DFT2 = 'N'
-     C                             AND WR2DFTR2 = 'N'                                       MD022120
- 
-     C                   IF        R2RPN2 = *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL2'
-     C                   EVAL      MsgIDXAr  = '5046080'
-     C                   EVAL      R2RPL2OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   IF        R2RPP2 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL2'
-     C                   EVAL      MsgIDXAr  = '5046081'
-     C                   EVAL      R2RPL2OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   MOVEL     R2RPL2        F18Chr
-     C     AlphaN        CHECK     F18Chr                                 98
-     C     Digits        CHECK     R2RPL2:19                              99
-     C
-     C                   IF        *IN98 = *ON OR *IN99 = *ON
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL2'
-     C                   EVAL      MsgIDXAr  = '5046082'
-     C                   EVAL      R2RPL2OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ** Validate Reporting Party SWIFT Identification 2                                    MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPS2 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT2 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR2 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP2 <> *BLANKS                                        MD039656
+     C**********                                                                            MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPS2'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046077'                                    MD039656
+     C**********         EVAL      R2RPS2OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+      **********                                                                            MD039656
+     C**********         ELSE                                                               MD039656
+      **********                                                                            MD039656
+     C**********         EVAL      WRpSwf  = R2RPS2                                         MD039656
+     C**********         EVAL      FValFld = 'R2RPS2'                                       MD039656
+     C**********         EXSR      VRpSwft                                                  MD039656
+     C**********         EVAL      R2RPS2OK = R2RPSOK                                       MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*LEI*2*                                                    MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPL2 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT2 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR2 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN2 = *BLANKS                                         MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL2'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046080'                                    MD039656
+     C**********         EVAL      R2RPL2OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP2 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL2'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046081'                                    MD039656
+     C**********         EVAL      R2RPL2OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2RPL2        F18Chr                                     MD039656
+     C*****AlphaN        CHECK     F18Chr                                 98                MD039656
+     C*****Digits        CHECK     R2RPL2:19                              99                MD039656
+     C**********                                                                            MD039656
+     C**********         IF        *IN98 = *ON OR *IN99 = *ON                               MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL2'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046082'                                    MD039656
+     C**********         EVAL      R2RPL2OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656      
       *
       ** Validate Reporting Party's Party ID 2
       *
@@ -1538,20 +1544,20 @@
      C                   MOVE      FValidOK      R2RPP3OK                                   MD022393
      C                   MOVE      BBCUST        R2CUS3                                     MD022393
      C                   IF        R2RPP3OK = *BLANKS                                       MD022393
-     C                   IF        R2RPN3 = *BLANKS AND                                     MD022393
-     C                             R2TRC3 = *BLANKS AND                                     MD022393
-     C                             R2RPS3 = *BLANKS AND                                     MD022393
-     C                             R2RPL3 = *BLANKS OR                                      MD022393
-     C                             R2RPN3 = BBCRNM AND                                      MD022393
-     C                             R2TRC3 = BBCRTN AND                                      MD022393
-     C                             R2RPS3 = BBCSID AND                                      MD022393
-     C                             R2RPL3 = CSLEIC                                          MD022393
+     C**********         IF        R2RPN3 = *BLAN                                  MD022393 MD039656
+     C**********                   R2TRC3 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2RPS3 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2RPL3 = *BLANKS OR                             MD022393 MD039656
+     C**********                   R2RPN3 = BBCRNM AND                             MD022393 MD039656
+     C**********                   R2TRC3 = BBCRTN AND                             MD022393 MD039656
+     C**********                   R2RPS3 = BBCSID AND                             MD022393 MD039656
+     C**********                   R2RPL3 = CSLEIC                                 MD022393 MD039656
      C                   EVAL      R2RPN3 = BBCRNM                                          MD022393
      C                   EVAL      R2TRC3 = BBCRTN                                          MD022393
      C                   EVAL      R2RPS3 = BBCSID                                          MD022393
      C                   EVAL      R2RPL3 = CSLEIC                                          MD022393
      C                   EVAL      WR2DFTR3 = 'Y'                                           MD022393
-     C                   ENDIF                                                              MD022393
+     C**********         ENDIF                                                     MD022393 MD039656
      C                   ENDIF                                                              MD022393
      C                   ENDIF                                                              MD022393
                                                                                             MD022393
@@ -1604,9 +1610,11 @@
      C                   EVAL      R2RPP3OK  = 'N'
      C                   EXSR      UpdatErrs
      C                   ENDIF
+     C                   ENDIF                                                              MD039656
  
      C                   EVAL      WR2DFTR3 = 'N'                                           MD022120
                                                                                             MD022120
+     C                   IF        R2RPP2 <> *BLANKS                                        MD039656
      C                   EVAL      FValid  = R2RPP3
      C                   EVAL      FValFld = 'R2RPP3'
      C                   EXSR      VRppt
@@ -1614,20 +1622,20 @@
      C                   EVAL      R2RPP3OK = FValidOK                                      MD024146
      C                   MOVE      BBCUST        R2CUS3
      C                   IF        R2RPP3OK = *BLANKS                                       MD022120
-     C                   IF        R2RPN3 = *BLANKS AND                                     MD022120
-     C                             R2TRC3 = *BLANKS AND                                     MD022120
-     C                             R2RPS3 = *BLANKS AND                                     MD022120
-     C                             R2RPL3 = *BLANKS OR                                      MD022120
-     C                             R2RPN3 = BBCRNM AND                                      MD022120
-     C                             R2TRC3 = BBCRTN AND                                      MD022120
-     C                             R2RPS3 = BBCSID AND                                      MD022120
-     C                             R2RPL3 = CSLEIC                                          MD022120
+     C**********         IF        R2RPN3 = *BLANKS A                              MD022120 MD039656
+     C**********                   R2TRC3 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2RPS3 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2RPL3 = *BLANKS OR                             MD022120 MD039656
+     C**********                   R2RPN3 = BBCRNM AND                             MD022120 MD039656
+     C**********                   R2TRC3 = BBCRTN AND                             MD022120 MD039656
+     C**********                   R2RPS3 = BBCSID AND                             MD022120 MD039656
+     C**********                   R2RPL3 = CSLEIC                                 MD022120 MD039656
      C                   EVAL      R2RPN3 = BBCRNM                                          MD022120
      C                   EVAL      R2TRC3 = BBCRTN                                          MD022120
      C                   EVAL      R2RPS3 = BBCSID                                          MD022120
      C                   EVAL      R2RPL3 = CSLEIC                                          MD022120
      C                   EVAL      WR2DFTR3 = 'Y'                                           MD022120
-     C                   ENDIF                                                              MD022120
+     C**********         ENDIF                                                     MD022120 MD039656
                                                                                             MD022120
      C                   ENDIF                                                              MD022120
  
@@ -1636,31 +1644,31 @@
      C                   IF        WCUSNO3 <> R2RPP3                                        MD022633
      C                   EXSR      SRTransType                                              MD022633
      C                   ENDIF                                                              MD022633
-      *
-      ** Validate Reporting Party Name 3
-      *
-     C                   IF        R2RPN3 <> *BLANKS
-     C                             AND WR2DFT3 = 'N'
-     C                             AND WR2DFTR3 = 'N'                                       MD022120
- 
-     C                   IF        R2RPP3 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPN3'
-     C                   EVAL      MsgIDXAr  = '5046062'
-     C                   EVAL      R2RPN3OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   MOVEL     R2RPN3        FldChk
-     C                   EXSR      SWSet
-     C                   IF        *IN99 = *ON
-     C                   EVAL      FldNamXAr = 'R2RPN3'
-     C                   EVAL      MsgIDXAr  = '5046063'
-     C                   EVAL      R2RPN3OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*Name 3*                                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN3 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT3 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR3 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP3 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPN3'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046062'                                    MD039656
+     C**********         EVAL      R2RPN3OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2RPN3        FldChk                                     MD039656
+     C**********         EXSR      SWSet                                                    MD039656
+     C**********         IF        *IN99 = *ON                                              MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPN3'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046063'                                    MD039656
+     C**********         EVAL      R2RPN3OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
       *                                                                                     MD022251
       ** Default Transaction Id type first before validating                                MD022251
       ** UTI Namespace and Transaction Id                                                   MD022251
@@ -1791,40 +1799,40 @@
      C                   ENDIF
  
      C                   ENDIF
-      *
-      ** Validate Reporting Party City 3
-      *
-     C                   IF        R2TRC3 <> *BLANKS
-     C                             AND WR2DFT3 = 'N'
-     C                             AND WR2DFTR3 = 'N'                                       MD022120
- 
-     C                   IF        R2RPN3 = *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC3'
-     C                   EVAL      MsgIDXAr  = '5046069'
-     C                   EVAL      R2TRC3OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   IF        R2RPP3 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC3'
-     C                   EVAL      MsgIDXAr  = '5046070'
-     C                   EVAL      R2TRC3OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   MOVEL     R2TRC3        FldChk
-     C                   EXSR      SWSet
-     C                   IF        *IN99 = *ON
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC3'
-     C                   EVAL      MsgIDXAr  = '5046071'
-     C                   EVAL      R2TRC3OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*City*3*                                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2TRC3 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT3 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR3 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN3 = *BLANKS                                         MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC3'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046069'                                    MD039656
+     C**********         EVAL      R2TRC3OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP3 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC3'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046070'                                    MD039656
+     C**********         EVAL      R2TRC3OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2TRC3        FldChk                                     MD039656
+     C**********         EXSR      SWSet                                                    MD039656
+     C**********         IF        *IN99 = *ON                                              MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC3'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046071'                                    MD039656
+     C**********         EVAL      R2TRC3OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
       *
       ** Validate Transaction Identifier Type 3
       *
@@ -1954,68 +1962,68 @@
      C                   ENDIF
  
      C                   ENDIF
-      *
-      ** Validate Reporting Party SWIFT Identification 3
-      *
-     C                   IF        R2RPS3 <> *BLANKS
-     C                             AND WR2DFT3 = 'N'
-     C                             AND WR2DFTR3 = 'N'                                       MD022120
- 
-     C                   EXSR      ResetErrs
- 
-     C                   IF        R2RPP3 <> *BLANKS
-     C
-     C                   EVAL      FldNamXAr = 'R2RPS3'
-     C                   EVAL      MsgIDXAr  = '5046077'
-     C                   EVAL      R2RPS3OK  = 'N'
-     C                   EXSR      UpdatErrs
- 
-     C                   ELSE
- 
-     C                   EVAL      WRpSwf  = R2RPS3
-     C                   EVAL      FValFld = 'R2RPS3'
-     C                   EXSR      VRpSwft
-     C                   EVAL      R2RPS3OK = R2RPSOK
- 
-     C                   ENDIF
- 
-     C                   ENDIF
-      *
-      ** Validate Reporting Party LEI 3
-      *
-     C                   IF        R2RPL3 <> *BLANKS
-     C                             AND WR2DFT3 = 'N'
-     C                             AND WR2DFTR3 = 'N'                                       MD022120
- 
-     C                   IF        R2RPN3 = *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL3'
-     C                   EVAL      MsgIDXAr  = '5046080'
-     C                   EVAL      R2RPL3OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   IF        R2RPP3 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL3'
-     C                   EVAL      MsgIDXAr  = '5046081'
-     C                   EVAL      R2RPL3OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   MOVEL     R2RPL3        F18Chr
-     C     AlphaN        CHECK     F18Chr                                 98
-     C     Digits        CHECK     R2RPL3:19                              99
-     C
-     C                   IF        *IN98 = *ON OR *IN99 = *ON
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL3'
-     C                   EVAL      MsgIDXAr  = '5046082'
-     C                   EVAL      R2RPL3OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*SWIFT*Identification*3*                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPS3 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT3 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR3 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP3 <> *BLANKS                                        MD039656
+     C**********                                                                            MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPS3'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046077'                                    MD039656
+     C**********         EVAL      R2RPS3OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+      **********                                                                            MD039656
+     C**********         ELSE                                                               MD039656
+      **********                                                                            MD039656
+     C**********         EVAL      WRpSwf  = R2RPS3                                         MD039656
+     C**********         EVAL      FValFld = 'R2RPS3'                                       MD039656
+     C**********         EXSR      VRpSwft                                                  MD039656
+     C**********        EVAL      R2RPS3OK = R2RPSOK                                        MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+      ** Validate Reporting Party LEI 3                                                     MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPL3 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT3 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR3 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN3 = *BLANKS                                         MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL3'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046080'                                    MD039656
+     C**********         EVAL      R2RPL3OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP3 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL3'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046081'                                    MD039656
+     C**********         EVAL      R2RPL3OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2RPL3        F18Chr                                     MD039656
+     C*****AlphaN        CHECK     F18Chr                                 98                MD039656
+     C*****Digits        CHECK     R2RPL3:19                              99                MD039656
+     C**********                                                                            MD039656
+     C**********         IF        *IN98 = *ON OR *IN99 = *ON                               MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL3'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046082'                                    MD039656
+     C**********         EVAL      R2RPL3OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********        ENDIF                                                               MD039656
       *
       ** Validate Reporting Party's Party ID 3
       *
@@ -2090,22 +2098,23 @@
      C                   MOVE      FValidOK      R2RPP4OK                                   MD022393
      C                   MOVE      BBCUST        R2CUS4                                     MD022393
      C                   IF        R2RPP4OK = *BLANKS                                       MD022393
-     C                   IF        R2RPN4 = *BLANKS AND                                     MD022393
-     C                             R2TRC4 = *BLANKS AND                                     MD022393
-     C                             R2RPS4 = *BLANKS AND                                     MD022393
-     C                             R2RPL4 = *BLANKS OR                                      MD022393
-     C                             R2RPN4 = BBCRNM AND                                      MD022393
-     C                             R2TRC4 = BBCRTN AND                                      MD022393
-     C                             R2RPS4 = BBCSID AND                                      MD022393
-     C                             R2RPL4 = CSLEIC                                          MD022393
+     C**********         IF        R2RPN4 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2TRC4 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2RPS4 = *BLANKS AND                            MD022393 MD039656
+     C**********                   R2RPL4 = *BLANKS OR                             MD022393 MD039656
+     C**********                   R2RPN4 = BBCRNM AND                             MD022393 MD039656
+     C**********                   R2TRC4 = BBCRTN AND                             MD022393 MD039656
+     C**********                   R2RPS4 = BBCSID AND                             MD022393 MD039656
+     C**********                   R2RPL4 = CSLEIC                                 MD022393 MD039656
      C                   EVAL      R2RPN4 = BBCRNM                                          MD022393
      C                   EVAL      R2TRC4 = BBCRTN                                          MD022393
      C                   EVAL      R2RPS4 = BBCSID                                          MD022393
      C                   EVAL      R2RPL4 = CSLEIC                                          MD022393
      C                   EVAL      WR2DFTR4 = 'Y'                                           MD022393
+     C**********         ENDIF                                                     MD022393 MD039656
      C                   ENDIF                                                              MD022393
      C                   ENDIF                                                              MD022393
-     C                   ENDIF                                                              MD022393
+ 
                                                                                             MD022393
      C                   ENDIF                                                              MD022393
       *
@@ -2156,29 +2165,31 @@
      C                   EVAL      R2RPP4OK  = 'N'
      C                   EXSR      UpdatErrs
      C                   ENDIF
+     C                   ENDIF                                                              MD039656
  
      C                   EVAL      WR2DFTR4 = 'N'                                           MD022120
                                                                                             MD022120
+     C                   IF        R2RPP2 <> *BLANKS                                        MD039656
      C                   MOVE      R2RPP4        FValid
      C                   MOVE      'R2RPP4'      FValFld
      C                   EXSR      VRppt
      C                   MOVE      FValidOK      R2RPP4OK
      C                   MOVE      BBCUST        R2CUS4
      C                   IF        R2RPP4OK = *BLANKS                                       MD022120
-     C                   IF        R2RPN4 = *BLANKS AND                                     MD022120
-     C                             R2TRC4 = *BLANKS AND                                     MD022120
-     C                             R2RPS4 = *BLANKS AND                                     MD022120
-     C                             R2RPL4 = *BLANKS OR                                      MD022120
-     C                             R2RPN4 = BBCRNM AND                                      MD022120
-     C                             R2TRC4 = BBCRTN AND                                      MD022120
-     C                             R2RPS4 = BBCSID AND                                      MD022120
-     C                             R2RPL4 = CSLEIC                                          MD022120
+     C**********         IF        R2RPN4 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2TRC4 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2RPS4 = *BLANKS AND                            MD022120 MD039656
+     C**********                   R2RPL4 = *BLANKS OR                             MD022120 MD039656
+     C**********                   R2RPN4 = BBCRNM AND                             MD022120 MD039656
+     C**********                   R2TRC4 = BBCRTN AND                             MD022120 MD039656
+     C**********                   R2RPS4 = BBCSID AND                             MD022120 MD039656
+     C**********                   R2RPL4 = CSLEIC                                 MD022120 MD039656
      C                   EVAL      R2RPN4 = BBCRNM                                          MD022120
      C                   EVAL      R2TRC4 = BBCRTN                                          MD022120
      C                   EVAL      R2RPS4 = BBCSID                                          MD022120
      C                   EVAL      R2RPL4 = CSLEIC                                          MD022120
      C                   EVAL      WR2DFTR4 = 'Y'                                           MD022120
-     C                   ENDIF                                                              MD022120
+     C**********         ENDIF                                                     MD022120 MD039656
                                                                                             MD022120
      C                   ENDIF                                                              MD022120
  
@@ -2187,31 +2198,31 @@
      C                   IF        WCUSNO4 <> R2RPP4                                        MD022633
      C                   EXSR      SRTransType                                              MD022633
      C                   ENDIF                                                              MD022633
-      *
-      ** Validate Reporting Party Name 4
-      *
-     C                   IF        R2RPN4 <> *BLANKS
-     C                             AND WR2DFT4 = 'N'
-     C                             AND WR2DFTR4 = 'N'                                       MD022120
- 
-     C                   IF        R2RPP4 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPN4'
-     C                   EVAL      MsgIDXAr  = '5046062'
-     C                   EVAL      R2RPN4OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   MOVEL     R2RPN4        FldChk
-     C                   EXSR      SWSet
-     C                   IF        *IN99 = *ON
-     C                   EVAL      FldNamXAr = 'R2RPN4'
-     C                   EVAL      MsgIDXAr  = '5046063'
-     C                   EVAL      R2RPN4OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*Name*4*                                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN4 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT4 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR4 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP4 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPN4'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046062'                                    MD039656
+     C**********         EVAL      R2RPN4OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2RPN4        FldChk                                     MD039656
+     C**********         EXSR      SWSet                                                    MD039656
+     C**********         IF        *IN99 = *ON                                              MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPN4'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046063'                                    MD039656
+     C**********         EVAL      R2RPN4OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********        ENDIF                                                               MD039656
       *                                                                                     MD022251
       ** Default Transaction Id type first before validating                                MD022251
       ** UTI Namespace and Transaction Id                                                   MD022251
@@ -2342,40 +2353,40 @@
      C                   ENDIF
  
      C                   ENDIF
-      *
-      ** Validate Reporting Party City 4
-      *
-     C                   IF        R2TRC4 <> *BLANKS
-     C                             AND WR2DFT4 = 'N'
-     C                             AND WR2DFTR4 = 'N'                                       MD022120
- 
-     C                   IF        R2RPN4 = *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC4'
-     C                   EVAL      MsgIDXAr  = '5046069'
-     C                   EVAL      R2TRC4OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   IF        R2RPP4 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC4'
-     C                   EVAL      MsgIDXAr  = '5046070'
-     C                   EVAL      R2TRC4OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   MOVEL     R2TRC4        FldChk
-     C                   EXSR      SWSet
-     C                   IF        *IN99 = *ON
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2TRC4'
-     C                   EVAL      MsgIDXAr  = '5046071'
-     C                   EVAL      R2TRC4OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*City*4*                                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2TRC4 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT4 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR4 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN4 = *BLANKS                                         MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC4'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046069'                                    MD039656
+     C**********         EVAL      R2TRC4OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP4 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2TRC4'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046070'                                    MD039656
+     C**********         EVAL      R2TRC4OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2TRC4        FldChk                                     MD039656
+     C**********         EXSR      SWSet                                                    MD039656
+     C**********         IF        *IN99 = *ON                                              MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********          EVAL      FldNamXAr = 'R2TRC4'                                    MD039656
+     C**********         EVAL      MsgIDXAr  = '5046071'                                    MD039656
+     C**********         EVAL      R2TRC4OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
       *
       ** Validate Transaction Identifier Type 4
       *
@@ -2505,68 +2516,68 @@
      C                   ENDIF
  
      C                   ENDIF
-      *
-      ** Validate Reporting Party SWIFT Identification 4
-      *
-     C                   IF        R2RPS4 <> *BLANKS
-     C                             AND WR2DFT4 = 'N'
-     C                             AND WR2DFTR4 = 'N'                                       MD022120
- 
-     C                   EXSR      ResetErrs
- 
-     C                   IF        R2RPP4 <> *BLANKS
-     C
-     C                   EVAL      FldNamXAr = 'R2RPS4'
-     C                   EVAL      MsgIDXAr  = '5046077'
-     C                   EVAL      R2RPS4OK  = 'N'
-     C                   EXSR      UpdatErrs
- 
-     C                   ELSE
- 
-     C                   EVAL      WRpSwf  = R2RPS4
-     C                   EVAL      FValFld = 'R2RPS4'
-     C                   EXSR      VRpSwft
-     C                   EVAL      R2RPS4OK = R2RPSOK
- 
-     C                   ENDIF
- 
-     C                   ENDIF
-      *
-      ** Validate Reporting Party LEI 4
-      *
-     C                   IF        R2RPL4 <> *BLANKS
-     C                             AND WR2DFT4 = 'N'
-     C                             AND WR2DFTR4 = 'N'                                       MD022120
- 
-     C                   IF        R2RPN4 = *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL4'
-     C                   EVAL      MsgIDXAr  = '5046080'
-     C                   EVAL      R2RPL4OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   IF        R2RPP4 <> *BLANKS
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL4'
-     C                   EVAL      MsgIDXAr  = '5046081'
-     C                   EVAL      R2RPL4OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   MOVEL     R2RPL4        F18Chr
-     C     AlphaN        CHECK     F18Chr                                 98
-     C     Digits        CHECK     R2RPL4:19                              99
-     C
-     C                   IF        *IN98 = *ON OR *IN99 = *ON
-     C                   EXSR      ResetErrs
-     C                   EVAL      FldNamXAr = 'R2RPL4'
-     C                   EVAL      MsgIDXAr  = '5046082'
-     C                   EVAL      R2RPL4OK  = 'N'
-     C                   EXSR      UpdatErrs
-     C                   ENDIF
- 
-     C                   ENDIF
+      **********                                                                            MD039656
+      ***Validate*Reporting*Party*SWIFT*Identification*4*                                   MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPS4 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT4 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR4 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP4 <> *BLANKS                                        MD039656
+     C**********                                                                            MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPS4'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046077'                                    MD039656
+     C**********         EVAL      R2RPS4OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+      **********                                                                            MD039656
+     C**********         ELSE                                                               MD039656
+      **********                                                                            MD039656
+     C**********         EVAL      WRpSwf  = R2RPS4                                         MD039656
+     C**********         EVAL      FValFld = 'R2RPS4'                                       MD039656
+     C**********         EXSR      VRpSwft                                                  MD039656
+     C**********         EVAL      R2RPS4OK = R2RPSOK                                       MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+      ** Validate Reporting Party LEI 4                                                     MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPL4 <> *BLANKS                                        MD039656
+     C**********                   AND WR2DFT4 = 'N'                                        MD039656
+     C**********                   AND WR2DFTR4 = 'N'                              MD022120 MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPN4 = *BLANKS                                         MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL4'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046080'                                    MD039656
+     C**********         EVAL      R2RPL4OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         IF        R2RPP4 <> *BLANKS                                        MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL4'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046081'                                    MD039656
+     C**********         EVAL      R2RPL4OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         MOVEL     R2RPL4        F18Chr                                     MD039656
+     C*****AlphaN        CHECK     F18Chr                                 98                MD039656
+     C*****Digits        CHECK     R2RPL4:19                              99                MD039656
+     C**********                                                                            MD039656
+     C**********         IF        *IN98 = *ON OR *IN99 = *ON                               MD039656
+     C**********         EXSR      ResetErrs                                                MD039656
+     C**********         EVAL      FldNamXAr = 'R2RPL4'                                     MD039656
+     C**********         EVAL      MsgIDXAr  = '5046082'                                    MD039656
+     C**********         EVAL      R2RPL4OK  = 'N'                                          MD039656
+     C**********         EXSR      UpdatErrs                                                MD039656
+     C**********         ENDIF                                                              MD039656
+      **********                                                                            MD039656
+     C**********         ENDIF                                                              MD039656
       *
       ** Validate Reporting Party's Party ID 4
       *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD024368           Date 13Dec16               *
-      *  Prev Amend No. MD030983           Date 04Oct16               *
+      *  Last Amend No. MD039656           Date 12Jul16               *      
+      *  Prev Amend No. MD024368           Date 13Dec16               *
+      *                 MD030983           Date 04Oct16               *
       *                 CSW216             Date 14Mar16               *
       *                 MD023231           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039656 - Unable to reverse an authorised deal              *      
       *  MD024368 - DB Error when reversing Deal with no Reporting    *
       *             details. Applied for MD-39839                     *
       *  MD030983 -  Generated messages still display previous trade  *
@@ -101,6 +103,7 @@
      D***ValdS2              1042   1846                                               CSW214 CSW216
      D***ValdS3              1858   1866                                               CSW214 CSW216
      D***ValdS4              1898   1954                                               CSW214 CSW216
+     D  ValdSu1              582    825                                                     MD039656     
      D  ValdS1                 1   1077                                                       CSW216
      D  ValdS2              1082   1886                                                       CSW216
      D  ValdS3              1898   1906                                                       CSW216
@@ -116,6 +119,7 @@
      D***RPIFS2*             1042   1846                                               CSW214 CSW216
      D***RPIFS3*             1858   1866                                               CSW214 CSW216
      D***RPIFS4*             1898   1954                                               CSW214 CSW216
+     D  RPIFSu1              582    825                                                     MD039656     
      D  RPIFS1                 1   1077                                                       CSW216
      D  RPIFS2              1082   1886                                                       CSW216
      D  RPIFS3              1898   1906                                                       CSW216
@@ -307,6 +311,13 @@
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    RITMST
      C                   EVAL      RIPRED = *BLANKS                                         MD030983
+                                                                                            MD039656
+      ** Update Reporting Party Name, City, SWIFT ID and LEI Code                           MD039656
+      ** if Customer details has been amended prior to reversal                             MD039656
+                                                                                            MD039656
+     C                   IF        RPIFSu1 <> ValdSu1                                       MD039656
+     C                   EVAL      RPIFSu1 = ValdSu1                                        MD039656
+     C                   ENDIF                                                              MD039656
  
      C                   UPDATE    DLRPIFD0
  

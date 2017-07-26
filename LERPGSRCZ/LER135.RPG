@@ -22,8 +22,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD045479           Date 21Jun17               *
-      *  Prev Amend No. MD036064           Date 26Jul17               *
+      *  Last Amend No. MD031473A          Date 14Dec16               *
+      *  Prev Amend No. MD031473           Date 24Feb16               *
+      *                 MD045479           Date 21Jun17               *
+      *                 MD036064           Date 26Jul17               *
       *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
       *                 CLE154             Date 10Aug12               *
@@ -253,6 +255,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD031473A - Revise RECALL so that TDUE is the recalculated   *
+      *              amount from start date upto last payment date.   *
+      *  MD031473 - LE Incorrect fee accrual calculation (rate chg)   *
       *  MD045479 - For the migrated fees, the HIFRT's and HIAMT's    *
       *             should be set to zero before writing to LEFHST    *
       *  MD036064 - System created incorrect PDCL for FEE. Define     *
@@ -803,6 +808,8 @@
      F***LEFHSTL2O***E**         K        DISK         KINFSR *PSSR A                 204452 BUG8762
      F***LEFHSTL2UF**E**         K        DISK         KINFSR *PSSR A                 BUG8762 250628
      FLEFHSTL7UF  E           K        DISK         KINFSR *PSSR A                            250628
+     FLEFHSTLAIF  E           K        DISK         KINFSR *PSSR                            MD031473
+     F            LEFHSTF                           KRENAMELEFHSTA                          MD031473
      FLEFEED  UF  E           K        DISK         KINFSR *PSSR
      FLEPEFFD UF  E           K        DISK         KINFSR *PSSR A
      FLEPEFFZ UF  E                    DISK         KINFSR *PSSR
@@ -923,6 +930,8 @@
      E                    @HRT        5  7 5A            FEE RATES - HISTORY                 BUG8762
      E                    @WAMT       5 11 0A            FEE AMOUNTS - WORK ARRAY            BUG8762
      E                    @WRT        5  7 5A            FEE RATES - WORK ARRAY              BUG8762
+     E                    @HLAMT      5 11 0A            FEE AMOUNTS - HISTORY (LOAN)       MD031473
+     E                    @HLRT       5  7 5A            FEE RATES - HISTORY (LOAN)         MD031473
      E********************INT         1 15 0             ZHASH INTEGERS    0056
      E********************DEC         1  3 0             ZHASH DECIMALS    0056
      E***********         INT         2 15 0             ZHASH INTEGERS    0056               CLE139
@@ -1741,6 +1750,30 @@
      I              CHTP                            #CHTPZ                                    CLE139
      I              TNLU                            #TNLUZ                                    CLE139
      I/COPY WNCPYSRC,LEH00378
+     ILEFHSTA                                                                               MD031473
+      ** Rename fields                                                                      MD031473
+     I              HIRECI                          LORECI                                  MD031473
+     I              HIBRCA                          LOBRCA                                  MD031473
+     I              HICNUM                          LOCNUM                                  MD031473
+     I              HIFACL                          LOFACL                                  MD031473
+     I              HILNRF                          LOLNRF                                  MD031473
+     I              HIFSEQ                          LOFSEQ                                  MD031473
+     I              HIFCOD                          LOFCOD                                  MD031473
+     I              HIFCCY                          LOFCCY                                  MD031473
+     I              HIAMTS                          LOAMTS                                  MD031473
+     I              HIHDAT                          LOHDAT                                  MD031473
+     I              HILCHD                          LOLCHD                                  MD031473
+     I              HILCHT                          LOLCHT                                  MD031473
+     I              HIFRT1                          LOFRT1                                  MD031473
+     I              HIFRT2                          LOFRT2                                  MD031473
+     I              HIFRT3                          LOFRT3                                  MD031473
+     I              HIFRT4                          LOFRT4                                  MD031473
+     I              HIFRT5                          LOFRT5                                  MD031473
+     I              HIAMT1                          LOAMT1                                  MD031473
+     I              HIAMT2                          LOAMT2                                  MD031473
+     I              HIAMT3                          LOAMT3                                  MD031473
+     I              HIAMT4                          LOAMT4                                  MD031473
+     I              HIAMT5                          LOAMT5                                  MD031473
       *                                                                   CLE013
      I/COPY ZSRSRC,ZINTDYZ1                                               CLE013
      I/COPY ZSRSRC,ZDATE9Z2                                               CLE013
@@ -1815,6 +1848,23 @@
      I                                    P   9  125HIFRT3                                   BUG8762
      I                                    P  13  165HIFRT4                                   BUG8762
      I                                    P  17  205HIFRT5                                   BUG8762
+     I            DS                                                                        MD031473
+      ** Loan Fee Amounts Data structure                                                    MD031473
+     I                                    P   1  300@HLAMT                                  MD031473
+     I                                    P   1   60LOAMT1                                  MD031473
+     I                                    P   7  120LOAMT2                                  MD031473
+     I                                    P  13  180LOAMT3                                  MD031473
+     I                                    P  19  240LOAMT4                                  MD031473
+     I                                    P  25  300LOAMT5                                  MD031473
+     I            DS                                                                        MD031473
+      ** Loan Fee rates data structure                                                      MD031473
+     I                                    P   1  205@HLRT                                   MD031473
+     I                                    P   1   45LOFRT1                                  MD031473
+     I                                    P   5   85LOFRT2                                  MD031473
+     I                                    P   9  125LOFRT3                                  MD031473
+     I                                    P  13  165LOFRT4                                  MD031473
+     I                                    P  17  205LOFRT5                                  MD031473
+      *                                                                                     MD031473
       *
      I            DS
       ** Format fields for account key
@@ -4368,6 +4418,9 @@
       *
       *  AMTACC - SUBROUTINE TO CALCULATE AMOUNT FOR ACCRUALS
       *
+      *  In case of changes to this sub-routine, verify whether these apply to              MD031473
+      *  SR/AMTACC as well, as sr/AMTACL is based on sr/AMTACC.                             MD031473
+      *                                                                                     MD031473
       *  CALLED FROM: MAIN PROCESSING
       *
       *  CALLS: HISRED, REPHDR, ACCRUE
@@ -5164,6 +5217,9 @@
       *
       *  HISRED - SUBROUTINE TO CALCULATE AMOUNTS FOR PAYMENTS DUE.
       *           N.B. *IN70 ON = ACTUAL AMOUNT USED, OFF = AVERAGE.
+      *                                                                                     MD031473
+      *  In case of changes to this sub-routine, verify whether these apply to              MD031473
+      *  SR/HISREL as well, as sr/HISREL is based on sr/HISRED.                             MD031473
       *
       *  CALLED FROM: AMTACC
       *
@@ -5323,6 +5379,9 @@
       *
       *  ACCRUE - SUBROUTINE TO CALCULATE ACCRUAL AMOUNT
       *
+      *  In case of changes to this sub-routine, verify whether these apply to              MD031473
+      *  SR/ACCRUL as well, as sr/ACCRUL is based on sr/ACCRUE.                             MD031473
+      *                                                                                     MD031473
       *  CALLED FROM: AMTACC, HISRED
       *
       *  CALLS: ZXRATE, ZCONV, REPDTL, LSTRAT, AOCURRR0
@@ -6124,6 +6183,15 @@
      C                     ENDIF                                                              CLE141
      C                     ENDIF                                                              CLE134
       *
+     C           ZDAYNO    IFGE CODT                                                        MD031473
+     C           FECALT    ANDEQ'97'                                                        MD031473
+     C           ZDAYNO    ORGE CODT                                                        MD031473
+     C           FECALT    ANDEQ'98'                                                        MD031473
+     C           ZDAYNO    ORGE CODT                                                        MD031473
+     C           FECALT    ANDEQ'99'                                                        MD031473
+     C                     Z-ADDCODT      ENDATE                                            MD031473
+     C                     ENDIF                                                            MD031473
+      *
       **  If the next payment date calculated will be after
       **  the fee period end date then make the end date the date
       **  of next payment.
@@ -6630,6 +6698,9 @@
       *
       *  GENKEY SUBROUTINE TO GENERATE ACCOUNT KEY
       *
+      *  In case of changes to this sub-routine, verify whether these apply to              MD031473
+      *  SR/GENKYL as well, as sr/GENKYL is based on sr/GENKEY.                             MD031473
+      *                                                                                     MD031473
       *  CALLED FROM:  MAIN PROCESSING, UPDFEE
       *
       *  CALLS:  ZSFILE, AOBRCHR0, ZHASH
@@ -10072,6 +10143,9 @@
       *                                                                   CLE005
       *  RECALC - Recalculating the total fee due from start.             CLE005
       *                                                                   CLE005
+      *  In case of changes to this sub-routine, verify whether these     MD031473
+      *  apply to SR/RECALL as well, as sr/RECALL is based on sr/RECALC.  MD031473
+      *                                                                   MD031473
       *  CALLED FROM:  SR/AMTACC                                          CLE005
       *                                                                   CLE005
       *  CALLS: SR/HISCAL                                                 CLE005
@@ -10287,6 +10361,9 @@
       *                                                                   CLE005
       *  HISCAL - Recalculating the total fee due from start.             CLE005
       *                                                                   CLE005
+      *  In case of changes to this sub-routine, verify whether these     MD031473
+      *  apply to SR/HISCLL as well, as sr/HISCLL is based on sr/HISCAL.  MD031473
+      *                                                                   MD031473
       *  CALLED FROM:  SR/RECALC                                          CLE005
       *                                                                   CLE005
       *  CALLS: SR/ACCRUE                                                 CLE005
@@ -11060,6 +11137,13 @@
      C           FEPSTD    IFLT CODT                                       B2                 CLE073
      C           BKALDI    ANDEQ'Y'                                                           CLE073
      C           BKALDI    ORNE 'Y'                                                           CLE073
+      *                                                                                     MD031473
+     C           CLE005    IFEQ 'Y'                                                         MD031473
+     C           FEINDC    ANDNE'Y'                                                         MD031473
+     C           FECALT    ANDNE'90'                                                        MD031473
+     C           FECALT    ANDNE'99'                                                        MD031473
+     C                     EXSR AMTAL2                                                      MD031473
+     C                     ELSE                                                             MD031473
       *                                                                                       CLE073
       ** Read file until date read is greater than date of end of                             CLE073
       ** this accrual period.  This processing can be done more                               CLE073
@@ -11175,6 +11259,7 @@
      C                     Z-ADDCPAMP     AAMT                                                CLE073
      C                     ENDDO                                                              CLE073
       *                                                                                       CLE073
+     C                     ENDIF                                                            MD031473
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
      C           WFEE      SUB  FEAMTS    WDIFF2                                            AR634880
@@ -11238,6 +11323,223 @@
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
      C                     ENDSR                                                              CLE073
+      *                                                                                     MD031473
+      *****************************************************************                     MD031473
+     C/TITLE SR/AMTAL2                                                                      MD031473
+      *****************************************************************                     MD031473
+      *                                                                                     MD031473
+      *  AMTAL2 - SUBROUTINE TO CALCULATE AMOUNT FOR ACCRUALS                               MD031473
+      *                                                                                     MD031473
+      *  CALLED FROM: AMTACL                                                                MD031473
+      *                                                                                     MD031473
+      *  CALLS: AMTAL3                                                                      MD031473
+      *                                                                                     MD031473
+      *****************************************************************                     MD031473
+      *                                                                                     MD031473
+     C           AMTAL2    BEGSR                                                            MD031473
+      *                                                                                     MD031473
+      ** Note that this SR is called with CLE005 on and FEINDC *NE 'Y'.                     MD031473
+      *                                                                                     MD031473
+      ** Move rates and amounts from LEFEED to working arrays.                              MD031473
+      *                                                                                     MD031473
+     C                     Z-ADDFAMT      @WAMT                                             MD031473
+     C                     Z-ADDFRT       @WRT                                              MD031473
+      *                                                                                     MD031473
+      ** Read LEFHST to get the right rates and amounts for                                 MD031473
+      ** for specific fee period.                                                           MD031473
+      *                                                                                     MD031473
+     C           LELKEY    SETLLLEFHSTLA                                                    MD031473
+     C           LELKEY    READELEFHSTLA            N    27                                 MD031473
+     C           *IN27     IFEQ '0'                                                         MD031473
+     C           *IN27     DOWEQ'0'                                                         MD031473
+      *                                                                                     MD031473
+      ** Move rates and amounts from historical file to FAMT & FRT.                         MD031473
+      *                                                                                     MD031473
+     C                     Z-ADD@HLAMT    FAMT                                              MD031473
+     C                     Z-ADD@HLRT     FRT                                               MD031473
+     C                     Z-ADDLOHDAT    ENDATE                                            MD031473
+      *                                                                                     MD031473
+     C                     Z-ADDSTDATE    WVDAT                                             MD031473
+     C           KEYHST    SETGTLEHISTLA                                                    MD031473
+     C           KEYPHS    REDPELEHISTLA                 20                                 MD031473
+      *                                                                                     MD031473
+     C                     EXSR AMTAL3                                                      MD031473
+     C                     Z-ADDENDATE    STDATE                                            MD031473
+     C           LELKEY    READELEFHSTLA            N    27                                 MD031473
+     C                     ENDDO                                                            MD031473
+      *                                                                                     MD031473
+      ** Move rates and amounts from working arrays back to FAMT & FRT.                     MD031473
+      *                                                                                     MD031473
+     C                     Z-ADD@WAMT     FAMT                                              MD031473
+     C                     Z-ADD@WRT      FRT                                               MD031473
+      *                                                                                     MD031473
+     C           *IN27     IFEQ '1'                                                         MD031473
+     C           CODT      ANDGTENDATE                                                      MD031473
+     C                     Z-ADDCODT      ENDATE                                            MD031473
+      *                                                                                     MD031473
+     C           @CHKD     IFEQ 'Y'                                                         MD031473
+     C           CODT      IFGT FEPEND                                                      MD031473
+     C                     Z-ADDFEPEND    ENDATE                                            MD031473
+     C                     ELSE                                                             MD031473
+     C           ATYP      IFEQ 'H'                                                         MD031473
+     C           FENPYD    ANDLTCODT                                                        MD031473
+     C           FENPYD    ANDNE0                                                           MD031473
+     C                     Z-ADDFENPYD    ENDATE                                            MD031473
+     C                     ENDIF                                                            MD031473
+     C                     ENDIF                                                            MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C                     Z-ADDSTDATE    WVDAT                                             MD031473
+     C           KEYHST    SETGTLEHISTLA                                                    MD031473
+     C           KEYPHS    REDPELEHISTLA                 20                                 MD031473
+     C                     EXSR AMTAL3                                                      MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C                     ELSE                                                             MD031473
+     C***                  Z-ADDCODT      ENDATE                                            MD031473
+      *                                                                                     MD031473
+     C           @CHKD     IFEQ 'Y'                                                         MD031473
+     C           CODT      IFGT FEPEND                                                      MD031473
+     C                     Z-ADDFEPEND    ENDATE                                            MD031473
+     C                     ELSE                                                             MD031473
+     C           ATYP      IFEQ 'H'                                                         MD031473
+     C           FENPYD    ANDLTCODT                                                        MD031473
+     C           FENPYD    ANDGT0                                                           MD031473
+     C                     Z-ADDFENPYD    ENDATE                                            MD031473
+     C                     ENDIF                                                            MD031473
+     C                     ENDIF                                                            MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C                     Z-ADDSTDATE    WVDAT                                             MD031473
+     C           KEYHST    SETGTLEHISTLA                                                    MD031473
+     C           KEYPHS    REDPELEHISTLA                 20                                 MD031473
+     C                     EXSR AMTAL3                                                      MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C                     ENDSR                                                            MD031473
+      *                                                                                     MD031473
+      *****************************************************************                     MD031473
+     C/TITLE SR/AMTAL3                                                                      MD031473
+      *****************************************************************                     MD031473
+      *                                                                                     MD031473
+      *  AMTAL3 - SUBROUTINE TO CALCULATE AMOUNT FOR ACCRUALS                               MD031473
+      *                                                                                     MD031473
+      *  CALLED FROM: AMTAL2                                                                MD031473
+      *                                                                                     MD031473
+      *  CALLS: ACCRUL                                                                      MD031473
+      *                                                                                     MD031473
+      *****************************************************************                     MD031473
+      *                                                                                     MD031473
+     C           AMTAL3    BEGSR                                                            MD031473
+      *                                                                                     MD031473
+     C           FECALT    IFEQ '98'                                                        MD031473
+     C                     Z-ADDOPAMK     CFAMT                                             MD031473
+     C                     Z-ADDOPAMK     AAMT                                              MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C           FECALT    IFEQ '97'                        B* CALCT 97                     MD031473
+     C                     Z-ADDOPAMK     CFAMT                                             MD031473
+     C                     Z-ADDOPAMK     AAMT                                              MD031473
+     C           *IN20     IFEQ *OFF                                                        MD031473
+     C                     Z-ADDCPAMP     CFAMT                                             MD031473
+     C                     Z-ADDCPAMP     AAMT                                              MD031473
+ !!  C                     ELSE                                                             MD031473
+ !!  C                     Z-ADD001       WLASN                                             MD031473
+ !!  C           KEYHST    SETLLLEHISTLA                 20                                 MD031473
+     C                     ENDIF                                                            MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+      ** Read file until date read is greater than date of end of                           MD031473
+      ** this accrual period.                                                               MD031473
+      *                                                                                     MD031473
+     C                     MOVE '0'       *IN20                                             MD031473
+     C                     Z-ADDSTDATE    WVDAT                                             MD031473
+     C           *IN20     DOWEQ'0'                                                         MD031473
+     C           FECALT    IFEQ '97'                                                        MD031473
+     C**                   Z-ADDSTDATE    WVDAT                                             MD031473
+     C           KEYPHS    READELEHISTLA                 20                                 MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C           FECALT    IFNE '97'                                                        MD031473
+     C                     MOVE '1'       *IN20                                             MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C           *IN20     IFEQ '1'                                                         MD031473
+     C           VDATP     ORGT ENDATE                                                      MD031473
+     C           BKALDI    ANDNE'Y'                                                         MD031473
+     C           VDATP     ORGE ENDATE                                                      MD031473
+     C           BKALDI    ANDEQ'Y'                                                         MD031473
+     C                     Z-ADDENDATE    VDATP                                             MD031473
+     C                     MOVE '1'       *IN20                                             MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+      ** Fee Calculation Basis should be considered when computing                          MD031473
+      ** for the no. of days to be accrued.                                                 MD031473
+      *                                                                                     MD031473
+     C                     Z-ADD0         ZZINDY                                            MD031473
+     C                     Z-ADDVDATP     ZZEND                                             MD031473
+     C                     Z-ADDSTDATE    ZZBEG                                             MD031473
+     C                     MOVE FECALC    ZZCALC                                            MD031473
+     C                     EXSR ZINTDY                                                      MD031473
+     C           FECALC    IFEQ 6                                                           MD031473
+     C                     Z-ADDINT6DY    NDAYS                                             MD031473
+     C                     ELSE                                                             MD031473
+     C                     Z-ADDZZINDY    NDAYS                                             MD031473
+     C                     END                                                              MD031473
+      *                                                                                     MD031473
+      ** Add 1 day if first day accrual.                                                    MD031473
+      *                                                                                     MD031473
+     C           BKALDI    IFNE 'Y'                                                         MD031473
+     C           FEPSTD    ANDEQSTRDTE                                                      MD031473
+     C           VDATP     ANDEQENDATE                                                      MD031473
+     C           CODT      ANDEQENDATE                                                      MD031473
+     C           FEPEND    ANDGTCODT                                                        MD031473
+     C           *IN20     ANDEQ'1'                                                         MD031473
+     C                     ADD  1         NDAYS                                             MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C           NDAYS     IFGT 0                                                           MD031473
+     C           FEORED    IFEQ BJRDNB                                                      MD031473
+     C           FEPSTD    ANDLTMSTD                                                        MD031473
+      *                                                                                     MD031473
+     C                     Z-ADDNDAYS     WDAYS2 159                                        MD031473
+     C           VDATP     IFGT MSTD                                                        MD031473
+     C           VDATP     SUB  MSTD      DIFF    50                                        MD031473
+     C           DIFF      ADD  1         DIFF                                              MD031473
+     C           WDAYS2    SUB  DIFF      WDAYS2                                            MD031473
+     C                     MOVE '1'       *IN28                                             MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C                     Z-ADDWDAYS2    WDAYS                                             MD031473
+     C                     Z-ADDAAMT      WAMT                                              MD031473
+     C                     EXSR ACCRUL                                                      MD031473
+     C                     ADD  WTOT      WAGG2  130                                        MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C                     Z-ADDNDAYS     WDAYS                                             MD031473
+     C                     Z-ADDAAMT      WAMT                                              MD031473
+     C                     EXSR ACCRUL                                                      MD031473
+     C                     ADD  WTOT      WFEE                                              MD031473
+     C                     Z-ADDVDATP     STDATE                                            MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+      ** Reset amount to accrue - comes from next record on amounts                         MD031473
+      ** file.                                                                              MD031473
+      *                                                                                     MD031473
+     C           FECALT    IFEQ '97'                        B* CALCT 97                     MD031473
+     C                     Z-ADDOPAMK     CFAMT                                             MD031473
+     C                     Z-ADDOPAMK     AAMT                                              MD031473
+     C           *IN20     IFEQ *OFF                                                        MD031473
+     C                     Z-ADDCPAMP     CFAMT                                             MD031473
+     C                     Z-ADDCPAMP     AAMT                                              MD031473
+     C                     ELSE                                                             MD031473
+     C                     Z-ADD001       WLASN                                             MD031473
+     C                     ENDIF                                                            MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C                     ENDDO                                                            MD031473
+      *                                                                                     MD031473
+     C                     ENDSR                                                            MD031473
       *                                                                                       CLE073
       ***************************************************************                         CLE073
      C/TITLE SR/HISREL                                                                        CLE073
@@ -11491,7 +11793,8 @@
      C           FECALC    IFEQ 6                                                             CLE073
      C                     Z-ADDINT6DY    WDAYS9                                              CLE073
      C                     ELSE                                                               CLE073
-     C                     Z-ADDZZINDY    WDAYS9  50                                          CLE073
+     C**********           Z-ADDZZINDY    WDAYS9  50                                 CLE073 MD031473
+     C                     Z-ADDZZINDY    WDAYS9 159                                        MD031473
      C                     ENDIF                                                              CLE073
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
@@ -12218,6 +12521,135 @@
      C                     Z-ADD0         WFEE                                                CLE073
      C                     Z-ADD0         TDUE   130                                          CLE073
       *                                                                                       CLE073
+     C           FEORED    IFNE BJRDNB                                                      MD031473
+      *                                                                                     MD031473
+      ** Store end date and move rates/amounts from LEFEED to working array                 MD031473
+     C                     Z-ADDFAMT      @WAMT                                             MD031473
+     C                     Z-ADDFRT       @WRT                                              MD031473
+      *                                                                                     MD031473
+      ** Read LEFHST to get the right rates and amounts for specific fee period.            MD031473
+      *                                                                                     MD031473
+     C           LELKEY    KLIST                                                            MD031473
+     C                     KFLD           FECNUM                                            MD031473
+     C                     KFLD           FELOAN                                            MD031473
+     C                     KFLD           FEFSEQ                                            MD031473
+      *                                                                                     MD031473
+     C           LELKEY    SETLLLEFHSTLA                                                    MD031473
+     C           LELKEY    READELEFHSTLA                 27                                 MD031473
+     C           *IN27     DOUEQ'1'                                                         MD031473
+     C           *IN27     IFEQ '0'                                                         MD031473
+     C                     Z-ADD@HLAMT    FAMT                                              MD031473
+     C                     Z-ADD@HLRT     FRT                                               MD031473
+     C                     Z-ADDLOHDAT    ENDATE                                            MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+      ** Calculate WDAYS.                                                                   MD031473
+      *                                                                                     MD031473
+     C                     Z-ADDSTDATE    ZZBEG                                             MD031473
+     C                     Z-ADDENDATE    ZZEND                                             MD031473
+     C                     MOVE FECALC    ZZCALC                                            MD031473
+     C                     EXSR ZINTDY                                                      MD031473
+     C           FECALC    IFEQ 6                                                           MD031473
+     C                     Z-ADDINT6DY    WDAYS                                             MD031473
+     C                     ELSE                                                             MD031473
+     C                     Z-ADDZZINDY    WDAYS                                             MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+      ** Set amount                                                                         MD031473
+      *                                                                                     MD031473
+     C           FECALT    IFEQ '99'                                                        MD031473
+     C           FECALT    OREQ '90'                                                        MD031473
+     C                     Z-ADDFEFAMT    CFAMT                                             MD031473
+     C                     Z-ADDFEFAMT    AAMT                                              MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+      ** Type 98: Loan Original Amount                                                      MD031473
+      *                                                                                     MD031473
+     C           FECALT    IFEQ '98'                                                        MD031473
+     C                     Z-ADDOPAMK     CFAMT                                             MD031473
+     C                     Z-ADDOPAMK     AAMT                                              MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+      ** Caculation type 97: get amount from loan history file                              MD031473
+      *                                                                                     MD031473
+     C                     Z-ADD999       WLASN                                             MD031473
+     C           FECALT    IFEQ '97'                                                        MD031473
+     C                     Z-ADDSTDATE    WVDAT                                             MD031473
+     C                     Z-ADDOPAMK     CFAMT                                             MD031473
+     C                     Z-ADDOPAMK     AAMT                                              MD031473
+     C                     Z-ADD999       WLASN   30                                        MD031473
+     C           KEYHST    SETGTLEHISTLA                                                    MD031473
+     C           KEYPHS    REDPELEHISTLA                 18                                 MD031473
+     C           *IN18     IFEQ *OFF                                                        MD031473
+     C                     Z-ADDCPAMP     CFAMT                                             MD031473
+     C                     Z-ADDCPAMP     AAMT                                              MD031473
+     C                     ELSE                                                             MD031473
+     C                     Z-ADD001       WLASN                                             MD031473
+     C           KEYHST    SETLLLEHISTLA                 18                                 MD031473
+     C                     ENDIF                                                            MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C           FECALT    IFNE '99'                                                        MD031473
+     C           FECALT    ANDNE'90'                                                        MD031473
+     C                     EXSR HISCLL                                                      MD031473
+     C**********           Z-ADDWFEE      TDUE                                    MD031473 MD031473A
+     C                     ADD  WFEE      TDUE                                             MD031473A
+     C                     Z-ADD0         WFEE                                             MD031473A
+     C           TDUE      IFNE FEAMTS                                                      MD031473
+     C           FECALT    ANDEQ'97'                                                        MD031473
+     C           TDUE      SUB  FEAMTS    WDIFF2 130                                        MD031473
+     C                     SUB  FEAMTP    WDIFF2                                            MD031473
+     C                     ADD  FETADJ    WDIFF2                                            MD031473
+     C                     ADD  FEAMTA    WDIFF2                                            MD031473
+     C                     SUB  FEWOFF    WDIFF2                                            MD031473
+     C                     SUB  FEAMTW    WDIFF2                                            MD031473
+     C           WDIFF2    IFEQ 1                                                           MD031473
+     C                     SUB  1         TDUE                                              MD031473
+     C                     ENDIF                                                            MD031473
+     C           WDIFF2    IFEQ -1                                                          MD031473
+     C                     ADD  1         TDUE                                              MD031473
+     C                     ENDIF                                                            MD031473
+     C                     ENDIF                                                            MD031473
+     C                     ENDIF                                                           MD031473A
+      *                                                                                    MD031473A
+     C                     Z-ADDENDATE    STDATE                                           MD031473A
+     C           LELKEY    READELEFHSTLA                 27                                MD031473A
+     C                     ENDDO                                                           MD031473A
+      *                                                                                     MD031473
+     C           FECALT    IFNE '99'                                                       MD031473A
+     C           FECALT    ANDNE'90'                                                       MD031473A
+      *                                                                                    MD031473A
+      ** Recalculate Fee amount past due amount.                                            MD031473
+      *                                                                                     MD031473
+     C           TDUE      ADD  FETADJ    ADDUE  130                                        MD031473
+     C                     ADD  FEAMTA    ADDUE                                             MD031473
+     C                     SUB  FEAMTS    ADDUE                                             MD031473
+     C           FEAUTO    IFEQ 'Y'                                                         MD031473
+     C           FEAUTO    OREQ 'C'                                                         MD031473
+     C           CLE134    ANDEQ'Y'                                                         MD031473
+     C           FEAUT2    OREQ 'C'                                                         MD031473
+     C           CLE134    ANDEQ'Y'                                                         MD031473
+     C                     SUB  FEAMTP    ADDUE                                             MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+      ** FEAMTP should be set to amount outstanding on previous fee                         MD031473
+      ** period only.                                                                       MD031473
+      *                                                                                     MD031473
+     C                     Z-ADDADDUE     FEAMTP                                            MD031473
+     C                     SUB  FEWOFF    FEAMTP                                            MD031473
+     C                     SUB  FEAMTW    FEAMTP                                            MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
+     C**********           Z-ADDENDATE    STDATE                                  MD031473 MD031473A
+     C********** LELKEY    READELEFHSTLA                 27                       MD031473 MD031473A
+     C**********           ENDDO                                                  MD031473 MD031473A
+      *                                                                                     MD031473
+     C                     Z-ADD@WAMT     FAMT                                              MD031473
+     C                     Z-ADD@WRT      FRT                                               MD031473
+      *                                                                                     MD031473
+      ** Feored = Bjrdnb                                                                    MD031473
+     C                     ELSE                                                             MD031473
+      *
       ** Calculate WDAYS.                                                                     CLE073
       *                                                                                       CLE073
      C                     Z-ADDSTDATE    ZZBEG                                               CLE073
@@ -12304,6 +12736,9 @@
      C                     SUB  FEWOFF    FEAMTP                                              CLE073
      C                     SUB  FEAMTW    FEAMTP                                              CLE073
      C                     ENDIF                                                              CLE073
+      *                                                                                     MD031473
+     C                     ENDIF                                                            MD031473
+      *                                                                                     MD031473
      C                     MOVE 'H'       ATYP                                                CLE073
       *                                                                                       CLE073
      C                     ENDSR                                                              CLE073

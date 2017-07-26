@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD040758           Date 21Oct16               *
-      *  Prev Amend No. MD039280A          Date 18Oct16               *
+      *  Last Amend No. MD045460           Date 20Jun17               *
+      *  Prev Amend No. MD040758           Date 21Oct16               *
+      *                 MD039280A          Date 18Oct16               *
       *                 MD039001           Date 12Aug16               *
       *                 MD039280           Date 27Jul16               *
       *                 MD034990           Date 25May16               *
@@ -220,6 +221,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD045460 - Net interest for Retail Accounts with defined     *
+      *             alternate account is not posted to main account   *
       *  MD040758 - Interest posting and tax posting in the main and  *
       *             alternate account is incorrect when CDL013 is on  *
       *  MD039280A - Ensure that counterposting of tax to alternate   *
@@ -975,7 +978,8 @@
       *                                                                                       CRE100
       ** System Values Array Definition                                                       CRE100
      E**********          SVAL    1   2 20                                           CRE100 MD034990
-     E                    SVAL    1   3 20                                                  MD034990
+     E**********          SVAL    1   3 20                                         MD034990 MD045460
+     E                    SVAL    1   4 20                                                  MD045460
       *****************************************************************   CCB003
      E/EJECT
       *****************************************************************   CCB003
@@ -2702,10 +2706,12 @@
      C********** @CRINT    ANDGT*ZERO                                                 135809 135809R
      C**********           SUB  @CRINT    HISB                                        135809 135809R
      C**********           END                                                        135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C           WDRCR     IFEQ '1'                                                         AR978914
      C           @CRINT    ANDGT*ZERO                                                       AR978914
      C                     SUB  @CRINT    HISB                                              AR978914
      C                     END                                                              AR978914
+     C                     ENDIF                                                            MD045460
      C           WCHGA     IFNE 0                                                             250998
      C           REBID     IFEQ 'Y'                                                           250998
      C                     ADD  WCHGA     CHGAR                                               250998
@@ -2910,6 +2916,7 @@
      C           WDRCR     IFEQ '1'                                                         AR978914
      C           ATITAX    ANDEQ'Y'                                                         AR978914
      C           SHISD     ANDEQCNCID                                                       AR978914
+     C           WWHTAL    ANDEQ'N'                                                         MD045460
      C           WDRCR     OREQ '1'                                                         MD040758
      C           ATITAX    ANDNE'0'                                                         MD040758
      C           SHISD     ANDLECNCID                                                       MD040758
@@ -3080,6 +3087,7 @@
      C           WDRCR     IFEQ '1'                                                         AR978914
      C           ATITAX    ANDEQ'Y'                                                         AR978914
      C           SHISD     ANDEQCNCID                                                       AR978914
+     C           WWHTAL    ANDEQ'N'                                                         MD045460
      C           WDRCR     OREQ '1'                                                         MD040758
      C           ATITAX    ANDNE'0'                                                         MD040758
      C           SHISD     ANDEQCNCID                                                       MD040758
@@ -4319,7 +4327,9 @@
      C                     MOVELDN07,2    INP07   6                                           CGL029
      C                     MOVELMGD,2     ##MGID                          S01522
      C**********           Z-ADD2         @INDX   20                                  135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADD2         @INDX   20                                        AR978914
+     C                     ENDIF                                                            MD045460
      C/COPY WNCPYSRC,RE3664C011
      C*********************ELSE                            - X1           104489
      C                     END                             - E2           104489
@@ -4345,7 +4355,9 @@
      C                     MOVELDN07,#    INP07                           088273
      C                     MOVELMGD,#     ##MGID                          189038
      C**********           Z-ADD#         @INDX                                       135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADD#         @INDX                                             AR978914
+     C                     ENDIF                                                            MD045460
      C                     END                             - E2           104489
       *                                                                   104489
      C                     ELSE                                           057048
@@ -4360,7 +4372,9 @@
      C                     MOVELMGD,12    ##MGID                          135401
      C/COPY WNCPYSRC,RE3664C184
      C**********           Z-ADD12        @INDX                                       135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADD12        @INDX                                             AR978914
+     C                     ENDIF                                                            MD045460
      C*
      C**  IF ADJUST INTEREST THEN SEND ON CHARGE OR PRODUCT
      C*
@@ -4486,6 +4500,7 @@
      C                     MOVE 'CAPC'    OTST                            CRE008
      C**********           ENDIF                                                     261620 MD022635
      C**********           Z-ADD@INDX     #                                           135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADD@INDX     #                                                 AR978914
      C**********           MOVELNAR,2     INPNAR                   071428 135809
      C**********           MOVELNR16,2    INP16                    071428 135809
@@ -4500,6 +4515,7 @@
      C**********           MOVELNR16,2    INP16                                     135809R AR978914
      C**********           MOVELDN07,2    INP07                                     135809R AR978914
      C                     MOVELDN07,#    INP07                                             AR978914
+     C                     ENDIF                                                            MD045460
      C**********           MOVELMGD,2     ##MGID                                   AR577206 MD022635
      C                     MOVELMGD,#     ##MGID                                            MD022635
      C/COPY WNCPYSRC,RE3664C058
@@ -5997,7 +6013,8 @@
      C**********           PARM *BLANKS   PVALK3 20                                  CRE100 MD034990
      C                     PARM SVAL,3    PVALK3 20                                         MD034990
      C                     PARM *BLANKS   PVAL3 200                                           CRE100
-     C                     PARM *BLANKS   PVALK4 20                                           CRE100
+     C**********           PARM *BLANKS   PVALK4 20                                  CRE100 MD045460
+     C                     PARM SVAL,4    PVALK4 20                                         MD045460
      C                     PARM *BLANKS   PVAL4 200                                           CRE100
      C                     PARM *BLANKS   PVALK5 20                                           CRE100
      C                     PARM *BLANKS   PVAL5 200                                           CRE100
@@ -6026,6 +6043,11 @@
      C                     MOVE 'Y'       RETSEQ  1                                         MD034990
      C                     ENDIF                                                            MD034990
       *                                                                                     MD034990
+     C                     MOVE 'N'       WWHTAL  1                                         MD045460
+     C           PVAL4     IFEQ 'Y'                                                         MD045460
+     C                     MOVE 'Y'       WWHTAL                                            MD045460
+     C                     ENDIF                                                            MD045460
+      *                                                                                     MD045460
      C                     ELSE                                                               CRE100
       *                                                                                       CRE100
      C           W0RTCD    IFNE '*NRF'                                                        CRE100
@@ -6044,6 +6066,10 @@
      C           PVAL3     IFEQ '*NRF'                                                      MD034990
      C                     MOVELPVALK3    DBKEY                                             MD034990
      C                     ENDIF                                                            MD034990
+      *                                                                                     MD045460
+     C           PVAL4     IFEQ '*NRF'                                                      MD045460
+     C                     MOVELPVALK4    DBKEY                                             MD045460
+     C                     ENDIF                                                            MD045460
       *                                                                                       CRE100
      C                     OUT  LDA                                                           CRE100
      C                     EXSR *PSSR                                                         CRE100
@@ -6448,7 +6474,9 @@
      C                     Z-ADD12        W       20                      135401
      C**********           MOVEL'INT ADJ' DN07,W                                       135809 CGL029
      C**********           MOVEL'INTADJ'  DN07,W                                      CGL029 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     MOVEL'INTADJ'  DN07,W                                            AR978914
+     C                     ENDIF                                                            MD045460
      C                     MOVEL'CR INT. 'NR16,W                          135401
      C                     MOVE 'ADJ.    'NR16,W                          135401
      C*                                                                   135401
@@ -6867,6 +6895,7 @@
      C**********           MOVEL'GB0051'  MGD,#     P                                 135809 135809R
      C/COPY WNCPYSRC,REH00432
       * Set up narrative for transfer of net interest to*alt. a/c                           AR978914
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     MOVE 'T6'      LNARC                                             AR978914
      C                     Z-ADD13        #                                                 AR978914
      C                     MOVEL'NT ALT'  DN07,#                                            AR978914
@@ -6895,6 +6924,7 @@
      C                     ENDIF                                                            MD021155
       *   Set up Narrative message: rightmost byte blank                                    AR978914
      C                     MOVEL'GB0051'  MGD,#     P                                       AR978914
+     C                     ENDIF                                                            MD045460
      C*
      C                     END                             - E0
      C*
@@ -7134,8 +7164,10 @@
      C                     Z-ADD0         WTIWT  130
      C**********           Z-ADD*ZERO     @CRINT                                      135809 135809R
      C**********           Z-ADD*ZERO     @CRNET                                      135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADD*ZERO     @CRINT                                            AR978914
      C                     Z-ADD*ZERO     @CRNET                                            AR978914
+     C                     ENDIF                                                            MD045460
      C                     Z-ADD*ZERO     @WCAIC                          130468
      C*
      C** SET DEFAULT TAX TO APLLY
@@ -9665,7 +9697,9 @@
       *                                                                   101656
      C           BGNTST    IFEQ 'Y'                                       101656
      C**********           Z-ADDHISB      @RHISB                                      135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADDHISB      @RHISB                                            AR978914
+     C                     ENDIF                                                            MD045460
      C           CGL031    IFEQ 'N'                                                        AR851468B
      C                     EXSR TDISR                                     101656
      C           WCSIN     IFEQ 'N'                                                         AR813717
@@ -9673,7 +9707,9 @@
      C                     ENDIF                                                            AR813717
      C                     ENDIF                                                           AR851468B
      C**********           Z-ADD@RHISB    HISB                                        135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADD@RHISB    HISB                                              AR978914
+     C                     ENDIF                                                            MD045460
      C                     END                                            101656
       *                                                                   101656
      C***********          Z-ADD73        DBASE                           CRE002
@@ -11461,7 +11497,9 @@
       **Save*history balance*******************************************               135809 135809R
      C**********           Z-ADDHISB      @RHISB                                      135809 135809R
       * Save history balance                                                                AR978914
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADDHISB      @RHISB                                            AR978914
+     C                     ENDIF                                                            MD045460
      C*
      C** INITIALIZE TOTAL FIELD
      C*
@@ -11850,6 +11888,7 @@
      C*
      C********** BCINW     IFGT *ZERO                      * B1           135809
      C********** BCINW     IFGT *ZERO                                               135809R AR978914
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C*                                                    *
      C** CHECK FOR ALTERNATE ACCOUNT                       *
      C*                                                    *
@@ -12485,6 +12524,229 @@
      C                     END                             ** E2
      C**********           END                             * E1           135809
      C**********           END                             * E1                     135809R AR978914
+     C                     ELSE                                                             MD045460
+      *                                                                                     MD045460
+      ** Check for the main account                                                         MD045460
+      *                                                                                     MD045460
+     C           BCINW     IFGT *ZERO                                                       MD045460
+     C           CACP      IFNE *BLANKS                                                     MD045460
+     C           CGL165    IFEQ 'Y'                                                         MD045460
+     C           CINS      ANDNE0                                                           MD045460
+     C           @CRNET    SUB  CINS      @CRNET                                            MD045460
+     C                     ENDIF                                                            MD045460
+     C                     MOVELCACP      WALT                                              MD045460
+     C           WALT5     IFEQ *BLANKS                                                     MD045460
+     C           WALT10    CHAINACNUM                99                                     MD045460
+      *                                                                                     MD045460
+      ** If account does not exist or closed, do not post tax                               MD045460
+      *                                                                                     MD045460
+     C           *IN99     IFEQ '1'                                                         MD045460
+     C           RRRECI    OREQ 'C'                                                         MD045460
+     C                     Z-ADD*ZERO     BCINW                                             MD045460
+     C                     Z-ADD*ZERO     CINW                                              MD045460
+     C                     Z-ADD*ZERO     WTIWT                                             MD045460
+      *                                                                                     MD045460
+     C                     ELSE                                                             MD045460
+      *                                                                                     MD045460
+      ** Else if account is live, set up fields to post                                     MD045460
+      *                                                                                     MD045460
+     C                     MOVE RCNUM     CNUM                                              MD045460
+     C                     MOVE RCCY      CCY                                               MD045460
+     C                     MOVE 'P'       RECI                                              MD045460
+     C                     Z-ADDRACOD     ACOD                                              MD045460
+     C                     Z-ADDWALT10    ACNO                                              MD045460
+     C                     Z-ADDCNCID     VALD                                              MD045460
+     C                     Z-ADDCNCID     HISD                                              MD045460
+     C                     MOVE 'R'       ATYP                                              MD045460
+     C                     Z-ADDRACSQ     ACSQ                                              MD045460
+     C                     MOVE RBRCA     BRCA                                              MD045460
+      *                                                                                     MD045460
+      ** If Analytical Accounting installed, get profit centre of                           MD045460
+      ** the alternate account                                                              MD045460
+      *                                                                                     MD045460
+     C           BGN0ST    IFEQ 'Y'                                                         MD045460
+     C           WALT10    CHAINREACNMF              99                                     MD045460
+     C           *IN99     IFEQ '1'                                                         MD045460
+     C           *LOCK     IN   LDA                                                         MD045460
+     C                     MOVEL'REACNMPD'DBFILE           ************                     MD045460
+     C                     MOVELWALT10    DBKEY            * DBER 202 *                     MD045460
+     C                     Z-ADD202       DBASE            ************                     MD045460
+     C                     OUT  LDA                                                         MD045460
+     C                     EXSR *PSSR                                                       MD045460
+     C                     ELSE                                                             MD045460
+     C                     MOVE TPRFC     PRFC                                              MD045460
+     C                     ENDIF                                                            MD045460
+     C                     ENDIF                                                            MD045460
+      *                                                                                     MD045460
+     C                     ENDIF                                                            MD045460
+      *                                                                                     MD045460
+     C                     ELSE                                                             MD045460
+      *                                                                                     MD045460
+      ** Check for the alternate account                                                    MD045460
+      *                                                                                     MD045460
+     C           WALTK     CHAINACCNT               N99                                     MD045460
+      *                                                                                     MD045460
+      ** If account does not exist or closed, do not post tax                               MD045460
+      *                                                                                     MD045460
+     C           *IN99     IFEQ '1'                                                         MD045460
+     C           AARECI    OREQ 'C'                                                         MD045460
+     C                     Z-ADD*ZERO     BCINW                                             MD045460
+     C                     Z-ADD*ZERO     CINW                                              MD045460
+     C                     Z-ADD*ZERO     WTIWT                                             MD045460
+     C                     ELSE                                                             MD045460
+      *                                                                                     MD045460
+      ** Else if account is live, set up fields to post                                     MD045460
+      *                                                                                     MD045460
+     C                     MOVE AACNUM    CNUM                                              MD045460
+     C                     MOVE AACCY     CCY                                               MD045460
+     C                     MOVE 'P'       RECI                                              MD045460
+     C                     Z-ADDAAACOD    ACOD                                              MD045460
+     C                     Z-ADDAAACNO    ACNO                                              MD045460
+     C                     MOVE AAATYP    ATYP                                              MD045460
+     C                     Z-ADDAAACSQ    ACSQ                                              MD045460
+     C                     MOVE ABRCA     BRCA                                              MD045460
+      *                                                                                     MD045460
+      ** If Analytical Accounting installed, get profit centre of                           MD045460
+      ** the alternate account                                                              MD045460
+      *                                                                                     MD045460
+     C           BGN0ST    IFEQ 'Y'                                                         MD045460
+     C           ATYP      IFEQ 'R'                                                         MD045460
+     C           ATYP      OREQ 'N'                                                         MD045460
+     C                     MOVE AAPRFC    PRFC                                              MD045460
+     C                     ENDIF                                                            MD045460
+     C                     ENDIF                                                            MD045460
+     C           ATYP      IFEQ 'R'                                                         MD045460
+     C                     MOVE '1'       RIND                                              MD045460
+     C                     Z-ADDCNCID     VALD                                              MD045460
+     C                     Z-ADDCNCID     HISD                                              MD045460
+     C                     ELSE                                                             MD045460
+     C*                                                                                     MD045460
+     C                     Z-ADD*ZEROS    ACNO                                              MD045460
+     C                     MOVE *ZERO     RIND                                              MD045460
+     C                     Z-ADDRUND      VALD                                              MD045460
+     C                     Z-ADDRUND      HISD                                              MD045460
+     C                     ENDIF                                                            MD045460
+      *                                                                                     MD045460
+     C                     ENDIF                                                            MD045460
+      *                                                                                     MD045460
+     C                     ENDIF                                                            MD045460
+      *                                                                                     MD045460
+      ** Initialise account amount to be posted                                             MD045460
+      *                                                                                     MD045460
+     C           BCINW     IFGT 0                                                           MD045460
+     C           CCY       IFEQ BCCY                                                        MD045460
+     C                     Z-ADDCINW      WPSTA                                             MD045460
+     C                     MOVE WOTACC    WTACC                                             MD045460
+     C                     MOVE WOTACT    WATYP                                             MD045460
+     C                     ELSE                                                             MD045460
+     C           CCY       IFEQ BACCY                                                       MD045460
+     C                     Z-ADDBCINW     WPSTA                                             MD045460
+     C                     MOVE WBTACC    WTACC                                             MD045460
+     C                     MOVE WBTACT    WATYP                                             MD045460
+     C                     ELSE                                                             MD045460
+     C                     CALL 'AOCURRR0'                                                  MD045460
+     C                     PARM '*MSG   ' @RTCD                                             MD045460
+     C                     PARM '*KEY   ' @OPTN                                             MD045460
+     C                     PARM CCY       @CYCD   3                                         MD045460
+     C           SDCURR    PARM SDCURR    DSSDY                                             MD045460
+     C           @RTCD     IFNE *BLANK                                                      MD045460
+     C           *LOCK     IN   LDA                                                         MD045460
+     C                     MOVEL'SDCURRPD'DBFILE           **************                   MD045460
+     C                     MOVEL@CYCD     DBKEY            *DB ERROR 113*                   MD045460
+     C                     Z-ADD113       DBASE            **************                   MD045460
+     C                     OUT  LDA                                                         MD045460
+     C                     EXSR *PSSR                                                       MD045460
+     C                     ENDIF                                                            MD045460
+     C                     Z-ADDCDP       WACDP                                             MD045460
+     C                     Z-ADDSPOT      WASPOT                                            MD045460
+     C/COPY WNCPYSRC,REH00149                                                               MD045460
+     C                     MOVE MDIN      WAMDIN                                            MD045460
+     C                     MOVE TACC      WATACC                                            MD045460
+     C                     MOVELWATACC    KACOD                                             MD045460
+     C                     CALL 'AOACODR0'                                                  MD045460
+     C                     PARM '*MSG   ' @RTCD                                             MD045460
+     C                     PARM '*KEY   ' @OPTN                                             MD045460
+     C                     PARM KACOD     @ACCD  10                                         MD045460
+     C           SDACOD    PARM SDACOD    DSFDY                                             MD045460
+     C           @RTCD     IFNE *BLANK                                                      MD045460
+     C           *LOCK     IN   LDA                                                         MD045460
+     C                     MOVEL'SDACODPD'DBFILE           ***************                  MD045460
+     C                     MOVEL@ACCD     DBKEY            * DB ERROR 114*                  MD045460
+     C                     Z-ADD114       DBASE            ***************                  MD045460
+     C                     OUT  LDA                                                         MD045460
+     C                     EXSR *PSSR                                                       MD045460
+     C                     ENDIF                                                            MD045460
+     C                     MOVE A5ACTY    WATACT                                            MD045460
+     C                     MOVE BCCY      ZCCYI                                             MD045460
+     C                     Z-ADDWOSPOT    ZRATEF                                            MD045460
+     C                     MOVE WOCDP     ZCDPI                                             MD045460
+     C                     MOVE WOMDIN    ZMDINF                                            MD045460
+     C                     MOVE CCY       ZCCYO                                             MD045460
+     C                     Z-ADDWASPOT    ZRATET                                            MD045460
+     C                     MOVE WACDP     ZCDPO                                             MD045460
+     C                     MOVE WAMDIN    ZMDINT                                            MD045460
+     C                     Z-ADDCINW      ZAMTCI                                            MD045460
+      *                                                                                     MD045460
+      ** Set withholding tax conversion flag                                                MD045460
+      *                                                                                     MD045460
+     C                     MOVE 'Y'       @WHTF                                             MD045460
+     C*                                                                                     MD045460
+     C                     EXSR #CCYCN                                                      MD045460
+      *                                                                                     MD045460
+     C                     MOVE *BLANK    @WHTF                                             MD045460
+     C*                                                                                     MD045460
+     C                     Z-ADDZAMTCO    WPSTA                                             MD045460
+     C                     MOVE WATACC    WTACC                                             MD045460
+     C                     MOVE WATACT    WATYP                                             MD045460
+     C*                                                                                     MD045460
+     C                     ENDIF                                                            MD045460
+     C                     ENDIF                                                            MD045460
+     C                     ENDIF                                                            MD045460
+     C           BBRCA     IFEQ BRCA                                                        MD045460
+     C                     MOVE BBICN     WBICN                                             MD045460
+     C                     ELSE                                                             MD045460
+      *                                                                                     MD045460
+     C                     Z-ADDCUBRCA    C                                                 MD045460
+     C           BRCA      LOKUPABRC,C                   16                                 MD045460
+     C           *IN16     IFEQ '1'                                                         MD045460
+     C           C         OCUR SDBRCH                                                      MD045460
+     C                     ELSE                                                             MD045460
+     C                     CALL 'AOBRCHR0'                                                  MD045460
+     C                     PARM '*MSG   ' @RTCD                                             MD045460
+     C                     PARM '*KEY   ' @OPTN                                             MD045460
+     C                     PARM BRCA      @BRCA   3                                         MD045460
+     C           SDBRCH    PARM SDBRCH    DSFDY                                             MD045460
+     C           @RTCD     IFNE *BLANK                                                      MD045460
+     C           *LOCK     IN   LDA                                                         MD045460
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************                  MD045460
+     C                     MOVEL@BRCA     DBKEY            * DB ERROR 115*                  MD045460
+     C                     Z-ADD115       DBASE            ***************                  MD045460
+     C                     OUT  LDA                                                         MD045460
+     C                     EXSR *PSSR                                                       MD045460
+     C                     ENDIF                                                            MD045460
+     C                     ENDIF                                                            MD045460
+     C                     MOVE BICN      WBICN                                             MD045460
+     C                     ENDIF                                                            MD045460
+      *                                                                                     MD045460
+     C                     ELSE                                                             MD045460
+     C                     MOVE BCNUM     CNUM                                              MD045460
+     C                     MOVE BCCY      CCY                                               MD045460
+     C                     MOVE 'P'       RECI                                              MD045460
+     C                     Z-ADDBACOD     ACOD                                              MD045460
+     C                     MOVE WACNO     ACNO                                              MD045460
+     C                     MOVE 'R'       ATYP                                              MD045460
+     C                     Z-ADDBACSQ     ACSQ                                              MD045460
+     C                     MOVE BBRCA     BRCA                                              MD045460
+     C                     MOVE '1'       RIND                                              MD045460
+     C                     Z-ADDCNCID     VALD                                              MD045460
+     C                     Z-ADDCNCID     HISD                                              MD045460
+     C                     Z-ADDCINW      WPSTA                                             MD045460
+     C                     MOVE WOTACC    WTACC                                             MD045460
+     C                     MOVE WOTACT    WATYP                                             MD045460
+     C                     MOVE BBICN     WBICN                                             MD045460
+     C                     ENDIF                                                            MD045460
+     C                     ENDIF                                                            MD045460
+     C                     ENDIF                                                            MD045460
      C/COPY WNCPYSRC,REH00439
      C*
      C* IF STILL AMOUNT TO BE POSTED PROCESS OUTPUT.
@@ -12552,7 +12814,9 @@
       *                                                                                       CGL165
       * Restore history balance                                           135809
      C**********           Z-ADD@RHISB    HISB                                        135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADD@RHISB    HISB                                              AR978914
+     C                     ENDIF                                                            MD045460
      C                     MOVE ' '       ADJUST                                            MD040758
      C                     ENDSR
      C********************************************************************
@@ -12597,6 +12861,9 @@
      C                     Z-ADD*ZEROS    DBASE
      C********** CACP      IFEQ *BLANKS                                   135809
      C********** CACP      IFEQ *BLANKS                                             135809R AR978914
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
+     C           WWHTAL    OREQ 'Y'                                                         MD045460
+     C           CACP      ANDEQ*BLANKS                                                     MD045460
      C*
      C** ACCESS POSITION RECORD FOR UPDATE OR ADD THEN UPDATE HEADER FIELD
      C*
@@ -12680,7 +12947,9 @@
       * Save updated history balance                                      135809
      C/COPY WNCPYSRC,REH00452
      C**********           Z-ADDHISB      @RHISB                                      135809 135809R
+     C           WWHTAL    IFEQ 'N'                                                         MD045460
      C                     Z-ADDHISB      @RHISB                                            AR978914
+     C                     ENDIF                                                            MD045460
      C/COPY WNCPYSRC,REH00453
      C**********           ELSE                                           135809
      C***UPDATE*POSITION*RECORD*FOR*ALTERNATE*ACCOUNT*PROCESSING********* 135809
@@ -12689,6 +12958,7 @@
      C**********           ELSE                                                     135809R AR978914
      C**********           EXSR POSPR                                               135809R AR978914
      C**********           END                             - E1                     135809R AR978914
+     C                     ENDIF                                                            MD045460
      C*
      C                     END                             - E1
      C/COPY WNCPYSRC,REH00454
@@ -17764,3 +18034,4 @@ European Taxation of Interest
 RET_INTAC_CUST_LVL                                                                            CRE100
 RET_CHG_CUST_LVL                                                                              CRE100
 RET_SEQ_CUST_LVL                                                                            MD034990
+GrossIntWHTaxAltAcct                                                                        MD045460

@@ -15,11 +15,13 @@
       *  Function : This program allows the maintenance of payment    *
       *             charge details                                    *
       *                                                               *
-      *  Last Amend No. 259785             Date 14Jan13               *
-      *  Prev Amend No. CFT147  *CREATE    Date 14Jan13               *
+      *  Last Amend No. MD032880           Date 12Aug15               *
+      *  Prev Amend No. 259785             Date 14Jan13               *
+      *                 CFT147  *CREATE    Date 14Jan13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032880 - API: FTPCHGPD not updated by SPTR                 *
       *  259785 - Fix for CFT147.                                     *
       *           Base Ccy amounts calc'd from max value "other ccy"  *
       *           amounts are exceeding field size.  Add              *
@@ -53,33 +55,33 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       *
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       *
       ** Program, procedure and module names for parameters
       ** ==================================================
       *
- 
+
       ** +--------------------------------------+
       ** Î End of automatically included D-specsÎ
       ** Î =====================================Î
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** Î Manually included D-specs            Î
       ** Î =========================            Î
       ** +--------------------------------------+
- 
+
       *
       ** Work Variables
       *
@@ -103,12 +105,12 @@
      D PRTCD           S              7A
      D POPTN           S              7A
      D PCCY            S              7A
- 
+
       ** +--------------------------------------+
       ** Î Arrays and Data Structures           Î
       ** Î ==========================           Î
       ** +--------------------------------------+
- 
+
       *
       ** EXTERNAL DS FOR BANK DETAILS
       *
@@ -125,24 +127,24 @@
       ** Second DS for access programs, long data structure
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** Î Named constants                      Î
       ** Î ===============                      Î
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** Î Declared variables                   Î
       ** Î ==================                   Î
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** Î End of D-specs                       Î
       ** Î ==============                       Î
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** Î                                                                Î
       ** Î Initial processing is performed automatically: the *INZSR is   Î
@@ -153,9 +155,9 @@
       *
      C/EJECT
       *
-     C                   IF        W#SRTM = P#SRTM
+     C**********         IF        W#SRTM = P#SRTM                                          MD032880
      C                   EXSR      SRMAIN
-     C                   ENDIF
+     C**********         ENDIF                                                              MD032880
       *
      C                   EVAL      *INLR = *ON
       *

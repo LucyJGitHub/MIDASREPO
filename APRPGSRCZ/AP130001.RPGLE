@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD039105           Date 06Jun16               *
-      *  Prev Amend No. MD028229           Date 29Oct14               *
+      *  Last Amend No. MD031737           Date 27Jul17               *
+      *  Prev Amend No. MD039105           Date 06Jun16               *
+      *                 MD028229           Date 29Oct14               *
       *                 CCB024A  *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031737 - Housekeeping of ZATRNLOGPD is missing             *
       *  MD039105 - Data truncation encountered when trying to insert *
       *             CUSD MQ and SOAP transaction with UDF fields      *
       *  MD028229 - Added purging of 'C' records on T_APIMSG.         *
@@ -149,6 +151,19 @@
      C**********         READ      T_APIMSG                               99                MD039105
       **********                                                                            MD039105
      C**********         ENDDO                                                              MD039105
+                                                                                            MD039105
+      ** Check and delete if record is found in ZATRNLOGPD                                  MD039105
+      ** then delete record in T_APIMSG                                                     MD039105
+                                                                                            MD039105
+     C/EXEC SQL                                                                             MD039105
+     C+ DELETE FROM ZATRNLOGL8                                                              MD039105
+     C+ WHERE AAMSGLOGID IN                                                                 MD039105
+     C+ (                                                                                   MD039105
+     C+  SELECT MQMSID from T_APIMSG                                                        MD039105
+     C+  WHERE DATE(MQTMST) < :MidasConvDate AND                                            MD039105
+     C+  (MQSTAT = 'C' OR MQSTAT = 'P')                                                     MD039105
+     C+ )                                                                                   MD039105
+     C/END-EXEC                                                                             MD039105
                                                                                             MD039105
      C/EXEC SQL                                                                             MD039105
      C+ DELETE FROM T_APIMSG                                                                MD039105

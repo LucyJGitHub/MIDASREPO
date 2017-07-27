@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD033895           Date 15Apr15               *
-      *  Prev Amend No. MD031851           Date 25Jan15               *
+      *  Last Amend No. MD035433           Date 02Sep15               *
+      *  Prev Amend No. MD033895           Date 15Apr15               *
+      *                 MD031851           Date 25Jan15               *
       *                 MD031225           Date 10Dec14               *
       *                 MD027206           Date 19Aug14               *
       *                 MD025112           Date 11May14               *
@@ -93,6 +94,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035433 - System generated new PDCL instead of using old    *
+      *             one. Evaluate WRECI equals to 'D' for AYSIIN = 'Y'*
+      *             to correctly retrieve record of PDCL details.     *
       *  MD033895 - Password retrieval issue on LEC000456 during COB  *
       *  MD031851 - Unable to generate PDCL Y if the PDCL has no base *
       *             rate code.                                        *
@@ -1265,6 +1269,7 @@
 
       ** PDCL on PD Interest
 
+     C                   EVAL      WRECI = 'D'                                              MD035433
      C                   IF        WINT > 0
      C                   EVAL      WCPAM = WINT
      C                   EVAL      WPIIN = 'I'

@@ -11,8 +11,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2006           */
 /*                                                                   */
-/*       Last Amend No. MD026169           Date 04Apr14              */
-/*       Prev Amend No. MD025679A          Date 21Mar14              */
+/*       Last Amend No. MD034158           Date 04Jun15              */
+/*       Prev Amend No. MD026169           Date 04Apr14              */
+/*                      MD025679A          Date 21Mar14              */
 /*                      MD025679           Date 13Mar14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -22,6 +23,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD034158 - Job SCC007001 missing due to lock on SCBKJOBMON. */
+/*                  Deallocate SCBKJOBMON when MPHAS <> 'C'.         */
 /*       MD026169 - GO_ONL_OLP background job is processing          */
 /*                  full receiver chain                              */
 /*       MD025679A - API - OLPOSOA Locking Issue Performance Update  */
@@ -77,6 +80,9 @@
                           JOBQ(&LIB/INTERFACE) PRTDEV(*CURRENT) +
                           OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
                           RQSDTA('CALL SCC007001') INLLIBL(*JOBD)                       /*MD025679*/
+             ENDDO                                                                      /*MD034158*/
+             ELSE       CMD(DO)                                                         /*MD034158*/
+                DLCOBJ     OBJ((SCBKJOBMON *DTAQ *EXCLRD))                              /*MD034158*/
              ENDDO
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +

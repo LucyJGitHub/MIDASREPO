@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD045854           Date 25May17               *
-      *  Prev Amend No. AR1092517          Date 14Mar13               *
+      *  Last Amend No. MD046910           Date 25Jul17               *
+      *  Prev Amend No. MD045854           Date 25May17               *
+      *                 AR1092517          Date 14Mar13               *
       *                 AR1003955          Date 13Jul12               *
       *                 CSC054             Date 23Feb12               *
       *                 249585             Date 16May12               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046910 - Reversal of MD-45854 as part of fix MD-43023      *
       *  MD045854 - Batch Detail cannot be entered with message       *
       *             Batch Header already accepted. Removed CAP209     *
       *             conditioning from AR1092517 fix.                  *
@@ -198,6 +200,8 @@
      C*****CGL125        OREQ      'Y'                                             CSC054  AR1092517
      C*****CAP209        ANDEQ     'N'                                            AR1092517 MD045854
      C*****CAP209        OREQ      'Y'                                            AR1092517 MD045854
+     C     CAP209        ANDEQ     'N'                                                      MD046910
+     C     CAP209        OREQ      'Y'                                                      MD046910
      C     BRFRNT        ANDNE     *BLANKS                                                    CSC054
      C                   EXSR      SRProces
      C                   ENDIF                                                  CAP084
@@ -548,6 +552,30 @@
      C**********         EVAL      CAP209 = 'Y'                                   AR1092517 MD045854
      C**********         ENDIF                                                    AR1092517 MD045854
       **********                                                                  AR1092517 MD045854
+      *****************************************************************                     MD046910
+      ** Access SAR details file to see if CAP209 is installed.                             MD046910
+      *****************************************************************                     MD046910
+     C                   MOVE      'N'           CAP209            1                        MD046910
+     C                   CALL      'AOSARDR0'                                               MD046910
+     C                   PARM      *BLANKS       PRTCD                                      MD046910
+     C                   PARM      '*VERIFY'     POPTN                                      MD046910
+     C                   PARM      'CAP209'      PSARD                                      MD046910
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD046910
+      *                                                                                     MD046910
+     C                   IF        PRTCD <> *BLANKS AND                                     MD046910
+     C                             PRTCD <> '*NRF'                                          MD046910
+     C     *LOCK         IN        LDA                                                      MD046910
+     C                   EVAL      DBPGM = 'GLBITHVU'                                       MD046910
+     C                   EVAL      DBKEY = 'CAP209'                                         MD046910
+     C                   EVAL      DBFILE ='SCSARDPD'                                       MD046910
+     C                   EVAL      DBASE  = 5                                               MD046910
+     C                   OUT       LDA                                                      MD046910
+     C                   EXSR      *PSSR                                                    MD046910
+     C                   ENDIF                                                              MD046910
+      *                                                                                     MD046910
+     C                   IF        PRTCD = *BLANKS                                          MD046910
+     C                   EVAL      CAP209 = 'Y'                                             MD046910
+     C                   ENDIF                                                              MD046910
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

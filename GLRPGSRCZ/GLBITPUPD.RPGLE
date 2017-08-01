@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD042040           Date 10Oct16               *
-      *  Prev Amend No. MD033964           Date 07Oct16               *
+      *  Last Amend No. MD043023           Date 25Jul17               *
+      *  Prev Amend No. MD042040           Date 10Oct16               *
+      *                 MD033964           Date 07Oct16               *
       *                 MD039859           Date 11Aug16               *
       *                 MD033630A          Date 25May16               *
       *                 MD036967           Date 25May16               *
@@ -82,6 +83,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043023 - If batch is sent through interface with Auto      *
+      *             autorization set to 'Y', reject batch item if     *
+      *             'Hash item no. calculated' equals 'Hash item no.  *
+      *             input'.                                           *
+      *           - Applied for MD-46910
       *  MD042040 - Ensure delay loop processed for API transactions. *
       *           - Ensure correct chain for header update.           *
       *  MD033964 - Batch Header must not be created automatically    *
@@ -1553,6 +1559,16 @@ E1   C                   ENDIF                                                  
      C                   MOVE      *BLANKS       BRBIUF                                       CAP084
      C                   EVAL      BRWSID = *blanks                                         BUG1175R
      C                   ENDIF                                                                CAP084
+      *                                                                                     MD043023
+      ** If batch is auto-authorized and number of items calculated is now greater than     MD043023
+      ** number of items input, reject batch item as batch is being authorized.             MD043023
+     C     BRAUTH        IFEQ      'Y'                                                      MD043023
+     C     BRHINC        ANDGT     BRHINI                                                   MD043023
+     C                   EVAL      PRTCD = 'GLX1005'                                        MD043023
+     C                   EVAL      *INLR = *ON                                              MD043023
+     C                   RETURN                                                             MD043023
+     C                   ENDIF                                                              MD043023
+      *                                                                                     MD043023
       *                                                                                      BUG3085
       ** If Security on Journal Entry is *ON, set Last Amend                                 BUG3085
       ** User field to system user.  Use correct user field if java user                     BUG3085

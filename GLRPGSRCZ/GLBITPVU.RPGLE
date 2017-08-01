@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD027817           Date 06Apr17               *
-      *  Prev Amend No. MD042436           Date 07Nov16               *
+      *  Last Amend No. MD043023           Date 25Jul17               *      
+      *  Prev Amend No. MD027817           Date 06Apr17               *
+      *                 MD042436           Date 07Nov16               *
       *                 MD033964           Date 07Oct16               *
       *                 MD039859           Date 21Jul16               *
       *                 AR851481           Date 27Oct15               *
@@ -90,6 +91,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043023 - (1) access header with Front Office Id only if    *
+      *             it is non blank.                                  *
+      *             (2) if Front Office Id is blank, use batch number *
+      *             instead to access batch header to retrieve status *
+      *             for MD042436.                                     *
+      *             (3) if batch is sent through interface with Auto  *
+      *             autorization set to 'Y', reject batch item if     *
+      *             'Hash item no. calculated' equals 'Hash item no.  *
+      *             input'.                                           *
+      *           - Applied for MD-46910                              *      
       *  MD027817 - Values of Additional Info and Multicash Narrative *
       *             are lost during amendment. Prevent clearing of    *
       *             the fields during edit.                           *
@@ -572,6 +583,9 @@
       ** Do not allow blank batch number with no corresponding front office                AR1092119
       ** ID in JE Headers file for transactions coming from 3rd party                      AR1092119
       *                                                                                    AR1092119
+      ** Access header with Front Office Id if non blank only                               MD043023
+     C                   MOVEL     'N'           HeaderFound       1                        MD043023
+     C     APFOTRANID    IFNE      *BLANKS                                                  MD043023
      C     APFOTRANID    CHAIN     GLJENHL3                           31                   AR1092119
      C     *IN31         IFEQ      *ON                                                     AR1092119
      C     DDBTNB        ANDEQ     *BLANKS                                                 AR1092119
@@ -580,6 +594,9 @@
      C                   MOVEL     '5016871'     MsgIdArr(1)                               AR1092119
      C                   ELSE                                                              AR1092119
       *                                                                                       249585
+     C     *IN31         IFEQ      *OFF                                                     MD043023
+     C                   EVAL      HeaderFound = 'Y'                                        MD043023
+     C                   ENDIF                                                              MD043023
       ** Retrieve original batch item details                                                 249585
       *                                                                                       249585
      C                   EVAL      WBTNB = DDBTNB                                             249585
@@ -591,10 +608,36 @@
      C                   EVAL      B2AFRT = BTAFRT                                            249585
      C                   ENDIF                                                                249585
      C                   ENDIF                                                             AR1092119
+     C                   ENDIF                                                              MD043023
+      *                                                                                     MD043023
+      ** If Front Office Id is blank or Front Office Id is not blank and it was not found   MD043023
+     C     APFOTRANID    IFEQ      *BLANKS                                                  MD043023
+     C     APFOTRANID    ORNE      *BLANKS                                                  MD043023
+     C     *IN31         ANDEQ     *ON                                                      MD043023
+      ** use batch number to access header                                                  MD043023
+     C     DDBTNB        CHAIN(N)  GLJENHL0                           22                    MD043023
+     C     *IN22         IFEQ      *OFF                                                     MD043023
+     C                   EVAL      HeaderFound = 'Y'                                        MD043023
+     C                   ENDIF                                                              MD043023
+     C                   ENDIF                                                              MD043023
       *                                                                                     MD042436
       ** Only process is batch status is not authorised                                     MD042436
       *                                                                                     MD042436
-     C     BRBTSF        IFNE      'A'                                                      MD042436
+     C*****BRBTSF        IFNE      'A'                                             MD042436 MD043023
+      ** Do not process if header was found and batch is already accepted                   MD043023
+     C     HeaderFound   IFEQ      'Y'                                                      MD043023
+     C     BRBTSF        ANDEQ     'A'                                                      MD043023
+      ** or if header was found and batch is auto authorize and item no. calculated is      MD043023
+      ** greater or equal to item no. input                                                 MD043023
+     C     HeaderFound   OREQ      'Y'                                                      MD043023
+     C     BRAUTH        ANDEQ     'Y'                                                      MD043023
+     C     BRHINC        ANDGE     BRHINI                                                   MD043023
+                                                                                            MD043023
+     C                   MOVEL     'DDBTNB'      FldNameArr(1)                              MD043023
+     C                   MOVEL     'GLX1005'     MsgIDArr(1)                                MD043023
+     C                   MOVE      'E'           DDDLIT                                     MD043023
+     C                   Z-ADD     1             Idx                                        MD043023
+     C                   ELSE                                                               MD043023
       *
       ** Process transaction.
       ** Check to see whether the header is in use
@@ -688,11 +731,11 @@
       *                                                                                     MD042436
       ** Else error since batch status already authorised                                   MD042436
       *                                                                                     MD042436
-     C                   ELSE                                                               MD042436
-     C                   MOVEL     'DDBTNB'      FldNameArr(1)                              MD042436
-     C                   MOVEL     'GLX1005'     MsgIDArr(1)                                MD042436
-     C                   MOVE      'E'           DDDLIT                                     MD042436
-     C                   Z-ADD     1             Idx                                        MD042436
+     C**********         ELSE                                                      MD042436 MD043023
+     C**********         MOVEL     'DDBTNB'      FldNameArr(1)                     MD042436 MD043023
+     C**********         MOVEL     'GLX1005'     MsgIDArr(1)                       MD042436 MD043023
+     C**********         MOVE      'E'           DDDLIT                            MD042436 MD043023
+     C**********         Z-ADD     1             Idx                               MD042436 MD043023
      C                   ENDIF                                                              MD042436
       *
       ** If errors exist, set Valid Indicator to 'N'; otherwise, set
@@ -1067,6 +1110,12 @@
      C                   MOVE      'E'           DDDLIT                                     MD033964
      C                   Z-ADD     1             Idx                                        MD033964
      C                   ENDIF                                                              MD033964
+     C                   IF        PRTCD = 'GLX1005'                                        MD043023
+     C                   MOVEL     'DDBTNB'      FldNameArr(1)                              MD043023
+     C                   MOVEL     'GLX1005'     MsgIDArr(1)                                MD043023
+     C                   MOVE      'E'           DDDLIT                                     MD043023
+     C                   Z-ADD     1             Idx                                        MD043023
+     C                   ENDIF                                                              MD043023
      C/COPY WNCPYSRC,GLBITPXC06
       *
      C     PRTCD         IFNE      *BLANKS
@@ -1074,6 +1123,7 @@
      C     PRTCD         ANDNE     'CGL0002'                                                  TCA102
      C     PRTCD         ANDNE     'CGL0003'                                                  TCA102
      C     PRTCD         ANDNE     'NOHEADR'                                                MD033964
+     C     PRTCD         ANDNE     'GLX1005'                                                MD043023
      C                   MOVEL     '0'           APIRetc                                      TCA102
      C                   IF        (CSC022 = 'N')                                             CSC022
      C                             OR (CSC022 = 'Y') AND (WCMTSK = 'N')                       CSC022
@@ -1093,6 +1143,7 @@
      C     PRTCD         IFNE      *BLANKS
      C     PRTCD         ANDNE     '*RECUPD'
      C     PRTCD         ANDNE     'NOHEADR'                                                MD033964
+     C     PRTCD         ANDNE     'GLX1005'                                                MD043023
      C                   EXSR      *PSSR
      C                   ENDIF
       *

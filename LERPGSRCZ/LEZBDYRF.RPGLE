@@ -17,10 +17,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. CLE141  *CREATE    Date 01Mar16               *
+      *  Last Amend No. MD047042           Date 02Aug17               *
+      *  Prev Amend No. CLE141  *CREATE    Date 01Mar16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047042 - Component LEC06A failed during COB due to decimal *
+      *             data error caused by incorrect value received.    *
+      *             Changed the data type of PRFDAY from packed to    *
+      *             zoned decimal.                                    *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions - Phase 2                      *
       *                                                               *
@@ -71,7 +76,8 @@
 
       ** Entry Parameters
      D PDAYNO          S              5  0
-     D PRFDAY          S              2  0
+     D*PRFDAY***       S              2  0                                                  MD047042
+     D PRFDAY          S              2S 0                                                  MD047042
      D PCURR           S             30
      D PLOCN           S             30
      D PMODE           S              1

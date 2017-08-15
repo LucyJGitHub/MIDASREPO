@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD033971           Date 05Aug15              */
-/*       Prev Amend No. MD031262           Date 13Feb15              */
+/*       Last Amend No. MD046737           Date 15Aug17              */
+/*       Prev Amend No. MD033971           Date 05Aug15              */
+/*                      MD031262           Date 13Feb15              */
 /*                      AR1092065A         Date 15Mar13              */
 /*                      AR1092065          Date 28Feb13              */
 /*                      AR1089839          Date 19Feb13              */
@@ -74,6 +75,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046737 - User gets kicked back to command line when       */
+/*                  starting COB.                                    */
 /*       MD033971 - When COB is autoscheduled, unauthorized          */
 /*                  transactions are not checked.                    */
 /*       MD031262 - CCB014 Autoschedule 'Y'.                         */
@@ -204,12 +207,12 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /*/COPY WNCPYSRC,SCC0400INT                                          */
              DCL        VAR(&CCB014) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CCB014*/
              DCL        VAR(&DLYCOB) TYPE(*CHAR) LEN(256)                                 /*CCB014*/
              DCL        VAR(&SCHREQ) TYPE(*CHAR) LEN(1)                                   /*CCB014*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')
@@ -257,23 +260,23 @@
              DCL        VAR(&MSGSTAT) TYPE(*CHAR) LEN(5)                                  /*CCB023*/
              DCL        VAR(&LOCK) TYPE(*CHAR) LEN(1) VALUE('N')                          /*CCB023*/
 /*/COPY WNCPYSRC,SCH00004                                            */
- 
+
 /*/COPY WNCPYSRC,SCC0400011                                          */
              DCLF       FILE(SDAULGPD)                                                    /*CSD012*/
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*/COPY WNCPYSRC,SCC0400MPS                                          */
- 
+
 /* Access PF/SDMMODPD to determine which modules are live */
- 
+
              CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &MMOD)
- 
+
 /*  Database error handling  */
- 
+
              IF         COND(&RTCD *NE '       ') THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
@@ -300,14 +303,14 @@
                CALL       PGM(CBC0007) PARM('*LIBL' 'MSPECIAL' +
                           '*MSGQ' '180' '3' ' ')                                          /*CCB014*/
              ENDDO                                                                        /*CCB014*/
- 
+
 /* First allocate the message queues */
- 
+
              ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL)) WAIT(9999)
              SNDPGMMSG  MSG('TERM  ') TOMSGQ(MSPECIAL)
              SNDPGMMSG  MSG('Input cycle termination executing') +
                           TOMSGQ(MRUNQ)
- 
+
 /************CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)                                      */ /*CPK017*/
 /************RCVMSG     MSGQ(MSTATUS)                                                  */ /*CPK017*/
 /*/COPY WNCPYSRC,SCC0400005                                          */
@@ -318,31 +321,31 @@
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(EXIT))                                                 /*MD033971*/
              ENDDO                                                                        /*CCB014*/
- 
+
  LOOP1:      CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)
              RCVMSG     MSGQ(MSTATUS) RMV(*NO) MSG(&STATMSG)
- 
+
              IF         COND(&STATMSG *NE '     ') THEN(DO)
- 
+
 /* Call SCC0010 to inform user that job cannot be run now */
- 
+
  LOOP2:         CHGVAR     VAR(&RPY) VALUE('Y')
- 
+
                 RTVMSG     MSGID(SCM0026) MSGF(MIDASMSG) MSG(&MESSAGE)
                 CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)
                 CHGDTAARA  DTAARA(MIDASMSG (2 1)) VALUE('1')
                 CALL       PGM(SCC0010) PARM('SCC0400' 'RETRY' &RPY)
- 
+
                 IF         COND((&RPY *EQ 'Y') *OR (&RPY *EQ 'y')) +
                              THEN(GOTO CMDLBL(LOOP1))
                 IF         COND((&RPY *EQ 'N') *OR (&RPY *EQ 'n')) +
                              THEN(GOTO CMDLBL(EXIT))
- 
+
              ELSE       CMD(GOTO CMDLBL(LOOP2))
- 
+
              ENDDO
 /*/COPY WNCPYSRC,SCC0400012                                          */
- 
+
              DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
                                                                                /*136442*/ /*CPK014*/
 /* Check if MIDASSTS job is active */                                                     /*CCB023*/
@@ -451,7 +454,7 @@ EXIT2:                                                                          
 /* The following processing has been replaced by CoB component APC0400. */                /*CPK014*/
 /*                                                                      */                /*CPK014*/
 /************************************************************************/                /*CPK014*/
- 
+
 /***Check*if*the*API*Switchable*Feature*is*on*                                 /*136442*/ /*CPK014*/
 /************CHGVAR     VAR(&SSARD) VALUE('CAP002')                            /*136442*/ /*CPK014*/
 /************CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')                           /*139764*/ /*CPK014*/
@@ -470,7 +473,7 @@ EXIT2:                                                                          
 /*********** ENDAPIDBU  SYSTEM(&PREFIX) LDNI(Y) DEAM(Y) NASP(Y) +             */
 /***********              NASS(Y) FXDL(Y) FRA(Y) SIRS(Y) CIRS(Y) +            */
 /***********          DPMV(Y) TRAD(Y) TRAN(Y) INTC(Y) ***/ /*CAP004*/ /*CAP033*/
- 
+
 /*********** ENDAPIDBU  SYSTEM(&PREFIX) LDNI(Y) DEAM(Y) NASP(Y) +             */
 /***********              NASS(Y) FXDL(Y) FRA(Y) SIRS(Y) CIRS(Y) +            */
 /***********              DPMV(Y) TRAD(Y) TRAN(Y) INTC(Y) FWRT(Y) +           */
@@ -498,31 +501,31 @@ EXIT2:                                                                          
 /**********               DPMV(Y) TRAD(Y) TRAN(Y) INTC(Y) FWRT(Y) +                       /*CAP057*/
 /**********               INTR(Y) PFDM(Y) BITH(Y) BITP(Y) +                               /*CAP057*/
 /**********               IPAY(Y) SECS(Y) SEDE(Y)                              /*CAP140*/ /*CAP057*/
- 
+
 /**********  ENDAPIDBU  SYSTEM(&PREFIX) LDNI(Y) DEAM(Y) NASP(Y) +                         /*CAP038*/
 /**********               NASS(Y) FXDL(Y) FRA(Y) SIRS(Y) CIRS(Y) +                        /*CAP038*/
 /**********               DPMV(Y) TRAD(Y) TRAN(Y) INTC(Y) FWRT(Y) +                       /*CAP038*/
 /**********               INTR(Y) PRCS(Y) PFDM(Y) BITH(Y) BITP(Y) +                       /*CAP038*/
 /**********               OPAY(Y) CUSD(Y) AMAD(Y) IPAY(Y) SECS(Y) +                       /*CAP038*/
 /**********               SECD(Y) SEDE(Y) SPTR(Y)                              /*CAP057*/ /*CAP038*/
- 
+
 /**********  ENDAPIDBU  SYSTEM(&PREFIX) LDNI(Y) DEAM(Y) NASP(Y) +                         /*CAP042*/
 /**********               NASS(Y) FXDL(Y) FRA(Y) SIRS(Y) CIRS(Y) +                        /*CAP042*/
 /**********               DPMV(Y) TRAD(Y) TRAN(Y) INTC(Y) FWRT(Y) +                       /*CAP042*/
 /**********               INTR(Y) PRCS(Y) PFDM(Y) BITH(Y) BITP(Y) +                       /*CAP042*/
 /**********               OPAY(Y) CUSD(Y) AMAD(Y) IPAY(Y) SECS(Y) +                       /*CAP042*/
 /**********               SECD(Y) SEDE(Y) SPTR(Y) BSRT(Y)                      /*CAP038*/ /*CAP042*/
- 
+
 /************ENDAPIDBU  SYSTEM(&PREFIX) LDNI(Y) DEAM(Y) NASP(Y) +                         /*CPK014*/
 /************             NASS(Y) FXDL(Y) FRA(Y) SIRS(Y) CIRS(Y) +                        /*CPK014*/
 /************             DPMV(Y) TRAD(Y) TRAN(Y) INTC(Y) FWRT(Y) +                       /*CPK014*/
 /************             INTR(Y) PRCS(Y) PFDM(Y) BITH(Y) BITP(Y) +                       /*CPK014*/
 /************             OPAY(Y) CUSD(Y) AMAD(Y) IPAY(Y) SECS(Y) +                       /*CPK014*/
 /************             SECD(Y) SEDE(Y) SPTR(Y) BSRT(Y) FUND(Y)              /*CAP042*/ /*CPK014*/
- 
+
 /*/COPY WNCPYSRC,SCC0400015                                          */
 /**********  DLYJOB     DLY(30) **/                                            /*CAP004*/ /*CPK014*/
- 
+
 /************ENDDO                                                             /*136442*/ /*CPK014*/
                                                                                /*CDE001*/ /*CPK014*/
 /************************************************************************/                /*CPK014*/
@@ -530,7 +533,7 @@ EXIT2:                                                                          
 /* The following processing has been replaced by CoB component DEC0400. */                /*CPK014*/
 /*                                                                      */                /*CPK014*/
 /************************************************************************/                /*CPK014*/
- 
+
 /***Check*if*the*CRM*Limits*Switcahable*Feature*is*On*                         /*CDE001*/ /*CPK014*/
 /************CHGVAR     VAR(&SSARD) VALUE('CDE001')                            /*CDE001*/ /*CPK014*/
 /************CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')                           /*CDE001*/ /*CPK014*/
@@ -545,24 +548,24 @@ EXIT2:                                                                          
 /************   CALL       PGM(DEC0040) PARM('C')                              /*180491*/ /*CPK014*/
 /**********     DLYJOB     DLY(30) **/                                         /*CDE001*/ /*CPK014*/
 /************ENDDO                                                             /*CDE001*/ /*CPK014*/
- 
+
 /************IF         COND((&CAP002 *EQ 'Y') +                                          /*CPK014*/
 /************            *OR (&CDE001 *EQ 'Y')) THEN(DO)                       /*CPK014*/ /*CPK014*/
 /************   DLYJOB     DLY(30)                                             /*CPK014*/ /*CPK014*/
 /************ENDDO                                                             /*CPK014*/ /*CPK014*/
 /*/COPY WNCPYSRC,SCC0400014                                          */
- 
+
 /* Access PF/SCSARDPD to determine if CEU002 is switched on. */     /* 152046 */
- 
+
              CHGVAR     VAR(&SRTCD) VALUE('       ')                /* 152046 */
              CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')                /* 152046 */
              CHGVAR     VAR(&SSARD) VALUE('CEU002')                 /* 152046 */
- 
+
              CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD +
                           &SSCSARD)                                 /* 152046 */
- 
+
                 IF         COND(&SRTCD *EQ '       ') THEN(DO)      /* 152046 */
- 
+
 /* Start commitment control */                                                            /*CPK016*/
 /************STRCMTCTL  LCKLVL(*CHG)                           /*152046 CPK009*/
 /**********  STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB) */                         /*CPK009*/ /*CPK016*/
@@ -573,13 +576,13 @@ EXIT2:                                                                          
              ENDCMTCTL                                              /* 152046 */
              RCLRSC                                                                    /*AR1005269*/
              MONMSG     MSGID(CPF0000)                                                 /*AR1005269*/
- 
- 
+
+
                 IF         COND(&RTCD *NE '       ') THEN(GOTO +
                              CMDLBL(ABNOR))                         /* 152046 */
- 
+
              ENDDO      /* CEU002 is switched on */                 /* 152046 */
- 
+
 /*/COPY WNCPYSRC,SCC0400010                                          */
 /**/                                                                  /*CGL009*/
 /*    Check if Fontis IAT/TPP Interface (CGL009) is active            /*CGL009*/
@@ -706,24 +709,24 @@ LOOP3:                                                                          
                                                                                           /*CSD012*/
 /*/COPY WNCPYSRC,SCC0400013                                          */
 /* Check for unauthorised payments (if FT is present) */
- 
+
              IF         COND((%SUBSTRING(&MMOD 39 1)) *EQ 'Y') THEN(DO)
- 
+
 /*/COPY WNCPYSRC,SCH00031                                            */
                 CALL       PGM(FT0809) PARM(&HCONT)                                       /*CFT003*/
- 
+
                 IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +
                              CMDLBL(ABNOR))                                               /*CFT003*/
- 
+
                 IF         COND(&HCONT *EQ 'Y') THEN(DO)                                  /*CFT003*/
- 
+
                   SNDPGMMSG  MSG('(Payments have been reported they +
                           need an authorisation before processing can +
                           continue''') TOMSGQ(MOPERQ)                                     /*CFT003*/
- 
+
 /* Call SCC0010 to send outstanding payments require */
 /* authorisation screen                              */
- 
+
 /**********       RTVMSG     MSGID(SCM0091) MSGF(MIDASMSG) +
                                    MSG(&MESSAGE)                     */        /*AR1092065A CFT003*/
                   RTVMSG     MSGID(SCM0042) MSGF(MIDASMSG) +
@@ -737,15 +740,15 @@ LOOP3:                                                                          
                   CHGDTAARA  DTAARA(MIDASMSG (15 1)) VALUE('1')
                   CALL       PGM(SCC0010) PARM('SCC0400' 'ENTER' +
                                    &NOREPLY)                                              /*CFT003*/
- 
+
                   GOTO       CMDLBL(EXIT)                                                 /*CFT003*/
                 ENDDO                                                                     /*CFT003*/
- 
+
                 CALL       PGM(FTC0230) PARM(&FTPARM &RSEQ &RLEV &RENT)
- 
+
                 IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +
                              CMDLBL(ABNOR))
- 
+
 /*/COPY WNCPYSRC,SCC0400009                                          */
                 IF         COND(&FTPARM *EQ 'Y') THEN(DO)
 /*/COPY WNCPYSRC,SCC0400004                                          */
@@ -755,16 +758,16 @@ LOOP3:                                                                          
                                                                                         /*MD031262*/
              IF         COND((&CCB014 *EQ 'Y') *AND (&SCHREQ *EQ +
                           'Y')) THEN(GOTO CMDLBL(EXIT))                                 /*MD031262*/
- 
+
 /* Allow IC termination to continue with un-aut payments? */
- 
+
                    CHGVAR     VAR(&SRTCD) VALUE('       ')
                    CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')
                    CHGVAR     VAR(&SSARD) VALUE('S01480')
- 
+
                    CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD +
                                 &SSCSARD)
- 
+
                    IF         COND((&SRTCD *EQ '       ') *AND +
                                 (&SRTCD *NE '*NRF   ')) THEN(DO)
                       CHGVAR     VAR(&MSGDTA) VALUE(' ')
@@ -777,23 +780,23 @@ LOOP3:                                                                          
                         CHGVAR     VAR(&REOPN) VALUE('Y')                                 /*CCB014*/
                         GOTO       CMDLBL(TAGUSC01)                                       /*CCB014*/
                       ENDDO                                                               /*CCB014*/
- 
+
                       CALL       PGM(MEC1027) PARM(&RTN_CODE +
                                    'FTM2355' 'FTUSRMSG ' &MSGDTA +
                                    'OPTION    ' &REOPN 'FT0230' 'Y')
 /*/COPY WNCPYSRC,SCC0400007                                          */
 TAGUSC01:                                                                                 /*CCB014*/
- 
+
                       IF         COND(&REOPN *NE 'Y') THEN(DO)
                          GOTO       CMDLBL(EXIT)
                       ENDDO
- 
+
                    ENDDO
                    ELSE       CMD(DO)
- 
+
 /* Call SCC0010 to send outstanding payments require */
 /* authorisation screen                              */
- 
+
                       RTVMSG     MSGID(SCM0042) MSGF(MIDASMSG) +
                                    MSG(&MESSAGE)
                       CHGDTAARA  DTAARA(MIDASMSG (251 50)) +
@@ -805,24 +808,24 @@ TAGUSC01:                                                                       
                       CHGDTAARA  DTAARA(MIDASMSG (15 1)) VALUE('1')
                       CALL       PGM(SCC0010) PARM('SCC0400' 'ENTER' +
                                    &NOREPLY)
- 
+
                       GOTO       CMDLBL(EXIT)
                    ENDDO
                 ENDDO
 /*/COPY WNCPYSRC,SCH00030                                            */
              ENDDO
- 
+
 /* Check if CRE401 is installed */                                                        /*CRE401*/
              CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*CRE401*/
              CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                      /*CRE401*/
              CHGVAR     VAR(&PSARD) VALUE('CRE401')                                       /*CRE401*/
              CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &DSFDY)                   /*CRE401*/
              IF         COND(&PRTCD *EQ '       ') THEN(DO)                               /*CRE401*/
- 
+
 /* Check if there are unauthorised sweeps */                                              /*CRE401*/
              CALL       PGM(REC000334) PARM(&RERTCD &RSEQ &RLEV &RENT)                    /*CRE401*/
                IF       COND(&RERTCD *EQ 'Y') THEN(DO)                                    /*CRE401*/
- 
+
 /* Call SCC0010 to send 'Unauthorised Sweeps Accounts require */                          /*CRE401*/
 /* authorisation' screen */                                                               /*CRE401*/
                       RTVMSG     MSGID(SCM0090) MSGF(MIDASMSG) +
@@ -836,13 +839,13 @@ TAGUSC01:                                                                       
                       CHGDTAARA  DTAARA(MIDASMSG (15 1)) VALUE('1')                       /*CRE401*/
                       CALL       PGM(SCC0010) PARM('SCC0400' 'ENTER' +
                                    &NOREPLY)                                              /*CRE401*/
- 
+
                       GOTO       CMDLBL(EXIT)                                             /*CRE401*/
                ENDDO                                                                      /*CRE401*/
              ENDDO                                                                        /*CRE401*/
 /* Check for any incomplete end of centre processing runs */
 /* in Futures and Options                                 */
- 
+
              IF         COND((%SUBSTRING(&MMOD 41 1)) *EQ 'Y') THEN(DO)
                 CALL       PGM(FF0680) PARM(&EOCACT)
                 IF         COND(&EOCACT) THEN(GOTO ABNOR)
@@ -852,7 +855,7 @@ TAGUSC01:                                                                       
 /* The following processing has been replaced by CoB component PLC0400. */                /*CPK014*/
 /*                                                                      */                /*CPK014*/
 /************************************************************************/                /*CPK014*/
- 
+
 /***Check*if*Midas-Plato*Real-time*interface*is*On*                            /*192605*/ /*CPK014*/
 /************CHGVAR     VAR(&SSARD) VALUE('CPL005')                            /*192605*/ /*CPK014*/
 /************CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')                           /*192605*/ /*CPK014*/
@@ -871,7 +874,7 @@ TAGUSC01:                                                                       
                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                              CMDLBL(ABNOR))
              ENDDO
- 
+
 /* Access switchable features file to check if CDL008 is on */        /*CDL008*/
                                                                       /*CDL008*/
              CHGVAR     VAR(&SRTCD) VALUE('       ')                  /*CDL008*/
@@ -944,7 +947,7 @@ TAGUSC01:                                                                       
 /* The following processing has been replaced by CoB component SDC1400. */                /*CPK014*/
 /*                                                                      */                /*CPK014*/
 /************************************************************************/                /*CPK014*/
- 
+
 /**Access*switchable*features*file*to*check*if*CSD006*is*on**/                 /*CSD006*/ /*CPK014*/
 /************                                                                  /*CSD006*/ /*CPK014*/
 /************CHGVAR     VAR(&SRTCD) VALUE('       ')                           /*CSD006*/ /*CPK014*/
@@ -984,21 +987,23 @@ TAGUSC01:                                                                       
 /**********  CHGDTAARA  DTAARA(MPHAS (1 1)) VALUE('C')               */        /*CCB020 AR1092065A*/
 /**********  SCWRTJREG  EVENT(MPHAS) FLAG(C) TEXT('MPHAS changed +   */        /*CCB020 AR1092065A*/
 /**********               from A to C')                              */        /*CCB020 AR1092065A*/
- 
+             CHGDTAARA  DTAARA(MPHAS (1 1)) VALUE('B')                                  /*MD046737*/
+             SCWRTJREG  EVENT(MPHAS) FLAG(B) TEXT('MPHAS changed from A to B')          /*MD046737*/
+
              TFRCTL     PGM(CBRUN)
- 
+
 /*/COPY WNCPYSRC,SCC0400MPE                                          */
- 
+
              GOTO       CMDLBL(END)
- 
+
  EXIT:       DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              GOTO       CMDLBL(END)
 /*                                                                   /*S01408*/
 /*/COPY WNCPYSRC,SCC0400001                                          /*S01408*/
 /*                                                                   /*S01408*/
- 
+
  ABNOR:
 /* An abnormal message has been issued and to prevent */
 /* further errors  being  sent to the ABNOR tag by    */
@@ -1006,46 +1011,46 @@ TAGUSC01:                                                                       
 /* executable code each of the  following  lines  are */
 /* individually  monitored  to  prevent  any  further */
 /* errors which may occur from causing a loop.        */
- 
+
 /*/COPY WNCPYSRC,SCC0400ERR                                          */
- 
+
              SNDPGMMSG  MSG('Program SCC0400 ended abnormally - job +
                           cancelled') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
 /*                                                                   /*S01408*/
 /*/COPY WNCPYSRC,SCC0400003                                          /*S01408*/
 /*                                                                   /*S01408*/
- 
+
 /* Remove message from MSPECIAL */
- 
+
              ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              RCVMSG     MSGQ(MSPECIAL)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              SIGNOFF    LOG(*LIST)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
- 
+
+
  END:
 /*/COPY WNCPYSRC,SCC0400END                                          */
- 
+
              ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL)) WAIT(9999)
- 
+
              CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
- 
+
              RCVMSG     MSGQ(MSPECIAL)
- 
+
              DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
- 
+
              ENDPGM

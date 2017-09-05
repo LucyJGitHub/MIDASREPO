@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD046969           Date 02Sep17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 MD030621           Date 26Feb15               *
       *                 MD032052           Date 23Jan15               *
@@ -123,6 +124,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046969 - Inserted PDCL X and Y combined via SOAP or Manual *
+      *             Input will leave the PDCL Y loan in WIP. Buffer is*
+      *             returned without the @DEPI value misaligning the  *
+      *             position for the Auto-Auth field.                 *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions                                *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -1400,6 +1405,7 @@
      C                                               + TranInSix                            MD020605
      C                                               + TranInSeven                            CLE141
      C                                               + ##RECS + ##PAYS                      MD020605
+     C                                               + @DEPI                                MD046969
      C                                               + InfData + RegData                    MD020605
      C                                               + ExtData                              MD020605
      C                   ENDIF                                                              MD020605
@@ -1422,6 +1428,7 @@
      C                                               + ##RECS + ##PAYS          BUG2480
      C**********                                     + ExtData                        BUG2480 CAP086
      C**********                                     + InfData + ExtData              CAP086  CER001
+     C                                               + @DEPI                                MD046969
      C                                               + InfData + RegData                      CER001
      C                                               + ExtData                                CER001
      C                   ENDIF                                                               BUG4685

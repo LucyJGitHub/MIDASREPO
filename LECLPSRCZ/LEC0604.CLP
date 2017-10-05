@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
-/*       Last Amend No. AR786878           Date 05Jun13              */
-/*       Prev Amend No. CCB022B            Date 06Aug12              */
+/*       Last Amend No. MD046161           Date 09Aug17              */
+/*       Prev Amend No. AR786878           Date 05Jun13              */
+/*                      CCB022B            Date 06Aug12              */
 /*                      AR1080820          Date 26Jan13              */
 /*                      AR544186           Date 01Aug12              */
 /*                      AR567199           Date 01Aug12              */
@@ -44,6 +45,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046161 - Database error on COB component LEC60A.         */
 /*       AR786878 - New processing for manual repayment and         */
 /*                  repayment schedule for PDCL's. (Child:AR786879) */
 /*       CCB022B - COB Restructure - COB File Manager                */
@@ -334,7 +336,9 @@
 /**/
                 IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
 /**/
-             IF         COND(&RERUN *EQ '      ') THEN(DO)                                /*CLE134*/
+/**********  IF         COND(&RERUN *EQ '      ') THEN(DO)   */              /*CLE134*/ /*MD046161*/
+             IF         COND((&RERUN *EQ '      ') *AND (&CSEQ *EQ +
+                          9)) THEN(DO)                                                  /*MD046161*/
              CPYF       FROMFILE(LEFEED) TOFILE(LEFEEDAC) +
                           MBROPT(*REPLACE) INCREL((*IF FELCHD *EQ +
                           &RUNDX)) FMTOPT(*MAP *DROP)                 /*094398*/
@@ -342,7 +346,9 @@
                           FILE(LEFEEDAC))                             /*094398*/
              ENDDO                                                                        /*CLE134*/
                                                                                         /*AR567199*/
-             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                              /*AR567199*/
+/**********  IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)   */            /*AR567199*/ /*MD046161*/
+             IF         COND((&RERUN *EQ 'NEWCOB') *OR (&CSEQ *EQ +
+                          19)) THEN(DO)                                                 /*MD046161*/
                 CPYF       FROMFILE(LEFEED) TOFILE(LEFEEDAC) +
                              MBROPT(*REPLACE) INCREL((*IF FELCHD *EQ +
                              &RUNDX) (*AND FERECI *NE '*')) +

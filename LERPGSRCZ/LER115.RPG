@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD031473A          Date 14Dec16               *
-      *  Prev Amend No. MD031473           Date 24Feb16               *      
+      *  Last Amend No. MD046351           Date 23Aug17               *
+      *  Prev Amend No. MD031473A          Date 14Dec16               *
+      *                 MD031473           Date 24Feb16               *
       *                 MD036596           Date 24Jul17               *
       *                 AR1007106          Date 24Jul17               *
       *                 MD043383           Date 30Mar17               *
@@ -176,16 +177,19 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD046351 - ROUNDING AND TRUNCATION IN FEE ACCRUAL            *
+      *             calculations due to mult/div using 15,9 fields    *
+      *             being placed into 13,0/15,0 result fields.        *
       *  MD031473A - Revise AVCALL so that checking for rate changes  *
       *              is only applied for calculation type 97 and 98.  *
-      *  MD031473 - LE: Incorrect fee accrual calculation (rate chg)  *      
+      *  MD031473 - LE: Incorrect fee accrual calculation (rate chg)  *
       *  MD036596 - Reverse fix MD022296.                             *
       *  AR1007106 - Error in Fee Details Enquiry. Reverse codes of   *
       *              fix BUG23230 and part of fix BUG23523 to get     *
       *              the right Available Amount for the fee period    *
       *              in parallel to LER135.                           *
       *              (Child: AR1007107)                               *
-      *            - Applied for MD036596.
+      *            - Applied for MD036596.                            *
       *  MD043383 - Display only the fee maturity for matured fee.    *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
@@ -7611,18 +7615,34 @@
       ** if based on average use WDAYS                                                        204320
       *                                                                                       204320
      C           FECALC    IFEQ 6                                                           BUG21892
-     C                     MULT WDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C                     MULT WDAYS     WTOT                            BH3414
-     C                     ENDIF                                                            BUG21892
-     C                     ELSE                                                               204320
-     C           FECALC    IFEQ 6                                                           BUG21892
-     C                     MULT NDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C                     MULT NDAYS     WTOT                                                204320
-     C                     ENDIF                                                            BUG21892
-     C                     ENDIF                                                              204320
-     C                     DIV  WCBS      WTOT      H                     BH3414
+     C**********           MULT WDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C**********           MULT WDAYS     WTOT                                       BH3414 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ELSE                                                      204320 MD046351
+     C********** FECALC    IFEQ 6                                                  BUG21892 MD046351
+     C**********           MULT NDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C**********           MULT NDAYS     WTOT                                       204320 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ENDIF                                                     204320 MD046351
+     C**********           DIV  WCBS      WTOT      H                                BH3414 MD046351
+      *                                                                                     MD046351
+     C           WTOT      MULT WDAYS2    ZWK309 309                                        MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C                     MULT WDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ELSE                                                             MD046351
+     C           FECALC    IFEQ 6                                                           MD046351
+     C           WTOT      MULT NDAYS2    ZWK309                                            MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C                     MULT NDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ENDIF                                                            MD046351
      C*                                                                   BH3414
      C                     ELSE                                           BH3414
      C*                                                                   BH3414
@@ -7659,19 +7679,35 @@
      C           *IN19     IFEQ '1'                                                           204320
       *                                                                                       204320
      C           FECALC    IFEQ 6                                                           BUG21892
-     C                     MULT WDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C                     MULT WDAYS     WTOT                            BH3414
-     C                     ENDIF                                                            BUG21892
-     C                     ELSE                                                               204320
-     C           FECALC    IFEQ 6                                                           BUG21892
-     C                     MULT NDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C                     MULT NDAYS     WTOT                                                204320
-     C                     ENDIF                                                            BUG21892
-     C                     ENDIF                                                              204320
-     C                     DIV  WCBS      WTOT      H                     BH3414
-     C*                                                                   BH3414
+     C**********           MULT WDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C**********           MULT WDAYS     WTOT                                       BH3414 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ELSE                                                      204320 MD046351
+     C********** FECALC    IFEQ 6                                                  BUG21892 MD046351
+     C**********           MULT NDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C**********           MULT NDAYS     WTOT                                       204320 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ENDIF                                                     204320 MD046351
+     C**********           DIV  WCBS      WTOT      H                                BH3414 MD046351
+      *                                                                                     MD046351
+     C           WTOT      MULT WDAYS2    ZWK309                                            MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C                     MULT WDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ELSE                                                             MD046351
+     C           FECALC    IFEQ 6                                                           MD046351
+     C           WTOT      MULT NDAYS2    ZWK309                                            MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C                     MULT NDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ENDIF                                                            MD046351
+      *                                                                                     MD046351
      C                     END                                            BH3414
      C*                                                                   BH3414
      C                     END                                            BH3414
@@ -7712,18 +7748,34 @@
      C           *IN19     IFEQ '1'                                                           204320
       *                                                                                       204320
      C           FECALC    IFEQ 6                                                           BUG21892
-     C           WAMT      MULT WDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C           WAMT      MULT WDAYS     WTOT                            BH3414
-     C                     ENDIF                                                            BUG21892
-     C                     ELSE                                                               204320
-     C           FECALC    IFEQ 6                                                           BUG21892
-     C           WAMT      MULT NDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C           WAMT      MULT NDAYS     WTOT                                                204320
-     C                     ENDIF                                                            BUG21892
-     C                     ENDIF                                                              204320
-     C                     DIV  WCBS      WTOT      H                     BH3414
+     C********** WAMT      MULT WDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C********** WAMT      MULT WDAYS     WTOT                                       BH3414 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ELSE                                                      204320 MD046351
+     C********** FECALC    IFEQ 6                                                  BUG21892 MD046351
+     C********** WAMT      MULT NDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C********** WAMT      MULT NDAYS     WTOT                                       204320 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ENDIF                                                     204320 MD046351
+     C**********           DIV  WCBS      WTOT      H                                BH3414 MD046351
+      *                                                                                     MD046351
+     C           WAMT      MULT WDAYS2    ZWK309                                            MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C           WAMT      MULT WDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ELSE                                                             MD046351
+     C           FECALC    IFEQ 6                                                           MD046351
+     C           WAMT      MULT NDAYS2    ZWK309                                            MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C           WAMT      MULT NDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ENDIF                                                            MD046351
      C*                                                                   BH3414
      C                     ELSE                                           BH3414
      C*                                                                   BH3414
@@ -7754,18 +7806,34 @@
      C           *IN19     IFEQ '1'                                                           204320
       *                                                                                       204320
      C           FECALC    IFEQ 6                                                           BUG21892
-     C           WAMT      MULT WDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C           WAMT      MULT WDAYS     WTOT                            BH3414
-     C                     ENDIF                                                            BUG21892
-     C                     ELSE                                                               204320
-     C           FECALC    IFEQ 6                                                           BUG21892
-     C           WAMT      MULT NDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C           WAMT      MULT NDAYS     WTOT                                                204320
-     C                     ENDIF                                                            BUG21892
-     C                     ENDIF                                                              204320
-     C                     DIV  WCBS      WTOT      H                     BH3414
+     C********** WAMT      MULT WDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C********** WAMT      MULT WDAYS     WTOT                                       BH3414 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ELSE                                                      204320 MD046351
+     C********** FECALC    IFEQ 6                                                  BUG21892 MD046351
+     C********** WAMT      MULT NDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C********** WAMT      MULT NDAYS     WTOT                                       204320 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ENDIF                                                     204320 MD046351
+     C**********           DIV  WCBS      WTOT      H                                BH3414 MD046351
+      **********                                                                     BH3414 MD046351
+     C           WAMT      MULT WDAYS2    ZWK309                                            MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C           WAMT      MULT WDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ELSE                                                             MD046351
+     C           FECALC    IFEQ 6                                                           MD046351
+     C           WAMT      MULT NDAYS2    ZWK309                                            MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C           WAMT      MULT NDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ENDIF                                                            MD046351
      C*                                                                   BH3414
      C                     END                                            BH3414
      C*                                                                   BH3414
@@ -7785,18 +7853,34 @@
      C           *IN19     IFEQ '1'                                                           204320
       *                                                                                       204320
      C           FECALC    IFEQ 6                                                           BUG21892
-     C                     MULT WDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C                     MULT WDAYS     WTOT                            BH3414
-     C                     ENDIF                                                            BUG21892
-     C                     ELSE                                                               204320
-     C           FECALC    IFEQ 6                                                           BUG21892
-     C                     MULT NDAYS2    WTOT                                              BUG21892
-     C                     ELSE                                                             BUG21892
-     C                     MULT NDAYS     WTOT                                                204320
-     C                     ENDIF                                                            BUG21892
-     C                     ENDIF                                                              204320
-     C                     DIV  WCBS      WTOT      H                     BH3414
+     C**********           MULT WDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C**********           MULT WDAYS     WTOT                                       BH3414 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ELSE                                                      204320 MD046351
+     C********** FECALC    IFEQ 6                                                  BUG21892 MD046351
+     C**********           MULT NDAYS2    WTOT                                     BUG21892 MD046351
+     C**********           ELSE                                                    BUG21892 MD046351
+     C**********           MULT NDAYS     WTOT                                       204320 MD046351
+     C**********           ENDIF                                                   BUG21892 MD046351
+     C**********           ENDIF                                                     204320 MD046351
+     C**********           DIV  WCBS      WTOT      H                                BH3414 MD046351
+      *                                                                                     MD046351
+     C           WTOT      MULT WDAYS2    ZWK309                                            MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C                     MULT WDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ELSE                                                             MD046351
+     C           FECALC    IFEQ 6                                                           MD046351
+     C           WTOT      MULT NDAYS2    ZWK309                                            MD046351
+     C           ZWK309    DIV  WCBS      WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C                     MULT NDAYS     WTOT                                              MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ENDIF                                                            MD046351
      C*                                                                   BH3414
      C                     END                                            BH3414
      C*                                                                   BH3414
@@ -7939,25 +8023,41 @@
       ** Calculate final accrual amount.                                                      CLE073
       *                                                                                       CLE073
      C           FECALC    IFEQ 6                                                           MD031473
-     C           WDAY9B    IFEQ 0                                                           MD031473
-     C                     Z-ADD1         WDAY9B                                            MD031473
-     C                     ENDIF                                                            MD031473
-     C                     ELSE                                                             MD031473
-     C           WDAYS9    IFEQ 0                                                             CLE073
-     C                     Z-ADD1         WDAYS9                                              CLE073
-     C                     ENDIF                                                              CLE073
-     C                     ENDIF                                                            MD031473
-     C                     MULT WDAYS     WTOT                                                CLE073
-      *                                                                                       CLE073
-     C           WTOT      IFNE 0                                                             CLE073
-     C           FECALT    IFNE '99'                                                          CLE073
-     C           FECALT    ANDNE'90'                                                          CLE134
-     C                     DIV  WCBS      WTOT      H                                         CLE073
-     C                     ELSE                                                               CLE073
-     C           FECALC    IFEQ 6                                                           MD031473
-     C                     DIV  WDAY9B    WTOT      H                                       MD031473
-     C                     ELSE                                                             MD031473
-     C                     DIV  WDAYS9    WTOT      H                                         CLE073
+      *                                                                                     MD046351
+     C**********           MULT WDAYS2    WTOT                                     MD037027 MD046351
+     C**********           ELSE                                                    MD037027 MD046351
+     C**********           MULT WDAYS     WTOT                                       CLE073 MD046351
+     C**********           ENDIF                                                   MD037027 MD046351
+     C********** WTOT      IFNE 0                                                    CLE073 MD046351
+     C********** FECALT    IFNE '99'                                                 CLE073 MD046351
+     C********** FECALT    ANDNE'90'                                                 CLE134 MD046351
+     C**********           DIV  WCBS      WTOT      H                                CLE073 MD046351
+     C**********           ELSE                                                      CLE073 MD046351
+     C********** FECALC    IFEQ 6                                                  MD031473 MD046351
+     C**********           DIV  WDAY9B    WTOT      H                              MD031473 MD046351
+     C**********           ELSE                                                    MD031473 MD046351
+     C**********           DIV  WDAYS9    WTOT      H                                CLE073 MD046351
+      *                                                                                     MD046351
+     C           WTOT      MULT WDAYS2    ZWK309                                            MD046351
+     C                     ELSE                                                             MD046351
+     C                     MULT WDAYS     WTOT                                              MD046351
+     C                     ENDIF                                                            MD046351
+      *                                                                                     MD046351
+     C           ZWK309    IFNE 0                                                           MD046351
+     C           WTOT      ORNE 0                                                           MD046351
+     C           FECALT    IFNE '99'                                                        MD046351
+     C           FECALT    ANDNE'90'                                                        MD046351
+     C           FECALC    IFEQ 6                                                           MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C                     DIV  WCBS      WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     ELSE                                                             MD046351
+      *                                                                                     MD046351
+     C           FECALC    IFEQ 6                                                           MD046351
+     C           ZWK309    DIV  WDAY9B    WTOT      H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C                     DIV  WDAYS9    WTOT      H                                       MD046351
      C                     ENDIF                                                            MD031473
      C                     ENDIF                                                              CLE073
      C                     ENDIF                                                              CLE073

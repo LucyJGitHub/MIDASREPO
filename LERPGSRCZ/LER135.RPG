@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD031473A          Date 14Dec16               *
-      *  Prev Amend No. MD031473           Date 24Feb16               *
+      *  Last Amend No. MD046351           Date 23Aug17               *
+      *  Prev Amend No. MD031473A          Date 14Dec16               *
+      *                 MD031473           Date 24Feb16               *
       *                 MD045479           Date 21Jun17               *
       *                 MD036064           Date 26Jul17               *
       *                 MD045010           Date 05Apr17               *
@@ -255,6 +256,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD046351 - Rounding and truncation in fee accrual            *
+      *             calculations due to mult/div using 15,9 fields    *
+      *             being placed into 13,0/15,0 result fields.        *
       *  MD031473A - Revise RECALL so that TDUE is the recalculated   *
       *              amount from start date upto last payment date.   *
       *  MD031473 - LE Incorrect fee accrual calculation (rate chg)   *
@@ -5582,8 +5586,12 @@
      C*                                                                   BH3504
      C** Calculate final accrual amount.                                  BH3504
      C*                                                                   BH3504
-     C           WRK15     MULT WDAYS     WTOTRP 130                      BH3504
-     C                     DIV  WCBS      WTOTRP    H                     BH3504
+     C********** WRK15     MULT WDAYS     WTOTRP 130                                 BH3504 MD046351
+     C**********           DIV  WCBS      WTOTRP    H                                BH3504 MD046351
+      *                                                                                     MD046351
+     C           WRK15     MULT WDAYS     ZWK309 309                                        MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOTRP 130H                                       MD046351
       *
       ** Set up report details if final payment accrual processing.
       *
@@ -5651,8 +5659,12 @@
      C*                                                                   BH3504
      C** Calculate final accrual amount.                                  BH3504
      C*                                                                   BH3504
-     C           WRK15     MULT WDAYS     WTOTRP 130                      BH3504
-     C                     DIV  WCBS      WTOTRP    H                     BH3504
+     C********** WRK15     MULT WDAYS     WTOTRP 130                                 BH3504 MD046351
+     C**********           DIV  WCBS      WTOTRP    H                                BH3504 MD046351
+      *                                                                                     MD046351
+     C           WRK15     MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOTRP    H                                       MD046351
       *
       ** Set up report details if final payment accrual processing.
       *
@@ -5681,8 +5693,12 @@
      C*                                                                   BH3504
      C** Calculate final accrual amount.                                  BH3504
      C*                                                                   BH3504
-     C                     MULT WDAYS     WTOT                            BH3504
-     C                     DIV  WCBS      WTOT      H                     BH3504
+     C**********           MULT WDAYS     WTOT                                       BH3504 MD046351
+     C**********           DIV  WCBS      WTOT      H                                BH3504 MD046351
+      *                                                                                     MD046351
+     C           WTOT      MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
      C/COPY WNCPYSRC,LER135C015
       *
      C                     END
@@ -5724,8 +5740,12 @@
      C                     MULT FRT,X     WAMT
      C                     END
       *
-     C           WAMT      MULT WDAYS     WTOT
-     C                     DIV  WCBS      WTOT      H
+     C********** WAMT      MULT WDAYS     WTOT                                              MD046351
+     C**********           DIV  WCBS      WTOT      H                                       MD046351
+      *                                                                                     MD046351
+     C           WAMT      MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
      C/COPY WNCPYSRC,LER135C016
       *
      C                     ELSE
@@ -5753,9 +5773,14 @@
      C                     MULT FRT,X     WAMT
      C                     END
       *
+     C           WAMT      MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     DIV  100       ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
+      *
      C                     DIV  100       WAMT      H
-     C           WAMT      MULT WDAYS     WTOT
-     C                     DIV  WCBS      WTOT      H
+     C********** WAMT      MULT WDAYS     WTOT                                              MD046351
+     C**********           DIV  WCBS      WTOT      H                                       MD046351
      C/COPY WNCPYSRC,LER135C017
       *
      C                     END
@@ -5787,30 +5812,35 @@
      C           CALT      OREQ 21
      C           CALT      OREQ 22
       *
-     C           WAMT      MULT FRT,1     WTOT
-     C                     MULT WDAYS     WTOT
-      *                                                                                       258597
-     C                     Z-ADDWTOT      WTOTX  174                                          258597
-      *                                                                                       258597
-     C                     DIV  WCBS      WTOT      H
-      *                                                                                       258597
-      ** Sometimes, if the number to be dropped is 5 and the last                             258597
-      ** figure to be kept is even number, it is increased. This                              258597
-      ** should be double-checked to avoid adding 1 when this                                 258597
-      ** case is encountered and rounded off.                                                 258597
-      *                                                                                       258597
-     C           WTOTX     DIV  WCBS      WTOTX                                               258597
-     C                     Z-ADDWTOTX     WTOT5  130                                          258597
-     C                     Z-ADDWTOTX     WTOTY   44                                          258597
-     C                     Z-ADDWTOTX     WTOTL   10                                          258597
-     C           WTOTL     DIV  2         WTOTM   21                                          258597
-     C                     Z-ADDWTOTM     WTOTN   11                                          258597
-     C           WTOTY     IFEQ 0.5                                                           258597
-     C           WTOTN     ANDEQ0.0                                                           258597
-     C           WTOT      ANDGTWTOT5                                                         258597
-     C                     Z-ADDWTOT5     WTOT                                                258597
-     C                     ENDIF                                                              258597
-      *                                                                                       258597
+     C           WAMT      MULT FRT,1     ZWK309                                            MD046351
+     C                     MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
+      *                                                                                     MD046351
+     C********** WAMT      MULT FRT,1     WTOT                                              MD046351
+     C**********           MULT WDAYS     WTOT                                              MD046351
+      **********                                                                     258597 MD046351
+     C**********           Z-ADDWTOT      WTOTX  174                                 258597 MD046351
+      **********                                                                     258597 MD046351
+     C**********           DIV  WCBS      WTOT      H                                       MD046351
+      **********                                                                     258597 MD046351
+      ***Sometimes,*if*the*number*to*be*dropped*is*5*and*the*last*****               258597 MD046351
+      ***figure*to*be*kept*is*even*number,*it*is*increased.*This******               258597 MD046351
+      ***should*be*double-checked*to*avoid*adding*1*when*this*********               258597 MD046351
+      ***case*is*encountered*and*rounded*off.*************************               258597 MD046351
+      **********                                                                     258597 MD046351
+     C********** WTOTX     DIV  WCBS      WTOTX                                      258597 MD046351
+     C**********           Z-ADDWTOTX     WTOT5  130                                 258597 MD046351
+     C**********           Z-ADDWTOTX     WTOTY   44                                 258597 MD046351
+     C**********           Z-ADDWTOTX     WTOTL   10                                 258597 MD046351
+     C********** WTOTL     DIV  2         WTOTM   21                                 258597 MD046351
+     C**********           Z-ADDWTOTM     WTOTN   11                                 258597 MD046351
+     C********** WTOTY     IFEQ 0.5                                                  258597 MD046351
+     C********** WTOTN     ANDEQ0.0                                                  258597 MD046351
+     C********** WTOT      ANDGTWTOT5                                                258597 MD046351
+     C**********           Z-ADDWTOT5     WTOT                                       258597 MD046351
+     C**********           ENDIF                                                     258597 MD046351
+      **********                                                                     258597 MD046351
      C/COPY WNCPYSRC,LER135C018
       *
       ** Set up report details if final payment accrual processing.
@@ -11800,17 +11830,27 @@
       *                                                                                       CLE073
       ** Calculate final accrual amount.                                                      CLE073
       *                                                                                       CLE073
-     C           WRK15     MULT WDAYS     WTOTRP                                              CLE073
-     C           WRK15     MULT WDAYS     WTOT                                                CLE073
-      *                                                                                       CLE073
-     C           FECALT    IFNE '99'                                                          CLE073
-     C           FECALT    ANDNE'90'                                                          CLE134
-     C                     DIV  WCBS      WTOTRP    H                                         CLE073
-     C                     DIV  WCBS      WTOT      H                                         CLE073
-     C                     ELSE                                                               CLE073
-     C                     DIV  WDAYS9    WTOTRP    H                                         CLE073
-     C                     DIV  WDAYS9    WTOT      H                                         CLE073
-     C                     ENDIF                                                              CLE073
+     C********** WRK15     MULT WDAYS     WTOTRP                                     CLE073 MD046351
+     C********** WRK15     MULT WDAYS     WTOT                                       CLE073 MD046351
+      **********                                                                     CLE073 MD046351
+     C********** FECALT    IFNE '99'                                                 CLE073 MD046351
+     C********** FECALT    ANDNE'90'                                                 CLE134 MD046351
+     C**********           DIV  WCBS      WTOTRP    H                                CLE073 MD046351
+     C**********           DIV  WCBS      WTOT      H                                CLE073 MD046351
+     C**********           ELSE                                                      CLE073 MD046351
+     C**********           DIV  WDAYS9    WTOTRP    H                                CLE073 MD046351
+     C**********           DIV  WDAYS9    WTOT      H                                CLE073 MD046351
+     C**********           ENDIF                                                     CLE073 MD046351
+      *                                                                                     MD046351
+     C           WRK15     MULT WDAYS     ZWK309                                            MD046351
+     C           FECALT    IFNE '99'                                                        MD046351
+     C           FECALT    ANDNE'90'                                                        MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     ELSE                                                             MD046351
+     C                     DIV  WDAYS9    ZWK309    H                                       MD046351
+     C                     ENDIF                                                            MD046351
+     C                     Z-ADDZWK309    WTOTRP    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *                                                                                       CLE073
      C           ATYP      IFEQ 'H'                                                           CLE073
      C           FRT,1     ANDNE0                                                             CLE073

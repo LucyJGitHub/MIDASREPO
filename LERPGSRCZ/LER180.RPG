@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD026385           Date 25Apr14               *
-      *  Prev Amend No. AR894146           Date 06Feb13               *
+      *  Last Amend No. MD046351           Date 23Aug17               *
+      *  Prev Amend No. MD026385           Date 25Apr14               *
+      *                 AR894146           Date 06Feb13               *
       *                 AR996895           Date 25Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -92,6 +93,9 @@
      F*                                                                  *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046351 - Rounding and truncation in fee accrual            *
+      *             calculations due to mult/div using 15,9 fields    *
+      *             being placed into 13,0/15,0 result fields.        *
       *  MD026385 - Many fields with unknown data 99.999999999.       *
       *           - Accrued amount are incorrect.                     *
       *  AR894146 - An array index not valid error was encountered    *
@@ -3264,8 +3268,12 @@
       *                                                                   BH3451
       ** Calculate final accrual amount.                                  BH3451
       *                                                                   BH3451
-     C                     MULT WDAYS     WTOT                            BH3451
-     C                     DIV  WCBS      WTOT      H                     BH3451
+     C**********           MULT WDAYS     WTOT                                       BH3451 MD046351
+     C**********           DIV  WCBS      WTOT      H                                BH3451 MD046351
+      *                                                                                     MD046351
+     C           WTOT      MULT WDAYS     ZWK309 309                                        MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *
      C                     ELSE
       *
@@ -3299,8 +3307,12 @@
       *                                                                   BH3451
       ** Calculate final accrual amount.                                  BH3451
       *                                                                   BH3451
-     C                     MULT WDAYS     WTOT                            BH3451
-     C                     DIV  WCBS      WTOT      H                     BH3451
+     C**********           MULT WDAYS     WTOT                                       BH3451 MD046351
+     C**********           DIV  WCBS      WTOT      H                                BH3451 MD046351
+      *                                                                                     MD046351
+     C           WTOT      MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *
      C                     END
       *
@@ -3337,8 +3349,12 @@
      C                     MULT FRT,X     WAMT
      C                     END
       *
-     C           WAMT      MULT WDAYS     WTOT
-     C                     DIV  WCBS      WTOT      H
+     C********** WAMT      MULT WDAYS     WTOT                                              MD046351
+     C**********           DIV  WCBS      WTOT      H                                       MD046351
+      *                                                                                     MD046351
+     C           WAMT      MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *
      C                     ELSE
       *
@@ -3364,8 +3380,12 @@
      C                     END
       *
      C                     DIV  100       WAMT      H
-     C           WAMT      MULT WDAYS     WTOT
-     C                     DIV  WCBS      WTOT      H
+     C********** WAMT      MULT WDAYS     WTOT                                              MD046351
+     C**********           DIV  WCBS      WTOT      H                                       MD046351
+      *                                                                                     MD046351
+     C           WAMT      MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *
      C                     END
       *
@@ -3378,10 +3398,14 @@
      C           FECALT    OREQ '13'
      C           FECALT    OREQ '21'
       *
-     C           WAMT      MULT FRT,1     WTOT
-     C                     MULT WDAYS     WTOT
-     C                     DIV  WCBS      WTOT      H
-      *
+     C********** WAMT      MULT FRT,1     WTOT                                              MD046351
+     C**********           MULT WDAYS     WTOT                                              MD046351
+     C**********           DIV  WCBS      WTOT      H                                       MD046351
+      *                                                                                     MD046351
+     C           WAMT      MULT FRT,1     ZWK309                                            MD046351
+     C                     MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
      C                     END
       *
      C                     ENDSR

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD034020           Date 19Jul17               *
-      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *  Last Amend No. MD046351           Date 23Aug17               *
+      *  Prev Amend No. MD034020           Date 19Jul17               *
+      *                 AR943686           Date 23Sep16               *
       *                 MD041443           Date 19Sep16               *
       *                 CLE154             Date 06Aug12               *
       *                 AR868380           Date 10Jun13               *
@@ -80,6 +81,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046351 - Rounding and truncation in fee accrual            *
+      *             calculations due to mult/div using 15,9 fields    *
+      *             being placed into 13,0/15,0 result fields.        *
       *  MD034020 - Projection on payment date is not working for     *
       *             calc 97/98 if settlement is thru retail.          *
       *             NOTE: AR812101 should be present in LEFEEMUPD     *
@@ -1988,8 +1992,12 @@
       *
       ** Calculate final accrual amount.
       *
-     C                     MULT WDAYS     WTOT
-     C                     DIV  WCBS      WTOT      H
+     C**********           MULT WDAYS     WTOT                                              MD046351
+     C**********           DIV  WCBS      WTOT      H                                       MD046351
+      *                                                                                     MD046351
+     C           WTOT      MULT WDAYS     ZWK309 309                                        MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *
      C                     ENDIF
       *
@@ -2078,8 +2086,12 @@
       *
      C                     ENDIF
       *
-     C           WAMT      MULT WDAYS     WTOT
-     C                     DIV  WCBS      WTOT      H
+     C********** WAMT      MULT WDAYS     WTOT                                              MD046351
+     C**********           DIV  WCBS      WTOT      H                                       MD046351
+      *                                                                                     MD046351
+     C           WAMT      MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *
      C                     ENDIF
       *
@@ -2094,9 +2106,14 @@
      C           FECALT    OREQ '21'
      C           FECALT    OREQ '22'
       *
-     C           WAMT      MULT FRT,1     WTOT
-     C                     MULT WDAYS     WTOT
-     C                     DIV  WCBS      WTOT      H
+     C********** WAMT      MULT FRT,1     WTOT                                              MD046351
+     C**********           MULT WDAYS     WTOT                                              MD046351
+     C**********           DIV  WCBS      WTOT      H                                       MD046351
+      *                                                                                     MD046351
+     C           WAMT      MULT FRT,1     ZWK309                                            MD046351
+     C                     MULT WDAYS     ZWK309                                            MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *
      C                     ENDIF
       *
@@ -2228,12 +2245,15 @@
       *                                                                                       CLE073
       ** Calculate final accrual amount.                                                      CLE073
       *                                                                                       CLE073
-     C                     MULT WDAYS     WTOT                                                CLE073
-      *                                                                                       CLE073
-     C           WTOT      IFNE 0                                                             CLE073
-     C                     DIV  WCBS      WTOT      H                                         CLE073
-     C                     ENDIF                                                              CLE073
-      *                                                                                       CLE073
+     C**********           MULT WDAYS     WTOT                                       CLE073 MD046351
+      **********                                                                     CLE073 MD046351
+     C********** WTOT      IFNE 0                                                    CLE073 MD046351
+     C**********           DIV  WCBS      WTOT      H                                CLE073 MD046351
+     C           WTOT      MULT WDAYS     ZWK309                                            MD046351
+      *                                                                                     MD046351
+     C           ZWK309    IFNE 0                                                           MD046351
+     C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     Z-ADDZWK309    WTOT      H                                       MD046351
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
      C                     ENDSR                                                              CLE073

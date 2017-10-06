@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039449           Date 04Jul16               *      
-      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *  Last Amend No. MD046162           Date 15Aug17               *
+      *  Prev Amend No. MD039449           Date 04Jul16               *
+      *                 CLE154             Date 07Aug12               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -53,8 +54,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046162 - PDCL loans attached to reactivated loans will     *
+      *             also be reactivated.                              *
       *  MD039449 - CLE164: Unable to change loan autosettle          *
-      *             indicator from N to C                             *      
+      *             indicator from N to C                             *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -110,6 +113,9 @@
      FLE0373P1O   E                    PRINTER                        UC
      F                                              KINFDS SPOOL1
      FCLOANZI0UF  E           K        DISK                                                 MD039449
+      *                                                                                     MD046162
+      ** Loan amendments file                                                               MD046162
+     FLEPDUEL2IF  E           K        DISK         KINFSR *PSSR                            MD046162
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
@@ -174,8 +180,20 @@
      I              AMTP                            PAMTP
      I              PRAM                            PPRAM
      I              PRSQ                            PPRSQ                 CLE014
+     I              INTA                            PINTA                                   MD046162
      IHISTSHQF
      I              RECI                            QRECI
+     ILEPDUED0                                                                              MD046162
+     I              YTKPACL                         YTKPCL                                  MD046162
+     I              YTKPABR                         YTKPBR                                  MD046162
+     I              YTKPAAC                         YTKPAC                                  MD046162
+     I              YTKPASE                         YTKPSE                                  MD046162
+     I              YTKPACY                         YTKPCY                                  MD046162
+     I              YTKIACL                         YTKICL                                  MD046162
+     I              YTKIABR                         YTKIBR                                  MD046162
+     I              YTKIAAC                         YTKIAC                                  MD046162
+     I              YTKIASE                         YTKISE                                  MD046162
+     I              YTKIACY                         YTKICY                                  MD046162
       *
      ILDA       E DSLDA                         256
       *
@@ -244,6 +262,9 @@
      C**********           KFLD           K1CNUM  60                                          CSD027
      C                     KFLD           K1CNUM  6                                           CSD027
      C                     KFLD           K1LNRF
+      **  Chain to LEPDUEL2                                                                 MD046162
+     C           K#KY03    KLIST                                                            MD046162
+     C                     KFLD           K3LNRF  6                                         MD046162
       *
      C/TITLE Main Processing
       *================================================================
@@ -476,6 +497,7 @@
      C                     ADD  1         WCOUNT
      C                     ENDIF
      C                     ENDIF
+     C                     EXSR SRPDCL                                                      MD046162
      C                     ENDIF
       *
       **  Read next record.
@@ -723,6 +745,111 @@
       *
       *
       *****************************************************************
+      /TITLE SR/SRPDCL                                                                      MD046162
+      *****************************************************************                     MD046162
+      *                                                               *                     MD046162
+      *  SRPDCL - Subroutine to Update Trailer File HISTSZX           *                     MD046162
+      *                                                               *                     MD046162
+      *  Called By: SRPDCL                                            *                     MD046162
+      *  Calls    : None                                              *                     MD046162
+      *                                                               *                     MD046162
+      *****************************************************************                     MD046162
+      *                                                                                     MD046162
+     C           SRPDCL    BEGSR                                                            MD046162
+      *                                                                                     MD046162
+     C                     MOVE LNRF      K3LNRF                                            MD046162
+     C                     MOVE *BLANKS   YPLON                                             MD046162
+     C                     MOVE *BLANKS   K1LNRF                                            MD046162
+     C           K#KY03    SETLLLEPDUEL2                                                    MD046162
+     C           K#KY03    READELEPDUEL2                 70                                 MD046162
+      *                                                                                     MD046162
+     C           *IN70     DOWEQ'0'                                                         MD046162
+     C           YPLON     ANDNEK1LNRF                                                      MD046162
+      *                                                                                     MD046162
+     C                     MOVE YPLON     K1LNRF                                            MD046162
+     C                     MOVE 'A'       K1RCDT                                            MD046162
+     C           K#KY01    CHAINCLOAN                90                                     MD046162
+     C           *IN90     IFEQ '0'                                                         MD046162
+     C           LRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       LRECI                                             MD046162
+     C                     Z-ADD0         MDAT                                              MD046162
+     C                     BITOF'2'       ACEI                                              MD046162
+     C                     UPDATCLOANCLF                                                    MD046162
+      *                                                                                     MD046162
+     C                     MOVE 'B'       K1RCDT                                            MD046162
+     C           K#KY01    CHAINCLOAN                90                                     MD046162
+     C           *IN90     IFEQ '0'                                                         MD046162
+     C           KRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       KRECI                                             MD046162
+     C                     UPDATCLOANCKF                                                    MD046162
+      *                                                                                     MD046162
+     C                     MOVE BRCA      K1BRCA                                            MD046162
+     C                     MOVE CNUM      K1CNUM                                            MD046162
+     C           K#KY02    SETLLHISTSHMF                                                    MD046162
+     C           K#KY02    READEHISTSHMF                 60                                 MD046162
+     C           *IN60     DOWEQ'0'                                                         MD046162
+     C           MRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       MRECI                                             MD046162
+      *                                                                                     MD046162
+      **  Zeroise CPAM and INTR to trigger recalculation in LE0400                          MD046162
+      *                                                                                     MD046162
+     C           CLE014    IFEQ 'Y'                                                         MD046162
+     C                     Z-ADD0         MCPAM                                             MD046162
+     C                     Z-ADD0         MINTR                                             MD046162
+     C                     ENDIF                                                            MD046162
+      *                                                                                     MD046162
+     C                     UPDATHISTSHMF                                                    MD046162
+     C           K#KY02    READEHISTSHMF                 60                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C           K#KY02    SETLLHISTSHNF                                                    MD046162
+     C           K#KY02    READEHISTSHNF                 60                                 MD046162
+     C           *IN60     DOWEQ'0'                                                         MD046162
+     C           NRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       NRECI                                             MD046162
+     C                     UPDATHISTSHNF                                                    MD046162
+     C           K#KY02    READEHISTSHNF                 60                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C           K#KY02    SETLLHISTSHPF                                                    MD046162
+     C           K#KY02    READEHISTSHPF                 60                                 MD046162
+     C           *IN60     DOWEQ'0'                                                         MD046162
+     C           PRECI     ANDEQ'M'                                                         MD046162
+     C           PAMTP     IFNE 'MA'                                                        MD046162
+     C                     MOVE 'D'       PRECI                                             MD046162
+     C                     UPDATHISTSHPF                                                    MD046162
+     C                     ELSE                                                             MD046162
+     C           PINTA     IFNE 0                                                           MD046162
+     C           PPRAM     ORNE 0                                                           MD046162
+     C                     MOVE 'D'       PRECI                                             MD046162
+     C                     MOVE 'MR'      PAMTP                                             MD046162
+     C                     Z-ADD18        PPRSQ                                             MD046162
+     C                     UPDATHISTSHPF                                                    MD046162
+     C                     ELSE                                                             MD046162
+     C                     DELETHISTSHPF                                                    MD046162
+     C                     EXSR SRTRAI                                                      MD046162
+     C                     ENDIF                                                            MD046162
+     C                     ENDIF                                                            MD046162
+     C           K#KY02    READEHISTSHPF                 60                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C           K#KY02    SETLLHISTSHQF                                                    MD046162
+     C           K#KY02    READEHISTSHQF                 60                                 MD046162
+     C           *IN60     DOWEQ'0'                                                         MD046162
+     C           QRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       QRECI                                             MD046162
+     C                     UPDATHISTSHQF                                                    MD046162
+     C           K#KY02    READEHISTSHQF                 60                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C                     ENDIF                                                            MD046162
+     C                     ENDIF                                                            MD046162
+     C           K#KY03    READELEPDUEL2                 70                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C                     ENDSR                                                            MD046162
+      *                                                                                     MD046162
+      *****************************************************************                     MD046162
       /TITLE SR/ZDATE2
      C/COPY ZSRSRC,ZDATE2Z2
       /TITLE SR/ZFRPED

@@ -18,14 +18,17 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. AR1093704          Date 05Mar13               *
-      *  Prev Amend No. AR1054387          Date 09Nov12               *
+      *  Last Amend No. CGL182             Date 11May17               *
+      *  Prev Amend No. AR1093704          Date 05Mar13               *
+      *                 AR1054387          Date 09Nov12               *
       *                 AR1005162          Date 16Jul12               *
       *                 AR985003           Date 06Jun12               *
       *                 CSC054 *CREATE     Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL182 - Journal Entry via the Interface File - Java Version *
+      *           (Recompile)                                         *
       *  AR1093704 - Error in trailer computation                     *
       *  AR1054387 - Postings done were made with contrary sign       *
       *  AR1005162 - Base ccy exchange rate in corrective batch has   *

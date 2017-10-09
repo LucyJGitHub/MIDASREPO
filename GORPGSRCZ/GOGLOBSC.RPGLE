@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD023043A          Date 27Nov13               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD046901           Date 21Jul17               *
+      *  Prev Amend No. MD023043A          Date 27Nov13               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -21,6 +22,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046901 - Batch details listview is not loading in the      *
+      *             other zone.                                       *
       *  MD023043A - Encounters an error upon switch-ON of CSW213     *
       *              (Recompile)                                      *
       *  CGP017 - Global Layer - GOC0100 Task Split (Recompile)       *
@@ -95,6 +98,7 @@
      C     PFLNAME       CASEQ     'SCSAREPD  '  GLOB_SCSAREPD
      C     PFLNAME       CASEQ     'SCSARIPD  '  GLOB_SCSARIPD
      C     PFLNAME       CASEQ     'SCSARWPD  '  GLOB_SCSARWPD
+     C     PFLNAME       CASEQ     'SCOEAPTD  '  GLOB_SCOEAPTD                              MD046901
      C                   ENDCS
      C                   ENDIF
  
@@ -134,6 +138,14 @@
      C     GLOB_SCSARWPD BEGSR
       /COPY GPCPYSRCG,GPSCSARWPD
      C                   ENDSR
+      *****************************************************************                     MD046901
+      /SPACE 5                                                                              MD046901
+      *****************************************************************                     MD046901
+      * Global Updates - Overridable Errors for Approval                                    MD046901
+      *****************************************************************                     MD046901
+     C     GLOB_SCOEAPTD BEGSR                                                              MD046901
+      /COPY GPCPYSRCG,GPSCOEAPTD                                                            MD046901
+     C                   ENDSR                                                              MD046901
       *****************************************************************
       /SPACE 5
       *****************************************************************

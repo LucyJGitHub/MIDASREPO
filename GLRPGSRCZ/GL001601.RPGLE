@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. MD040602           Date 19Aug16               *
-      *  Prev Amend No. MD025865           Date 20Mar14               *
+      *  Last Amend No. CGL182             Date 11May17               *
+      *  Prev Amend No. MD040602           Date 19Aug16               *
+      *                 MD025865           Date 20Mar14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26846           Date 14Dec09               *
       *                 BUG26406           Date 13Oct09               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL182 - Journal Entry via the Interface File - Java Version *
+      *           (Recompile)                                         *
       *  MD040602 - Initialise HQJETP to 'R' as otherwise inteface    *
       *             batched will not appear in JRNE ListView          *
       *  MD025865 - Transactions generated are on 'HELD' status and   *

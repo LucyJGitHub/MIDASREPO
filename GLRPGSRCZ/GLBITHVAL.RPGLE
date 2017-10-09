@@ -16,8 +16,9 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *                                                               *
-      *  Last Amend No. 246752             Date 29Oct15               *
-      *  Prev Amend No. MD027587           Date 19Jun14               *
+      *  Last Amend No. CGL182             Date 11May17               *
+      *  Prev Amend No. 246752             Date 29Oct15               *
+      *                 MD027587           Date 19Jun14               *
       *                 AR1078953          Date 18Jan13               *
       *                 AR1070246          Date 08Jan13               *
       *                 CGL130             Date 28Sep12               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL182 - Journal Entry via the Interface File - Java Version *
       *  246752 - Batches remain Held after Accepting. Wrong valida-  *
       *           tion for Single Branch. Applied for MD034561        *
       *  MD027587 - Unable to use the C for Copy and T for Template   *
@@ -301,6 +303,7 @@
      D/COPY WNCPYSRC,GLH00448
       *                                                                                       CER046
      D CER046          S              1A                                                      CER046
+     D CGL182          S              1A                                                      CGL182
       *
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
@@ -446,6 +449,8 @@
                                                                                               CAP084
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C     DDBHAI        ANDEQ     'D'                                                        CAP084
+     C     CGL182        OREQ      'Y'                                                        CGL182
+     C     DDBHAI        ANDEQ     'P'                                                        CGL182
      C                   EVAL      B1BHAI = DDBHAI                                            CAP084
      C                   ELSE                                                                 CAP084
      C                   EXSR      SRBHAI
@@ -1513,6 +1518,27 @@
      C                   IF        P@RTCD = *BLANKS                                           CGL130
      C                   EVAL      CGL130 = 'Y'                                               CGL130
      C                   ENDIF                                                                CGL130
+      *                                                                                       CGL182
+      ** Check if enhancement CGL182 is on                                                    CGL182
+      *                                                                                       CGL182
+     C                   MOVE      'N'           CGL182                                       CGL182
+      *                                                                                       CGL182
+     C                   CALLB     'AOSARDR0'                                                 CGL182
+     C                   PARM      *BLANKS       P@RTCD                                       CGL182
+     C                   PARM      '*VERIFY'     P@OPTN                                       CGL182
+     C                   PARM      'CGL182'      P@SARD                                       CGL182
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL182
+      *                                                                                       CGL182
+     C                   IF        (P@RTCD <> *BLANKS) AND (P@RTCD <> '*NRF')                 CGL182
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL182
+     C                   EVAL      DBKEY = 'CGL182'                                           CGL182
+     C                   EVAL      DBASE = 5                                                  CGL182
+     C                   EXSR      *PSSR                                                      CGL182
+     C                   ENDIF                                                                CGL182
+      *                                                                                       CGL182
+     C                   IF        P@RTCD = *BLANKS                                           CGL182
+     C                   EVAL      CGL182 = 'Y'                                               CGL182
+     C                   ENDIF                                                                CGL182
                                                                                               CSC024
       ** Access System values                                                                 CSC024
                                                                                               CSC024

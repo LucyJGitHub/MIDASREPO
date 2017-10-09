@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CLE068             Date 02Aug16               *
-      *  Prev Amend No. MD035554           Date 25May16               *
+      *  Last Amend No. MD046901           Date 21Jul17               *
+      *  Prev Amend No. CLE068             Date 02Aug16               *
+      *                 MD035554           Date 25May16               *
       *                 CGL052             Date 02Dec15               *
       *                 MD029739           Date 15Aug14               *
       *                 MD033486           Date 27Feb15               *
@@ -97,6 +98,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046901 - Batch details listview is not loading in the      *
+      *             other zone (Recompile)                            *
       *  CLE068 - Loan Event Modeller (Recompile)                     *
       *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
       *  CGL052 - Amend Washout Processing (Recompile)                *

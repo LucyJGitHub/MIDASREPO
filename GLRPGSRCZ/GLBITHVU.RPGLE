@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD046910           Date 25Jul17               *
-      *  Prev Amend No. MD045854           Date 25May17               *
+      *  Last Amend No. CGL182             Date 11May17               *
+      *  Prev Amend No. MD046910           Date 25Jul17               *
+      *                 MD045854           Date 25May17               *
       *                 MD000091           Date 07May13               *
       *                 AR1092517          Date 14Mar13               *
       *                 AR1078953          Date 18Jan13               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL182 - Journal Entry via the Interface File - Java Version *
       *  MD046910 - Reversal of MD-45854 as part of fix MD-43023      *
       *  MD045854 - Batch Detail cannot be entered with message       *
       *             Batch Header already accepted. Removed CAP209     *
@@ -320,6 +322,9 @@
                                                                                               CAP086
       ** Auto Authorisation flag                                                              CAP086
      D CAP086          S              1A   INZ('N')                                           CAP086
+                                                                                              CGL182
+      ** ABC for Journal Entry via Interface File                                             CGL182
+     D CGL182          S              1A   INZ('N')                                           CGL182
       *
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -850,6 +855,15 @@
      C     B1BTSF        IFNE      'A'
      C                   EVAL      B1BTSF = 'H'
      C                   ENDIF
+      *                                                                                       CGL182
+      ** When Batch Accept/Held indicator is 'P', set Batch Status to 'P'                     CGL182
+      ** Status 'P' is Upload in Progress                                                     CGL182
+      *                                                                                       CGL182
+     C     CGL182        IFEQ      'Y'                                                        CGL182
+     C     B1BHAI        ANDEQ     'P'                                                        CGL182
+     C                   EVAL      B1BTSF = B1BHAI                                            CGL182
+     C                   ENDIF                                                                CGL182
+      *                                                                                       CGL182
       ** Type of Journal is Interface.
       *
      C                   IF        IF_AUTH <> ' '                                             249177
@@ -1138,6 +1152,30 @@
      C                   EVAL      CAP209 = 'Y'                                             MD046910
      C                   ENDIF                                                              MD046910
                                                                                             MD046910
+      ** Access SAR details file to see if CGL182 is installed.                               CGL182
+      *                                                                                       CGL182
+     C                   EVAL      CGL182 = 'N'                                               CGL182
+     C                   CALL      'AOSARDR0'                                                 CGL182
+     C                   PARM      *BLANKS       PRTCD                                        CGL182
+     C                   PARM      '*VERIFY'     POPTN                                        CGL182
+     C                   PARM      'CGL182'      PSARD                                        CGL182
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL182
+      *                                                                                       CGL182
+     C                   IF        PRTCD <> *BLANKS AND                                       CGL182
+     C                             PRTCD <> '*NRF'                                            CGL182
+     C     *LOCK         IN        LDA                                                        CGL182
+     C                   EVAL      DBPGM = 'GLAMADVU'                                         CGL182
+     C                   EVAL      DBKEY = 'CGL182'                                           CGL182
+     C                   EVAL      DBFILE ='SCSARDPD'                                         CGL182
+     C                   EVAL      DBASE  = 6                                                 CGL182
+     C                   OUT       LDA                                                        CGL182
+     C                   EXSR      *PSSR                                                      CGL182
+     C                   ENDIF                                                                CGL182
+      *                                                                                       CGL182
+     C                   IF        PRTCD = *BLANKS                                            CGL182
+     C                   MOVE      'Y'           CGL182                                       CGL182
+     C                   ENDIF                                                                CGL182
+      *                                                                                       CGL182                                                                                            
      C                   MOVE      *BLANKS       PRTCD                                       BUG9713
                                                                                              BUG9713
      C/COPY WNCPYSRC,GLBITH05                                                                 GOC001

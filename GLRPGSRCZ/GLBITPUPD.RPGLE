@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD043023           Date 25Jul17               *
-      *  Prev Amend No. MD042040           Date 10Oct16               *
+      *  Last Amend No. MD046060           Date 21Jun17               *
+      *  Prev Amend No. CGL182             Date 11May17               *      
+      *                 MD043023           Date 25Jul17               *
+      *                 MD042040           Date 10Oct16               *
       *                 MD033964           Date 07Oct16               *
       *                 MD039859           Date 11Aug16               *
       *                 MD033630A          Date 25May16               *
@@ -83,6 +85,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046060 - GLBTNOPD is not defined with COMMIT               *
+      *  CGL182 - Journal Entry via the Interface File - Java Version *      
       *  MD043023 - If batch is sent through interface with Auto      *
       *             autorization set to 'Y', reject batch item if     *
       *             'Hash item no. calculated' equals 'Hash item no.  *
@@ -218,6 +222,7 @@
       *                                                                         186206
       ** Today's batch numbers used                                             186206
      FGLBTNOL0  UF A E           K DISK    INFSR(*PSSR)                         186206
+     F                                     COMMIT                                           MD046060
       *
      FGLJENPL0  UF A E           K DISK    INFSR(*PSSR)                         CGL016
      F********                             USROPN                                      CGL016 CAP084
@@ -531,6 +536,7 @@
      D/COPY WNCPYSRC,GLBITPDD01
       ** Duplicate cheque                                                                     257489
      D WCDup           S              1A   Inz('N')                                           257489
+     D CGL182          S              1A   INZ('N')                                           CGL182
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -1388,8 +1394,12 @@ E1   C                   ENDIF                                                  
      C     BRBIUF        IFNE      'Y'
      C     JAVAUSER      ANDEQ     'N'                                                        CAP084
      C     BRBTSF        ORNE      'H'
+     C     CGL182        ANDEQ     'N'                                                        CGL182
      C     BRWSID        ORNE      *BLANKS
      C     JAVAUSER      ANDEQ     'N'                                                        CAP084
+     C     BRBTSF        ORNE      'H'                                                        CGL182
+     C     BRBTSF        ANDNE     'P'                                                        CGL182
+     C     CGL182        ANDEQ     'Y'                                                        CGL182
       *
      C                   MOVEL     B2FRNT        DBKEY
      C                   MOVEL(P)  'GLJENHPD'    DBFILE
@@ -2565,6 +2575,27 @@ E1   C                   ENDIF                                                  
      C**********         MOVE      'N'           CGL125                              CSC054 MD039859
      C                   MOVE      'N'           CAP209                                     MD039859
      C                   ENDIF                                                                CSC054
+      *                                                                                       CGL182
+      ** Access SAR details file to see if CGL182 is installed.                               CGL182
+      *                                                                                       CGL182
+     C                   CALLB     'AOSARDR0'                                                 CGL182
+     C                   PARM      *BLANKS       @RTCD                                        CGL182
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL182
+     C                   PARM      'CGL182'      @SARD                                        CGL182
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL182
+      *                                                                                       CGL182
+     C                   IF        (@RTCD <> *BLANKS) AND                                     CGL182
+     C                             (@RTCD <> '*NRF   ')                                       CGL182
+     C                   EVAL      DBKEY = 'CGL182'                                           CGL182
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL182
+     C                   EVAL      DBASE = 14                                                 CGL182
+     C                   EXSR      *PSSR                                                      CGL182
+     C                   ENDIF                                                                CGL182
+      *                                                                                       CGL182
+     C                   IF        @RTCD = *BLANK                                             CGL182
+     C                   EVAL      CGL182 = 'Y'                                               CGL182
+     C                   ENDIF                                                                CGL182
+      *                                                                                       CGL182
      C/COPY WNCPYSRC,GLH00460
      C/COPY OFCPYSRCZ,CGL135_066                                                             CGL135A
       *

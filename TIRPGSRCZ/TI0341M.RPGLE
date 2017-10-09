@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL154             Date 13Oct14               *
-      *  Prev Amend No. MD027587           Date 19Jun14               *
+      *  Last Amend No. CGL182             Date 11May17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 MD027587           Date 19Jun14               *
       *                 TI010329           Date 28May13               *
       *                 CAP207             Date 10Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -75,6 +76,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL182 - Journal Entry via the Interface File - Java Version *
+      *           (Recompile)                                         *      
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD027587 - Unable to used the C for Copy and T for Template  *
       *             (Recompile)                                       *

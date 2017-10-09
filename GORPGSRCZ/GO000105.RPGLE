@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD020167           Date 23Apr13               *
-      *  Prev Amend No. CCB020A            Date 06Aug12               *
+      *  Last Amend No. CGL182             Date 11May17               *
+      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *                 CCB020A            Date 06Aug12               *
       *                 CCB023             Date 06Aug12               *
       *                 AR1042967          Date 16Oct12               *
       *                 CLE148             Date 23Jul12               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL182 - Journal Entry via the Interface File - Java Version *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  CCB020A - COB Restructure - Secondary COB Infrastructure     *
       *  CCB023 - COB Restructure - Input Cycle Termination           *
@@ -118,10 +120,13 @@
      C                   IF        *IN02 = *OFF                                            AR1042967
      C                   IF        BRBTSF = 'H' AND                                        AR1042967
      C                             HQJETP <> 'C'                                           AR1042967
+     C                             OR BRBTSF = 'P'                                            CGL182
+     C                             AND HQJETP <> 'C'                                          CGL182
      C                   EVAL      CountN = CountN + 1                                     AR1042967
      C                   ENDIF                                                             AR1042967
      C                   ELSE                                                              AR1042967
      C                   IF        BRBTSF = 'H'
+     C                             OR BRBTSF = 'P'                                            CGL182
      C                   EVAL      CountN = CountN + 1
      C                   ENDIF
      C                   ENDIF                                                             AR1042967

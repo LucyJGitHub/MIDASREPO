@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD046910           Date 25Jul17               *
-      *  Prev Amend No. MD042261           Date 07Jun17               *
+      *  Last Amend No. MD046060           Date 21Jun17               *
+      *  Prev Amend No. CGL182             Date 11May17               *      
+      *                 MD046910           Date 25Jul17               *
+      *                 MD042261           Date 07Jun17               *
       *                 MD045854           Date 25May17               *
       *                 MD033630A          Date 25May16               *
       *                 MD036967           Date 25May16               *
@@ -75,6 +77,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046060 - GLBTNOPD is not defined with COMMIT               *
+      *  CGL182 - Journal Entry via the Interface File - Java Version *      
       *  MD046910 - Reversal of MD-45854 as part of fix MD-43023      *
       *  MD042261 - Records from GLJENP1D were not reversed when      *
       *             deleting a batch. Remove record if batch is delete*
@@ -220,6 +224,7 @@
       *                                                                         186206
       ** Today's batch numbers used                                             186206
      FGLBTNOL0  UF A E           K DISK    INFSR(*PSSR)                         186206
+     F                                     COMMIT                                           MD046060
       *
      FRETTYPL0  IF   E           K DISK    INFSR(*PSSR)                                    AR792734A
      F                                     USROPN                                          AR792734A
@@ -452,6 +457,7 @@
       ** Working Variables                                                                  AR992022
       *                                                                                     AR992022
      D WRefNo          S              6A                                                    AR992022
+     D CGL182          S              1A   INZ('N')                                           CGL182
       *
       ** Hook for non-core D-specs (all types)                                                GOC001
       /COPY WNCPYSRC,GLBITHDD01                                                               GOC001
@@ -587,8 +593,12 @@
      C     BRBIUF        IFNE      'Y'
      C     JAVAUSER      ANDEQ     'N'                                                        CAP084
      C     BRBTSF        ORNE      'H'
+     C     CGL182        ANDEQ     'N'                                                        CGL182
      C     BRWSID        ORNE      *BLANKS
      C     JAVAUSER      ANDEQ     'N'                                                        CAP084
+     C     BRBTSF        ORNE      'H'                                                        CGL182
+     C     BRBTSF        ANDNE     'P'                                                        CGL182
+     C     CGL182        ANDEQ     'Y'                                                        CGL182
       *
      C                   MOVEL     B1FRNT        DBKEY
      C                   MOVEL(P)  'GLJENHPD'    DBFILE
@@ -1681,6 +1691,29 @@
      C                   EVAL      CAP209 = 'Y'                                             MD046910
      C                   ENDIF                                                              MD046910
       *                                                                                     MD046910
+      ** Access SAR details file to see if CGL182 is installed.                               CGL182
+      *                                                                                       CGL182
+     C                   CALL      'AOSARDR0'                                                 CGL182
+     C                   PARM      *BLANKS       PRTCD                                        CGL182
+     C                   PARM      '*VERIFY'     POPTN                                        CGL182
+     C                   PARM      'CGL182'      PSARD                                        CGL182
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL182
+      *                                                                                       CGL182
+     C                   IF        PRTCD <> *BLANKS AND                                       CGL182
+     C                             PRTCD <> '*NRF'                                            CGL182
+     C     *LOCK         IN        LDA                                                        CGL182
+     C                   EVAL      DBPGM = 'GLBITHVU'                                         CGL182
+     C                   EVAL      DBKEY = 'CGL182'                                           CGL182
+     C                   EVAL      DBFILE ='SCSARDPD'                                         CGL182
+     C                   EVAL      DBASE  = 15                                                CGL182
+     C                   OUT       LDA                                                        CGL182
+     C                   EXSR      *PSSR                                                      CGL182
+     C                   ENDIF                                                                CGL182
+      *                                                                                       CGL182
+     C                   IF        PRTCD = *BLANKS                                            CGL182
+     C                   EVAL      CGL182 = 'Y'                                               CGL182
+     C                   ENDIF                                                                CGL182
+      *                                                                                       CGL182      
      C/COPY WNCPYSRC,GLH00709
       *
      C/COPY OFCPYSRCZ,CGL135_015                                                             CGL135A

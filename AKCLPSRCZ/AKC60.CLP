@@ -9,14 +9,15 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Amend No. 202112             Date 25Jul17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 131108             Date 16Mar98              */
-/*       Prev Amend No. 092374             Date 07Jan97              */
+/*       Prev Amend No. 131108             Date 16Mar98              */
+/*                      092374             Date 07Jan97              */
 /*                      092556             Date 07Jan97              */
 /*                     100986             Date  16APR96              */
 /*                  S01408             Date  04MAY95                */
@@ -32,6 +33,12 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*                                                                  */
+/*   202112 - File out of balance occurred in SE0370. Fix will      */
+/*            ensure to update the audit file SEACKA correctly      */
+/*            when moving the generated SE account keys in the      */
+/*            live file SEACKD.                                     */
+/*          - Applied for MD-43337                                  */
 /*   131108 - Screen not redisplayed after output of U5 message      */
 /*            which requires shortening                              */
 /*   092374 - Forsees problem of Duplicate Keys                     */
@@ -371,18 +378,18 @@
              CHGJOB     SWS(XXXXXX00)
                                                              /*S01315*/
 /************CALL       PGM(*LIBL/SE4040)    */
-             CALL       PGM(*LIBL/AK0064)
+/**********  CALL       PGM(*LIBL/AK0064) */                          /*202112*/
                                                              /*S01315*/
 /**/
 /*   FOR DATABASE ERRORS RECOVER DATA FROM LDA                      */
 /**/
-             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+/**********  IF         COND(%SWITCH(XXXXXXX1)) THEN(DO) */           /*202112*/
 /************RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)           */
-             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
-             SNDPGMMSG  MSGID(MEM0001) MSGF(*LIBL/MIDAS) MSGDTA(&MEM) +
-                          TOPGMQ(*EXT) TOMSGQ(*LIBL/MOPERQ)
-             GOTO       CMDLBL(ENDPGM)
-             ENDDO
+/**********  RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM) */          /*202112*/
+/**********  SNDPGMMSG  MSGID(MEM0001) MSGF(*LIBL/MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(*LIBL/MOPERQ) */        /*202112*/
+/**********  GOTO       CMDLBL(ENDPGM) */                             /*202112*/
+/**********  ENDDO */                                                 /*202112*/
 /**/
              CALL AK0112                                             /*092374*/
 /************CPYF       FROMFILE(*LIBL/XSEACKD) TOFILE(*LIBL/SEACKD) +

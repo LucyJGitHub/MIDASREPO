@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2005            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSD095             Date 08Apr14               *
+      *  Last Amend No. MD046115           Date 28Jul17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSD095             Date 08Apr14               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046115 - The settlements were blanks out when there is no  *
+      *             record in LESTALPD.                               *
       *  CDL094 - Enhance Receive Settlement Instructions (Recompile) *
       *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -582,7 +585,7 @@
      C                   EVAL      FLREXI = REXI                                             CSF011A
      C                   ENDIF                                                               CSF011A
                                                                                              CSF011A
-     C                   ENDIF                                                               CSF011A
+     C**********         ENDIF                                                      CSF011A MD046115
                                                                                              CSF011A
      C                   CALLB     'ZASETINCVT'                                              CSF011A
                                                                                              CSF011A
@@ -594,6 +597,9 @@
      C                   PARM                    ##FRIS                                      CSF011A
      C                   PARM      C_DDTCUR      #TRCCY                                      CSF011A
      C                   PARM      C_DDTCUR      #TPCCY                                      CSF011A
+     C                   ENDIF                                                              MD046115
+      *                                                                                     MD046115
+     C                   EXSR      ValidateSt                                               MD046115
                                                                                              CSF011A
      C                   ENDSR                                                               CSF011A
       *****************************************************************

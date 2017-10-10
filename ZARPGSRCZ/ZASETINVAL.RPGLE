@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD036475           Date 04Dec15               *      
-      *  Prev Amend No. MD024884A          Date 04Jul17               *
+      *  Last Amend No. MD046115           Date 24Jul17               *
+      *  Prev Amend No. MD036475           Date 04Dec15               *      
+      *                 MD024884A          Date 04Jul17               *
       *                 MD032089           Date 28Apr15               *
       *                 MD040199           Date 05Aug16               *
       *                 MD039348           Date 17Jun16               *
@@ -129,6 +130,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046115 - The error messages for CDL094 were not properly   *
+      *             formatted.                                        *
       *  MD036475 - System error in MR loan events. Check account for *
       *             both blocked debit/credit when CALP is MAPY.      *      
       *  MD024884A - Incorrect Payment and Receipt accounts           *
@@ -6274,6 +6277,27 @@
      C                   MOVEL     'ESM0'        WMessageID
      C                   MOVE      O#E(Q#)       WMessageID
      C                   EVAL      MsgIDArr(Idx) = WMessageID
+     C     O#E(Q#)       IFEQ      '994'                                                    MD046115
+     C                   EVAL      MsgIDArr(Idx) = 'MEC0105'                                MD046115
+     C                   ENDIF                                                              MD046115
+     C     O#E(Q#)       IFEQ      '302'                                                    MD046115
+     C                   EVAL      MsgIDArr(Idx) = 'MEC0302'                                MD046115
+     C                   ENDIF                                                              MD046115
+     C     O#E(Q#)       IFEQ      '103'                                                    MD046115
+     C                   EVAL      MsgIDArr(Idx) = 'MEC0103'                                MD046115
+     C                   ENDIF                                                              MD046115
+     C     O#E(Q#)       IFEQ      '104'                                                    MD046115
+     C                   EVAL      MsgIDArr(Idx) = 'MEC0104'                                MD046115
+     C                   ENDIF                                                              MD046115
+     C     O#E(Q#)       IFEQ      '897'                                                    MD046115
+     C                   EVAL      MsgIDArr(Idx) = 'MEC0116'                                MD046115
+     C                   ENDIF                                                              MD046115
+     C     O#E(Q#)       IFEQ      '893'                                                    MD046115
+     C                   EVAL      MsgIDArr(Idx) = 'MEC0108'                                MD046115
+     C                   ENDIF                                                              MD046115
+     C     O#E(Q#)       IFEQ      '895'                                                    MD046115
+     C                   EVAL      MsgIDArr(Idx) = 'MEC0107'                                MD046115
+     C                   ENDIF                                                              MD046115
      C                   ENDDO
      C                   MOVE      'N'           DDBtb1OK
      C                   MOVE      'N'           DDBtb2OK

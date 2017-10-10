@@ -27,12 +27,13 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
+      *  Last Amend No. CSE113             Date 06Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG11750           Date 24Jul06               *
-      *  Prev Amend No. BUG11748           Date 21Jul06               *
+      *  Prev Amend No. BUG11750           Date 24Jul06               *
+      *                 BUG11748           Date 21Jul06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
@@ -79,6 +80,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CSE113 - Clear Inactive Securities in Depot Balance Enquiry  *
       *  BUG11750 - Security Balance by Depot Enq. - DB error         *
       *  BUG11748 - Depot Number defaults to zero                     *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -265,7 +267,8 @@
       *
       ** Error messages
       *
-     E                    MSG     1  13 79                                S01117
+     E**********          MSG     1  13 79                                             S01117 CSE113
+     E                    MSG     1  15 79                                                    CSE113
      E/COPY WNCPYSRC,SE0200E001
      E/COPY ZSRSRC,ZSDESCZ1                                               CSE016
      E/COPY ZSRSRC,ZDATE2Z1                                               CSE016
@@ -414,6 +417,9 @@
      C                     MOVE '0'       *IN41
      C                     MOVE '0'       *IN42
      C                     MOVE '0'       *IN45                           S01117
+     C           CSE113    IFEQ 'Y'                                                           CSE113
+     C                     MOVE '0'       *IN43                                               CSE113
+     C                     ENDIF                                                              CSE113
      C                     END
       *
       ** Check Command Keys - including HELP
@@ -774,6 +780,22 @@
      C           MBIN      ANDEQ'Y'                                       S01117
      C                     EXSR BRCAIN                                    S01117
      C                     END                                            S01117
+      *                                                                                       CSE113
+     C           CSE113    IFEQ 'Y'                                                           CSE113
+      *                                                                                       CSE113
+      ** Validate Historic/Active Indicator                                                   CSE113
+      *                                                                                       CSE113
+     C           HAIND     IFNE ' '                                                           CSE113
+     C           HAIND     IFNE 'H'                                                           CSE113
+     C           HAIND     ANDNE'A'                                                           CSE113
+     C                     MOVEA'11'      *IN,42                                              CSE113
+     C                     MOVELMSG,14    ERMSG                                               CSE113
+     C                     ENDIF                                                              CSE113
+     C                     ELSE                                                               CSE113
+     C                     MOVE 'A'       HAIND                                               CSE113
+     C                     ENDIF                                                              CSE113
+      *                                                                                       CSE113
+     C                     ENDIF                                                              CSE113
       *
       ** If all OK prepare to display the screen
       *
@@ -1110,7 +1132,9 @@
      C           STVAL     IFNE ' 0 '                                     035245
      C           SVVAL     ORNE ' 0 '                                     035245
      C           SSVAL     ORNE ' 0 '                                     035245
+     C           CSE113    IFEQ 'N'                                                           CSE113
      C                     ADD  1         OUTREC
+     C                     ENDIF                                                              CSE113
      C                     END                                            035245
      C***********OUTREC    IFEQ 15                                        S01117
      C********** OUTREC    IFEQ 7                                  S01117 CSE016
@@ -1212,6 +1236,26 @@
      C*****************************************************************
      C**
      C           SUBFIL    BEGSR                           ** SUBFIL **
+      *                                                                                       CSE113
+      ** Condition output according to Historic/Active Indicator                              CSE113
+      *                                                                                       CSE113
+     C           CSE113    IFEQ 'Y'                                                           CSE113
+     C           WTRAD     IFEQ 0                                                             CSE113
+     C           WVALU     ANDEQ0                                                             CSE113
+     C           WSETL     ANDEQ0                                                             CSE113
+     C                     MOVE '0'       *IN44                                               CSE113
+     C                     ELSE                                                               CSE113
+     C                     MOVE '1'       *IN44                                               CSE113
+     C                     ENDIF                                                              CSE113
+     C                     ENDIF                                                              CSE113
+      *                                                                                       CSE113
+     C           CSE113    IFEQ 'Y'                                                           CSE113
+     C           HAIND     ANDEQ'H'                                                           CSE113
+     C           *IN44     ANDEQ'0'                                                           CSE113
+     C           CSE113    OREQ 'Y'                                                           CSE113
+     C           HAIND     ANDEQ'A'                                                           CSE113
+     C           *IN44     ANDEQ'1'                                                           CSE113
+     C           CSE113    OREQ 'N'                                                           CSE113
      C**
      C**  Access Description and Currency for Security
      C**
@@ -1293,10 +1337,19 @@
      C           STVAL     IFNE ' 0 '                                     035245
      C           SVVAL     ORNE ' 0 '                                     035245
      C           SSVAL     ORNE ' 0 '                                     035245
+     C           CSE113    OREQ 'Y'                                                           CSE113
+     C           STVAL     ANDEQ' 0 '                                                         CSE113
+     C           SVVAL     ANDEQ' 0 '                                                         CSE113
+     C           SSVAL     ANDEQ' 0 '                                                         CSE113
+     C           HAIND     ANDEQ'H'                                                           CSE113
      C**
      C                     ADD  1         X
      C/COPY WNCPYSRC,SE0200C020
+     C           CSE113    IFEQ 'Y'                                                           CSE113
+     C                     ADD  1         OUTREC                                              CSE113
+     C                     ENDIF                                                              CSE113
      C                     WRITESE0200S0
+     C                     ENDIF                                                              CSE113
      C/COPY WNCPYSRC,SE0200C021
      C                     END                                            035245
      C**
@@ -1815,6 +1868,21 @@
      C                     MOVE *ON       *IN21                                               CSE040
      C                     ENDIF                                                              CSE040
      C**                                                                                      CSE040
+     C                     MOVE 'N'       CSE113  1                                           CSE113
+     C                     MOVE '0'       *IN46   1                                           CSE113
+     C                     CALL 'AOSARDR0'                                                    CSE113
+     C                     PARM *BLANKS   @RTCD            Return Code                        CSE113
+     C                     PARM '*VERIFY' @OPTN            Option                             CSE113
+     C                     PARM 'CSE113'  @SARD            Feature Refer.                     CSE113
+     C           @RTCD     IFEQ *BLANKS                                                       CSE113
+     C                     MOVE 'Y'       CSE113                                              CSE113
+     C                     MOVE '1'       *IN46                                               CSE113
+     C                     ENDIF                                                              CSE113
+      *                                                                                       CSE113
+     C           CSE113    IFEQ 'Y'                                                           CSE113
+     C                     MOVE 'A'       HAIND                                               CSE113
+     C                     ENDIF                                                              CSE113
+      *                                                                                       CSE113
      C                     ENDSR
      C**
      C*****************************************************************
@@ -1984,6 +2052,7 @@ USER IS NOT AUTHORISED TO ANY BOOKING BRANCHES
 BANK LEVEL AUTHORITY IS NEEDED FOR ALL BRANCHES
 NO DEPOT NO./SHORTNAME SELECTED OR ENTERED - PLEASE RE-ENTER OR TAKE F/6
 USER IS NOT AUTHORISED TO THE BOOKING BRANCH
+INVALID ENTRY - ENTER EITHER 'H', 'A', OR LEAVE BLANK                                         CSE113
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                      CSE016
 0366073110961461                                                          CSE016
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                        CSE016

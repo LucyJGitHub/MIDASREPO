@@ -1,23 +1,24 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
 /*EXI *  TEXT('Midas SE Input Cycle Audit Reports')                  */
-/********************************************************************/
-/*                                                                  */
-/*         Midas     - Securities Trading Module                */
-/*                                                                  */
-/*         SEC0301 - AUDIT REPORTS - INPUT CYCLE                    */
-/*                                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*         Midas - Securities Trading Module                         */
+/*                                                                   */
+/*         SEC0301 - AUDIT REPORTS - INPUT CYCLE                     */
+/*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
-/*                                                                  */
+/*                                                                   */
+/*       Last Amend No. CSE108             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*       Last Amend No. CSE017             Date 20Oct99              */
+/*       Prev Amend No. CSE017             Date 20Oct99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CEU011             Date 16Mar98              */
+/*                      CEU011             Date 16Mar98              */
 /*                      S01401             Date 16Jun93              */
 /*                      E38656             DATE 23Apr92             */
 /*                      E32615             DATE 29NOV91             */
@@ -30,6 +31,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /**/                                                               /**/
+/*       CSE108 - Yearly Profitability Report and Enquiry            */
 /*       CSE017 - Cum/Ex Indicator on Depot Movements (Recompiled)   */
 /*       CEU011 - Position/Risk Report                             */
 /*       S01401 - SWIFT Messages MT5xxs : call new report pgms :   */
@@ -447,6 +449,11 @@
              IF         COND(&PRM01 *EQ 'SE5310  ') THEN(CHGVAR +
                           VAR(&MSG) VALUE('SEC0301 - COMMERCIAL PAPER +
                           PRICE AUDIT LIST-INTERIM'))
+                                                                                          /*CSE108*/
+             IF         COND(&PRM01 *EQ 'SE8405  ') THEN(CHGVAR +
+                          VAR(&MSG) VALUE('SEC0301 - DAILY  +
+                          EXCHANGE RATE LIST'))
+                                                                                          /*CSE108*/
 /*/COPY WNCPYSRC,SEC0301004                                          */
 /**/
 /* SEND PGM MESSAGE */
@@ -472,6 +479,14 @@ S01169*/
 /************IF         COND(&PRM01 *EQ 'SE0375  ') +                * *S01117*/
 /************             THEN(CALL PGM(&PRM01))                     * *S01117*/
 /************ELSE       CMD(CALL PGM(&PRM01) PARM('I'))              * *S01117*/
+                                                                                          /*CSE108*/
+             IF         COND(&PRM01 *EQ 'SE8405  ') THEN(DO)                              /*CSE108*/
+             CALL       PGM(SE8405) PARM('I' '     ')                                     /*CSE108*/
+             IF     COND(%SWITCH(XXXXXXX1)) THEN(GOTO ERROR)                              /*CSE108*/
+             DLTOVR *ALL                                                                  /*CSE108*/
+             GOTO ERROR                                                                   /*CSE108*/
+             ENDDO                                                                        /*CSE108*/
+                                                                                          /*CSE108*/
              IF         COND(&PRM01 *EQ 'SE0351' *OR +
                              &PRM01 *EQ 'SE0352' *OR +
                              &PRM01 *EQ 'SE0353' *OR +

@@ -1,0 +1,217 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('SMI Yearly Profitability Files Update')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8406 - SMI Yearly Profitability Update                     *
+      *                                                               *
+      *  Called by: SEC8400                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *                                                               *
+      *  Last Amend No. CSE108 *CREATE     Date 06Oct17               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSE108 - Yearly Profitability Report and Enquiry             *
+      *                                                               *
+      *****************************************************************
+     FSEYPDWPDIF  E           K        DISK
+     FSEYPDZPDIF  E           K        DISK
+     FSEYPDBPDUF  E           K        DISK                      A
+     FSEYPDSL4UF  E           K        DISK                      A
+     ISEYPDA      DS                             15
+     I                                        1   50CECD
+     I                                        6  100PECD
+     I                                       11  150LECD
+      *
+      ** DATA AREA FOR CURRENT EVENT CONTROL DATE
+      *
+      *  CECD = CURRENT ECD
+      *  PECD = PREVIOUS ECD
+      *  LECD = LATEST ECD
+      *
+      ** READ IN EVENT CONTROL DATES
+      *
+     C           *NAMVAR   DEFN           SEYPDA
+     C           *LOCK     IN   SEYPDA
+     C                     OUT  SEYPDA
+      *
+      ** CHECK IF YEARLY PROFITABILITY REPORT HAS BEEN RUN
+      *
+     C           LECD      CABEQ0         ENDTAG
+      *
+      ** CHECK IF UPDATES DONE ALREADY
+      *
+     C           CECD      CABEQLECD      ENDTAG
+      *
+      ** DELETE ALL RECORDS FOR 'PREVIOUS' EVENT CONTROL DATE
+      *
+     C                     EXSR PDELET
+      *
+      ** ADD RECORDS FOR 'LATEST' EVENT CONTROL DATE
+      *
+     C                     EXSR LADD
+      *
+      ** UPDATE EVENT CONTROL DATES
+      ** THE CURRENT BECOMES THE PREVIOUS
+      ** THE LATEST BECOMES THE CURRENT
+      *
+     C           *LOCK     IN   SEYPDA
+     C                     Z-ADDCECD      PECD
+     C                     Z-ADDLECD      CECD
+     C                     Z-ADD*ZERO     LECD
+     C                     OUT  SEYPDA
+      *
+     C           ENDTAG    TAG
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      * PDELET - DELETE ALL RECORDS FOR 'PREVIOUS' EVENT CONTROL DATE *
+      *                                                               *
+      *****************************************************************
+     C           PDELET    BEGSR
+     C           PECDK     KLIST
+     C                     KFLD           PECD
+      *
+      ** DELETE 'PREVIOUS' BOOK TOTALS
+      *
+     C           PECDK     READESEYPDBD0                 99*
+      *
+     C           *IN99     DOWEQ'0'
+     C                     DELETSEYPDBD0
+     C           PECDK     READESEYPDBD0                 99*
+     C                     END
+      *
+      ** DELETE 'PREVIOUS' SECURITY TOTALS
+      *
+     C           PECDK     READESEYPDSD0                 99*
+      *
+     C           *IN99     DOWEQ'0'
+     C                     DELETSEYPDSD0
+     C           PECDK     READESEYPDSD0                 99*
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * LADD - ADD RECORDS FOR 'LATEST' EVENT CONTROL DATE            *
+      *                                                               *
+      *****************************************************************
+     C           LADD      BEGSR
+      *
+     C           LECDK     KLIST
+     C                     KFLD           LECD
+      *
+     C           YPDTBC    KLIST
+     C                     KFLD           CECD
+     C                     KFLD           YPBK
+     C                     KFLD           YPBA
+      *
+     C           YPDTBL    KLIST
+     C                     KFLD           LECD
+     C                     KFLD           YPBK
+     C                     KFLD           YPBA
+      *
+      ** ADD 'LATEST' BOOK TOTALS
+      *
+     C           LECDK     READESEYPDWD0                 99*
+      *
+     C           *IN99     DOWEQ'0'
+      *
+     C                     MOVE LYPBA     YPBA
+     C                     MOVE LYPBK     YPBK
+      *
+      ** GET 'CURRENT' BOOK TOTAL TO DETERMINE CHANGE IN YTD FIGURES
+      *
+     C           YPDTBC    CHAINSEYPDBD0             99    *
+      *
+      ** DETERMINE CHANGE IN YTD FIGURES
+      *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD*ZERO     TBYTD
+     C                     END
+     C           W6TOTB    SUB  TBYTD     WCBYTD 150
+      *
+      ** WRITE/UPDATE THE 'LATEST' BOOK TOTAL
+      *
+     C           YPDTBL    CHAINSEYPDBD0             99    *
+      *
+     C                     Z-ADDLECD      YECD
+      *
+     C                     Z-ADDWCBYTD    CBYTD
+     C                     Z-ADDW6TOTB    TBYTD
+      *
+     C  N99                UPDATSEYPDBD0
+     C   99                WRITESEYPDBD0
+      *
+     C           LECDK     READESEYPDWD0                 99*
+     C                     END
+      *
+     C           YPDTSC    KLIST
+     C                     KFLD           CECD
+     C                     KFLD           YPBK
+     C                     KFLD           YPBA
+     C                     KFLD           YPSS
+      *
+     C           YPDTSL    KLIST
+     C                     KFLD           LECD
+     C                     KFLD           YPBK
+     C                     KFLD           YPBA
+     C                     KFLD           YPSS
+      *
+      ** ADD 'LATEST' SECURITY TOTALS
+      *
+     C           LECDK     READESEYPDZD0                 99*
+      *
+     C           *IN99     DOWEQ'0'
+      *
+     C                     MOVE LYPBA     YPBA
+     C                     MOVE LYPBK     YPBK
+     C                     MOVE LYPNC     YPNC
+     C                     MOVE LYPIN     YPIN
+     C                     MOVE LYPSS     YPSS
+      *
+      ** GET 'CURRENT' SECURITY TOTAL TO DETERMINE CHANGE IN YTD FIGURES
+      *
+     C           YPDTSC    CHAINSEYPDSD0             99    *
+      *
+      ** DETERMINE CHANGE IN YTD FIGURES
+      *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD*ZERO     TTRP
+     C                     Z-ADD*ZERO     TUPN
+     C                     Z-ADD*ZERO     TPSN
+     C                     Z-ADD*ZERO     TBYTD
+     C                     END
+     C           WREAL     SUB  TTRP      WCTRP  150
+     C           WUREAL    SUB  TUPN      WCUPN  150
+     C           WINTR     SUB  TPSN      WCPSN  150
+     C           WBASTO    SUB  TBYTD     WCBYTD 150
+      *
+      ** WRITE/UPDATE THE 'LATEST' SECURITY TOTAL
+      *
+     C           YPDTSL    CHAINSEYPDSD0             99    *
+      *
+     C                     Z-ADDLECD      YECD
+      *
+     C                     Z-ADDWCTRP     CTRP
+     C                     Z-ADDWCUPN     CUPN
+     C                     Z-ADDWCPSN     CPSN
+     C                     Z-ADDWCBYTD    CBYTD
+      *
+     C                     Z-ADDWREAL     TTRP
+     C                     Z-ADDWUREAL    TUPN
+     C                     Z-ADDWINTR     TPSN
+     C                     Z-ADDWBASTO    TBYTD
+      *
+     C  N99                UPDATSEYPDSD0
+     C   99                WRITESEYPDSD0
+      *
+     C           LECDK     READESEYPDZD0                 99*
+     C                     END
+     C                     ENDSR
+      *****************************************************************

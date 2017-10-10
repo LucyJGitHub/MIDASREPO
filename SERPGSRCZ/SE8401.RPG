@@ -1,0 +1,218 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Calculate Interest')                          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8401 - Calculate Interest                                  *
+      *                                                               *
+      *  Called by: SE8400                                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *                                                               *
+      *  Last Amend No. CSE108 *CREATE     Date 06Oct17               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSE108 - Yearly Profitability Report and Enquiry             *
+      *                                                               *
+      *****************************************************************
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+     E                    CD         12  4 0             CD01-12 ARRAY
+     E                    CR         12  1               CR01-12 ARRAY
+     E                    ZF29   14  32  5 0             29TH FEB ARRAY
+     E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+     E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    POWER8  1   8  8 4             POWER8 ARRAY
+      *
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     ILDA        UDS                            256
+     I                                        1   1 CLOSPG
+     I                                        2   2 YP
+     I                                        3   3 LDAC
+     I                                        4  13 SESN
+     I                                       14  14 PROT
+     I                                       15  15 PPDI
+     I                                       16  160NMDP
+     I                                       17  170CDP
+     I                                       18  220MATY
+     I                                       23  337CPNR
+     I                                       34  34 DYBS
+     I                                       35  35 DVBS
+     I                                       36  36 STBS
+     I                                       37  38 SYBS
+     I                                       50  97 CD
+     I                                       50  97 CDDS
+     I                                       50  530CD01
+     I                                       54  570CD02
+     I                                       58  610CD03
+     I                                       62  650CD04
+     I                                       66  690CD05
+     I                                       70  730CD06
+     I                                       74  770CD07
+     I                                       78  810CD08
+     I                                       82  850CD09
+     I                                       86  890CD10
+     I                                       90  930CD11
+     I                                       94  970CD12
+     I                                       98 109 CR
+     I                                       98 109 CRDS
+     I                                       98  98 CR01
+     I                                       99  99 CR02
+     I                                      100 100 CR03
+     I                                      101 101 CR04
+     I                                      102 102 CR05
+     I                                      103 103 CR06
+     I                                      104 104 CR07
+     I                                      105 105 CR08
+     I                                      106 106 CR09
+     I                                      107 107 CR10
+     I                                      108 108 CR11
+     I                                      109 109 CR12
+     I                                      110 1140NCD
+     I                                      115 1238CFCT
+     I                                      124 1380CPDP
+     I                                      139 1530SFPP
+     I                                      154 1560IADJ
+     I                                      157 1610FCPN
+     I                                      162 1660ISSD
+     I                                      167 1710ITLD
+     I                                      181 1910NOML
+     I                                      192 1960CALDAT
+     I                                      197 197 ACIN
+     I                                      198 2120INTR
+      *
+      ** INITIALIZATION ROUTINE
+      *
+     C                     EXSR INIT
+      *
+     C           CLOSPG    IFEQ 'Y'
+     C                     SETON                     LR
+     C                     GOTO END
+     C                     END
+      *
+      ** INTEREST CALCULATION
+      *
+     C           MATY      IFNE *ZERO
+     C           DYBS      ANDNE'4'
+     C           CD01      ANDNE*ZERO
+     C                     EXSR INTCAL
+     C                     END
+      *
+     C                     OUT  LDA
+     C                     RETRN
+     C           END       TAG
+      *****************************************************************
+      *                                                               *
+      *  INIT - INITIALIZATION ROUTINE                                *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C                     SETOF                     98
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     Z-ADDCALDAT    ECD     50
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INTCAL - INTEREST CALCULATION ROUTINE                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INTCAL    BEGSR
+      *
+      ** CALCULATE LAST COUPON DATE
+      *
+     C           LDAC      IFEQ 'Y'
+     C           CALDAT    SUB  1         ZECD
+     C                     ELSE
+     C                     Z-ADDCALDAT    ZECD
+     C                     END
+      *
+     C                     EXSR ZLCD
+     C                     Z-ADDZZLCD     LCPN    50
+      *
+      ** CALCULATE NEXT COUPON DATE
+      *
+     C                     Z-ADDCALDAT    ECD
+     C                     EXSR ZNCD
+      *
+     C           CALDAT    IFEQ LCPN
+     C                     MOVEL'F'       ACIN
+     C                     END
+     C           ACIN      IFEQ 'X'
+     C                     Z-ADDCALDAT    ZDCSDT  50
+     C                     Z-ADDNCD       ZDCEDT  50
+     C                     ELSE
+     C           ACIN      IFNE 'F'
+     C                     Z-ADDLCPN      ZDCSDT
+     C                     Z-ADDCALDAT    ZDCEDT
+     C                     ELSE
+     C                     Z-ADDCALDAT    ZDCSDT
+     C                     Z-ADDCALDAT    ZDCEDT
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDNOML      ZAMT   150
+      *
+     C                     Z-ADDNMDP      NMDP    10
+     C                     Z-ADDCDP       CDP     10
+     C                     MOVE PROT      PROT    1
+      *
+     C                     EXSR ZACCZ
+     C                     Z-ADDZDCINT    INTR
+      *
+      ** REVERSE SIGN IF EX-COUPON
+      *
+     C           ACIN      IFEQ 'X'
+     C                     Z-SUBINTR      INTR
+     C                     END
+      *
+      ** DETERMINE FOLLOWING COUPON DATE, IF REQUIRED
+      *
+     C           CALDAT    IFEQ NCD
+     C           CALDAT    ADD  1         ECD
+     C                     EXSR ZNCD
+     C                     END
+      *
+     C                     ENDSR
+     C**********************************************************************
+     C/COPY ZSRSRC,ZACCZZ1
+     C/COPY ZSRSRC,ZACCRZ1
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/COPY ZSRSRC,ZNCDZ3
+     C/COPY ZSRSRC,ZDYYRZ3
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZLCDZ1
+     C/COPY ZSRSRC,ZRATEZ1
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

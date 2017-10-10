@@ -1,0 +1,159 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Daily Exchange Rates Update')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8403 -Daily Exchange Rate Update                           *
+      *                                                               *
+      *  Called by: SEC8403                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *                                                               *
+      *  Last Amend No. CSE108 *CREATE     Date 06Oct17               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSE108 - Yearly Profitability Report and Enquiry             *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDCURRL0IF  E           K        DISK
+     FSEDEXRPDIF  E           K        DISK                      A
+     E/COPY ZSRSRC,ZDATE2Z1
+     ILDA        UDS                            256
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     I            DS
+     I                                        1   60ZDATE
+     I                                        1   2 DLMNTH
+     I                                        3   4 DLDAYN
+     I                                        5   6 DLYEAR
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** EXTERNAL DS FOR BANK DETAILS
+     ISDBANK    E DSSDBANKPD
+      *
+     ISDEXPM    E DSSDEXPMPD
+      *
+      ** ACCESS ICD
+      *
+      ** Access LF/SDBANKL1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 01 *
+     C                     MOVEL'SDBANKL1'DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Access LF/SDEXMPL1
+      *
+     C                     CALL 'AOEXPMR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C           SDEXPM    PARM SDEXPM    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 02 *
+     C                     MOVEL'SDEXPML1'DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Determine Year, Month & Day of current day
+      *
+     C                     EXSR DETYMD
+      *
+      ** Access all currencies
+      *
+     C           *LOVAL    SETLLSDCURRL0
+     C                     READ SDCURRL0                 99*
+     C           *IN99     DOWEQ'0'
+      *
+      ** Access the Daily Exchange Rate for the Currency
+      *
+     C           A6DLCI    IFEQ 'Y'
+     C                     EXSR ACDEXR
+     C                     END
+     C                     READ SDCURRL0                 99*
+     C                     END
+     C                     SETON                         LR
+      *****************************************************************
+      *                                                               *
+      *  ACDEXR - Access Daily Exchange Rate for Currency             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACDEXR    BEGSR                           ** ACDEXR *
+      *
+     C                     MOVELA6CYCD    DLCCCY
+     C           SEDEXK    KLIST
+     C                     KFLD           DLCCCY
+     C                     KFLD           DLYEAR
+     C                     KFLD           DLMNTH
+     C                     KFLD           DLDAYN
+      *
+     C           SEDEXK    CHAINSEDEXRPD             99
+     C           *IN99     IFEQ '1'
+     C                     Z-ADDA6SPRT    DLEXRT
+     C                     WRITESEDEXRD0
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DETYMD - Determine Year, Month, and Day of run date          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETYMD    BEGSR                           ** DETYMD *
+      *
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ** End the program here.
+      *
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 226449             Date 24Jun15               *
-      *  Prev Amend No. MD034776           Date 08Jul15               *
+      *  Last Amend No. CSE109             Date 06Oct17               *
+      *  Prev Amend No. 226449             Date 24Jun15               *
+      *                 MD034776           Date 08Jul15               *
       *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -141,6 +142,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSE109 - Own holding enquriry enhancements                   *
+      *           Add Unrealised P&L to enquiry.                      *
       *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
       *         - Applied for MD034387.                               *
       *  MD034776 - Reverse AR1001183A to allow negative interest     *
@@ -327,6 +330,7 @@
       *
      FSE0230DFCF  E                    WORKSTN      KINFDS SCRDS
      F                                        SFLRECKSFILE SE0230S0
+     F                                        SFLRECKSFILE SE0230S1                           CSE109
      FSECTY   IF  E           K        DISK
      FUDEPB   IF  E           K        DISK
      F***TABSE***IF  E           K        DISK                            S01117
@@ -472,7 +476,8 @@
      E***********         MSG     1  13 79               Error Messages   S01117
      E***********         MSG     1  14 79               Error MessS01117 CAC005
      E***********         MSG     1  23 79               Error MessCAC005 CSE006
-     E                    MSG     1  24 79               Error Messages   CSE006
+     E**********          MSG     1  24 79               Error Messages                CSE006 CSE109
+     E                    MSG     1  25 79               Error Messages                       CSE109
      E/COPY ZSRSRC,ZDAYSZ1
      E/COPY ZSRSRC,ZPOWERZ1
      E/COPY ZSRSRC,ZSEDITZ1
@@ -550,6 +555,27 @@
      I                                       21  21 SB1
      I                                       22  34 SRNOM
      I                                       35  35 SB2
+      *                                                                                       CSE109
+     I            DS                                                                          CSE109
+     I                                        1  77 LIN4                                      CSE109
+     I                                        1  20 SDESC4                                    CSE109
+     I                                       22  24 SNMCY4                                    CSE109
+     I                                       28  32 SPCTR4                                    CSE109
+     I                                       34  45 SBKPR4                                    CSE109
+     I                                       46  46 SP14                                      CSE109
+     I                                       47  63 SBVAL4                                    CSE109
+     I                                       64  77 SUNRL4                                    CSE109
+     I            DS                                                                          CSE109
+     I                                        1  77 LIN5                                      CSE109
+     I                                        1  13 SCPNR5                                    CSE109
+     I                                       14  20 SMATY5                                    CSE109
+     I                                       21  33 SNOML5                                    CSE109
+     I                                       34  45 SMKPR5                                    CSE109
+     I                                       46  46 SP25                                      CSE109
+     I                                       47  63 SMVAL5                                    CSE109
+     I            DS                                                                          CSE109
+     I                                        1  77 LIN6                                      CSE109
+      *
      I*
      I            DS
      I*
@@ -671,6 +697,11 @@
      C           *LIKE     DEFN PSPRFC    PRFCHK                          CAC005
      C**********           Z-ADD0         SAVCN   60                                          CSD027
      C                     MOVE *BLANKS   SAVCN   6                                           CSD027
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE 'A'       HISACT                                              CSE109
+     C                     MOVE '1'       *IN49                                               CSE109
+     C                     ENDIF                                                              CSE109
+      *                                                                                       CSE109
      C           UKEY      KLIST
      C                     KFLD           BRCCHK
      C                     KFLD           BOKCHK
@@ -794,8 +825,13 @@
      C**
      C**    Display the screen
      C**
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     WRITESE0230F1                                                      CSE109
+     C                     EXFMTSE0230C1                                                      CSE109
+     C                     ELSE                                                               CSE109
      C                     WRITESE0230F0
      C                     EXFMTSE0230C0
+     C                     ENDIF                                                              CSE109
      C*                                                                   S01408
      C/COPY WNCPYSRC,SE0230CP10                                           S01408
      C*                                                                   S01408
@@ -815,6 +851,10 @@
      C                     MOVE *BLANKS   ERMSG  79
      C                     SETOF                     414243
      C                     SETOF                     4445
+      *                                                                                       CSE109
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE '1'       *IN70                                               CSE109
+     C                     ENDIF                                                              CSE109
       *                                                                   CAC005
      C           CAC005    IFEQ 'Y'                                       CAC005
      C                     MOVE *OFF      *IN48                           CAC005
@@ -1069,7 +1109,11 @@
      C**
      C                     ELSE
      C**
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     READCSE0230S1                 40                                   CSE109
+     C                     ELSE                                                               CSE109
      C                     READCSE0230S0                 40
+     C                     ENDIF                                                              CSE109
      C**
      C**     Check if any entry made
      C**
@@ -1126,14 +1170,26 @@
      C                     MOVE SSESN     RQSESN
      C                     MOVE *BLANK    SELECT
      C                     MOVE '0'       *IN08
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     UPDATSE0230S1                                                      CSE109
+     C                     ELSE                                                               CSE109
      C                     UPDATSE0230S0
+     C                     ENDIF                                                              CSE109
      C**
      C           *IN40     DOUEQ'1'
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     READCSE0230S1                 40                                   CSE109
+     C                     ELSE                                                               CSE109
      C                     READCSE0230S0                 40
+     C                     ENDIF                                                              CSE109
      C           *IN40     IFEQ '0'
      C                     MOVE *BLANK    SELECT
      C                     MOVE '0'       *IN08
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     UPDATSE0230S1                                                      CSE109
+     C                     ELSE                                                               CSE109
      C                     UPDATSE0230S0
+     C                     ENDIF                                                              CSE109
      C                     MOVE '1'       *IN42
      C                     MOVE MSG,3     ERMSG
      C                     END
@@ -1159,6 +1215,26 @@
      C**
      C                     SETOF                     414243
      C                     SETOF                     4445
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE '0'       *IN70                                               CSE109
+      *                                                                                       CSE109
+      ** If HISTORIC/ACTIVE - Check it is A or H                                              CSE109
+      ** ERROR if not                                                                         CSE109
+      *                                                                                       CSE109
+     C           HISACT    IFNE ' '                                                           CSE109
+     C           HISACT    ANDNE'A'                                                           CSE109
+     C           HISACT    ANDNE'H'                                                           CSE109
+     C                     SETON                     4270                                     CSE109
+     C                     MOVE MSG,25    ERMSG                                               CSE109
+     C                     GOTO ESECE                                                         CSE109
+     C                     ENDIF                                                              CSE109
+      *                                                                                       CSE109
+      ** If HISTORIC/ACTIVE - Default to A if blank                                           CSE109
+      *                                                                                       CSE109
+     C           HISACT    IFEQ ' '                                                           CSE109
+     C                     MOVE 'A'       HISACT                                              CSE109
+     C                     ENDIF                                                              CSE109
+     C                     ENDIF                                                              CSE109
       *                                                                   CAC005
      C           CAC005    IFEQ 'Y'                                       CAC005
      C                     MOVE *OFF      *IN48                           CAC005
@@ -1434,6 +1510,12 @@
      C           SAVSS     IFNE *BLANKS
       *                                                                   219779
      C           ZZNOML    IFNE 0                                         219779
+     C           CSE109    ANDEQ'N'                                                           CSE109
+     C           ZZNOML    ORNE 0                                                             CSE109
+     C           CSE109    ANDEQ'Y'                                                           CSE109
+     C           HISACT    ANDEQ'A'                                                           CSE109
+     C           CSE109    OREQ 'Y'                                                           CSE109
+     C           HISACT    ANDEQ'H'                                                           CSE109
      C                     EXSR PROCES
       *                                                                                       245887
      C                     ELSE                                                               245887
@@ -1726,7 +1808,9 @@
      C**
      C**  B/V ind is set to BLANK by default
      C**
+     C           CSE109    IFEQ 'N'                                                           CSE109
      C                     MOVE ' '       SBVI
+     C                     ENDIF                                                              CSE109
      C                     Z-ADD0         BKPR   158
      C                     Z-ADD0         ZZAPW
      C**
@@ -1756,7 +1840,9 @@
      C**  B/V ind is set to Y
      C**
      C           PVDT      IFLT PRUN
+     C           CSE109    IFEQ 'N'                                                           CSE109
      C                     MOVE 'Y'       SBVI
+     C                     ENDIF                                                              CSE109
      C**
      C**  If price found & value date equals prev. run date
      C**    Price will be used to override AP num COB field
@@ -2065,9 +2151,16 @@
      C                     SETOF                     464750
      C                     SETOF                     51
      C                     MOVE *OFF      *IN48                           CAC005
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE '0'       *IN70                                               CSE109
+     C                     ENDIF                                                              CSE109
      C**  CLEAR SUBFILE
      C                     SETON                       02
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     WRITESE0230C1                                                      CSE109
+     C                     ELSE                                                               CSE109
      C                     WRITESE0230C0
+     C                     ENDIF                                                              CSE109
      C                     SETOF                       02
      C**
      C                     ENDSR
@@ -2225,6 +2318,10 @@
      C                     MOVE ZPRFC     SPCTR                           152925
      C                     MOVE ZPSBK     XPSBK   2                       152925
      C                     END                                            152925
+      *                                                                                       CSE109
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE SPCTR     SPCTR4                                              CSE109
+     C                     ENDIF                                                              CSE109
      C**
      C**   ACCESS SECURITY DETAILS
      C**
@@ -2275,6 +2372,10 @@
      C                     MOVE SAVSS     SSESN
      C                     MOVE SRPN      SDESC
      C                     MOVE NMCY      SNMCY
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE SDESC     SDESC4                                              CSE109
+     C                     MOVE SNMCY     SNMCY4                                              CSE109
+     C                     ENDIF                                                              CSE109
      C**
      C***********          MOVEL'20      'TKEY   12                       S01117
      C***********          MOVELNMCY      ZWK4    4                       S01117
@@ -2399,19 +2500,35 @@
      C                     ENDIF                                                              CSE075
      C                     ENDIF                                                              CSE075
      C                     ENDIF                                                              CSE075
+      *                                                                                       CSE109
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     Z-ADD5         ZDECS   10                                          CSE109
+     C                     MOVE 'L'       ZECODE                                              CSE109
+     C                     Z-ADDZPRCOT    WRK5DC 115                                          CSE109
+     C                     MOVE WRK5DC    ZFLD15                                              CSE109
+     C                     ELSE                                                               CSE109
      C                     Z-ADD8         ZDECS   10
      C                     MOVE 'L'       ZECODE
      C***********          MOVE ZPRCOT    ZFLD15
      C***********          MOVE BKPR      ZFLD15                          S01176
      C                     MOVE ZPRCOT    ZFLD15                          S01176
+     C                     ENDIF                                                              CSE109
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    SBKPR
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE SBKPR     SBKPR4                                              CSE109
+     C                     ENDIF                                                              CSE109
      C*                                                                   E23340
      C* Do Not show Yield on Trade Date Positions                         E23340
      C*                                                                   E23340
-     C           TRDCHK    IFEQ 'T'                                       E23340
-     C           STBS      IFEQ 'Y'                                       E01890
-     C           STBS      OREQ 'D'                                       E01890
+     C********** TRDCHK    IFEQ 'T'                                                    E23340 CSE109
+     C********** STBS      IFEQ 'Y'                                                    E01890 CSE109
+     C********** STBS      OREQ 'D'                                                    E01890 CSE109
+     C           TRDCHK    IFEQ 'T'                                                           CSE109
+     C           STBS      ANDEQ'Y'                                                           CSE109
+     C           TRDCHK    OREQ 'T'                                                           CSE109
+     C           STBS      ANDEQ'D'                                                           CSE109
+     C           CSE109    ANDEQ'N'                                                           CSE109
      C***********          MOVE '-- NOT A'NAR    16                E23340 E23941
      C***********          MOVEL'VAILABLE'NAR                      E23340 E23941
      C                     MOVEL'-- NOT A'NAR    16                E23340 E23941
@@ -2419,13 +2536,17 @@
      C                     MOVELNAR       SBKPR                           E23340
      C                     MOVE ' -'      SBKPR                           E23340
      C                     END                                            E01890
-     C                     END                                            E23340
+     C**********           END                                                         E23340 CSE109
      C*                                                                   E23340
      C           SPBS      IFEQ 'P'
      C                     MOVE '%'       SP1
      C                     ELSE
      C                     MOVE ' '       SP1
      C                     END
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE SBKPR     SBKPR4                                              CSE109
+     C                     MOVE SP1       SP14                                                CSE109
+     C                     ENDIF                                                              CSE109
      C*                                                                   054259
      C           PROT      IFEQ '8'                                       054259
      C*                                                                   054259
@@ -2496,6 +2617,9 @@
      C/COPY WNCPYSRC,SE0230C007
      C                     MULT CURF      ZCONS     H                     054259
      C                     END                                            054259
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     Z-ADDZCONS     BKPRSV 150                                          CSE109
+     C                     ENDIF                                                              CSE109
      C/COPY WNCPYSRC,SE0230C004
      C*                                                                   054259
      C                     Z-ADDZCONS     ZFLD15                          E22564
@@ -2505,13 +2629,24 @@
      C***********          MOVE BVAL      ZFLD15                          E22564
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    SBVAL
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE SBVAL     SBVAL4                                              CSE109
+     C                     ENDIF                                                              CSE109
      C**
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE LIN4      SLINX                                               CSE109
+     C                     ELSE                                                               CSE109
      C                     MOVE LIN1      SLINE
+     C                     ENDIF                                                              CSE109
      C                     END
      C**
      C**  SFLT=2 SECOND SECURITY DETAILS LINE
      C**
      C           SFLT      IFEQ 2
+     C           SFLT      OREQ 1                                                             CSE109
+     C           CSE109    ANDEQ'Y'                                                           CSE109
+      *                                                                                       CSE109
+     C           SFLT      IFEQ 2                                                             CSE109
      C                     SETON                     08
      C**
      C**   Edit coupon rate & maturity date
@@ -2526,6 +2661,9 @@
      C                     ELSE                                           E15690
      C                     MOVE *BLANKS   SCPNR                           E15690
      C                     END                                            E15690
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE SCPNR     SCPNR5                                              CSE109
+     C                     ENDIF                                                              CSE109
      C**
      C           MATY      IFEQ 00000
      C           MATY      OREQ 99999
@@ -2543,6 +2681,15 @@
      C                     Z-ADDZZNOML    ZFLD15
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    SNOML
+      *                                                                                       CSE109
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE SMATY     SMATY5                                              CSE109
+     C                     MOVE SNOML     SNOML5                                              CSE109
+     C                     ENDIF                                                              CSE109
+      *                                                                                       CSE109
+      ** SFLT = 1                                                                             CSE109
+      *                                                                                       CSE109
+     C                     ELSE                                                               CSE109
      C***********                                                         S01176
      C*****Format*market*price*****************************************   S01176
      C***********          MOVE MKPR      ZPRICE                          S01176
@@ -2772,9 +2919,17 @@
      C*                                                                   S01176
      C                     END                                            S01176
      C*                                                                   S01176
+     C           CSE109    IFEQ 'N'                                                           CSE109
      C                     Z-ADD8         ZDECS   10                      S01176
      C                     MOVE 'L'       ZECODE                          S01176
      C                     MOVE MKPRSV    ZFLD15                          S01176
+     C                     ELSE                                                               CSE109
+     C                     Z-ADD5         ZDECS   10                                          CSE109
+     C                     MOVE 'L'       ZECODE                                              CSE109
+     C                     Z-ADDMKPRSV    WRK5DC 115                                          CSE109
+     C                     MOVE WRK5DC    ZFLD15                                              CSE109
+     C                     ENDIF                                                              CSE109
+      *                                                                                       CSE109
      C                     EXSR ZSEDIT                                    S01176
      C                     MOVE ZOUT21    SMKPR                           S01176
      C           SPBS      IFEQ 'P'                                       S01176
@@ -2782,6 +2937,11 @@
      C                     ELSE                                           S01176
      C                     MOVE ' '       SP2                             S01176
      C                     END                                            S01176
+      *                                                                                       CSE109
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE SMKPR     SMKPR5                                              CSE109
+     C                     MOVE SP2       SP25                                                CSE109
+     C                     ENDIF                                                              CSE109
      C**
      C*****Format*market*value*****************************************   E22564
      C***********          Z-ADD*ZEROS    WMVAL  150                      E22564
@@ -2847,9 +3007,34 @@
      C***********          Z-ADDMVAL      ZFLD15                          E22564
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    SMVAL
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE SMVAL     SMVAL5                                              CSE109
+     C                     ENDIF                                                              CSE109
+      ** End for Else SFLT = 1                                                                CSE109
+     C                     ENDIF                                                              CSE109
      C**
+     C           MKPRSV    IFNE 0                                                             CSE109
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C           ZCONS     SUB  BKPRSV    ZFLD15                                              CSE109
+     C                     EXSR ZSEDIT                                                        CSE109
+     C                     MOVE ZOUT21    SUNRL4                                              CSE109
+     C                     ELSE                                                               CSE109
+     C                     MOVE *BLANKS   SUNRL4                                              CSE109
+     C                     END                                                                CSE109
+      *                                                                                       CSE109
+     C                     END                                                                CSE109
+     C           SFLT      IFEQ 1
+     C           CSE109    ANDEQ'Y'                                                           CSE109
+     C                     MOVE LIN4      SLINX                                               CSE109
+     C                     ELSE                                                               CSE109
+      *                                                                                       CSE109
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     MOVE LIN5      SLINX                                               CSE109
+     C                     ELSE                                                               CSE109
      C                     MOVE LIN2      SLINE
+     C                     ENDIF                                                              CSE109
      C                     END
+     C                     ENDIF                                                              CSE109
      C**
      C**  SFLT=3 REPOS LINE
      C**
@@ -2868,14 +3053,37 @@
      C**
      C                     MOVE LIN3      SLINE
      C                     END
+      *                                                                                       CSE109
+      ** If Historic Data requested only output records with                                  CSE109
+      ** NOMINAL POSITION EQUAL ZERO                                                          CSE109
+      *                                                                                       CSE109
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C           HISACT    IFEQ 'H'                                                           CSE109
+     C           ZZNOML    ANDNE*ZEROS                                                        CSE109
+     C                     GOTO ENDTAG                                                        CSE109
+     C                     ENDIF                                                              CSE109
+      *                                                                                       CSE109
+      ** If Active Data requested only output records with                                    CSE109
+      **   NOMINAL POSITION NOT EQUAL ZERO                                                    CSE109
+      *                                                                                       CSE109
+     C           HISACT    IFEQ 'A'                                                           CSE109
+     C           ZZNOML    ANDEQ*ZEROS                                                        CSE109
+     C                     GOTO ENDTAG                                                        CSE109
+     C                     ENDIF                                                              CSE109
+     C                     ENDIF                                                              CSE109
      C**
      C**   And output details to subfile
      C**
      C                     ADD  1         SFLREC
      C                     ADD  1         OUTREC  20
+     C           CSE109    IFEQ 'Y'                                                           CSE109
+     C                     WRITESE0230S1                                                      CSE109
+     C                     ELSE                                                               CSE109
      C                     WRITESE0230S0
+     C                     ENDIF                                                              CSE109
      C**
-     C                     ENDSR
+     C**********           ENDSR                                                              CSE109
+     C           ENDTAG    ENDSR                                                              CSE109
      C**
      C****************************************************************    S01176
       /EJECT                                                              S01176
@@ -3238,6 +3446,22 @@
      C           @RTCD     IFEQ *BLANK                                    CSE006
      C                     MOVE 'Y'       CSE006                          CSE006
      C                     ENDIF                                          CSE006
+      *                                                                                       CSE109
+      ** Check if CSE109 is on                                                                CSE109
+      *                                                                                       CSE109
+     C                     MOVE 'N'       CSE109  1                                           CSE109
+     C                     MOVE '0'       *IN26   1                                           CSE109
+     C                     CALL 'AOSARDR0'                                                    CSE109
+     C                     PARM *BLANKS   @RTCD                                               CSE109
+     C                     PARM '*VERIFY' @OPTN                                               CSE109
+     C                     PARM 'CSE109'  @SARD                                               CSE109
+      *                                                                                       CSE109
+     C           @RTCD     IFEQ *BLANK                                                        CSE109
+     C                     MOVE 'Y'       CSE109                                              CSE109
+     C                     MOVE '1'       *IN26                                               CSE109
+     C                     ENDIF                                                              CSE109
+     C                     MOVE 'Y'       CSE109                                          TESTCSE109
+     C                     MOVE '1'       *IN26                                           TESTCSE109
      C**
      C**     CALCULATE EVENT CONTROL DATE
      C**
@@ -3641,6 +3865,7 @@ BOOK OR PROFIT CENTRE MUST NOT BE BLANK
 BOOK AND PROFIT CENTRE COMBINATION DOES NOT EXISTS - PLEASE RE-ENTER
 INVALID PROFIT CENTRE - PLEASE RE-ENTER
 BUY-SELL BOOKS NOT PROCESSED BY THIS PROGRAM                                        CSE006
+INVALID ENTRY - ENTER EITHER 'H', 'A', OR LEAVE BLANK                                         CSE109
 **   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
 0006001521029820444305904073650882610287117481320914670161311759219053
 2051421975234362489726358278192928030741322023366335124365853804639507

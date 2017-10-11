@@ -16,14 +16,15 @@
      F*                                                                  *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      **
-      *  Last Amend No. MD027587           Date 19Jun14               *
+      *  Last Amend No. MD047608           Date 06Oct17               *
+      *  Prev Amend No. MD027587           Date 19Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. S01340             Date 21Feb92               *
+      *                 S01340             Date 21Feb92               *
       *                 S01199             Date 02May90               *
      **                    S01251             DATE 09FEB90               *
      **                    S01234             DATE 21DEC89               *
@@ -31,6 +32,9 @@
      **                                                                --*
      *********************************************************************
      **                                                                  *
+      *  MD047608 - Batch cannot be authorized because it has 1000    *
+      *             items. Fix is to not pass back 999 if 999 is the  *
+      *             latest item number used.                          *
       *  MD027587 - Unable to used the C for Copy and T for Template  *
       *             (Recompile)                                       *
      **   Program to retrieve the last batch item number from the JE     *
@@ -93,6 +97,29 @@
      C**********           Z-ADDBTJNNB    BCHIT                           S01251
      C           BCHNUM    IFEQ BTBTNB                     If 2
      C                     Z-ADDBTBINB    BCHIT
+      * If latest batch item is 999, look for one that would be deleted                     MD047608
+     C           BCHIT     IFEQ 999                                                         MD047608
+     C                     Z-ADD1         PREV    30                                        MD047608
+     C           LATBAT    SETLL@BTREAL              82                                     MD047608
+     C           LATBAT    READE@BTREAL                9182                                 MD047608
+     C           *IN82     DOWEQ'0'                                                         MD047608
+     C           BTBINB    IFEQ PREV                                                        MD047608
+     C                     ADD  1         PREV                                              MD047608
+     C           LATBAT    READE@BTREAL                9182                                 MD047608
+     C                     ELSE                                                             MD047608
+     C           PREV      SUB  1         BCHIT                                             MD047608
+     C           BCHIT     IFEQ 999                                                         MD047608
+     C                     Z-ADD0         BCHIT                                             MD047608
+     C                     ENDIF                                                            MD047608
+     C                     LEAVE                                                            MD047608
+     C                     ENDIF                                                            MD047608
+     C                     ENDDO                                                            MD047608
+      * If all items wre used, pass back 0                                                  MD047608
+     C           BTBINB    IFEQ 999                                                         MD047608
+     C                     Z-ADD0         BCHIT                                             MD047608
+     C                     ENDIF                                                            MD047608
+     C                     ENDIF                                                            MD047608
+      *                                                                                     MD047608
      C                     ELSE                            E 2
      C                     Z-ADD0         BCHIT
      C                     END                             Endif 2

@@ -19,12 +19,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CCG024             Date 29Sep16               *
+      *  Last Amend No. MD025434           Date 02Oct17               *
+      *  Prev Amend No. CCG024             Date 29Sep16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD053             Date 01Jun06               *
       *                 CSC022             Date 24Feb04               *
       * Midas Release 4.01 -------------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD025434 - Avoid empty .dat file sent to CM.                 *
+      *             Applied for MD048036.                             *
       *  CCG024 - Use Atlernate Name and Address in Correspondence    *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
@@ -83,6 +86,8 @@
      FCGXDCRL0UF  E           K        DISK                           UC
      F                                              KINFSR SRFILE
      F                                              KCOMIT
+     FCGUXMLL0IF  E           K        DISK                           UC                    MD025434
+     F                                              KINFSR SRFILE                           MD025434
      FCG5100P1O   E             65     PRINTER      KINFDS SPOOLP     UC
       *
       /EJECT
@@ -273,6 +278,15 @@
       **  For each record found ...
      C           *IN50     DOWEQ*OFF
       *
+      **  For current items, ensure first that records are in CGUXMLPD                      MD025434
+     C           P#ARCH    IFNE 'A'                                                         MD025434
+     C           DRITEM    SETLLCGUXMLL0                                                    MD025434
+     C           DRITEM    READECGUXMLL0                 80                                 MD025434
+     C           *IN80     IFEQ *ON                                                         MD025434
+     C                     GOTO NXTREC                                                      MD025434
+     C                     ENDIF                                                            MD025434
+     C                     ENDIF                                                            MD025434
+      *                                                                                     MD025434
       **  Initialise the output format.
      C                     CLEAR@PGENPD
      C                     MOVEL*BLANKS   ##ISTS
@@ -829,6 +843,7 @@
      C                     ELSE
      C                     OPEN CGUDCRPD
      C                     OPEN CGUDCRL0
+     C                     OPEN CGUXMLL0                                                    MD025434
      C                     ENDIF
      C*
      C*** Open report and log to RCF

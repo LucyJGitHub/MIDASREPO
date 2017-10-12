@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046874           Date 31Jul17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046874 - Incorrectly update the Retail's account type      *
+      *             causing database error in REC62N component        *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -181,6 +184,7 @@
      D RtnCode         S              7
      D WProfitC        S              4
      D Option          S              7
+     D WAccType        S              1    INZ(' ')                                         MD046874
  
       *****************************************************************
       /EJECT
@@ -215,6 +219,7 @@
       *
       * Do While not EOF
      C                   DOW       *IN40 = '0'
+     C                   EVAL      WAccType = ATYP                                          MD046874
       *
       ** If retail account, check whether in fact it is a nostro
      C                   IF        ATYP = 'R'
@@ -226,7 +231,8 @@
      C     NostroKey     CHAIN     SDNOSTL2                           41
       *
      C                   IF        *IN41 = '0'
-     C                   EVAL      ATYP = 'N'
+     C**********         EVAL      ATYP = 'N'                                               MD046874
+     C                   EVAL      WAccType = 'N'                                           MD046874
      C                   ENDIF
       *ENDIF ATYP = 'R'
      C                   ENDIF
@@ -249,13 +255,15 @@
      C                             WProfitC = FTUAPC
       *
       * If Account type is Retail
-     C                   IF        ATYP = 'R'
+     C**********         IF        ATYP = 'R'                                               MD046874
+     C                   IF        WAccType = 'R'                                           MD046874
      C                   EVAL      PRFC = AAREPC
      C                   UPDATE    ACCNTABF
      C                   ENDIF
       *
       * If Account type is Nostro
-     C                   IF        ATYP = 'N'
+     C**********         IF        ATYP = 'N'                                               MD046874
+     C                   IF        WAccType = 'N'                                           MD046874
      C                   EVAL      PRFC = AANSPC
      C                   UPDATE    ACCNTABF
      C                   ENDIF

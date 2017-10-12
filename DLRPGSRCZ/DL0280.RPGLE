@@ -17563,6 +17563,8 @@
      C*                                                                   S01119
      C     DASNDM        IFEQ      2                                                           S0111
      C     WREAD         ANDEQ     'Y'
+     C     DLNODM        ORNE      DLNO                                                     MD036601
+     C     WREAD         ANDEQ     'Y'                                                      MD036601
      C*                                                                   S01119
      C*  ACCESS AMENDMENT RECORD FOR DEAL IF NOT RECORD ALREADY FOUND     S01119
      C*                                                                   S01119
@@ -17673,6 +17675,8 @@
      C*                                                                   S01119
      C     DASNDM        IFEQ      1                                                           S0111
      C     WREAD         ANDEQ     'Y'
+     C     DLNODM        ORNE      DLNO                                                     MD036601
+     C     WREAD         ANDEQ     'Y'                                                      MD036601
      C*                                                                   S01119
      C*  ACCESS AMENDMENT RECORD FOR DEAL IF NOT RECORD ALREADY FOUND     S01119
      C*                                                                   S01119

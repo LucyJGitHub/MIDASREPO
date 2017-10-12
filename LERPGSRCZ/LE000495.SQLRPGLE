@@ -12,11 +12,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD031723 *REWRITE  Date 09Jan15               *
-      *  Prev Amend No. CLE164 *CREATE     Date 18Aug14               *
+      *  Last Amend No. MD039450           Date 04Aug16               *
+      *  Prev Amend No. MD031723 *REWRITE  Date 09Jan15               *
+      *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD039450 - Improve COB component LEC000495 performance       *
+      *             Added 1 column to prevent SQL0030                 *
       *  MD031723 - LEC000495 Failed during COB due to conflict       *
       *             on the lenght of field AKEY on file LEKP1DPD      *
       *             and LEPK2DPD                                      *
@@ -100,6 +103,7 @@
      D                                     prefix(A_)
      D AvailableBal  e ds                  extname(LETMPLTD)
      D                                     prefix(B_)
+     D   B_RECNO                      8s 0                                                  MD039450
      D CombineFile   e ds                  extname(LETMPLTD)
      D                                     prefix(C_)
      D TransactDS      ds                  likeds(CombineFile)

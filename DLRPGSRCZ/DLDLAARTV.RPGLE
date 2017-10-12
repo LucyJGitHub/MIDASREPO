@@ -16,12 +16,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. AR1096788          Date 18Mar13               *
-      *  Prev Amend No. 258839             Date 28Sep12               *
+      *  Last Amend No. MD047196           Date 08Aug17               *
+      *  Prev Amend No. AR1096788          Date 18Mar13               *
+      *                 258839             Date 28Sep12               *
       *                 CAP210  *CREATE    Date 28Sep12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047196 - Authority Validation not working.                 *
       *  AR1096788 - DLAA details should be written in core STRANF    *
       *              file instead of the new DLSTRANFPD file          *
       *  258839 - Amended program so that user have the option to     *
@@ -297,22 +299,24 @@
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
-     C                   MOVEL     'DLAA034'     MsgIdArr(Ix)
+     C**********         MOVEL     'DLAA034'     MsgIdArr(Ix)                               MD047196
+     C                   MOVEL     'MMA0493'     MsgIdArr(Ix)                               MD047196
      C                   ELSE
      C                   IF        ERR = 2
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
-     C                   SELECT
-     C                   WHEN      DDACTN='E'
-     C                   MOVEL     'DLAA030'     MsgIdArr(Ix)
-     C                   WHEN      DDACTN='I'
-     C                   MOVEL     'DLAA031'     MsgIdArr(Ix)
-     C                   WHEN      DDACTN='A'
-     C                   MOVEL     'DLAA032'     MsgIdArr(Ix)
-     C                   WHEN      DDACTN='D'
-     C                   MOVEL     'DLAA033'     MsgIdArr(Ix)
-     C                   ENDSL
+     C                   MOVEL     'MMA0494'     MsgIdArr(Ix)                               MD047196
+     C**********         SELECT                                                             MD047196
+     C**********         WHEN      DDACTN='E'                                               MD047196
+     C**********         MOVEL     'DLAA030'     MsgIdArr(Ix)                               MD047196
+     C**********         WHEN      DDACTN='I'                                               MD047196
+     C**********         MOVEL     'DLAA031'     MsgIdArr(Ix)                               MD047196
+     C**********         WHEN      DDACTN='A'                                               MD047196
+     C**********         MOVEL     'DLAA032'     MsgIdArr(Ix)                               MD047196
+     C**********         WHEN      DDACTN='D'                                               MD047196
+     C**********         MOVEL     'DLAA033'     MsgIdArr(Ix)                               MD047196
+     C**********         ENDSL
      C                   ENDIF
      C                   ENDIF
       *

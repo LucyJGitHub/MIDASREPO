@@ -22,8 +22,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR1057551          Date 05Jun17               *
-      *  Prev Amend No. MD045091           Date 10May17               *
+      *  Last Amend No. MD038254           Date 03Jun16               *
+      *  Prev Amend No. MD030190           Date 26Nov15               *
+      *                 MD035546           Date 21Oct15               *
+      *                 253042             Date 07Oct15               *
+      *                 AR1057551          Date 05Jun17               *
+      *                 MD045091           Date 10May17               *
       *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD039651           Date 11Aug16               *
@@ -265,6 +269,28 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047806 - Consider zero base rate                           *
+      *  MD031179 - Used BRTE instead of BRTEH to correctly display   *
+      *             the starting base rate for newly inserted loans.  *      
+      *  MD035329 - Historic rollover with zero base rate does not    *
+      *             appear in Loan Activity Enquiry. Ensure that zero *
+      *             rollover rate is also displayed on LOAC. Apply    *
+      *             part of fix AR738602.                             *
+      *  MD026445 - ROLLOVER - SPREAD event is not displayed on next  *
+      *             page. Move 221558 fix before BUG9240 in SR/SRDISH.*
+      *           - Applied for MD035329                              *      
+      *  MD038254 - Use calculated outstanding interest for RE events *
+      *             of loan type 1 and 3 in SRLOAM instead of ZINTR.  *
+      *             Partially applied MD-12518                        *
+      *  MD030190 - Access system value checking when LOAC is called  *
+      *             from linked enquiry (CUPO).                       *
+      *           - Applied for MD-36557.                             *
+      *  MD035546 - Change the condition of 253042 to not display     *
+      *             maturity details on past due loans.               *
+      *  253042 - Maturity projections should be displayed whether    *
+      *           past rundate or not.  Patterned after fixes 238751  *
+      *           and 241588.                                         *
+      *         - Applied for MD-35546.                               *
       *  AR1057551 - Some loans incorrectly post interest repayments  *
       *             even though repayment type is 2 (no interest)     *
       *             – in R4 these interest payments are not posted.   *
@@ -1231,6 +1257,8 @@
       ** Linked enquiry data area
      I                                      141 146 LOANNO
      I/COPY WNCPYSRC,LEH00929
+      *                                                                                     MD035546
+     IJNSTT     E DSJNSTAT                                                                  MD035546
       *                                                                                       243394
       ** Datastructure to hold input parameter for AOSVALR0.                                  243394
      I            DS                                                                          243394
@@ -1949,6 +1977,11 @@
      C           RECI      ANDNE'M'                                                           202726
      C           MDAT      ANDLTRUND                                                          202726
      C           LCD       ANDEQRUND                                                          202726
+     C           RLDT      OREQ *ZEROS                                                      MD035546
+     C           MDAT      ANDGTPRUN                                                        MD035546
+     C           MDAT      ANDLTRUND                                                        MD035546
+     C           RECI      ANDNE'M'                                                         MD035546
+     C           PTDI      ANDNE'P'                                                         MD035546
      C                     EXSR SRMDAT                                    133915
      C                     MOVE '0'       *IN68                           133915
      C                     ELSE                                           133915
@@ -2277,16 +2310,23 @@
       *                                                                                      BUG9052
       ** ... base rate                                                                       BUG9052
       *                                                                                      BUG9052
-     C           BRTE      IFGT *ZEROS                                                       BUG9052
+     C********** BRTE      IFGT *ZEROS                                              BUG9052 MD035329
+     C           BRTT      IFGT *ZEROS                                                      MD035329
      C           VSLN      ANDLT20                                                           BUG9052
      C                     MOVEL'LEE0041' ZAMSID                                             BUG9052
      C                     EXSR SRTEXT                                                       BUG9052
      C                     MOVELZAMSTX    SNARR                                              BUG9052
-     C                     MOVE BRTE      ZFIELD                                             BUG9052
-     C                     Z-ADD7         ZADEC                                              BUG9052
-     C                     EXSR ZEDIT                                                        BUG9052
-     C                     MOVE ZFIELD    SAMNT                                              BUG9052
-     C                     MOVE *BLANKS   ZFIELD                                            AR742875
+     C**********           MOVE BRTE      ZFIELD                                    BUG9052 MD031179
+     C**********           Z-ADD7         ZADEC                                     BUG9052 MD031179
+     C**********           EXSR ZEDIT                                               BUG9052 MD031179
+     C**********           MOVE ZFIELD    SAMNT                                     BUG9052 MD031179
+     C**********           MOVE *BLANKS   ZFIELD                                   AR742875 MD031179
+     C                     Z-ADD0         ZFLD15                                            MD031179
+     C                     MOVE BRTE      ZFLD15                                            MD031179
+     C                     Z-ADD7         ZDECS                                             MD031179
+     C                     EXSR ZSEDIT                                                      MD031179
+     C                     MOVE ZOUT21    SAMNT                                             MD031179
+     C                     Z-ADDA6NBDP    ZDECS                                             MD031179
      C                     EXSR SRDISS                                                       BUG9052
      C                     ENDIF                                                             BUG9052
       *                                                                                       263418
@@ -2329,7 +2369,8 @@
       ** ... rate                                                                            BUG9052
       *                                                                                      BUG9052
      C           RTSP      IFGT *ZEROS                                                       BUG9052
-     C           BRTE      ANDEQ*ZEROS                                                       BUG9052
+     C********** BRTE      ANDEQ*ZEROS                                              BUG9052 MD035329
+     C           BRTT      ANDEQ*ZEROS                                                      MD035329
      C           VSLN      ANDLT20                                                           BUG9052
      C                     MOVEL'LEE0042' ZAMSID                                             BUG9052
      C                     EXSR SRTEXT                                                       BUG9052
@@ -2344,8 +2385,10 @@
       *                                                                                      BUG9052
       ** ... spread rate                                                                     BUG9052
       *                                                                                      BUG9052
-     C           RTSP      IFGT *ZEROS                                                       BUG9052
-     C           BRTE      ANDGT*ZEROS                                                       BUG9052
+     C********** RTSP      IFGT *ZEROS                                              BUG9052 MD035329
+     C********** BRTE      ANDGT*ZEROS                                              BUG9052 MD035329
+     C           RTSP      IFGE *ZEROS                                                      MD035329
+     C           BRTT      ANDGT*ZEROS                                                      MD035329
      C           VSLN      ANDLT20                                                           BUG9052
      C                     SELEC                                                             BUG9052
      C           SPIN      WHEQ 'A'                                                          BUG9052
@@ -2902,11 +2945,13 @@
       *                                                                                    AR1071639
       ** Consider negative rate.                                                           AR1071639
       *                                                                                    AR1071639
-     C           BRTEH     IFNE *ZEROS                                                     AR1071639
-     C           RTSPH     ORNE *ZEROS                                                     AR1071639
+     C***********BRTEH     IFNE *ZEROS                                            AR1071639 MD047806
+     C********** RTSPH     ORNE *ZEROS                                            AR1071639 MD047806
+     C           BRTTH     IFGT *ZEROS                                                      MD047806
      C                     Z-ADD7         ZADEC                           144916
      C********** BRTEH     IFGT *ZEROS                                              144916 AR1071639
       *                                                                                    AR1071639
+      ** Base Rate                                                                          MD047806
       ** Consider a negative base rate.                                                    AR1071639
       *                                                                                    AR1071639
      C           BRTEH     IFNE *ZEROS                                                     AR1071639
@@ -2939,12 +2984,15 @@
      C                     EXSR SRDISH                                    144916
      C                     ENDIF                                          144916
       *                                                                   144916
+     C                     ENDIF                                                            MD047806
      C********** RTSPH     IFGT *ZEROS                                              144916 AR1071639
       *                                                                                    AR1071639
+      ** Spread rate                                                                        MD047806
       ** Consider a negative rate.                                                         AR1071639
       *                                                                                    AR1071639
-     C           RTSPH     IFNE *ZEROS                                                     AR1071639
-     C           WDTL3     ANDEQ*BLANK                                                        188806
+     C********** RTSPH     IFNE *ZEROS                                            AR1071639 MD047806
+     C********** WDTL3     ANDEQ*BLANK                                               188806 MD047806
+     C           WDTL3     IFEQ *BLANK                                                      MD047806
      C           VSLN      ANDLT20                                                            188806
       *                                                                                    AR1071639
      C           RTSPH     IFLT 0                                                          AR1071639
@@ -2987,7 +3035,7 @@
      C                     MOVE 'Y'       WDTL3                                               188806
      C                     EXSR SRDISH                                    144916
      C                     ENDIF                                          144916
-     C                     ENDIF                                          144916
+     C**********           ENDIF                                                     144916 MD047806
       *
       ** Principal increase
       *
@@ -3800,7 +3848,8 @@
       ** Consider a negative base rate.                                                    AR1071639
       *                                                                                    AR1071639
      C********** BRTEH     IFGT *ZEROS                                                     AR1071639
-     C           BRTEH     IFNE *ZEROS                                                     AR1071639
+     C********** BRTEH     IFNE *ZEROS                                            AR1071639 MD047806
+     C           BRTTH     IFGT *ZEROS                                                      MD047806
      C           WDTL1     ANDEQ*BLANK
      C           WFXCHG    ANDNE'Y'                                                         MD031378
      C                     MOVEL'LEE0032' ZAMSID
@@ -3842,7 +3891,8 @@
       *                                                                                    AR1071639
       ** Consider a negative rate.                                                         AR1071639
       *                                                                                    AR1071639
-     C           RTSPH     IFNE *ZEROS                                                     AR1071639
+     C*********  RTSPH     IFNE *ZEROS                                            AR1071639 MD047806
+     C           BRTTH     IFEQ *ZEROS                                                      MD047806
      C           BRTEH     ANDEQ*ZEROS
      C           WDTL2     ANDEQ*BLANK
      C           VSLN      ANDLT20
@@ -3938,8 +3988,9 @@
       *                                                                                    AR1071639
       ** Consider a negative rate.                                                         AR1071639
       *                                                                                    AR1071639
-     C           RTSPH     IFNE *ZEROS                                                     AR1071639
-     C           BRTEH     ANDNE*ZEROS                                                     AR1071639
+     C********** RTSPH     IFNE *ZEROS                                            AR1071639 MD047806
+     C********** BRTEH     ANDNE*ZEROS                                            AR1071639 MD047806
+     C           BRTT      IFGT *ZEROS                                                      MD047806
      C           WDTL5     ANDEQ*BLANK
      C           VSLN      ANDLT20
      C           WFXCHG    ANDNE'Y'                                                         MD031378
@@ -4119,7 +4170,8 @@
       *                                                                                    AR1071639
       ** Consider a negative base rate.                                                    AR1071639
       *                                                                                    AR1071639
-     C           BRTEH     IFNE *ZEROS                                                     AR1071639
+     C********** BRTEH     IFNE *ZEROS                                            AR1071639 MD047806
+     C           BRTTH     IFGT *ZEROS                                                      MD047806
      C           VSLN      ANDLT20
      C                     MOVEL'LEE0041' ZAMSID
      C                     EXSR SRTEXT
@@ -4155,7 +4207,8 @@
       *                                                                                    AR1071639
       ** Consider a negative rate.                                                         AR1071639
       *                                                                                    AR1071639
-     C           RTSPH     IFNE *ZEROS                                                     AR1071639
+     C********** RTSPH     IFNE *ZEROS                                            AR1071639 MD047806
+     C           BRTTH     IFEQ *ZEROS                                                      MD047806
      C           BRTEH     ANDEQ*ZEROS
      C           VSLN      ANDLT20
      C                     MOVEL'LEE0042' ZAMSID
@@ -4193,8 +4246,10 @@
       *                                                                                    AR1071639
       ** Consider a negative rate.                                                         AR1071639
       *                                                                                    AR1071639
-     C           RTSPH     IFNE *ZEROS                                                     AR1071639
-     C           BRTEH     ANDNE*ZEROS                                                     AR1071639
+     C*********  RTSPH     IFNE *ZEROS                                            AR1071639 MD047806
+     C*********  BRTEH     ANDNE*ZEROS                                            AR1071639 MD047806
+     C           BRTTH     IFGT *ZEROS                                                      MD047806
+     C           BRTEH     ORNE *ZEROS                                                      MD047806
      C           VSLN      ANDLT20
      C                     SELEC
      C           SPINH     WHEQ 'A'
@@ -4621,10 +4676,11 @@
      C           AMTPH     WHEQ 'MC'                                                          188806
      C           WDTL2     IFEQ *BLANK                                                        188806
      C********** BRTEH     ANDGT*ZERO                                               188806 AR1071639
-     C           BRTEH     ANDNE*ZERO                                                      AR1071639
+     C********** BRTEH     ANDNE*ZERO                                             AR1071639 MD047806
+     C           BRTTH     ANDGT*ZERO
      C           WDTL3     OREQ *BLANK                                                        188806
      C********** RTSPH     ANDGT*ZERO                                               188806 AR1071639
-     C           RTSPH     ANDNE*ZERO                                                      AR1071639
+     C********** RTSPH     ANDNE*ZERO                                             AR1071639 MD047806
      C                     MOVE 'Y'       WSAME                                               188806
      C                     ENDIF                                                              188806
       *
@@ -4652,20 +4708,24 @@
      C           AMTPH     WHEQ 'RO'
      C           WDTL2     IFEQ *BLANK
      C********** RTSPH     ANDGT*ZEROS                                                     AR1071639
-     C           RTSPH     ANDNE*ZEROS                                                     AR1071639
+     C********** RTSPH     ANDNE*ZEROS                                            AR1071639 MD047806
      C***********BRTEH     ANDEQ*ZEROS                                    154221
      C********** BRTEH     ANDNE*ZEROS                                                 154221 186708
      C           BRTEH     ANDEQ*ZEROS                                                        186708
+     C           BRTTH     ANDEQ*ZEROS                                                      MD047806
      C           WDTL3     OREQ *BLANK
      C           PRINX     ANDNE*BLANK
      C           PRINRO    ANDNE*ZEROS
      C           WDTL4     OREQ *BLANK
      C           PRINX     ANDNE*BLANK
      C           PRINRO    ANDNE*ZEROS
+     C           DISCRO    ANDNE0                                                           MD026445
      C           WDTL5     OREQ *BLANK                                                       BUG9240
-     C           RTSPH     ANDGT*ZEROS                                                       BUG9240
-     C           BRTEH     ANDGT*ZEROS                                                       BUG9240
-     C           DISCRO    ANDNE0                                         221558
+     C********** RTSPH     ANDGT*ZEROS                                              BUG9240 MD035329
+     C           RTSPH     ANDGE*ZEROS                                                      MD035329
+     C********** BRTEH     ANDGT*ZEROS                                              BUG9240 MD035329
+     C           BRTTH     ANDGT*ZEROS                                                      MD035329
+     C********** DISCRO    ANDNE0                                                    221558 MD026445
      C                     MOVE 'Y'       WSAME
      C                     ENDIF
      C                     ENDSL
@@ -5048,21 +5108,27 @@
      C                     ENDIF                                                              238722
      C                     ENDIF                                          157635
       *                                                                   157635
+     C           WCALC     SUB  WIPAID    WCURRI                                            MD038254
+      *                                                                                     MD038254
      C           REPTL     IFEQ 3
      C***********ZINTR     IFLE TAMTL                                     157635
      C***********TAMTL     SUB  ZINTR     WPRAM  130H                     157635
-     C           ZINTR     IFLE WTAMTL                                    157635
+     C********** ZINTR     IFLE WTAMTL                                               157635 MD038254
+     C           WCURRI    IFLE WTAMTL                                                      MD038254
       *                                                                                       238722
      C           NCCY      IFNE *BLANKS                                                       238722
      C           CCYCL     ANDEQCCYL                                                          238722
      C           VDATL     ANDGTWWRLDT                                                        238722
      C           *IN10     OREQ '1'                                                           238722
-     C           ZAMTCO    SUB  ZINTR     WPRAM                                               238722
+     C********** ZAMTCO    SUB  ZINTR     WPRAM                                      238722 MD038254
+     C           ZAMTCO    SUB  WCURRI    WPRAM                                             MD038254
      C                     ELSE                                                               238722
-     C           WTAMTL    SUB  ZINTR     WPRAM  130H                     157635
+     C********** WTAMTL    SUB  ZINTR     WPRAM  130H                                157635 MD038254
+     C           WTAMTL    SUB  WCURRI    WPRAM  130H                                       MD038254
      C                     ENDIF                                                              238722
       *                                                                                       238722
-     C                     Z-ADDZINTR     WINTA  130
+     C**********           Z-ADDZINTR     WINTA  130                                        MD038254
+     C                     Z-ADDWCURRI    WINTA  130                                        MD038254
      C                     ELSE
      C                     Z-ADD*ZEROS    WPRAM
      C***********          Z-ADDTAMTL     WINTA                           157635
@@ -5106,7 +5172,8 @@
      C                     Z-ADDWPRAML    WPRAM                           157635
      C                     ENDIF                                                              238722
       *                                                                                       238722
-     C                     Z-ADDZINTR     WINTA
+     C**********           Z-ADDZINTR     WINTA                                             MD038254
+     C                     Z-ADDWCURRI    WINTA                                             MD038254
      C                     ENDIF
      C********** AUTOL     IFEQ 'Y'                                                    218984 242909
      C********** AUTOL     IFEQ 'Y'                                                BUG22066 BUG22332
@@ -6100,6 +6167,7 @@
      C                     MOVE BJLCCY    ZCCY                                              MD023475
      C                     MOVE BJSLCD    ZLOC                                              MD023475
      C                     ENDIF                                                            MD023475
+     C                     EXSR SRSCUR                                                        253042
       *
       ** If CLE005 is installed, take into consideration payment due
       ** date, thus allowing end date to fall on a holiday
@@ -6382,6 +6450,7 @@
      C                     MOVE BJLCCY    ZCCY                                              MD023475
      C                     MOVE BJSLCD    ZLOC                                              MD023475
      C                     ENDIF                                                            MD023475
+     C                     EXSR SRSCUR                                                        253042
       *                                                                   154221
       ** If CLE005 is installed, take into consideration payment due      154221
       ** date, thus allowing end date to fall on a holiday                154221
@@ -6680,8 +6749,9 @@
      C           MDST      IFEQ 01                                                          MD039187
      C           MDST      OREQ 07                                                          MD039187
      C           MDST      OREQ 08                                                          MD039187
-     C                     MOVE CCYCL     ZCCY                            157635
-     C                     MOVE WNLOC     ZLOC                            154221
+     C**********           MOVE CCYCL     ZCCY                                         157635 253042
+     C**********           MOVE WNLOC     ZLOC                                         154221 253042
+     C                     EXSR SRSCUR                                                        253042
      C                     ELSE                                                             MD039187
       *                                                                                     MD039187
       ** For all other settlement types, use Local Currency & Location                      MD039187
@@ -6873,8 +6943,9 @@
      C           MDST      IFEQ 01                                                          MD039187
      C           MDST      OREQ 07                                                          MD039187
      C           MDST      OREQ 08                                                          MD039187
-     C                     MOVE CCYCL     ZCCY                            157635
-     C                     MOVE WNLOC     ZLOC                            154221
+     C**********           MOVE CCYCL     ZCCY                                         157635 253042
+     C**********           MOVE WNLOC     ZLOC                                         154221 253042
+     C                     EXSR SRSCUR                                                        253042
       *                                                                                     MD039187
       ** For all other settlement types, use Local Currency & Location                      MD039187
       *                                                                                     MD039187
@@ -7527,8 +7598,9 @@
      C           MDST      IFEQ 01                                                          MD039187
      C           MDST      OREQ 07                                                          MD039187
      C           MDST      OREQ 08                                                          MD039187
-     C                     MOVE CCYCL     ZCCY                            157635
-     C                     MOVE WNLOC     ZLOC                            154221
+     C**********           MOVE CCYCL     ZCCY                                         157635 253042
+     C**********           MOVE WNLOC     ZLOC                                         154221 253042
+     C                     EXSR SRSCUR                                                        253042
      C                     ELSE                                                             MD039187
       *                                                                                     MD039187
       ** For all other settlement types, use Local Currency & Location                      MD039187
@@ -7628,8 +7700,9 @@
      C           MDST      IFEQ 01                                                          MD039187
      C           MDST      OREQ 07                                                          MD039187
      C           MDST      OREQ 08                                                          MD039187
-     C                     MOVE CCYCL     ZCCY                            157635
-     C                     MOVE WNLOC     ZLOC                            154221
+     C**********           MOVE CCYCL     ZCCY                                         157635 253042
+     C**********           MOVE WNLOC     ZLOC                                         154221 253042
+     C                     EXSR SRSCUR                                                        253042
       *                                                                                     MD039187
       ** For all other settlement types, use Local Currency & Location                      MD039187
       *                                                                                     MD039187
@@ -8982,6 +9055,28 @@
      C                     ENDIF                                                              CLE036
       *                                                                                       CLE036
      C                     ENDIF                                                              CLE036
+      *                                                                                       253042
+      ** Access SAR details file to determine if CEU004 is switched on                        253042
+      *                                                                                       253042
+     C                     CALL 'AOSARDR0'                                                    253042
+     C                     PARM *BLANKS   PRTCD                                               253042
+     C                     PARM '*VERIFY' POPTN                                               253042
+     C                     PARM 'CEU004'  PSARD                                               253042
+     C           SCSARD    PARM SCSARD    DSFDY                                               253042
+      *                                                                                       253042
+     C                     MOVE 'N'       CEU004  1                                           253042
+     C           PRTCD     IFEQ *BLANKS                                                       253042
+     C                     MOVE 'Y'       CEU004                                              253042
+     C                     ELSE                                                               253042
+     C           PRTCD     IFNE '*NRF   '                                                     253042
+     C                     MOVEL'LE0212  'DBPGM                                               253042
+     C                     MOVEL'SCSARDPD'DBFILE                                              253042
+     C                     Z-ADD10        DBASE                                               253042
+     C                     MOVEL'CEU004'  DBKEY                                               253042
+     C                     EXSR *PSSR                                                         253042
+     C                     ENDIF                                                              253042
+     C                     ENDIF                                                              253042
+      *                                                                                       253042
       *                                                                                       CLE134
       ** Check whether CLE134 is installed or not.                                            CLE134
       *                                                                                       CLE134
@@ -9054,6 +9149,9 @@
      C                     MOVE RQDTD     MODID   2
      C                     OUT  EMSDS
      C/COPY WNCPYSRC,LEH01381
+      *                                                                                     MD035546
+     C           *NAMVAR   DEFN JNSTAT    JNSTT                                             MD035546
+     C                     IN   JNSTT                                                       MD035546
       *
       ** Check the multibranching indicator to protect and non-display
       ** the branch field for a single branch system
@@ -9147,6 +9245,13 @@
      C                     MOVE CLAS      WHCLAS                                              CLE042
      C                     MOVE 'START  ' SACST
      C/COPY WNCPYSRC,LEH00924
+      *                                                                                     MD030190
+     C           CAS5      IFEQ 'N'                                                         MD030190
+     C           RLDT      ANDGT0                                                           MD030190
+     C                     MOVE 'Y'       CAS005                                            MD030190
+     C                     ENDIF                                                            MD030190
+      *                                                                                     MD030190
+     C                     EXSR SRSVAL                                                      MD030190
      C                     EXSR SRLOAN
      C                     EXSR SRPROC
       *
@@ -9160,6 +9265,17 @@
      C                     END                                                                190005
      C                     WRITELE0212F0
      C                     ENDIF
+      *                                                                                     MD030190
+     C                     EXSR SRSVAL                                                      MD030190
+     C/COPY WNCPYSRC,LE0212C013                                                             MD030190
+     C                     ENDSR                                                            MD030190
+      /EJECT                                                                                MD030190
+      *****************************************************************                     MD030190
+      * SRSVAL  -  Retrieve system value setting                      *                     MD030190
+      * Called by: SRINIT - Initial subroutine                        *                     MD030190
+      * Calls    : None                                               *                     MD030190
+      *****************************************************************                     MD030190
+     C           SRSVAL    BEGSR                                                            MD030190
       *                                                                                       243394
       ** CHECK SYSTEM VALUE: Add Past Due Interest in Calculated                              243394
       ** Maturity Interest.                                                                   243394
@@ -9334,7 +9450,8 @@
      C                     MOVE *BLANK    SINDT                           133915
      C                     ELSE                                                               202726
      C                     MOVE 'B'       SCODE                                               202726
-     C                     Z-ADDLCD       ZDAYNO                                              202726
+     C**********           Z-ADDLCD       ZDAYNO                                       202726 253042
+     C                     Z-ADDRUND      ZDAYNO                                              253042
      C                     EXSR ZDATE2                                                        202726
      C                     MOVE ZADATE    SINDT                                               202726
      C                     ENDIF                                                              202726
@@ -9348,6 +9465,56 @@
      C                     EXSR ZDATE2                                    133915
      C                     MOVE ZADATE    SDUDT                           133915
      C                     MOVE ZADATE    SBLDT                           133915
+      *                                                                                       253042
+      ** Check PTDI and PDDI field for maturity processing                                    253042
+      *                                                                                       253042
+     C                     EXSR SRSCUR                                                        253042
+     C                     MOVE WNLOC     ZLOC                                                253042
+     C                     Z-ADD0         ZNRDYS                                              253042
+      *                                                                                       253042
+     C                     SELEC                                                              253042
+     C           PTDI      WHEQ 'P'                                                           253042
+     C                     EXSR ZBKDT                                                         253042
+     C                     Z-ADDZDYNBR    WMDAT   50                                          253042
+      *                                                                                       253042
+     C           PTDI      WHEQ 'N'                                                           253042
+     C                     EXSR ZFWDT                                                         253042
+     C                     Z-ADDZDYNBR    WMDAT                                               253042
+      *                                                                                       253042
+     C           PTDI      WHEQ 'M'                                                           253042
+     C                     EXSR ZDATE2                                                        253042
+     C           *IN98     IFEQ *OFF                                                          253042
+     C                     MOVE ZDATE     MMYY    40P                                         253042
+     C                     MOVELMMYY      MMNLCD  20P                                         253042
+     C                     ELSE                                                               253042
+     C                     MOVELZDATE     MMNLCD    P                                         253042
+     C                     ENDIF                                                              253042
+     C                     Z-ADDZDAYNO    @DAYNO  50                                          253042
+     C                     EXSR ZFWDT                                                         253042
+     C                     Z-ADDZDYNBR    ZDAYNO                                              253042
+     C                     EXSR ZDATE2                                                        253042
+     C           *IN98     IFEQ *OFF                                                          253042
+     C                     MOVE ZDATE     MMYY      P                                         253042
+     C                     MOVELMMYY      MMNWKD  20P                                         253042
+     C                     ELSE                                                               253042
+     C                     MOVELZDATE     MMNWKD    P                                         253042
+     C                     ENDIF                                                              253042
+     C           MMNLCD    IFNE MMNWKD                                                        253042
+     C                     Z-ADD@DAYNO    ZDAYNO                                              253042
+     C                     EXSR ZBKDT                                                         253042
+     C                     ENDIF                                                              253042
+     C                     Z-ADDZDYNBR    WMDAT                                               253042
+      *                                                                                       253042
+     C                     OTHER                                                              253042
+     C                     Z-ADDMDAT      WMDAT                                               253042
+      *                                                                                       253042
+     C                     ENDSL                                                              253042
+      *                                                                                       253042
+     C           MDAT      IFNE WMDAT                                                         253042
+     C                     Z-ADDWMDAT     ZDAYNO                                              253042
+     C                     EXSR ZDATE2                                                        253042
+     C                     MOVE ZADATE    SINDT                                               253042
+     C                     ENDIF                                                              253042
       *                                                                   133915
       ** Maturity                                                         133915
       *                                                                   133915
@@ -9650,11 +9817,13 @@
       ** Consider a negative rate.                                                         AR1071639
       *                                                                                    AR1071639
      C********** WRSPR     IFGT *ZEROS                                              184903 AR1071639
-     C           WRSPR     IFNE *ZEROS                                                     AR1071639
-     C           WBRAT     ANDEQ*ZEROS                                    184903
+     C********** WRSPR     IFNE *ZEROS                                            AR1071639 MD047806
+     C********** WBRAT     ANDEQ*ZEROS                                               184903 MD047806
+     C           WBRAT     IFEQ *ZEROS                                                      MD047806
      C           CLE036    ANDEQ'N'                                                           CLE036
-     C           WRSPR     ORGT *ZEROS                                                        CLE036
-     C           WBRAT     ANDEQ*ZEROS                                                        CLE036
+     C********** WRSPR     ORGT *ZEROS                                               CLE036 MD047806
+     C********** WBRAT     ANDEQ*ZEROS                                               CLE036 MD047806
+     C           WBRAT     OREQ *ZEROS                                                      MD047806
      C           WBSRT     ANDEQ*ZEROS                                                        CLE036
      C           CLE036    ANDEQ'Y'                                                           CLE036
      C                     ADD  1         WCNT                            184903
@@ -9674,10 +9843,12 @@
      C                     ENDIF                                                              193701
      C********** WRSPR     IFGT *ZEROS                                              184903 AR1071639
      C********** WBRAT     ANDGT*ZEROS                                              184903 AR1071639
-     C           WRSPR     IFNE *ZEROS                                                     AR1071639
-     C           WBRAT     ANDNE*ZEROS                                                     AR1071639
-     C           WRSPR     ORGT *ZEROS                                                        CLE036
-     C           WBSRT     ANDGT*ZEROS                                                        CLE036
+     C********** WRSPR     IFNE *ZEROS                                            AR1071639 MD047806
+     C********** WBRAT     ANDNE*ZEROS                                            AR1071639 MD047806
+     C********** WRSPR     ORGT *ZEROS                                               CLE036 MD047806
+     C********** WBSRT     ANDGT*ZEROS                                               CLE036 MD047806
+     C           WBRAT     IFGT *ZEROS                                                      MD047806
+     C           WBSRT     ORGT *ZEROS                                                      MD047806
      C           CLE036    ANDEQ'Y'                                                           CLE036
      C                     ADD  1         WCNT                            184903
      C                     ENDIF                                          184903
@@ -9965,8 +10136,10 @@
       *                                                                                       CLE036
      C                     ELSE                                                               CLE036
       *                                                                                       CLE036
-     C                     MOVE *BLANKS   ZFIELD                                              CLE036
-     C                     MOVE WBSRT     ZFIELD                                              CLE036
+     C**********           MOVE *BLANKS   ZFIELD                                     CLE036 MD031179
+     C                     MOVE *BLANKS   ZFLD15                                            MD031179
+     C**********           MOVE WBSRT     ZFIELD                                     CLE036 MD031179
+     C                     MOVE WBSRT     ZFLD15                                            MD031179
       *                                                                                       CLE036
      C                     ENDIF                                                              CLE036
       *                                                                                       CLE036
@@ -9978,7 +10151,8 @@
      C           NCHI      ANDEQ'R'                                                           235907
      C           BRTT      ANDEQ0                                                             235907
      C           NBRA      ANDNE0                                                             235907
-     C                     MOVE RFRT      ZFIELD                                              235907
+     C**********           MOVE RFRT      ZFIELD                                     235907 MD031179
+     C                     MOVE RFRT      ZFLD15                                            MD031179
      C                     ENDIF                                                              235907
       *                                                                                       235907
       ** Override the Current Base Rate based on History File                                 239062
@@ -10009,7 +10183,8 @@
      C           USENEW    ANDEQ'Y'                                                         MD039651
      C                     MOVE OWCUBR    ZFIELD                                            MD039651
      C                     ELSE                                                             MD039651
-     C                     MOVE WCUBR     ZFIELD                                              239062
+     C**********           MOVE WCUBR     ZFIELD                                     239062 MD031179
+     C                     MOVE WCUBR     ZFLD15                                            MD031179
      C                     ENDIF                                                            MD039651
      C                     ELSE                                                             MD025520
      C                     MOVE WCUBR     ZFIELD                                            MD025520
@@ -10065,11 +10240,13 @@
       *                                                                   184903
      C********** WRSPR     IFGT *ZEROS                                              184903 AR1071639
      C********** WBRAT     ANDEQ*ZEROS                                              184903 AR1071639
-     C           WRSPR     IFNE *ZEROS                                                     AR1071639
-     C           WBRAT     ANDEQ*ZEROS                                                     AR1071639
+     C********** WRSPR     IFNE *ZEROS                                            AR1071639 MD047806
+     C********** WBRAT     ANDEQ*ZEROS                                            AR1071639 MD047806
+     C           WBRAT     IFEQ *ZEROS                                                      MD047806
      C           CLE036    ANDEQ'N'                                                           CLE036
-     C           WRSPR     ORGT *ZEROS                                                        CLE036
-     C           WBRAT     ANDEQ*ZEROS                                                        CLE036
+     C********** WRSPR     ORGT *ZEROS                                               CLE036 MD047806
+     C********** WBRAT     ANDEQ*ZEROS                                               CLE036 MD047806
+     C           WBRAT     OREQ *ZEROS                                                      MD047806
      C           WBSRT     ANDEQ*ZEROS                                                        CLE036
      C           CLE036    ANDEQ'Y'                                                           CLE036
      C********** WDTL2     ANDEQ*BLANK                                                 184903 193701
@@ -10265,14 +10442,16 @@
       *                                                                   184903
      C********** WRSPR     IFGT *ZEROS                                              184903 AR1071639
      C********** WBRAT     ANDGT*ZEROS                                              184903 AR1071639
-     C           WRSPR     IFNE *ZEROS                                                     AR1071639
-     C           WBRAT     ANDNE*ZEROS                                                     AR1071639
+     C********** WRSPR     IFNE *ZEROS                                            AR1071639 MD047806
+     C********** WBRAT     ANDNE*ZEROS                                            AR1071639 MD047806
+     C           WBRAT     IFNE *ZEROS                                                      MD047806
      C********** WDTL5     ANDEQ*BLANK                                                 184903 193701
      C           WDTL8     ANDEQ*BLANK                                                        193701
      C           VSLN      ANDLT20                                        184903
      C           CLE036    OREQ 'Y'                                                           CLE036
-     C           WRSPR     ANDGT*ZEROS                                                        CLE036
-     C           WBSRT     ANDGT*ZEROS                                                        CLE036
+     C********** WRSPR     ANDGT*ZEROS                                               CLE036 MD047806
+     C********** WBSRT     ANDGT*ZEROS                                               CLE036 MD047806
+     C           WBSRT     ANDGT*ZEROS                                                      MD047806
      C           WDTL8     ANDEQ*BLANK                                                        CLE036
      C           VSLN      ANDLT20                                                            CLE036
      C                     SUB  1         WCNT                            184903
@@ -10392,6 +10571,41 @@
      C/COPY WNCPYSRC,LEH00906
      C                     ENDSR                                          184903
       /EJECT                                                              184903
+      *****************************************************************                       253042
+      *                                                               *                       253042
+      *  SRSCUR - Subroutine to set correct currency depeding on the  *                       253042
+      *           settlement type.                                    *                       253042
+      *                                                               *                       253042
+      *  Called By: SRRPAY - Process each forward repayment           *                       253042
+      *             SRDETL - Write detail line                        *                       253042
+      *                                                               *                       253042
+      *****************************************************************                       253042
+      *                                                                                       253042
+     C           SRSCUR    BEGSR                                                              253042
+      *                                                                                       253042
+     C           MDST      IFEQ 01                                                            253042
+     C           MDST      OREQ 02                                                            253042
+     C           MDST      OREQ 07                                                            253042
+     C           MDST      OREQ 08                                                            253042
+     C           MDST      OREQ 12                                                            253042
+     C                     MOVE CCYCL     ZCCY                                                253042
+     C                     MOVE WNLOC     ZLOC                                                253042
+     C                     ELSE                                                               253042
+     C                     MOVE BJLCCY    ZCCY                                                253042
+     C                     MOVE BJSLCD    ZLOC                                                253042
+     C                     ENDIF                                                              253042
+      *                                                                                       253042
+      ** If feature CEU004 is on, use settlement currency                                     253042
+      ** if Settlement currency from the LOAN is not blank.                                   253042
+      *                                                                                       253042
+     C           CEU004    IFEQ 'Y'                                                           253042
+     C           SCCY      IFNE *BLANKS                                                       253042
+     C                     MOVE SCCY      ZCCY                                                253042
+     C                     ENDIF                                                              253042
+     C                     ENDIF                                                              253042
+      *                                                                                       253042
+     C                     ENDSR                                                              253042
+      /EJECT                                                                                  253042
       *****************************************************************                       238722
       *                                                               *                       238722
       *  CONCCY - Subroutine to convert amounts to new ccy equivalent *                       238722

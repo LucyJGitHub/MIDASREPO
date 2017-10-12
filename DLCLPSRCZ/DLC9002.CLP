@@ -10,14 +10,15 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. MD039268           Date 31Aug16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC020             Date 31Mar04              */
+/*       Prev Amend No. CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. CCB009             DATE 01Jun00              */
+/*                      CCB009             DATE 01Jun00              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408            DATE 04MAY95              */
@@ -27,6 +28,10 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD039268 - Interest incorrect after term deposit penalty    */
+/*                  termination. Enabled dealing history processing. */
+/*                  Dealing history file was used to compute the     */
+/*                  correct penalty interest.                        */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
 /*       CCB009 - Journal files throughout close of business         */
 /*       S01408 - Addition of core hook DLC9002MP1                  */
@@ -96,8 +101,8 @@
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*S01390*/
              CHGVAR     VAR(&SAR) VALUE('AUS006')                     /*S01390*/
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)  /*S01390*/
-             IF         COND(&RTCD *NE '       ') THEN(GOTO +
-                          CMDLBL(END))                                /*S01390*/
+/**********  IF         COND(&RTCD *NE '       ') THEN(GOTO +
+                          CMDLBL(END))                                       /*S01390*/ /*MD039268*/
  
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
 /************RTVDTAARA  DTAARA(DLSTAT (17 3)) RTNVAR(&BUSY)          * *S01390*/

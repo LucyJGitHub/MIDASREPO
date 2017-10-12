@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD035554           Date 25May16               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD046414           Date 19Jul17               *
+      *  Prev Amend No. MD035554           Date 25May16               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG27288           Date 07Apr10               *
+      *                 BUG27288           Date 07Apr10               *
       *                 CAP202             Date 10Feb10               *
       *                 CAP187             Date 21Aug09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046414 - Deleted Held Item restored by API message         *
+      *             processing. (Recompile)                           *
       *  MD035554 - 2o'clock/ABC Compatibility                        *
       *  CGP017 - Global Layer - GOC0100 Task Split (Recompile)       *
       *  BUG27288 - A serios Midas error has occured message comes    *

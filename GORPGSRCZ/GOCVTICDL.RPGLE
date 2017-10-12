@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CER016             Date 19May08               *
+      *  Last Amend No. MD034630           Date 10Nov15               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER016             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034630 - Multiple calls of UTCHOBJEX inside GOC0020        *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER016 - German Interest Calculation: Upgrade of FGE059      *
       *           to Midas Plus                                       *
@@ -70,27 +72,27 @@
       *                                                                                       CER016
       ** Access SAR Details File to determine if CER016 is installed                          CER016
       *                                                                                       CER016
-     C                   CALLB     'AOSARDR0'                                                 CER016
-     C                   PARM      *BLANKS       PRtCd                                        CER016
-     C                   PARM      '*VERIFY'     POptn                                        CER016
-     C                   PARM      'CER016'      PSard                                        CER016
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CER016
+     C**********         CALLB     'AOSARDR0'                                        CER016 MD034630
+     C**********         PARM      *BLANKS       PRtCd                               CER016 MD034630
+     C**********         PARM      '*VERIFY'     POptn                               CER016 MD034630
+     C**********         PARM      'CER016'      PSard                               CER016 MD034630
+     C*****SCSARD        PARM      SCSARD        DSFDY                               CER016 MD034630
       *                                                                                       CER016
       ** Database error                                                                       CER016
       *                                                                                       CER016
-     C                   IF        (PRtCd <> *BLANKS) and                                     CER016
-     C                             (PRtCd <> '*NRF   ')                                       CER016
-     C                   EVAL      DBKEY = 'CER016'                                           CER016
-     C                   EVAL      DBFILE = 'SCSARDPD'                                        CER016
-     C                   EVAL      DBASE = 001                                                CER016
-     C                   EXSR      *PSSR                                                      CER016
-     C                   ENDIF                                                                CER016
-      *                                                                                       CER016
-     C                   IF        PRtCd = *BLANKS                                            CER016
-     C                   EVAL      CER016 = 'Y'                                               CER016
-     C                   ELSE                                                                 CER016
-     C                   EVAL      CER016 = 'N'                                               CER016
-     C                   ENDIF                                                                CER016
+     C**********         IF        (PRtCd <> *BLANKS) and                            CER016 MD034630
+     C**********                   (PRtCd <> '*NRF   ')                              CER016 MD034630
+     C**********         EVAL      DBKEY = 'CER016'                                  CER016 MD034630
+     C**********         EVAL      DBFILE = 'SCSARDPD'                               CER016 MD034630
+     C**********         EVAL      DBASE = 001                                       CER016 MD034630
+     C**********         EXSR      *PSSR                                             CER016 MD034630
+     C**********         ENDIF                                                       CER016 MD034630
+      *                                                                              CER016 MD034630
+     C**********         IF        PRtCd = *BLANKS                                   CER016 MD034630
+     C**********         EVAL      CER016 = 'Y'                                      CER016 MD034630
+     C**********         ELSE                                                        CER016 MD034630
+     C**********         EVAL      CER016 = 'N'                                      CER016 MD034630
+     C**********         ENDIF                                                       CER016 MD034630
       *                                                                                       CER016
      C                   IF        CER016 = 'Y' AND I#ICBS = *ZEROS                           CER016
      C                   EVAL      O#ICMT = WMth                                              CER016
@@ -135,6 +137,42 @@
       * NORMAL EXIT
       *
      C                   RETURN
+      *                                                                                     MD034630
+      *****************************************************************                     MD034630
+      /EJECT                                                                                MD034630
+      *****************************************************************                     MD034630
+      *                                                               *                     MD034630
+      * *INZSR - Program Initialisation routine                       *                     MD034630
+      *                                                               *                     MD034630
+      *****************************************************************                     MD034630
+      *                                                                                     MD034630
+     C     *INZSR        BEGSR                                                              MD034630
+      *                                                                                     MD034630
+      ** Access SAR Details File to determine if CER016 is installed                        MD034630
+      *                                                                                     MD034630
+     C                   CALLB     'AOSARDR0'                                               MD034630
+     C                   PARM      *BLANKS       PRtCd                                      MD034630
+     C                   PARM      '*VERIFY'     POptn                                      MD034630
+     C                   PARM      'CER016'      PSard                                      MD034630
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD034630
+      *                                                                                     MD034630
+      ** Database error                                                                     MD034630
+      *                                                                                     MD034630
+     C                   IF        (PRtCd <> *BLANKS) and                                   MD034630
+     C                             (PRtCd <> '*NRF   ')                                     MD034630
+     C                   EVAL      DBKEY = 'CER016'                                         MD034630
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD034630
+     C                   EVAL      DBASE = 001                                              MD034630
+     C                   EXSR      *PSSR                                                    MD034630
+     C                   ENDIF                                                              MD034630
+      *                                                                                     MD034630
+     C                   IF        PRtCd = *BLANKS                                          MD034630
+     C                   EVAL      CER016 = 'Y'                                             MD034630
+     C                   ELSE                                                               MD034630
+     C                   EVAL      CER016 = 'N'                                             MD034630
+     C                   ENDIF                                                              MD034630
+      *                                                                                     MD034630
+     C                   ENDSR                                                              MD034630
       *
       ********************************************************************
       /SPACE 5

@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD045010           Date 05Apr17               *
-      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *  Last Amend No. AR1002234          Date 12Jan17               *
+      *  Prev Amend No. MD040186           Date 13Sep16               *
+      *                 MD045010           Date 05Apr17               *
+      *                 AR943686           Date 23Sep16               *
       *                 CLE141A            Date 28Apr16               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE164             Date 28Nov14               *
@@ -107,6 +109,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1002234 - FCOOB in LE0320 when an MR with a 13-digit       *
+      *              amount is inserted (Child: AR1002235).           *
+      *            - Applied for MD-42936                             *
+      *  MD040186 - Processing alignment to adopt MD023787 changes.   *
+      *             Do not create projected movement when MAPY receipt*
+      *             settlement account and PDCL receipt settlement    *
+      *             account are the same.                             *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  AR943686 - CLE031: System generating wrong projected move-   *
@@ -840,6 +849,7 @@
      D PRI1            S              1S 0                                                  AR322732
      D WUpdExpo        S              1A                                                    AR806351
      D UpdateFlag      S              1A                                                    MD022533
+     D WPDCLNoPost     S              1A                                                    MD040186
      D CurArr          S              3    DIM(10)                                            CLE141
      D LocArr          S              3    DIM(10)                                            CLE141
      D PPDDI           S              1                                                       CLE141
@@ -4931,17 +4941,21 @@
      C                   Z-ADD     ZZTOTI        VRAF
      C                   Z-ADD     ZZTOTD        VRAL
       *
-     C                   Z-ADD     TAMTR         ZZAMT                  40
+     C**********         Z-ADD     TAMTR         ZZAMT                  40                 AR1002234
+     C                   Z-ADD     TAMTR         WRK13                  40                 AR1002234
      C     *IN40         IFEQ      '1'
-     C                   Z-SUB     ZZAMT         ZZAMT
+     C**********         Z-SUB     ZZAMT         ZZAMT                                     AR1002234
+     C                   Z-SUB     WRK13         WRK13                                     AR1002234
      C                   ENDIF
       *
      C     WWACTN        IFEQ      'I'
-     C     ZZAMT         ADD       WAMNT         WRK13
+     C*****ZZAMT         ADD       WAMNT         WRK13                                     AR1002234
+     C     WRK13         ADD       WAMNT         WRK13                                     AR1002234
      C                   ENDIF
       *
      C     WWACTN        IFEQ      'R'
-     C     ZZAMT         SUB       WAMNT         WRK13
+     C*****ZZAMT         SUB       WAMNT         WRK13                                     AR1002234
+     C     WRK13         SUB       WAMNT         WRK13                                     AR1002234
      C                   ENDIF
       *
      C     WRK13         DIV       1000          ZZAMT                  40
@@ -5128,6 +5142,7 @@
       *                                                                                     MD023787
      C                   MOVE      *BLANKS       PDCLI             1                        MD023787
      C                   MOVE      *BLANKS       PDRST             1                        MD023787
+     C                   EVAL      WPDCLNoPost = ' '                                        MD040186
      C                   IF        CobMode <> 'Y'  and                                      MD023787
      C                             (%SUBST(MRLTYP:1:1) = 'X' or                             MD023787
      C                              %SUBST(MRLTYP:1:1) =  'Y' or                            MD023787
@@ -5140,6 +5155,13 @@
       *                                                                                     MD023787
       ** If the Settlement on MR and Loan is the same, the projection                       MD023787
       ** should be done (credit) like a normal loan.                                        MD023787
+      ** To convene with functionalities, no need to create PAMV if                         MD040186
+      ** MAPY receipt account and PDCL receipt account are the same.                        MD040186
+      *                                                                                     MD040186
+     C     ReadCLRSTM    IFEQ      MRRSTM                                                   MD040186
+     C     RONSL         ANDEQ     MRRONS                                                   MD040186
+     C                   EVAL      WPDCLNoPost = 'Y'                                        MD040186
+     C                   ENDIF                                                              MD040186
       *                                                                                     MD023787
      C     ReadCLRSTM    IFNE      MRRSTM                                                   MD023787
      C     RONSL         ORNE      MRRONS                                                   MD023787
@@ -5157,6 +5179,7 @@
 
       ***  Do On-line updates
 
+     C     WPDCLNoPost   IFEQ      ' '                                                      MD040186
      C                   MOVE      *BLANKS       ##RTCD            7
      C                   CALL      'AOOULAU0'
      C                   PARM      *BLANKS       ##RTCD            7
@@ -5229,6 +5252,7 @@
      C                   GOTO      EXIT                                                     AR868380
      C                   ENDIF                                                              AR868380
      C                   ENDIF                                                                264065
+     C                   ENDIF                                                              MD040186
       *
       * We only need to call AOOULEU0 if the Pay our Nostro fields                           BUG4513
       * are different for the Loan and Manual repayment.                                     BUG4513

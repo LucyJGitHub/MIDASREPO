@@ -18,8 +18,9 @@
       *                                                               *
       *  (C) Copyright MISYS INTERNATIONAL BANKING SYSTEMS LTD 2008   *
       *                                                               *
-      *  Last Amend No. MD021669A          Date 21Jun17               *
-      *  Prev Amend No. MD021669           Date 21Jun17               *
+      *  Last Amend No. MD039268           Date 31Aug16               *
+      *  Prev Amend No. MD021669A          Date 21Jun17               *
+      *                 MD021669           Date 21Jun17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -39,6 +40,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039268 - Interest incorrect after term deposit penalty     *
+      *             termination. Enabled dealing history processing.  *
+      *             Dealing history file was used to compute the      *
+      *             correct penalty interest.                         *
       *  MD021669A - Additional test case wherein penalty rate was    *
       *              amended.                                         *
       *            – Applied for MD-30199.                            *
@@ -98,6 +103,9 @@
       ** SD Currencies Extension file
      FSDCURRX0IF  E           K        DISK         KINFSR *PSSR
       *
+      ** DL History File                                                                    MD039268
+     FDLHISTL0IF  E           K        DISK         KINFSR *PSSR                            MD039268
+      *                                                                                     MD039268
       ** MM Deals file - Adjustment Update
      FDEALSC  UF  E           K        DISK         KINFSR *PSSR
      F                                              KCOMIT
@@ -169,6 +177,10 @@
      E/COPY ZSRSRC,ZRATE1Z1
      E/COPY ZSRSRC,ZSEDITZ1
       *
+     IHISTSAAF                                                                              MD039268
+     I              PCPL                            HIPCPL                                  MD039268
+     I              ICBS                            HIICBS                                  MD039268
+      *                                                                                     MD039268
       *--------------------------------------------------------------------
       *
      I/COPY ZSRSRC,ZDAT10Z1
@@ -1279,15 +1291,23 @@
      C                     Z-ADDHKINTR    IIRT1                                             MD021669
      C                     Z-ADDW#PRAT    IIRT2                                             MD021669
      C                     Z-ADDIO@INT    IO@IN1                                            MD021669
+     C                     MOVE 'N'       WRCHG   1                                         MD039268
       *                                                                                     MD021669
       ** Calculate penalty interest.                                                        MD021669
       *                                                                                     MD021669
+     C           IACD      IFGT VDAT                                                        MD039268
+     C                     EXSR SRINTP                                                      MD039268
+     C                     ENDIF                                                            MD039268
+      *                                                                                     MD039268
+     C           WRCHG     IFEQ 'N'                                                         MD039268
      C           IO@IN1    MULT IIRT2     IO@WRK    H                                       MD021669
      C           II@RDI    IFEQ 'Y'                                                         MD021669
      C           IO@WRK    DIV  IIRT1     IO@IN2                                            MD021669
      C                     ELSE                                                             MD021669
      C           IO@WRK    DIV  IIRT1     IO@IN2    H                                       MD021669
      C                     ENDIF                                                            MD021669
+      *                                                                                     MD039268
+     C                     ENDIF                                                            MD039268
      C                     Z-ADDIO@IN2    W#ADJI                                            MD021669
      C                     Z-ADDIO@IN2    F#INTA                                            MD021669
       *
@@ -1424,6 +1444,17 @@
       ** Total Interest - Adjusted
      C           W#PRTE    IFNE SPRAT                      B1
      C           *IN51     ANDNE'1'
+      *                                                                                     MD039268
+     C                     MOVE 'N'       WRCHG                                             MD039268
+     C                     Z-ADD0         IO@IN2                                            MD039268
+     C           IACD      IFGT VDAT                                                        MD039268
+     C                     Z-ADDF#PENR    IIRT2                                             MD039268
+     C                     EXSR SRINTP                                                      MD039268
+     C                     Z-ADDIO@IN2    W#ADJI                                            MD039268
+     C                     Z-ADDIO@IN2    F#INTA                                            MD039268
+     C                     ENDIF                                                            MD039268
+      *                                                                                     MD039268
+     C           WRCHG     IFEQ 'N'                                                         MD039268
      C                     Z-ADDF#VDAT    ZZBEG
      C                     Z-ADDF#MDAT    ZZEND
      C           F#FLID    IFEQ 'Y'                        B2
@@ -1436,6 +1467,7 @@
      C                     EXSR SRINTR
      C                     Z-ADDIO@INT    W#ADJI
      C                     Z-ADDIO@INT    F#INTA
+     C                     ENDIF                                                            MD039268
       *
      C                     MOVE *BLANKS   ZFIELD
      C                     Z-ADD*ZEROS    ZADEC
@@ -1516,7 +1548,65 @@
      C                     EXSR ZASNMS
       *
      C           EINST     ENDSR
-      *
+      ******************************************************************                    MD039268
+      *                                                                *                    MD039268
+      *  SRINTP - Calculate Penalty Interest                           *                    MD039268
+      *                                                                                     MD039268
+      ******************************************************************                    MD039268
+      *                                                                                     MD039268
+     C           SRINTP    BEGSR                                                            MD039268
+      *                                                                                     MD039268
+     C                     Z-ADD0         SVEDAT  50                                        MD039268
+     C                     Z-ADD0         WEAMT  150                                        MD039268
+     C                     Z-ADDSDNUMN    K#DLNO                                            MD039268
+     C                     Z-ADD0         K#EDAT                                            MD039268
+     C                     MOVE ' '       K#RTYP                                            MD039268
+     C           K#HIST    SETLLDLHISTL0                                                    MD039268
+      *                                                                                     MD039268
+     C                     READ DLHISTL0                 88                                 MD039268
+     C                     Z-ADDEDAT      SVEDAT                                            MD039268
+      *                                                                                     MD039268
+     C           *IN88     DOWEQ'0'                                                         MD039268
+     C           SDNUMN    ANDEQDLNO                                                        MD039268
+      *                                                                                     MD039268
+     C           SVEDAT    IFEQ EDAT                                                        MD039268
+     C                     Z-ADDEDAT      ZZBEG                                             MD039268
+     C                     MOVE HIICBS    ZZCALC                                            MD039268
+     C                     Z-ADDIIRT2     II@RAT                                            MD039268
+     C                     MOVE HKRDFC    II@RDI                                            MD039268
+     C                     ELSE                                                             MD039268
+      *                                                                                     MD039268
+     C                     Z-ADDEDAT      SVEDAT                                            MD039268
+     C                     Z-ADDWEAMT     II@AMT                                            MD039268
+     C                     Z-ADDEDAT      ZZEND                                             MD039268
+     C                     EXSR SRINTR                                                      MD039268
+     C           IO@INT    ADD  IO@IN2    IO@IN2                                            MD039268
+     C                     Z-ADDEDAT      ZZBEG                                             MD039268
+     C                     ENDIF                                                            MD039268
+      *                                                                                     MD039268
+     C                     SELEC                                                            MD039268
+     C           RTYP      WHEQ 'LD'                                                        MD039268
+     C                     MOVE 'Y'       WRCHG                                             MD039268
+     C                     Z-ADDEAMT      WEAMT                                             MD039268
+     C           RTYP      WHEQ 'PI'                                                        MD039268
+     C                     ADD  EAMT      WEAMT                                             MD039268
+     C           RTYP      WHEQ 'PD'                                                        MD039268
+     C                     SUB  EAMT      WEAMT                                             MD039268
+     C                     ENDSL                                                            MD039268
+      *                                                                                     MD039268
+     C                     READ DLHISTL0                 88                                 MD039268
+      *                                                                                     MD039268
+     C                     ENDDO                                                            MD039268
+      *                                                                                     MD039268
+     C           WRCHG     IFEQ 'Y'                                                         MD039268
+     C                     Z-ADDBJRDNB    ZZEND                                             MD039268
+     C                     Z-ADDWEAMT     II@AMT                                            MD039268
+     C                     EXSR SRINTR                                                      MD039268
+     C           IO@INT    ADD  IO@IN2    IO@IN2                                            MD039268
+     C                     ENDIF                                                            MD039268
+      *                                                                                     MD039268
+     C                     ENDSR                                                            MD039268
+      *                                                                                     MD039268
       ******************************************************************
       *                                                                *
       *  SRINTR - Calculate Interest                                   *
@@ -2629,6 +2719,11 @@
      C                     KFLD           K#VDMM  20
      C                     KFLD           K#VDDD  20
      C                     KFLD           K#DEMS  30
+      ** History file key                                                                   MD039268
+     C           K#HIST    KLIST                                                            MD039268
+     C                     KFLD           K#DLNO  60                                        MD039268
+     C                     KFLD           K#EDAT  50                                        MD039268
+     C                     KFLD           K#RTYP  2                                         MD039268
       *
       ** Define all program work fields
      C           *LIKE     DEFN DBFILE    @BFILE

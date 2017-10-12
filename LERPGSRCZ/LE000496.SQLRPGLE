@@ -12,12 +12,20 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD038473           Date 02Jun16               *
-      *  Prev Amend No. MD036207           Date 02Jun16               *
+      *  Last Amend No. MD038713           Date 07May16               *
+      *  Last Amend No. MD037496           Date 11Feb16               *
+      *                 MD038473           Date 02Jun16               *
+      *                 MD036207           Date 02Jun16               *
       *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD038713 - Incorrect Values for Payment Date and Original    *
+      *             Transaction Start Date                            *
+      *  MD037496 - LE000496 Failed during COB due to variable        *
+      *             CURLKUP too short to hold the value               *
+      *           - Corrected the cache process and increase the      *
+      *             length of the variable from 1 to 3                *
       *  MD038473 - LEC000496 in MSGW during COB                      *
       *  MD036207 - LEC000496 being on MSGW during COB                *
       *           - Applied for MD-38473                              *
@@ -113,7 +121,8 @@
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D                                     OCCURS(2500)
      D IDXCUR          S              3  0 INZ(1)
-     D CURLKUP         S              1  0 INZ(0)
+     D***CURLKUP*         S              1  0 INZ(0)                             MD037496
+     D CURLKUP         S              3  0 INZ(0)                                MD037496
      D pDSSDY          S            200A
 
      D SPOOL1          DS
@@ -258,9 +267,11 @@
                    if CURLKUP > 0;
                       %Occur(SDCURR) = CURLKUP;
                    else;
-                      Currencies(IdxCur) = A6CYCD;
+       //             Currencies(IdxCur) = A6CYCD;                       //MD037496
+                      Currencies(IdxCur) = SEACCY;                       //MD037496
+                      %Occur(SDCURR) = IdxCur;                           //MD037496
                       IdxCur = IdxCur + 1;
-                      %Occur(SDCURR) = IdxCur;
+       //             %Occur(SDCURR) = IdxCur;                           //MD037496
                       pOption = '*KEY';
                       RetrieveCCY(pReturnCode:pOption:SEACCY:SDCURR);
                       ZECODE = 'A';
@@ -807,7 +818,8 @@
                       exsr PrintHeaderSEAC;
                    endif;
 
-                   pDayNo = SEVDAT;
+//                 pDayNo = SEVDAT;                                            //MD038713
+                   pDayNo = SEVDPY;                                            //MD038713
                    pDateFormat = BJDFIN;
                    pValueDate = 0;
                    pRunDate = *Blanks;
@@ -885,7 +897,8 @@
                  exsr PrintHeaderSEAC;
               endif;
 
-              pDayNo = SEVDAT;
+//            pDayNo = SEVDAT;                                                 //MD038713
+              pDayNo = SEVDPY;                                                 //MD038713
               pDateFormat = BJDFIN;
               pValueDate = 0;
               pRunDate = *Blanks;
@@ -1065,6 +1078,17 @@
                                            :wDtlsCount);
                          wDtlsCount = wDtlsCount + RepSeq(M) + 2;
                       when DsplyRep(N) = 'ORTStartDate';
+                         pDayNo = SESDAT;                                      //MD038713
+                         pDateFormat = BJDFIN;                                 //MD038713
+                         pValueDate = 0;                                       //MD038713
+                         pRunDate = *Blanks;                                   //MD038713
+                         ConvertDate(                                          //MD038713
+                                       pDayNo                                  //MD038713
+                                     : pDateFormat                             //MD038713
+                                     : pValueDate                              //MD038713
+                                     : pRunDate                                //MD038713
+                                    );                                         //MD038713
+                         P1VDAT = pRunDate;                                    //MD038713
                          M = %LookUp(DsplyRep(N):RepKey);
                          w@Dtls = %Replace(P1VDAT:w@Dtls:wDtlsCount);
                          wDtlsCount = wDtlsCount + RepSeq(M) + 2;

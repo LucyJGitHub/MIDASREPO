@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR1057551          Date 05Jun17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. MD037495           Date 11Feb16               *
+      *  Prev Amend No. AR1057551          Date 05Jun17               *
+      *                 CGL184             Date 07Dec16               *
       *                 MD038509           Date 02May16               *
       *                 CLE154             Date 02Aug12               *
       *                 AR897086           Date 09Mar15               *
@@ -243,6 +244,10 @@
 0009 F*                                                               *
 0011 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD037495 - Incorrect Repayment Priority Retrieved for        *
+      *             category code ZPRIM                               *
+      *           - Pass CLOANZTD as the file parameter when accessing*
+      *             program LE000801                                  *
       *  AR1057551 - Some loans incorrectly post interest repayments  *
       *              even though repayment type is 2 (no interest)    *
       *              – in R4 these interest payments are not posted.  *
@@ -14292,11 +14297,22 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       ** Determine Extension file to use in LE000801                                          CLE164
       *                                                                                       CLE164
      C                     MOVE *BLANKS   XTFILE                                              CLE164
-     C           SELTY1    IFEQ 'Z'                                                           CLE164
+     C********** SELTY1    IFEQ 'Z'                                                  CLE164 MD037495
+     C           SECATC    IFEQ 'LFEE'                                                      MD037495
+     C           SECATC    OREQ 'LFEM'                                                      MD037495
+     C           SECATC    OREQ 'FFEE'                                                      MD037495
+     C           SECATC    OREQ 'FFEM'                                                      MD037495
+     C           SECATC    OREQ 'Fee90'                                                     MD037495
+     C           SECATC    OREQ 'Fee9M'                                                     MD037495
      C                     MOVEL'LEFEEZTD'XTFILE 10                                           CLE164
      C                     MOVE YBRCA     PBRCA                                             MD038509
      C                     MOVE YECNUM    PCNUM                                             MD038509
      C                     ELSE                                                               CLE164
+      *                                                                                     MD037495
+      ** Other Category Codes are for Loans, YINTR,YINTM,YPRIN,YPRIM                        MD037495
+      ** XINTR,XINTM,XPRIN,XPRIM, ZINTR, ZINTM, ZPRIN, ZPRIM                                MD037495
+      ** OLINT, OLINM, OLPRI, OLPRM                                                         MD037495
+      *                                                                                     MD037495
      C                     MOVEL'CLOANZTD'XTFILE                                              CLE164
      C                     MOVE BRCA      PBRCA                                             MD038509
      C                     MOVE CNUM      PCNUM                                             MD038509

@@ -10,8 +10,9 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
-/*       Last Amend No. AR1061928          Date 30Nov12              */
-/*       Prev Amend No. AR1055539          Date 12Nov12              */
+/*       Last Amend No. MD033997           Date 11May15              */
+/*       Prev Amend No. AR1061928          Date 30Nov12              */
+/*                      AR1055539          Date 12Nov12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -30,6 +31,7 @@
 /*                      S01194                  DATE  08FEB90       */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD033997 - Move process of facility expiry on 2nd COB.     */
 /*       AR1061928 - LEC06 on MSGW during clean COB                 */
 /*       AR1055539 - Various errors encountered in COB during       */
 /*                   Link Test                                      */
@@ -122,7 +124,8 @@
              ENDDO                                                                     /*AR1055539*/
 /* FACILITIES FILE UPDATE PHASE ONE                                 */
 /************CALL PGM(LE0460)****************************************/ /* CPF */
-             CALL PGM(LE0461)                                          /* CPF */
+/************CALL PGM(LE0461)****************************************/ /* CPF */        /*MD033997*/
+             CALL PGM(LE0461) PARM(&RERUN)                                              /*MD033997*/
                                                                                           /*CLE039*/
              IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)                                  /*CLE039*/
                 COMMIT                                                                    /*CLE039*/

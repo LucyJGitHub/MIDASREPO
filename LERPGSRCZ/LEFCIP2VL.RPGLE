@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD041034           Date 05Sep16               *
-      *  Prev Amend No. MD035306           Date 14Aug15               *
+      *  Last Amend No. MD031311           Date 13Jun16               *
+      *  Prev Amend No. MD041034           Date 05Sep16               *
+      *                 MD035306           Date 14Aug15               *
       *                 MD024398           Date 11May14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -66,6 +67,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031311 - Error message required if total of tranches       *
+      *             exceed Credit Agreement amount                    *
       *  MD041034 - Drawing Type 6 field is unavailable in Pre        *
       *             Confirmation screen when inserting Tranche fclty  *
       *  MD035306 - Use DTPX in validating drawn types when CLE028    *
@@ -2613,7 +2616,8 @@
      C*****WTAMT         ANDNE     WAMT                                                      BUG4351
      C                   Move      'W'           DDCAXROK
      C                   Add       1             WId
-     C                   Movel     'DDCAXR'      WFldNmXAr(WId)
+     C**********         Movel     'DDCAXR'      WFldNmXAr(WId)                             MD031311
+     C                   Movel     'DDFAMT'      WFldNmXAr(WId)                             MD031311
      C                   Movel     'LEF0129'     WMsgIDXAr(WId)
      C                   ENDIF
      C                   ENDIF                                                                250214

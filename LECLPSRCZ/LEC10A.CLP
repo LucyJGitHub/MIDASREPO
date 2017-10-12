@@ -9,15 +9,17 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. MD031285              Date 15Jun16          */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01117                DATE 13/02/90         */
+/*       Prev Amend No. S01117                DATE 13/02/90         */
 /*                                                                  */
 /********************************************************************/
+/*      MD031285 - LE Guarantee was not expired on end date.        */
 /*      S01117 - MULTIBRANCHING REL.10                              */
 /********************************************************************/
 /*                                                                   */
@@ -39,8 +41,10 @@
 /**/
              CHGJOB     SWS(00000000)
              RTVDTAARA  DTAARA(LESTAT) RTNVAR(&LESTAT)
-             IF         COND(%SUBSTRING(&LESTAT 13 1) *NE 'Y') +
-                        THEN(GOTO CMDLBL(ENDPGM))
+/**********  IF         COND(%SUBSTRING(&LESTAT 13 1) *NE 'Y') +
+                        THEN(GOTO CMDLBL(ENDPGM))               */                     /*MD031285*/
+             IF         COND(%SUBSTRING(&LESTAT 13 1) *NE 'Y' *AND +
+                          &CSEQ *NE 8) THEN(GOTO CMDLBL(ENDPGM))                       /*MD031285*/
                 CALL       PGM(&PARM) PARM(&CNAM &CSEQ)
 /**/
 /*   ERROR MESSAGES                                             */

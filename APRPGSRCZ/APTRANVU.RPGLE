@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD042042           Date 14Feb17               *
-      *  Prev Amend No. MD042033           Date 30Sep16               *
+      *  Last Amend No. MD041996           Date 12Oct16               *
+      *  Prev Amend No. MD042042           Date 14Feb17               *
+      *                 MD042033           Date 30Sep16               *
       *                 MD043890           Date 06Feb17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
@@ -206,6 +207,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041996 - Incorrect mapping for FX Netting                  *
       *  MD042042 - Input Officer 1 and Input Officer 2 in IPAY and   *
       *             OPAY are being populated with WIP authoriser.     *
       *             Use the WIP input user profile instead.           *
@@ -1944,9 +1946,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       ACT5Ln        Bfp                                 CER059 MD022093
      C**********         EVAL      TransACT6 = %SUBST(BUFFERTOTAL:Bfp:ACT6Ln)        CER059 MD022093
      C**********         ADD       ACT6Ln        Bfp                                 CER059 MD022093
-     C                   EVAL      TRANS19   = %SUBST(TransCCTN:1:CCTNLn1) +                MD021813
-     C                                         %SUBST(BUFFERTOTAL:Bfp:CCTNLn)               MD021813
-     C                   ADD       CCTNLn        Bfp                                        MD021813
+     C**********         EVAL      TRANS19   = %SUBST(TransCCTN:1:CCTNLn1) +       MD021813 MD041996
+     C**********                               %SUBST(BUFFERTOTAL:Bfp:CCTNLn)      MD021813 MD041996
+     C**********         ADD       CCTNLn        Bfp                               MD021813 MD041996
      C**********         EVAL      ExtData   = %SUBST(BUFFERTOTAL:Bfp:SDEXLn)        CER059 MD022093
      C**********         ADD       SDEXLn        Bfp                                 CER059 MD022093
       ** REMINDER : Moving forward, STOP adding new data in the first buffer                MD022093
@@ -7155,6 +7157,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      TransCCTX = TransACT1 + TransACT2                        MD022093
      C                                       + TransACT3 + TransACT4                        MD022093
      C                                       + TransACT5 + TransACT6                        MD022093
+     C                   EVAL      TRANS19   = %SUBST(TransCCTN:1:CCTNLn1) +                MD041996
+     C                                         %SUBST(BufferEx4:Bfp:CCTNLn)                 MD041996
+     C                   ADD       CCTNLn        Bfp                                        MD041996
      C                   EVAL      ExtData   = %SUBST(BufferEx4:Bfp:SDEXLn)                 MD022093
      C                   ADD       SDEXLn        Bfp                                        MD022093
                                                                                             MD022093

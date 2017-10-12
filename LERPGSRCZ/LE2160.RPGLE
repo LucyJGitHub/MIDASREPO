@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. 260183             Date 29Oct15               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -43,6 +44,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260183 - LEC2460 failed because LF/LELOANL2 can't find       *
+      *           matured loans that has RATF='Y'. Amend sources such *
+      *           that these loans are also retrieved using a new LF. *
+      *           (Applied for MD-36224).                             *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -113,7 +118,11 @@
       ** Live Rollover details
      FLELOANL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(L2)
- 
+      *                                                                                       260183
+     FLELOANLH  IF   E           K DISK    INFSR(*PSSR) PREFIX(L2)                            260183
+     F                                     RENAME(CLOANCKF: LELOANF)                          260183
+      ** Loans to be reactivated Rollover details                                             260183
+      *                                                                                       260183
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -350,6 +359,16 @@
      C                             AND (L0LNRF <= STOLN)                                      CLE148
       *
      C     L0LNRF        CHAIN     LELOANL2                           12
+      *                                                                                       260183
+      ** If loan details cannot be found in live loans                                        260183
+      ** try looking at loans that are matured but will                                       260183
+      ** be reactivated                                                                       260183
+      *                                                                                       260183
+     C                   IF        *IN12 = *ON                                                260183
+     C                             AND (L0RATF = 'Y')                                         260183
+     C     L0LNRF        CHAIN     LELOANLH                           12                      260183
+     C                   ENDIF                                                                260183
+      *                                                                                       260183
      C                   IF        *IN12 = *ON
      C     *LOCK         IN        LDA
      C                   Z-ADD     2             DBase

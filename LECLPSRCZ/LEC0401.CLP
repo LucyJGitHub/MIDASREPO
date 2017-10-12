@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD021155           Date 19Jul13              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD040628           Date 07Sep16              */
+/*       Prev Amend No. MD021155           Date 19Jul13              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CSW208             Date 15Apr08              */
@@ -37,6 +38,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD040628 - If error occurs, return to calling program       */
+/*                  with correct job switches.                       */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Apply Standard Midas Journaling                  */
 /*       CLE134 - Past Due Call Loan Processing                      */
@@ -462,6 +465,8 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
                 CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')                                 /*CCG015*/
                 CALL       PGM(CGC3605) PARM(&ACTION)                                     /*CCG015*/
              ENDDO                                                                        /*205448*/
+             CHGJOB     SWS(XXXXXX11)                                                   /*MD040628*/
+             RETURN                                                                     /*MD040628*/
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')

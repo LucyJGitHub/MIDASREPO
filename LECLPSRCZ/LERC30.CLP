@@ -10,26 +10,31 @@
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD033997           Date 11May15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CLE025             Date 20Oct03              */
+/*       Prev Amend No. CLE025             Date 20Oct03              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CLE023             Date 19Nov01              */
+/*                      CLE023             Date 19Nov01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      MOF60              Date 23Mar92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD033997 - Move process of facility expiry on 2nd COB.      */
+/*                Populate LEHISAPD with 'FE' events as this file is */
+/*                used on 2nd COB run instead of HISACT.             */
 /*       CLE025 - Credit Lines                                       */
 /*       CLE023 - Lending Facility History Improvements.             */
 /*       MOF60  - Customer Lending R10 enhancements                  */
 /*                                                                   */
 /*********************************************************************/
  
-PGM  PARM(&CNAM &CSEQ)
+/**********  PGM  PARM(&CNAM &CSEQ)                                  */                 /*MD033997*/
+             PGM  PARM(&CNAM &CSEQ &RERUN)                                              /*MD033997*/
  
 /* Declare the variables for rerun checking */
  
@@ -40,6 +45,7 @@ PGM  PARM(&CNAM &CSEQ)
                           Misys International Banking Systems Ltd. +
                           2001')
  
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                 /*MD033997*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CLE023*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CLE023*/
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CLE023*/
@@ -126,6 +132,10 @@ PGM  PARM(&CNAM &CSEQ)
  
   /* Call Manual Changes Extract Program */
  
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                             /*MD033997*/
+             CLRPFM     LEHISAPD                                                       /*MD033997*/
+             OVRDBF     FILE(HISACT) TOFILE(LEHISAPD)                                  /*MD033997*/
+             ENDDO                                                                     /*MD033997*/
              CALL LER030
  
   /* IF ERROR, SEND MSG & COPY BACK SECURITY FILES     */

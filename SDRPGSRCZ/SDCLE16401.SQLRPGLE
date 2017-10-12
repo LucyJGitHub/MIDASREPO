@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No.  MD031687  *CREATE    Date 18Dec14            *
+      *  Last Amend No.  MD036852             Date 11Dec15            *
+      *  Prev Amend No.  MD031687  *CREATE    Date 18Dec14            *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036852 - Resolve spelling errors                           *
       *  MD031687 - Initialise data for SDRPKYTD                      *
       *             Repayment Priority Key                            *
       *                                                               *
@@ -38,7 +40,8 @@
      C/exec SQL
      C+ insert into SDRPKYTD Values
      C+ (
-     C+   'CategoryCoPR'
+     C****'CategoryCoPR'                                                                    MD036852
+     C+   'CategoryCOPR'                                                                    MD036852
      C+ , 'Category Code Repayment Priority'
      C+ , 02
      C+ , 'A'
@@ -82,7 +85,8 @@
      C/exec SQL
      C+ insert into SDRPKYTD Values
      C+ (
-     C+   'PayValueDate'
+     C****'PayValueDate'                                                                    MD036852
+     C+   'PAYValueDate'                                                                    MD036852
      C+ , 'Value Date of Payment'
      C+ , 25
      C+ , 'D'

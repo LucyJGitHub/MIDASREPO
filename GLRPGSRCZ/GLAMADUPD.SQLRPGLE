@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD042832           Date 23Nov16               *
-      *  Prev Amend No. MD034725           Date 27Jul16               *
+      *  Last Amend No. MD034366           Date 09Sep15               *
+      *  Prev Amend No. MD042832           Date 23Nov16               *
+      *                 MD034725           Date 27Jul16               *
       *                 MD035554           Date 25May16               *
       *                 MD033852           Date 20Aug15               *
       *                 CRE101             Date 27Aug14               *
@@ -126,6 +127,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034366 - CRE005 failuers in COB. Added timestamp field to  *
+      *             ensure that latest rate change record is used.    *
       *  MD042832 - Serious Midas Error upon authorization due to     *
       *             incorrect of indicator.                           *
       *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
@@ -833,23 +836,25 @@
                                                                                               CRE005
      D IC3RAT          DS                                                                     CRE005
       *  Data Structure for RERCH3                                                            CRE005
-     D  I3RAT3                 1     36                                                       CRE005
+     D**I3RAT3**               1     36                                              CRE005 MD034366
+     D  I3RAT3                 1     30                                                     MD034366
      D  IRAT3A                 1      6P 7                                                    CRE005
      D  IRAT3B                 7     12P 7                                                    CRE005
      D  IRAT3C                13     18P 7                                                    CRE005
      D  IRAT3D                19     24P 7                                                    CRE005
      D  IRAT3E                25     30P 7                                                    CRE005
-     D  IRAT3F                31     36P 7                                                    CRE005
+     D**IRAT3F**              31     36P 7                                           CRE005 MD034366
                                                                                               CRE005
      D IC3BAL          DS                                                                     CRE005
       *  Data Structure for RERCH3                                                            CRE005
-     D  I3BAL3                 1     48                                                       CRE005
+     D**I3BAL3**               1     48                                              CRE005 MD034366
+     D  I3BAL3                 1     40                                                     MD034366
      D  IBAL3A                 1      8P 0                                                    CRE005
      D  IBAL3B                 9     16P 0                                                    CRE005
      D  IBAL3C                17     24P 0                                                    CRE005
      D  IBAL3D                25     32P 0                                                    CRE005
      D  IBAL3E                33     40P 0                                                    CRE005
-     D  IBAL3F                41     48P 0                                                    CRE005
+     D**IBAL3F**              41     48P 0                                           CRE005 MD034366
                                                                                               CRE005
 
      D** DATA STRUCTURE FOR ACCOUNT KEY NUMBER
@@ -4676,6 +4681,10 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   ENDIF                                                                CRE005
      C                   TIME                    I1TIME                                       CRE005
      C                   EVAL      I1SPOS = 'GE/RC'                                           CRE005
+      ** Timestamp                                                                          MD034366
+     C                   CALLB     'ZAGENTMSTM'                                             MD034366
+     C                   PARM                    TimeStamp                                  MD034366
+     C                   EVAL      I1TSTMP = TimeStamp                                      MD034366
      C                   EVAL      I1BRCA = AMBRCA                                            CRE005
      C                   EVAL      I1ZZ001 = 'R'                                              CRE005
      C                   EVAL      I1RVLD = *ZEROS                                            CRE005
@@ -4703,6 +4712,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      I2DRCR = 0                                                 CRE005
      C**********         TIME                    I2TIME                                CRE005 233901
      C                   EVAL      I2TIME = I1TIME                                            233901
+     C                   EVAL      I2TSTMP = I1TSTMP                                        MD034366
      C                   EVAL      I2BRCA = AMBRCA                                            CRE005
      C                   EVAL      I2BAL1   = RT_BAL2                                         CRE005
      C                   EVAL      I2RAT1   = RT_RAT2                                         CRE005
@@ -4765,6 +4775,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      I3DRCR = 0                                                 CRE005
      C**********         TIME                    I3TIME                                CRE005 233901
      C                   EVAL      I3TIME = I1TIME                                            233901
+     C                   EVAL      I3TSTMP = I1TSTMP                                        MD034366
      C                   EVAL      I3BRCA = AMBRCA                                            CRE005
      C**********         EVAL      I3BAL3   = RT_BAL2                                  CRE005 236976
      C**********         EVAL      I3RAT3   = RT_RAT2                                  CRE005 236976
@@ -4808,6 +4819,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   ADD       WWDBRT        IRAT3E                                       CRE005
      C                   ENDIF                                                                CRE005
      C                   ENDIF                                                                CRE005
+     C                   MOVEL     I3BAL3        I3BAL1                                     MD034366
+     C                   MOVEL     I3RAT3        I3RAT1                                     MD034366
      C                   WRITE     RERCH3D0                                                   CRE005
                                                                                               CRE005
       ** Add 1 to header record field                                                         CRE005
@@ -4860,6 +4873,10 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   ENDIF                                                                CRE005
      C                   TIME                    I1TIME                                       CRE005
      C                   EVAL      I1SPOS = 'GE/RC'                                           CRE005
+      ** Timestamp                                                                          MD034366
+     C                   CALLB     'ZAGENTMSTM'                                             MD034366
+     C                   PARM                    TimeStamp                                  MD034366
+     C                   EVAL      I1TSTMP = TimeStamp                                      MD034366
      C                   EVAL      I1BRCA = AMBRCA                                            CRE005
      C                   EVAL      I1ZZ001 = 'R'                                              CRE005
      C                   EVAL      I1RVLD = *ZEROS                                            CRE005
@@ -4975,6 +4992,10 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   ENDIF                                                                CRE005
      C                   TIME                    I1TIME                                       CRE005
      C                   EVAL      I1SPOS = 'GE/RC'                                           CRE005
+      ** Timestamp                                                                          MD034366
+     C                   CALLB     'ZAGENTMSTM'                                             MD034366
+     C                   PARM                    TimeStamp                                  MD034366
+     C                   EVAL      I1TSTMP = TimeStamp                                      MD034366
      C                   EVAL      I1BRCA = AMBRCA                                            CRE005
      C                   EVAL      I1ZZ001 = 'R'                                              CRE005
      C                   EVAL      I1RVLD = *ZEROS                                            CRE005
@@ -5004,6 +5025,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      I2DRCR = 1                                                 CRE005
      C**********         TIME                    I2TIME                                CRE005 233901
      C                   EVAL      I2TIME = I1TIME                                            233901
+     C                   EVAL      I2TSTMP = I1TSTMP                                        MD034366
      C                   EVAL      I2BRCA = AMBRCA                                            CRE005
      C                   EVAL      I2BAL1   = RT_BAL2                                         CRE005
      C                   EVAL      I2RAT1   = RT_RAT2                                         CRE005
@@ -5066,6 +5088,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      I3DRCR = 1                                                 CRE005
      C**********         TIME                    I3TIME                                CRE005 233901
      C                   EVAL      I3TIME = I1TIME                                            233901
+     C                   EVAL      I3TSTMP = I1TSTMP                                        MD034366
      C                   EVAL      I3BRCA = AMBRCA                                            CRE005
      C**********         EVAL      I3BAL3   = RT_BAL2                                  CRE005 236976
      C**********         EVAL      I3RAT3   = RT_RAT2                                  CRE005 236976
@@ -5110,6 +5133,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   ADD       WWCBRT        IRAT3E                                       CRE005
      C                   ENDIF                                                                CRE005
      C                   ENDIF                                                                CRE005
+     C                   MOVEL     I3BAL3        I3BAL1                                     MD034366
+     C                   MOVEL     I3RAT3        I3RAT1                                     MD034366
      C                   WRITE     RERCH3D0                                                   CRE005
                                                                                               CRE005
       ** Add 1 to header record field                                                         CRE005
@@ -5159,6 +5184,10 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   ENDIF                                                                CRE005
      C                   TIME                    I1TIME                                       CRE005
      C                   EVAL      I1SPOS = 'GE/RC'                                           CRE005
+      ** Timestamp                                                                          MD034366
+     C                   CALLB     'ZAGENTMSTM'                                             MD034366
+     C                   PARM                    TimeStamp                                  MD034366
+     C                   EVAL      I1TSTMP = TimeStamp                                      MD034366
      C                   EVAL      I1BRCA = AMBRCA                                            CRE005
      C                   EVAL      I1ZZ001 = 'R'                                              CRE005
      C                   EVAL      I1RVLD = *ZEROS                                            CRE005

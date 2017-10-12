@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039449           Date 04Jul16               *      
-      *  Prev Amend No. MD034363           Date 30Jun15               *
+      *  Last Amend No. MD041714           Date 29Sep16               *
+      *  Prev Amend No. MD039449           Date 04Jul16               *      
+      *                 MD034363           Date 30Jun15               *
       *                 MD045480           Date 12May17               *            
       *                 AR943686           Date 23Sep16               *
       *                 CLE141             Date 08Feb16               *
@@ -146,6 +147,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041714 - Reversed PDCL Interest Loan has incorrect         *
+      *             RECI in LEPDUEPD                                  *
       *  MD039449 - CLE164: Unable to change loan autosettle          *
       *             indicator from N to C                             *      
       *  MD034363 - Reversal projected movements were generated during*
@@ -2671,9 +2674,18 @@
      C                             %SUBST(LTYP: 1: 1) <> 'Z'                                  263840
      C                             AND @DEPI  <> 'Y'                                        MD030621
      C                   EXSR      SRFCLT
-     C                   EXSR      SrUpdLEPDUE                                             AR1079502
+     C**********         EXSR      SrUpdLEPDUE                                    AR1079502 MD041714
      C                   ENDIF                                                                263840
                                                                                               263840
+      *                                                                                     MD041714
+      ** Reverse PDCL Interest Loan                                                         MD041714
+      *                                                                                     MD041714
+     C                   IF        CLE134      = 'Y'           AND                          MD041714
+     C                             (%SUBST(LTYP: 1: 1) = 'X'   OR                           MD041714
+     C                              %SUBST(LTYP: 1: 1) = 'Y')                               MD041714
+     C                   EXSR      SrUpdLEPDUE                                              MD041714
+     C                   ENDIF                                                              MD041714
+                                                                                            MD041714
      C                   EXSR      SRLREF
 
       * Write an LTRIX record
@@ -9823,9 +9835,10 @@
      C     SrUpdLEPDUE   BEGSR                                                             AR1079502
      C     LNRF          CHAIN     LEPDUELC                           97                   AR1079502
      C                   DOW       *IN97 = '0'                                             AR1079502
-     C                   EVAL      YRECI = 'R'                                             AR1079502
-     C                   EVAL      YTYLC = 'R'                                             AR1079502
-     C                   UPDATE    LEPDUEDC                                                AR1079502
+     C**********         EVAL      YRECI = 'R'                                    AR1079502 MD041714
+     C**********         EVAL      YTYLC = 'R'                                    AR1079502 MD041714
+     C**********         UPDATE    LEPDUEDC                                       AR1079502 MD041714
+     C                   DELETE    LEPDUEDC                                                 MD041714
      C     LNRF          READE     LEPDUELC                               97               AR1079502
      C                   ENDDO                                                             AR1079502
      C                   ENDSR                                                             AR1079502

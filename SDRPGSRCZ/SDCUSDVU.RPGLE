@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD045238           Date 24Apr17               *
-      *  Prev Amend No. MD042966           Date 20Dec16               *
+      *  Last Amend No. MD041996           Date 12Oct16               *
+      *  Prev Amend No. MD045238           Date 24Apr17               *
+      *                 MD042966           Date 20Dec16               *
       *                 MD042692           Date 20Dec16               *
       *                 MD042407           Date 07Nov16               *
       *                 CSW216             Date 14Mar16               *
@@ -136,6 +137,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041996 - Incorrect mapping for FX Netting                  *
       *  MD045238 - Authority Holder is not recognized as Controlling *
       *             Person                                            *
       *  MD042966 - FATCA US Indicia are not updated upon             *
@@ -1022,11 +1024,15 @@
                                                                                             AR743761
       ** Stamp Tax details                                                                    CER049
      DTranInStamp      S             31A                                                      CER049
-     D FillerBuf       S           5276A                                                      CSW213
+     D***FillerBuf       S           5276A                                           CSW213 MD041996
+     D FillerBuf       S           5096A                                                    MD041996
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
      D FillerBufEx2    S           5980A                                                      CGL132
      D FillerBufEx3    S           9999A                                                      CSW213
-     D FillerBufEx4    S           6898A                                                      CSW213
+     D***FillerBufEx4    S           6898A                                           CSW213 MD041996
+     D FillerBufEx4    S           5974A                                                    MD041996
+     D TranInCtnm1     S              8A                                                    MD041996
+     D TranInCtnm2     S            110A                                                    MD041996
      D PPCOLC          S              2A                                                    MD026693
       ** +--------------------------------------+
                                                                                             MD026519
@@ -1376,6 +1382,8 @@
      C                   PARM                    APIRetC           1                         BUG4742
      C                   MOVEL     DDACTN        Buffer                                      BUG4742
      C                   ELSE                                                                BUG4742
+     C                   EVAL      TranInCtnm1 = %SUBST(TranInCtnm:1:8)                     MD041996
+     C                   EVAL      TranInCtnm2 = %SUBST(TranInCtnm:9)                       MD041996
      C                   EVAL                    Buffer = TranInPrim
      C**********                                 + TranInSeco + TranInMsrt                  BUG14803
      C                                           + Traninseco                               BUG14803
@@ -1402,11 +1410,12 @@
      C                                           + @TimeStamp                                BUG4196
      C                                           + TranInRwan                                 CSD079
      C                                           + TranInStamp                                CER049
+     C                                           + TranInCtnm1                              MD041996
      C                                           + AAuth                                      CER059
      C**********                                 + TranInCUAH                          CER059 CSW213
      C**********                                 + TranInCCTX                          CER059 CSW213
      C**********                                 + ExtData                            BUG4196 CSD079
-     C                                           + TranInCtnm                              AR1086546
+     C**********                                 + TranInCtnm                     AR1086546 MD041996
      C                                           + FillerBuf                                  CSW213
      C                   EVAL      BufferEx2 = SDSW13                                         CSW213
      C                                       + TranInCUXC                                     CGL132
@@ -1417,6 +1426,7 @@
                                                                                               CSW213
      C                   EVAL      BufferEx4 = TranInCUAH                                     CSW213
      C                                       + TranInCCTX                                     CSW213
+     C                                       + TranInCtnm2                                  MD041996
      C                                       + ExtData                                      AR316373
      C                                       + FillerBufEx4                                   CSW213
      C                   ENDIF                                                               BUG4742

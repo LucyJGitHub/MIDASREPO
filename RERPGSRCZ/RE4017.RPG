@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
-      *  Last Amend No. CCB020             Date 06Aug12               *
-      *  Prev Amend No. AR989169           Date 19Jun12               *
+      *  Last Amend No. MD034366           Date 09Sep15               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *                 AR989169           Date 19Jun12               *
       *                 AR947093A          Date 04May12               *
       *                 AR947093           Date 26Apr12               *
       *                 AR943718           Date 03Apr12               *
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034366 - CRE005 failuers in COB. Added timestamp field to  *
+      *             ensure that latest rate change record is used.    *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  AR989169 - Interest tab was not properly updated             *
       *  AR947093A - Base Rate amendment resulted to 0 interest rate  *
@@ -368,6 +371,37 @@
      I                                        1  24 W2CACP                                    230355
      I                                        1   3 WKCRBR                                    230355
      I                                        4  24 WKCACP                                    230355
+      *                                                                                     MD034366
+     IQUSEC       DS                                                                        MD034366
+     I                                    B   1   40QUSBPR                                  MD034366
+     I                                    B   5   80QUSBAV                                  MD034366
+     I                                        9  15 QUSEI                                   MD034366
+     I                                       16  16 QUSERE                                  MD034366
+     I                                       17  32 QUSED0                                  MD034366
+      *                                                                                     MD034366
+     IOUTDAT      DS                                                                        MD034366
+     I                                        1   4 APIYR                                   MD034366
+     I                                        5   6 APIMH                                   MD034366
+     I                                        7   8 APIDY                                   MD034366
+     I                                        9  10 APIHR                                   MD034366
+     I                                       11  12 APIMN                                   MD034366
+     I                                       13  14 APISC                                   MD034366
+     I                                       15  17 APIML                                   MD034366
+     ISTAMP       DS                                                                        MD034366
+     I                                        1   4 RETYR                                   MD034366
+     I                                        5   5 TMST1                                   MD034366
+     I                                        6   7 RETMH                                   MD034366
+     I                                        8   8 TMST2                                   MD034366
+     I                                        9  10 RETDY                                   MD034366
+     I                                       11  11 TMST3                                   MD034366
+     I                                       12  13 RETHR                                   MD034366
+     I                                       14  14 TMST4                                   MD034366
+     I                                       15  16 RETMN                                   MD034366
+     I                                       17  17 TMST5                                   MD034366
+     I                                       18  19 RETSC                                   MD034366
+     I                                       20  20 TMST6                                   MD034366
+     I                                       21  23 RETML                                   MD034366
+     I                                       24  26 RETMC                                   MD034366
       *                                                                                       CRE073
      I              'ZACALCSPRT'          C         CALCSR                                    CRE073
      I** Constant                                                                             CRE073
@@ -1965,6 +1999,9 @@
      C                     ELSE
      C                     Z-ADD235959    TIME
      C                     END
+     C           'RERCH'   IFEQ OUTFIL                                                      MD034366
+     C                     EXSR W#TIME                                                      MD034366
+     C                     ENDIF                                                            MD034366
       *
      C                     MOVEL'GE/RC   'SPOS
      C                     MOVELE2BRCA    BRCA
@@ -2137,6 +2174,52 @@
      C                     ENDIF
       *
      C                     ENDSR
+      ******************************************************************                    MD034366
+      *                                                                                     MD034366
+     C           W#TIME    BEGSR                                                            MD034366
+      *                                                                                     MD034366
+     C                     Z-ADD16        QUSBPR                                            MD034366
+     C                     Z-ADD0         QUSBAV                                            MD034366
+     C                     MOVE *BLANKS   INFORM 10                                         MD034366
+     C                     MOVEL'*CURRENT'INFORM                                            MD034366
+     C                     MOVE *BLANKS   INVARI  1                                         MD034366
+     C                     MOVE *BLANKS   OUTFOR 10                                         MD034366
+     C                     MOVEL'*YYMD'   OUTFOR 10                                         MD034366
+      *                                                                                     MD034366
+      ** Use the API to get a 17-byte date/time value (down to the                          MD034366
+      ** microsecond).                                                                      MD034366
+      *                                                                                     MD034366
+     C                     CALL 'QWCCVTDT'                                                  MD034366
+     C                     PARM           INFORM                                            MD034366
+     C                     PARM           INVARI                                            MD034366
+     C                     PARM           OUTFOR                                            MD034366
+     C                     PARM           OUTDAT                                            MD034366
+     C                     PARM           QUSEC                                             MD034366
+      *                                                                                     MD034366
+      ** The OutDate field returned from the API and TimeStamp fields                       MD034366
+      ** returned from this procedure have been broken down by data                         MD034366
+      ** structures.  Copy the data from one to the other and exit.                         MD034366
+      *                                                                                     MD034366
+     C                     MOVE '-'       TMST1                                             MD034366
+     C                     MOVE '-'       TMST2                                             MD034366
+     C                     MOVE '-'       TMST3                                             MD034366
+     C                     MOVE '.'       TMST4                                             MD034366
+     C                     MOVE '.'       TMST5                                             MD034366
+     C                     MOVE '.'       TMST6                                             MD034366
+     C                     MOVE '000'     RETMC                                             MD034366
+     C                     MOVELAPIYR     RETYR                                             MD034366
+     C                     MOVELAPIMH     RETMH                                             MD034366
+     C                     MOVELAPIDY     RETDY                                             MD034366
+     C                     MOVELAPIHR     RETHR                                             MD034366
+     C                     MOVELAPIMN     RETMN                                             MD034366
+     C                     MOVELAPISC     RETSC                                             MD034366
+     C                     MOVELAPIML     RETML                                             MD034366
+      *                                                                                     MD034366
+     C                     MOVELSTAMP     TSTMP                                             MD034366
+      *                                                                                     MD034366
+     C                     ENDSR                                                            MD034366
+      *                                                                                     MD034366
+      *****************************************************************                     MD034366
       /EJECT
       *****************************************************************
       *                                                               *

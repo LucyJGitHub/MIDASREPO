@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD021155           Date 19Jul13              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD040628           Date 07Sep16              */
+/*       Prev Amend No. MD021155           Date 19Jul13              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -33,6 +34,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD040628 - If error occurs, return to calling program       */
+/*                  with correct job switches.                       */
 /*       MD021155 - COB Restructure Phase 1 Remnants                 */
 /*                - Apply Standard Midas Journaling                  */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
@@ -672,6 +675,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              ENDDO
              CHGJOB     SWS(XXXXXX11)
+             RETURN                                                                     /*MD040628*/
  
 /**Reset*busy*flag*in*LESTAT */                                       /*E40242*/
 /*D:*********ALCOBJ     OBJ((LESTAT *DTAARA *EXCLRD)) WAIT(32000)  */ /*E40242*/

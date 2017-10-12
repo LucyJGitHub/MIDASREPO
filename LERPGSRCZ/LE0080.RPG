@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
 0009 F*                                                               *
-      *  Last Amend No. CGL184             Date 07Dec16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD031285           Date 14Jun16               *
+      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *                 CLE141             Date 08Feb16               *
       *               . CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE064             Date 06Dec10               *
@@ -91,6 +92,10 @@
 0011 F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD031285 - LE Guarantee was not expired on end date.         *
+      *             Expired records should be shown in the screen as  *
+      *             long as the facilities/loans are still active.    *
+      *             Pattern fix 245406.                               *
       *  CGL184 - New Frequencies for Account Statements (Recompile)  *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -360,7 +365,8 @@
 0100 E**********          ERMSG   1  14 70               ERROR MESSS01117 CLE004
 0100 E****                ERMSG   1  22 75               ERROR MES CLE004 155821
 0100 E***********         ERMSG   1  23 75               ERROR MES 155821 168815
-0100 E                    ERMSG   1  26 75               ERROR MESSAGES   168815
+0100 E**********          ERMSG   1  26 75               ERROR MESSAGES              168815 MD031285
+0100 E                    ERMSG   1  27 75               ERROR MESSAGES                     MD031285
      E****                STAT    1   4 16                         CLE004 158893
      E                    STAT    1   5 16                                158893
       *                                                                   S01408
@@ -3950,6 +3956,17 @@ E01  C                     ENDIF                                          168815
      C           *IN21     ANDEQ'0'                                       CLE004
      C                     EXSR SRAUTH                                    CLE004
      C                     ENDIF                                          CLE004
+      *                                                                                     MD031285
+      ** Expired records not allowed to amend                                               MD031285
+      *                                                                                     MD031285
+     C           SACTN     IFEQ 'A'                                                         MD031285
+     C           SSTAT     ANDEQ'EXPIRED'                                                   MD031285
+     C           ERRMSG    IFEQ *BLANK                                                      MD031285
+     C                     MOVE '1'       *IN21                                             MD031285
+     C                     MOVE '0'       *IN43                                             MD031285
+     C                     MOVE ERMSG,27  ERRMSG                                            MD031285
+     C                     ENDIF                                                            MD031285
+     C                     ENDIF                                                            MD031285
       *                                                                   CLE004
       ** Save rel. record no. of first record in error                    CLE004
       *                                                                   CLE004
@@ -4317,6 +4334,8 @@ E01  C                     ENDIF                                          168815
      C                     MOVE *BLANK    STATUS                          CLE004
      C                     ELSE                                           CLE004
      C                     SELEC                                          CLE004
+     C           RECI      WHEQ 'E'                                                         MD031285
+     C                     MOVELSTAT,5    STATUS                                            MD031285
      C           GSTS      WHEQ 'C'                                       CLE004
      C                     MOVELSTAT,1    STATUS                          CLE004
      C           GSTS      WHEQ 'R'                                       CLE004
@@ -4641,6 +4660,7 @@ DELETED GUARANTEE
 THE SEQUENCE NUMBER MUST BE BLANK ON INSERT
 TOO MANY GUARANTEES FOR THIS FACILITY
 TOO MANY GUARANTEES FOR THIS LOAN
+EXPIRED RECORD IS NOT ALLOWED TO AMEND
 ** STAT ** Status   (EXPIRED added by 158893)
 COMPLETE
 REAUTHORISE REQ.

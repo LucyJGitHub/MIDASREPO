@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. CGL001             Date 06Aug12               *
-      *  Prev Amend No. 259541             Date 22Jan13               *
+      *  Last Amend No. MD036257           Date 12Nov15               *
+      *  Prev Amend No. CGL001             Date 06Aug12               *
+      *                 259541             Date 22Jan13               *
       *                 AR1073026          Date 20Dec12               *
       *                 CGL127             Date 06Aug12               *
       *                 CRE075             Date 06Dec10               *
@@ -57,6 +58,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD036257 - Very long run of GLC2550 before first NWD of a    *
+      *             month. Purge postings for current month (194300)  *
+      *             if system value 'PreservMonthsPosts' is N.        *
       *  CGL001 - Introduction of New statement frequency 'N' (NEVER) *
       *           Incorporate 259541                                  *
       *  259541 - RZB feature on Drop postings for Z statement        *
@@ -248,6 +252,7 @@
      I/COPY WNCPYSRC,GL2550IIPG                                           S01408
      I*                                                                   S01408
      I              'DropZStmtPosting'    C         SVAL                                      259541
+     I              'PreservMonthsPosts'  C         SVAL2                                   MD036257
       *                                                                                       CGL001
       ** New system value constant.                                                           CGL001
       *                                                                                       CGL001
@@ -478,7 +483,8 @@
      C                     PARM           PCS01 200                                           259541
      C                     PARM NEWSVL    PSV02  20                                    259541 CGL001
      C                     PARM           PCS02 200                                           259541
-     C                     PARM           PSV03  20                                           259541
+     C**********           PARM           PSV03  20                                  259541 MD036257
+     C                     PARM SVAL2     PSV03  20                                         MD036257
      C                     PARM           PCS03 200                                           259541
      C                     PARM           PSV04  20                                           259541
      C                     PARM           PCS04 200                                           259541
@@ -658,10 +664,13 @@
       *                                                                   114060
       * Do not drop if posting was generated in current month as it       194300
       * is needed by Midas Export.                                        194300
+      * AND system value 'PreservMonthsPosts' is Y                                          MD036257
+     C           PCS03     IFEQ 'Y'                                                         MD036257
      C           CMX001    IFEQ 'Y'                                       194300
      C           PSTD      ANDGESOMDAY                                    194300
      C                     MOVE 'N'       ACHV                            194300
      C                     END                                            194300
+     C                     ENDIF                                                            MD036257
       *                                                                   194300
      C*  Archive this record if it is eligible
      C           ACHV      IFEQ 'Y'

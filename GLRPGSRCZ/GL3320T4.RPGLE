@@ -13,12 +13,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD035213           Date 25May16               *
-      *  Prev Amend No. MD024688           Date 09May14               *
+      *  Last Amend No. MD042411           Date 18Nov16               *
+      *  Prev Amend No. MD035213           Date 25May16               *
+      *                 MD024688           Date 09May14               *
       *                 CGL142   *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042411 - BRCA/CCY/ACOD totals can be more than 15 digits   *
+      *            (Recompile)                                        *
       *  MD035213 - Component GLC3320T4 failed on program GL3320T4    *
       *             due to empty REACRZ.                              *
       *  MD024688 - GLC3320T4 00001 failed during COB                 *

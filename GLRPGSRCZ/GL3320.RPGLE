@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. MD033583           Date 03Jun15               *
-      *  Prev Amend No. 253181             Date 26Apr16               *
+      *  Last Amend No. MD042411           Date 18Nov16               *
+      *  Prev Amend No. MD033583           Date 03Jun15               *
+      *                 253181             Date 26Apr16               *
       *                 MD031642           Date 15Dec14               *
       *                 CRE095             Date 25Apr14               *
       *                 MD033737           Date 05May15               *
@@ -82,8 +83,10 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD042411 - GLC33202 component failure. BRCA/CCY/ACOD         *
+      *             totals can be more than 15 digits                 *
       *  MD033583 - Performance - ABEXAG - Reuse deleted records      *
-      *             (Recompile)                                       *     
+      *             (Recompile)                                       *
       *  253181 - Delete record from the shadow file REMEMLPD when    *
       *           account has been dropped from ACCNTAB               *
       *         - Applied for MD022061                                *
@@ -217,7 +220,8 @@
      F***ABEXAG* O   F      40            DISK                                                CGL029
      F***ABEXZY* O   F      40            DISK                                                CGL029
      F***ABEXAG*   O    F   50        DISK                                             CGL029 CGL120
-     FABEXAG    O    F   50        DISK    COMMIT                                             CGL120
+     F***ABEXAG    O    F   50        DISK    COMMIT                                 CGL120 MD042411
+     FABEXAG    O    F   54        DISK    COMMIT                                           MD042411
      F***ABEXZY*   O    F   50        DISK                                             CGL029 CGL120
      F***ABEXZY    UF   F   50        DISK    COMMIT                                   CGL120 CGL142
      F***GLABEXZY  UF A E             DISK    COMMIT                                 CGL142 MD024120
@@ -323,7 +327,8 @@
      D ZYDY            S              4  0 DIM(4) CTDATA PERRCD(4)              ZDATE SR. ARRAY
      D ZMDY            S              3  0 DIM(13) CTDATA PERRCD(13)            ZDATE SR. ARRAY
      D ZMNM            S              3    DIM(12) CTDATA PERRCD(12)            ZDATE2 SR. ARRAY
-     D INT             S             15  0 DIM(6)
+     D*INT*************S             15  0 DIM(6)                                           MD042411
+     D INT             S             18  0 DIM(6)                                           MD042411
      D DEC             S              3  0 DIM(6)
      D CommitCtr       S             10I 0 INZ                                              MD024120
      D*                                                        Key - ACCNT
@@ -961,6 +966,7 @@
      C                   Z-ADD     0             ZER13            13 3
      C                   Z-ADD     0             ZERO5             5 0
      C                   Z-ADD     0             ZERO15           15 0
+     C                   Z-ADD     0             ZERO19           19 0                      MD042411
      C                   Z-ADD     0             TNSAW             5 0                        CGL142
      C/COPY WNCPYSRC,GL3320C007
      C*
@@ -1028,7 +1034,8 @@
      C** Access Start of business Ledger Balance for ABEX                 076177
      C** to get balances before Real Time Postings Applied.               076177
      C*                                                                   076177
-     C                   Z-ADD     LDBL          SLDBL            15 0                        076177
+     C*******************Z-ADD*****LDBL**********SLDBL************15*0****           076177 MD042411
+     C                   Z-ADD     LDBL          SLDBL            18 0                      MD042411
      C                   MOVE      *IN29         *IN36                                        076177
      C*                                                                   076177
      C                   MOVE      '0'           *IN35                                        185118
@@ -1421,27 +1428,35 @@
      C***********          Z-ADD3         X                               076177
      C***29******          Z-ADD4         X                               076177
      C***********          EXSR HASH                                      076917
-     C                   MOVE      SLDBL         ZZAMT                                        076177
-     C   36              Z-SUB     ZZAMT         ZZAMT                                        076177
+     C*******************MOVE******SLDBL*********ZZAMT********************           076177 MD042411
+     C                   MOVE      SLDBL         ZZ183                                      MD042411
+     C***36**************Z-SUB*****ZZAMT*********ZZAMT********************           076177 MD042411
+     C   36              Z-SUB     ZZ183         ZZ183                                      MD042411
      C                   Z-ADD     3             X                                            076177
      C   36              Z-ADD     4             X                                            076177
-     C                   EXSR      HASH                                                       076177
+     C*******************EXSR******HASH***********************************           076177 MD042411
+     C                   EXSR      HASH18                                                   MD042411
       *                                                                   076177
-     C                   MOVE      LDBL          ZZAMT                                        076177
+     C*******************MOVE******LDBL**********ZZAMT********************           076177 MD042411
+     C                   MOVE      LDBL          ZZ183                                      MD042411
      C***29******          Z-SUBZZAMT     ZZAMT                    076177 185118
-     C   29
-     CANN35              Z-SUB     ZZAMT         ZZAMT                                        185118
+     C***29***************************************************************                  MD042411
+     C**ANN35************Z-SUB*****ZZAMT*********ZZAMT********************           185118 MD042411
+     C   29                                                                                 MD042411
+     CANN35              Z-SUB     ZZ183         ZZ183                                      MD042411
      C                   Z-ADD     5             X
      C***29******          Z-ADD6         X                               185118
      C   29
      CANN35              Z-ADD     6             X                                            185118
      C***********ZZAMT     ADD  ZZAMT     ZZAMT                           185118
      C***********          EXSR HASH                                      185118
-     C  N35              EXSR      HASH                                                       185118
+     C**N35**************EXSR******HASH***********************************           185118 MD042411
+     C  N35              EXSR      HASH18                                                   MD042411
      C                   Z-ADD     5             X                                            185118
      C   29
      CANN35              Z-ADD     6             X                                            185118
-     C  N35              EXSR      HASH                                                       185118
+     C**N35**************EXSR******HASH***********************************           185118 MD042411
+     C  N35              EXSR      HASH18                                                   MD042411
      C*
      C     ENDF          TAG                                                    **ENDF TAG**
       *
@@ -1725,14 +1740,20 @@
      C/SPACE 2
      C********************************************************************
      C*
-     C     HASH          BEGSR                                                  *** HASH ***
+0763 C* Subroutine renamed as INT and DEC are now 18 and 3 long rather than                 MD042411
+     C* standard 15 and 3 length fields used elsewhere in Midas                             MD042411
+     C*****HASH**********BEGSR********************************************      *** HASH ***MD042411
+     C     HASH18        BEGSR                                                  ** HASH18 **MD042411
      C*
-     C                   Z-ADD     INT(X)        ZZTOTI
+     C*******************Z-ADD*****INT(X)********ZZTOTI*******************                  MD042411
+     C                   Z-ADD     INT(X)        ZZ18TI                                     MD042411
      C                   Z-ADD     DEC(X)        ZZTOTD
      C*
-     C                   EXSR      GLZADD
+     C*******************EXSR******GLZADD*********************************                  MD042411
+     C                   EXSR      GLZADD18                                                 MD042411
      C*
-     C                   Z-ADD     ZZTOTI        INT(X)
+     C*******************Z-ADD*****ZZTOTI********INT(X)*******************                  MD042411
+     C                   Z-ADD     ZZ18TI        INT(X)                                     MD042411
      C                   Z-ADD     ZZTOTD        DEC(X)
      C*
      C                   ENDSR
@@ -1743,15 +1764,19 @@
      C*
      C     COMP          BEGSR                                                  *** COMP ***
      C*
-     C                   Z-ADD     INT(X)        ZZTOTI
+     C*******************Z-ADD*****INT(X)********ZZTOTI*******************                  MD042411
+     C                   Z-ADD     INT(X)        ZZ18TI                                     MD042411
      C                   Z-ADD     DEC(X)        ZZTOTD
      C*
-     C                   Z-ADD     INT(Y)        ZZINT
+     C*******************Z-ADD*****INT(Y)********ZZINT********************                  MD042411
+     C                   Z-ADD     INT(Y)        ZZ18IN                                     MD042411
      C                   Z-ADD     DEC(Y)        ZZDEC
      C*
-     C                   EXSR      GLZCMP
+     C*******************EXSR******GLZCMP*********************************                  MD042411
+     C                   EXSR      GLZCMP18                                                 MD042411
      C*
-     C     ZZDIFI        COMP      0                                  5555
+     C*****ZZDIFI********COMP******0**********************************5555                  MD042411
+     C     ZZ18DI        COMP      0                                  5555                  MD042411
      C  N55ZZDIFD        COMP      0                                  5555
      C**
      C                   ENDSR
@@ -1905,49 +1930,70 @@
      C********************************************************************
      C/SPACE 2
      C********************************************************************
-     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C**SUBROUTINE*TO*ADD*AN*AMOUNT*(ZZAMT)*TO*THE*TOTAL*(ZZTOTI,ZZTOTD)**                  MD042411
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZ183) TO THE TOTAL (ZZ18TI,ZZTOTD)                    MD042411
      C*   IND '99' IS SET BY AN OVERFLOW ERROR
      C*
-     C     GLZADD        BEGSR                                                  *** GLZADD ****
+0763 C* Subroutine renamed as it handles values upto 18 digits rather than                  MD042411
+     C* standard 15 length fields used elsewhere in Midas                                   MD042411
+     C*****GLZADD********BEGSR********************************************      *** GLZADD *MD042411
+0890 C     GLZADD18      BEGSR                                                  ** GLZADD18 MD042411
      C*
-     C                   Z-ADD     ZZAMT         ZZAMT            15 3    91    -DEFINE ZZAMT
-     C   91              GOTO      ZZAEND                                       AMT = 0.BYPASS
+     C*******************Z-ADD*****ZZAMT*********ZZAMT************15*3****91    -DEFINE ZZAMMD042411
+0892 C                   Z-ADD     ZZ183         ZZ183            18 3    91    -DEFINE ZZ18MD042411
+     C***91**************GOTO******ZZAEND*********************************      AMT = 0.BYPAMD042411
+     C   91              GOTO      ZZ18AEND                                     AMT = 0.BYPAMD042411
      C*
-     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
-     C                   Z-ADD     ZZAMT         ZZAMTI           15 0          INTEGER FIELD
-     C                   Z-ADD     ZZAMT         ZZWK1             3 3
+     C**SPLIT*ZZAMT*INTO*INTEGER*AND*DECIMAL*FIELDS***********************                  MD042411
+     C* SPLIT ZZ183 INTO INTEGER AND DECIMAL FIELDS                                         MD042411
+     C*******************Z-ADD*****ZZAMT*********ZZAMTI***********15*0****      INTEGER FIELMD042411
+0896 C                   Z-ADD     ZZ183         ZZ180I           18 0          INTEGER FIELMD042411
+     C*******************Z-ADD*****ZZAMT*********ZZWK1*************3*3****                  MD042411
+     C                   Z-ADD     ZZ183         ZZWK1             3 3                      MD042411
      C                   MOVE      ZZWK1         ZZAMTD            3 0          DECIMAL FIELD
-     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C**BOTH*ZZAMTI*AND*ZZAMTD*CONTAIN*A*'SIGN'*ZONE*NOW******************                  MD042411
+     C* BOTH ZZ180I AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                                    MD042411
      C*
-     C                   EXSR      GLZSUM
-     C     ZZAEND        ENDSR                                                  ** ZZAEND TAG *
+     C*******************EXSR******GLZSUM*********************************                  MD042411
+     C                   EXSR      GLZSUM18                                                 MD042411
+     C*****ZZAEND        ENDSR                                                  ** ZZAEND TAMD042411
+     C     ZZ18AEND      ENDSR                                                  ZZA18END TAGMD042411
      C*
      C********************************************************************
      C/SPACE 2
      C********************************************************************
      C* SUBROUTINE TO COMPARE AN AMOUNT TO THE TOTAL.
-     C*      PARAMETERS. I/P - ZZINT - THE INTEGER PORTION OF THE NUMBER.
+     C*******PARAMETERS.*I/P*-*ZZINT*-*THE*INTEGER*PORTION*OF*THE*NUMBER.*                  MD042411
+     C*      PARAMETERS. I/P - ZZ18IN - THE INTEGER PORTION OF THE NUMBER.                  MD042411
      C*                  I/P - ZZDEC - THE DECIMAL PORTION OF THE NUMBER.
-     C*                  O/P - ZZDIFI - IS THE INTEGER DIFFERENCE.
+     C*******************O/P*-*ZZDIFI*-*IS*THE*INTEGER*DIFFERENCE.********                  MD042411
+     C*                  O/P - ZZ18DI - IS THE INTEGER DIFFERENCE.                          MD042411
      C*                  O/P - ZZDIFD - IS THE DECIMAL DIFFERENCE.
      C*                  O/P - ZZNEGD - FOR IMMEDIATE PRINTING ONLY.
      C*                  O/P - 96 IS SET IF DIFFERENCE IS NEGATIVE.
      C*
-     C*    IF AN ERROR HAS OCCURED ZZDIFI AND ZZDIFD WILL BE ZERO.
+     C*****IF*AN*ERROR*HAS*OCCURED*ZZDIFI*AND*ZZDIFD*WILL*BE*ZERO.********                  MD042411
+     C*    IF AN ERROR HAS OCCURED ZZ18DI AND ZZDIFD WILL BE ZERO.                          MD042411
      C*        '99' - OVERFLOW ERROR
-     C*        '97' - THE 'SIGN' ZONES OF ZZINT AND ZZDEC ARE DIFFERENT
+     C*********'97'*-*THE*'SIGN'*ZONES*OF*ZZINT*AND*ZZDEC*ARE*DIFFERENT***                  MD042411
+     C*        '97' - THE 'SIGN' ZONES OF ZZ18IN AND ZZDEC ARE DIFFERENT                    MD042411
      C*
-     C     GLZCMP        BEGSR                                                  *** GLZCMP ****
+0763 C* Subroutine renamed as it handles values upto 18 digits rather than                  MD042411
+     C* standard 15 length fields used elsewhere in Midas                                   MD042411
+     C*****GLZCMP********BEGSR********************************************      *** GLZCMP *MD042411
+     C     GLZCMP18      BEGSR                                                  ** GLZCMP18 MD042411
      C                   SETOFF                                       9799
      C                   Z-ADD     ZZDEC         ZZDEC             3 0919293    DEFINE ZZDEC
-     C                   Z-ADD     ZZINT         ZZINT            15 0949596    DEFINE ZZINT
+     C*******************Z-ADD*****ZZINT*********ZZINT************15*0949596    DEFINE ZZINTMD042411
+     C                   Z-ADD     ZZ18IN        ZZ18IN           18 0949596    DEFINE ZZ18IMD042411
      C* IF SIGN ZONES DIFFER, SET 97, & RETURN ZERO.
      C   91
      CAN 95
      COR 92
      CAN 94              SETON                                        97        ERROR -MIXED
      C*                                                           STATUS
-     C   97              GOTO      ZZQUIT                                       BRANCH TO ADMIT
+     C***97**************GOTO******ZZQUIT*********************************    BRANCH TO ADMIMD042411
+     C   97              GOTO      ZZ18QUIT                                   BRANCH TO ADMIMD042411
      C*
      C*  SPECIAL CASES DEALT WITH FIRST
      C*      EITHER AMOUNTS EQ '0' OR BOTH AMOUNTS 'EQ'
@@ -1955,62 +2001,87 @@
      C                   SETOFF                                       9495
      C   93
      CAN 96              SETON                                        91        * IF I/P FIELD
-     C   91              Z-ADD     ZZTOTI        ZZDIFI           15 0          *    ZERO
+     C***91**************Z-ADD*****ZZTOTI********ZZDIFI***********15*0****      *    ZERO   MD042411
+     C   91              Z-ADD     ZZ18TI        ZZ18DI           18 0          *    ZERO   MD042411
      C   91              Z-ADD     ZZTOTD        ZZDIFD            3 0          *
-     C   91              GOTO      ZZSIGN
+     C***91**************GOTO******ZZSIGN*********************************                  MD042411
+     C   91              GOTO      ZZ18SIGN                                                 MD042411
      C*
-     C     ZZTOTI        COMP      ZZINT                                  91    * IF FIELDS EQ
+     C*****ZZTOTI********COMP******ZZINT**********************************91    * IF FIELDS MD042411
+     C     ZZ18TI        COMP      ZZ18IN                                 91    * IF FIELDS MD042411
      C   91ZZTOTD        COMP      ZZDEC                                  91    *
-     C   91              Z-ADD     0             ZZDIFI                         *
+     C***91**************Z-ADD*****0*************ZZDIFI*******************      *           MD042411
+     C   91              Z-ADD     0             ZZ18DI                         *           MD042411
      C   91              Z-ADD     0             ZZDIFD                         *
-     C   91              GOTO      ZZCEND
+     C***91**************GOTO******ZZCEND*********************************                  MD042411
+     C   91              GOTO      ZZ18CEND                                                 MD042411
      C*
-     C     ZZTOTI        COMP      0                                      91    * IF TOTAL
+     C*****ZZTOTI********COMP******0**************************************91    * IF TOTAL  MD042411
+     C     ZZ18TI        COMP      0                                      91    * IF TOTAL  MD042411
      C   91ZZTOTD        COMP      0                                      91    *    ZERO
-     C   91              Z-SUB     ZZINT         ZZDIFI                         *
+     C***91**************Z-SUB*****ZZINT*********ZZDIFI*******************      *           MD042411
+     C   91              Z-SUB     ZZ18IN        ZZ18DI                         *           MD042411
      C   91              Z-SUB     ZZDEC         ZZDIFD                         *
      C**
-     C     ZZSIGN        TAG                                                    *** ZZSIGN ****
+     C*****ZZSIGN********TAG**********************************************      *** ZZSIGN *MD042411
+     C     ZZ18SIGN      TAG                                                    * ZZ18SIGN *MD042411
      C*
-     C**   IF ZZDIFD IS ZERO, AND ZZDIFI IS NEG. SET UP ZZNEGD.
+     C*****IF*ZZDIFD*IS*ZERO,*AND*ZZDIFI*IS*NEG.*SET*UP*ZZNEGD.***********                  MD042411
+     C**   IF ZZDIFD IS ZERO, AND ZZ18DI IS NEG. SET UP ZZNEGD.                             MD042411
      C                   SETOFF                                       96
      C   91ZZDIFD        COMP      0                                      94
-     C   94ZZDIFI        COMP      0                                    96
+     C***94ZZDIFI********COMP******0************************************96                  MD042411
+     C   94ZZ18DI        COMP      0                                    96                  MD042411
      C   96              MOVE      '.000-'       ZZNEGD            5
-     C   91              GOTO      ZZCEND
+     C***91**************GOTO******ZZCEND*********************************                  MD042411
+     C   91              GOTO      ZZ18CEND                                                 MD042411
      C*      END OF SPECIAL CASES
      C*
-     C* IF ZZTOTALS EQ 'B' AND ZZINT,ZZDEC EQ 'A'   THEN -
+     C**IF*ZZTOTALS*EQ*'B'*AND*ZZINT,ZZDEC*EQ*'A'***THEN*-****************                  MD042411
+     C* IF ZZTOTALS EQ 'B' AND ZZ18IN,ZZDEC EQ 'A'   THEN -                                 MD042411
      C*  TO COMPARE 'A' WITH 'B'
      C*     1. STORE ORIGINAL VALUE OF 'B'.
      C*     2. NEGATE 'A'.
      C*     3. ADD 'A' TO 'B'.
      C*     4. 'B' IS NOW THE DIFFERENCE. STORE 'B' IN FIELD 'C'.
      C*     5. RESTORE 'B'.
-     C*            N.B. 'A' EQ ZZINT AND ZZDEC
-     C*                 'B' EQ ZZTOTI AND ZZTOTD
-     C*                 'C' EQ ZZDIFI AND ZZDIFD
+     C*************N.B.*'A'*EQ*ZZINT*AND*ZZDEC****************************                  MD042411
+     C*            N.B. 'A' EQ ZZ18IN AND ZZDEC                                             MD042411
+     C******************'B'*EQ*ZZTOTI*AND*ZZTOTD**************************                  MD042411
+     C*                 'B' EQ ZZ18TI AND ZZTOTD                                            MD042411
+     C******************'C'*EQ*ZZDIFI*AND*ZZDIFD**************************                  MD042411
+     C*                 'C' EQ ZZ18DI AND ZZDIFD                                            MD042411
      C*
      C*    STEP #1
-     C                   Z-ADD     ZZTOTI        ZZSTRI           15 0
+     C*******************Z-ADD*****ZZTOTI********ZZSTRI***********15*0****                  MD042411
+     C                   Z-ADD     ZZ18TI        ZZ18SI           18 0                      MD042411
      C                   Z-ADD     ZZTOTD        ZZSTRD            3 0
      C*    STEP #2
-     C                   Z-SUB     ZZINT         ZZAMTI           15 0
+     C*******************Z-SUB*****ZZINT*********ZZAMTI***********15*0****                  MD042411
+     C                   Z-SUB     ZZ18IN        ZZ180I           18 0                      MD042411
      C                   Z-SUB     ZZDEC         ZZAMTD            3 0
      C*    STEP #3
-     C                   EXSR      GLZSUM
-     C   99              GOTO      ZZQUIT
+     C*******************EXSR******GLZSUM*********************************                  MD042411
+     C                   EXSR      GLZSUM18                                                 MD042411
+     C***99**************GOTO******ZZQUIT*********************************                  MD042411
+     C   99              GOTO      ZZ18QUIT                                                 MD042411
      C*    STEP #4
-     C                   Z-ADD     ZZTOTI        ZZDIFI
+     C*******************Z-ADD*****ZZTOTI********ZZDIFI*******************                  MD042411
+     C                   Z-ADD     ZZ18TI        ZZ18DI                                     MD042411
      C                   MOVE      ZZTOTD        ZZDIFD
      C*    STEP #5
-     C                   Z-ADD     ZZSTRI        ZZTOTI           15 0
+     C*******************Z-ADD*****ZZSTRI********ZZTOTI***********15*0****                  MD042411
+     C                   Z-ADD     ZZ18SI        ZZ18TI           18 0                      MD042411
      C                   Z-ADD     ZZSTRD        ZZTOTD            3 0
-     C                   GOTO      ZZCEND                                       BYPASS ADMIT
-     C     ZZQUIT        TAG                                                    ** ZZQUIT TAG**
-     C                   Z-ADD     0             ZZDIFI
+     C*******************GOTO******ZZCEND*********************************      BYPASS ADMITMD042411
+     C                   GOTO      ZZ18CEND                                     BYPASS ADMITMD042411
+     C*****ZZQUIT********TAG**********************************************      ** ZZQUIT TAMD042411
+     C     ZZ18QUIT      TAG                                                    *ZZ18QUIT TAMD042411
+     C*******************Z-ADD*****0*************ZZDIFI*******************                  MD042411
+     C                   Z-ADD     0             ZZ18DI                                     MD042411
      C                   Z-ADD     0             ZZDIFD
-     C     ZZCEND        ENDSR                                                  ** ZZCEND TAG**
+     C*****ZZCEND********ENDSR********************************************      ** ZZCEND TAMD042411
+     C     ZZ18CEND      ENDSR                                                  ZZC18END TAGMD042411
      C*
      C********************************************************************
      C/SPACE 2
@@ -2018,100 +2089,149 @@
      C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
      C*                        GLZADD, GLZSUB, GLZCMP.
      C*          PARAMETERS PASSED -
-     C*                     I/P ZZAMTI ZZAMTD
-     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C**********************I/P*ZZAMTI*ZZAMTD*****************************                  MD042411
+     C*                     I/P ZZ180I ZZAMTD                                               MD042411
+     C**********************O/P*ZZTOTI*ZZTOTD*ZZNEGD*IND*96*IND*99.*******                  MD042411
+     C*                     O/P ZZ18TI ZZTOTD ZZNEGD IND 96 IND 99.                         MD042411
      C*
-     C     GLZSUM        BEGSR                                                  *** GLZSUM ****
+     C*****GLZSUM********BEGSR********************************************      *** GLZSUM *MD042411
+     C     GLZSUM18      BEGSR                                                  ** GLZSUM18 MD042411
      C*
-     C                   Z-ADD     ZZTOTI        ZZTOTI           15 0          DEFINE ZZTOTI
+     C*******************Z-ADD*****ZZTOTI********ZZTOTI***********15*0****      DEFINE ZZTOTMD042411
+     C                   Z-ADD     ZZ18TI        ZZ18TI           18 0          DEFINE ZZ18TMD042411
      C                   Z-ADD     ZZTOTD        ZZTOTD            3 0          DEFINE ZZTOTD
      C                   SETOFF                                       919293
      C                   SETOFF                                       949599
      C*
-     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
-     C     ZZAMTI        COMP      0                                    9293
+     C*****DETERMINE*SIGN*OF*ZZAMTI*&*D,***92*IF*NEG**********************                  MD042411
+     C*    DETERMINE SIGN OF ZZ180I & D,   92 IF NEG                                        MD042411
+     C*****ZZAMTI********COMP******0************************************9293                MD042411
+     C     ZZ180I        COMP      0                                    9293                MD042411
      C   93ZZAMTD        COMP      0                                    9293
-     C   93              GOTO      ZZSEND                                       ZERO BYPASS
+     C***93**************GOTO******ZZSEND*********************************      ZERO BYPASS MD042411
+     C   93              GOTO      ZZ18SEND                                     ZERO BYPASS MD042411
      C*
-     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
-     C     ZZTOTI        COMP      0                                    9193
+     C*****DETERMINE*SIGN*OF*ZZTOTI*&*D,*91*IF*NEG.***********************                  MD042411
+     C*    DETERMINE SIGN OF ZZ18TI & D, 91 IF NEG.                                         MD042411
+     C*****ZZTOTI********COMP******0************************************9193                MD042411
+     C     ZZ18TI        COMP      0                                    9193                MD042411
      C   93ZZTOTD        COMP      0                                    9193
      C*
      C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
-     C   93              Z-ADD     ZZAMTI        ZZTOTI
+     C***93**************Z-ADD*****ZZAMTI********ZZTOTI*******************                  MD042411
+     C   93              Z-ADD     ZZ180I        ZZ18TI                                     MD042411
      C   93              Z-ADD     ZZAMTD        ZZTOTD
-     C   93              GOTO      ZZSEND                                       ZERO BYPASS
+     C***93**************GOTO******ZZSEND*********************************      ZERO BYPASS MD042411
+     C   93              GOTO      ZZ18SEND                                     ZERO BYPASS MD042411
      C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
-     C   91
-     CANN92
-     CORN91
-     CAN 92              GOTO      ZZOFPS
+     C***91***************************************************************                  MD042411
+     C**ANN92*************************************************************                  MD042411
+     C**ORN91*************************************************************                  MD042411
+     C**AN*92************GOTO******ZZOFPS*********************************                  MD042411
+     C   91                                                                                 MD042411
+     CANN92                                                                                 MD042411
+     CORN91                                                                                 MD042411
+     CAN 92              GOTO      ZZ18OFPS                                                 MD042411
      C*
      C     ZZAMTD        ADD       ZZTOTD        ZZWK2             4 0
      C     ZZWK2         COMP      999                                93        '93' = CARRY
      C  N93ZZWK2         COMP      -999                                 93             INTO INTEGER.
      C*
-     C   93
-     CANN92ZZAMTI        ADD       1             ZZWK3            15 0          ADD 'CARRY' +VE
-     C   93
-     CAN 92ZZAMTI        SUB       1             ZZWK3                          SUB 'CARRY' -VE
-     C   93ZZTOTI        ADD       ZZWK3         ZZWK3
-     C  N93ZZTOTI        ADD       ZZAMTI        ZZWK3
+     C***93***************************************************************                  MD042411
+     C***ANN92ZZAMTI*****ADD*******1*************ZZWK3************15*0****      ADD 'CARRY' MD042411
+     C   93                                                                                 MD042411
+     CANN92ZZ180I        ADD       1             ZZWK18           18 0          ADD 'CARRY' MD042411
+     C***93***************************************************************                  MD042411
+     C**AN*92ZZAMTI******SUB*******1*************ZZWK3********************      SUB 'CARRY' MD042411
+     C   93                                                                                 MD042411
+     CAN 92ZZ180I        SUB       1             ZZWK18                         SUB 'CARRY' MD042411
+     C***93ZZTOTI********ADD*******ZZWK3*********ZZWK3********************                  MD042411
+     C   93ZZ18TI        ADD       ZZWK18        ZZWK18                                     MD042411
+     C**N93ZZTOTI********ADD*******ZZAMTI********ZZWK3********************                  MD042411
+     C  N93ZZ18TI        ADD       ZZ180I        ZZWK18                                     MD042411
      C*
-     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
-     C  N92ZZWK3         COMP      ZZTOTI                               99      -92 MEANS NOS.
-     C   92ZZWK3         COMP      ZZTOTI                             99                    NEGATIVE
+     C**IF*THE*MODULUS*OF*ZZWK3*IS*LT*MOD.*ZZTOTI*THEN*O/F*HAS*OCCURED****                  MD042411
+     C* IF THE MODULUS OF ZZWK18 IS LT MOD. ZZ18TI THEN O/F HAS OCCURED                     MD042411
+     C**N92ZZWK3*********COMP******ZZTOTI*******************************99      -92 MEANS NOMD042411
+     C  N92ZZWK18        COMP      ZZ18TI                               99      -92 MEANS NOMD042411
+     C***92ZZWK3*********COMP******ZZTOTI*****************************99**      NEGATIVE    MD042411
+     C   92ZZWK18        COMP      ZZ18TI                             99        NEGATIVE    MD042411
      C  N99              Z-ADD     ZZWK2         ZZTOTD
-     C  N99              Z-ADD     ZZWK3         ZZTOTI
+     C**N99**************Z-ADD*****ZZWK3*********ZZTOTI*******************                  MD042411
+     C  N99              Z-ADD     ZZWK18        ZZ18TI                                     MD042411
      C*
-     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
-     C   99              Z-ADD     0             ZZAMT            15 3
-     C                   GOTO      ZZSEND
+     C**IF*O/F*ZEROIZE*ZZAMT*,*IND*'99'*SET*AND*ZZTOT*FIELDS*LEFT*INTACT.*                  MD042411
+     C* IF O/F ZEROIZE ZZ183 , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.                   MD042411
+     C***99**************Z-ADD*****0*************ZZAMT************15*3****                  MD042411
+     C   99              Z-ADD     0             ZZ183            18 3                      MD042411
+     C*******************GOTO******ZZSEND*********************************                  MD042411
+     C                   GOTO      ZZ18SEND                                                 MD042411
      C*
      C* THE 'SIGNS' ARE DIFFERENT
-     C     ZZOFPS        TAG                                                    ** ZZOFPS TAG**
-     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*****ZZOFPS********TAG**********************************************      ** ZZOFPS TAMD042411
+     C     ZZ18OFPS      TAG                                                    ** ZZOFPS TAMD042411
+     C**IF*ZZAMT*WAS*NEGATIVE,*MAKE*IT*POS.*TO*COMP*WITH*ZZTOT************                  MD042411
+     C* IF ZZ183 WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT                              MD042411
      C*
-     C   92              Z-SUB     ZZAMTI        ZZAMTI           15 0
+     C***92**************Z-SUB*****ZZAMTI********ZZAMTI***********15*0****                  MD042411
+     C   92              Z-SUB     ZZ180I        ZZ180I           18 0                      MD042411
      C   92              Z-SUB     ZZAMTD        ZZAMTD            3 0
      C*
-     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C**IF*ZZTOT*WAS*NEGATIVE,*MAKE*IT*POS.*TO*COMP*WITH*ZZAMT.***********                  MD042411
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZ183.                             MD042411
      C*
-     C   91              Z-SUB     ZZTOTI        ZZTOTI
+     C***91**************Z-SUB*****ZZTOTI********ZZTOTI*******************                  MD042411
+     C   91              Z-SUB     ZZ18TI        ZZ18TI                                     MD042411
      C   91              Z-SUB     ZZTOTD        ZZTOTD
-     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C**BOTH*ZZAMT*AND*ZZTOT*ARE*NOW*POSITIVE.****************************                  MD042411
+     C* BOTH ZZ183 AND ZZTOT ARE NOW POSITIVE.                                              MD042411
      C*
-     C     ZZTOTI        COMP      ZZAMTI                             93  95
+     C*****ZZTOTI********COMP******ZZAMTI*****************************93**95                MD042411
+     C     ZZ18TI        COMP      ZZ180I                             93  95                MD042411
      C   95ZZTOTD        COMP      ZZAMTD                             93  95
      C*
-     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
-     C   95              Z-ADD     0             ZZTOTI
+     C**IF*ZZTOT*EQ.*ZZAMT*RETURN*ZERO.***********************************                  MD042411
+     C* IF ZZTOT EQ. ZZ183 RETURN ZERO.                                                     MD042411
+     C***95**************Z-ADD*****0*************ZZTOTI*******************                  MD042411
+     C   95              Z-ADD     0             ZZ18TI                                     MD042411
      C   95              Z-ADD     0             ZZTOTD
-     C   95              GOTO      ZZSEND
+     C***95**************GOTO******ZZSEND*********************************                  MD042411
+     C   95              GOTO      ZZ18SEND                                                 MD042411
      C*
-     C* IF ZZTOT GT. ZZAMT.
+     C**IF*ZZTOT*GT.*ZZAMT.***********************************************                  MD042411
+     C* IF ZZTOT GT. ZZ183.                                                                 MD042411
      C   93ZZAMTD        COMP      ZZTOTD                             94
-     C   93
-     CAN 94ZZTOTI        SUB       1             ZZTOTI
+     C***93***************************************************************                  MD042411
+     C***AN*94ZZTOTI*****SUB*******1*************ZZTOTI*******************                  MD042411
+     C   93                                                                                 MD042411
+     CAN 94ZZ18TI        SUB       1             ZZ18TI                                     MD042411
      C   93
      CAN 94ZZTOTD        ADD       1000          ZZWK2
-     C   93ZZTOTI        SUB       ZZAMTI        ZZTOTI
+     C***93ZZTOTI********SUB*******ZZAMTI********ZZTOTI*******************                  MD042411
+     C   93ZZ18TI        SUB       ZZ180I        ZZ18TI                                     MD042411
      C   93
      CAN 94ZZWK2         SUB       ZZAMTD        ZZTOTD
      C   93
      CANN94ZZTOTD        SUB       ZZAMTD        ZZTOTD
      C*
      C*
-     C* IF ZZAMT GT. ZZTOT.
+     C**IF*ZZAMT*GT.*ZZTOT.***********************************************                  MD042411
+     C* IF ZZ183 GT. ZZTOT.                                                                 MD042411
      C  N93ZZTOTD        COMP      ZZAMTD                             94
-     C  N93
-     CAN 94ZZAMTI        SUB       1             ZZWK3            15 0
+     C**N93***************************************************************                  MD042411
+     C***AN*94ZZAMTI*****SUB*******1*************ZZWK3************15*0****                  MD042411
+     C  N93                                                                                 MD042411
+     CAN 94ZZ180I        SUB       1             ZZWK18           18 0                      MD042411
      C  N93
      CAN 94ZZAMTD        ADD       1000          ZZWK2
-     C  N93
-     CAN 94ZZWK3         SUB       ZZTOTI        ZZTOTI
-     C  N93
-     CANN94ZZAMTI        SUB       ZZTOTI        ZZTOTI
+     C**N93***************************************************************                  MD042411
+     C**AN*94ZZWK3*******SUB*******ZZTOTI********ZZTOTI*******************                  MD042411
+     C  N93                                                                                 MD042411
+     CAN 94ZZWK18        SUB       ZZ18TI        ZZ18TI                                     MD042411
+     C**N93***************************************************************                  MD042411
+     C**ANN94ZZAMTI******SUB*******ZZTOTI********ZZTOTI*******************                  MD042411
+     C  N93                                                                                 MD042411
+     CANN94ZZ180I        SUB       ZZ18TI        ZZ18TI                                     MD042411
      C  N93
      CAN 94ZZWK2         SUB       ZZTOTD        ZZTOTD
      C  N93
@@ -2123,18 +2243,24 @@
      CAN 91
      CORN93
      CAN 92              SETON                                        94
-     C   94              Z-SUB     ZZTOTI        ZZTOTI
+     C***94**************Z-SUB*****ZZTOTI********ZZTOTI*******************                  MD042411
+     C   94              Z-SUB     ZZ18TI        ZZ18TI                                     MD042411
      C   94              Z-SUB     ZZTOTD        ZZTOTD
      C**
-     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
-     C   92              Z-SUB     ZZAMTI        ZZAMTI
+     C*****RESTORE*SIGN*OF*ZZAMTI*&*ZZAMTD*IF*IT*WAS*REVERSED.************                  MD042411
+     C**   RESTORE SIGN OF ZZ180I & ZZAMTD IF IT WAS REVERSED.                              MD042411
+     C***92**************Z-SUB*****ZZAMTI********ZZAMTI*******************                  MD042411
+     C   92              Z-SUB     ZZ180I        ZZ180I                                     MD042411
      C   92              Z-SUB     ZZAMTD        ZZAMTD
-     C     ZZSEND        TAG                                                    ** ZZSEND TAG *
+     C*****ZZSEND********TAG**********************************************      ** ZZSEND TAMD042411
+     C     ZZ18SEND      TAG                                                    *ZZ18SEND TAMD042411
      C**
-     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     C*****IF*ZZTOTD*IS*ZERO,*AND*ZZTOTI*IS*NEG.*SET*UP*ZZNEGD.***********                  MD042411
+     C**   IF ZZTOTD IS ZERO, AND ZZ18TI IS NEG. SET UP ZZNEGD.                             MD042411
      C                   SETOFF                                       96
      C     ZZTOTD        COMP      0                                      91
-     C   91ZZTOTI        COMP      0                                    96
+     C***91ZZTOTI********COMP******0************************************96                  MD042411
+     C   91ZZ18TI        COMP      0                                    96                  MD042411
      C   96              MOVE      '.000-'       ZZNEGD            5
      C                   ENDSR                                                           ** ENDSR **
      C********************************************************************
@@ -2294,13 +2420,21 @@
      O                     41                    12 '1'
      O                       CNUM                18
      O                       ACSQ                20
-     O                       ZERO15              28P
-     O                       ZERO15              36P
+     O***********            ZERO15              28P                                        MD042411
+     O***********            ZERO15              36P                                        MD042411
      O***********         29   LDBL      28P                              185118
      O***********        N29   LDBL      36P                              185118
-     O              N35 29   LDBL                28P                            185118
-     O              N35N29   LDBL                36P                            185118
-     O                       ACOD                50                                           CGL029
+     O***********   N35 29   LDBL                28P                            185118      MD042411
+     O***********   N35N29   LDBL                36P                            185118      MD042411
+     O***********            ACOD                50                                   CGL029MD042411
+     O* ABEXAGE has had size of DRBL and CRBL increased to 18P0 from 15P0                   MD042411
+     O* ABEXAG has shared format with ABEXAGE.                                              MD042411
+     O* initialise field with 19P0 field so all bytes are initialised                       MD042411
+     O                       ZERO19              30P                                        MD042411
+     O                       ZERO19              40P                                        MD042411
+     O              N35 29   LDBL                30P                                        MD042411
+     O              N35N29   LDBL                40P                                        MD042411
+     O                       ACOD                54                                         MD042411
      O***ABEXAG    T    L1                                                                    CGL120
      O**********                                  1 'E'                                       CGL120
      O**********             BRCA                 4                                           CGL120

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037383           Date 25May16               *
-      *  Prev Amend No. CGL049             Date 17Feb15               *
+      *  Last Amend No. MD042411           Date 18Nov16               *
+      *  Prev Amend No. MD037383           Date 25May16               *
+      *                 CGL049             Date 17Feb15               *
       *                 CGL160             Date 11Nov14               *
       *                 MD024553           Date 30Jan14               *
       *                 CGL120             Date 06Aug12               *
@@ -75,6 +76,8 @@
      F*                                                                  *
       ********************************************************************
       *                                                               *
+      *  MD042411 - GLC33202 component failure. BRCA/CCY/ACOD         *
+      *             totals can be more than 15 digits                 *
       *  MD037383 - ACCNTAB blank after COB component GLC008140 00001 *
       *             Stamp Tax (CER049) processing.                    *
       *             Rework that component to make it 'Task Split'     *
@@ -294,8 +297,10 @@
 0086 F*
 0087 F***ACBL*** IPEAF      40 19AI     2 DISK                                                CGL029
      F***ACBL***   IPE AF   50    25AIDISK    KEYLOC(2)                                CGL029 CGL120
-     FGLDLYPPD  IPE AF   54    25AIDISK    KEYLOC(2)                                          CGL120
-0087 FABEXZY    IF   F   40        DISK
+0904 F***GLDLYPPD**IPE*AF***54****25AIDISK****KEYLOC(2)*******************           CGL120 MD042411
+     FGLDLYPPD  IPE AF   59    25AIDISK    KEYLOC(2)                                        MD042411
+0087 F****ABEXZY****IF***F***40********DISK*******************************                  MD042411
+0087 FABEXZY    IF   F   28        DISK                                                     MD042411
 0088 F*
      FSACBL     IF   E           K DISK    PREFIX(S_)                                         CGL120
 0089 F***ACJND***ISEAF     160 19AI     2 DISK                            CGL007
@@ -322,8 +327,10 @@
      D ARG1            S              1    DIM(2) CTDATA PERRCD(2)                            CGL030
      D ARN1            S              6  0 DIM(2)                                             CGL030
      D BRN1            S              6  0 DIM(2)                                             CGL030
-     D AR1I            S             15  0 DIM(2)                                             CGL030
-     D BR1I            S             15  0 DIM(2)                                             CGL030
+0904 D*AR1I************S*************15**0*DIM(2)*************************           CGL030 MD042411
+     D AR1I            S             18  0 DIM(2)                                           MD042411
+0904 D*BR1I************S*************15**0*DIM(2)*************************           CGL030 MD042411
+     D BR1I            S             18  0 DIM(2)                                           MD042411
      D AR1D            S              3  0 DIM(2)                                             CGL030
      D BR1D            S              3  0 DIM(2)                                             CGL030
       *                                                                                       CGL030
@@ -435,15 +442,18 @@
      D**********          BRTD       25  3 0                                           CRE004 CGL047
      D ARNP            S              6  0 DIM(26)                                            CGL047
      D BRNP            S              6  0 DIM(26)                                            CGL047
-     D ARTI            S             15  0 DIM(26)                                            CGL047
-     D BRTI            S             15  0 DIM(26)                                            CGL047
+0904 D*ARTI************S*************15**0*DIM(26)************************           CGL047 MD042411
+0904 D*BRTI************S*************15**0*DIM(26)************************           CGL047 MD042411
+     D ARTI            S             18  0 DIM(26)                                          MD042411
+     D BRTI            S             18  0 DIM(26)                                          MD042411
      D ARTD            S              3  0 DIM(26)                                            CGL047
      D BRTD            S              3  0 DIM(26)                                            CGL047
      D*                                                                   S01408
      D/COPY WNCPYSRC,GL0340EEP1                                           S01408
      D*                                                                   S01408
 0111 D**
-0112 D INT             S             15  0 DIM(6)
+0112 D*INT*************S*************15**0*DIM(6)*************************                  MD042411
+     D INT             S             18  0 DIM(6)                                           MD042411
 0113 D DEC             S              3  0 DIM(6)
      D*                                                                   S01408
 0204 D/SPACE 2
@@ -623,11 +633,16 @@
 0147 D**
 0148 D**   TRAILER
 0149 D**
-0150 D ABEXDS          DS            40
-0151 D  INT#1                  5     12P 0
-0152 D  DEC#1                 13     14P 0
-0153 D  INT#2                 15     22P 0
-0154 D  DEC#2                 23     24P 0
+0150 D*ABEXDS**********DS************40***********************************                  MD042411
+0151 D**INT#1******************5*****12P*0********************************                  MD042411
+0152 D**DEC#1*****************13*****14P*0********************************                  MD042411
+0153 D**INT#2*****************15*****22P*0********************************                  MD042411
+0154 D**DEC#2*****************23*****24P*0********************************                  MD042411
+     D ABEXDS          DS            28                                                     MD042411
+     D  INT#1                  5     14P 0                                                  MD042411
+     D  DEC#1                 15     16P 0                                                  MD042411
+     D  INT#2                 17     26P 0                                                  MD042411
+     D  DEC#2                 27     28P 0                                                  MD042411
 0188 D*
 0189 D ACJNDS          DS           160
      D  RECI                   1      1
@@ -748,10 +763,14 @@
      I                                 12   12 0RINDB         L4                              CGL120
      I                                 13   18  CNUMB         L3                              CGL120
      I                                 19   20 0ACSQB         L2                              CGL120
-     I                             P   21   28 0CRBL                  5342                    CGL120
-     I                             P   29   36 0DRBL                    44                    CGL120
-     I                                 41   50 0ACODB         L5                              CGL120
-     I                                 51   54  PRFCB         L1                              CGL120
+0904 I*****************************P***21***28*0CRBL******************5342           CGL120 MD042411
+0904 I*****************************P***29***36*0DRBL********************44           CGL120 MD042411
+0904 I*********************************41***50*0ACODB*********L5**********           CGL120 MD042411
+0904 I*********************************51***54**PRFCB*********L1**********           CGL120 MD042411
+     I                             P   21   30 0CRBL                  5342                  MD042411
+     I                             P   31   40 0DRBL                    44                  MD042411
+     I                                 45   54 0ACODB         L5                            MD042411
+     I                                 55   58  PRFCB         L1                            MD042411
      I          NS  03    1 CX                                                                CGL120
      I                                  1    1  RECI                                          CGL120
      I                                  2    4  BRCDB         L7                              CGL120
@@ -760,10 +779,14 @@
      I                                 12   12 0RINDB         L4                              CGL120
      I                                 13   18  CNUMB         L3                              CGL120
      I                                 19   20 0ACSQB         L2                              CGL120
-     I                             P   21   28 0CRBL                  5342                    CGL120
-     I                             P   29   36 0DRBL                    44                    CGL120
-     I                                 41   50 0ACODB         L5                              CGL120
-     I                                 51   54  PRFCB         L1                              CGL120
+0904 I*****************************P***21***28*0CRBL******************5342           CGL120 MD042411
+0904 I*****************************P***29***36*0DRBL********************44           CGL120 MD042411
+0904 I*********************************41***50*0ACODB*********L5**********           CGL120 MD042411
+0904 I*********************************51***54**PRFCB*********L1**********           CGL120 MD042411
+     I                             P   21   30 0CRBL                  5342                  MD042411
+     I                             P   31   40 0DRBL                    44                  MD042411
+     I                                 45   54 0ACODB         L5                            MD042411
+     I                                 55   58  PRFCB         L1                            MD042411
 0155 I**
 0156 I*    CATCHALL FOR DELETED RECORDS
 0157 I**
@@ -1034,19 +1057,28 @@
 0348 C***********          MOVE 'A'       CLTKEY  7                       S01194
 0349 C*
      C                   MOVE      *BLANKS       WPRFC             4                          120830
-     C                   Z-ADD     0             TPRFC            15 0                        120830
-0350 C                   Z-ADD     0             TACOD            15 0
-0351 C                   Z-ADD     0             TCCY             15 0
-0352 C                   Z-ADD     0             TACSQ            15 0
+0904 C*******************Z-ADD*****0*************TPRFC************15*0****           120830 MD042411
+0350 C*******************Z-ADD*****0*************TACOD************15*0****                  MD042411
+0351 C*******************Z-ADD*****0*************TCCY*************15*0****                  MD042411
+0352 C*******************Z-ADD*****0*************TACSQ************15*0****                  MD042411
 0353 C***********          Z-ADD0         TPSTA  150                      S01290
-     C                   Z-ADD     0             TPSTDR           15 0                        S01290
-     C                   Z-ADD     0             TPSTCR           15 0                        S01290
-0354 C                   Z-ADD     0             TLDBE            15 0
+0904 C*******************Z-ADD*****0*************TPSTDR***********15*0****           S01290 MD042411
+0904 C*******************Z-ADD*****0*************TPSTCR***********15*0****           S01290 MD042411
+0354 C*******************Z-ADD*****0*************TLDBE************15*0****                  MD042411
+     C                   Z-ADD     0             TPRFC            18 0                      MD042411
+     C                   Z-ADD     0             TACOD            18 0                      MD042411
+     C                   Z-ADD     0             TCCY             18 0                      MD042411
+     C                   Z-ADD     0             TACSQ            18 0                      MD042411
+     C                   Z-ADD     0             TPSTDR           18 0                      MD042411
+     C                   Z-ADD     0             TPSTCR           18 0                      MD042411
+     C                   Z-ADD     0             TLDBE            18 0                      MD042411
 0355 C*
 0356 C                   Z-ADD     0             TNOP              6 0
      C*                                                                   S01290
-     C                   Z-ADD     0             PSTACR           15 0                        S01290
-     C                   Z-ADD     0             PSTADR           15 0                        S01290
+0904 C*******************Z-ADD*****0*************PSTACR***********15*0****           S01290 MD042411
+0904 C*******************Z-ADD*****0*************PSTADR***********15*0****           S01290 MD042411
+     C                   Z-ADD     0             PSTACR           18 0                      MD042411
+     C                   Z-ADD     0             PSTADR           18 0                      MD042411
 0357 C*
 0358 C***********          Z-ADD30        TTYPA                           S01194
 0359 C***********          Z-ADD20        TTYPC                           S01194
@@ -1193,8 +1225,10 @@
 0392 C**********         SETON                                        66                      CGL120
      C/COPY WNCPYSRC,GL0340C006
 0393 C     REST          TAG
-     C   01
-0394 CAN 53              Z-ADD     CRBL          LDBE             15 0
+     C***01***************************************************************                  MD042411
+0394 C**AN*53************Z-ADD*****CRBL**********LDBE*************15*0****                  MD042411
+     C   01                                                                                 MD042411
+     CAN 53              Z-ADD     CRBL          LDBE             18 0                      MD042411
      C   01
 0395 CANN53              Z-ADD     DRBL          LDBE
 0396 C***02*****         Z-ADD     0             LDBL             15 0                        CGL120
@@ -1203,10 +1237,14 @@
      C***02*****                                                                              CGL120
 0398 C***AN*54LDBL          ADD       DRBL          LDBL                                      CGL120
      C   03              Z-ADD     *ZERO         LDBE                                         CGL120
-     C   03                                                                                   CGL120
-     CAN L5              Z-ADD     *ZERO         LDBL             15 0                        CGL120
-     C   01                                                                                   CGL120
-     CAN L5              Z-ADD     *ZERO         LDBL             15 0                        CGL120
+0904 C***03***************************************************************           CGL120 MD042411
+0904 C**AN*L5************Z-ADD******ZERO*********LDBL*************15*0****           CGL120 MD042411
+     C   03                                                                                 MD042411
+     CAN L5              Z-ADD     *ZERO         LDBL             18 0                      MD042411
+0904 C***01***************************************************************           CGL120 MD042411
+0904 C**AN*L5************Z-ADD******ZERO*********LDBL*************15*0****           CGL120 MD042411
+     C   01                                                                                 MD042411
+     CAN L5              Z-ADD     *ZERO         LDBL                                       MD042411
       *                                                                                       CGL120
       ** Obtain O/B at Account Level                                                          CGL120
       *                                                                                       CGL120
@@ -1388,7 +1426,8 @@
 0442 C                   SETON                                        81
 0443 C**
 0444 C**   SAVE L BAL FOR RET AC OP BAL LINE
-0445 C                   Z-ADD     LDBL          REBAL            15 0
+0445 C*******************Z-ADD*****LDBL**********REBAL************15*0****                  MD042411
+     C                   Z-ADD     LDBL          REBAL            18 0                      MD042411
 0446 C/SPACE 2
 0447 C***  CUSTOMER NAME
 0448 C*
@@ -1529,26 +1568,34 @@
 0515 C**
 0516 C     ARNP(X)       ADD       1             ARNP(X)
 0517 C*
-0518 C                   Z-ADD     ARTI(X)       ZZTOTI
+0518 C*******************Z-ADD*****ARTI(X)*******ZZTOTI*******************                  MD042411
+0518 C                   Z-ADD     ARTI(X)       ZZ18TI                                     MD042411
 0519 C                   Z-ADD     ARTD(X)       ZZTOTD
 0520 C*
-0521 C     PSTA          DIV       1000          ZZAMT
+0521 C*****PSTA**********DIV*******1000**********ZZAMT********************                  MD042411
+0521 C     PSTA          DIV       1000          ZZ183                                      MD042411
 0522 C**
-0523 C                   EXSR      GLZADD
+0523 C*******************EXSR******GLZADD*********************************                  MD042411
+0523 C                   EXSR      GLZADD18                                                 MD042411
 0524 C*
-0525 C                   Z-ADD     ZZTOTI        ARTI(X)
+0525 C*******************Z-ADD*****ZZTOTI********ARTI(X)******************                  MD042411
+0525 C                   Z-ADD     ZZ18TI        ARTI(X)                                    MD042411
 0526 C                   Z-ADD     ZZTOTD        ARTD(X)
 0527 C**
 0528 C     BRNP(X)       ADD       1             BRNP(X)
 0529 C*
-0530 C                   Z-ADD     BRTI(X)       ZZTOTI
+0530 C*******************Z-ADD*****BRTI(X)*******ZZTOTI*******************                  MD042411
+0530 C                   Z-ADD     BRTI(X)       ZZ18TI                                     MD042411
 0531 C                   Z-ADD     BRTD(X)       ZZTOTD
 0532 C*
-0533 C     PSTA          DIV       1000          ZZAMT
+0533 C*****PSTA**********DIV*******1000**********ZZAMT********************                  MD042411
+0533 C     PSTA          DIV       1000          ZZ183                                      MD042411
 0534 C**
-0535 C                   EXSR      GLZADD
+0535 C*******************EXSR******GLZADD*********************************                  MD042411
+0535 C                   EXSR      GLZADD18                                                 MD042411
 0536 C*
-0537 C                   Z-ADD     ZZTOTI        BRTI(X)
+0537 C*******************Z-ADD*****ZZTOTI********BRTI(X)******************                  MD042411
+0537 C                   Z-ADD     ZZ18TI        BRTI(X)                                    MD042411
 0538 C                   Z-ADD     ZZTOTD        BRTD(X)
 0539 C*
 0540 C*******    X         COMP 16                   4848                 S01102
@@ -1578,26 +1625,34 @@
       *                                                                                       CGL030
      C     ARN1(X)       ADD       1             ARN1(X)                                      CGL030
       *                                                                                       CGL030
-     C                   Z-ADD     AR1I(X)       ZZTOTI                                       CGL030
+0604 C*******************Z-ADD*****AR1I(X)*******ZZTOTI*******************           CGL030 MD042411
+     C                   Z-ADD     AR1I(X)       ZZ18TI                                     MD042411
      C                   Z-ADD     AR1D(X)       ZZTOTD                                       CGL030
       *                                                                                       CGL030
-     C     PSTA          DIV       1000          ZZAMT                                        CGL030
+0604 C*****PSTA**********DIV*******1000**********ZZAMT********************           CGL030 MD042411
+     C     PSTA          DIV       1000          ZZ183                                      MD042411
       *                                                                                       CGL030
-     C                   EXSR      GLZADD                                                     CGL030
+0604 C*******************EXSR******GLZADD*********************************           CGL030 MD042411
+     C                   EXSR      GLZADD18                                                 MD042411
       *                                                                                       CGL030
-     C                   Z-ADD     ZZTOTI        AR1I(X)                                      CGL030
+0604 C*******************Z-ADD*****ZZTOTI********AR1I(X)******************           CGL030 MD042411
+     C                   Z-ADD     ZZ18TI        AR1I(X)                                    MD042411
      C                   Z-ADD     ZZTOTD        AR1D(X)                                      CGL030
       *                                                                                       CGL030
      C     BRN1(X)       ADD       1             BRN1(X)                                      CGL030
       *                                                                                       CGL030
-     C                   Z-ADD     BR1I(X)       ZZTOTI                                       CGL030
+0604 C*******************Z-ADD*****BR1I(X)*******ZZTOTI*******************           CGL030 MD042411
+     C                   Z-ADD     BR1I(X)       ZZ18TI                                     MD042411
      C                   Z-ADD     BR1D(X)       ZZTOTD                                       CGL030
       *                                                                                       CGL030
-     C     PSTA          DIV       1000          ZZAMT                                        CGL030
+0604 C*****PSTA**********DIV*******1000**********ZZAMT********************           CGL030 MD042411
+     C     PSTA          DIV       1000          ZZ183                                      MD042411
       *                                                                                       CGL030
-     C                   EXSR      GLZADD                                                     CGL030
+0604 C*******************EXSR******GLZADD*********************************           CGL030 MD042411
+     C                   EXSR      GLZADD18                                                 MD042411
       *                                                                                       CGL030
-     C                   Z-ADD     ZZTOTI        BR1I(X)                                      CGL030
+0604 C*******************Z-ADD*****ZZTOTI********BR1I(X)******************           CGL030 MD042411
+     C                   Z-ADD     ZZ18TI        BR1I(X)                                    MD042411
      C                   Z-ADD     ZZTOTD        BR1D(X)                                      CGL030
       *                                                                                       CGL030
      C                   Z-ADD     1             X                                            CGL030
@@ -1613,26 +1668,34 @@
       *                                                                                       CGL030
      C     ARNP(X)       ADD       1             ARNP(X)                                      CGL030
       *                                                                                       CGL030
-     C                   Z-ADD     ARTI(X)       ZZTOTI                                       CGL030
+0604 C*******************Z-ADD*****ARTI(X)*******ZZTOTI*******************           CGL030 MD042411
+     C                   Z-ADD     ARTI(X)       ZZ18TI                                     MD042411
      C                   Z-ADD     ARTD(X)       ZZTOTD                                       CGL030
       *                                                                                       CGL030
-     C     PSTA          DIV       1000          ZZAMT                                        CGL030
+     C*****PSTA**********DIV*******1000**********ZZAMT********************           CGL030 MD042411
+     C     PSTA          DIV       1000          ZZ183                                      MD042411
       *                                                                                       CGL030
-     C                   EXSR      GLZADD                                                     CGL030
+0604 C*******************EXSR******GLZADD*********************************           CGL030 MD042411
+     C                   EXSR      GLZADD18                                                 MD042411
       *                                                                                       CGL030
-     C                   Z-ADD     ZZTOTI        ARTI(X)                                      CGL030
+0604 C*******************Z-ADD*****ZZTOTI********ARTI(X)******************           CGL030 MD042411
+     C                   Z-ADD     ZZ18TI        ARTI(X)                                    MD042411
      C                   Z-ADD     ZZTOTD        ARTD(X)                                      CGL030
       *                                                                                       CGL030
      C     BRNP(X)       ADD       1             BRNP(X)                                      CGL030
       *                                                                                       CGL030
-     C                   Z-ADD     BRTI(X)       ZZTOTI                                       CGL030
+0604 C*******************Z-ADD*****BRTI(X)*******ZZTOTI*******************           CGL030 MD042411
+     C                   Z-ADD     BRTI(X)       ZZ18TI                                     MD042411
      C                   Z-ADD     BRTD(X)       ZZTOTD                                       CGL030
       *                                                                                       CGL030
-     C     PSTA          DIV       1000          ZZAMT                                        CGL030
+     C*****PSTA**********DIV*******1000**********ZZAMT********************           CGL030 MD042411
+     C     PSTA          DIV       1000          ZZ183                                      MD042411
       *                                                                                       CGL030
-     C                   EXSR      GLZADD                                                     CGL030
+0604 C*******************EXSR******GLZADD*********************************           CGL030 MD042411
+     C                   EXSR      GLZADD18                                                 MD042411
       *                                                                                       CGL030
-     C                   Z-ADD     ZZTOTI        BRTI(X)                                      CGL030
+0604 C*******************Z-ADD*****ZZTOTI********BRTI(X)******************           CGL030 MD042411
+     C                   Z-ADD     ZZ18TI        BRTI(X)                                    MD042411
      C                   Z-ADD     ZZTOTD        BRTD(X)                                      CGL030
       *                                                                                       CGL030
      C                   END                                                                  CGL030
@@ -1710,8 +1773,10 @@
      C     *IN04         IFEQ      *ON                                                        CGL120
      C     *IN05         OREQ      *ON                                                        CGL120
      C                   Z-ADD     4             X                                            CGL120
-     C     PSTA          DIV       1000          ZZAMT                                        CGL120
-     C                   EXSR      HASH                                                       CGL120
+0604 C*****PSTA**********DIV*******1000**********ZZAMT********************           CGL120 MD042411
+     C     PSTA          DIV       1000          ZZ183                                      MD042411
+     C*******************EXSR******HASH***********************************           CGL120 MD042411
+     C                   EXSR      HASH18                                                   MD042411
      C                   ENDIF                                                                CGL120
       *                                                                                       CGL120
       *** Output Posting Lines to Report                                                      CGL120
@@ -1763,12 +1828,17 @@
 0591 C     T7            TAG                                                    ** T7 TAG **
 0592 C*
 0593 C                   Z-ADD     6             X
-0594 C     CRBL          DIV       1000          ZZAMT
-0595 C                   Z-SUB     ZZAMT         ZZAMT
-0596 C  N42              EXSR      HASH
+0594 C*****CRBL**********DIV*******1000**********ZZAMT********************                  MD042411
+0594 C     CRBL          DIV       1000          ZZ183                                      MD042411
+0595 C*******************Z-SUB*****ZZAMT*********ZZAMT********************                  MD042411
+0595 C                   Z-SUB     ZZ183         ZZ183                                      MD042411
+0596 C**N42**************EXSR******HASH***********************************                  MD042411
+0596 C  N42              EXSR      HASH18                                                   MD042411
 0597 C                   Z-ADD     5             X
-0598 C     DRBL          DIV       1000          ZZAMT
-0599 C  N44              EXSR      HASH
+0598 C*****DRBL**********DIV*******1000**********ZZAMT********************                  MD042411
+0598 C     DRBL          DIV       1000          ZZ183                                      MD042411
+0599 C**N44**************EXSR******HASH***********************************                  MD042411
+0599 C  N44              EXSR      HASH18                                                   MD042411
 0600 C*
 0601 C     ENDF          TAG                                                    ** ENDF TAG **
 0602 C*
@@ -2228,16 +2298,19 @@
      CLR                 Z-ADD     INT#2         INT(2)
      CLR                 Z-ADD     DEC#1         DEC(1)
      CLR                 Z-ADD     DEC#2         DEC(2)
-     CLR                 Z-ADD     0             ZZTOTI
+     C***LR**************Z-ADD*****0*************ZZTOTI*******************                  MD042411
+     CLR                 Z-ADD     0             ZZ18TI                                     MD042411
      CLR                 Z-ADD     0             ZZTOTD
      CLR   TAG001        TAG
      CLR                 READ      ACJNT         ACJNDS                   21
      CLR   *IN21         IFEQ      '0'
      CLR   NOREP         ADD       NOREP#        NOREP             5 0
      CLR   NOREP         SUB       2             NOREP
-     CLR                 Z-ADD     INT#3         ZZAMTI
+0169 C***LR**************Z-ADD*****INT#3*********ZZAMTI*******************                  MD042411
+     CLR                 Z-ADD     INT#3         ZZ180I                                     MD042411
      CLR                 Z-ADD     DEC#3         ZZAMTD
-     CLR                 EXSR      GLZSUM
+     C**LR***************EXSR******GLZSUM*********************************                  MD042411
+     CLR                 EXSR      GLZSUM18                                                 MD042411
      CLR                 GOTO      TAG001
      CLR                 END
      CLR   NOREP         ADD       2             NOREP
@@ -2250,7 +2323,8 @@
      C/COPY WNCPYSRC,GL0340CP12                                           S01408
      C*                                                                   S01408
      CLR                 Z-ADD     ZZTOTD        DEC(3)
-     CLR                 Z-ADD     ZZTOTI        INT(3)
+     C***LR**************Z-ADD*****ZZTOTI********INT(3)*******************                  MD042411
+     CLR                 Z-ADD     ZZ18TI        INT(3)                                     MD042411
 0738 C*
 0737 CLR                 SETOFF                                       434647
 0739 CLR                 Z-ADD     1             X
@@ -2293,14 +2367,20 @@
      C**                                                                  S01194
 0762 C********************************************************************
 0763 C*
-0764 C     HASH          BEGSR
+0763 C* Subroutine renamed as INT and DEC are now 18 and 3 long rather than                 MD042411
+     C* standard 15 and 3 length fields used elsewhere in Midas                             MD042411
+0764 C*****HASH**********BEGSR********************************************                  MD042411
+0764 C     HASH18        BEGSR                                                              MD042411
 0765 C*
-0766 C                   Z-ADD     INT(X)        ZZTOTI
+0766 C*******************Z-ADD*****INT(X)********ZZTOTI*******************                  MD042411
+0766 C                   Z-ADD     INT(X)        ZZ18TI                                     MD042411
 0767 C                   Z-ADD     DEC(X)        ZZTOTD
 0768 C*
-0769 C                   EXSR      GLZADD
+0769 C*******************EXSR******GLZADD*********************************                  MD042411
+0769 C                   EXSR      GLZADD18                                                 MD042411
 0770 C*
-0771 C                   Z-ADD     ZZTOTI        INT(X)
+0771 C*******************Z-ADD*****ZZTOTI********INT(X)*******************                  MD042411
+0771 C                   Z-ADD     ZZ18TI        INT(X)                                     MD042411
 0772 C                   Z-ADD     ZZTOTD        DEC(X)
 0773 C*
 0774 C                   ENDSR
@@ -2311,15 +2391,19 @@
 0779 C*
 0780 C     COMP          BEGSR
 0781 C*
-0782 C                   Z-ADD     INT(X)        ZZTOTI
+0782 C*******************Z-ADD*****INT(X)********ZZTOTI*******************                  MD042411
+0782 C                   Z-ADD     INT(X)        ZZ18TI                                     MD042411
 0783 C                   Z-ADD     DEC(X)        ZZTOTD
 0784 C*
-0785 C                   Z-ADD     INT(Y)        ZZINT
+0785 C*******************Z-ADD*****INT(Y)********ZZINT********************                  MD042411
+0785 C                   Z-ADD     INT(Y)        ZZ18IN                                     MD042411
 0786 C                   Z-ADD     DEC(Y)        ZZDEC
 0787 C*
-0788 C                   EXSR      GLZCMP
+0788 C*******************EXSR******GLZCMP*********************************                  MD042411
+0788 C                   EXSR      GLZCMP18                                                 MD042411
 0789 C*
-0790 C     ZZDIFI        COMP      0                                  4545
+0790 C*****ZZDIFI********COMP******0**********************************4545                  MD042411
+0790 C     ZZ18DI        COMP      0                                  4545                  MD042411
 0791 C  N45ZZDIFD        COMP      0                                  4545
 0792 C**
 0793 C                   ENDSR
@@ -2418,22 +2502,36 @@
 0884 C********************************************************************
 0885 C/SPACE 2
 0886 C********************************************************************
-0887 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0887 C**SUBROUTINE*TO*ADD*AN*AMOUNT*(ZZAMT)*TO*THE*TOTAL*(ZZTOTI,ZZTOTD)**                  MD042411
+0887 C* SUBROUTINE TO ADD AN AMOUNT (ZZ183 ) TO THE TOTAL (ZZ18TI,ZZTOTD)*                  MD042411
 0888 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0763 C* Subroutine renamed as it handles values upto 18 digits rather than                  MD042411
+     C* standard 15 length fields used elsewhere in Midas                                   MD042411
+     C* Any variables with length increased renamed so as to not cause                      MD042411
+     C* clash with any use of older subroutines in future                                   MD042411
 0889 C*
-0890 C     GLZADD        BEGSR                                                  *** GLZADD ****
+0890 C*****GLZADD********BEGSR********************************************      *** GLZADD *MD042411
+0890 C     GLZADD18      BEGSR                                                  *** GLZADD *MD042411
 0891 C*
-0892 C                   Z-ADD     ZZAMT         ZZAMT            15 3    91    -DEFINE ZZAMT
-0893 C   91              GOTO      ZZAEND                                       AMT = 0.BYPASS
+0892 C*******************Z-ADD*****ZZAMT*********ZZAMT************15*3****91    -DEFINE ZZAMMD042411
+0892 C                   Z-ADD     ZZ183         ZZ183            18 3    91    -DEFINE ZZ18MD042411
+0893 C***91**************GOTO******ZZAEND*********************************      AMT = 0.BYPAMD042411
+0893 C   91              GOTO      ZZ18AEND                                     AMT = 0.BYPAMD042411
 0894 C*
-0895 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
-0896 C                   Z-ADD     ZZAMT         ZZAMTI           15 0          INTEGER FIELD
-0897 C                   Z-ADD     ZZAMT         ZZWK1             3 3
+0895 C**SPLIT*ZZAMT*INTO*INTEGER*AND*DECIMAL*FIELDS***********************                  MD042411
+0895 C* SPLIT ZZ183  INTO INTEGER AND DECIMAL FIELDS                                        MD042411
+0896 C*******************Z-ADD*****ZZAMT*********ZZAMTI***********15*0****      INTEGER FIELMD042411
+0896 C                   Z-ADD     ZZ183         ZZ180I           18 0          INTEGER FIELMD042411
+0897 C*******************Z-ADD*****ZZAMT*********ZZWK1*************3*3****                  MD042411
+0897 C                   Z-ADD     ZZ183         ZZWK1             3 3                      MD042411
 0898 C                   MOVE      ZZWK1         ZZAMTD            3 0          DECIMAL FIELD
-0899 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0899 C**BOTH*ZZAMTI*AND*ZZAMTD*CONTAIN*A*'SIGN'*ZONE*NOW******************                  MD042411
+0899 C* BOTH ZZ180I AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                                    MD042411
 0900 C*
-0901 C                   EXSR      GLZSUM
-0902 C     ZZAEND        ENDSR                                                  ** ZZAEND TAG *
+0901 C*******************EXSR******GLZSUM*********************************                  MD042411
+     C                   EXSR      GLZSUM18                                                 MD042411
+0902 C*****ZZAEND********ENDSR********************************************      ** ZZAEND TAMD042411
+0902 C     ZZ18AEND      ENDSR                                                  *ZZ18AEND TAMD042411
 0903 C*
 0904 C********************************************************************
 0905 C/SPACE 2
@@ -2441,100 +2539,151 @@
 0907 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
 0908 C*                        GLZADD, GLZSUB, GLZCMP.
 0909 C*          PARAMETERS PASSED -
-0910 C*                     I/P ZZAMTI ZZAMTD
-0911 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0910 C**********************I/P*ZZAMTI*ZZAMTD*****************************                  MD042411
+0910 C*                     I/P ZZ180I ZZAMTD                                               MD042411
+0911 C**********************O/P*ZZTOTI*ZZTOTD*ZZNEGD*IND*96*IND*99.*******                  MD042411
+0911 C*                     O/P ZZ18TI ZZTOTD ZZNEGD IND*96 IND*99.                         MD042411
 0912 C*
-0913 C     GLZSUM        BEGSR                                                  *** GLZSUM ****
+0763 C* Subroutine renamed as it handles values upto 18 digits rather than                  MD042411
+     C* standard 15 length fields used elsewhere in Midas                                   MD042411
+0913 C*****GLZSUM********BEGSR********************************************      *** GLZSUM *MD042411
+     C     GLZSUM18      BEGSR                                                  ** GLZSUM18 MD042411
 0914 C*
-0915 C                   Z-ADD     ZZTOTI        ZZTOTI           15 0          DEFINE ZZTOTI
+0915 C*******************Z-ADD*****ZZTOTI********ZZTOTI***********15*0****      DEFINE ZZTOTMD042411
+0915 C                   Z-ADD     ZZ18TI        ZZ18TI           18 0          DEFINE ZZ18TMD042411
 0916 C                   Z-ADD     ZZTOTD        ZZTOTD            3 0          DEFINE ZZTOTD
 0917 C                   SETOFF                                       919293
 0918 C                   SETOFF                                       949599
 0919 C*
-0920 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
-0921 C     ZZAMTI        COMP      0                                    9293
+0920 C*****DETERMINE*SIGN*OF*ZZAMTI*&*D,***92*IF*NEG**********************                  MD042411
+0920 C*    DETERMINE SIGN OF ZZ180I & D,   92 IF NEG                                        MD042411
+0921 C*****ZZAMTI********COMP******0************************************9293                MD042411
+0921 C     ZZ180I        COMP      0                                    9293                MD042411
 0922 C   93ZZAMTD        COMP      0                                    9293
-0923 C   93              GOTO      ZZSEND                                       ZERO BYPASS
+0923 C***93**************GOTO******ZZSEND*********************************      ZERO BYPASS MD042411
+0923 C   93              GOTO      ZZ18SEND                                     ZERO BYPASS MD042411
 0924 C*
-0925 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
-0926 C     ZZTOTI        COMP      0                                    9193
+0925 C*****DETERMINE*SIGN*OF*ZZTOTI*&*D,*91*IF*NEG.***********************                  MD042411
+0925 C*    DETERMINE SIGN OF ZZ18TI & D, 91 IF NEG.                                         MD042411
+0926 C*****ZZTOTI********COMP******0************************************9193                MD042411
+0926 C     ZZ18TI        COMP      0                                    9193                MD042411
 0927 C   93ZZTOTD        COMP      0                                    9193
 0928 C*
 0929 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
-0930 C   93              Z-ADD     ZZAMTI        ZZTOTI
+0930 C***93**************Z-ADD*****ZZAMTI********ZZTOTI*******************                  MD042411
+0930 C   93              Z-ADD     ZZ180I        ZZ18TI                                     MD042411
 0931 C   93              Z-ADD     ZZAMTD        ZZTOTD
-0932 C   93              GOTO      ZZSEND                                       ZERO BYPASS
+0932 C***93**************GOTO******ZZSEND*********************************      ZERO BYPASS MD042411
+0932 C   93              GOTO      ZZ18SEND                                     ZERO BYPASS MD042411
 0933 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
-     C   91
-0934 CANN92
-     CORN91
-0935 CAN 92              GOTO      ZZOFPS
+1013 C***91***************************************************************                  MD042411
+0934 C**ANN92*************************************************************                  MD042411
+1013 C**ORN91*************************************************************                  MD042411
+0935 C**AN*92**************GOTO******ZZOFPS*******************************                  MD042411
+     C   91                                                                                 MD042411
+0934 CANN92                                                                                 MD042411
+     CORN91                                                                                 MD042411
+0935 CAN 92              GOTO      ZZ18OFPS                                                 MD042411
 0936 C*
 0937 C     ZZAMTD        ADD       ZZTOTD        ZZWK2             4 0
 0938 C     ZZWK2         COMP      999                                93        '93' = CARRY
 0939 C  N93ZZWK2         COMP      -999                                 93             INTO INTEGER.
 0940 C*
-     C   93
-0941 CANN92ZZAMTI        ADD       1             ZZWK3            15 0          ADD 'CARRY' +VE
-     C   93
-0942 CAN 92ZZAMTI        SUB       1             ZZWK3                          SUB 'CARRY' -VE
-0943 C   93ZZTOTI        ADD       ZZWK3         ZZWK3
-0944 C  N93ZZTOTI        ADD       ZZAMTI        ZZWK3
+0904 C***93***************************************************************                  MD042411
+0941 C**ANN92ZZAMTI******ADD*******1*************ZZWK3************15*0****      ADD 'CARRY' MD042411
+     C   93                                                                                 MD042411
+0941 CANN92ZZ180I        ADD       1             ZZWK18           18 0          ADD 'CARRY' MD042411
+0904 C***93***************************************************************                  MD042411
+0942 C**AN*92ZZAMTI******SUB*******1*************ZZWK3********************      SUB 'CARRY' MD042411
+     C   93                                                                                 MD042411
+0942 CAN 92ZZ180I        SUB       1             ZZWK18                         SUB 'CARRY' MD042411
+0943 C***93ZZTOTI********ADD*******ZZWK3*********ZZWK3********************                  MD042411
+0943 C   93ZZ18TI        ADD       ZZWK18        ZZWK18                                     MD042411
+0944 C**N93ZZTOTI********ADD*******ZZAMTI********ZZWK3********************                  MD042411
+0944 C  N93ZZ18TI        ADD       ZZ180I        ZZWK18                                     MD042411
 0945 C*
-0946 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
-0947 C  N92ZZWK3         COMP      ZZTOTI                               99      -92 MEANS NOS.
-0948 C   92ZZWK3         COMP      ZZTOTI                             99                    NEGATIVE
+0946 C**IF*THE*MODULUS*OF*ZZWK3*IS*LT*MOD.*ZZTOTI*THEN*O/F*HAS*OCCURED****                  MD042411
+0946 C* IF THE MODULUS OF ZZWK18 IS LT MOD. ZZ18TI THEN O/F HAS OCCURED                     MD042411
+0947 C**N92ZZWK3*********COMP******ZZTOTI*******************************99      -92 MEANS NOMD042411
+0947 C  N92ZZWK18        COMP      ZZ18TI                               99      -92 MEANS NOMD042411
+0948 C***92ZZWK3*********COMP******ZZTOTI*****************************99**           NEGATIVMD042411
+0948 C   92ZZWK18        COMP      ZZ18TI                             99             NEGATIVMD042411
 0949 C  N99              Z-ADD     ZZWK2         ZZTOTD
-0950 C  N99              Z-ADD     ZZWK3         ZZTOTI
+0950 C**N99**************Z-ADD*****ZZWK3*********ZZTOTI*******************                  MD042411
+0950 C  N99              Z-ADD     ZZWK18        ZZ18TI                                     MD042411
 0951 C*
-0952 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
-0953 C   99              Z-ADD     0             ZZAMT            15 3
-0954 C                   GOTO      ZZSEND
+0952 C**IF*O/F*ZEROIZE*ZZAMT*,*IND*'99'*SET*AND*ZZTOT*FIELDS*LEFT*INTACT.*                  MD042411
+0952 C* IF O/F ZEROIZE ZZ183 , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.                   MD042411
+0953 C***99**************Z-ADD*****0*************ZZAMT************15*3****                  MD042411
+0953 C   99              Z-ADD     0             ZZ183            18 3                      MD042411
+0954 C*******************GOTO******ZZSEND*********************************                  MD042411
+0954 C                   GOTO      ZZ18SEND                                                 MD042411
 0955 C*
 0956 C* THE 'SIGNS' ARE DIFFERENT
-0957 C     ZZOFPS        TAG                                                    ** ZZOFPS TAG**
-0958 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0957 C*****ZZOFPS********TAG**********************************************      ** ZZOFPS TAMD042411
+0957 C     ZZ18OFPS      TAG                                                    *ZZ18OFPS TAMD042411
+0958 C**IF*ZZAMT*WAS*NEGATIVE,*MAKE*IT*POS.*TO*COMP*WITH*ZZTOT************                  MD042411
+0958 C* IF ZZ183  WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT                             MD042411
 0959 C*
-0960 C   92              Z-SUB     ZZAMTI        ZZAMTI           15 0
+0960 C***92**************Z-SUB*****ZZAMTI********ZZAMTI***********15*0****                  MD042411
+0960 C   92              Z-SUB     ZZ180I        ZZ180I           18 0                      MD042411
 0961 C   92              Z-SUB     ZZAMTD        ZZAMTD            3 0
 0962 C*
-0963 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0963 C**IF*ZZTOT*WAS*NEGATIVE,*MAKE*IT*POS.*TO*COMP*WITH*ZZAMT.***********                  MD042411
+0963 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZ183                              MD042411
 0964 C*
-0965 C   91              Z-SUB     ZZTOTI        ZZTOTI
+0965 C***91**************Z-SUB*****ZZTOTI********ZZTOTI*******************                  MD042411
+0965 C   91              Z-SUB     ZZ18TI        ZZ18TI                                     MD042411
 0966 C   91              Z-SUB     ZZTOTD        ZZTOTD
-0967 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0967 C**BOTH*ZZAMT*AND*ZZTOT*ARE*NOW*POSITIVE.****************************                  MD042411
+0967 C* BOTH ZZ183  AND ZZTOT ARE NOW POSITIVE.                                             MD042411
 0968 C*
-0969 C     ZZTOTI        COMP      ZZAMTI                             93  95
+0969 C*****ZZTOTI********COMP******ZZAMTI*****************************93**95                MD042411
+0969 C     ZZ18TI        COMP      ZZ180I                             93  95                MD042411
 0970 C   95ZZTOTD        COMP      ZZAMTD                             93  95
 0971 C*
-0972 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
-0973 C   95              Z-ADD     0             ZZTOTI
+0972 C**IF*ZZTOT*EQ.*ZZAMT*RETURN*ZERO.***********************************                  MD042411
+0972 C* IF ZZTOT EQ. ZZ183  RETURN ZERO.                                                    MD042411
+0973 C***95**************Z-ADD*****0*************ZZTOTI*******************                  MD042411
+0973 C   95              Z-ADD     0             ZZ18TI                                     MD042411
 0974 C   95              Z-ADD     0             ZZTOTD
-0975 C   95              GOTO      ZZSEND
+0975 C***95**************GOTO******ZZSEND*********************************                  MD042411
+0975 C   95              GOTO      ZZ18SEND                                                 MD042411
 0976 C*
-0977 C* IF ZZTOT GT. ZZAMT.
+0977 C**IF*ZZTOT*GT.*ZZAMT.***********************************************                  MD042411
+0977 C* IF ZZTOT GT. ZZ183                                                                  MD042411
 0978 C   93ZZAMTD        COMP      ZZTOTD                             94
-     C   93
-0979 CAN 94ZZTOTI        SUB       1             ZZTOTI
+     C***93***************************************************************                  MD042411
+0979 C***AN*94ZZTOTI*****SUB*******1*************ZZTOTI*******************                  MD042411
+     C   93                                                                                 MD042411
+0979 CAN 94ZZ18TI        SUB       1             ZZ18TI                                     MD042411
      C   93
 0980 CAN 94ZZTOTD        ADD       1000          ZZWK2
-0981 C   93ZZTOTI        SUB       ZZAMTI        ZZTOTI
+0981 C***93ZZTOTI********SUB*******ZZAMTI********ZZTOTI*******************                  MD042411
+0981 C   93ZZ18TI        SUB       ZZ180I        ZZ18TI                                     MD042411
      C   93
 0982 CAN 94ZZWK2         SUB       ZZAMTD        ZZTOTD
      C   93
 0983 CANN94ZZTOTD        SUB       ZZAMTD        ZZTOTD
 0984 C*
 0985 C*
-0986 C* IF ZZAMT GT. ZZTOT.
+0986 C**IF*ZZAMT*GT.*ZZTOT.***********************************************                  MD042411
+0986 C* IF ZZ183  GT. ZZTOT.                                                                MD042411
 0987 C  N93ZZTOTD        COMP      ZZAMTD                             94
-     C  N93
-0988 CAN 94ZZAMTI        SUB       1             ZZWK3            15 0
+     C**N93***************************************************************                  MD042411
+0988 C**AN*94ZZAMTI******SUB*******1*************ZZWK3************15*0****                  MD042411
+     C  N93                                                                                 MD042411
+0988 CAN 94ZZ180I        SUB       1             ZZWK18           18 0                      MD042411
      C  N93
 0989 CAN 94ZZAMTD        ADD       1000          ZZWK2
-     C  N93
-0990 CAN 94ZZWK3         SUB       ZZTOTI        ZZTOTI
-     C  N93
-0991 CANN94ZZAMTI        SUB       ZZTOTI        ZZTOTI
+     C**N93***************************************************************                  MD042411
+0990 C**AN*94ZZWK3*******SUB*******ZZTOTI********ZZTOTI*******************                  MD042411
+     C  N93                                                                                 MD042411
+0990 CAN 94ZZWK18        SUB       ZZ18TI        ZZ18TI                                     MD042411
+     C**N93***************************************************************                  MD042411
+0991 C**ANN94ZZAMTI******SUB*******ZZTOTI********ZZTOTI*******************                  MD042411
+     C  N93                                                                                 MD042411
+0991 CANN94ZZ180I        SUB       ZZ18TI        ZZ18TI                                     MD042411
      C  N93
 0992 CAN 94ZZWK2         SUB       ZZTOTD        ZZTOTD
      C  N93
@@ -2546,46 +2695,61 @@
 0997 CAN 91
      CORN93
 0998 CAN 92              SETON                                        94
-0999 C   94              Z-SUB     ZZTOTI        ZZTOTI
+0999 C***94**************Z-SUB*****ZZTOTI********ZZTOTI*******************                  MD042411
+0999 C   94              Z-SUB     ZZ18TI        ZZ18TI                                     MD042411
 1000 C   94              Z-SUB     ZZTOTD        ZZTOTD
 1001 C**
-1002 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
-1003 C   92              Z-SUB     ZZAMTI        ZZAMTI
+1002 C*****RESTORE*SIGN*OF*ZZAMTI*&*ZZAMTD*IF*IT*WAS*REVERSED.************                  MD042411
+1002 C**   RESTORE SIGN OF ZZ180I & ZZAMTD IF IT WAS REVERSED.                              MD042411
+1003 C***92**************Z-SUB*****ZZAMTI********ZZAMTI*******************                  MD042411
+1003 C   92              Z-SUB     ZZ180I        ZZ180I                                     MD042411
 1004 C   92              Z-SUB     ZZAMTD        ZZAMTD
-1005 C     ZZSEND        TAG                                                    ** ZZSEND TAG *
+1005 C*****ZZSEND********TAG**********************************************      ** ZZSEND TAMD042411
+1005 C     ZZ18SEND      TAG                                                    ** ZZSEND TAMD042411
 1006 C**
-1007 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+1007 C*****IF*ZZTOTD*IS*ZERO,*AND*ZZTOTI*IS*NEG.*SET*UP*ZZNEGD.***********                  MD042411
+1007 C*    IF ZZTOTD IS ZERO, AND ZZ18TI IS NEG. SET UP ZZNEGD.                             MD042411
 1008 C                   SETOFF                                       96
 1009 C     ZZTOTD        COMP      0                                      91
-1010 C   91ZZTOTI        COMP      0                                    96
+1010 C***91ZZTOTI********COMP******0************************************96                  MD042411
+1010 C   91ZZ18TI        COMP      0                                    96                  MD042411
 1011 C   96              MOVE      '.000-'       ZZNEGD            5
 1012 C                   ENDSR                                                    ** ENDSR **
 1013 C********************************************************************
 1014 C/SPACE 2
 1015 C********************************************************************
 1016 C* SUBROUTINE TO COMPARE AN AMOUNT TO THE TOTAL.
-1017 C*      PARAMETERS. I/P - ZZINT - THE INTEGER PORTION OF THE NUMBER.
+1017 C*******PARAMETERS.*I/P*-*ZZINT*-*THE*INTEGER*PORTION*OF*THE*NUMBER.*                  MD042411
+1017 C*      PARAMETERS. I/P - ZZ18IN - THE INTEGER PORTION OF THE NUMBER.                  MD042411
 1018 C*                  I/P - ZZDEC - THE DECIMAL PORTION OF THE NUMBER.
-1019 C*                  O/P - ZZDIFI - IS THE INTEGER DIFFERENCE.
+1019 C*******************O/P*-*ZZDIFI*-*IS*THE*INTEGER*DIFFERENCE.********                  MD042411
+1019 C*                  O/P - ZZ18DI - IS THE INTEGER DIFFERENCE.                          MD042411
 1020 C*                  O/P - ZZDIFD - IS THE DECIMAL DIFFERENCE.
 1021 C*                  O/P - ZZNEGD - FOR IMMEDIATE PRINTING ONLY.
 1022 C*                  O/P - 96 IS SET IF DIFFERENCE IS NEGATIVE.
 1023 C*
-1024 C*    IF AN ERROR HAS OCCURED ZZDIFI AND ZZDIFD WILL BE ZERO.
+1024 C*****IF*AN*ERROR*HAS*OCCURED*ZZDIFI*AND*ZZDIFD*WILL*BE*ZERO.********                  MD042411
+1024 C*    IF AN ERROR HAS OCCURED ZZ18DI AND ZZDIFD WILL BE ZERO.                          MD042411
 1025 C*        '99' - OVERFLOW ERROR
-1026 C*        '97' - THE 'SIGN' ZONES OF ZZINT AND ZZDEC ARE DIFFERENT
+1026 C*********'97'*-*THE*'SIGN'*ZONES*OF*ZZINT*AND*ZZDEC*ARE*DIFFERENT***                  MD042411
+1026 C*        '97' - THE 'SIGN' ZONES OF ZZ18IN AND ZZDEC ARE DIFFERENT                    MD042411
 1027 C*
-1028 C     GLZCMP        BEGSR                                                  *** GLZCMP ****
+0763 C* Subroutine renamed as it handles values upto 18 digits rather than                  MD042411
+     C* standard 15 length fields used elsewhere in Midas                                   MD042411
+1028 C*****GLZCMP********BEGSR********************************************      *** GLZCMP *MD042411
+1028 C     GLZCMP18      BEGSR                                                  ** GLZCMP18 MD042411
 1029 C                   SETOFF                                       9799
 1030 C                   Z-ADD     ZZDEC         ZZDEC             3 0919293    DEFINE ZZDEC
-1031 C                   Z-ADD     ZZINT         ZZINT            15 0949596    DEFINE ZZINT
+1031 C*******************Z-ADD*****ZZINT*********ZZINT************15*0949596    DEFINE ZZINTMD042411
+1031 C                   Z-ADD     ZZ18IN        ZZ18IN           18 0949596    DEFINE ZZ18IMD042411
 1032 C* IF SIGN ZONES DIFFER, SET 97, & RETURN ZERO.
      C   91
 1033 CAN 95
      COR 92
 1034 CAN 94              SETON                                        97        ERROR -MIXED
 1035 C*                                                           STATUS
-1036 C   97              GOTO      ZZQUIT                                       BRANCH TO ADMIT
+1036 C***97**************GOTO******ZZQUIT*********************************      BRCH TO ADMIMD042411
+1036 C   97              GOTO      ZZ18QUIT                                     BRCH TO ADMIMD042411
 1037 C*
 1038 C*  SPECIAL CASES DEALT WITH FIRST
 1039 C*      EITHER AMOUNTS EQ '0' OR BOTH AMOUNTS 'EQ'
@@ -2593,62 +2757,87 @@
 1041 C                   SETOFF                                       9495
      C   93
 1042 CAN 96              SETON                                        91        * IF I/P FIELD
-1043 C   91              Z-ADD     ZZTOTI        ZZDIFI           15 0          *    ZERO
+1043 C***91**************Z-ADD*****ZZTOTI********ZZDIFI***********15*0****      *    ZERO   MD042411
+1043 C   91              Z-ADD     ZZ18TI        ZZ18DI           18 0          *    ZERO   MD042411
 1044 C   91              Z-ADD     ZZTOTD        ZZDIFD            3 0          *
-1045 C   91              GOTO      ZZSIGN
+1045 C***91**************GOTO******ZZSIGN*********************************                  MD042411
+1045 C   91              GOTO      ZZ18SIGN                                                 MD042411
 1046 C*
-1047 C     ZZTOTI        COMP      ZZINT                                  91    * IF FIELDS EQ
+1047 C*****ZZTOTI********COMP******ZZINT**********************************91    * IF FIELDS MD042411
+1047 C     ZZ18TI        COMP      ZZ18IN                                 91    * IF FIELDS MD042411
 1048 C   91ZZTOTD        COMP      ZZDEC                                  91    *
-1049 C   91              Z-ADD     0             ZZDIFI                         *
+1049 C***91**************Z-ADD*****0*************ZZDIFI*******************      *           MD042411
+1049 C   91              Z-ADD     0             ZZ18DI                         *           MD042411
 1050 C   91              Z-ADD     0             ZZDIFD                         *
-1051 C   91              GOTO      ZZCEND
+1051 C***91**************GOTO******ZZCEND*********************************                  MD042411
+1051 C   91              GOTO      ZZ18CEND                                                 MD042411
 1052 C*
-1053 C     ZZTOTI        COMP      0                                      91    * IF TOTAL
+1053 C*****ZZTOTI********COMP******0**************************************91    * IF TOTAL  MD042411
+1053 C     ZZ18TI        COMP      0                                      91    * IF TOTAL  MD042411
 1054 C   91ZZTOTD        COMP      0                                      91    *    ZERO
-1055 C   91              Z-SUB     ZZINT         ZZDIFI                         *
+1055 C***91**************Z-SUB*****ZZINT*********ZZDIFI*******************      *           MD042411
+1055 C   91              Z-SUB     ZZ18IN        ZZ18DI                         *           MD042411
 1056 C   91              Z-SUB     ZZDEC         ZZDIFD                         *
 1057 C**
-1058 C     ZZSIGN        TAG                                                    *** ZZSIGN ****
+1058 C*****ZZSIGN********TAG**********************************************      *** ZZSIGN *MD042411
+1058 C     ZZ18SIGN      TAG                                                    * ZZ18SIGN *MD042411
 1059 C*
-1060 C**   IF ZZDIFD IS ZERO, AND ZZDIFI IS NEG. SET UP ZZNEGD.
+1060 C*****IF*ZZDIFD*IS*ZERO,*AND*ZZDIFI*IS*NEG.*SET*UP*ZZNEGD.***********                  MD042411
+1060 C**   IF ZZDIFD IS ZERO, AND ZZ18DI IS NEG. SET UP ZZNEGD.                             MD042411
 1061 C                   SETOFF                                       96
 1062 C   91ZZDIFD        COMP      0                                      94
-1063 C   94ZZDIFI        COMP      0                                    96
+1063 C***94ZZDIFI********COMP      0                                    96                  MD042411
+1063 C   94ZZ18DI        COMP      0                                    96                  MD042411
 1064 C   96              MOVE      '.000-'       ZZNEGD            5
-1065 C   91              GOTO      ZZCEND
+1065 C***91**************GOTO******ZZCEND*********************************                  MD042411
+1065 C   91              GOTO      ZZ18CEND                                                 MD042411
 1066 C*      END OF SPECIAL CASES
 1067 C*
-1068 C* IF ZZTOTALS EQ 'B' AND ZZINT,ZZDEC EQ 'A'   THEN -
+1068 C**IF*ZZTOTALS*EQ*'B'*AND*ZZINT,ZZDEC*EQ*'A'***THEN*-****************                  MD042411
+1068 C* IF ZZTOTALS EQ 'B' AND ZZ18IN,ZZDEC EQ 'A'   THEN -                                 MD042411
 1069 C*  TO COMPARE 'A' WITH 'B'
 1070 C*     1. STORE ORIGINAL VALUE OF 'B'.
 1071 C*     2. NEGATE 'A'.
 1072 C*     3. ADD 'A' TO 'B'.
 1073 C*     4. 'B' IS NOW THE DIFFERENCE. STORE 'B' IN FIELD 'C'.
 1074 C*     5. RESTORE 'B'.
-1075 C*            N.B. 'A' EQ ZZINT AND ZZDEC
-1076 C*                 'B' EQ ZZTOTI AND ZZTOTD
-1077 C*                 'C' EQ ZZDIFI AND ZZDIFD
+1075 C*************N.B.*'A'*EQ*ZZINT*AND*ZZDEC****************************                  MD042411
+1075 C*            N.B. 'A' EQ ZZ18IN AND ZZDEC                                             MD042411
+1076 C******************'B'*EQ*ZZTOTI*AND*ZZTOTD**************************                  MD042411
+1076 C*                 'B' EQ ZZ18TI AND ZZTOTD                                            MD042411
+1077 C******************'C'*EQ*ZZDIFI*AND*ZZDIFD**************************                  MD042411
+1077 C*                 'C' EQ ZZ18DI AND ZZDIFD                                            MD042411
 1078 C*
 1079 C*    STEP #1
-1080 C                   Z-ADD     ZZTOTI        ZZSTRI           15 0
+1080 C*******************Z-ADD*****ZZTOTI********ZZSTRI***********15*0****                  MD042411
+1080 C                   Z-ADD     ZZ18TI        ZZ18SI           18 0                      MD042411
 1081 C                   Z-ADD     ZZTOTD        ZZSTRD            3 0
 1082 C*    STEP #2
-1083 C                   Z-SUB     ZZINT         ZZAMTI           15 0
+1083 C*******************Z-SUB*****ZZINT*********ZZAMTI***********15*0****                  MD042411
+1083 C                   Z-SUB     ZZ18IN        ZZ180I           18 0                      MD042411
 1084 C                   Z-SUB     ZZDEC         ZZAMTD            3 0
 1085 C*    STEP #3
-1086 C                   EXSR      GLZSUM
-1087 C   99              GOTO      ZZQUIT
+1086 C*******************EXSR******GLZSUM*********************************                  MD042411
+     C                   EXSR      GLZSUM18                                                 MD042411
+1087 C***99**************GOTO******ZZQUIT*********************************                  MD042411
+1087 C   99              GOTO      ZZ18QUIT                                                 MD042411
 1088 C*    STEP #4
-1089 C                   Z-ADD     ZZTOTI        ZZDIFI
+1089 C*******************Z-ADD*****ZZTOTI********ZZDIFI*******************                  MD042411
+1089 C                   Z-ADD     ZZ18TI        ZZ18DI                                     MD042411
 1090 C                   MOVE      ZZTOTD        ZZDIFD
 1091 C*    STEP #5
-1092 C                   Z-ADD     ZZSTRI        ZZTOTI           15 0
+1092 C*******************Z-ADD*****ZZSTRI********ZZTOTI***********15*0****                  MD042411
+1092 C                   Z-ADD     ZZ18SI        ZZ18TI           18 0                      MD042411
 1093 C                   Z-ADD     ZZSTRD        ZZTOTD            3 0
-1094 C                   GOTO      ZZCEND                                       BYPASS ADMIT
-1095 C     ZZQUIT        TAG                                                    ** ZZQUIT TAG**
-1096 C                   Z-ADD     0             ZZDIFI
+1094 C*******************GOTO******ZZCEND*********************************      BYPASS ADMITMD042411
+1094 C                   GOTO      ZZ18CEND                                     BYPASS ADMITMD042411
+1095 C*****ZZQUIT********TAG**********************************************      ** ZZQUIT TAMD042411
+1095 C     ZZ18QUIT      TAG                                                    *ZZ18QUIT TAMD042411
+1096 C*******************Z-ADD*****0*************ZZDIFI*******************                  MD042411
+1096 C                   Z-ADD     0             ZZ18DI                                     MD042411
 1097 C                   Z-ADD     0             ZZDIFD
-1098 C     ZZCEND        ENDSR                                                  ** ZZCEND TAG**
+1098 C*****ZZCEND********ENDSR********************************************      ** ZZCEND TAMD042411
+1098 C     ZZ18CEND      ENDSR                                                  *ZZ18CEND TAMD042411
 1099 C*
 1100 C********************************************************************
 1101 C/SPACE 2
@@ -2847,11 +3036,16 @@
      O**********       73      A5NARR    56                                            CSD005 CGL029
      O              N73      A5ACCN              41                                           CGL029
      O               73      A5NARR              62                                           CGL029
-1217 O                                          106 'O/B'                       S01290
-1218 O               30      LDBL               128 '   ,   ,   ,   , 0 CR'
-1219 O               31      LDBL               128 '  ,   ,   ,   , 0 . CR'
-1220 O               32      LDBL               128 ' ,   ,   ,   , 0 .  CR'
-1221 O               33      LDBL               128 '   ,   ,   , 0 .   CR'
+1217 O******************************************106*'O/B'*****************      S01290      MD042411
+1218 O***************30******LDBL***************128*'***,***,***,***,*0*CR'                 MD042411
+1219 O***************31******LDBL***************128*'**,***,***,***,*0*.*CR'                MD042411
+1220 O***************32******LDBL***************128*'*,***,***,***,*0*.**CR'                MD042411
+1221 O***************33******LDBL***************128*'***,***,***,*0*.***CR'                 MD042411
+     O                                          102 'O/B'                                   MD042411
+     O               30      LDBL               128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      LDBL               128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      LDBL               128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      LDBL               128 '   ,   ,   ,   , 0 .   CR'             MD042411
 1222 O********D**1     81                                                 S01117
 1222 O**********D    81 25                  1                                          S01117 CGL120
      O          EF           EXACOB         1                                                 CGL120
@@ -2883,11 +3077,16 @@
 1232 O                       ACSQJ               14
 1233 O***********              CRNM      35                               S01194
 1233 O                       BBCRNM              35                             S01194
-1234 O                                          106 'O/B'
-1235 O               30      LDBE               128 '   ,   ,   ,   , 0 CR'
-1236 O               31      LDBE               128 '  ,   ,   ,   , 0 . CR'
-1237 O               32      LDBE               128 ' ,   ,   ,   , 0 .  CR'
-1238 O               33      LDBE               128 '   ,   ,   , 0 .   CR'
+1234 O******************************************106*'O/B'*****************                  MD042411
+1235 O***************30******LDBE***************128*'***,***,***,***,*0*CR'                 MD042411
+1236 O***************31******LDBE***************128*'**,***,***,***,*0*.*CR'                MD042411
+1237 O***************32******LDBE***************128*'*,***,***,***,*0*.**CR'                MD042411
+1238 O***************33******LDBE***************128*'***,***,***,*0*.***CR'                 MD042411
+     O                                          102 'O/B'                                   MD042411
+     O               30      LDBE               128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      LDBE               128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      LDBE               128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      LDBE               128 '   ,   ,   ,   , 0 .   CR'             MD042411
 1239 O**
 1240 O/SPACE 3
 1241 O***  A/C SEQ. O/B
@@ -2902,11 +3101,16 @@
 1245 O                                           12 '-'
 1246 O                       ACSQJ               14
      O                       BBCRNM              35                                           209478
-1247 O                                          106 'O/B'
-1248 O               30      LDBE               128 '   ,   ,   ,   , 0 CR'
-1249 O               31      LDBE               128 '  ,   ,   ,   , 0 . CR'
-1250 O               32      LDBE               128 ' ,   ,   ,   , 0 .  CR'
-1251 O               33      LDBE               128 '   ,   ,   , 0 .   CR'
+1247 O******************************************106*'O/B'*****************                  MD042411
+1248 O***************30******LDBE***************128*'***,***,***,***,*0*CR'                 MD042411
+1249 O***************31******LDBE***************128*'**,***,***,***,*0*.*CR'                MD042411
+1250 O***************32******LDBE***************128*'*,***,***,***,*0*.**CR'                MD042411
+1251 O***************33******LDBE***************128*'***,***,***,*0*.***CR'                 MD042411
+     O                                          102 'O/B'                                   MD042411
+     O               30      LDBE               128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      LDBE               128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      LDBE               128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      LDBE               128 '   ,   ,   ,   , 0 .   CR'             MD042411
 1252 O/SPACE 3
 1253 O***  POSTING DETAILS
 1254 O*
@@ -2937,11 +3141,16 @@
      O*                                                                   120830
      O          EF           EXPRFC         1                                   120830
      O                                            6 '(NET)'                     120830
-     O               30      TPRFC               28 '   ,   ,   ,   , 0 CR'     120830
-     O               31      TPRFC               28 '  ,   ,   ,   , 0 . CR'    120830
-     O               32      TPRFC               28 ' ,   ,   ,   , 0 .  CR'    120830
-     O               33      TPRFC               28 '   ,   ,   , 0 .   CR'     120830
-     O                       WPRFC               33                             120830
+     O***************30******TPRFC***************28*'***,***,***,***,*0*CR'     120830      MD042411
+     O***************31******TPRFC***************28*'**,***,***,***,*0*.*CR'    120830      MD042411
+     O***************32******TPRFC***************28*'*,***,***,***,*0*.**CR'    120830      MD042411
+     O***************33******TPRFC***************28*'***,***,***,*0*.***CR'     120830      MD042411
+     O***********************WPRFC***************33***********************      120830      MD042411
+     O               30      TPRFC               32 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      TPRFC               32 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      TPRFC               32 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      TPRFC               32 '   ,   ,   ,   , 0 .   CR'             MD042411
+     O                       WPRFC               37                                         MD042411
      O***********                        48 '-------------'        120830 127973
      O***********                        72 '--------------------- 120830 127973
      O***********                        96 '--------------------- 120830 127973
@@ -2962,21 +3171,31 @@
      O***  A/C SEQ. DEBIT BALANCE                                         S01290
      O*                                                                   S01290
      O          E    85 25N17               1                                   S01290
-     O                                          106 'TOTAL OF ACCOUNT  DEBITS'  S01290
-     O               30      PSTADR             128 '   ,   ,   ,   , 0 CR'     S01290
-     O               31      PSTADR             128 '  ,   ,   ,   , 0 . CR'    S01290
-     O               32      PSTADR             128 ' ,   ,   ,   , 0 .  CR'    S01290
-     O               33      PSTADR             128 '   ,   ,   , 0 .   CR'     S01290
+     O******************************************106*'TOTAL*OF*ACCOUNT**DEBITS'  S01290      MD042411
+     O***************30******PSTADR*************128*'***,***,***,***,*0*CR'     S01290      MD042411
+     O***************31******PSTADR*************128*'**,***,***,***,*0*.*CR'    S01290      MD042411
+     O***************32******PSTADR*************128*'*,***,***,***,*0*.**CR'    S01290      MD042411
+     O***************33******PSTADR*************128*'***,***,***,*0*.***CR'     S01290      MD042411
+     O                                          102 'TOTAL OF ACCOUNT  DEBITS'              MD042411
+     O               30      PSTADR             128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      PSTADR             128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      PSTADR             128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      PSTADR             128 '   ,   ,   ,   , 0 .   CR'             MD042411
      O*                                                                   S01290
      O/SPACE 2                                                            S01290
      O***  A/C SEQ. CREDIT BALANCE                                        S01290
      O*                                                                   S01290
      O          E    85 25N16               1                                   S01290
-     O                                          106 'TOTAL OF ACCOUNT CREDITS'  S01290
-     O               30      PSTACR             128 '   ,   ,   ,   , 0 CR'     S01290
-     O               31      PSTACR             128 '  ,   ,   ,   , 0 . CR'    S01290
-     O               32      PSTACR             128 ' ,   ,   ,   , 0 .  CR'    S01290
-     O               33      PSTACR             128 '   ,   ,   , 0 .   CR'     S01290
+     O******************************************106*'TOTAL*OF*ACCOUNT*CREDITS'  S01290      MD042411
+     O***************30******PSTACR*************128*'***,***,***,***,*0*CR'     S01290      MD042411
+     O***************31******PSTACR*************128*'**,***,***,***,*0*.*CR'    S01290      MD042411
+     O***************32******PSTACR*************128*'*,***,***,***,*0*.**CR'    S01290      MD042411
+     O***************33******PSTACR*************128*'***,***,***,*0*.***CR'     S01290      MD042411
+     O                                          102 'TOTAL OF ACCOUNT CREDITS'              MD042411
+     O               30      PSTACR             128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      PSTACR             128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      PSTACR             128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      PSTACR             128 '   ,   ,   ,   , 0 .   CR'             MD042411
 1266 O*
 1267 O/SPACE 2
 1268 O***  A/C SEQ. C/B
@@ -2984,11 +3203,16 @@
 1270 O********E**1     85                                                 S01117
 1270 O**********E    85 25                  1                                          S01117 CGL120
      O          EF   85 25                  1                                                 CGL120
-1271 O                                          106 'C/B'
-1272 O               30      TACSQ              128 '   ,   ,   ,   , 0 CR'
-1273 O               31      TACSQ              128 '  ,   ,   ,   , 0 . CR'
-1274 O               32      TACSQ              128 ' ,   ,   ,   , 0 .  CR'
-1275 O               33      TACSQ              128 '   ,   ,   , 0 .   CR'
+1271 O******************************************106*'C/B'*****************                  MD042411
+1272 O***************30******TACSQ**************128*'***,***,***,***,*0*CR'                 MD042411
+1273 O***************31******TACSQ**************128*'**,***,***,***,*0*.*CR'                MD042411
+1274 O***************32******TACSQ**************128*'*,***,***,***,*0*.**CR'                MD042411
+1275 O***************33******TACSQ**************128*'***,***,***,*0*.***CR'                 MD042411
+     O                                          102 'C/B'                                   MD042411
+     O               30      TACSQ              128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      TACSQ              128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      TACSQ              128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      TACSQ              128 '   ,   ,   ,   , 0 .   CR'             MD042411
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0340OOP5                                           S01408
      O*                                                                   S01408
@@ -3011,11 +3235,16 @@
      O          EF   86 25                  1                                   S01290
 1281 O***********                       106 'RETAIL ACCOUNT O/B'          S01290
      O                                           16 'RETAIL ACCOUNTS'           S01290
-     O                                          106 'O/B'                       S01290
-1282 O               30      REBAL              128 '   ,   ,   ,   , 0 CR'
-1283 O               31      REBAL              128 '  ,   ,   ,   , 0 . CR'
-1284 O               32      REBAL              128 ' ,   ,   ,   , 0 .  CR'
-1285 O               33      REBAL              128 '   ,   ,   , 0 .   CR'
+     O******************************************106*'O/B'*****************      S01290      MD042411
+1282 O***************30******REBAL**************128*'***,***,***,***,*0*CR'                 MD042411
+1283 O***************31******REBAL**************128*'**,***,***,***,*0*.*CR'                MD042411
+1284 O***************32******REBAL**************128*'*,***,***,***,*0*.**CR'                MD042411
+1285 O***************33******REBAL**************128*'***,***,***,*0*.***CR'                 MD042411
+     O                                          102 'O/B'                                   MD042411
+     O               30      REBAL              128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      REBAL              128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      REBAL              128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      REBAL              128 '   ,   ,   ,   , 0 .   CR'             MD042411
 1286 O*
 1287 O**SUMMARY*OF*RETAIL*A/C'S                                           S01290
 1288 O***********                                                         S01290
@@ -3030,28 +3259,43 @@
      O***  SUMMARY OF RETAIL ACCOUNTS (DEBIT BALANCES)                    S01290
      O*                                                                   S01290
      O          E    86 25N19               1                                   S01290
-     O                                          106 'RETAIL ACCOUNT  DEBITS'    S01290
-     O               30      TPSTDR             128 '   ,   ,   ,   , 0 CR'     S01290
-     O               31      TPSTDR             128 '  ,   ,   ,   , 0 . CR'    S01290
-     O               32      TPSTDR             128 ' ,   ,   ,   , 0 .  CR'    S01290
-     O               33      TPSTDR             128 '   ,   ,   , 0 .   CR'     S01290
+     O******************************************106*'RETAIL*ACCOUNT**DEBITS'    S01290      MD042411
+     O***************30******TPSTDR*************128*'***,***,***,***,*0*CR'     S01290      MD042411
+     O***************31******TPSTDR*************128*'**,***,***,***,*0*.*CR'    S01290      MD042411
+     O***************32******TPSTDR*************128*'*,***,***,***,*0*.**CR'    S01290      MD042411
+     O***************33******TPSTDR*************128*'***,***,***,*0*.***CR'     S01290      MD042411
+     O                                          102 'RETAIL ACCOUNT  DEBITS'                MD042411
+     O               30      TPSTDR             128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      TPSTDR             128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      TPSTDR             128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      TPSTDR             128 '   ,   ,   ,   , 0 .   CR'             MD042411
      O*                                                                   S01290
      O***  SUMMARY OF RETAIL ACCOUNTS (CREDIT BALANCES)                   S01290
      O*                                                                   S01290
      O          E    86 25N18               1                                   S01290
-     O                                          106 'RETAIL ACCOUNT CREDITS'    S01290
-     O               30      TPSTCR             128 '   ,   ,   ,   , 0 CR'     S01290
-     O               31      TPSTCR             128 '  ,   ,   ,   , 0 . CR'    S01290
-     O               32      TPSTCR             128 ' ,   ,   ,   , 0 .  CR'    S01290
-     O               33      TPSTCR             128 '   ,   ,   , 0 .   CR'     S01290
+     O******************************************106*'RETAIL*ACCOUNT*CREDITS'    S01290      MD042411
+     O***************30******TPSTCR*************128*'***,***,***,***,*0*CR'     S01290      MD042411
+     O***************31******TPSTCR*************128*'**,***,***,***,*0*.*CR'    S01290      MD042411
+     O***************32******TPSTCR*************128*'*,***,***,***,*0*.**CR'    S01290      MD042411
+     O***************33******TPSTCR*************128*'***,***,***,*0*.***CR'     S01290      MD042411
+     O                                          102 'RETAIL ACCOUNT CREDITS'                MD042411
+     O               30      TPSTCR             128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      TPSTCR             128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      TPSTCR             128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      TPSTCR             128 '   ,   ,   ,   , 0 .   CR'             MD042411
      O*                                                                   120830
      O          E    86 25                  1                                   120830
      O                                            6 '(NET)'                     120830
-     O               30      TPRFC               28 '   ,   ,   ,   , 0 CR'     120830
-     O               31      TPRFC               28 '  ,   ,   ,   , 0 . CR'    120830
-     O               32      TPRFC               28 ' ,   ,   ,   , 0 .  CR'    120830
-     O               33      TPRFC               28 '   ,   ,   , 0 .   CR'     120830
-     O                       WPRFC               33                             120830
+     O***************30******TPRFC***************28*'***,***,***,***,*0*CR'     120830      MD042411
+     O***************31******TPRFC***************28*'**,***,***,***,*0*.*CR'    120830      MD042411
+     O***************32******TPRFC***************28*'*,***,***,***,*0*.**CR'    120830      MD042411
+     O***************33******TPRFC***************28*'***,***,***,*0*.***CR'     120830      MD042411
+     O***********************WPRFC***************33***********************      120830      MD042411
+     O               30      TPRFC               32 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      TPRFC               32 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      TPRFC               32 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      TPRFC               32 '   ,   ,   ,   , 0 .   CR'             MD042411
+     O                       WPRFC               37                                         MD042411
      O***********                        48 '-------------'        120830 127973
      O***********                        72 '--------------------- 120830 127973
      O***********                        96 '--------------------- 120830 127973
@@ -3073,11 +3317,16 @@
 1297 O********E**1     86                                                 S01117
 1297 O**********E    86 25                  1                                          S01117 CGL120
      O          EF   86 25                  1                                                 CGL120
-1298 O                                          106 'C/B'
-1299 O               30      TACOD              128 '   ,   ,   ,   , 0 CR'
-1300 O               31      TACOD              128 '  ,   ,   ,   , 0 . CR'
-1301 O               32      TACOD              128 ' ,   ,   ,   , 0 .  CR'
-1302 O               33      TACOD              128 '   ,   ,   , 0 .   CR'
+1298 O******************************************106*'C/B'*****************                  MD042411
+1299 O***************30******TACOD**************128*'***,***,***,***,*0*CR'                 MD042411
+1300 O***************31******TACOD**************128*'**,***,***,***,*0*.*CR'                MD042411
+1301 O***************32******TACOD**************128*'*,***,***,***,*0*.**CR'                MD042411
+1302 O***************33******TACOD**************128*'***,***,***,*0*.***CR'                 MD042411
+     O                                          102 'C/B'                                   MD042411
+     O               30      TACOD              128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      TACOD              128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      TACOD              128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      TACOD              128 '   ,   ,   ,   , 0 .   CR'             MD042411
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0340OOP7                                           S01408
      O*                                                                   S01408
@@ -3101,13 +3350,20 @@
 1308 O          EF   87 25               1  2                                   S01290
 1309 O***********                       106 'ACCOUNT CODE C/B'            S01290
      O***********              A5ACCN   102                         S01290CSD005
-     O              N73      A5ACCN             102                             CSD005
-     O               73      A5NARR             102                             CSD005
-     O                                          106 'C/B'                       S01290
-1310 O               30      TACOD              128 '   ,   ,   ,   , 0 CR'
-1311 O               31      TACOD              128 '  ,   ,   ,   , 0 . CR'
-1312 O               32      TACOD              128 ' ,   ,   ,   , 0 .  CR'
-1313 O               33      TACOD              128 '   ,   ,   , 0 .   CR'
+     O**************N73******A5ACCN*************102***********************      CSD005      MD042411
+     O***************73******A5NARR*************102***********************      CSD005      MD042411
+     O******************************************106*'C/B'*****************      S01290      MD042411
+1310 O***************30******TACOD**************128*'***,***,***,***,*0*CR'                 MD042411
+1311 O***************31******TACOD**************128*'**,***,***,***,*0*.*CR'                MD042411
+1312 O***************32******TACOD**************128*'*,***,***,***,*0*.**CR'                MD042411
+1313 O***************33******TACOD**************128*'***,***,***,*0*.***CR'                 MD042411
+     O              N73      A5ACCN              98                                         MD042411
+     O               73      A5NARR              98                                         MD042411
+     O                                          102 'C/B'                                   MD042411
+     O               30      TACOD              128 '   ,   ,   ,   ,   , 0 CR'             MD042411
+     O               31      TACOD              128 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+     O               32      TACOD              128 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+     O               33      TACOD              128 '   ,   ,   ,   , 0 .   CR'             MD042411
      O*                                                                   S01290
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0340OOP9                                           S01408
@@ -3131,11 +3387,16 @@
 1319 O                                           29 '**********'
 1320 O                                           53 'CURRENCY OUT OF BALANCE'
 1321 O                                           56 'BY'
-1322 O               30      TCCY                78 '   ,   ,   ,   , 0 CR'
-1323 O               31      TCCY                78 '  ,   ,   ,   , 0 . CR'
-1324 O               32      TCCY                78 ' ,   ,   ,   , 0 .  CR'
-1325 O               33      TCCY                78 '   ,   ,   , 0 .   CR'
-1326 O                                           89 '**********'
+1322 O***************30******TCCY****************78*'***,***,***,***,*0*CR'                 MD042411
+1323 O***************31******TCCY****************78*'**,***,***,***,*0*.*CR'                MD042411
+1324 O***************32******TCCY****************78*'*,***,***,***,*0*.**CR'                MD042411
+1325 O***************33******TCCY****************78*'***,***,***,*0*.***CR'                 MD042411
+1326 O*******************************************89*'**********'**********                  MD042411
+1322 O               30      TCCY                82 '   ,   ,   ,   ,   , 0 CR'             MD042411
+1323 O               31      TCCY                82 '  ,   ,   ,   ,   , 0 . CR'            MD042411
+1324 O               32      TCCY                82 ' ,   ,   ,   ,   , 0 .  CR'            MD042411
+1325 O               33      TCCY                82 '   ,   ,   ,   , 0 .   CR'             MD042411
+1326 O                                           93 '**********'                            MD042411
 1327 O*
 1328 O***  BRANCH CHANGE HASH TOTALS
 1329 O*
@@ -3155,8 +3416,10 @@
      O          E            EECCC1         1                                                 CGL030
      O                       ARL1(Y)             42                                           CGL030
      O                       BRN1(Y)       3     48                                           CGL030
-     O                       BR1I(Y)       3     76                                           CGL030
-     O                       BR1D(Y)             79                                           CGL030
+     O***********************BR1I(Y)*******3*****76***********************           CGL030 MD042411
+     O***********************BR1D(Y)*************79***********************           CGL030 MD042411
+     O                       BR1I(Y)       3     80                                         MD042411
+     O                       BR1D(Y)             83                                         MD042411
      O/COPY WNCPYSRC,GL0340OOPG                                           S01408
      O*                                                                   S01408
 1339 O*****   E  1     52                                                 S01117
@@ -3164,8 +3427,10 @@
 1340 O              N56      ARLT(X)             42
 1341 O               56                          20 'OVERALL'
 1342 O                       BRNP(X)       3     48
-1343 O                       BRTI(X)       Z     76
-1344 O                       BRTD(X)             79
+1343 O***********************BRTI(X)*******Z*****76***********************                  MD042411
+1344 O***********************BRTD(X)*************79***********************                  MD042411
+     O                       BRTI(X)       Z     80                                         MD042411
+     O                       BRTD(X)             83                                         MD042411
      O*                                                                   127973
      O          T    L7 25 59            3                                      127973
      O         AND  N58 27 29                                                   127973
@@ -3233,18 +3498,24 @@
      O          E            EECCC2         1                                                 CGL030
      O                       ARL1(Y)             42                                           CGL030
      O                       ARN1(Y)       3     48                                           CGL030
-     O                       AR1I(Y)       3     76                                           CGL030
-     O                       AR1D(Y)             79                                           CGL030
+     O***********************AR1I(Y)*******3*****76***********************           CGL030 MD042411
+     O***********************AR1D(Y)*************79***********************           CGL030 MD042411
+     O                       AR1I(Y)       3     80                                         MD042411
+     O                       AR1D(Y)             83                                         MD042411
      O/COPY WNCPYSRC,GL0340OOP1                                           S01408
      O*                                                                   S01408
 1359 O          E    89                     1
 1360 O              N56      ARLT(X)             42
 1361 O               56                          20 'OVERALL'
 1362 O                       ARNP(X)       3     48
-1363 O                       ARTI(X)       Z     76
-1364 O                       ARTD(X)             79
-     O               38   N63                   106 '*** NO DETAILS TO REPORT'  S01117
-     O               38   N63                   110 '***'                       S01117
+1363 O***********************ARTI(X)*******Z*****76***********************                  MD042411
+1364 O***********************ARTD(X)*************79***********************                  MD042411
+     O***************38***N63*******************106*'****NO*DETAILS*TO*REPORT'  S01117      MD042411
+     O***************38***N63*******************110*'***'*****************      S01117      MD042411
+     O                       ARTI(X)       Z     80                                         MD042411
+     O                       ARTD(X)             83                                         MD042411
+     O               38   N63                   110 '*** NO DETAILS TO REPORT'              MD042411
+     O               38   N63                   114 '***'                                   MD042411
 1365 O/SPACE 2
 1366 O***  F I L E    C O N T R O L S
 1367 O***

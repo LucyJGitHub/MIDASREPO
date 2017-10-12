@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD034451C          Date 02Mar16               *      
-      *  Prev Amend No. MD041157           Date 09Aug16               *
+      *  Last Amend No. MD042377           Date 01Dec16               *
+      *  Prev Amend No. MD034451C          Date 02Mar16               *      
+      *                 MD041157           Date 09Aug16               *
       *                 MD030959           Date 17Jun15               *
       *                 AR648606           Date 30Oct14               *
       *                 MD000091           Date 08May13               *
@@ -57,6 +58,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042377 - Error RE71053 should only be validated against a  *
+      *             retail account since GL account does not have a   *
+      *             record in REIACD.                                 *
       *  MD034451C - Recompiled due to changed PF/HELDIHB             *      
       *  MD041157 - Failure to close an account.  Check correct       *
       *             network files during account closure.             *
@@ -784,8 +788,10 @@
      C                   EndIf                                                  216306
       *
       ** ACCOUNT CANNOT BE AN ALTERNATIVE ACCOUNT
+     C                   IF        ATYP = 'R'                                               MD042377
      C     KREIAC        CHAIN     REIACDXF                           80
       *
+     C                   IF        *IN80 = '0'                                              MD042377
      C     NOALT         IfGT      0
      C                   Move      'N'           DDCUSNOk
      C                   Move      'N'           DDCcyOk
@@ -796,6 +802,8 @@
      C                   Movel     'DDAcNo'      FldNamXAr(Idx)
      C                   Movel     'RE71053'     MsgIDXAr(Idx)
      C                   EndIf
+     C                   ENDIF                                                              MD042377
+     C                   ENDIF                                                              MD042377
       *
       ** ACCOUNT CANNOT BE A PRIME ACCOUNT
       *

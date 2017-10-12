@@ -31,13 +31,14 @@
       *    applied to this source.                                    *
       *                                                               *
       *                                                               *
+      *  Last Amend No. MD034630           Date 10Nov15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSE071             Date 19Jul05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSE031             Date 15Nov01               *
+      *                 CSE031             Date 15Nov01               *
       *                 180707             Date 25Jul00               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034630 - Multiple calls of UTCHOBJEX inside GOC0020        *
       *  CSE071 - Multiple Holidays Re Securities                     *
       *  CSE031 - Coupon Fixing for Floating Rate Notes               *
       *  180707 - No Position Settlements generated due to wrong Last *
@@ -137,6 +139,14 @@
      D  CR                     1     12
      D                                     DIM(12)                              CR01-12 ARRAY
       ** +--- The converted ZNCDZ1 and ZNCDZ2 end here ------------------+
+      *                                                                                     MD034630
+      ** AOSARDR0 Parameter                                                                 MD034630
+     D  URTNCD         S              7A                                                    MD034630
+     D  UOPTN          S              7A                                                    MD034630
+     D  UUKEY          S              6A                                                    MD034630
+     D  UDSFDY         S             76A                                                    MD034630
+     D  CSE031         S              1A                                                    MD034630
+     D  CSE071         S              1A                                                    MD034630
  
       * Set indicator 98 from BJDFIN
  
@@ -443,28 +453,28 @@
      C                   PARM                    HCY9                                         CSE071
       *                                                                                       CSE031
       ** Check if feature CSE031 is on                                                        CSE031
-     C                   CALLB     'AOSARDR0'                                                 CSE031
-     C                   PARM                    URTNCD            7                          CSE031
-     C                   PARM      '*VERIFY'     UOPTN             7                          CSE031
-     C                   PARM      'CSE031'      UUKEY             6                          CSE031
-     C                   PARM                    UDSFDY           76                          CSE031
+     C**********         CALLB     'AOSARDR0'                                        CSE031 MD034630
+     C**********         PARM                    URTNCD            7                 CSE031 MD034630
+     C**********         PARM      '*VERIFY'     UOPTN             7                 CSE031 MD034630
+     C**********         PARM      'CSE031'      UUKEY             6                 CSE031 MD034630
+     C**********         PARM                    UDSFDY           76                 CSE031 MD034630
       *                                                                                       CSE071
-     C                   MOVE      'N'           CSE031            1                          CSE071
-     C     URTNCD        IFEQ      *BLANKS                                                    CSE071
-     C                   MOVE      'Y'           CSE031                                       CSE071
-     C                   ENDIF                                                                CSE071
+     C**********         MOVE      'N'           CSE031            1                 CSE031 MD034630
+     C*****URTNCD        IFEQ      *BLANKS                                           CSE031 MD034630
+     C**********         MOVE      'Y'           CSE031                              CSE031 MD034630
+     C**********         ENDIF                                                       CSE031 MD034630
       *                                                                                       CSE071
       ** Check if feature CSE071 is on                                                        CSE071
-     C                   CALL      'AOSARDR0'                                                 CSE071
-     C                   PARM                    URTNCD                                       CSE071
-     C                   PARM      '*VERIFY'     UOPTN                                        CSE071
-     C                   PARM      'CSE071'      UUKEY                                        CSE071
-     C                   PARM                    UDSFDY                                       CSE071
+     C**********         CALL      'AOSARDR0'                                        CSE031 MD034630
+     C**********         PARM                    URTNCD                              CSE031 MD034630
+     C**********         PARM      '*VERIFY'     UOPTN                               CSE031 MD034630
+     C**********         PARM      'CSE071'      UUKEY                               CSE031 MD034630
+     C**********         PARM                    UDSFDY                              CSE031 MD034630
       *                                                                                       CSE071
-     C                   MOVE      'N'           CSE071            1                          CSE071
-     C     URTNCD        IFEQ      *BLANKS                                                    CSE071
-     C                   MOVE      'Y'           CSE071                                       CSE071
-     C                   ENDIF                                                                CSE071
+     C**********         MOVE      'N'           CSE071            1                 CSE031 MD034630
+     C*****URTNCD        IFEQ      *BLANKS                                           CSE031 MD034630
+     C**********         MOVE      'Y'           CSE071                              CSE031 MD034630
+     C**********         ENDIF                                                       CSE031 MD034630
       *                                                                                       CSE031
       ** If CSE031 feature is on                                                              CSE031
       ** or CSE071 feature is on                                                              CSE071
@@ -580,6 +590,31 @@
       ** Next Coupon Date
      C                   PARM                    NCD
  
+      *                                                                                     MD034630
+      ** Check if feature CSE031 is on                                                      MD034630
+     C                   CALLB     'AOSARDR0'                                               MD034630
+     C                   PARM                    URTNCD                                     MD034630
+     C                   PARM      '*VERIFY'     UOPTN                                      MD034630
+     C                   PARM      'CSE031'      UUKEY                                      MD034630
+     C                   PARM                    UDSFDY                                     MD034630
+      *                                                                                     MD034630
+     C                   MOVE      'N'           CSE031                                     MD034630
+     C     URTNCD        IFEQ      *BLANKS                                                  MD034630
+     C                   MOVE      'Y'           CSE031                                     MD034630
+     C                   ENDIF                                                              MD034630
+      *                                                                                     MD034630
+      ** Check if feature CSE071 is on                                                      MD034630
+     C                   CALL      'AOSARDR0'                                               MD034630
+     C                   PARM                    URTNCD                                     MD034630
+     C                   PARM      '*VERIFY'     UOPTN                                      MD034630
+     C                   PARM      'CSE071'      UUKEY                                      MD034630
+     C                   PARM                    UDSFDY                                     MD034630
+      *                                                                                     MD034630
+     C                   MOVE      'N'           CSE071                                     MD034630
+     C     URTNCD        IFEQ      *BLANKS                                                  MD034630
+     C                   MOVE      'Y'           CSE071                                     MD034630
+     C                   ENDIF                                                              MD034630
+      *                                                                                     MD034630
      C                   ENDSR
  
       *****************************************************************

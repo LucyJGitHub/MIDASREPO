@@ -34,11 +34,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. AR1096788          Date 18Mar13               *
-      *  Prev Amend No. CAP210  *CREATE    Date 28Sep12               *
+      *  Last Amend No. BUG5809            Date 08Aug17               *
+      *  Prev Amend No. AR1096788          Date 18Mar13               *
+      *                 CAP210  *CREATE    Date 28Sep12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG5809 - Response mode should be 'S'.                       *
+      *            Apply fix for MD-47196.                            *
       *  AR1096788 - DLAA details should be written in core STRANF    *
       *              file instead of the new DLSTRANFPD file          *
       *  CAP210 - Adjustment to Accrued Interests API                 *
@@ -367,7 +370,8 @@
       *
      C                   PARM                    ModeofOp
       ** Response mode
-     C                   PARM                    APRESPMODE
+     C**********         PARM                    APRESPMODE                                  BUG5809
+     C                   PARM      'S'           APRESPMODE                                  BUG5809
       ** Action Code
      C                   PARM                    DDACTN
       ** Front Office Transaction ID

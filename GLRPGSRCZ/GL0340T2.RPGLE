@@ -17,11 +17,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. AR1097218          Date 05Apr13               *
-      *  Prev Amend No. CGL120   *CREATE   Date 06Aug12               *
+      *  Last Amend No. MD042411           Date 18Nov16               *
+      *  Prev Amend No. AR1097218          Date 05Apr13               *
+      *                 CGL120   *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042411 - BRCA/CCY/ACOD totals can be more than 15 digits   *
+      *            (Recompile)                                        *
       *  AR1097218 - GLC0720 seq 10001 failed Out of Balance          *
       *  CGL120 - GL COB Components Task Split                        *
       *                                                               *

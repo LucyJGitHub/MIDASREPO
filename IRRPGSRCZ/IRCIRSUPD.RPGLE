@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR743357           Date 22Apr15               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD036601           Date 29Aug16               *
+      *  Prev Amend No. AR743357           Date 22Apr15               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025244           Date 09May14               *
@@ -113,6 +114,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036601 - DLC0606B failed in RU production dd 10.11.2015    *
+      *             Reset URFIN / TRFIN whenever fix date is less than*
+      *             rate change date.                                 *
       *  AR743357 - Reverse 246966. Error for 246966 should be put to *
       *             DLC02A.                                           *
       *           - Applied for MD033602                              *
@@ -3324,6 +3328,15 @@
       *
      C                   Z-ADD     *ZEROS        BRSQ
       *
+     C                   IF        UINFD >= BJRDNB                                          MD036601
+     C                             and UINFD <= UNICD                                       MD036601
+     C                   MOVE      *BLANK        URFIN                                      MD036601
+     C                   ENDIF                                                              MD036601
+      *                                                                                     MD036601
+     C                   IF        TINFD >= BJRDNB                                          MD036601
+     C                             and TINFD <= TNICD                                       MD036601
+     C                   MOVE      *BLANK        TRFIN                                      MD036601
+     C                   ENDIF                                                              MD036601
       *
      C                   ENDSR
      C****************************************************************

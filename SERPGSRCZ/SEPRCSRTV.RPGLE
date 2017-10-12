@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037408           Date 25May16               *
-      *  Prev Amend No. AR1092524          Date 12Mar13               *
+      *  Last Amend No. MD047196           Date 08Aug17               *
+      *  Prev Amend No. MD037408           Date 25May16               *
+      *                 AR1092524          Date 12Mar13               *
       *                 255418             Date 13Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047196 - Authority Validation not working.                 *
       *  MD037408 - SE PRICES Input Insert New Security Shortname not *
       *             validated initially eventhough value of field is  *
       *             invalid                                           *
@@ -1279,6 +1281,14 @@
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'MMA0704'     MsgIdArr(Ix)
+     C                   ELSE                                                               MD047196
+     C     @ERR          IFEQ      2                                                        MD047196
+     C                   MOVE      'N'           OKACTN                                     MD047196
+     C                   MOVE      'N'           OKPBRA                                     MD047196
+     C                   ADD       1             Ix                                         MD047196
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                             MD047196
+     C                   MOVEL     'MMA0086'     MsgIdArr(Ix)                               MD047196
+     C                   ENDIF                                                              MD047196
      C                   END
       *
      C     ESecChk       ENDSR

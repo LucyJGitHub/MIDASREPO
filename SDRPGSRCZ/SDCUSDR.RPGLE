@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD041996           Date 12Oct15               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CER071             Date 01Aug16               *
       *                 AR316373           Date 03Jun15               *
       *                 CER070             Date 19Aug14               *
       *                 CSW214             Date 25Nov14               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041996 - Incorrect mapping for FX Netting                  *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  AR316373 - BOE @ MPlus - BOE cust dtls are not displayed in  *
@@ -288,11 +290,15 @@
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
      D PTransType      S              4                                                       CSD028
-     D FillerBuf       S           5276A                                                      CSW213
+     D***FillerBuf       S           5276A                                           CSW213 MD041996
+     D FillerBuf       S           5096A                                                    MD041996
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
      D FillerBufEx2    S           5980A                                                      CGL132
      D FillerBufEx3    S           9999A                                                      CSW213
-     D FillerBufEx4    S           6898A                                                      CSW213
+     D***FillerBufEx4    S           6898A                                           CSW213 MD041996
+     D FillerBufEx4    S           5974A                                                    MD041996
+     D NewCuCtnm1      S              8A                                                    MD041996
+     D NewCuCtnm2      S            110A                                                    MD041996
 
       ** Stamp Tax details                                                                    CER049
      DTranStamp        S             31A                                                      CER049
@@ -374,6 +380,8 @@
      C                   ENDIF
 
      C                   MOVE      C_BBTMST      @TimeStamp       26                         BUG4196
+     C                   EVAL      NewCuCtnm1 = %SUBST(NewCuCtnm:1:8)                       MD041996
+     C                   EVAL      NewCuCtnm2 = %SUBST(NewCuCtnm:9)                         MD041996
      C                   EVAL                    Buffer = NewCuPrim
      C**********                                 + NewCuSeco + NewCuMsg                     BUG21091
      C                                           + NewCuSeco                                BUG21091
@@ -398,11 +406,12 @@
      C                                           + @TimeStamp                                BUG4196
      C                                           + NewCuRwan                                  CSD079
      C                                           + TranStamp                                  CER049
+     C                                           + NewCuCtnm1                               MD041996
      C                                           + AuthComp                                   CER059
      C                                           + FillerBuf                                  CSW213
      C**********                                 + NewCuCUAH                           CER059 CSW213
      C**********                                 + NewCuCCTX                           CER059 CSW213
-     C                                           + NewCuCtnm                               AR1086546
+     C**********                                 + NewCuCtnm                      AR1086546 MD041996
      C**********                                 + ExtData                            BUG5870 CSW213
      C                   EVAL      BufferEx2 = CuSW13                                         CSW213
      C                                       + CuCUXC                                         CGL132
@@ -413,6 +422,8 @@
                                                                                               CSW213
      C                   EVAL      BufferEx4 = NewCuCUAH                                      CSW213
      C                                       + NewCuCCTX                                      CSW213
+     C                                       + NewCuCtnm2                                   MD041996
+     C                                       + ExtData                                      MD041996
      C                                       + FillerBufEx4                                   CSW213
 
      C                   SETON                                        LR

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD036356           Date 20Oct15               *
-      *  Prev Amend No. MD035388           Date 20Oct15               *
+      *  Last Amend No. MD042805           Date 05Jun17               *
+      *  Prev Amend No. MD036356           Date 20Oct15               *
+      *                 MD035388           Date 20Oct15               *
       *                 MD029837A          Date 22Aug14               *
       *                 MD029837           Date 22Aug14               *
       *                 MD027560           Date 19Jun14               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042805  - FBM2.1SP10-FATCA US TIN mandatory - should be    *
+      *              optional depending on FATCA customer type        *
       *  MD036356 - Multiple NAHO FATCA fields does not default values*
       *             from Main NAHO/CRS Details                        *
       *  MD035388 - FATCA Screen order rework                         *
@@ -60,7 +63,7 @@
       *           Classification - Master                             *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+                                           MD026554
       ** ¦ F-specs                              ¦                                           MD026554
       ** ¦ =======                              ¦                                           MD026554
@@ -74,7 +77,15 @@
                                                                                             MD026554
      FSDFTNHL1  IF   E           K DISK    INFSR(*PSSR)                                     MD026554
       ** Midas SD FATCA NAHO Details retrieval index                                        MD026554
- 
+                                                                                            MD042805
+      ** +--------------------------------------+                                           MD042805
+      ** ¦ Program Prototypes                   ¦                                           MD042805
+      ** ¦ ==================                   ¦                                           MD042805
+      ** +--------------------------------------+                                           MD042805
+                                                                                            MD042805
+     D IsValidate      PR              N                                                    MD042805
+                                                                                            MD042805
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -82,54 +93,54 @@
       ** +--------------------------------------+
       **
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Access the System Value
      D SVAL01          C                   CONST('FATCAUsTinBirthRqd')
      D SVAL02          C                   CONST('FATCADftCLsTakeon')
      D SVAL03          C                   CONST('FATCADftCLsNewCustNH')
      D SVAL04          C                   CONST('FATCAEffectStartDate')                    MD026550
      D SVAL05          C                   CONST('FATCACountryofTax')                       MD026693
- 
+
       ** Data Structure for AOSVALR0 string
      DSVAL1            DS           200
      DSVAL11                   1      1
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIx             S              3P 0
@@ -137,7 +148,7 @@
      D WFUTIN          S              1A                                                   MD026693A
                                                                                             MD026554
      D WHasInfoCmp     S              1A                                                    MD026554
- 
+
      D Format          S              1                                                     MD026550
      D WDateDD         S              2A                                                    MD026550
      D WDateMM         S              2A                                                    MD026550
@@ -198,9 +209,9 @@
      C                   OUT       LDA                                                     MD026693A
      C                   EXSR      *PSSR                                                   MD026693A
      C                   ENDIF                                                             MD026693A
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        ReturnCode
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
@@ -212,7 +223,7 @@
      C                   Z-ADD     0             WIx
      C                   MOVE      'Y'           DDINFCOK
      C                   EVAL      WUSRQ = SVAL11
- 
+
      C                   IF        DDINFC <> 'Y' AND
      C                             DDINFC <> 'N' AND
      C                             DDINFC <> ' '
@@ -253,7 +264,7 @@
      C                   MOVEL     PPTIN1        DDUTIN                                    MD026753A
      C                   ENDIF                                                             MD026753A
      C                   ENDIF                                                             MD026753A
- 
+
      C**********         IF        DDINFC = 'Y' AND                                         MD026997
      C**********                   DDINFCO = ' ' OR                                         MD026997
      C**********                   DDINFC = 'Y' AND                                         MD026997
@@ -261,63 +272,63 @@
       *                                                                                     MD026997
       ** Validate only when set to 'Y'                                                      MD026997
      C                   IF        DDINFC = 'Y'                                             MD026997
- 
+
      C                   IF        DDCLAC = *BLANKS
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C**********         MOVEL     'USS0189'     MsgIdXAr(Idx)                              MD026693
      C                   MOVEL     'USS0174'     MsgIdXAr(Idx)                              MD026693
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDCLAC = SVAL2 OR
      C                             DDCLAC = SVAL3
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C**********         MOVEL     'USS0189'     MsgIdXAr(Idx)                              MD026693
      C                   MOVEL     'USS0174'     MsgIdXAr(Idx)                              MD026693
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDCSTP = ' '
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
- 
+
      C                   IF        CUSTID = 'C'
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0180'     MsgIdXAr(Idx)
- 
+
      C                   ELSE
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0168'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDCSST = ' ' AND
      C                             DDCSTP <> 'O' AND
      C                             DDCSTP <> 'J' AND                                        MD026554
      C                             DDCSTP <> 'P'
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
- 
+
      C                   IF        CUSTID = 'C'
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0181'     MsgIdXAr(Idx)
- 
+
      C                   ELSE
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0169'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                             MD026554
      C**********         IF        CUSTID = 'C'                                  MD026554A MD026554B
@@ -371,27 +382,27 @@
      C                   ENDDO                                                              MD026554
                                                                                            MD026554A
      C                   ENDIF                                                             MD026554A
- 
+
      C                   IF        DDCSTP = 'F' AND
      C                             DDCSST = 'UN' OR
      C                             DDCSTP = 'N' AND
      C                             DDCSST = 'UN'
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
- 
+
      C                   IF        CUSTID = 'C'
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0395'     MsgIdXAr(Idx)
- 
+
      C                   ELSE
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0170'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDAUSV = '  '                                            MD027560
      C                             AND PIsNew = 'N'                                        MD029837A
                                                                                             MD027560
@@ -403,168 +414,168 @@
      C                   ENDIF                                                              MD027560
                                                                                             MD027560
      C                   IF        DDMAIL = '  '
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0183'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDPHON = ' '
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0184'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDGREC = ' '
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0182'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDCISV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0186'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDTXSV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0187'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDCDSV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0159'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDTESV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0160'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDGCSV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0161'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDCBSV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0162'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDJASV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0163'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDHMSV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0164'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDRPSV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0165'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDMCSV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0166'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDIDSV = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0167'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDEXEM = ' '
      C                             AND PIsNew = 'N'                                         MD027454
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0175'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDHVAC = ' '
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0176'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C                   IF        DDREPT = ' '
- 
+
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0394'     MsgIdXAr(Idx)
- 
+
      C                   ENDIF
       **********                                                                  MD026693 MD026753A
      C**********         IF        CUSTID = 'C'                                   MD026693 MD026753A
@@ -590,6 +601,11 @@
       ** If Creation Date is past FATCA Effective Date, US TIN is required                  MD026693
       ** when Subject to Reporting is 'Y'                                                   MD026693
       *                                                                                     MD026693
+      *                                                                                     MD042805
+      ** Call a subroutine that would check if further validation to TIN and                MD042805
+      ** or Date/Town of Birth is needed                                                    MD042805
+      *                                                                                     MD042805
+     C                   IF        IsValidate                                               MD042805
       ** Convert FATCA Effective Date to day number                                         MD026693
      C                   MOVEL     SVAL4         PDate             6                        MD026693
      C                   Z-ADD     0             PDayNo            5 0                      MD026693
@@ -611,9 +627,9 @@
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)                             MD026693
      C                   MOVEL     'USS0177'     MsgIdXAr(Idx)                              MD026693
      C                   ENDIF                                                              MD026693
- 
+
      C                   IF        WUSRQ <> *BLANK
- 
+
      C                   IF        WUSRQ = 'B' AND
      C**********                   DDCBTH = *BLANK                                          MD026693
      C                             DDDBTH = *BLANK                                          MD026693
@@ -623,7 +639,7 @@
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0178'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   IF        WUSRQ = 'B' AND
      C                             DDBTHT = *BLANK
      C
@@ -632,7 +648,7 @@
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0179'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   IF        WUSRQ = 'U' AND
      C                             WFUTIN = ' ' AND                                        MD026693A
      C                             DDUTIN = *BLANK
@@ -641,7 +657,7 @@
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0177'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   IF        WUSRQ = 'Y' AND
      C                             WFUTIN = ' ' AND                                        MD026693A
      C                             DDUTIN = *BLANK
@@ -650,7 +666,7 @@
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0177'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   IF        WUSRQ = 'Y' AND
      C**********                   DDCBTH = *BLANK                                          MD026693
      C                             DDDBTH = *BLANK                                          MD026693
@@ -659,7 +675,7 @@
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0178'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   IF        WUSRQ = 'Y' AND
      C                             DDBTHT = *BLANK
      C                   MOVE      'N'           DDINFCOK
@@ -667,14 +683,14 @@
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0179'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   IF        DDRPTT = 'U'
      C                   MOVE      'N'           DDINFCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0185'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
       *                                                                                     MD026550
       ** If Creation Date is past FATCA Effective Date, US TIN is required                  MD026550
       ** when Subject to Reporting is 'Y'                                                   MD026550
@@ -700,17 +716,18 @@
      C**********         ENDIF                                                     MD026550 MD026693
      C                                                                                      MD026550
      C                   ENDIF
- 
+     C
+     C                   ENDIF                                                              MD042805
      C                   ENDIF
- 
+
      C                   IF        Idx = 0
      C                   EVAL      DFINFC = DDINFC
      C                   ENDIF
- 
+
       ** RETURN
- 
+
      C                   RETURN
- 
+
       *****************************************************************                     MD026550
       /EJECT                                                                                MD026550
       *****************************************************************                     MD026550
@@ -778,14 +795,14 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
      C                   PARM                    DDINFC            1
      C                   PARM                    DDINFCO           1
      C                   PARM                    DDGREC            1
@@ -841,17 +858,17 @@
      C                   PARM                    DDAUSV            1                        MD027560
      C                   PARM                    PHasIndicia       1                        MD035388
      C                   PARM                    POrigin           1                        MD035388
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIdXAr
      C                   PARM                    WMsgDtXAr
- 
+
       ** FATCA Information complete - OK
      C                   PARM                    DDINFCOK          1
      C                   PARM                    DFINFC            1
@@ -859,7 +876,7 @@
       ** Flag to say if this is an insert of a customer                                     MD027454
       ** after FATCA effective date                                                         MD027454
      C                   PARM                    PIsNew            1                        MD027454
- 
+
      C**********         CALL      'AOSVALR0'                                              MD026693A
      C**********         PARM                    @RTCD                                     MD026693A
      C**********         PARM      SVAL01        SVALK1           20                       MD026693A
@@ -884,27 +901,52 @@
      C**********         PARM                    SVAL9           200                       MD026693A
      C**********         PARM                    SVALK10          20                       MD026693A
      C**********         PARM                    SVAL10          200                       MD026693A
- 
+
       ** If the system value is not found then issue a database error
      C**********         IF        @RTCD <> '*NRF' AND                                     MD026693A
      C**********                   @RTCD <> *BLANKS                                        MD026693A
- 
+
      C******LOCK         IN        LDA                                                     MD026693A
      C**********         EVAL      DBFile = 'SDSVALPD'                                     MD026693A
      C**********         EVAL      DBase = 001                                             MD026693A
      C**********         EVAL      DBKey = SVALK1                                          MD026693A
- 
+
      C**********         OUT       LDA                                                     MD026693A
      C**********         EXSR      *PSSR                                                   MD026693A
      C**********         ENDIF                                                             MD026693A
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
+      *****************************************************************                     MD042805
+      /EJECT                                                                                MD042805
+      *****************************************************************                     MD042805
+      *                                                               *                     MD042805
+      *  CheckValidate - Check if a particular customer needs valida- *                     MD042805
+      *                  tion of TIN and Date/Town of Birth           *                     MD042805
+      *                                                               *                     MD042805
+      *****************************************************************                     MD042805
+     P  IsValidate     B                                                                    MD042805
+     D  IsValidate     PI              N                                                    MD042805
+      /free                                                                                 MD042805
+                  if  (PHasIndicia = 'Y' or DDREPT = 'Y') and
+                      (not( DDEXEM = 'Y' ) and not( DDCSTP = 'F' )
+                      or (not( DDEXEM = 'Y' ) and (DDCSTP = 'F' )
+                      and not(DDCSST='PO' or DDCSST = 'PW' or
+                      DDCSST = 'PS')));
+                      Return *On;
+                  else;
+                      Return *Off;
+                  endif;
+      /end-free                                                                             MD042805
+     P  IsValidate     E                                                                    MD042805
+      *****************************************************************                     MD042805
+      /EJECT                                                                                MD042805
+      *****************************************************************                     MD042805
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2013

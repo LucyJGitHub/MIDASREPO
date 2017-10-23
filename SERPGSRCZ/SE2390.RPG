@@ -33,8 +33,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. MD037742           Date 04Apr16               *
-      *  Prev Amend No. 260331             Date 31Mar16               *
+      *  Last Amend No. CSE110             Date 06Oct17               *
+      *  Prev Amend No. MD037742           Date 04Apr16               *
+      *                 260331             Date 31Mar16               *
       *                 215959             Date 21Mar16               *
       *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
@@ -147,6 +148,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CSE110 - Condition Output of Partly Paid Account Key on      *
+      *           Position Settlement.                                *
       *  MD037742 - Security diary events - pool factor reversal.     *
       *             Additional fix to initialize tax fields to prevent*
       *             garbage which cause decimal data error in COB.    *
@@ -925,12 +928,16 @@
      C           SAAT      CASEQ'CP'      COUPON
      C           SAAT      CASEQ'MP'      MORTPY                          E21138
      C           SAAT      CASEQ'MA'      MATURE                          E21138
+     C         71SAAT      CASEQ'PP'      PARTPY                                              CSE110
      C                     END
      C*
-     C           PSRI      IFEQ 'Y'
-     C           SAAT      CASEQ'PP'      PARTPY
+     C********** PSRI      IFEQ 'Y'                                                           CSE110
+     C********** SAAT      CASEQ'PP'      PARTPY                                              CSE110
      C***********SAAT      CASEQ'MP'      MORTPY                          E21138
      C***********SAAT      CASEQ'MA'      MATURE                          E21138
+     C           CSE110    IFEQ 'N'                                                           CSE110
+     C           PSRI      ANDEQ'Y'                                                           CSE110
+     C           SAAT      CASEQ'PP'      PARTPY                                              CSE110
      C                     END
      C                     END
      C*
@@ -1667,22 +1674,70 @@
      C           PROT      IFEQ '8'                                       E23169
      C                     MULT SACF      WPAYDU    H                     E23169
      C                     END                                            E23169
+      *                                                                                       CSE110
+      ** If account key required write A/C key in W01                                         CSE110
+      *                                                                                       CSE110
+     C           CSE110    IFEQ 'Y'                                                           CSE110
+      *                                                                                       CSE110
+     C           AKRI      IFEQ 'Y'                                                           CSE110
+     C                     MOVE 'P'       WACEVC                                              CSE110
+      *                                                                                       CSE110
+     C           NPAC      IFEQ 'N'                                                           CSE110
+     C           DSNV      ORGT 0                                                             CSE110
+     C                     MOVE ' '       WACNEG                                              CSE110
+     C                     ELSE                                                               CSE110
+     C                     MOVE 'N'       WACNEG                                              CSE110
+     C                     ENDIF                                                              CSE110
+      *                                                                                       CSE110
+     C                     MOVE 'PP'      WACAMC                                              CSE110
+     C                     Z-ADDWPAYDU    EVAM                                                CSE110
+      *                                                                                       CSE110
+     C           WACNEG    IFEQ 'N'                                                           CSE110
+     C                     Z-SUBEVAM      EVAM                                                CSE110
+     C                     ENDIF                                                              CSE110
+      *                                                                                       CSE110
+     C                     EXSR W01                                                           CSE110
+     C                     ENDIF                                                              CSE110
+      *                                                                                       CSE110
+     C                     ENDIF                                                              CSE110
      C*
      C* WRITE POSITION SETTLEMENT
      C*
+     C           PSRI      IFEQ 'Y'                                                           CSE110
+     C           WSRECI    ANDNE'R'                                                           CSE110
+     C           CSE110    ANDEQ'Y'                                                           CSE110
+     C           CSE110    OREQ 'N'                                                           CSE110
+      *                                                                                       CSE110
      C                     MOVE 'PP'      PEVT
      C                     Z-ADDDSNV      PNMP
      C                     Z-ADDWPAYDU    PAMD
+      *                                                                                       CSE110
+     C           CSE110    IFEQ 'Y'                                                           CSE110
+      *                                                                                       CSE110
+     C           PAMD      IFLE 0                                                             CSE110
+     C                     MOVE 'R'       PPRE                                                CSE110
+     C                     ELSE                                                               CSE110
+     C                     MOVE 'P'       PPRE                                                CSE110
+     C                     ENDIF                                                              CSE110
+      *                                                                                       CSE110
+     C                     ENDIF                                                              CSE110
+      *                                                                                       CSE110
      C           PAMD      IFLT 0
      C                     Z-SUBPAMD      PAMD
      C                     END
      C*
+     C           CSE110    IFEQ 'N'                                                           CSE110
+      *                                                                                       CSE110
      C           DSNV      IFLE 0
      C                     MOVE 'R'       PPRE
      C                     ELSE
      C                     MOVE 'P'       PPRE
      C                     END
+      *                                                                                       CSE110
+     C                     ENDIF                                                              CSE110
      C                     EXSR W02
+      *                                                                                       CSE110
+     C                     ENDIF                                                              CSE110
       *
      C           ENDPPY    ENDSR
       *
@@ -3639,6 +3694,34 @@ AW   C                     Z-ADDDEC,1     WHASHD
      C                     ELSE                                           CEU005
      C                     MOVE 'N'       CEU005                          CEU005
      C                     END                                            CEU005
+      *                                                                                       CSE110
+      ** Access SAR details file to check CSE110 feature if installed.                        CSE110
+      *                                                                                       CSE110
+     C                     MOVE 'N'       CSE110  1                                           CSE110
+     C                     CALL 'AOSARDR0'                                                    CSE110
+     C                     PARM *BLANKS   @RTCD                                               CSE110
+     C                     PARM '*VERIFY' @OPTN                                               CSE110
+     C                     PARM 'CSE110'  @SARD                                               CSE110
+      *                                                                                       CSE110
+     C                     SELEC                                                              CSE110
+     C           @RTCD     WHEQ *BLANK                                                        CSE110
+     C                     MOVE *ON       *IN71                                               CSE110
+     C                     MOVE 'Y'       CSE110                                              CSE110
+      *                                                                                       CSE110
+     C           @RTCD     WHEQ '*NRF'                                                        CSE110
+     C                     MOVE *OFF      *IN71                                               CSE110
+     C                     MOVE 'N'       CSE110                                              CSE110
+      *                                                                                       CSE110
+     C                     OTHER                                                              CSE110
+     C           *LOCK     IN   LDA                                                           CSE110
+     C                     MOVEL'SCSARDPD'DBFILE            *************                     CSE110
+     C                     MOVEL'013'     DBASE             *DBERROR 013*                     CSE110
+     C                     MOVEL@OPTN     DBKEY             *************                     CSE110
+     C                     SETON                     U7U8                                     CSE110
+     C                     OUT  LDA                                                           CSE110
+     C                     EXSR *PSSR                                                         CSE110
+     C                     ENDSL                                                              CSE110
+      *                                                                                       CSE110
      C/COPY WNCPYSRC,SE2390C044
      C*                                                                   CAC002
      C**  Access MIDAS Module details                                     CAC002

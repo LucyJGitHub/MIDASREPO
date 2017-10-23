@@ -27,8 +27,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 219437             Date 11May16               *
-      *  Prev Amend No. MD036337           Date 11May16               *
+      *  Last Amend No. CSE107             Date 06Oct17               *
+      *  Prev Amend No. 219437             Date 11May16               *
+      *                 MD036337           Date 11May16               *
       *                 226449             Date 24Jun15               *
       *                 MD034776           Date 08Jul15               *
       *                 AR1067108          Date 11Dec12               *
@@ -128,6 +129,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CSE107 - Include details of Unrealized PL in Base Currency   *
+      *           in Unrealized PL Analysis Report.                   *
       *  219437 - For discount based securities, price should also    *
       *           be calculated based on ECD.                         *
       *         - Applied for MD-38412.                               *
@@ -437,6 +440,7 @@
      E/COPY ZSRSRC,ZHOLE                                                  S01195
      E/COPY ZSRSRC,ZSEDITZ1
      E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZPOWERZ1                                                                   CSE107
       /EJECT
      IUPLEXDF
      I              ERNP                            URNP                  111158
@@ -577,6 +581,29 @@
      C*
       ***  Access ICD2 record
      C                     EXSR ZICD2
+      *                                                                                       CSE107
+      ** Get Base Currency decimal if feature CSE107 is switched ON.                          CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+      *                                                                                       CSE107
+     C                     MOVE *BLANK    ZZ006                                               CSE107
+     C                     MOVE '20'      RECT                                                CSE107
+     C                     MOVE 1         ZZ001                                               CSE107
+     C                     MOVE BCCY      RCCY                                                CSE107
+      *                                                                                       CSE107
+     C           TABKEY    CHAINTABTG10F             99                                       CSE107
+     C           *IN99     IFEQ '1'                                                           CSE107
+     C                     MOVE '07'      DBASE            **DB ERROR 07                      CSE107
+     C                     MOVE 'TABLE'   DBFILE                                              CSE107
+     C                     MOVELTABKEY    DBKEY                                               CSE107
+     C                     WRITEERRORAU                                                       CSE107
+     C                     SETON                     U7U8LR                                   CSE107
+     C                     RETRN                                                              CSE107
+     C                     END                                                                CSE107
+     C*                                                                                       CSE107
+     C                     Z-ADDCDP       BCDP    10                                          CSE107
+     C                     ENDIF                                                              CSE107
+     C*                                                                                       CSE107
      C           *IN99     IFEQ '1'
      C           *LOCK     IN   LDA                                       S01117
      C                     MOVE 'TABLE'   DBFILE           ***************
@@ -805,6 +832,10 @@
      CLR 20                EXSR L1PRT
      CLR 20                EXSR L2PRT
      CLR 20                EXSR L3PRT
+      *                                                                                       CSE107
+      ** Perform totals printing for Unrealised P&L.                                          CSE107
+      *                                                                                       CSE107
+     CLR 20 53             EXSR L4PRT                                                         CSE107
      C*                                                                   154670
      C** RCF Processing for Audit File                                    154670
      C*                                                                   154670
@@ -867,6 +898,21 @@
      C                     EXSR *PSSR                                     S01117
      C                     RETRN
      C                     END
+      *                                                                                       CSE107
+      ** Check if switchable feature CSE107 is switched ON.                                   CSE107
+      *                                                                                       CSE107
+     C                     CALL 'AOSARDR0'                                                    CSE107
+     C                     PARM *BLANKS   PRTCD   7                                           CSE107
+     C                     PARM '*VERIFY' POPTN   7                                           CSE107
+     C                     PARM 'CSE107'  PSARD   6                                           CSE107
+      *                                                                                       CSE107
+     C           PRTCD     IFEQ *BLANKS                                                       CSE107
+     C                     MOVE 'Y'       CSE107  1                                           CSE107
+     C                     MOVE *ON       *IN53                                               CSE107
+     C                     ELSE                                                               CSE107
+     C                     MOVE 'N'       CSE107                                              CSE107
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C/COPY WNCPYSRC,SE0915C019
       *
      C                     ENDSR
@@ -889,6 +935,13 @@
      C   L1 24             EXSR L1PRT
      C   L2 24             EXSR L2PRT
      C   L3 24             EXSR L3PRT
+      *                                                                                       CSE107
+      ** Perform totals printing for Unrealised P&L.                                          CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C   L4 24             EXSR L4PRT                                                         CSE107
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C   L4                MOVE URBK      @URBK   2                       092158
      C   L5                MOVE URBA      @URBA   3                       092158
       *                                                                   CAC005
@@ -953,9 +1006,21 @@
      C                     EXSR HEADS
      C                     ELSE
      C           *IN21     IFEQ '1'                                       154670
+      *                                                                                       CSE107
+      ** Write HEAD2X if feature CSE107 is switched ON.                                       CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEHEAD2X                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEHEAD2                  10
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ELSE                                           154670
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEHEAD6X                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEHEAD6                  10                 154670
+     C                     ENDIF                                                              CSE107
      C                     END                                            154670
      C                     ADD  3         LINCNT  20
       *                                                                   CAC005
@@ -1015,6 +1080,9 @@
      C                     EXSR ZSEDIT
      C***********          MOVE ZOUT21    NPOUT  13                       E20125
      C                     MOVE ZOUT21    NPOUT                           E20125
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE ZOUT21    PNPOUT                                              CSE107
+     C                     ENDIF                                                              CSE107
       *                                                                                       CAS002
      C********** CAS002    IFEQ 'Y'                                                    CAS002 CAS006
      C**********           Z-ADDURNP      SENAMT                                       CAS002 CAS006
@@ -1107,6 +1175,9 @@
      C                     EXSR ZSEDIT
      C***********          MOVE ZOUT21    BKOUT  13                       E20125
      C                     MOVE ZOUT21    BKOUT                           E20125
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE ZOUT21    PBKOUT                                              CSE107
+     C                     ENDIF                                                              CSE107
       *                                                                                       CAS002
      C********** CAS002    IFEQ 'Y'                                                    CAS002 CAS006
      C**********           Z-ADDBKCT      SEBKCT                                       CAS002 CAS006
@@ -1292,6 +1363,9 @@
      C                     EXSR ZSEDIT
      C***********          MOVE ZOUT21    MPOUT  17                       E20125
      C                     MOVE ZOUT21    MPOUT                           E20125
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE ZOUT21    PMPOUT                                              CSE107
+     C                     ENDIF                                                              CSE107
       *                                                                   E20125
      C**RESET*CURRENCY*DEC*PLACES**************************************   E20125
      C***********          MOVE CDP       ZDECS                           E20125
@@ -1357,6 +1431,9 @@
      C                     EXSR ZSEDIT
      C***********          MOVE ZOUT21    MKOUT  13                       E20125
      C                     MOVE ZOUT21    MKOUT                           E20125
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE ZOUT21    PMKOUT                                              CSE107
+     C                     ENDIF                                                              CSE107
       *                                                                                       CAS002
      C********** CAS002    IFEQ 'Y'                                                    CAS002 CAS006
      C**********           Z-ADDMKVL      SEMVAL                                       CAS002 CAS006
@@ -1431,6 +1508,9 @@
      C                     MOVE 'L'       ZECODE                          E23248
      C                     EXSR ZSEDIT                                    E23248
      C                     MOVE ZOUT21    APOUT                           E23248
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE ZOUT21    PAPOUT                                              CSE107
+     C                     ENDIF                                                              CSE107
       *                                                                                       CAS006
       **   Accrued Interest - (13,0) - edited into length-21 field.                           CAS006
       **   ~~~~~~~~~~~~~~~~                                                                   CAS006
@@ -1455,9 +1535,20 @@
      C** SHOW UNREALISED PROFIT/LOSS WHEN PRICE WENT DOWN TO              091803
      C** ZERO.                                                            091803
      C*                                                                   091803
-     C           MKVL      IFNE 0
-     C           MKVL      OREQ 0                                         091803
+     C********** MKVL      IFNE 0                                                             CSE107
+     C********** MKVL      OREQ 0                                                      091803 CSE107
+     C           MKVL      IFNE 0                                                             CSE107
+     C           CSE107    ANDEQ'N'                                                           CSE107
+     C           MKVL      OREQ 0                                                             CSE107
      C           *IN52     ANDEQ*ON                                       091803
+     C           CSE107    ANDEQ'N'                                                           CSE107
+      *                                                                                       CSE107
+     C           ZPRCOT    ORNE 0                                                             CSE107
+     C           CSE107    ANDEQ'Y'                                                           CSE107
+     C           ZPRCOT    OREQ 0                                                             CSE107
+     C           *IN52     ANDEQ*ON                                                           CSE107
+     C           CSE107    ANDEQ'Y'                                                           CSE107
+      *                                                                                       CSE107
      C           MKVL      SUB  BKCT      URPL   150
       *                                                                                       CAS006
       ** Take Accrued Interest into consideration if CAS006 is enabled.                       CAS006
@@ -1476,11 +1567,42 @@
      C***********          MOVE ZOUT21    PLOUT  13                       E20125
      C                     MOVE ZOUT21    PLOUT                           E20125
      C*
+      ** If feature CSE107 is ON, convert Unrealised P&L to base curr.                        CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE ZOUT21    PPLOUT                                              CSE107
+     C                     Z-ADDURPL      ZAMTCI                                              CSE107
+     C                     Z-ADDCSPOT     ZEXCH                                               CSE107
+     C                     MOVE CMDIN     ZMD                                                 CSE107
+     C                     MOVE CDP       ZCDPI                                               CSE107
+     C                     MOVE BCDP      ZCDPO                                               CSE107
+     C                     EXSR ZCONVN                                                        CSE107
+     C                     Z-ADDZAMTCO    ZFLD15                                              CSE107
+     C                     MOVE BCDP      ZDECS                                               CSE107
+     C                     MOVE 'J'       ZECODE                                              CSE107
+     C                     EXSR ZSEDIT                                                        CSE107
+     C                     MOVE ZOUT21    PLOUTB                                              CSE107
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ADD  URPL      L1TOT  150
+      *                                                                                       CSE107
+      ** Addition of P/L in Base Currency.                                                    CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     ADD  ZAMTCO    L1TOTB 150                                          CSE107
+     C                     ENDIF                                                              CSE107
      C*
      C                     ELSE
      C                     MOVE *BLANKS   PLOUT
      C                     MOVE '***'     PLOUT
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE *BLANKS   PPLOUT                                              CSE107
+     C                     MOVE '***'     PPLOUT                                              CSE107
+     C                     MOVE *BLANKS   PLOUTB                                              CSE107
+     C                     MOVE '***'     PLOUTB                                              CSE107
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     END
      C*                                                                   S01408
       *                                                                                       CAS002
@@ -1531,15 +1653,39 @@
      C********** *IN21     ANDEQ'1'                                       154670              246072
      C           *IN21     IFEQ '1'                                                           246072
      C                     MOVE SECNM     @SECNM 41                                           CSE092
+      *                                                                                       CSE107
+      ** Write DTL1X if feature CSE107 is switched ON.                                        CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEDTL1X                  10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEDETAIL1                10                                     CAS006
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ELSE                                                               246072
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEDETL2X                                                        CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEDETAI2                                                        246072
+     C                     ENDIF                                                              CSE107
      C                     ENDIF                                                              246072
      C                     ELSE                                                               CAS006
      C           *IN21     IFEQ '1'                                                           246072
+      *                                                                                       CSE107
+      ** Write DTL2X if feature CSE107 is switched ON.                                        CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEDTL2X                  10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEDETAIL2                10                                     CAS006
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ELSE                                                               246072
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEDETL2X                                                        CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEDETAI2                                                        246072
+     C                     ENDIF                                                              CSE107
      C                     ENDIF                                                              246072
      C                     ENDIF                                                              CAS006
       **********                                                                       CAS002 CAS006
@@ -1606,12 +1752,29 @@
      C           L1PRT     BEGSR                           *** L1PRT  ***
       *
      C                     ADD  L1TOT     L2TOT  150
+      *                                                                                       CSE107
+      ** Add P/L in Base Currency if feature CSE107 is ON.                                    CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     ADD  L1TOTB    L2TOTB 150                                          CSE107
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     MOVE *BLANKS   ZFLD15
      C                     MOVE L1TOT     ZFLD15
      C                     MOVE CDP       ZDECS                           E20125
      C                     MOVE 'J'       ZECODE                          E20125
      C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    L1OUT  21
+     C**********           MOVE ZOUT21    L1OUT  21                                           CSE107
+     C                     MOVE ZOUT21    L1OUT                                               CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE ZOUT21    PL1OUT                                              CSE107
+     C                     Z-ADDL1TOTB    ZFLD15                                              CSE107
+     C                     MOVE BCDP      ZDECS                                               CSE107
+     C                     MOVE 'J'       ZECODE                                              CSE107
+     C                     EXSR ZSEDIT                                                        CSE107
+     C                     MOVE ZOUT21    L1OUTB                                              CSE107
+     C                     ENDIF                                                              CSE107
      C*
      C*                                                                   S01408
      C/COPY WNCPYSRC,SE0915CCP2                                           S01408
@@ -1622,12 +1785,28 @@
      C                     END
      C*
      C           *IN21     IFEQ '1'                                       154670
+      *                                                                                       CSE107
+      ** Write L1LINX if feature CSE107 is switched ON.                                       CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEL1LINX                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEL1LIN                  10
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ELSE                                           154670
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEL1LN2X                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEL1LIN2                 10                 154670
+     C                     ENDIF                                                              CSE107
      C                     END                                            154670
      C                     ADD  2         LINCNT
      C                     Z-ADD0         L1TOT
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     Z-ADD0         L1TOTB 150                                          CSE107
+     C                     ENDIF                                                              CSE107
       *
      C* SET IND FOR NEW HEADINGS
      C                     SETOF                     29
@@ -1646,12 +1825,29 @@
      C           L2PRT     BEGSR                           *** L2PRT  ***
       *
      C                     ADD  L2TOT     L3TOT  150
+      *                                                                                       CSE107
+      ** Add P/L in Base Currency if feature CSE107 is ON.                                    CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     ADD  L2TOTB    L3TOTB 150                                          CSE107
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     MOVE *BLANKS   ZFLD15
      C                     MOVE L2TOT     ZFLD15
      C                     MOVE CDP       ZDECS                           E20125
      C                     MOVE 'J'       ZECODE                          E20125
      C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    L2OUT  21
+     C**********           MOVE ZOUT21    L2OUT  21                                           CSE107
+     C                     MOVE ZOUT21    L2OUT                                               CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE ZOUT21    PL2OUT                                              CSE107
+     C                     Z-ADDL2TOTB    ZFLD15                                              CSE107
+     C                     MOVE BCDP      ZDECS                                               CSE107
+     C                     MOVE 'J'       ZECODE                                              CSE107
+     C                     EXSR ZSEDIT                                                        CSE107
+     C                     MOVE ZOUT21    L2OUTB                                              CSE107
+     C                     ENDIF                                                              CSE107
      C*
      C           LINCNT    IFGE 55
      C                     EXSR HEADS
@@ -1659,13 +1855,29 @@
      C*
      C/COPY WNCPYSRC,SE0915C010
      C           *IN21     IFEQ '1'                                       154670
+      *                                                                                       CSE107
+      ** Write L2LINX if feature CSE107 is switched ON.                                       CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEL2LINX                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEL2LIN                  10
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ELSE                                           154670
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEL2LN2X                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEL2LIN2                 10                 154670
+     C                     ENDIF                                                              CSE107
      C                     END                                            154670
      C/COPY WNCPYSRC,SE0915C011
      C                     ADD  2         LINCNT
      C                     Z-ADD0         L2TOT
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     Z-ADD0         L2TOTB                                              CSE107
+     C                     ENDIF                                                              CSE107
       *
      C* SET IND FOR NEW HEADINGS
      C                     SETOF                     29
@@ -1682,12 +1894,28 @@
       *
      C           L3PRT     BEGSR                           *** L3PRT  ***
       *
+      ** Print totals for Unrealised P&L if feature CSE107 is ON.                             CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     ADD  L3TOTB    L4TOTB 150                                          CSE107
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     MOVE *BLANKS   ZFLD15
      C                     MOVE L3TOT     ZFLD15
      C                     MOVE CDP       ZDECS                           E20125
      C                     MOVE 'J'       ZECODE                          E20125
      C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    L3OUT  21
+     C**********           MOVE ZOUT21    L3OUT  21                                           CSE107
+     C                     MOVE ZOUT21    L3OUT                                               CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     MOVE ZOUT21    PL3OUT                                              CSE107
+     C                     Z-ADDL3TOTB    ZFLD15                                              CSE107
+     C                     MOVE BCDP      ZDECS                                               CSE107
+     C                     MOVE 'J'       ZECODE                                              CSE107
+     C                     EXSR ZSEDIT                                                        CSE107
+     C                     MOVE ZOUT21    L3OUTB                                              CSE107
+     C                     ENDIF                                                              CSE107
      C*
      C           LINCNT    IFGE 55
      C  NL4                MOVE URBK1     URBK                            067906
@@ -1696,16 +1924,61 @@
      C*
      C/COPY WNCPYSRC,SE0915C012
      C           *IN21     IFEQ '1'                                       154670
+      *                                                                                       CSE107
+      ** Write L3LINX if feature CSE107 is switched ON.                                       CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEL3LINX                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEL3LIN                  10
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ELSE                                           154670
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEL3LN2X                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEL3LIN2                 10                 154670
+     C                     ENDIF                                                              CSE107
      C                     END                                            154670
      C/COPY WNCPYSRC,SE0915C013
      C                     ADD  2         LINCNT
      C                     Z-ADD0         L3TOT
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     Z-ADD0         L3TOTB                                              CSE107
+     C                     ENDIF                                                              CSE107
       *
      C                     ENDSR
       *
+      *****************************************************************                       CSE107
+      /EJECT                                                                                  CSE107
+      *****************************************************************                       CSE107
+      *                                                               *                       CSE107
+      *  L4PRT  - Subroutine to Print L4 Totals.                      *                       CSE107
+      *                                                               *                       CSE107
+      *****************************************************************                       CSE107
+     C           L4PRT     BEGSR                                                              CSE107
+      *                                                                                       CSE107
+     C                     MOVE *BLANKS   ZFLD15                                              CSE107
+     C                     Z-ADDL4TOTB    ZFLD15                                              CSE107
+     C                     MOVE BCDP      ZDECS                                               CSE107
+     C                     MOVE 'J'       ZECODE                                              CSE107
+     C                     EXSR ZSEDIT                                                        CSE107
+     C                     MOVE ZOUT21    L4OUTB                                              CSE107
+      *                                                                                       CSE107
+     C           LINCNT    IFGE 55                                                            CSE107
+     C                     EXSR HEADS                                                         CSE107
+     C                     END                                                                CSE107
+      *                                                                                       CSE107
+     C           *IN21     IFEQ '1'                                                           CSE107
+     C                     WRITEL4LINX                 10                                     CSE107
+     C                     ELSE                                                               CSE107
+     C                     WRITEL4LN2X                 10                                     CSE107
+     C                     ENDIF                                                              CSE107
+     C                     ADD  2         LINCNT                                              CSE107
+     C                     Z-ADD0         L4TOTB                                              CSE107
+      *                                                                                       CSE107
+     C                     ENDSR                                                              CSE107
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1735,6 +2008,15 @@
      C                     RETRN
      C                     END
      C*
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     Z-ADDSPOT      CSPOT  138                                          CSE107
+     C           MDIN      IFEQ 0                                                             CSE107
+     C                     MOVEL'D'       CMDIN   1                                           CSE107
+     C                     ELSE                                                               CSE107
+     C                     MOVEL'M'       CMDIN                                               CSE107
+     C                     ENDIF                                                              CSE107
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ENDSR
       *
       *****************************************************************
@@ -1883,20 +2165,49 @@
       *
      C           *IN21     IFEQ '1'                                       154670
      C                     WRITEHEAD1                  10
+      *                                                                                       CSE107
+      ** Write HEAD2X if feature CSE107 is switched ON.                                       CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEHEAD2X                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEHEAD2                  10
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C/COPY WNCPYSRC,SE0915C014
       *                                                                                       CAS006
      C           CAS006    IFNE 'Y'                                                           CAS006
+      *                                                                                       CSE107
+      ** Write HEAD3X if feature CSE107 is switched ON.                                       CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEHEAD3X                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEHEAD3                  10
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ELSE                                                               CAS006
+      *                                                                                       CSE107
+      ** Write HEAD4X if feature CSE107 is switched ON.                                       CSE107
+      *                                                                                       CSE107
+     C           CSE107    IFEQ 'Y'                                                           CSE107
+     C                     WRITEHEAD4X                 10                                     CSE107
+     C                     ELSE                                                               CSE107
      C                     WRITEHEAD4                  10                                     CAS006
+     C                     ENDIF                                                              CSE107
+      *                                                                                       CSE107
      C                     ENDIF                                                              CAS006
       *                                                                                       CAS006
      C/COPY WNCPYSRC,SE0915C015
      C                     ELSE                                           154670
      C                     WRITEHEAD5                  10                 154670
+     C           CSE107    IFEQ 'Y'                                                          CCSE107
+     C                     WRITEHEAD6X                 10                                    CCSE107
+     C                     WRITEHEAD7X                 10                                    CCSE107
+     C                     ELSE                                                              CCSE107
      C                     WRITEHEAD6                  10                 154670
      C                     WRITEHEAD7                  10                 154670
+     C                     ENDIF                                                             CCSE107
      C                     END                                            154670
      C                     Z-ADD16        LINCNT
      C                     SETON                     29
@@ -2075,6 +2386,7 @@
      C/COPY ZSRSRC,ZCALCD                                                 E39495
      C/EJECT                                                              E39495
      C/COPY ZSRSRC,ZCNSDZ1                                                E39495
+     C/COPY ZSRSRC,ZCONVNZ1                                                                   CSE107
       ***
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2001
@@ -2097,3 +2409,11 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 00100000
 01000000
 10000000
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION                                           CSE107
+0000001                                                                                       CSE107
+0000010                                                                                       CSE107
+0000100                                                                                       CSE107
+0001000                                                                                       CSE107
+0010000                                                                                       CSE107
+0100000                                                                                       CSE107
+1000000                                                                                       CSE107

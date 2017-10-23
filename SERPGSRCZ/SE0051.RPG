@@ -1,0 +1,710 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Generate Dividend Book Position A/C keys')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0051 - Generate Dividend Book Positions A/C Keys           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *                                                               *
+      *  Last Amend No. CSE111 *CREATE     Date 06Oct17               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  DUG407 - Suppress Account keys on Back-value of dividends    *
+      *                                                               *
+      *****************************************************************
+      *
+     FSEPCBD  IF  E           K        DISK
+     FBPACCL2 UF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FBKPHD   UF  E           K        DISK
+     FBKPOS   IF  E           K        DISK
+     FBKPHR   IF  E           K        DISK
+     F            BKPHDDF                           KRENAMEBKPHRDF
+     FBKPOR   IF  E           K        DISK
+     F            BKPOSDF                           KRENAMEBKPORDF
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABTB10F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FSEKEYD  O   E           K        DISK
+     FSEKEYA  UF  E                    DISK                      A
+     FSE0051AUO   E                    PRINTER
+      *****************************************************************
+      *
+      *    I N D E X   T O   S U B R O U T I N E S
+      *
+      *
+      *    FIRST   -  ACCESSES INFO FROM ICD,ICD2 AND ICDSE
+      *    DIVIDN  -  CALCULATE DIVIDEND
+      *    P35     -  OUTPUT DIVIDEND A/C KEYS
+      *    W01     -  OUTPUTS ACCOUNT KEYS TO SEKEYD
+      *    U01     -  UPDATES ACTION RECORD
+      *    AUDIT   -  PRODUCES CONTROL REPORT AND UPDATES AUDIT RECORDS
+      *    BKPCHN  -  CHAINS TO BOOK POSITION
+      *    SECCHN  -  CHAINS TO SECURITIES FILE
+      *    INVCHN  -  CHAINS TO INVESTMENTS FILE
+      *    TABCHN  -  CHAINS TO TABTG10 FILE
+      *
+      *  ZCNSD  - CALCULATES AMOUNT FROM NOMINAL AND PRICE
+      *  ZEVCD  - CALCULATES EVENT CONTROL DATE
+      *  ZICD2  - OBTAINS ICD2 INFO
+      *  ZICDSE - OBTAINS ICDSE INFO
+      *  ZSYSTM - OBTAINS ICD INFO
+      *
+      *****************************************************************
+     E/COPY ZSRSRC,ZHASHZ1
+     E/COPY ZSRSRC,ZPOWER8Z1                             POWER8 ARRAY
+     IBPACCDF     01
+     IBPACBDF     02
+     I              BBSS                            BCSS
+     I              BBBA                            BCBA
+     I              BBMK                            BCMK
+     I              BBBK                            BCBO
+     I              BBAD                            BCAD
+     I              BBED                            BCED
+     I              BBAS                            BCAS
+     I              BBTP                            BCTP
+     I              BBIT                            BCIT
+     I              BBUN                            BCUN
+     I              BBCA                            BCCP
+     I              BBTA                            BCTA
+     I              BBCF                            BCCF
+     I              BBPC                            BCPC
+     I              BBNC                            BCNC
+     I              BBNR                            BCNR
+     I              BBOD                            BCOT
+     I              BBTV                            BCTV
+     I              BBTR                            BCTR
+     I              BBTS                            BCTS
+     I              BBPS                            BCPS
+     I              BBNM                            BCNL
+     I              BBCN                            BCCN
+     I              BBRA                            BCRA
+     I              BBCC                            BCCC
+     I              BBCT                            BCCT
+     I              BBPT                            BCTD
+     I              BBRI                            BCRV
+     I              BBPR                            BCPR
+     I              BBP1                            BCP1
+     I              BBP2                            BCP2
+     I              BBPL                            BCPL
+     I              BBAP                            BCAT
+     I              BBDV                            BCDV
+     IBPACHDF     03
+     I/COPY ZSRSRC,ZHASHZ2
+      *
+      ** External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** DATA STRUCTURE FOR ACCOUNT KEY
+      *
+     I            DS
+     I                                        1  20 ACKY
+     I                                        1   3 IVTP
+     I                                        4   4 EVTP
+     I                                        5   5 TRTP
+     I                                        6   6 PORT
+     I                                        7   8 BOOK
+     I                                        9   9 PSBS
+     I                                       10  10 FILL
+     I                                        9  10 TRST
+     I                                       11  12 CHGT
+     I                                       13  13 MARK
+     I                                       14  14 CNVI
+     I                                       15  15 NEGI
+     I                                       16  18 FIL3
+     I                                       19  20 AMCD
+     I            DS
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I            DS
+     I                                        1  22 BCOLD
+     I            DS
+     I                                        1  22 BCNEW
+     I                                        1  10 BCSS
+     I                                       11  13 BCBA
+     I                                       14  15 BCBO
+     I                                       16  16 BCMK
+     I                                       17  17 BCTV
+     I                                       18  220BCAD
+      *
+     IKSEPCR      DS
+      ** Data structure to enable reporting of Book Position Profit
+      ** Centre database errors
+      *
+     I                                        1   2 KBOKC
+     I                                        3   5 KBRCA
+     I                                        6  15 KSESN
+     I                                       16  16 KMKTI
+      *
+     ISCSARD    E DSSCSARDPD
+      ** Switchable features file
+      *
+     IDSFDY     E DSDSFDY
+      ** First data structure for access programs, short data structure
+      *
+     ISDMMOD    E DSSDMMODPD
+      **  DS For Access To Modules File
+      *
+     ISDSTRD    E DSSDSTRDPD
+      **  Securities Trading Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS For Access Prograns, Long Data Structure
+      *
+      ** FIRST CYCLE
+      *
+     C                     EXSR FIRST
+     C                     Z-ADD0         ICREC   50
+     C                     Z-ADD0         IBREC   50
+     C                     Z-ADD0         IHREC   50
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Read And Process All Book Position Action Records Until EOF
+      *
+     C                     READ BPACCL2                  70*
+     C           *IN70     DOWEQ'0'
+      *
+      ** Access Book Position
+      *
+     C                     EXSR BKPCHN
+      *
+      ** Access Securities File, Investment Type, And Nominal Currency
+      *
+     C                     EXSR SECCHN
+      *
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+     C                     EXSR INVCHN
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+     C                     EXSR TABCHN
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+     C                     Z-ADDCDP       ZCDP
+      *
+      ** Calculate Dividend Due
+      *
+     C                     EXSR DIVIDN
+      *
+      ** On Forward run, Update record ID & Date on Book Position Actions
+      *
+     C           *INU1     IFEQ '0'
+     C                     Z-ADDBJRDNB    BCED
+     C                     MOVE 'H'       RECI
+     C                     Z-ADDZCONS     BCDV
+     C   01                EXCPTUBPACC
+     C   02                EXCPTUBPACB
+     C   03                EXCPTUBPACH
+     C                     END
+      *
+      ** In reversal run, Process all records on BPACHD and records
+      ** on BPACCD/BPACBD with reversal indicator equal to 'Y'.
+      ** in forward run, process all records on BPACHD and records
+      ** on BPACCD/BPACBD with reversal IND.= BLANK.
+      *
+     C           *IN03     IFEQ '1'
+     C           BCRV      OREQ 'Y'
+     C           *INU1     ANDEQ'1'
+     C           BCRV      ORNE 'Y'
+     C           *INU1     ANDEQ'0'
+      *
+      ** Records read
+      *
+     C   01                ADD  1         ICREC
+     C   02                ADD  1         IBREC
+     C   03                ADD  1         IHREC
+      *
+      ** Process on change of action
+      *
+     C           BCNEW     IFNE BCOLD
+     C                     MOVELBCNEW     BCOLD
+      *
+      ** Generate A/C keys for Dividend Due
+      *
+     C                     EXSR P35
+     C                     END
+     C                     END
+      *
+      ** Read and process all Book Position action records until EOF
+      *
+     C                     SETOF                     010203
+     C                     READ BPACCL2                  70
+     C                     END
+     C           ENDLP     TAG
+      *
+      ** Audit Processing
+      *
+     C                     EXSR AUDIT
+     C                     SETON                     LR
+      *****************************************************************
+      *
+      *  BKPCHN-  SUBROUTINE TO ACCESS BOOK POSITION
+      *
+      *****************************************************************
+      *
+     C           BKPCHN    BEGSR                           **BKPCHN**
+      *
+      ** Keylists For Access Of BKPHD and BKPOS
+      *
+     C           BKPHDK    KLIST
+     C                     KFLD           BCSS
+     C                     KFLD           BCBA
+     C                     KFLD           BCBO
+     C                     KFLD           BCMK
+     C                     KFLD           BCTV
+      *
+     C           BKPOSK    KLIST
+     C                     KFLD           BCSS
+     C                     KFLD           BCBA
+     C                     KFLD           BCBO
+     C                     KFLD           BCMK
+     C                     KFLD           BCTV
+     C                     KFLD           BCAD
+      *
+     C           BKPOSP    KLIST
+     C                     KFLD           BCSS
+     C                     KFLD           BCBA
+     C                     KFLD           BCBO
+     C                     KFLD           BCMK
+     C                     KFLD           BCTV
+      *
+      ** If not reversal mode
+      ** Update latest position change date on BKPHDD
+      *
+     C           *INU1     IFEQ '0'
+     C           BKPHDK    CHAINBKPHDDF              99
+     C           *IN99     IFEQ '0'
+     C           BCAD      IFGT LPCD
+     C                     Z-ADDBCAD      LPCD
+     C                     END
+     C                     EXCPTUBKPHD
+     C                     END
+     C                     END
+      *
+      ** Get Position On Dividend Payment Date
+      *
+     C                     Z-ADD0         NPSN
+     C                     Z-ADD0         ECNP
+      *
+     C           BKPHDK    CHAINBKPHRDF              99
+     C           *INU1     IFEQ '1'
+     C           *IN99     ANDEQ'0'
+      *
+      ** If Reversal Mode And Position was rebuilt by SE2220 (REC.ON BKPHRD)
+      ** Use BKPOR for previous Position
+      *
+     C           BKPOSK    SETGTBKPORDF
+     C           BKPOSP    REDPEBKPORDF                  99*
+      *
+      ** Otherwise use BKPOS
+      *
+     C                     ELSE
+     C           BKPOSK    SETGTBKPOSDF
+     C           BKPOSP    REDPEBKPOSDF                  99
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      *  DIVIDN - Subroutine to Calculate Dividend
+      *
+      *****************************************************************
+      *
+     C           DIVIDN    BEGSR                           **DIVIDN**
+      *
+      ** Calculate Dividend Due
+      *
+     C           NPSN      SUB  ECNP      ZNOML
+     C                     Z-ADDBCUN      ZPRC
+     C                     EXSR ZCNSD
+     C                     ENDSR
+      *****************************************************************
+      *
+      *  P35   -  Output Dividend A/C Keys
+      *
+      *****************************************************************
+      *
+     C           P35       BEGSR                           **  P35 **
+      *
+      ** Output key for Dividend Due
+      *
+     C                     MOVE 'H'       EVTP
+     C                     MOVE ' '       TRTP
+     C                     MOVE ' '       PORT
+     C                     MOVE '  '      TRST
+     C                     MOVE BCBO      BOOK
+     C                     MOVE BCMK      MARK
+      *
+      ** NEGI should be 'N' for Dividend on short position if SNAC = 'Y'
+      *
+     C           ZNOML     IFGE 0
+     C           SNAC      OREQ 'N'
+     C                     MOVE ' '       NEGI
+     C                     ELSE
+     C                     MOVE 'N'       NEGI
+     C                     END
+      *
+     C                     MOVE 'DI'      AMCD
+     C                     MOVELISSR      CSTN
+     C                     MOVE *ZEROS    TRFR
+      *
+     C                     Z-ADDZCONS     EVAM
+      *
+      ** Reverse sign on Output File if Split Negative Accrual = 'Y'
+      ** and Cum-Coupon Value is Less Than zero.
+      *
+     C           SNAC      IFEQ 'Y'
+     C           ZNOML     ANDLT0
+     C                     Z-SUBEVAM      EVAM
+     C                     END
+      *
+      ** Access Midas Module Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD23        DBASE            ************
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERR 23 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     SETON                     U7U899
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Access Securities Trading Details
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD24        DBASE            ************
+     C                     MOVEL'SDSTRDPD'DBFILE           * DBERR 24 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     SETON                     U7U899
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Profit Centres are not applicable to Depot Positions
+      ** Therefore ensure that any DEPOT Position Account Keys have
+      ** a blank Profit Centre
+      *
+     C                     MOVE *BLANKS   PRFC
+      *
+      ** If Analytical Accounting is installed, set the Profit Centre
+      **  SE ICD Default Profit Centre.
+      *
+     C           BGN0ST    IFEQ 'Y'
+      *
+     C           KSEPCB    KLIST
+     C                     KFLD           KBOKC
+     C                     KFLD           KBRCA
+     C                     KFLD           KSESN
+     C                     KFLD           KMKTI
+      *
+     C                     MOVELBCBO      KBOKC
+     C                     MOVELBCBA      KBRCA
+     C                     MOVELBCSS      KSESN
+     C                     MOVELBCMK      KMKTI
+      *
+     C                     EXSR PPCCHN
+      *
+     C           PCBK      IFEQ *BLANKS
+     C                     MOVE BVSEPC    PRFC
+     C                     ELSE
+     C                     MOVE PCBK      PRFC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           EVAM      IFNE 0
+     C                     EXSR W01
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  PPCCHN - SR to chain to Book positions profit centre file    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PPCCHN    BEGSR                           *** PPCCHN ***
+      *
+     C           KSEPCB    CHAINSEPCBDF              80
+     C           *IN80     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVEL'SEPCBD'  DBFILE           ***************
+     C                     MOVELKSEPCR    DBKEY            * DB ERROR 22 *
+     C                     Z-ADD22        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *  W01    - SUBROUTINE TO OUTPUT ACCOUNT KEYS
+      *
+      *****************************************************************
+      *
+     C           W01       BEGSR                           **  W01 **
+      *
+      ** Set Up All Fields Not Passed From calling routine
+      *
+     C                     MOVE 'D'       RECI
+     C           CIAK      IFEQ 'Y'
+     C           SCVI      ANDEQ'Y'
+     C                     MOVE SCVI      CNVI
+     C                     ELSE
+     C                     MOVE *BLANK    CNVI
+     C                     END
+      *
+     C                     MOVE BCBA      BRHA
+     C                     MOVE SITP      IVTP
+     C                     MOVE '00'      ASQN
+      *
+     C                     Z-ADDBCAD      EVDT
+      *
+     C                     MOVE NMCY      EVCY
+     C                     MOVE BCSS      SESH
+      *
+     C                     MOVE *BLANKS   STLA
+     C                     MOVE NMCY      KCCY
+     C                     MOVE *ZEROS    STLT
+     C   U1                MOVE '1'       RVRS
+     C  NU1                MOVE '0'       RVRS
+     C                     MOVE *ZEROS    KCUST
+     C                     Z-ADD0         KNCA
+     C                     Z-ADD0         KBCA
+      *
+     C                     WRITESEKEYDF
+      *
+      ** Accumulate Total Of Account Keys Output
+      *
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S
+     C                     Z-ADDEVAM      ZZAMT
+     C                     EXSR ZHASH
+     C                     ADD  1         OREC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *  SECCHN  -  Subroutine to chain to Securities File
+      *
+      *****************************************************************
+      *
+     C           SECCHN    BEGSR                           **  SECCHN **
+      *
+     C           BCSS      CHAINSECTYDF              80
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'SECTY'   DBFILE           *****************
+     C                     MOVELBCSS      DBKEY            ** DB ERROR 04 **
+     C                     Z-ADD04        DBASE            *****************
+     C                     SETON                     U7U8
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * TABCHN    -  Subroutine to chain to TABTG10
+      *
+      *****************************************************************
+      *
+     C           TABCHN    BEGSR                           **  TABCHN **
+      *
+      ** - TABLE
+      *
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+      *
+     C                     MOVE *BLANK    TKEY
+     C                     MOVEL'20'      TKEY
+     C                     MOVELNMCY      KEY4    4
+     C                     MOVE '1'       KEY4
+     C                     MOVE KEY4      TKEY
+     C           TABKEY    CHAINTABTG10F             80
+     C  N80      RECI      COMP 'D'                  8080
+     C           *IN80     IFEQ '1'
+     C                     SETON                     U7U8  *****************
+     C                     MOVE 'TABLE'   DBFILE           ** DB ERROR 05 **
+     C                     MOVELTKEY      DBKEY            *****************
+     C                     Z-ADD05        DBASE
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+      *  INVCHN  -  Subroutine to chain to INVESTMENTS File
+      *
+      *****************************************************************
+      *
+     C           INVCHN    BEGSR                           **  INVCHN **
+      *
+     C           INVKEY    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+     C           INVKEY    CHAININVTPDF              80
+     C  N80      RECI      COMP 'D'                  8080
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'INVTP'   DBFILE           *****************
+     C                     MOVELBCSS      DBKEY            ** DB ERROR 06 **
+     C                     Z-ADD06        DBASE            *****************
+     C                     SETON                     U7U8
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+      *  AUDIT  -  Subroutine to Update Audit Records And Output
+      *             Control Report
+      *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+      *
+      ** - Output Control Report
+      *
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ '0'
+      *
+     C           ICREC     IFEQ 0
+     C           IBREC     ANDEQ0
+     C           IHREC     ANDEQ0
+     C                     WRITENONE
+     C                     ELSE
+      *
+     C           OREC      IFNE 0
+     C                     Z-ADDINT,S     OHASH1
+     C                     Z-ADDDEC,S     OHASH2
+     C                     ELSE
+     C                     Z-ADD0         OHASH1
+     C                     Z-ADD0         OHASH2
+     C                     END
+      *
+     C                     WRITECONTROL
+     C                     WRITEHEADAU
+     C                     WRITECONTROL1
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     WRITEERROR
+      *
+     C                     END
+      *
+     C                     WRITETRAILAU
+      *
+      ** If No Database Errors Update Audit Record on SEKEYA
+      *
+     C           *INU7     IFEQ '0'
+     C                     Z-ADD0         NORE
+     C                     Z-ADD0         HRWN
+     C                     Z-ADD0         HRDC
+     C           1         CHAINSEKEYAF              99    *
+     C                     ADD  OREC      NORE
+     C                     ADD  OHASH1    HRWN
+     C                     ADD  OHASH2    HRDC
+     C   99                WRITESEKEYAF
+     C  N99                UPDATSEKEYAF
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+      * FIRST - Subroutine to access ICD information and to Calculate
+      *         ACCRUAL CONTROL DATE
+      *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+      *
+      ** Access ICD2
+      *
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *IN99
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTKEY      DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     ELSE
+      *
+      ** Access ZICDSE
+      *
+     C                     EXSR ZICDSE
+     C           *INU8     IFEQ '1'
+     C                     SETON                     99U7
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            **DB ERROR 03
+     C                     Z-ADD03        DBASE            ***************
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZICD2Z1
+     C/COPY ZSRSRC,ZICDSEZ1
+     C/COPY ZSRSRC,ZCNSDZ1
+     C/COPY ZSRSRC,ZHASHZ3
+     OBPACCDF E                UBPACC
+     O                         RECI
+     O                         BCED
+     O                         BCDV
+     OBPACBDF E                UBPACB
+     O                         RECI
+     O                         BCED
+     O                         BCDV
+     OBPACHDF E                UBPACH
+     O                         RECI
+     O                         BCED
+     O                         BCDV
+     OBKPHDDF E                UBKPHD
+     O                         LPCD
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

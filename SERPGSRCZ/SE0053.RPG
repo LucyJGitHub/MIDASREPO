@@ -1,0 +1,1606 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Profit Adjustment Reconciliation Report')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0053 - Profit Adjustment Reconciliation Report             *
+      *                                                               *
+      *  Function: Produce report for book positions in which a       *
+      *   (COB)    backvaluation has occurred; the report shows       *
+      *            all trade movements on these positions and figures *
+      *            before and after the day's update for Unrealised   *
+      *            P/L, Coupon or Dividend, Purchased Interest and    *
+      *            Part Payments.                                     *
+      *                                                               *
+      *  Called by: SEC0605 -  Profit Adjustment Reconciliation Report*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *                                                               *
+      *  Last Amend No. CSE111 *CREATE     Date 06Oct17               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSE111 - Suppress Accout Keys on back-value of dividends     *
+      *                                                               *
+      *****************************************************************
+      *
+     FPRFAJ   IF  E           K        DISK
+     FBPACCL1 UF  E           K        DISK         KINFDS BPADS
+     F                                              KINFSR BPASR
+     FBKPHD   IF  E           K        DISK
+     FBKPOS   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FPRFAJA  IF  E                    DISK
+     FBPACHA  UF  E                    DISK         KINFDS BPCDS
+     F                                              KINFSR BPCSR
+     FBPACCA  IF  E                    DISK
+     FBPACBA  IF  E                    DISK
+     FBPACCAPDIF  E                    DISK
+     FBPACBVPDIF  E                    DISK
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+     FINVTP   IF  E           K        DISK
+     FSE0053AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FSE0053P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FTABSE   IF  E           K        DISK
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - BPACCD READ                                           *
+      *   02  - BPACBD READ                                           *
+      *   03  - BPACHD READ                                           *
+      *   04  - CAC005 is Installed                                   *
+      *                                                               *
+      *   10  - B/F LINE TO BE PRINTED                                *
+      *   11  - DETAIL LINE/S TO BE PRINTED                           *
+      *   12  - SUMMARY LINES TO BE PRINTED                           *
+      *   20  - FIRST TIME THROUGH INDICATOR FOR PRINT FILE           *
+      *   30  - MULTIBRANCHING                                        *
+      *   48  - Adjustment Unrealised P/L                             *
+      *   50  - FILE AND CALCULATED TOTALS DISAGREE - PRFAJA          *
+      *   51  - FILE AND CALCULATED TOTALS DISAGREE - BPACHA          *
+      *   60  - Chain fail on INVTP                                   *
+      *   80  - ERROR ON CHAIN                                        *
+      *   89  - EOF ON PRFAJ                                          *
+      *                                                               *
+      * 90-99 - USED IN Z-SUBROUTINES                                 *
+      *                                                               *
+      * U7-U8 - DATABASE ERROR                                        *
+      *   U8  - CONTROL TOTALS OUT OF BALANCE                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  FIRST  - ACCESSES INFO FROM ICD1                             *
+      *  PR01   - PRODUCE PROFIT ADJUSTMENT RECONCILIATION REPORT     *
+      *  AUDIT  - PRODUCE CONTROL REPORT AND UPDATES AUDIT RECORDS    *
+      *  BKHCHN - CHAINS TO BOOK POSITION HEADER                      *
+      *  BKPCHN - CHAINS TO BOOK POSITION                             *
+      *  SECCHN - CHAINS TO SECURITIES FILE                           *
+      *  TBGCHN - CHAINS TO TABTG10 FILE (CURRENCIES)                 *
+      *  TBRCHN - CHAINS TO TABLETR FILE (BRANCHES)                   *
+      *  *PSSR  - ERROR HANDLING                                      *
+      *                                                               *
+      *  ZDATE1 - CONVERTS DATES TO DAYS                              *
+      *  ZDATE2 - CONVERTS DAYS TO DATES                              *
+      *  ZDAYS  - CALCULATES NO OF DAYS BETWEEN TWO DATES             *
+      *  ZDYYR  - CALCULATES NO OF DAYS IN INTEREST YEAR              *
+      *  ZPRCI  - CONVERTS PRICE TO %PRICE                            *
+      *  ZSDESC - FORMATS SECURITY DESCRIPTIONS                       *
+      *  ZSEDIT - EDITS NUMERIC FIELDS FOR PRINTING                   *
+      *  ZSYSTM - OBTAINS ICD INFO                                    *
+      *  ZYLDI  - OUTPUTS YIELD AS PERCENTAGE                         *
+      *  ZACCR  - Calculate ACCRUED INTEREST between two dates        *
+      *  ZACCZ  - Calculate ACCRUED INTEREST between two dates        *
+      *  ZCALCD - Calculate LONG TERM CD PRICE from input yield       *
+      *  ZCNSD  - Calculate CONSIDERATION                             *
+      *  ZRATE  - Calculate EFFECTIVE INTEREST RATE                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZACCRZ0
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZSDESCZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZNCDZ1
+      /EJECT
+      *
+      ** Record Identifiers
+      *
+     IBPACCDF     01
+      *
+      ** Rename Fields Used on BPACBD to look like BPACCD and BPACHD
+     IBPACBDF     02
+     I              BBAD                            BCAD
+     I              BBAS                            BCAS
+     I              BBTR                            BCTR
+     I              BBPS                            BCPS
+     I              BBNM                            BCNL
+     I              BBRI                            BCRV
+     I              BBPR                            BCPR
+     I              BBP1                            BCP1
+     I              BBP2                            BCP2
+     I              BBPL                            BCPL
+     I              BBAP                            BCAT
+     I              BBDV                            BCDV
+      *
+     IBPACHDF     03
+      *
+     IINVTPDF
+     I              SFLG                            ISFLG
+      *
+     I/COPY ZSRSRC,ZSDESCZ2
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZNCDZ2
+     I/COPY ZSRSRC,ZYLDZ1
+      *
+      ** Data Structures to redefine file keys
+      *
+     I            DS
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+      *
+      ** Data Structures for error file keys
+      *
+     I            DS
+     I                                        1  17 BHKEY
+     I                                        1  10 PESS
+     I                                       11  13 PEBH
+     I                                       14  15 PEBK
+     I                                       16  16 PEMK
+     I                                       17  17 PETV
+      *
+     I            DS
+     I                                        1  20 BPKEY
+     I                                        1  10 BHSC
+     I                                       11  13 BHBA
+     I                                       14  15 BHBK
+     I                                       16  16 BHMK
+     I                                       17  17 BHTV
+     I                                    P  18  200LPSD
+      *
+      ** Data Structures for error handling
+      *
+     IBPADS       DS
+     I                                     *STATUS  STSBPA
+      *
+     IBPCDS       DS
+     I                                     *STATUS  STSBPC
+      *
+      **   Local Data Area for DAtabase Error Information.
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Data Structure for compilation  - copyright insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ISPOOL       DS
+      *
+      ** DS for Spool File Name
+      *
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IRUNDT       DS
+      *
+      ** RUNDAT data area
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+      ** Midas SD Branch Codes
+      *
+     IDSSDY     E DSDSSDY
+      ** Second Data structure for access programs
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      **  KEYLISTS FOR FILE CHAINS
+      *
+      ** - BOOK POSITION HEADER
+      *
+     C           BKHKEY    KLIST
+     C                     KFLD           PESS
+     C                     KFLD           PEBH
+     C                     KFLD           PEBK
+     C                     KFLD           PEMK
+     C                     KFLD           PETV
+      *
+      ** - Book Position
+      *
+     C           BKPKEY    KLIST
+     C                     KFLD           PESS
+     C                     KFLD           PEBH
+     C                     KFLD           PEBK
+     C                     KFLD           PEMK
+     C                     KFLD           PETV
+     C                     KFLD           LPSD
+      *
+      ** - SECURITY
+      *
+     C           SECKEY    KLIST
+     C                     KFLD           PESS
+      *
+      ** - Book Position Actions
+      *
+     C           BACKEY    KLIST
+     C                     KFLD           PESS
+     C                     KFLD           PEBH
+     C                     KFLD           PEMK
+     C                     KFLD           PEBK
+     C                     KFLD           PETV
+      *
+      ** - TABLE
+      *
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+      *
+      ** Clear LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE0053  'DBPGM
+     C                     OUT  LDA
+      *
+      ** Access ICD information
+      *
+     C                     EXSR FIRST
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+      *
+      ** Define and clear work fields and indicators
+      *
+     C           *LIKE     DEFN PESS      WPESS
+     C           *LIKE     DEFN PEBH      WPEBR
+     C           *LIKE     DEFN PENP      PCUMP
+     C           *LIKE     DEFN RECI      HRECI
+     C                     MOVE *BLANKS   WPESS
+     C                     MOVE *BLANKS   WPEBR
+     C                     Z-ADD0         PRJREC  50
+     C                     Z-ADD0         ICREC   50
+     C                     Z-ADD0         IBREC   50
+     C                     Z-ADD0         IDREC   50
+     C                     Z-ADD0         REAREC  50
+     C                     Z-ADD0         TPEBP  150
+     C                     Z-ADD0         ORFGA   50
+     C                     Z-ADD0         LCNT    50
+      *
+      ** Reas and process all profit adjustment Records UNTIL EOF
+      *
+     C           *IN89     DOUEQ'1'
+     C           *INU7     OREQ '1'
+      *
+     C                     READ PRFAJ                    89
+      *
+      ** If EOF - Finish and close print file and exit
+      *
+     C           *IN89     IFEQ '1'
+     C           *IN20     IFEQ '1'
+     C                     WRITETRAIL
+     C                     CLOSESE0053P1
+     C                     END
+     C                     GOTO ENDLP
+     C                     END
+      *
+     C                     ADD  1         PRJREC
+      *
+      ** Clear Work Fields and indicators
+      *
+     C                     Z-ADD0         PCUMP
+     C                     MOVE '0'       *IN88
+      *
+      ** If Change in Security - Obtain new Security Details
+      ** and CURRENCY details
+      *
+     C           PESS      IFNE WPESS
+      *
+     C                     EXSR SECCHN
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+     C                     EXSR TBGCHN
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+     C                     END
+      *
+      ** Obtain BOOK POSITION HEADER
+      *
+     C                     EXSR BKHCHN
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+      ** Obtain latest book position
+      *
+     C                     EXSR BKPCHN
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+      ** Print position HEADINGS and B/F LINE
+      *
+     C                     MOVE '1'       *IN10
+     C                     EXSR PR01
+      *
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+      ** Read through all BOOK POSITION actions for this position
+      *
+     C           BACKEY    SETLLBPACCL1
+      *
+     C           *IN88     DOUEQ'1'
+      *
+      ** Clear record identifying indicators
+      *
+     C                     SETOF                     010203
+      *
+     C           BACKEY    READEBPACCL1                  88
+     C           *IN88     IFEQ '0'
+     C   01                ADD  1         ICREC
+     C   02                ADD  1         IBREC
+     C   03                MOVE RECI      HRECI
+      *
+      ** Print Movement Details (TRADE OR NON-TRADE)
+      *
+     C                     MOVE '1'       *IN11
+     C                     EXSR PR01
+      *
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+      ** If BPACHD record (HISTORIC) and RECI is 'D'
+      *
+     C           *IN03     IFEQ '1'
+     C           HRECI     ANDEQ'D'
+     C                     ADD  1         REAREC
+     C                     MOVE 'H'       RECI
+     C                     UPDATBPACHDF
+     C                     END
+      *
+      ** If BPACBD record is a reversal count as deleted
+      *
+     C           *IN02     IFEQ '1'
+     C           BCRV      ANDEQ'Y'
+     C                     ADD  1         IDREC
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Print Position Summary Figures
+      *
+     C                     MOVE '1'       *IN12
+     C                     EXSR PR01
+      *
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+     C           ENDLP     TAG                             *** ENDLP  ***
+     C                     END                             *ENDDO
+      *
+      ** Update BOOK POSTION Audit Record and output control report
+      *
+     C           EAUDIT    TAG                             *** EAUDIT ***
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *
+      *  FIRST  - Subroutine to access ICD information
+      *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+      *
+     C           INVTPK    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      ** Read in RUNDAT data area
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                         30
+     C                     END
+      *
+      ** RCF Processing for Audit File
+      *
+     C                     EXSR RCFAU
+      *
+      **  ACCESS ICD
+      *
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *IN
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** Access ZICDSE
+      *
+     C                     EXSR ZICDSE
+     C           *INU8     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+      *
+      ** Check if Adjust Unrealised P/L is needed
+      *
+     C           AUPR      IFEQ 'Y'
+     C                     MOVE '1'       *IN48
+     C                     ELSE
+     C                     MOVE '0'       *IN48
+     C                     END
+      *
+      ** Access SAR details file to see if CSE035 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CSE035'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSE035  1
+     C                     ELSE
+     C                     MOVE 'N'       CSE035
+     C                     ENDIF
+      *
+      ** Access SAR details file to see if CEU018 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CEU018'  @SARD
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CEU018  1
+     C                     ELSE
+     C                     MOVE 'N'       CEU018
+     C                     ENDIF
+      *
+      ** Access Switchable feature files for CAC005
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CAC005'  PSARD   6
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CAC005  1
+     C                     MOVE '1'       *IN04
+     C                     ELSE
+     C                     MOVE 'N'       CAC005
+     C                     MOVE '0'       *IN04
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  PR01   - SUBROUTINE TO PRINT DETAIL REPORT
+      *
+      *****************************************************************
+      *
+     C           PR01      BEGSR                           ** PR01 **
+      *
+      ** Check for change in BRANCH or first time through
+      *
+     C           WPEBR     IFNE PEBH
+      *
+      ** Output Trailer and close print file if not first time
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITETRAIL
+     C                     CLOSESE0053P1
+     C                     ELSE
+     C                     MOVE '1'       *IN20
+     C                     END
+      *
+      ** - Open print file and set up heading details
+      *
+     C                     OPEN SE0053P1
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         LCNT
+     C                     EXSR RCFP1
+      *
+      ** - ACCESS BRANCH TABLE FOR BRANCH NAME
+      *
+     C                     EXSR TBRCHN
+     C           *INU7     IFEQ '1'
+     C                     GOTO EPR01
+     C                     END
+      *
+     C                     MOVE PEBH      HDBR
+     C                     MOVE BRNM      HDBRNM
+      *
+     C                     END
+      *
+      ** Output other HEADINGS if necessary
+      **   - Change in BRANCH, B/F line or overflow
+      *
+     C           WPEBR     IFNE PEBH
+     C           *IN10     OREQ '1'
+     C           *IN12     OREQ '1'
+     C           LCNT      ANDGT26
+     C           LCNT      ORGT 39
+      *
+     C                     MOVE *BLANKS   HDMK
+     C           PEMK      IFEQ 'G'
+     C                     MOVEL'GREY'    HDMK
+     C                     ELSE
+     C           PEMK      IFEQ 'P'
+     C                     MOVEL'PRIMARY' HDMK
+     C                     ELSE
+     C                     MOVEL'SECOND'  HDMK
+     C                     MOVE 'ARY'     HDMK
+     C                     END
+     C                     END
+      *
+      ** - Obtain Security Description
+      *
+     C                     MOVELSRPN      ZSRPN
+     C                     MOVE RSFD      ZRSFD
+     C                     EXSR ZSDESC
+     C                     MOVELZRNME     HDDESC
+      *
+     C           PETV      IFEQ 'T'
+     C                     MOVEL'TRADE '  HDTV
+      *                    MOVE 'VALUE'   HDTV
+     C                     MOVE 'DATE '   HDTV
+     C                     ELSE
+     C                     MOVEL'VALUE '  HDTV
+     C                     MOVE 'DATE '   HDTV
+     C                     END
+      *
+     C                     MOVE PEBH      WPEBR
+      *
+     C           CAC005    IFEQ 'Y'
+     C                     MOVE PEBK      BKPRF   2
+      *
+      ** If CAC005 is installed, retrieve the corresponding user book
+      ** and profit centre.
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*USER  ' POPTN
+     C                     PARM           PBKCD   2
+     C                     PARM           PPRFC   4
+     C                     PARM PEBK      PPSBK   2
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE PBKCD     PEBK
+     C                     MOVE PPRFC     PRFC    4
+     C                     ELSE
+     C                     MOVE *BLANKS   PRFC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** - Output HEADINGS
+      *
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     WRITEHEAD3
+     C                     Z-ADD0         LCNT
+      *
+     C           CAC005    IFEQ 'Y'
+     C                     MOVE BKPRF     PEBK
+     C                     ADD  1         LCNT
+     C                     END
+      *
+     C                     END
+      *
+      ** Check whether B/F, Detail or Summary Records required
+      *
+      **  - B/F
+      *
+     C           *IN10     IFEQ '1'
+      *
+     C                     Z-ADDPEBD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DTEVDT
+      *
+     C                     MOVE ' B/F  '  DTBCTR
+     C                     MOVE *BLANKS   DTREV
+     C                     MOVE *BLANKS   DTEVNT
+     C                     MOVE *BLANKS   DTNOML
+      *
+      ** - Cumulative POSITION
+      *
+     C                     Z-ADDPENP      ZFLD15
+     C                     Z-ADDPENP      PCUMP
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTCUMP
+      *
+      ** - Purchased Interest
+      *
+     C                     Z-ADDPEBP      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPITT
+      *
+      ** - Accumulate Purchased Interest for POSITION
+      **    No need to if report is on TRADE DATE BASIS
+      *
+     C           PETV      IFNE 'T'
+     C                     ADD  PEBP      TPEBP
+     C                     END
+      *
+      ** - Average Price
+      ** - If B/F Nominal is zero set average PRICE to ZERO
+      *
+     C           PCUMP     IFEQ 0
+     C                     Z-ADD0         ZFLD15
+     C                     ELSE
+     C                     MOVE PEBA      ZFLD15
+     C                     END
+      *
+      ** Adjust Price : PRICE + PUR INT before rounding
+      *
+     C           CSE035    IFEQ 'Y'
+      *
+     C           NCD       IFGE MATY
+     C           SYBS      ANDEQ'AU'
+     C                     Z-ADDZPRCOT    ZPRCOT
+     C                     ELSE
+     C           ZPRCOT    ADD  ZWAMT     ZPRCOT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           CSE035    IFEQ 'Y'
+      *
+     C           NCD       IFGE MATY
+     C           SYBS      ANDEQ'AU'
+     C                     ELSE
+     C           ZPRCOT    SUB  PURINT    ZPRCOT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD8         ZDECS
+     C                     MOVEL'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WK17   17
+     C                     MOVELWK17      DTPRCC
+      *
+     C                     WRITEDETAIL1
+     C                     MOVE '0'       *IN10
+     C                     ADD  1         LCNT
+      *
+      ** Write blank line
+      *
+     C                     MOVE *BLANKS   DTPITP
+     C                     MOVE *BLANKS   DTPRAP
+     C                     MOVE *BLANKS   DTRLPL
+     C                     WRITEDETAIL2
+     C*
+     C                     GOTO EPR01
+      *
+     C                     END
+      *
+      ** - Detail line
+      *
+     C           *IN11     IFEQ '1'
+      *
+     C                     Z-ADDBCAD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DTEVDT
+      *
+      ** - For a Trade Action
+      *
+     C           BCAS      IFEQ '40'
+      *
+     C                     MOVE BCTR      DTBCTR
+      *
+      ** -  Highlight Backvalued trades.
+      *
+     C                     MOVE *BLANKS   DTREV
+     C           *IN02     IFEQ '1'
+     C                     MOVE 'B/V'     DTREV
+     C                     END
+     C           BCRV      IFEQ 'Y'
+     C                     MOVE 'REV'     DTREV
+     C                     END
+      *
+     C                     MOVE *BLANKS   DTEVNT
+     C           BCPS      IFEQ 'P'
+     C                     MOVEL'PURCHASE'DTEVNT
+     C                     ELSE
+     C                     MOVEL'SALE    'DTEVNT
+     C                     END
+      *
+      ** - Trade Nominal
+      *
+     C                     Z-ADDBCNL      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTNOML
+      *
+      ** - Cumulative Position
+      *
+      *
+      **  Ignore REVERSALS
+      *
+     C           BCRV      IFNE 'Y'
+     C           BCPS      IFEQ 'P'
+     C           PCUMP     ADD  BCNL      WKNO   150
+     C                     ELSE
+     C           PCUMP     SUB  BCNL      WKNO   150
+     C                     END
+      *
+     C                     Z-ADDWKNO      PCUMP
+     C                     Z-ADDWKNO      ZFLD15
+      *
+      ** For reversals, position should be BLANK
+      *
+     C                     END
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTCUMP
+      *
+      ** - Trade Purchased Interest
+      *
+     C                     Z-ADDPCHI      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPITT
+      *
+      ** - Position Purchased Interest
+      *
+      ***  Note: BCP1 is Addition /Subtraction to Purchased Interest;
+      ***        BCP2, If NOT= 0, is the Latest Purchased Interest.
+      *
+      ** Only needs calculating if report is on VALUE Date basis
+      *
+     C           PETV      IFNE 'T'
+     C           BCP2      IFNE 0
+     C           BCPS      IFEQ 'S'
+     C                     Z-SUBBCP2      TPEBP
+     C                     Z-SUBBCP2      WKNO
+     C                     ELSE
+     C                     Z-ADDBCP2      TPEBP
+     C                     Z-ADDBCP2      WKNO
+     C                     END
+     C                     ELSE
+      *
+      **  If a Reversal, do not alter the Position Purchased Interest,
+      **  (because it has already been taken into account), ELSE, Add
+      **  to Position for a Purchase and Subtract for a Sale.
+      *
+     C           BCRV      IFNE 'Y'
+     C           BCPS      IFEQ 'P'
+     C                     ADD  BCP1      TPEBP
+     C                     ELSE
+     C                     SUB  BCP1      TPEBP
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDTPEBP     WKNO
+     C                     END
+      *
+      ** If not VALUE Date report, make sure accum. TRADE posn is 0
+      *
+     C                     ELSE
+     C                     Z-ADD0         WKNO
+     C                     END
+     C                     Z-ADDWKNO      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPITP
+      *
+      ** - Contract Price
+      *
+     C                     MOVE CNTP      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVEL'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WK17
+     C                     MOVELWK17      DTPRCC
+      *
+      ** - Average PRICE
+      ** - If Cumulative Position is ZERO set average PRICE to ZERO
+      *
+     C           PCUMP     IFEQ 0
+     C                     Z-ADD0         ZFLD15
+     C                     ELSE
+     C                     MOVE BCAT      ZFLD15
+     C                     END
+     C                     Z-ADD8         ZDECS
+     C                     MOVEL'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WK17
+     C                     MOVELWK17      DTPRAP
+      *
+      ** - Realised Profit/Loss
+      *
+     C           BCPL      IFNE 0
+      *
+     C                     Z-ADDBCPL      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTRLPL
+     C                     ELSE
+     C                     MOVE *BLANKS   DTRLPL
+     C                     END
+      *
+      ** For reversals, position should be BLANK
+      *
+     C           BCRV      IFEQ 'Y'
+     C                     MOVE *BLANKS   DTCUMP
+     C                     MOVE *BLANKS   DTPITP
+     C                     MOVE *BLANKS   DTPRAP
+     C                     MOVE *BLANKS   DTRLPL
+     C                     END
+      *
+      ** Write Detail lines
+      *
+     C                     WRITEDETAIL1
+     C                     WRITEDETAIL2
+      *
+     C                     ADD  2         LCNT
+      *
+     C                     ELSE
+      *
+      ** - For a non-TRADE Action
+      *
+     C                     MOVE *BLANKS   DTBCTR
+     C                     MOVE *BLANKS   DTREV
+     C                     MOVE *BLANKS   DTNOML
+     C                     MOVE *BLANKS   DTCUMP
+     C                     MOVE *BLANKS   DTPITT
+     C                     MOVE *BLANKS   DTPRCC
+     C                     MOVE *BLANKS   DTEVNT
+      *
+     C           BCAS      IFEQ '05'
+     C                     MOVEL'PART '   DTEVNT
+     C                     MOVE 'PAYT.  ' DTEVNT
+     C                     ELSE
+     C           BCAS      IFEQ '20'
+     C                     MOVEL'MORT. '  DTEVNT
+     C                     MOVE 'PAYT. '  DTEVNT
+     C                     ELSE
+     C           BCAS      IFEQ '30'
+     C                     MOVEL'COUPON'  DTEVNT
+     C                     ELSE
+     C           BCAS      IFEQ '35'
+     C                     MOVEL'DIVIDEND'DTEVNT
+     C                     ELSE
+     C           BCAS      IFEQ '50'
+     C                     MOVEL'RATE '   DTEVNT
+     C                     MOVE 'CHANGE ' DTEVNT
+     C                     ELSE
+     C           BCAS      IFEQ '60'
+     C                     MOVEL'PRICE '  DTEVNT
+     C                     MOVE 'CHANGE'  DTEVNT
+      *
+      **  - AVERAGE PRICE
+      **    (IN % FORMAT )
+      *
+     C                     Z-ADDBCPR      ZPRCIN
+     C                     Z-ADDBCAD      ZFDATE
+      *
+     C           ACRI      IFEQ 'X'
+     C                     MOVE 'X'       SCUMEX
+     C                     ELSE
+     C                     MOVE 'C'       SCUMEX
+     C                     END
+     C                     Z-ADD1000000   ZNOML
+      *
+     C                     EXSR ZPRCI
+     C                     MOVE ZPRCOT    ZFLD15
+      *
+     C                     Z-ADD8         ZDECS
+     C                     MOVEL'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WK17
+     C                     MOVELWK17      DTPRCC
+     C                     END
+      *
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Write Detail Lines
+      *
+     C                     WRITEDETAIL1
+      *
+     C                     ADD  1         LCNT
+     C                     END
+      *
+     C                     MOVE '0'       *IN11
+     C                     GOTO EPR01
+     C                     END
+      *
+      ** - SUMMARY
+      *
+     C           *IN12     IFEQ '1'
+      *
+     C                     WRITESUMHD1
+     C                     WRITESUMHD2
+      *
+      ** - Previous Unrealised PROFIT/LOSS
+      *
+     C                     Z-ADDPEPL      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPEPL
+      *
+      ** - Previous Dividend
+      *
+     C                     Z-ADDPEDV      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPEDV
+      *
+      ** - Previous Purchased Interest
+      *
+     C                     Z-ADDPEPI      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPEPI
+      *
+      ** - Previous Partly PAID
+      *
+     C                     Z-ADDPEPP      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPEPP
+      *
+      ** - Previous COUPON
+      *
+     C                     Z-ADDPECP      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPECP
+      *
+     C                     WRITESUMDT1
+      *
+      ** - Required Profit/Loss
+      *
+     C                     Z-ADDUPPT      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTUPPT
+      *
+      ** - Required DIVIDEND
+      *
+     C                     Z-ADDBHDP      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTBHDP
+      *
+      ** - Required Purchased Interest
+      *
+     C                     Z-ADDPILP      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPILP
+      *
+      ** - Required PARTLY PAID
+      *
+     C                     Z-ADDBHPP      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTBHPP
+      *
+      ** - Required COUPON
+      *
+     C                     Z-ADDBHCP      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTBHCP
+      *
+     C                     WRITESUMDT2
+      *
+     C                     WRITESUMDT3
+      *
+      ** Output Adjustments
+      *
+      **  - ADJUSTED PROFIT/LOSS
+      *
+     C           UPPT      SUB  PEPL      WKNO
+     C                     Z-ADDWKNO      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTAEPL
+      *
+      ** - Adjusted Dividend
+      *
+     C           BHDP      SUB  PEDV      WKNO
+     C                     Z-ADDWKNO      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTAEDV
+      *
+      ** - Adjusted Purchased Interest
+      *
+     C           PILP      SUB  PEPI      WKNO
+     C                     Z-ADDWKNO      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTAEPI
+      *
+      ** - Adjusted Partly PAID
+      *
+     C           BHPP      SUB  PEPP      WKNO
+     C                     Z-ADDWKNO      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTAEPP
+      *
+      **  - ADJUSTED COUPON
+      *
+     C           BHCP      SUB  PECP      WKNO
+     C                     Z-ADDWKNO      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTAECP
+      *
+     C                     WRITESUMDT4
+      *
+     C                     MOVE '0'       *IN12
+     C                     Z-ADD0         TPEBP
+     C                     END
+      *
+     C           EPR01     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  Audit  -  Subroutine to update AUDIT records and output
+      *             CONTROL REPORT
+      *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+      *
+      ** Check NO DBASE ERROR has been encountered so far
+      ** -  ACCESS PROFIT ADJUSTMENT audit record
+      *
+     C           *INU7     IFEQ '0'
+     C                     READ PRFAJAF                  86
+     C           *IN86     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA
+     C                     MOVEL'PRFAJ'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 07 *
+     C                     Z-ADD07        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDNORE      PNORE   50
+     C           NORE      IFNE PRJREC
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+      ** Access Historic Actions AUDIT record
+      *
+     C                     READ BPACHAF                  86
+     C           *IN86     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BPACH'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 08 *
+     C                     Z-ADD08        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDNORE      HNORE   50
+     C                     Z-ADDRFGA      ORFGA   50
+     C           REAREC    IFNE RFGA
+     C                     END
+      *
+      ** Access AUDIT records for current and backvalued actions
+      ** TO CALCULATE NEW NO OF RECORDS ON FILE
+      *
+     C                     READ BPACCAF                  86
+     C           *IN86     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BPACC'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 09 *
+     C                     Z-ADD09        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDNORE      CNORE   50
+      *
+     C                     READ BPACBAF                  86
+     C           *IN86     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BPABC'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 10 *
+     C                     Z-ADD10        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDNORE      BNORE   50
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** Update BPACHA file if no difference found in file and
+      ** CALCULATED TOTAL
+      *
+     C                     SUB  IDREC     BNORE
+     C           BNORE     ADD  CNORE     TNORE   50
+     C           TNORE     ADD  HNORE     TNORE
+     C                     READ BPACCAPF                 86
+     C           *IN86     IFEQ *OFF
+     C                     SUB  CTREVC    TNORE
+     C                     ENDIF
+      *
+     C                     READ BPACBVPF                 86
+     C           *IN86     IFEQ *OFF
+     C                     SUB  CTREVB    TNORE
+     C                     ENDIF
+      *
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDTNORE     NORE
+     C                     Z-ADD0         RFGA
+     C                     UPDATBPACHAF
+     C                     END
+      *
+     C                     END
+      *
+      ** - Output CONTROL REPORT
+      *
+     C                     Z-ADD0         PAGE
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ '0'
+      *
+     C           PRJREC    IFEQ 0
+     C           REAREC    ANDEQ0
+     C                     WRITENONE
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     END
+      *
+     C                     ELSE
+     C                     WRITEERROR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  BKHCHN   -  Subroutine to chain to BOOK POSITION HEADER
+      *
+      *****************************************************************
+      *
+     C           BKHCHN    BEGSR                           **  BKHCHN **
+      *
+     C           BKHKEY    CHAINBKPHDDF              80
+     C  N80      RECI      COMP '*'                      80
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BKPHD'   DBFILE           ***************
+     C                     MOVELBHKEY     DBKEY            * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /SPACE 3
+      ***************************************************************
+      *
+      *  BKPCHN  - Subroutine to chain to BOOK POSITION RECORD
+      *
+      ***************************************************************
+      *
+     C           BKPCHN    BEGSR                           **  BKPCHN **
+      *
+     C           BKPKEY    CHAINBKPOSDF              80
+     C  N80      RECI      COMP 'D'                  8080
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BKPOS'   DBFILE           ***************
+     C                     MOVELBPKEY     DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /SPACE 3
+      ***************************************************************
+      *
+      *  SECCHN  -  Subroutine to chain to SECURITIES FILE
+      *
+      ***************************************************************
+      *
+     C           SECCHN    BEGSR                           **  SECCHN **
+      *
+     C           SECKEY    CHAINSECTYDF              80
+     C  N80      RECI      COMP '*'                      80
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTY'   DBFILE           ***************
+     C                     MOVELPESS      DBKEY            * DB ERROR 05 *
+     C                     Z-ADD05        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8
+     C                     END
+      *
+      ** Access INVESTMENT TYPES file for processing type.
+      *
+     C           *INU7     IFEQ '0'
+     C           INVTPK    CHAININVTP                60
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'INVTP'   DBFILE           ***************
+     C                     MOVELNMCY      INVTDB  6        ** DB ERROR 06*
+     C                     MOVE SITP      INVTDB           ***************
+     C                     MOVELINVTDB    DBKEY
+     C                     Z-ADD6         DBASE
+     C                     SETON                     U7U8
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+      *  TBGCHN  - Subroutine to chain to TABTG10
+      *
+      *****************************************************************
+      *
+     C           TBGCHN    BEGSR                           **  TABCHN **
+      *
+     C                     MOVE *BLANK    TKEY
+     C                     MOVEL'20'      TKEY
+     C                     MOVELNMCY      KEY4    4
+     C                     MOVE '1'       KEY4
+     C                     MOVE KEY4      TKEY
+     C           TABKEY    CHAINTABTG10F             80
+     C  N80      RECI      COMP 'D'                  8080
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8  ***************
+     C                     MOVE 'TABLE'   DBFILE           * DB ERROR 11 *
+     C                     MOVELTKEY      DBKEY            ***************
+     C                     Z-ADD11        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+      *  TBRCHN  - Subroutine to chain to TABLETR
+      *
+      *****************************************************************
+      *
+     C           TBRCHN    BEGSR
+      *
+     C                     CALL 'AOBRCHR1'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM PEBH      PBRCH   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ** Database error if no record found
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE
+     C                     MOVELPEBH      DBKEY
+     C                     Z-ADD12        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+     C/EJECT
+     C/COPY ZSRSRC,ZCALCD
+     C/EJECT
+     C/COPY ZSRSRC,ZACCZZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZCNSDZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZACCRZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZRATEZ1
+     C/EJECT
+      *****************************************************************
+      *
+      *  BPASR  - SR for error handling of BOOK POSITION ACTIONS
+      *
+      *****************************************************************
+      *
+     C           BPASR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'BPACCL1' DBFILE           ***************
+     C                     MOVELBHKEY     DBKEY            * DB ERROR 90 *
+     C                     Z-ADD90        DBASE            ***************
+     C                     MOVE STSBPA    DBSTAT
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE '1'       *IN97
+     C                     SETON                       U7U8
+     C                     GOTO EAUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+      *  BPCSR  - Subroutine for error handling of HISTORIC BOOK
+      *           POSITION ACTIONS AUDIT FILE
+      *
+      *****************************************************************
+      *
+     C           BPCSR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'BPACH'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 91 *
+     C                     Z-ADD91        DBASE            ***************
+     C                     MOVE STSBPC    DBSTAT
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE '1'       *IN87
+     C                     SETON                       U7U8
+     C                     GOTO EAUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      ********************************************************************
+      *
+      *  RCFP1 -  Subroutine to REGISTER P1 printer file via RCF
+      *
+      ********************************************************************
+      *
+     C           RCFP1     BEGSR                            ** RCFP1 **
+      *
+      **      Ensure Report Spool File Recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM PEBH      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  Error during ZSFILE processing, Return to calling program
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  RCFAU -  Subroutine to REGISTER AU printer file via RCF
+      *
+      ********************************************************************
+      *
+     C           RCFAU     BEGSR                            ** RCFAU **
+      *
+      **      Ensure AUDIT SPOOL file recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  Error during ZSFILE processing, Return to calling program
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZLCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZPRCIZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSDESCZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDIZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDZ2
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2017
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

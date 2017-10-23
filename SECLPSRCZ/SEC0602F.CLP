@@ -9,19 +9,21 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. CSE111             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408                  DATE 10MAY95        */
-/*       PREV AMEND NO. S01189                  DATE  07JAN91       */
+/*       Prev Amend No. S01408             Date 10May95              */
+/*                      S01189             Date 07Jan91              */
 /*                      S01117                  DATE  10DEC90       */
 /*                      E16870                  DATE  08/03/89      */
 /*                      S01129                  DATE  31/03/88      */
 /*                                                                  */
 /*------------------------------------------------------------------*/
+/*       CSE111 - Suppress Account Keys on Back-Value of dividends  */
 /*       S01408 - Addition of core hook SEC0602FMS                  */
 /*       S01189 - CLOSE OF BUSINESS IMPROVEMENTS PHASE 2            */
 /*       S01117 - MULTIBRANCHING                                    */
@@ -161,6 +163,8 @@
              CLRPFM     FILE(BPACBD) MBR(BPACBD)
              CLRPFM     FILE(BPACCA) MBR(BPACCA)
              CLRPFM     FILE(BPACBA) MBR(BPACBA)
+             CLRPFM     FILE(BPACCAPD) MBR(BPACCAPD)                                      /*CSE111*/
+             CLRPFM     FILE(BPACBVPD) MBR(BPACBVPD)                                      /*CSE111*/
  
  
 /* CALL THE PROGRAM            */

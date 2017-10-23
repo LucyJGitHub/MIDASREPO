@@ -26,12 +26,13 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSE105             Date 06Dec10               *
+      *  Last Amend No. CSE111             Date 06Oct17               *
+      *  Prev Amend No. CSE105             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CAS006             Date 21Jan03               *
       *                 CSE035             Date 22Apr02               *
@@ -95,6 +96,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CSE111 - Suppress Account Keys on Back-Value of dividends    *
       *  CSE105 - Portuguese Upgrade - Discount/Premium Amortisation  *
       *           on Trade Date                                       *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -265,6 +267,10 @@
      F                                              KINFSR CBASR
      FBPACCA  O   E           K        DISK         KINFDS CCADS
      F                                              KINFSR CCASR
+     FBPACBVPDO   E                    DISK         KINFDS CBAX1D                             CSE111
+     F                                              KINFSR CBAX1S                             CSE111
+     FBPACCAPDO   E                    DISK         KINFDS CCAX1D                             CSE111
+     F                                              KINFSR CCAX1S                             CSE111
      FSE2110AUO   E                    PRINTER
      FTABSE   IF  E           K        DISK
      F* ICD 1     TABTB10F                          KIGNORE
@@ -444,6 +450,10 @@
      I*
      ICCADS       DS                            366
      I                                     *STATUS  STSCCA
+     ICBAX1D      DS                            366                                           CSE111
+     I                                     *STATUS  STXCBA                                    CSE111
+     ICCAX1D      DS                            366                                           CSE111
+     I                                     *STATUS  STXCCA                                    CSE111
      I*
      ILDA         DS                            256                       S01117
      I                                      134 183 DBLOT                 S01117
@@ -1220,6 +1230,29 @@
      C                     MOVE 'N'       CAS006                                              CAS006
      C                     ENDIF                                                              CAS006
       *                                                                                       CAS006
+      ** Access Switchable Features file to determine if CSE111 is on                         CSE111
+      *                                                                                       CSE111
+     C                     CALL 'AOSARDR0'                                                    CSE111
+     C                     PARM *BLANKS   PRTCD                                               CSE111
+     C                     PARM '*VERIFY' POPTN                                               CSE111
+     C                     PARM 'CSE111'  PSARD                                               CSE111
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSE111
+      *                                                                                       CSE111
+      ** An NRF (No Record Found) return code is valid.                                       CSE111
+      ** Issue database error only for error return codes.                                    CSE111
+      *                                                                                       CSE111
+     C                     MOVE 'N'       CSE111  1                                           CSE111
+     C           PRTCD     IFEQ *BLANKS                                                       CSE111
+     C                     MOVE 'Y'       CSE111                                              CSE111
+     C                     ENDIF                                                              CSE111
+      *                                                                                       CSE111
+     C           CSE111    IFEQ 'Y'                                                           CSE111
+     C                     Z-ADD0         LIVB    50                                          CSE111
+     C                     Z-ADD0         REVB    50                                          CSE111
+     C                     Z-ADD0         LIVC    50                                          CSE111
+     C                     Z-ADD0         REVC    50                                          CSE111
+     C                     ENDIF                                                              CSE111
+      *                                                                                       CSE111
      C                     ENDSR
       *
       *****************************************************************
@@ -1342,6 +1375,13 @@
      C*
      C           *INU8     IFEQ '0'
      C                     MOVE OACB      NORE
+      *                                                                                       CSE111
+     C           CSE111    IFEQ 'Y'                                                           CSE111
+     C                     Z-ADDLIVB      CTLIVB                                              CSE111
+     C                     Z-ADDREVB      CTREVB                                              CSE111
+     C                     WRITEBPACBVPF                                                      CSE111
+     C                     ENDIF                                                              CSE111
+      *                                                                                       CSE111
      C                     WRITEBPACBAF
      C                     END
      C*
@@ -1349,6 +1389,13 @@
      C*
      C           *INU8     IFEQ '0'
      C                     MOVE OACC      NORE
+      *                                                                                       CSE111
+     C           CSE111    IFEQ 'Y'                                                           CSE111
+     C                     Z-ADDLIVC      CTLIVC                                              CSE111
+     C                     Z-ADDREVC      CTREVC                                              CSE111
+     C                     WRITEBPACCAPF                                                      CSE111
+     C                     ENDIF                                                              CSE111
+      *                                                                                       CSE111
      C                     WRITEBPACCAF
      C                     END
      C*
@@ -2101,6 +2148,20 @@
      C** COUNT RECORD
      C*
      C                     ADD  1         OACB    50
+      *                                                                                       CSE111
+     C           CSE111    IFEQ 'Y'                                                           CSE111
+      *                                                                                       CSE111
+      ** Maintain Dividend Totals                                                             CSE111
+      *                                                                                       CSE111
+     C           BBAS      IFEQ '35'                                                          CSE111
+     C           BBRI      IFEQ 'Y'                                                           CSE111
+     C                     ADD  1         REVB                                                CSE111
+     C                     ELSE                                                               CSE111
+     C                     ADD  1         LIVB                                                CSE111
+     C                     ENDIF                                                              CSE111
+     C                     ENDIF                                                              CSE111
+      *                                                                                       CSE111
+     C                     ENDIF                                                              CSE111
      C*
      C* ELSE WRITE OUT TO BPACCD
      C*
@@ -2169,6 +2230,21 @@
      C** COUNT RECORD
      C*
      C                     ADD  1         OACC    50
+      *                                                                                       CSE111
+     C           CSE111    IFEQ 'Y'                                                           CSE111
+      *                                                                                       CSE111
+      ** Maintain Dividend Totals                                                             CSE111
+      *                                                                                       CSE111
+     C           BCAS      IFEQ '35'                                                          CSE111
+     C           BCRV      IFEQ 'Y'                                                           CSE111
+     C                     ADD  1         REVC                                                CSE111
+     C                     ELSE                                                               CSE111
+     C                     ADD  1         LIVC                                                CSE111
+     C                     ENDIF                                                              CSE111
+     C                     ENDIF                                                              CSE111
+      *                                                                                       CSE111
+     C                     ENDIF                                                              CSE111
+      *                                                                                       CSE111
      C                     END
      C*
      C                     ENDSR
@@ -2870,6 +2946,42 @@
      C*
      C                     ENDSR
       *
+      *****************************************************************                       CSE111
+     C/EJECT                                                                                  CSE111
+      *****************************************************************                       CSE111
+      *                                                               *                       CSE111
+      *   CBAX1S - SUBROUTINE FOR ERROR HANDLING OF BPACBVPD          *                       CSE111
+      *                                                               *                       CSE111
+      *****************************************************************                       CSE111
+     C           CBAX1S    BEGSR                                                              CSE111
+      *                                                                                       CSE111
+     C                     MOVE 'BPACBVPD'DBFILE                                              CSE111
+     C                     MOVEL'AUDIT'   DBKEY            *****************                  CSE111
+     C                     Z-ADD24        DBASE            ** DB ERROR 13  *                  CSE111
+     C                     MOVE STXCBA    DBSTAT           *****************                  CSE111
+     C                     MOVE '1'       *IN87                                               CSE111
+     C                     SETON                     99U7U8                                   CSE111
+     C                     GOTO EAUDIT                                                        CSE111
+      *                                                                                       CSE111
+     C                     ENDSR                                                              CSE111
+      *****************************************************************                       CSE111
+     C/EJECT                                                                                  CSE111
+      *****************************************************************                       CSE111
+      *                                                               *                       CSE111
+      *   CCAX1S - SUBROUTINE FOR ERROR HANDLING OF BPACCAPD          *                       CSE111
+      *                                                               *                       CSE111
+      *****************************************************************                       CSE111
+     C           CCAX1S    BEGSR                                                              CSE111
+      *                                                                                       CSE111
+     C                     MOVE 'BPACCAPD'DBFILE                                              CSE111
+     C                     MOVEL'AUDIT'   DBKEY            *****************                  CSE111
+     C                     Z-ADD25        DBASE            ** DB ERROR 14  *                  CSE111
+     C                     MOVE STXCCA    DBSTAT           *****************                  CSE111
+     C                     MOVE '1'       *IN87                                               CSE111
+     C                     SETON                     99U7U8                                   CSE111
+     C                     GOTO EAUDIT                                                        CSE111
+      *                                                                                       CSE111
+     C                     ENDSR                                                              CSE111
       *****************************************************************   S01117
       /EJECT                                                              S01117
       *****************************************************************   S01117

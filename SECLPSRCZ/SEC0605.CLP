@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. CSE111             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. 246619             Date 28Mar07              */
+/*       Prev Amend No. 246619             Date 28Mar07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSE036             Date 22Apr02              */
+/*                      CSE036             Date 22Apr02              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      168141             Date 08Oct99              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -31,6 +32,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       CSE111 - Suppress Account Keys on Back-Value of dividends  */
 /*       246619 - Clear PF/BKPOPD prior to call on PGM/SE2230.       */
 /*       CSE036 - Unrealised Profit and Loss Report by Trade         */
 /*       168141 - SEC0605 in loop in COB - can't complete           */
@@ -85,6 +87,10 @@
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BRK) TYPE(*CHAR) LEN(4)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')                    /*CSE036*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CSE111*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CSE111*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CSE111*/
+             DCL        VAR(&CSE111) TYPE(*CHAR) LEN(1)                                   /*CSE111*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0605001                                          */
                                                                       /*S01408*/
@@ -124,6 +130,23 @@
              CLRPFM     FILE(SEKEYA) MBR(BKPOSNR)
              CLRPFM     FILE(SEKEYD) MBR(BKPOSN)
              CLRPFM     FILE(SEKEYA) MBR(BKPOSN)
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CSE111*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CSE111*/
+             CHGVAR     VAR(&SAR) VALUE('CSE111')                                         /*CSE111*/
+             CHGVAR     VAR(&CSE111) VALUE('N')                                           /*CSE111*/
+                                                                                          /*CSE111*/
+/**  Check if Enhancement is installed */                                                 /*CSE111*/
+                                                                                          /*CSE111*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CSE111*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CSE111*/
+             CHGVAR     VAR(&CSE111) VALUE('Y')                                           /*CSE111*/
+             ENDDO                                                                        /*CSE111*/
+                                                                                          /*CSE111*/
+             IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
+             CLRPFM     FILE(SEKEYD) MBR(MMREVAL)                                         /*CSE111*/
+             CLRPFM     FILE(SEKEYA) MBR(MMREVAL)                                         /*CSE111*/
+             ENDDO                                                                        /*CSE111*/
+/**/                                                                                      /*CSE111*/
  
 /*  CHECK FOR COMPONENT RESTART                                     */
  
@@ -515,6 +538,13 @@
              OVRDBF     FILE(SEKEYA) TOFILE(SEKEYA)  MBR(BKPOSNR)
              OVRDBF     FILE(HTRACBX) TOFILE(HTRACB) SHARE(*NO)
              OVRDBF     FILE(BPACCU) TOFILE(BPACC) SHARE(*NO)         /*168141*/
+/**/                                                                                      /*CSE111*/
+             IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
+             OVRDBF     FILE(BPACCL1) TOFILE(BPACRVL1)                                    /*CSE111*/
+             OVRDBF     FILE(BPACCU) TOFILE(BPACCL1) SHARE(*NO)                           /*CSE111*/
+             CALL       PGM(SE0050)                                                       /*CSE111*/
+             GOTO       DUGTAGA                                                           /*CSE111*/
+             ENDDO                                                                        /*CSE111*/
  
 /* CALL PROGRAM                                                  */
                                                                       /*S01408*/
@@ -524,12 +554,39 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0605005                                          */
                                                                       /*S01408*/
+DUGTAGA:                                                                                  /*CSE111*/
              DLTOVR     FILE(*ALL)
  
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA                     */
  
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))
+                                                                                          /*CSE111*/
+             IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
+/** Setup and send PGM message */                                                         /*CSE111*/
+                                                                                          /*CSE111*/
+             CHGJOB SWS(10000000)                                                         /*CSE111*/
+             CHGVAR     VAR(&MBR) VALUE('0')                                              /*CSE111*/
+             CHGVAR     VAR(&MSG) VALUE('SEC06050 - Dividend +
+                          Reversal A/C keys')                                             /*CSE111*/
+/**/                                                                                      /*CSE111*/
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)                            /*CSE111*/
+             OVRDBF     FILE(SEKEYD) TOFILE(SEKEYD)  MBR(MMREVAL)                         /*CSE111*/
+             OVRDBF     FILE(SEKEYA) TOFILE(SEKEYA)  MBR(MMREVAL)                         /*CSE111*/
+                                                                                          /*CSE111*/
+/** Call Program */                                                                       /*CSE111*/
+                                                                                          /*CSE111*/
+             CALL       PGM(SE0051)                                                       /*CSE111*/
+                                                                                          /*CSE111*/
+             DLTOVR     FILE(*ALL)                                                        /*CSE111*/
+                                                                                          /*CSE111*/
+/** For Database Errors Recover Data From LDA */                                          /*CSE111*/
+                                                                                          /*CSE111*/
+             IF     COND(%SWITCH(XXXXXX1X) *OR +
+                      (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))                       /*CSE111*/
+                                                                                          /*CSE111*/
+             ENDDO                                                                        /*CSE111*/
+/**/                                                                                      /*CSE111*/
  
 /*  SETUP AND SEND PGM MESSAGE                                      */
  
@@ -545,8 +602,14 @@
  
 /*  CALL PROGRAM                                                    */
  
+             IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
+             CALL       PGM(SE0052)                                                       /*CSE111*/
+             GOTO       CMDLBL(DUGTG1)                                                    /*CSE111*/
+             ENDDO                                                                        /*CSE111*/
+                                                                                          /*CSE111*/
              CALL       PGM(SE2240)
- 
+                                                                                          /*CSE111*/
+ DUGTG1:                                                                                  /*CSE111*/
              DLTOVR     FILE(*ALL)
  
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA                     */
@@ -627,6 +690,12 @@
                 OVRDBF     FILE(HTRACBX) TOFILE(HTRACB) SHARE(*NO)
                 OVRDBF     FILE(BPACCU) TOFILE(BPACC) SHARE(*NO)      /*168141*/
                                                                       /*S01408*/
+             IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
+             OVRDBF     FILE(BPACCU) TOFILE(BPACCL1) SHARE(*NO)                           /*CSE111*/
+             CALL       PGM(SE0050)                                                       /*CSE111*/
+             GOTO       DUGTAGB                                                           /*CSE111*/
+             ENDDO                                                                        /*CSE111*/
+                                                                                          /*CSE111*/
 /*/COPY WNCPYSRC,SEC0605006                                          */
                                                                       /*S01408*/
              CALL       PGM(SE2220)
@@ -634,11 +703,37 @@
 /*/COPY WNCPYSRC,SEC0605007                                          */
                                                                       /*S01408*/
  
+DUGTAGB:                                                                                  /*CSE111*/
              DLTOVR     FILE(*ALL)
  
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))
  
+             IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
+/** Setup and send PGM message                                                            /*CSE111*/
+                                                                                          /*CSE111*/
+             CHGJOB SWS(00000000)                                                         /*CSE111*/
+             CHGVAR     VAR(&MBR) VALUE('1')                                              /*CSE111*/
+             CHGVAR     VAR(&MSG) VALUE('SEC06051 - Dividend +
+                          Forward A/C keys')                                              /*CSE111*/
+                                                                                          /*CSE111*/
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)                            /*CSE111*/
+             OVRDBF     FILE(SEKEYD) TOFILE(SEKEYD)  MBR(MMREVAL)                         /*CSE111*/
+             OVRDBF     FILE(SEKEYA) TOFILE(SEKEYA)  MBR(MMREVAL)                         /*CSE111*/
+                                                                                          /*CSE111*/
+/** Call Program */                                                                       /*CSE111*/
+                                                                                          /*CSE111*/
+             CALL       PGM(SE0051)                                                       /*CSE111*/
+                                                                                          /*CSE111*/
+             DLTOVR     FILE(*ALL)                                                        /*CSE111*/
+                                                                                          /*CSE111*/
+/* For Database Errors Recover Data From LDA                     */                       /*CSE111*/
+                                                                                          /*CSE111*/
+             IF     COND(%SWITCH(XXXXXX1X) *OR +
+                      (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))                       /*CSE111*/
+                                                                                          /*CSE111*/
+             ENDDO                                                                        /*CSE111*/
+                                                                                          /*CSE111*/
 /*  SETUP AND SEND PGM MESSAGE                                      */
  
              CHGVAR     VAR(&MBR) VALUE('G')
@@ -666,8 +761,14 @@
  
 /*  CALL PROGRAM                                                    */
  
+             IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
+             CALL       PGM(SE0053)                                                       /*CSE111*/
+             GOTO       CMDLBL(DUGTG2)                                                    /*CSE111*/
+             ENDDO                                                                        /*CSE111*/
+ 
              CALL       PGM(SE0740)
  
+ DUGTG2:                                                                                  /*CSE111*/
              DLTOVR     FILE(*ALL)
  
              IF         COND(%SWITCH(XXXXXX1X) *OR +

@@ -9,20 +9,22 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. CSE112             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408                  DATE 11MAY95        */
-/*       PREV AMEND NO. S01117                  DATE  07JAN91       */
+/*       Prev Amend NO. S01408                  DATE 11MAY95        */
+/*                      S01117                  DATE  07JAN91       */
 /*                      S01189                  DATE  07/04/89      */
 /*                      E16870                  DATE  08/03/89      */
 /*                      S01129                  DATE  30/03/88      */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       CSE112 - SE Market Price Updated with Price of Last Trade  */
 /*       S01408 - Addition of core hook SEC0602BMS                   */
 /*       S01117 - MULTIBRANCHING                                    */
 /*       E16870 - SESTAT REDEFINED AS 128 BYTES.                    *   E16870*/
@@ -49,6 +51,11 @@
              DCL        VAR(&LDAWK) TYPE(*CHAR) LEN(256)
              DCL        VAR(&TOLIB)  TYPE(*CHAR) LEN(10)              /*S01129*/
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)                  /*S01129*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CSE112*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CSE112*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CSE112*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CSE112*/
+             DCL        VAR(&CSE112) TYPE(*CHAR) LEN(1)                                   /*CSE112*/
  
 /*           DCLDTAARA  DTAARA(LDA)                                 *  *S01179*/
 /*           DCLDTAARA  DTAARA(SESTAT)                              *  *S01179*/
@@ -240,6 +247,29 @@
  
              CALL       PGM(SE2120)
  
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CSE112*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CSE112*/
+             CHGVAR     VAR(&SAR) VALUE('CSE112')                                         /*CSE112*/
+             CHGVAR     VAR(&CSE112) VALUE('N')                                           /*CSE112*/
+                                                                                          /*CSE112*/
+/**  Check if Enhancement is installed */                                                 /*CSE112*/
+                                                                                          /*CSE112*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CSE112*/
+/**/                                                                                      /*CSE112*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CSE112*/
+             CHGVAR     VAR(&CSE112) VALUE('Y')                                           /*CSE112*/
+             ENDDO                                                                        /*CSE112*/
+/**/                                                                                      /*CSE112*/
+             IF         COND(&CSE112 *EQ 'Y') THEN(DO)                                    /*CSE112*/
+/**/                                                                                      /*CSE112*/
+/** Call the Program SE0008 if no errors                                                  /*CSE112*/
+                                                                                          /*CSE112*/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                                  /*CSE112*/
+             CALL       PGM(SE0008)                                                       /*CSE112*/
+             ENDDO                                                                        /*CSE112*/
+/**/                                                                                      /*CSE112*/
+             ENDDO                                                                        /*CSE112*/
+/**/                                                                                      /*CSE112*/
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA                     */
  
  ERROR:      IF         COND(%SWITCH(XXXXXX11)) THEN(DO)

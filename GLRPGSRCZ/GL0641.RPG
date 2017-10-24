@@ -10,12 +10,13 @@
      F*                                                                  *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                                  *
+      *  Last Amend No. CGL187             Date 06Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CDL014             Date 29Jul03               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4.01 -------------------------------------------*
@@ -40,6 +41,7 @@
      F*                     E257              DATE - 08MAR90             *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  CGL187 - Amendment to Net Trading Position Report            *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *   CDL014 - Exclude Interest from Net Position.                  *
@@ -104,6 +106,13 @@
      F***DL0641AUO***F*****132     OV     PRINTER      KINFDS SPOOLULN0616S01314
      FGL0641P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01314
      FGL0641AUO   F     132     OV     PRINTER      KINFDS SPOOLU         S01314
+      *                                                                                       CGL187
+     FOLPOSOL0IF  E           K        DISK                           UC                      CGL187
+      *                                                                                       CGL187
+     FDLIRSCPDIF  E           K        DISK                           UC                      CGL187
+      *                                                                                       CGL187
+     FSACEXL3 IF  E           K        DISK                           UC                      CGL187
+      *                                                                                       CGL187
      F/COPY WNCPYSRC,GL0641F001
      F********************************************************************
      F*  FUNCTION OF INDICATORS
@@ -526,8 +535,23 @@
      C                     XFOOTOIO       TOTIO  150                    **
      C           TOTII     SUB  TOTIO     TOTI   150                    **
      C                     Z-ADD3         X
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+     C           CCYO      ANDNE'USD'                                                         CGL187
+      *                                                                                       CGL187
+     C           W0KEY1    CHAINOLPOSOL0             87                                       CGL187
+      *                                                                                       CGL187
+     C           TOTI      SUB  TTFOT     WKTOT                                               CGL187
+     C                     Z-ADDTOTI      OAX,3                                               CGL187
+     C                     EXSR IRSACR                                                        CGL187
+      *                                                                                       CGL187
+     C                     ELSE                                                               CGL187
+      *                                                                                       CGL187
      C                     Z-ADDTOTI      WKTOT
      C                     Z-ADDTOTI      OAX,3                           140987
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C                     EXSR DIVSR
      C/COPY WNCPYSRC,GL0641C002
       *                                                                                       CDL014
@@ -966,6 +990,27 @@
      C                     SETON                     U7U8LR               CEU011
      C                     EXSR *PSSR                                     CEU011
      C                     ENDIF                                          CEU011
+      *                                                                                       CGL187
+      ** Access Switchable Features File for CGL187                                           CGL187
+      *                                                                                       CGL187
+     C                     CALL 'AOSARDR0'                                                    CGL187
+     C                     PARM *BLANKS   @RTCD                                               CGL187
+     C                     PARM '*VERIFY' @OPTN                                               CGL187
+     C                     PARM 'CGL187'  @SARD                                               CGL187
+      *                                                                                       CGL187
+     C                     MOVE 'N'       CGL187  1                                           CGL187
+     C           @RTCD     IFEQ *BLANK                                                        CGL187
+     C                     MOVE 'Y'       CGL187                                              CGL187
+     C                     OPEN OLPOSOL0                                                      CGL187
+     C                     OPEN DLIRSCPD                                                      CGL187
+     C                     OPEN SACEXL3                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
+     C           W0KEY1    KLIST                                                              CGL187
+     C                     KFLD           BRCA                                                CGL187
+     C                     KFLD           CCYO                                                CGL187
+     C                     KFLD           RECN                                                CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,GL0641C010
       *                                                                   CEU011
       ** Retrieve general ledger details                                  CEU011
@@ -1136,6 +1181,30 @@
      C*
      C                     ENDSR
      C*****************************************************************
+      *                                                               *                       CGL187
+      *  IRSACR - Remove Accruals from Interest Commitment            *                       CGL187
+      *                                                               *                       CGL187
+      *****************************************************************                       CGL187
+      *                                                                                       CGL187
+     C           IRSACR    BEGSR                                                              CGL187
+      *                                                                                       CGL187
+     C           CCYO      SETLLDLIRSCPD                                                      CGL187
+     C           CCYO      CHAINDLIRSCPD             69                                       CGL187
+     C           *IN69     DOWEQ'0'                                                           CGL187
+     C                     SUB  REDACR    WKTOT                                               CGL187
+     C           CCYO      READEDLIRSCPD                 69                                   CGL187
+     C                     ENDDO                                                              CGL187
+      *                                                                                       CGL187
+     C           CCYO      SETLLSACEXL3                                                       CGL187
+     C           CCYO      CHAINSACEXL3              69                                       CGL187
+     C           *IN69     DOWEQ'0'                                                           CGL187
+     C                     SUB  OTUI      WKTOT                                               CGL187
+     C                     SUB  TTUI      WKTOT                                               CGL187
+     C           CCYO      READESACEXL3                  69                                   CGL187
+     C                     ENDDO                                                              CGL187
+      *                                                                                       CGL187
+     C                     ENDSR                                                              CGL187
+      *                                                                                       CGL187
       /EJECT
      O********************************************************************
      O****DL0641P1H  203   L2    58                                       E257

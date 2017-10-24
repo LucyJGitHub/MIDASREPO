@@ -9,14 +9,15 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. CGL187             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408            DATE  21FEB96             */
-/*       PREV AMEND NO. E20962            DATE  04OCT90             */
+/*       Prev Amend No. S01408             Date 21Feb96              */
+/*                      E20962             Date 04Oct90              */
 /*                      E22608            DATE  04SEP90             */
 /*                      E21893            DATE  07AUG90             */
 /*                      E15814            DATE  02/02/89            */
@@ -27,6 +28,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       CGL187 - Amendment to Net Trading Position Report          */
 /*       S01408 - ADDITION OF CORE HOOK GLC0802E01.                 */
 /*       E20962 - OLPOS IS BEING UPDATED TWICE - (FT & DL)          */
 /*       E22608 - PROGRAM RENAMED FROM DLC0802E AND ALL DL          */
@@ -59,6 +61,11 @@
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)        /*S01117*/
    DCL VAR(&RENT) TYPE(*CHAR) LEN(3) /* RCF entity code (all/comp/bch)/*S01117*/
+   DCL VAR(&CGL187) TYPE(*CHAR) LEN(1) VALUE('N')                                         /*CGL187*/
+   DCL VAR(&SAR) TYPE(*CHAR) LEN(6) VALUE('      ')                                       /*CGL187*/
+   DCL VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')                                     /*CGL187*/
+   DCL VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('       ')                                     /*CGL187*/
+   DCL VAR(&SCSARD) TYPE(*CHAR) LEN(200) VALUE('       ')                                 /*CGL187*/
 /*/COPY WNCPYSRC,GLC0802E02                                          */
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
              DCL        VAR(&PARM) TYPE(*CHAR) LEN(1)
@@ -74,11 +81,19 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,GLC0802E01                                          */
                                                                       /*S01408*/
+             CHGVAR     VAR(&SAR) VALUE('CGL187')                                         /*CGL187*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CGL187*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CGL187*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                         VAR(&CGL187) VALUE('Y'))                                         /*CGL187*/
+/**/                                                                                      /*CGL187*/
              CLRPFM     FILE(OLPOSOB)
 /**/
              SNDMSG     MSG('CREATION OF ONLINE POSITIONS FILE') +
                         TOMSGQ(MRUNQ)
 /*/COPY WNCPYSRC,GLC0802E03                                          */
+             IF         COND(&CGL187 *EQ 'Y') THEN(CLRPFM +
+                         FILE(OLPOSOX0))                                                  /*CGL187*/
 /**********  OVRDBF     FILE(TABLE)   TOFILE(TABDLEE)                 /*S01194*/
 /**********  OVRDBF     FILE(TABLC)   TOFILE(TABDLEI)                 /*S01194*/
              IF         COND(&PARM = '1') THEN(CHGJOB SWS(XXX1XXXX))

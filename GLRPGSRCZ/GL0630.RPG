@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
 0008 F*                                                               *
-      *  Last Amend No. CLE154             Date 06Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CGL187             Date 06Oct17
+      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP204             Date 15Feb10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -70,6 +71,7 @@
 0010 F*                                                               *
 0010 F*****************************************************************
 0010 F*                                                               *
+      *  CGL187 - Amendment to Net Trading Position Report            *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CAP204 - Teller Related APIs - Account Transfer              *
@@ -160,6 +162,10 @@
 0012 F*LPOS***UF* F     400  5AI     2 DISK                               S01117
 0012 FOLPOS   UF  F     400  8AI     2 DISK                               S01117
 0013 F*****TABLE***IF  F      96 12AI     2 DISK                          S01194
+     FOLPOSOL0UF  E           K        DISK                           UC                      CGL187
+      *                                                                                       CGL187
+     FEVNTXEL0IF  E           K        DISK                           UC                      CGL187
+      *                                                                                       CGL187
 0011 FEVNTML4 IP  E           K        DISK                               S01153
 0014 F*PRINT  O   F     132     OF     PRINTER                            S01124
 0014 F*L0630P1O   F     132     OF     PRINTER                    S01124  S01117
@@ -239,6 +245,7 @@
      E                    TABEV1 10  20  4               * EVENT TYPES    CEU003
 0062 E***********         TABEV2  8   8  4               * EVENT TYPES 2  CEU003
      E                    TABEV2  8  16  4               * EVENT TYPES 2  CEU003
+     E                    TABEV3 10  10  4               * EVENT TYPES 3                      CGL187
       *                                                                   S01408
      E/COPY WNCPYSRC,GL0630EEP1                                           S01408
       *                                                                   S01408
@@ -534,6 +541,41 @@
      C                     MOVE 'Y'       ULEO    1                       S01473
      C                     END                                            S01473
      C*                                                                   S01408
+      *                                                                                       CGL187
+      ** Access Switchable Features File For CGL187                                           CGL187
+      *                                                                                       CGL187
+     C                     CALL 'AOSARDR0'                                                    CGL187
+     C                     PARM *BLANKS   @RTCD                                               CGL187
+     C                     PARM '*VERIFY' @OPTN                                               CGL187
+     C                     PARM 'CGL187'  WSARD   6                                           CGL187
+      *                                                                                       CGL187
+     C                     MOVE 'N'       CGL187  1                                           CGL187
+     C           @RTCD     IFEQ *BLANK                                                        CGL187
+      *                                                                                       CGL187
+     C                     MOVE 'Y'       CGL187                                              CGL187
+     C                     OPEN OLPOSOL0                                                      CGL187
+     C                     OPEN EVNTXEL0                                                      CGL187
+      *                                                                                       CGL187
+     C                     Z-ADD*ZEROS    WWWKFL 150                                          CGL187
+      *                                                                                       CGL187
+     C           W0KEY1    KLIST                                                              CGL187
+     C                     KFLD           BRCA                                                CGL187
+     C                     KFLD           CCY                                                 CGL187
+     C                     KFLD           REXX    20                                          CGL187
+      *                                                                                       CGL187
+     C           W0KEY2    KLIST                                                              CGL187
+     C                     KFLD           DLNO                                                CGL187
+     C                     KFLD           CUNR                                                CGL187
+     C                     KFLD           ETYP                                                CGL187
+     C                     KFLD           EDAT                                                CGL187
+     C                     KFLD           ECCY                                                CGL187
+     C                     KFLD           ECSS                                                CGL187
+     C                     KFLD           DTYP                                                CGL187
+     C                     KFLD           DLST                                                CGL187
+     C                     KFLD           BRCA                                                CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,GL0630CCPG                                           S01408
      C*                                                                   S01408
       *                                                                   CLE006
@@ -1360,6 +1402,60 @@
       *                                                                   S01473
      C   77 51   OLO,S     ADD  EAMT      OLO,S
 0405 C**
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C           W0KEY2    CHAINEVNTXEL0             18                                       CGL187
+      *                                                                                       CGL187
+      ** For FX Deal Type PI,SI - Add Int Outright Accrued In                                 CGL187
+      ** New Total TTFOT (TFI - TFO)                                                          CGL187
+      *                                                                                       CGL187
+     C           ETYP      IFEQ '11V1'                                                        CGL187
+     C           ETYP      OREQ '11V2'                                                        CGL187
+     C           INOI      IFEQ 'O'                                                           CGL187
+     C                     ADD  AIPD      TFO                                                 CGL187
+     C                     ELSE                                                               CGL187
+     C                     ADD  AIPD      TFI                                                 CGL187
+     C                     END                                                                CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+      ** For Fixed Term Loan/Deposit And Neg. Assets Purch,                                   CGL187
+      ** Add Interest Accrued To Date In New Total TTFOT (TFI - TFO)                          CGL187
+      *                                                                                       CGL187
+     C           ETYP      LOKUPTABEV1                   18                                   CGL187
+     C           *IN18     IFEQ '1'                                                           CGL187
+     C           INOI      IFEQ 'O'                                                           CGL187
+     C                     ADD  PSAIP     TFO                                                 CGL187
+     C                     ELSE                                                               CGL187
+     C                     ADD  PSAIP     TFI                                                 CGL187
+     C                     END                                                                CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+      ** For Loans - Add Interest Accrued To Date In New Total TTFOT                          CGL187
+      ** (TFI - TFO)                                                                          CGL187
+      *                                                                                       CGL187
+     C           ETYP      LOKUPTABEV3                   18                                   CGL187
+     C           *IN18     IFEQ '1'                                                           CGL187
+     C           INOI      IFEQ 'O'                                                           CGL187
+     C                     ADD  PSAIP     TFO                                                 CGL187
+     C                     ELSE                                                               CGL187
+     C                     ADD  PSAIP     TFI                                                 CGL187
+     C                     END                                                                CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+      ** For Swap FX Deals, Add P/L Already Accrued In Total TTMO                             CGL187
+      *                                                                                       CGL187
+     C           ETYP      IFEQ '14V3'                                                        CGL187
+     C           ETYP      OREQ '14V4'                                                        CGL187
+     C           INOI      IFEQ 'O'                                                           CGL187
+     C                     ADD  PSAIP     TFO                                                 CGL187
+     C                     ELSE                                                               CGL187
+     C                     ADD  PSAIP     TFI                                                 CGL187
+     C                     END                                                                CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,GL0630C001
 0406 C           ENDD      TAG                             ** ENDD TAG  **
      C************IN03     IFEQ '1'                                       S01153
@@ -1938,11 +2034,36 @@
 0587 C                     SETON                     60
 0588 C                     EXCPT
 0589 C                     SETOF                     60
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     MOVE RECX      REXX                                                CGL187
+      *                                                                                       CGL187
+     C           W0KEY1    CHAINOLPOSOD0             22                                       CGL187
+      *                                                                                       CGL187
+     C                     Z-ADDWWWKFL    TTFOT                                               CGL187
+      *                                                                                       CGL187
+     C                     UPDATOLPOSOD0                                                      CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
 0590 C*
 0591 C***********          MOVE '02'      OLKEY                           S01117
 0591 C                     MOVE '02'      RECX                            S01117
 0592 C           OLKEY     CHAINOLPOS                22
 0593 C*
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     MOVE RECX      REXX                                                CGL187
+      *                                                                                       CGL187
+     C           W0KEY1    CHAINOLPOSOD0             22                                       CGL187
+      *                                                                                       CGL187
+     C           TFI       SUB  TFO       TTFOT  150                                          CGL187
+      *                                                                                       CGL187
+     C                     UPDATOLPOSOD0                                                      CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
 0594 C                     SETON                     62
 0595 C                     EXCPT
 0596 C                     SETOF                     62
@@ -1956,6 +2077,21 @@
 0602 C                     EXCPT
 0603 C                     SETOF                     64
 0604 C*
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     MOVE RECX      REXX                                                CGL187
+      *                                                                                       CGL187
+     C           W0KEY1    CHAINOLPOSOD0             22                                       CGL187
+      *                                                                                       CGL187
+     C                     Z-ADDWWWKFL    TTFOT                                               CGL187
+      *                                                                                       CGL187
+     C                     UPDATOLPOSOD0                                                      CGL187
+      *                                                                                       CGL187
+     C                     Z-ADD*ZEROS    TTFOT                                               CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
 0605 C*
 0606 C           UPZED     TAG                             ** UPZED TAG **
 0607 C                     Z-ADD0         OFI
@@ -1965,6 +2101,14 @@
 0611 C                     Z-ADD0         OLI
 0612 C                     Z-ADD0         OLO
      C*                                                                   S01408
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     Z-ADD0         TFI    150                                          CGL187
+     C                     Z-ADD0         TFO    150                                          CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,GL0630CADU                                           S01408
      C*                                                                   S01408
 0613 C**
@@ -2107,3 +2251,5 @@
 **  TABEV2 -- EVENT TYPES FOR LOANS/DEPOSITS UPDATING
 15V115V316V116V315M115M416M116M4
 15VX15VZ16VX16VZ15MX15MZ16MX16MZ                                          CEU003
+**  TABEV3 -- EVENT TYPES FOR LOANS INTEREST UPDATING                                         CGL187
+61I261M262I262M264I264M266I266M270I270M2                                                      CGL187

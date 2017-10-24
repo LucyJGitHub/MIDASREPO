@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD042716           Date 11Jan17               *
-      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL187             Date 06Oct17               *
+      *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD039107           Date 01Aug16               *
       *                 MD033601           Date 06Aug15               *
@@ -209,8 +210,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
-      *  MD042716 - When settlement method is 05, branch code is      *
-      *             wrong.  Ensure correct branch code.               *
+      *  CDL099 - Split Value Date                                    *
+      *  CGL187 - Amendment to Net Trading Position Report            *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  CGL184 - New Frequencies for Account Statements (Recompile)  *
@@ -688,6 +689,7 @@
      F*EVNTXED*O***F*****397************DISK                                           CLE025 CDL038
      FEVNTXED O   F     405            DISK                                                   CDL038
      F/COPY WNCPYSRC,DL0400F003
+     FEVNTXEX0O   E                    DISK                           UC                      CGL187
 0016 FEVNTXZZ O   F     326            DISK                               E57
      FEMTE2H1 O   F     128            DISK                      A    U1
      FEMXT2H1 O   F     128            DISK                      A    U1
@@ -818,6 +820,7 @@
      E                    ZPE        15  7 0                              CDL006
       *                                                                   CDL006
      E/COPY WNCPYSRC,DL0400EEP1                                           S01408
+     E                    BBD         2  5 0                                                  CDL099
      E*                                                                   S01408
 0093 E*****               HCCY       25  3               HOLIDAY CURENCIESS01194
 0094 E*****               ZHC        50  3               ZFREQ SR. ARRAY  S01194
@@ -938,6 +941,9 @@
      I                                     10401043 PRFC                  CAC001
 0162 I                                     10441046 ROBR                  S01117
 0162 I                                     10471049 POBR                  S01117
+     I                                    P105310590GCPCAP                                    CGL187
+     I                                    P106010660GCSCAP                                    CGL187
+      *                                                                                       CGL187
      I                                     11501153 PTFR                  S01486
      I                                     11541154 HLEX                  CDL002
      I                                     11551158 ICPC                  CDL002
@@ -951,6 +957,8 @@
      I                                     12921309 OPCA                                      CGL029
      I                                     13101327 OSCA                                      CGL029
      I                                     13641367 CLAS                                      CDL038
+     I                                    P223922410BSDT2                                     CDL099
+     I                                    P224222440BRSD2                                     CDL099
       *                                                                   S01408
      I/COPY WNCPYSRC,DL0400IIP2                                           S01408
       *                                                                   S01408
@@ -1515,6 +1523,14 @@
      I                                    P  31 1420ZRA                   CDL006
      I                                    P 143 2020ZPE                   CDL006
      I/COPY WNCPYSRC,DL0400IIP1                                           S01408
+      *                                                                                       CDL099
+      ** Data structure for array BBD                                                         CDL099
+      *                                                                                       CDL099
+     I            DS                                                                          CDL099
+     I                                        1  10 BBD                                       CDL099
+     I                                        1   50BSDT2                                     CDL099
+     I                                        6  100BRSD2                                     CDL099
+      *                                                                                       CDL099
      I*                                                                   S01408
 0519 I*    EVNTX OUTPUT KEYS
 0520 I            DS
@@ -1924,6 +1940,20 @@
      C                     MOVE 'N'       CGL015                                              CGL015
      C                     ENDIF                                                              CGL015
      C/COPY WNCPYSRC,DLH00403
+      *                                                                                       CDL099
+      **   Check if feature CDL099 is enabled                                                 CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM '*MSG   ' @RTCD   7                                           CDL099
+     C                     PARM '*KEY   ' @OPTN   7                                           CDL099
+     C                     PARM 'CDL099'  @SARD   6                                           CDL099
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVE 'Y'       CDL099  1                                           CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
       *                                                                                       CAS005
       ** Access Switchable Feature Details, check if CAS005 is                                CAS005
       ** switch on.                                                                           CAS005
@@ -1955,6 +1985,19 @@
      C           *LIKE     DEFN ZIRATE    WZRATE                                              CAS005
      C*                                                                   CEU015
      C/COPY WNCPYSRC,DL0400CCP9                                           S01408
+      *                                                                                       CGL187
+      ** Access switchable features file for CGL187                                           CGL187
+      *                                                                                       CGL187
+     C                     CALL 'AOSARDR0'                                                    CGL187
+     C                     PARM *BLANKS   @RTCD                                               CGL187
+     C                     PARM '*VERIFY' @OPTN                                               CGL187
+     C                     PARM 'CGL187'  @SARD                                               CGL187
+      *                                                                                       CGL187
+     C                     MOVE 'N'       CGL187  1                                           CGL187
+     C           @RTCD     IFEQ *BLANK                                                        CGL187
+     C                     MOVE 'Y'       CGL187                                              CGL187
+     C                     OPEN EVNTXEX0                                                      CGL187
+     C                     ENDIF                                                              CGL187
      C*                                                                   S01194
      C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  S01194
      C*                                                                   S01195
@@ -2092,6 +2135,27 @@
      C                     Z-ADDBJRDNB    ECD                             055773
      C                     END                                            055773
      C                     END                                            055773
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+      ** Determine Control Date To Calculate Interest Accrued for SWAP                        CGL187
+      *                                                                                       CGL187
+     C                     Z-ADDBJDNWD    REPCD   50                                          CGL187
+      *                                                                                       CGL187
+      ** If First Day Accrual                                                                 CGL187
+      *                                                                                       CGL187
+     C           BKALDI    IFEQ 'Y'                                                           CGL187
+     C           BJDNWD    SUB  1         REPCD                                               CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+     C           BKAPDT    IFLT BJDNWD                                                        CGL187
+     C           BKAPDT    ADD  1         REPCD                                               CGL187
+     C           BKALDI    IFEQ 'Y'                                                           CGL187
+     C                     Z-ADDBKAPDT    REPCD                                               CGL187
+     C                     END                                                                CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
 0610 C*
 0611 C***                  MOVE '40'      TABKEY                          S01194
 0612 C***                  EXSR TABCHN                                    S01194
@@ -3052,6 +3116,16 @@ A670 C****                 MOVELCPAR      CLIKEY                          S01194
 0692 C*    GO TO APPROPRIATE CALCS
 0693 C*
 0694 C   02      NOTD      COMP -999                     50
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     Z-ADD0         PSAIP  130                                          CGL187
+     C                     Z-ADD*ZEROS    DAYS                                                CGL187
+     C                     Z-ADD*ZEROS    PERIOD                                              CGL187
+     C                     Z-ADD*ZEROS    PRODUC                                              CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
 0695 C   02N50             GOTO CALNOT
 0696 C   02
 0697 COR 03                GOTO FIXNAP
@@ -3060,6 +3134,13 @@ A670 C****                 MOVELCPAR      CLIKEY                          S01194
 0700 C*
 0701 C*    F O R E I G N   E X C H A N G E
 0702 C*
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     Z-ADD0         AIPD   130                                          CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
 0703 C*    FIND DEALT BASE RATE FOR PURCHASE AND SALE CCYS
      C/COPY WNCPYSRC,DL0400C084
 0704 C*
@@ -3282,6 +3363,10 @@ A670 C****                 MOVELCPAR      CLIKEY                          S01194
      C**********           ENDIF                                                       247618 259640
      C**********           Z-ADDDLNO      DLNRF   60                                   247618 259640
       *****************************************************************                247618 259640
+      *                                                                                       CGL187
+      ** Save original interest date                                                          CGL187
+      *                                                                                       CGL187
+     C                     Z-ADDNIDT      WNIDT   50                                          CGL187
      C           CAS005    IFEQ 'Y'                                                           CAS005
      C           MDAT      ANDEQ0                                                             CAS005
      C                     MOVE CCY       ZCCY                                                228545
@@ -5357,6 +5442,12 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
 0938 C*    AND KEEP COUNT AND HASH TOTALS
 0939 C*
 0940 C           EVENT     BEGSR                           *** EVENT   ***
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     Z-ADD*ZEROS    PSAIP                                               CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
 0941 C*
 0942 C*    FIND FIELD VALUES FROM TABLES - SEE COMMENTS IN EXTENSION SPECS
 0943 C*
@@ -5366,6 +5457,19 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
 0944 C           KEY       LOKUPTAB1      TAB2           50
 0945 C  N50                GOTO ENDEV
 0946 C                     MOVE TAB2      KEYDS            DATA STRUCTURE
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C   02                                                                                   CGL187
+     COR 03      CODE2     IFEQ 'M2'                                                          CGL187
+     C           CODE2     OREQ 'I2'                                                          CGL187
+     C           EA        ANDEQ7                                                             CGL187
+     C                     Z-ADDAIPD      PSAIP                                               CGL187
+     C                     SUB  IPRD      PSAIP                                               CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,DL0400C103
 0947 C*
 0948 C*    EVENT TYPE
@@ -5513,6 +5617,24 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
 0961 C*
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0400CCP6                                           S01408
+      *                                                                                       CDL099
+      ** If CDL099 is enabled, do processing in Sr/#BSPVD                                     CDL099
+      *                                                                                       CDL099
+     C                     SETOF                     82                                       CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C           *IN01     ANDEQ'1'                                                           CDL099
+     C           BSDT2     ANDNE0                                                             CDL099
+     C           CDL099    OREQ 'Y'                                                           CDL099
+     C           *IN09     ANDEQ'1'                                                           CDL099
+     C           BSDT2     ANDNE0                                                             CDL099
+      *                                                                                       CDL099
+     C                     EXSR #BSPVD                                                        CDL099
+     C   68      BBD,BE    CABLEECD       ENDEV                                               CDL099
+     C   67      VDAT      CABLEECD       ENDEV                                               CDL099
+     C                     SETON                     82                                       CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
      C*                                                                   S01408
 0962 C*    EVENT CCY
      C           *LIKE     DEFN CCY       SETCCY                          CEU003
@@ -5552,6 +5674,45 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C                     ENDIF                                          CEU003
      C                     ENDIF                                          CEU003
      C*                                                                   S01392
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+      ** FOR FX DEAL 'PI' AND 'SI' CALCULATE NEW AMOUNT                                       CGL187
+      *                                                                                       CGL187
+     C           DTYP      IFEQ 'PI'                                                          CGL187
+     C           DTYP      OREQ 'SI'                                                          CGL187
+     C           EVCCY     IFEQ PUCY                                                          CGL187
+     C                     Z-ADDGCPCAP    PSAIP                                               CGL187
+     C                     Z-ADDGCPCAP    AIPD                                                CGL187
+     C                     ELSE                                                               CGL187
+     C                     Z-ADDGCSCAP    PSAIP                                               CGL187
+     C                     Z-ADDGCSCAP    AIPD                                                CGL187
+     C                     END                                                                CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+      ** CALCULATE SWAP PROFIT/LOSS ACCRUED TO DATE                                           CGL187
+      *                                                                                       CGL187
+     C           DTYP      IFEQ 'SW'                                                          CGL187
+      *                                                                                       CGL187
+     C           CODE2     IFEQ 'V3'                                                          CGL187
+     C           CODE2     OREQ 'V4'                                                          CGL187
+     C           REPCD     SUB  VDAT      DAYS    50                                          CGL187
+     C           OTDT      SUB  VDAT      PERIOD  50                                          CGL187
+      *                                                                                       CGL187
+     C           SPLA      MULT DAYS      PRODUC 150                                          CGL187
+     C           PRODUC    DIV  PERIOD    PSAIP                                               CGL187
+      *                                                                                       CGL187
+      ** IF FIRST LEG HAS NOT REACHED VALUE DATE                                              CGL187
+      *                                                                                       CGL187
+     C           VDAT      IFGT REPCD                                                         CGL187
+     C                     Z-ADD0         PSAIP                                               CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+     C                     END                                                                CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,DL0400C085
      C*  EVENT AMOUNT FOR LOANS/DEPOSITS                                  S01392
      C*  IF FRONT-UP INTEREST = Y AND M2 EVENT, SET EQUAL TO ZERO         S01392
@@ -5766,6 +5927,20 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
 1013 C   78N87   DBCR      DIV  POWER,N   WK159                           E20644
 1014 C   78N87   AMT,EA    MULT WK159     DBCE      H                     E20644
      C/COPY WNCPYSRC,DL0400C086
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+      ** INTEREST MUST BE CALCULATED FOR THE PERIOD IF NOT FIRST PERIOD                       CGL187
+      *                                                                                       CGL187
+     C           ZFREQ     IFNE *BLANK                                                        CGL187
+     C           DAT,ED    ANDGTNIDT                                                          CGL187
+     C           ZFREQ     ORNE *BLANK                                                        CGL187
+     C           DAT,ED    ANDGTWNIDT                                                         CGL187
+     C                     Z-ADD*ZEROS    PSAIP                                               CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
 1015 C                     SETOF                     78
 1016 C*
 1017 C*    SPOT BASE CCY EQUIV OF EVENT AMOUNT
@@ -6252,6 +6427,20 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C** THE DATE NEXT WORKING DAY
      C****1      DAT,ED    COMP DNWD                     63               S01194
      C   U1      DAT,ED    COMP BJDNWD                   63               S01194
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+      ** INTEREST MUST BE CALCULATED FOR THE PERIOD IF NOT FIRST PERIOD                       CGL187
+      *                                                                                       CGL187
+     C           ZFREQ     IFNE *BLANKS                                                       CGL187
+     C           DAT,ED    ANDGTNIDT                                                          CGL187
+     C           ZFREQ     ORNE *BLANKS                                                       CGL187
+     C           DAT,ED    ANDGTWNIDT                                                         CGL187
+     C                     Z-ADD*ZEROS    PSAIP                                               CGL187
+     C                     END                                                                CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,DL0400C062
      C***U1*63*******      ADD  1         TNDLR                           S01354
      C*
@@ -6535,6 +6724,15 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C/COPY WNCPYSRC,DL0400C118
      C                     EXSR SRNEG                                                       MD039107
      C                     EXCPTEVNTX                                     CEU003
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     EXSR SREVEX                                                        CGL187
+      *                                                                                       CGL187
+     C                     WRITEEVNTXED0                                                      CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,DL0400C095
      C                     ENDIF                                          CEU003
      C                     ELSE                                           CEU003
@@ -6573,6 +6771,15 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C/COPY WNCPYSRC,DL0400C105
      C                     EXSR SRNEG                                                       MD039107
 1110 C                     EXCPTEVNTX                                     S01117
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     EXSR SREVEX                                                        CGL187
+      *                                                                                       CGL187
+     C                     WRITEEVNTXED0                                                      CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,DL0400C096
      C                     ENDIF                                          CEU003
      C           CER049    IFEQ 'Y'                                                           CER049
@@ -6729,6 +6936,15 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
       *                                                                                       CGL015
      C                     EXSR SRNEG                                                       MD039107
      C                     EXCPTEVNTX                                     S01117
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     EXSR SREVEX                                                        CGL187
+      *                                                                                       CGL187
+     C                     WRITEEVNTXED0                                                      CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C                     MOVE WBBUTX    BBCRNM                          155498
      C                     MOVE WBBVTX    BBCRTN                          155498
      C                     MOVE WBBWTX    BBCASC                          155498
@@ -6826,6 +7042,15 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
       *                                                                                       CGL015
      C                     EXSR SRNEG                                                       MD039107
      C                     EXCPTEVNTX                                     S01117
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     EXSR SREVEX                                                        CGL187
+      *                                                                                       CGL187
+     C                     WRITEEVNTXED0                                                      CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,DL0400C042
       *
       ** RESET FIELDS READY FOR NEXT EVENT
@@ -8706,6 +8931,15 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C                     EXSR SRNEG                                                       MD039107
      C                     EXCPTEVNTX                                     CEU003
      C/COPY WNCPYSRC,DL0400C097
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     EXSR SREVEX                                                        CGL187
+      *                                                                                       CGL187
+     C                     WRITEEVNTXED0                                                      CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C                     MOVE *OFF      *IN46                           CEU003
      C*                                                                   CEU003
      C* For records 2 and 3 the following attributes are common.          CEU003
@@ -8782,6 +9016,15 @@ S13  C***********VDATM*****CABGTBJDNWD    NXTAMD                    S01194E15988
      C                     EXSR SRNEG                                                       MD039107
      C                     EXCPTEVNTX                                     CEU003
      C/COPY WNCPYSRC,DL0400C098
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     EXSR SREVEX                                                        CGL187
+      *                                                                                       CGL187
+     C                     WRITEEVNTXED0                                                      CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C                     MOVE *OFF      *IN47                           CEU003
      C*                                                                   CEU003
      C* Keep the Event records count and hash total of event amount.      CEU003
@@ -9067,6 +9310,15 @@ TAS19C           EVCODE    OREQ '17M2'                                    138004
      C/COPY WNCPYSRC,DL0400C121
      C                     EXSR SRNEG                                                       MD039107
      C                     EXCPTEVNTX                                     CEU003
+      *                                                                                       CGL187
+     C           CGL187    IFEQ 'Y'                                                           CGL187
+      *                                                                                       CGL187
+     C                     EXSR SREVEX                                                        CGL187
+      *                                                                                       CGL187
+     C                     WRITEEVNTXED0                                                      CGL187
+      *                                                                                       CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
      C/COPY WNCPYSRC,DL0400C099
      C                     MOVE *OFF      *IN48                           CEU003
      C*                                                                   CEU003
@@ -9108,6 +9360,37 @@ TAS19C           EVCODE    OREQ '17M2'                                    138004
 1330 C********************************************************************S01195
      C/EJECT                                                              S01195
      C*                                                                   S01408
+      /EJECT                                                                                  CGL187
+      *****************************************************************                       CGL187
+      *                                                               *                       CGL187
+      *  SREVEX - Format Event Code and Type                          *                       CGL187
+      *                                                               *                       CGL187
+      *****************************************************************                       CGL187
+      *                                                                                       CGL187
+     C           SREVEX    BEGSR                                                              CGL187
+      *                                                                                       CGL187
+     C                     MOVE DLNO      LDLNO                                               CGL187
+     C                     MOVE CNMR      LCUNR                                               CGL187
+     C           *IN47     IFEQ *ON                                                           CGL187
+     C           *IN48     OREQ *ON                                                           CGL187
+     C                     MOVE WEVCD1    LEDAT                                               CGL187
+     C                     ELSE                                                               CGL187
+     C                     MOVE EVCODE    LETYP                                               CGL187
+     C                     ENDIF                                                              CGL187
+     C                     MOVE DAT,ED    LEDAT                                               CGL187
+     C                     MOVE EVCCY     LECCY                                               CGL187
+     C                     MOVE SSNO      LECSS                                               CGL187
+     C                     MOVE DTYP      LDTYP                                               CGL187
+     C                     MOVE DLST      LDLST                                               CGL187
+     C                     MOVE BRCA      LEBRC                                               CGL187
+      *                                                                                       CGL187
+     C           *IN48     IFEQ *ON                                                           CGL187
+     C                     MOVE SETCCY    LECCY                                               CGL187
+     C                     MOVE STSSNO    LECSS                                               CGL187
+     C                     ENDIF                                                              CGL187
+      *                                                                                       CGL187
+     C                     ENDSR                                                              CGL187
+      *                                                                                       CGL187
       /EJECT                                                              CDL006
       *****************************************************************   CDL006
       *                                                               *   CDL006
@@ -9590,6 +9873,174 @@ TAS19C           EVCODE    OREQ '17M2'                                    138004
      C                     ENDSR                                                              234341
       *****************************************************************                       234341
      C/COPY WNCPYSRC,DL0400CCP7                                           S01408
+      *                                                                                       CDL099
+      *****************************************************************                       CDL099
+      **  There are several changes to the dates output on the event records.                 CDL099
+      **  In understanding the following codes, it is useful to refer to                      CDL099
+      **  programmers Guide No. 2, the list of event codes.                                   CDL099
+      **                                                                                      CDL099
+      **  Split Value Date effects the following changes:                                     CDL099
+      **  Where SALE DATE is output for Leg 1, Date is replaced with                          CDL099
+      **        BSDT2 if entered.                                                             CDL099
+      **  Where SALE DATE is output for Leg 2, Date is replaced with                          CDL099
+      **        BRSD2 if entered.                                                             CDL099
+      **  Where SOLD DATE is output for EVENT DATE and PURCH AMT is                           CDL099
+      **        output for OTHER AMOUNT, VDAT or OTHD is output for                           CDL099
+      **        OTHER DATE is output as appropriate.                                          CDL099
+      **  Where PURCH DAT is output for EVENT DATE and SALE AMT is                            CDL099
+      **        output for OTHER AMOUNT, BSDT2 or BRSD2 is output for                         CDL099
+      **        OTHER DATE is output as appropriate.                                          CDL099
+      **                                                                                      CDL099
+      **   NB For a Split Value Deal, the records hold the following values:                  CDL099
+      **                                                                                      CDL099
+      **  DEAL            FIELD: VDAT    OTHD    BRSD2  BSDT2                                 CDL099
+      **  FX OUTRIGHT             P                      S                                    CDL099
+      **  SW OR PS LEG1           P1      P2      S2     S1                                   CDL099
+      **  SW OR PS LEG2           P2      P1      S1     S2                                   CDL099
+      **                                                                                      CDL099
+      **|  DEAL |EV  |EVENT |EV DT*SVD DT *EV |OTH|OTH|OT DT*SVD DT *                         CDL099
+      **|  TYPE |CODE|DATE  |CODE *CODE   *CCY|CCY|DAT|CODE *CODE   *                         CDL099
+      **|       |    |      |     *IF DIFF*   |   |   |     *IF DIFF *                        CDL099
+      **|(FP/FS)|11V1|VALUE | 2   *  -    * P | S |ZER|  1  * 8 BSDT2*                        CDL099
+      **|(CX/SW)|11V2|VALUE | 2   *8 BSDT2* S | P |ZER|  1  * 2 VDAT *                        CDL099
+      **|(PS   )|    |      |     *       *   |   |   |     *        *                        CDL099
+      **|       |    |      |     *       *   |   |   |     *        *                        CDL099
+      **|  SW   |11V3|L2 VAL| 3   *9 BRSD2*P/L|P/L|ZER|  1  *  -     *                        CDL099
+      **|  SW   |11V4|L2 VAL| 3   *9 BRSD2*P/L|P/L|ZER|  1  *  -     *                        CDL099
+      **|  SW   |11V5|L1 VAL| 2   *8 BSDT2*P/L|P/L|L2V|  3  * 9 OTHD *                        CDL099
+      **|  SW   |11V6|L1 VAL| 2   *8 BSDT2*P/L|P/L|L2V|  3  * 9 OTHD *                        CDL099
+      **|  SW   |11V7|L2 VAL| 3   *   -   *L1P| - |ZER|  1  *  -     *                        CDL099
+      **|  SW   |11V8|L2 VAL| 3   *9 BRSD2*L1S| - |ZER|  1  *  -     *                        CDL099
+      **|       |    |      |     *       *   |   |   |     *        *                        CDL099
+      **|  P2   |11V3|L2 VAL| 3   *9 BRSD2*L2S  - |ZER|  1  *  -     *                        CDL099
+      **|  P2   |11V4|L2 VAL| 3   *       *L2P| - |ZER|  1  *  -     *                        CDL099
+      **|  P2   |11V7|L2 VAL| 3   *       *L1P| - |ZER|  1  *  -     *                        CDL099
+      **|  P2   |11V8|L2 VAL| 3   *9 BRSD2*L1S  - |ZER|  1  *  -     *                        CDL099
+      **       NB PS EVENTS V3-8 ARE CALCULATED FROM LEG2 SO EVENT DATES                      CDL099
+      **       ARE IN THE OPPOSITE SENSE TO A SW, IE VDAT = LEG 2 VALUE                       CDL099
+      **       BSDT2 = LEG 2 SALE ETC, SO IN REALITY THE VALUES ARE:                          CDL099
+      **|  P2   |11V3|L2 VAL| 2   *8 BRSD2*L2S  - |ZER|  1  *  -     *                        CDL099
+      **|  P2   |11V4|L2 VAL| 2   *       *L2P| - |ZER|  1  *  -     *                        CDL099
+      **|  P2   |11V7|L2 VAL| 2   *       *L1P| - |ZER|  1  *  -     *                        CDL099
+      **|  P2   |11V8|L2 VAL| 2   *8 BRSD2*L1S  - |ZER|  1  *  -     *                        CDL099
+      **                                                                                      CDL099
+      *******************************************************************                     CDL099
+      ** #BSPVD checks for deal types with split value dates.                                 CDL099
+      *******************************************************************                     CDL099
+      *                                                                                       CDL099
+     C           #BSPVD    BEGSR                                                              CDL099
+      *                                                                                       CDL099
+     C                     SETOF                     676869                                   CDL099
+      *                                                                                       CDL099
+     C           DTYP      COMP 'FP'                     50                                   CDL099
+     C  N50      DTYP      COMP 'FS'                     50                                   CDL099
+     C  N50      DTYP      COMP 'PI'                     50                                   CDL099
+     C  N50      DTYP      COMP 'SI'                     50                                   CDL099
+     C  N50      DTYP      COMP 'CX'                     50                                   CDL099
+     C   50      EVCODE    COMP '11V1'                   67                                   CDL099
+     C   50      EVCODE    COMP '11V2'                   68                                   CDL099
+     C   50                GOTO #BTAG1                                                        CDL099
+      *                                                                                       CDL099
+     C           DTYP      COMP 'OT'                     50                                   CDL099
+     C   50      EVCODE    COMP '13V1'                   67                                   CDL099
+     C   50      EVCODE    COMP '13V2'                   68                                   CDL099
+     C   50                GOTO #BTAG1                                                        CDL099
+      *                                                                                       CDL099
+     C           DTYP      COMP 'SW'                     69                                   CDL099
+     C   69      EVCODE    COMP '14V1'                   67                                   CDL099
+     C   69      EVCODE    COMP '14V2'                   68                                   CDL099
+      *                                                                                       CDL099
+     C           DTYP      COMP 'PS'                     69                                   CDL099
+     C   69      EVCODE    COMP '20V1'                   67                                   CDL099
+     C   69      EVCODE    COMP '20V2'                   68                                   CDL099
+      *                                                                                       CDL099
+     C           #BTAG1    TAG                                                                CDL099
+      *                                                                                       CDL099
+      ** Initialise BO                                                                        CDL099
+      *                                                                                       CDL099
+     C                     Z-ADD1         BO                                                  CDL099
+      *                                                                                       CDL099
+      ** Initialise BE                                                                        CDL099
+      *                                                                                       CDL099
+     C                     Z-ADD1         BE                                                  CDL099
+     C   67                EXSR #BSOD1                                                        CDL099
+     C   68                EXSR #BSPED                                                        CDL099
+     C   68                EXSR #BSOD2                                                        CDL099
+     C   50                GOTO #BSPV9                                                        CDL099
+      *                                                                                       CDL099
+      ** Additional processing for (first leg of) swap                                        CDL099
+      *                                                                                       CDL099
+     C           EVCODE    IFEQ '14V3'                                                        CDL099
+     C           BRSD2     ANDGT0                                                             CDL099
+     C           SPLC      ANDEQSLCY                                                          CDL099
+     C                     Z-ADD2         BE      10                                          CDL099
+     C                     END                                                                CDL099
+      *                                                                                       CDL099
+     C           EVCODE    IFEQ '14V5'                                                        CDL099
+     C           EVCODE    OREQ '14V6'                                                        CDL099
+      *                                                                                       CDL099
+     C           BSDT2     IFGT 0                                                             CDL099
+     C           SPLC      ANDEQSLCY                                                          CDL099
+     C                     Z-ADD1         BE                                                  CDL099
+     C                     Z-ADD2         BO      10                                          CDL099
+     C                     END                                                                CDL099
+     C                     END                                                                CDL099
+      *                                                                                       CDL099
+     C           EVCODE    IFEQ '14V8'                                                        CDL099
+     C           BRSD2     ANDGT0                                                             CDL099
+     C                     Z-ADD2         BE                                                  CDL099
+     C                     END                                                                CDL099
+      *                                                                                       CDL099
+      ** End fo SW processing                                                                 CDL099
+      *                                                                                       CDL099
+      ** Additional processing for (second leg of) internal contract                          CDL099
+      *                                                                                       CDL099
+     C           EVCODE    IFEQ '20V3'                                                        CDL099
+     C           EVCODE    OREQ '20V8'                                                        CDL099
+      *                                                                                       CDL099
+     C           BSDT2     IFGT 0                                                             CDL099
+     C                     Z-ADD1         BE                                                  CDL099
+     C                     END                                                                CDL099
+     C                     END                                                                CDL099
+      *                                                                                       CDL099
+      ** End of PS processing                                                                 CDL099
+      *                                                                                       CDL099
+     C           #BSPV9    ENDSR                                                              CDL099
+      *                                                                                       CDL099
+      *******************************************************************                     CDL099
+      ** #BSPED S.R. to set up sale value date as event if non zero                           CDL099
+      *******************************************************************                     CDL099
+      *                                                                                       CDL099
+     C           #BSPED    BEGSR                                                              CDL099
+      *                                                                                       CDL099
+     C           BSDT2     COMP 0                        56                                   CDL099
+     C  N56                Z-ADD1         BE                                                  CDL099
+      *                                                                                       CDL099
+     C                     ENDSR                                                              CDL099
+      *                                                                                       CDL099
+      *******************************************************************                     CDL099
+      ** #BSOD1 S.R. to set up other date as sale value date if non zero                      CDL099
+      *******************************************************************                     CDL099
+      *                                                                                       CDL099
+     C           #BSOD1    BEGSR                                                              CDL099
+      *                                                                                       CDL099
+     C           BSDT2     COMP 0                        56                                   CDL099
+     C  N56                Z-ADD1         BO                                                  CDL099
+      *                                                                                       CDL099
+     C                     ENDSR                                                              CDL099
+      *                                                                                       CDL099
+      *******************************************************************                     CDL099
+      ** #BSOD2 S.R. to set up other date as value date if event date                         CDL099
+      **             equals sale value date                                                   CDL099
+      *******************************************************************                     CDL099
+      *                                                                                       CDL099
+     C           #BSOD2    BEGSR                                                              CDL099
+      *                                                                                       CDL099
+     C           BE        COMP 1                        56                                   CDL099
+     C   56                Z-ADD2         OD                                                  CDL099
+      *                                                                                       CDL099
+     C                     ENDSR                                                              CDL099
+      *                                                                                       CDL099
       *****************************************************************                       CDL033
       *                                                               *                       CDL033
       *  SRFRC1 - Processing #1 for CF deals                          *                       CDL033
@@ -10638,6 +11089,9 @@ TAS19C           EVCODE    OREQ '17M2'                                    138004
 2249 O                         DAT,ED    20P                              E57
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0400OOP1                                           S01408
+      *                                                                                       CDL099
+     O                 01 82N67BBD,BE    20P                                                  CDL099
+     O                 09 82N67BBD,BE    20P                                                  CDL099
      O*                                                                   S01408
 2250 O                         AMT,EA    27P                              E57
      O**********       48      WSTAMT    27P                        CEU003138004
@@ -10666,6 +11120,9 @@ TAS19C           EVCODE    OREQ '17M2'                                    138004
 2260 O                         DAT,OD    56P                              E57
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0400OOP2                                           S01408
+      *                                                                                       CDL099
+     O                 01 82N68BBD,BO    56P                                                  CDL099
+     O                 09 82N68BBD,BO    56P                                                  CDL099
      O*                                                                   S01408
 2261 O                         AMT,OA    63P                              E57
 2262 O                 04      PUPRX     63P                              E57
@@ -10734,6 +11191,9 @@ TAS19C           EVCODE    OREQ '17M2'                                    138004
 2250 O                         DAT,ED   220P                              E57
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0400OOP3                                           S01408
+      *                                                                                       CDL099
+     O                 01 82   BBD,BE   220P                                                  CDL099
+     O                 09 82   BBD,BE   220P                                                  CDL099
      O*                                                                   S01408
 2292 O                         FFIN     221                               E57
 2293 O                 31               221 ' '                           E57

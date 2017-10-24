@@ -23,12 +23,13 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Amend No. CGL187             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAS008             Date 16Jun04              */
-/*       Prev Amend No. CAS006             Date 21Jan03              */
+/*       Prev Amend No. CAS008             Date 16Jun04              */
+/*                      CAS006             Date 21Jan03              */
 /*                      CAS005             Date 16Dec02              */
 /*                      CIR012             Date 03Apr03              */
 /*                      CAS004             Date 26Jun02              */
@@ -41,6 +42,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CGL187 - Amendment to Net Trading Position Report           */
 /*       CAS008 - IAS 39 Enhancements                                */
 /*       CAS006 - Hedge Accounting Phase B                           */
 /*       CAS005 - Enhancemments to CAS001, CAS002 and CAS004         */
@@ -73,6 +75,7 @@
              DCL  VAR(&SAR)    TYPE(*CHAR) LEN(6)                     /*CIR001*/
              DCL  VAR(&SCSARD) TYPE(*CHAR) LEN(200)                   /*CIR001*/
              DCL  VAR(&CIR001) TYPE(*CHAR) LEN(1) VALUE('N')          /*CIR001*/
+             DCL  VAR(&CGL187) TYPE(*CHAR) LEN(1) VALUE('N')                              /*CGL187*/
              DCL  VAR(&CAS004) TYPE(*CHAR) LEN(1) VALUE('N')                              /*CAS004*/
              DCL  VAR(&CAS005) TYPE(*CHAR) LEN(1) VALUE('N')                              /*CAS005*/
              DCL  VAR(&STAT) TYPE(*CHAR) LEN(1)                                           /*CAS004*/
@@ -283,6 +286,12 @@
  
                CHGVAR (&BOOK) VALUE(%SST(&RPARM 4 2))
                IF (&BOOK = '**') THEN(CHGVAR (&BOOK) VALUE('  '))
+               CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*CGL187*/
+               CHGVAR     VAR(&SAR) VALUE('CGL187')                                       /*CGL187*/
+               CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*CGL187*/
+               CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*CGL187*/
+               IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                            VAR(&CGL187) VALUE('Y'))                                      /*CGL187*/
                                                                                           /*CIR012*/
                CHGVAR     VAR(&DEAL) VALUE(%SST(&RPARM 6 6))                              /*CIR012*/
                IF         COND(&DEAL = '******') THEN(CHGVAR +
@@ -364,6 +373,8 @@
                                                                       /*CIR001*/
                CLRPFM FILE(DLACTVPD)                                  /*CIR001*/
                CLRPFM FILE(DLCFEVPD)                                  /*CIR001*/
+               IF         COND(&CGL187 *EQ 'Y') THEN(CLRPFM +
+                           FILE(DLIRSCFPD))                                               /*CGL187*/
 /**********    CALL (DL1955) PARM(&MODE &TYPE &ENT &CCY &BOOK &SEQ) ***/       /*CIR001*/ /*CIR012*/
                CALL       PGM(DL1955) PARM(&MODE &TYPE &ENT &CCY &BOOK +
                             &SEQ &DEAL)                                                   /*CIR012*/

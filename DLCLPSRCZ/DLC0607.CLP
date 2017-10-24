@@ -9,16 +9,17 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. CGL187             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*       Last Amend No. CDL008             Date 02May00              */
+/*       Prev Amend No. CDL008             Date 02May00              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. E22738             Date 16Aug90              */
+/*                      E22738             Date 16Aug90              */
 /*                      E20                Date 01Nov89              */
 /*                        S01117           DATE 18/07/89            */
 /*                        S01194           DATE 18/07/89            */
@@ -27,6 +28,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       CGL187 - Amendment to Net Trading Position Report          */
 /*       CDL008 - Continuous Linked Settlement                       */
 /*       E22738  -  FILES NO LONGER IN USE.(DONE BY E20)            */
 /*       E20     -  MODIFICATION: REMOVE MEMBERS FROM EVENT LF'S.   */
@@ -49,9 +51,15 @@
              DCL        VAR(&SAR)    TYPE(*CHAR) LEN(6)               /*CDL008*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)             /*CDL008*/
              DCL        VAR(&CDL008) TYPE(*CHAR) LEN(1) VALUE('N')    /*CDL008*/
+             DCL        VAR(&CGL187) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CGL187*/
 /*/COPY WNCPYSRC,DLC0607003                                          */
 /*********   RCVDTAARA  DTAARA(MMOD)                                    S01179*/
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)                    /*S01179*/
+             CHGVAR     VAR(&SAR) VALUE('CGL187')                                         /*CGL187*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CGL187*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CGL187*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                        VAR(&CGL187) VALUE('Y'))                                          /*CGL187*/
 /**/
 /*/COPY WNCPYSRC,DLC0607002                                          */
              CHGJOB     SWS(00000000)
@@ -199,6 +207,8 @@
              CLRPFM     FILE(EVNTXEC)
              CLRPFM     FILE(EVNTXED)
              CLRPFM     FILE(EVNTXZZ)
+              IF         COND(&CGL187 *EQ 'Y') THEN(CLRPFM +
+              FILE(EVNTXEX0))                                                             /*CGL187*/
 /*/COPY WNCPYSRC,DLC0607001                                          */
 /**/
 /*IF EXPOSURE MANAGEMENT MODULE PRESENT CLEAR EM FILES AND SET ON */

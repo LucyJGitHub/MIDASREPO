@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037598           Date 18Jul17               *
-      *  Prev Amend No. MD031530           Date 18Feb15               *
+      *  Last Amend No. MD047513           Date 18Sep17               *
+      *  Prev Amend No. MD037598           Date 18Jul17               *
+      *                 MD031530           Date 18Feb15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 MD024497           Date 04Feb14               *
@@ -40,6 +41,10 @@
       *                 CDL002             Date 06Mar97               *
       *                                                               *
       *---------------------------------------------------------------*
+      *
+      *  MD047513 - Incorrect projected ledger balance after FX net   *
+      *             deletion.  Recreate FX deal projection if FX net  *
+      *             was inserted on an earlier date.                  *
       *  MD037598 - Deal absent in FX nets summary.  Commit all files *
       *             for update.                                       *
       *  MD031530 - FX Netting contains deal still in WIP queue       *
@@ -111,6 +116,9 @@
       *
      E                    CPY@    1   1 80
       ** Array containing Copyright statement
+      *                                                                                     MD047513
+     E                    TABMTH  1  12  3   TABCOD  2                                      MD047513
+      *  Months/Month Numbers                                                               MD047513
      E/COPY WNCPYSRC,FX0921E001
       *
      IP@CURF    E DSSDCUSTPD
@@ -172,6 +180,24 @@
      I                                        1   20M#VALD
      I                                        3   40D#VALD
      I                                        5   60Y#VALD
+      *                                                                                     MD047513
+      ** Date DS - DDMMMYY.                                                                 MD047513
+     ID#DATE      DS                                                                        MD047513
+     I                                        1   20D#DAY                                   MD047513
+     I                                        3   5 D#MON                                   MD047513
+     I                                        6   70D#YRS                                   MD047513
+      *                                                                                     MD047513
+      ** Date DS - MMMDDYY.                                                                 MD047513
+     IM#DATE      DS                                                                        MD047513
+     I                                        1   3 M#MON                                   MD047513
+     I                                        4   50M#DAY                                   MD047513
+     I                                        6   70M#YRS                                   MD047513
+      **  Data Structure:  Date in YYYY/MM/DD format                                        MD047513
+     I            DS                                                                        MD047513
+     I                                        1   8 WNDAT8                                  MD047513
+     I                                        1   4 WNYY                                    MD047513
+     I                                        5   6 WNMM                                    MD047513
+     I                                        7   8 WNDD                                    MD047513
       *
       ** Local data area for database error details
      ILDA       E DSLDA                         256
@@ -397,7 +423,8 @@
      C                     END
      C                     MOVE *BLANKS   AMPRGI
      C                     EXSR ACCCUS
-     C                     MOVELCHGDAT    AMDTOE
+     C**********           MOVELCHGDAT    AMDTOE                                            MD047513
+     C                     EXSR SETENT                                                      MD047513
      C                     MOVELCHGDAT    AMDTCH
      C                     TIME           AMCHTI
      C                     MOVE 'I'       AMCHTY
@@ -752,6 +779,43 @@
       *
      CSR                   ENDSR
       *
+      *****************************************************************                     MD047513
+      *                                                                                     MD047513
+      *  Set entry date of FX net                                                           MD047513
+      *                                                                                     MD047513
+      *****************************************************************                     MD047513
+     C           SETENT    BEGSR                                                            MD047513
+      *                                                                                     MD047513
+      ** Set up DDDMMYY DS or MMMDDYY.                                                      MD047513
+      *                                                                                     MD047513
+     C           BJDFIN    IFEQ 'D'                                                         MD047513
+     C                     MOVELBJMRDT    D#DATE                                            MD047513
+     C                     MOVE D#DAY     WNDD                                              MD047513
+     C                     MOVELD#MON     RUNMON  3                                         MD047513
+     C                     MOVE D#YRS     WNYY                                              MD047513
+     C           D#YRS     IFGE 72                                                          MD047513
+     C                     MOVEL'19'      WNYY                                              MD047513
+     C                     ELSE                                                             MD047513
+     C                     MOVEL'20'      WNYY                                              MD047513
+     C                     ENDIF                                                            MD047513
+     C                     ELSE                                                             MD047513
+     C                     MOVELBJMRDT    M#DATE                                            MD047513
+     C                     MOVE M#DAY     WNDD                                              MD047513
+     C                     MOVELM#MON     RUNMON                                            MD047513
+     C                     MOVE M#YRS     WNYY                                              MD047513
+     C           M#YRS     IFGE 72                                                          MD047513
+     C                     MOVEL'19'      WNYY                                              MD047513
+     C                     ELSE                                                             MD047513
+     C                     MOVEL'20'      WNYY                                              MD047513
+     C                     ENDIF                                                            MD047513
+     C                     ENDIF                                                            MD047513
+     C           RUNMON    LOKUPTABMTH    TABCOD         74                                 MD047513
+     C                     MOVE TABCOD    WNMM                                              MD047513
+      *                                                                                     MD047513
+     C                     MOVE WNDAT8    AMDTOE                                            MD047513
+      *                                                                                     MD047513
+     C                     ENDSR                                                            MD047513
+      *                                                                                     MD047513
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *
@@ -780,3 +844,16 @@
      C/COPY WNCPYSRC,FX0921C011
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2001
+** TABMTH/TABCOD - MONTHS TABLES
+JAN01
+FEB02
+MAR03
+APR04
+MAY05
+JUN06
+JUL07
+AUG08
+SEP09
+OCT10
+NOV11
+DEC12

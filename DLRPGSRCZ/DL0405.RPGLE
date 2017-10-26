@@ -16,12 +16,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. MD045382           Date 20Apr17               *
-      *  Prev Amend No. MD036589A          Date 22Feb17               *
+      *  Last Amend No. MD046325           Date 26Jul17               *
+      *  Prev Amend No. MD045382           Date 20Apr17               *
+      *                 MD036589A          Date 22Feb17               *
       *                 MD036589 *CREATE   Date 14Feb16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046325 - GLC0802C failed due to invalid nostro code.       *
+      *             Check settlement first if nostro.                 *
       *  MD045382 - No contra posting on FX netting ICD for nostro    *
       *             settling on a different branch.  Always correctly *
       *             set branch code.                                  *
@@ -177,6 +180,12 @@
      D  WCCY                   8     10
      D  W19                   11     19
       *
+      ** Settlement account                                                                 MD046325
+     D OSAcNo          DS                                                                   MD046325
+     D  KCust                  1      6                                                     MD046325
+     D  KAccd                  7     16                                                     MD046325
+     D  KAcsq                 17     18                                                     MD046325
+      *                                                                                     MD046325
       ** Hash totalling fields
      D                 DS
      D  WWAmt                  1     15  3
@@ -224,6 +233,11 @@
      D WERLC           S             13P 8
      D Vnet            S              1A                                                   MD036589A
      D Netnos          S              2A                                                   MD036589A
+     D Evnos           S              1A                                                    MD046325
+     D WSetm           S              2  0                                                  MD046325
+     D WAcnt           S             10                                                     MD046325
+     D WAcCn           S             10                                                     MD046325
+     D WAcSn           S              2                                                     MD046325
       *
       ** Pointer for the indicator array
      D IndicatorP      S               *   INZ(%Addr(*IN))
@@ -255,18 +269,24 @@
       *
      C                   DOW       EndOfFile = False
 
+     C                   CLEAR                   NOSEXEDF                                   MD046325
      C                   IF        AMVALD > WControlDat AND AMRECI = 'C'
-     C                             AND AMOURN <> *BLANKS
+     C**********                   AND AMOURN <> *BLANKS                                    MD046325
       *
       ** Access nostro details
       *
-     C                   EVAL      PNonb = AMOURN
+     C                   EVAL      Evnos = 'N'                                              MD046325
+     C**********         EVAL      PNonb = AMOURN                                           MD046325
      C                   EXSR      SRNost
       *
       ** Access currency details
       *
      C                   EVAL      PCyCd = AMCCYD
      C                   EXSR      SRCyCd
+      *                                                                                     MD046325
+      ** If nostro, generate projections.                                                   MD046325
+      *                                                                                     MD046325
+     C                   IF        Evnos = 'Y'                                              MD046325
       *
       ** Access Customer details
       *
@@ -284,7 +304,7 @@
       *
      C                   EXSR      SRCtry
       *
-     C                   CLEAR                   NOSEXEDF
+     C**********         CLEAR                   NOSEXEDF                                   MD046325
       *
       ** Map fields to event file
       *
@@ -293,6 +313,7 @@
       ** Write record to Events file
       *
      C                   EXSR      SRWrite
+     C                   ENDIF                                                              MD046325
       *                                                                                    MD036589A
       ** Generate also for neeting ICD account.                                            MD036589A
       *                                                                                    MD036589A
@@ -432,10 +453,12 @@
      C                   ENDIF
       *
       ** Settlement type
-     C                   EVAL      SETP = AMSETM
+     C**********         EVAL      SETP = AMSETM                                            MD046325
+     C                   EVAL      SETP = WSetm                                             MD046325
       *
       ** OSAC1
-     C                   EVAL      OSAC1 = AMOURN
+     C**********         EVAL      OSAC1 = AMOURN                                           MD046325
+     C                   EVAL      OSAC1 = Netnos                                           MD046325
       *
      C                   MOVEL     AMNTNO        OSACQQ
       *
@@ -661,6 +684,10 @@
       *****************************************************************
      C     SRNost        BEGSR
       *
+     C                   IF        AMSETM = 1 or AMSETM = 2                                 MD046325
+     C                             or AMSETM = 7 or AMSETM = 8                              MD046325
+     C                             or AMSETM = 12                                           MD046325
+     C                   EVAL      PNonb = AMOURN                                           MD046325
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
@@ -673,17 +700,76 @@
      C                   PARM      *BLANKS       PCsSn
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      SDNOST        DSFDY
-
-     C                   IF        PRtCd <> *BLANKS
-
-     C     *LOCK         IN        LDA
-     C                   EVAL      DBKEY = PCyCd + PNoNb
-     C                   EVAL      DBFILE = 'SDNOSTPD'
-     C                   EVAL      DBASE = 005
-     C                   OUT       LDA
-     C                   EXSR      SRDBErr
-
-     C                   ENDIF
+     C**********         IF        PRtCd <> *BLANKS                                         MD046325
+     C******LOCK         IN        LDA                                                      MD046325
+     C**********         EVAL      DBKEY = PCyCd + PNoNb                                    MD046325
+     C**********         EVAL      DBFILE = 'SDNOSTPD'                                      MD046325
+     C**********         EVAL      DBASE = 005                                              MD046325
+     C**********         OUT       LDA                                                      MD046325
+     C**********         EXSR      SRDBErr                                                  MD046325
+     C                   IF        PRtCd = *BLANKS                                          MD046325
+     C                   EVAL      Evnos = 'Y'                                              MD046325
+     C                   EVAL      Netnos = A7NONB                                          MD046325
+     C                   EVAL      WSetm = AMSETM                                           MD046325
+     C                   ENDIF                                                              MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
+     C                   IF        AMSETM = 5 or AMSETM = 9                                 MD046325
+     C                   EVAL      OSAcNo = AMOURN                                          MD046325
+     C                   CALL      'AONOSTR0'                                               MD046325
+     C                   PARM      *BLANKS       PRtCd                                      MD046325
+     C                   PARM      '*KEY   '     POptn                                      MD046325
+     C                   PARM      KCust         PCust                                      MD046325
+     C                   PARM      AMCCYD        PCyCd                                      MD046325
+     C                   PARM      KAccd         PAccn                                      MD046325
+     C                   PARM      KAcsq         PAcSn                                      MD046325
+     C                   PARM      *BLANKS       PNoNb                                      MD046325
+     C                   PARM      AMONOB        PBrCd                                      MD046325
+     C                   PARM      *BLANKS       PCsSn                                      MD046325
+     C                   PARM      *BLANKS       PPNOI                                      MD046325
+     C     SDNOST        PARM      SDNOST        DSFDY                                      MD046325
+     C                   IF        PRtCd = *BLANKS                                          MD046325
+     C                   EVAL      Evnos = 'Y'                                              MD046325
+     C                   EVAL      Netnos = A7NONB                                          MD046325
+     C                   EVAL      WSetm = 8                                                MD046325
+     C                   ENDIF                                                              MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
+     C                   IF        AMSETM = 4 or AMSETM = 14                                MD046325
+     C                   EVAL      WAcnt = %SUBST(AMOURN:1:10)                              MD046325
+     C                   CALL      'AOACCTR0'                                               MD046325
+     C                   PARM      *BLANKS       @RTCD                                      MD046325
+     C                   PARM      '*KEY   '     @OPTN                                      MD046325
+     C                   PARM      WAcnt         @RETL            10                        MD046325
+     C                   PARM      *BLANKS       @CNUM             6                        MD046325
+     C                   PARM      *BLANKS       @CUCD             3                        MD046325
+     C                   PARM      *BLANKS       @ACCD            10                        MD046325
+     C                   PARM      *BLANKS       @ACSQ             2                        MD046325
+     C                   PARM      *BLANKS       @BRCA             3                        MD046325
+     C     SDACCT        PARM      SDACCT        DSSDY                                      MD046325
+     C                   IF        @RTCD = *BLANKS                                          MD046325
+     C                   MOVEL     AACOD         WAcCn                                      MD046325
+     C                   MOVEL     AACSQ         WAcSn                                      MD046325
+     C                   CALL      'AONOSTR0'                                               MD046325
+     C                   PARM      *BLANKS       PRtCd                                      MD046325
+     C                   PARM      '*KEY   '     POptn                                      MD046325
+     C                   PARM      ACNUM         PCust                                      MD046325
+     C                   PARM      ACCY          PCyCd                                      MD046325
+     C                   PARM                    WAcCn                                      MD046325
+     C                   PARM                    WAcSn                                      MD046325
+     C                   PARM      *BLANKS       PNoNb                                      MD046325
+     C                   PARM      ABRCA         PBrCd                                      MD046325
+     C                   PARM      *BLANKS       PCsSn                                      MD046325
+     C                   PARM      *BLANKS       PPNOI                                      MD046325
+     C     SDNOST        PARM      SDNOST        DSFDY                                      MD046325
+     C                   IF        PRtCd = *BLANKS                                          MD046325
+     C                   EVAL      Evnos = 'Y'                                              MD046325
+     C                   EVAL      Netnos = A7NONB                                          MD046325
+     C                   EVAL      WSetm = 8                                                MD046325
+     C                   ENDIF                                                              MD046325
+     C                   ENDIF                                                              MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
      C                   ENDSR
 
       *****************************************************************
@@ -832,16 +918,133 @@
       *                                                                                    MD036589A
       ** Set up the fields.                                                                MD036589A
       *                                                                                    MD036589A
+     C                   MOVE      *BLANKS       PCnum                                      MD046325
+     C                   MOVE      A7CUST        PCnum                                      MD046325
+     C                   EXSR      SRCust                                                   MD046325
+     C                   MOVE      *BLANKS       PBrch                                      MD046325
+     C                   MOVE      A7BRCD        PBrch                                      MD046325
+     C                   EXSR      SRBrch                                                   MD046325
+     C                   EXSR      SRCtry                                                   MD046325
+     C                   EVAL      RECI = 'D'                                               MD046325
+     C                   EVAL      DLNO = 999999                                            MD046325
+      *                                                                                     MD046325
+     C                   IF        AMBSIN = 'B'                                             MD046325
+     C                   EVAL      ETYP = 'NTV1'                                            MD046325
+     C                   ELSE                                                               MD046325
+     C                   EVAL      ETYP = 'NTV2'                                            MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
+     C                   EVAL      EDAT = AMVALD                                            MD046325
+     C                   EVAL      EAMT = AMDBUY                                            MD046325
+     C                   EVAL      ECCY = AMCCYD                                            MD046325
+     C                   EVAL      ECSS = A6SSNB                                            MD046325
+     C                   EVAL      DTYP = 'NT'                                              MD046325
+     C                   EVAL      DLST = *BLANKS                                           MD046325
+     C                   Z-ADD     1             EXRT                                       MD046325
+     C                   EVAL      NGII = *BLANKS                                           MD046325
+     C                   EVAL      NOTD = 0                                                 MD046325
+     C                   EVAL      OTHD = 0                                                 MD046325
+     C                   EVAL      OTHA = 0                                                 MD046325
+     C                   EVAL      OTHC = *BLANKS                                           MD046325
+     C                   MOVEL     AMNETR        W7                                         MD046325
+     C                   MOVE      AMNETR        W19                                        MD046325
+      *                                                                                     MD046325
+     C                   IF        AMCCYD <> AMCCY2                                         MD046325
+     C                   EVAL      WCCY = AMCCY2                                            MD046325
+     C                   ELSE                                                               MD046325
+     C                   EVAL      WCCY = AMCCY1                                            MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
+     C     WNETR         CHAIN     FXNETML3                           41                    MD046325
+     C                   IF        *IN41 = '0'                                              MD046325
+     C                   EVAL      OTHD = B_AMVALD                                          MD046325
+     C                   EVAL      OTHA = B_AMDBUY                                          MD046325
+     C                   EVAL      OTHC = B_AMCCYD                                          MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
+     C                   EVAL      WCDP = A6NBDP                                            MD046325
+     C                   EVAL      WMDI = A6MDIN                                            MD046325
+     C                   EVAL      WBCXR = A6SPRT                                           MD046325
+     C                   EVAL      WERLC = A6ERLC                                           MD046325
+     C                   EVAL      PCyCd = BJCYCD                                           MD046325
+     C                   EXSR      SrCyCd                                                   MD046325
+      *                                                                                     MD046325
+     C                   IF        ECCY <> BJCYCD                                           MD046325
+     C                   EVAL      N = WCDP - A6NBDP                                        MD046325
+     C                   EVAL      N = N + 4                                                MD046325
+      *                                                                                     MD046325
+     C                   IF        WMDI = 'M'                                               MD046325
+     C                   EVAL      WRK159 = WBCXR/POWER(N)                                  MD046325
+     C                   EVAL      DBCE = EAMT * WRK159                                     MD046325
+     C                   ELSE                                                               MD046325
+     C                   EVAL      WRK159 = WBCXR * POWER(N)                                MD046325
+     C                   EVAL      DBCE = EAMT/WRK159                                       MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
+     C                   EVAL      BCEQ = DBCE                                              MD046325
+     C                   ELSE                                                               MD046325
+     C                   Z-ADD     EAMT          DBCE                                       MD046325
+     C                   Z-ADD     EAMT          BCEQ                                       MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
+     C                   EVAL      DBCR = WBCXR                                             MD046325
+     C                   IF        ECCY <> BNCYCD                                           MD046325
+     C                   EVAL      PCyCd = BNCYCD                                           MD046325
+     C                   EXSR      SrCyCd                                                   MD046325
+     C                   EVAL      N = WCDP - A6NBDP + 4                                    MD046325
+      *                                                                                     MD046325
+     C                   IF        WMDI = 'M'                                               MD046325
+     C                   EVAL      WRK159 = WERLC/POWER(N)                                  MD046325
+     C                   EVAL      LCEQ = EAMT * WRK159                                     MD046325
+     C                   ELSE                                                               MD046325
+     C                   EVAL      WRK159 = WERLC * POWER(N)                                MD046325
+     C                   EVAL      LCEQ = EAMT/WRK159                                       MD046325
+     C                   ENDIF                                                              MD046325
+     C                   ELSE                                                               MD046325
+     C                   Z-ADD     EAMT          LCEQ                                       MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
+     C                   EVAL      TSEN = *BLANKS                                           MD046325
+     C                   EVAL      ZZ001 = *BLANKS                                          MD046325
+     C                   EVAL      CPCI = *BLANKS                                           MD046325
+     C                   EVAL      BRCI = *BLANKS                                           MD046325
+     C                   EVAL      FIPI = 'Y'                                               MD046325
+      *                                                                                     MD046325
+     C                   IF        AMBSIN = 'B'                                             MD046325
+     C                   EVAL      INOI = 'O'                                               MD046325
+     C                   ELSE                                                               MD046325
+     C                   EVAL      INOI = 'I'                                               MD046325
+     C                   ENDIF                                                              MD046325
+      *                                                                                     MD046325
+     C                   EVAL      FCTI = 'N'                                               MD046325
+     C                   EVAL      RLVI = 'N'                                               MD046325
+     C                   EVAL      DASN = 0                                                 MD046325
+     C                   EVAL      FFVD = AMVALD                                            MD046325
+     C                   EVAL      FFIN = *BLANKS                                           MD046325
+     C                   EVAL      FACT = 0                                                 MD046325
+     C                   EVAL      FCNO = 0                                                 MD046325
+     C                   EVAL      FACO = *BLANKS                                           MD046325
+     C                   EVAL      SPI  = *BLANKS                                           MD046325
+     C                   MOVE      A7CUST        CPCN                                       MD046325
+     C                   EVAL      FSLI = 0                                                 MD046325
+     C                   EVAL      ICIR = 0                                                 MD046325
+     C                   EVAL      ICAM = 0                                                 MD046325
+     C                   EVAL      RBDA = 0                                                 MD046325
+     C                   EVAL      OCFF = *BLANKS                                           MD046325
+     C                   MOVEL     AMNETR        ZZ023                                      MD046325
+     C                   EVAL      TAXI = *BLANKS                                           MD046325
+     C                   EVAL      OSAC2 = *BLANKS                                          MD046325
+     C                   EVAL      CLAS = *BLANKS                                           MD046325
      C                   EVAL      CNUM = A8BICN                                           MD036589A
      C                   EVAL      BRCA = AMBRCA                                            MD045382
      C                   EVAL      SETP = 08                                               MD036589A
      C                   EVAL      OSAC1 = Netnos                                          MD036589A
      C                   EVAL      OSACQQ = *Blanks                                        MD036589A
-     C                   IF        INOI = 'I'                                              MD036589A
-     C                   EVAL      INOI = 'O'                                              MD036589A
-     C                   ELSE                                                              MD036589A
-     C                   EVAL      INOI = 'I'                                              MD036589A
-     C                   ENDIF                                                             MD036589A
+     C**********         IF        INOI = 'I'                                     MD036589A MD046325
+     C**********         EVAL      INOI = 'O'                                     MD036589A MD046325
+     C**********         ELSE                                                     MD036589A MD046325
+     C**********         EVAL      INOI = 'I'                                     MD036589A MD046325
+     C**********         ENDIF                                                    MD036589A MD046325
       *                                                                                    MD036589A
      C                   MOVE      *BLANKS       PCnum                                     MD036589A
      C                   MOVE      A8BICN        PCnum                                     MD036589A
@@ -902,7 +1105,8 @@
      C                   PARM      *BLANKS       PRtCd                                     MD036589A
      C                   PARM      '*KEY   '     POptn                                     MD036589A
      C                   PARM      A8BICN        PCust                                     MD036589A
-     C                   PARM      ECCY          PCyCd                                     MD036589A
+     C**********         PARM      ECCY          PCyCd                            MD036589A MD046325
+     C                   PARM      AMCCYD        PCyCd                                      MD046325
      C                   PARM      BNNEAC        PAccn                                     MD036589A
      C                   PARM      '01'          PAcSn                                     MD036589A
      C                   PARM                    PNoNb                                     MD036589A

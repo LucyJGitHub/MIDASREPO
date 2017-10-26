@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. MD029023           Date 21Nov14               *
+      *  Last Amend No. MD047680           Date 08Sep17               *
+      *  Prev Amend No. MD046635           Date 10Aug17               *
+      *                 MD020938           Date 19Jun13               *
+      *                 CGL165             Date 17Feb15               *
+      *                 MD029023           Date 21Nov14               *
       *                 CRE090             Date 14Feb14               *
       *                 MD024398           Date 11May14               *
       *                 MD000091           Date 07May13               *
@@ -58,6 +61,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047680 - Prevent validation of authority to the account    *
+      *             branch if branch value is blank                   *
+      *  MD046635 - User permissions are not verified on account      *
+      *             input via AMAD API. Change the validation so that *
+      *             the user inserting an account is always validated *
+      *             to have authority to the branch of the account.   *
+      *  MD020938 - Create new system values to check the branch/user *
+      *             authority.                                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD029023 - Need to pass debit rate spread for validation of  *
       *             Additional O/D Rate                               *
@@ -114,7 +125,7 @@
       ** +--------------------------------------+
       *****************************************************************
      F/COPY WNCPYSRC,GLAMA2VF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -133,64 +144,64 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.                                                       CER055
      D WFldNmXAr       S             10A   DIM(XArrayMax)                                     CER055
                                                                                               CER055
@@ -226,58 +237,58 @@
      D  DDDCSGOK                      1A                                                      CRE073
      D  DDDRMTOK                      1A                                                      CRE073
      D  DDDRFDOK                      1A                                                      CRE073
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
                                                                                 180721
      D SDGELR        E DS                  EXTNAME(SDGELRPD)                    180721
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS                                 180721
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D SDRETLACCD    E                     EXTFLD(QQACCD)                                     CGL029
       ** EXTERNAL DS FOR RETAIL DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
                                                                                 180721
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                    180721
       ** EXTERNAL DS FOR CUSTOMER DETAILS                                       180721
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
                                                                                 180721
      DDSLDY          E DS                  EXTNAME(DSLDY)                       180721
       ** THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE                 180721
- 
+
      D ValidAccn     E DS                  EXTNAME(GLVAMADPD)
       * Valid Account layout -> ACCNTAB
- 
+
      D ValidExBX     E DS                  EXTNAME(GLVAMBXPD)
      D GLBXACOD      E                     EXTFLD(QQACOD)                                     CGL029
       * Valid Extn. Account layout -> ACCNTBXC
- 
+
      D ValidExRI     E DS                  EXTNAME(GLVAMRIPD)
      D GLRIACOD      E                     EXTFLD(QQACOD)                                     CGL029
       * Valid Extn. Account layout -> REIACD
                                                                                               208221
      D TranIn4       E DS                  EXTNAME(GLAMCOPD)                                  208221
       * Incoming Transaction (screen 4)                                                       208221
- 
+
      D TranIn2       E DS                  EXTNAME(GLAMDIPD)
       * Incoming Transaction (screen 2)
- 
+
      D TranIn1       E DS                  EXTNAME(GLAMADPD)
       * Incoming Transaction (screen 1)
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
                                                                                               CSC011
@@ -287,12 +298,12 @@
      D ZMUSER          DS            17
       * ZMUSER data layout
      D  DBRN                  11     13
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -303,7 +314,7 @@
      D Idx             S              3P 0
      D WIx             S              3P 0                                                    CER055
      D Indx            S              3P 0                                                    CRE073
- 
+
       ** Fields defined for Enhancement CSC011                                                CSC011
      D CSC011          S              1A                                                      CSC011
      D PRtCd           S              7A                                                      CSC011
@@ -322,17 +333,21 @@
      D PModule         S              6A                                                      CRE073
      D PCurset         S              2P 0                                                    CRE073
      D CRE090          S              1A   INZ('N')                                           CRE090
+      ** Constant paramater for AOSVALR0                                                    MD020938
+     D BRCUSR          C                   CONST('CheckBrchUserAuthori')                    MD020938
+     D CurSysVal       DS           200                                                     MD020938
+     D CurVal                  1      1                                                     MD020938
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -347,7 +362,7 @@
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG8550
      C                   IN        ZMUSER                                                    BUG8550
      C                   UNLOCK    ZMUSER                                                    BUG8550
- 
+
      C                   Z-Add     0             WWDBRT           11 7
      C                   Z-ADD     0             WWBRTT           11 7                      AR944106
      C                   Move      DDDRCD        WWDRCD            6
@@ -364,9 +379,9 @@
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      DDCCY         @CCY              3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       * Call Validation Modules in Sequence
- 
+
       ** Validate Base Rate Type
       /COPY WNCPYSRC,GLAMAD2V01                                                               CUT009
      C                   EXSR      VBRATE
@@ -440,7 +455,7 @@
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   Else
@@ -456,9 +471,9 @@
       ** VBRATE - Validate Base Rate Type
       *****************************************************************
      C     VBRATE        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVDBBS'
@@ -495,9 +510,9 @@
       *
       ** Base Rate Type - OK
      C                   Parm                    DDDRIBOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -507,9 +522,9 @@
       *  VSRATE - Validate Rate/Spread & Sign
       *****************************************************************
      C     VSRATE        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVDBRT'
@@ -538,9 +553,9 @@
       ** Rate/Spread Sign - OK
      C                   Parm                    DDDRISOk
      C                   Parm                    DDDSIGOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -550,9 +565,9 @@
       ** VICALC - Validate Interest Calc. Type/Subtype
       *****************************************************************
      C     VICALC        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVDBIT02'
@@ -585,9 +600,9 @@
      C                   Parm                    DDDICTOk
      C                   Parm                    DDDCSTOk
       *
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -597,9 +612,9 @@
       *  VCVDAT - Validate This Change Value Date
       *****************************************************************
      C     VCVDAT        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
                                                                                 180721
      C     WValforPB     Ifeq      'Y'                                          180721
@@ -662,9 +677,9 @@
       *
       ** This Change Value Date - Ok
      C                   Parm                    DDDRCDOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -674,9 +689,9 @@
       ** VICALB - Validate Calculation Basis
       *****************************************************************
      C     VICALB        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVDBCC'
@@ -706,9 +721,9 @@
       *
       ** Calculation Basis - OK
      C                   Parm                    DDDRICOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -718,9 +733,9 @@
       ** VNXCAP - Validate Next Capital. Date, Frequency & Day no
       *****************************************************************
      C     VNXCAP        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
                                                                                 180721
      C     WValforPB     Ifeq      'Y'                                          180721
@@ -802,9 +817,9 @@
      C                   Parm                    DDDRIFOk
      C                   Parm                    DDDNCDOk
      C/COPY WNCPYSRC,GLAMA2VC02
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -814,9 +829,9 @@
       ** VBRACP - Validate Alternate A/C Dr. Interest Branch
       *****************************************************************
      C     VBRACP        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVDBAL'
@@ -857,10 +872,63 @@
      C                   Parm                    DDDRBROk
      C                   Parm                    DDDACPOk
      C                   Parm                    DDDSIGOk
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
+                                                                                            MD046635
+     C                   IF        DDDRBROk = 'Y' AND                                       MD046635
+     C                             DDDACPOk = 'Y' AND                                       MD046635
+     C                             DDDSIGOk = 'Y' AND                                       MD046635
+     C**********                   CurVal   = 'Y'                                  MD046635 MD047680
+     C                             CurVal   = 'Y' AND                                       MD047680
+     C                             DDDRBR <> *BLANKS                                        MD047680
+                                                                                            MD046635
+     C                   EXSR      RESETERRS                                                MD046635
+                                                                                            MD046635
+     C                   MOVE      DDACTN        ZACTN                                      MD046635
+     C                   CALL      'ZVACTBU'                                                MD046635
+     C                   PARM                    ZACTN             1                        MD046635
+     C                   PARM      DDDRBR        ZBR               3                        MD046635
+     C                   PARM                    ERR               1 0                      MD046635
+      *                                                                                     MD046635
+      **   If action invalid for user                                                       MD046635
+      *                                                                                     MD046635
+     C     ERR           IFEQ      1                                                        MD046635
+     C                   Z-ADD     1             I                                          MD046635
+     C                   MOVEL     'DDDRBR'      FldNamXAr(I)                               MD046635
+     C                   MOVEL     'RE71070'     MsgIDXAr(I)                                MD046635
+     C                   ENDIF                                                              MD046635
+      *                                                                                     MD046635
+     C     ERR           IFEQ      2                                                        MD046635
+     C                   Z-ADD     1             I                                          MD046635
+     C     DDACTN        IFEQ      'I'                                                      MD046635
+     C                   MOVEL     'DDDRBR'      FldNamXAr(I)                               MD046635
+     C                   MOVEL     'RE7102B'     MsgIDXAr(I)                                MD046635
+     C                   ENDIF                                                              MD046635
+     C     DDACTN        IFEQ      'A'                                                      MD046635
+     C                   MOVEL     'DDDRBR'      FldNamXAr(I)                               MD046635
+     C                   MOVEL     'RE7103B'     MsgIDXAr(I)                                MD046635
+     C                   ENDIF                                                              MD046635
+     C     DDACTN        IFEQ      'D'                                                      MD046635
+     C                   MOVEL     'DDDRBR'      FldNamXAr(I)                               MD046635
+     C                   MOVEL     'RE7104B'     MsgIDXAr(I)                                MD046635
+     C                   ENDIF                                                              MD046635
+     C                   ENDIF                                                              MD046635
+      *                                                                                     MD046635
+     C     ERR           IFEQ      1                                                        MD046635
+     C     ERR           OREQ      2                                                        MD046635
+     C                   MOVE      'N'           DDDRBROk                                   MD046635
+     C                   ENDIF                                                              MD046635
+     C                   ENDIF                                                              MD046635
+      *                                                                                     MD046635
+     C                   EXSR      UPDATERRS                                                MD046635
+      *                                                                                     MD020938
+     C*****DDDRBR        IFEQ      *Blanks                                         MD020938 MD046635
+     C*****BRIND         ANDEQ     'Y'                                             MD020938 MD046635
+     C**********         MOVE      *BLANKS       BRIND                             MD020938 MD046635
+     C**********         Move      ZBR           DDDRBR                            MD020938 MD046635
+     C**********         ENDIF                                                     MD020938 MD046635
       *
      C                   ENDSR
       *****************************************************************
@@ -869,9 +937,9 @@
       *  VOVRDRFT - Validate Overdraft Details
       *****************************************************************
      C     VOVRDRFT      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
      C                   CALLB     'GLVODDE'
@@ -948,9 +1016,9 @@
      C                   Parm                    DDAODROK
      C                   Parm                    DDAODRXOK
      C                   Parm                    DDORTCOK
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1148,7 +1216,7 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
       *
      C     DDACTN        IFEQ      'I'
@@ -1257,16 +1325,16 @@
      C                   ENDIF                                                                208221
      C                   ENDIF                                                                208221
      C*                                                                                       208221
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Transaction information (DS) from source system
      C                   PARM                    TranIn1
@@ -1507,13 +1575,37 @@
      C                   ENDIF                                                  180721
      C                   ENDIF                                                  180721
      C                   ENDIF                                                  180721
+                                                                                            MD046635
+     C                   CALLB     'AOSVALR0'                                               MD046635
+     C                   PARM                    @RTCD             7                        MD046635
+     C                   PARM      BRCUSR        @OP01            20                        MD046635
+     C     CurSysVal     PARM                    @VL01           200                        MD046635
+     C                   PARM                    @OP02            20                        MD046635
+     C                   PARM                    @VL02           200                        MD046635
+     C                   PARM                    @OP03            20                        MD046635
+     C                   PARM                    @VL03           200                        MD046635
+     C                   PARM                    @OP04            20                        MD046635
+     C                   PARM                    @VL04           200                        MD046635
+     C                   PARM                    @OP05            20                        MD046635
+     C                   PARM                    @VL05           200                        MD046635
+     C                   PARM                    @OP06            20                        MD046635
+     C                   PARM                    @VL06           200                        MD046635
+     C                   PARM                    @OP07            20                        MD046635
+     C                   PARM                    @VL07           200                        MD046635
+     C                   PARM                    @OP08            20                        MD046635
+     C                   PARM                    @VL08           200                        MD046635
+     C                   PARM                    @OP09            20                        MD046635
+     C                   PARM                    @VL09           200                        MD046635
+     C                   PARM                    @OP10            20                        MD046635
+     C                   PARM                    @VL10           200                        MD046635
+                                                                                            MD046635
      C/COPY WNCPYSRC,GLAMA2VC03
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1521,9 +1613,9 @@
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1533,7 +1625,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr                                    CER055
      C                   MOVEL     *BLANK        WMsgIDXAr                                    CER055
      C                   MOVEL     *BLANK        WMsgDtXAr                                    CER055
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1541,7 +1633,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)

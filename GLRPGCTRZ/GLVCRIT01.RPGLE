@@ -14,12 +14,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
+      *  Last Amend No. MD046635           Date 10Aug17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 222462             Date 06Jun06               *
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. 222462             Date 06Jun06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046635 - User permissions are not verified on account      *
+      *             input via AMAD API. Change the validation so that *
+      *             the user inserting an account is always validated *
+      *             to have authority to the branch of the account.   *
       *  222462 - There is no check that the alternate account is     *
       *           live.                                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -283,6 +288,7 @@
      C                   MOVE      ACOD          WWACOK
      C                   MOVE      ACSQ          WWACSK
      C                   MOVE      BRCA          WWBRCK
+     C                   MOVE      BRCA          DDCRBR                                     MD046635
      C                   END
      C                   END
      C                   END

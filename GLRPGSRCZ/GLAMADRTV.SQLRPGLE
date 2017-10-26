@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037025           Date 10Feb16               *
-      *  Prev Amend No. CRE101             Date 27Aug14               *
+      *  Last Amend No. MD046635           Date 10Aug17               *
+      *  Prev Amend No. MD037025           Date 10Feb16               *
+      *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
       *                 226364             Date 19Aug14               *
       *                 MD024951           Date 19Aug14               *
@@ -81,6 +82,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046635 - User permissions are not verified on account      *
+      *             input via AMAD API. Change the validation so that *
+      *             the user inserting an account is always validated *
+      *             to have authority to the branch of the account.   *
       *  MD037025 - Cannot delete an Account if the IBAN is           *
       *             referenced in a matured Incoming Payment.         *
       *             Patterned after 230192.                           *
@@ -1683,7 +1688,8 @@
      C     ERR           IFEQ      2
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
-     C                   MOVEL     'DDACTN'      FldNameArr(Ix)
+     C**********         MOVEL     'DDACTN'      FldNameArr(Ix)                             MD046635
+     C                   MOVEL     'DDBRCA'      FldNameArr(Ix)                             MD046635
      C                   SELECT
      C                   WHEN      DDACTN='1'or DDACTN='2'or DDACTN='3'or
      C                             DDACTN='4'or DDACTN='5'or DDACTN='E'

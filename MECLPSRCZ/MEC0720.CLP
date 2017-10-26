@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2002           */
 /*                                                                   */
-/*       Last Amend No. AR1031152          Date 06Dec12              */
-/*       Prev Amend No. AR549937           Date 27Jul12              */
+/*       Last Amend No. MD033914           Date 26Oct17              */
+/*       Prev Amend No. AR1031152          Date 06Dec12              */
+/*                      AR549937           Date 27Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD033914 - Housekeep DTAQs in xxDPLIB                       */
+/*                - Applied for MD047530.                            */
 /*       AR1031152 - Error issuing WRKMMMSVR command which calls     */
 /*                   program MEC2100. Issue command when CSW038 is   */
 /*                   switched OFF. (Child: AR1031154)                */
@@ -43,7 +46,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
              DCL        VAR(&MRDEOD) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MNGSYS) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -61,15 +64,17 @@
                           2002')
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(02)                                  /*240627*/
              DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)                                    /*240627*/
- 
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                 /*MD033914*/
+             DCL        VAR(&DTQMC) TYPE(*CHAR) LEN(10)                                 /*MD033914*/
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ERROR)
- 
+
              CHGJOB     SWS(00000000)
- 
+
              RTVJOBA    CURLIB(&CURLIB)
- 
+
              RTVDTAARA  DTAARA(MESTAT (50 1)) RTNVAR(&MNGSYS)
- 
+
 /* Check if Midas Message Manager/CASmf interface being used */                           /*207006*/
              CHGVAR     VAR(&CSW026) VALUE(' ')                                           /*207006*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*207006*/
@@ -96,7 +101,7 @@
              IF         COND(&RTCD *EQ ' ') THEN(DO)                                   /*AR1031152*/
                 CHGVAR     VAR(&CSW038) VALUE('Y')                                     /*AR1031152*/
              ENDDO                                                                     /*AR1031152*/
- 
+
 /* Delete MSMR* data areas @ XLIB for housekeeping purposes. */                         /*AR549937*/
                                                                                         /*AR549937*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)                            /*AR549937*/
@@ -107,6 +112,11 @@
              DLTDTAARA  DTAARA(&XLIB/MSMR*)                                             /*AR549937*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                  /*AR549937*/
                                                                                         /*AR549937*/
+             CHGVAR     VAR(&DTQMC) VALUE('MSQ*')                                       /*MD033914*/
+             CHGVAR     VAR(&DPLIB) VALUE(&PREFIX *CAT 'DPLIB')                         /*MD033914*/
+             DLTDTAQ    DTAQ(&DPLIB/&DTQMC)                                             /*MD033914*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                  /*MD033914*/
+                                                                                        /*MD033914*/
 /* Start Export from this Midas system to Meridian. */
 /**********  WRKMSMIF   OPERATION(*EOD) MCID(*ALL) */                                    /*BUG5980*/
              WRKMSMIF   OPERATION(*EOD) MCID(*ALL) MODE(*AUTO)                           /*BUG5980*/
@@ -114,7 +124,7 @@
 /**********  IF COND((&MNGSYS *EQ 'Y') *AND (&CSW034 *EQ 'Y')) THEN(DO) */        /*CSW034 BUG3866*/
              IF COND((&MNGSYS *EQ 'Y') *AND (&CSW034 *NE 'Y')) THEN(DO)                  /*BUG3866*/
 /* If this is the managing Midas system also start Meridian. */
- 
+
 /* Set off Meridian EoD enabled flag.  This will be set on once */
 /*  the Rundate Synchronisation message has been sent.          */
                 CHGDTAARA  DTAARA(MESTAT (49 1)) VALUE(' ')
@@ -143,7 +153,7 @@ LOOP:
                    GOTO LOOP
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(END)
 DBERR:                                                                                    /*207006*/
              CHGVAR     VAR(&MSG) VALUE('Switchable Features error')                      /*207006*/
@@ -156,12 +166,12 @@ DBERR:                                                                          
                                                                                           /*207006*/
 ERROR:
              CHGVAR     VAR(&MSG) VALUE('Start meridian links failure')
- 
+
              SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ) +
                           MSGTYPE(*INFO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:
 /**Delete*MSMR***data*areas*@*XLIB*for*housekeeping*purpose.**/                           /*240627*/
 /***********                                                 */                  /*240627 AR549937*/

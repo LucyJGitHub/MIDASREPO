@@ -10,7 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037598           Date 18Jul17               *
+      *  Last Amend No. MD048035           Date 12Oct17               *
+      *  Prev Amend No. MD047513           Date 18Sep17               *
+      *                 MD037598           Date 18Jul17               *
       *                 MD044815           Date 13Apr17               *
       *                 MD032914           Date 17Apr15               *
       *                 MD045437           Date 10May17               *
@@ -81,6 +83,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048035 - Projection for FX deal not reversed after FX net  *
+      *             was reconfirmed.  Correct checking of FX deal     *
+      *             projection during net confirmation.               *
+      *  MD047513 - Incorrect projected ledger balance after FX net   *
+      *             deletion.  Recreate FX deal projection if FX net  *
+      *             was inserted on an earlier date.                  *
       *  MD037598 - Deal absent in FX nets summary.  Commit all files *
       *             for update.                                       *
       *  MD044815 - System did not generate reversal projections when *
@@ -205,6 +213,7 @@
       *       35         CLEAR SUBFILE                                *
       *       36         SFLNXTCHG INDICATOR                          *
       *       38         ERROR ON SUBFILE SELECT FIELD                *
+      *       40         FX net inserted on an earlier date           *                     MD047513
       *       68         Display F15 to view deals                    *   127084
       *       69         If off non display status in subfile.        *
       *       70         EOF ON READ  FXNETML0                        *
@@ -416,6 +425,12 @@
      I                                       43  480CMTDNO
      I                                       51 300 CMTDT1
      I                                      301 550 CMTDT2
+      **  Data Structure:  Date in YYYY/MM/DD format                                        MD047513
+     I            DS                                                                        MD047513
+     I                                        1   8 WNDAT8                                  MD047513
+     I                                        1   4 WNYY                                    MD047513
+     I                                        5   6 WNMM                                    MD047513
+     I                                        7   8 WNDD                                    MD047513
       *
       *   Retrieve UsrId From Programme Status Data Structure
      IPSDS       SDS
@@ -712,6 +727,7 @@
       *  Govern use of Cmd. Keys and display relevant options.
      C                     MOVE *ON       *IN77
      C                     MOVEL*OFF      *IN20                           200138
+     C                     MOVE '0'       *IN40                                             MD047513
       *
       ** Determine whether to procees Group or by Customer.
      C                     MOVELPLCSSN    CUSGRP
@@ -1668,6 +1684,11 @@
       *
       *  RUN FMTNET FOR DETAILS IN HEADER
      C                     EXSR FMTNET
+      *                                                                                     MD047513
+      ** Check if FX net was inserted on an earlier date.                                   MD047513
+      *                                                                                     MD047513
+     C                     EXSR NETENT                                                      MD047513
+      *                                                                                     MD047513
       *  CONFIRM THAT NET HAS NOT ALREADY PASSED VALUE DATE. GIVE ERROR
      C           AMVALD    IFLT BJRDNB
      C                     MOVE '1'       *IN38
@@ -2703,10 +2724,15 @@
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     ENDIF
-      *                                                                                     MD044815
-      ** If deal inserted on an earlier date, need to regenerate projections.               MD044815
-      *                                                                                     MD044815
-     C           ORED      IFLT BJRDNB                                                      MD044815
+      *****************************************************************            MD044815 MD047513
+      ***If*deal*inserted*on*an*earlier*date,*need*to*regenerate*projections.      MD044815 MD047513
+      *****************************************************************            MD044815 MD047513
+     C********** ORED      IFLT BJRDNB                                             MD044815 MD047513
+      *                                                                                     MD047513
+      ** If FX net inserted on an earlier date, need to regenerate                          MD047513
+      ** FX deal projections.                                                               MD047513
+      *                                                                                     MD047513
+     C           *IN40     IFEQ '1'                                                         MD047513
      C                     EXSR RSCGEN                                                      MD044815
      C                     ENDIF                                                            MD044815
       *
@@ -3157,17 +3183,18 @@
      C           EXTFLG    ANDEQ'N'                                                         MD036826
       *                                                                                     MD036826
      C           DTYP      IFEQ TRYP                                                        MD036826
-      *                                                                                     MD044815
-      ** If projection is already on FX netting ICD, no need to reverse.                    MD044815
-      *                                                                                     MD044815
-     C                     MOVE BNNEAC    WACDE  100                                        MD044815
-     C           A8BICN    IFEQ CUSN                                                        MD044815
-     C           ASNC      ANDEQ1                                                           MD044815
-     C           ACDE      ANDEQWACDE                                                       MD044815
-     C           AMBRCA    ANDEQBRCA                                                        MD044815
-     C           AMCCYD    ANDEQCCYD                                                        MD044815
-     C                     MOVE 'Y'       EXTFLG                                            MD044815
-     C                     ELSE                                                             MD044815
+     C           OTR1      ANDEQ*BLANKS                                                     MD048035
+      *****************************************************************            MD044815 MD048035
+      ***If*projection*is*already*on*FX*netting*ICD,*no*need*to*reverse.           MD044815 MD048035
+      *****************************************************************            MD044815 MD048035
+     C**********           MOVE BNNEAC    WACDE  100                               MD044815 MD048035
+     C********** A8BICN    IFEQ CUSN                                               MD044815 MD048035
+     C********** ASNC      ANDEQ1                                                  MD044815 MD048035
+     C********** ACDE      ANDEQWACDE                                              MD044815 MD048035
+     C********** AMBRCA    ANDEQBRCA                                               MD044815 MD048035
+     C********** AMCCYD    ANDEQCCYD                                               MD044815 MD048035
+     C**********           MOVE 'Y'       EXTFLG                                   MD044815 MD048035
+     C**********           ELSE                                                    MD044815 MD048035
       *                                                                                     MD021333
       ** Reverse the Debit/Credit Indicator                                                 MD021333
       *                                                                                     MD021333
@@ -3216,13 +3243,54 @@
       *                                                                                     MD036826
      C                     MOVE 'Y'       EXTFLG                                            MD036826
       *                                                                                     MD036826
-     C                     ENDIF                                                            MD044815
+     C**********           ENDIF                                                   MD044815 MD048035
      C                     ENDIF                                                            MD021333
       *                                                                                     MD036826
       ** Read next available record.                                                        MD036826
       *                                                                                     MD036826
      C           RSACKY    READERSACMTLF                 11                                 MD036826
      C                     ENDDO                                                            MD036826
+      *                                                                                     MD048035
+      ** If no projections found, then need to force projection on                          MD048035
+      ** FX netting ICD.                                                                    MD048035
+      *                                                                                     MD048035
+     C           EXTFLG    IFEQ 'N'                                                         MD048035
+     C                     MOVELA8BICN    CUSN                                              MD048035
+     C                     MOVELAMCCYD    CCYD                                              MD048035
+     C                     MOVEL'01'      ASNC                                              MD048035
+     C                     MOVELAMBRCA    BRCA                                              MD048035
+     C                     Z-ADDBJRDNB    PTDT                                              MD048035
+     C                     Z-ADDAMVALD    VUDT                                              MD048035
+     C                     MOVE FHTYPE    TRYP                                              MD048035
+     C                     MOVE *BLANKS   NRTC                                              MD048035
+     C                     MOVE *BLANKS   NRTD                                              MD048035
+     C           PUCY      IFEQ CCYD                                                        MD048035
+     C                     MOVEL'BUY CCY' NRTD                                              MD048035
+     C                     Z-ADDPUAM      MVAM                                              MD048035
+     C                     Z-ADD0         DORC                                              MD048035
+     C                     ELSE                                                             MD048035
+     C                     MOVEL'SELL CCY'NRTD                                              MD048035
+     C                     Z-ADDSLAM      MVAM                                              MD048035
+     C                     Z-ADD1         DORC                                              MD048035
+     C                     ENDIF                                                            MD048035
+     C                     MOVELDLNO      TNMR                                              MD048035
+     C                     Z-ADD0         CQNR                                              MD048035
+     C                     MOVE *BLANKS   TBID                                              MD048035
+     C                     MOVE *BLANKS   APBI                                              MD048035
+     C                     MOVE *BLANKS   PASS                                              MD048035
+     C                     MOVE *BLANKS   XRFI                                              MD048035
+     C                     Z-ADD0         XRFN                                              MD048035
+     C                     MOVELBNNEAC    ACDE                                              MD048035
+     C                     MOVE *BLANKS   FUND                                              MD048035
+     C                     MOVELAMNETR    OTR1                                              MD048035
+     C                     MOVE *BLANKS   CMOD                                              MD048035
+     C                     MOVE *BLANKS   ETYP                                              MD048035
+     C                     MOVE *BLANKS   MTYP                                              MD048035
+     C                     WRITEQACMTLF                                                     MD048035
+     C                     EXSR UPDMEM                                                      MD048035
+     C                     EXSR UPDPRN                                                      MD048035
+     C                     EXSR UPDOLP                                                      MD048035
+     C                     ENDIF                                                            MD048035
       *                                                                                     MD021333
      C                     ENDSR                                                            MD021333
       *****************************************************************                     MD021333
@@ -3341,13 +3409,13 @@
       ** Put Net reference in Other Reference field (OTR1)                                  MD021333
       ** Append 'R' and '*' to signify reversal.                                            MD021333
       *                                                                                     MD021333
-     C           TNMR      IFEQ '000000'                                                    MD021333
+     C********** TNMR      IFEQ '000000'                                           MD021333 MD048035
      C                     MOVELAMNETR    OTR1                                              MD021333
      C                     MOVE 'R'       OTR1                                              MD021333
      C                     MOVE '*'       NRTD                                              MD021333
-     C                     ELSE                                                             MD021333
-     C                     MOVE *BLANKS   OTR1                                              MD021333
-     C                     ENDIF                                                            MD021333
+     C**********           ELSE                                                    MD021333 MD048035
+     C**********           MOVE *BLANKS   OTR1                                     MD021333 MD048035
+     C**********           ENDIF                                                   MD021333 MD048035
       *                                                                                     MD021333
      C                     WRITEQACMTLG                                                     MD021333
       *                                                                                     MD041420
@@ -3458,7 +3526,26 @@
      C                     EXSR UPDMEM                                                     MD041420A
      C                     EXSR UPDPRN                                                     MD041420A
      C                     EXSR UPDOLP                                                     MD041420A
-      *                                                                                    MD023887A
+      *****************************************************************           MD032914A MD044815
+      ***Write*contra*account*to*netting*account***********************           MD032914A MD044815
+      *****************************************************************           MD032914A MD044815
+     C***********          MOVELA8BICN    CUSN                                    MD032914A MD044815
+     C***********          MOVELAMCCYD    CCYD                                    MD032914A MD044815
+     C***********          MOVEL'01'      ASNC                                    MD032914A MD044815
+     C***********          MOVELAMBRCA    BRCA                                    MD032914A MD044815
+     C***********          MOVELBNNEAC    ACDE                                    MD032914A MD044815
+      *****************************************************************           MD032914A MD044815
+     C***********DORC      IFEQ 1                                                 MD032914A MD044815
+     C***********          Z-ADD0         DORC                                    MD032914A MD044815
+     C***********          ELSE                                                   MD032914A MD044815
+     C***********          Z-ADD1         DORC                                    MD032914A MD044815
+     C***********          ENDIF                                                  MD032914A MD044815
+      *****************************************************************           MD032914A MD044815
+     C***********          WRITEQACMTLF                                           MD032914A MD044815
+     C***********          EXSR UPDMEM                                            MD041420A MD044815
+     C***********          EXSR UPDPRN                                            MD041420A MD044815
+     C***********          EXSR UPDOLP                                            MD041420A MD044815
+      *****************************************************************           MD023887A MD044815
      C                     ENDIF                                                           MD023887A
       *                                                                                     MD021333
      C                     ENDIF                                                            MD021333
@@ -3703,6 +3790,7 @@
       *                                                                                     MD044815
      C                     ENDSR                                                            MD044815
       *****************************************************************                     MD044815
+      /EJECT                                                                                MD045437
       *****************************************************************                     MD045437
       * Subroutine  :  RSCRV2                                         *                     MD045437
       * Function    :  Reverse projections during amend               *                     MD045437
@@ -3867,7 +3955,54 @@
      C                     ENDIF                                                            MD045437
      C                     ENDSR                                                            MD045437
       *****************************************************************                     MD045437
-      /EJECT                                                                                  CSD015
+      /EJECT                                                                                MD047513
+      *****************************************************************                     MD047513
+      * Subroutine  :  NETENT                                         *                     MD047513
+      * Function    :  Determine FX net insertion date                *                     MD047513
+      *                                                               *                     MD047513
+      * Called by   :  DELETE                                         *                     MD047513
+      * Calls       :  None                                           *                     MD047513
+      *****************************************************************                     MD047513
+     C           NETENT    BEGSR                                                            MD047513
+      *                                                                                     MD047513
+      ** Initialise indicator.                                                              MD047513
+      *                                                                                     MD047513
+     C                     MOVE '0'       *IN40                                             MD047513
+      *                                                                                     MD047513
+      ** Set up DDDMMYY DS or MMMDDYY.                                                      MD047513
+      *                                                                                     MD047513
+     C           BJDFIN    IFEQ 'D'                                                         MD047513
+     C                     MOVELBJMRDT    D#DATE                                            MD047513
+     C                     MOVE D#DAY     WNDD                                              MD047513
+     C                     MOVELD#MON     RUNMON  3                                         MD047513
+     C                     MOVE D#YRS     WNYY                                              MD047513
+     C           D#YRS     IFGE 72                                                          MD047513
+     C                     MOVEL'19'      WNYY                                              MD047513
+     C                     ELSE                                                             MD047513
+     C                     MOVEL'20'      WNYY                                              MD047513
+     C                     ENDIF                                                            MD047513
+     C                     ELSE                                                             MD047513
+     C                     MOVELBJMRDT    M#DATE                                            MD047513
+     C                     MOVE M#DAY     WNDD                                              MD047513
+     C                     MOVELM#MON     RUNMON                                            MD047513
+     C                     MOVE M#YRS     WNYY                                              MD047513
+     C           M#YRS     IFGE 72                                                          MD047513
+     C                     MOVEL'19'      WNYY                                              MD047513
+     C                     ELSE                                                             MD047513
+     C                     MOVEL'20'      WNYY                                              MD047513
+     C                     ENDIF                                                            MD047513
+     C                     ENDIF                                                            MD047513
+     C           RUNMON    LOKUPTABMTH    TABCOD         74                                 MD047513
+     C                     MOVE TABCOD    WNMM                                              MD047513
+      *                                                                                     MD047513
+      ** If not equal, then FX net inserted on an earlier date.                             MD047513
+      *                                                                                     MD047513
+     C           AMDTOE    IFNE WNDAT8                                                      MD047513
+     C                     MOVE '1'       *IN40                                             MD047513
+     C                     ENDIF                                                            MD047513
+     C                     ENDSR                                                            MD047513
+      *****************************************************************                     MD047513
+      /EJECT
       *****************************************************************                       CSD015
      C           *INZSR    BEGSR
       *=========================================================================

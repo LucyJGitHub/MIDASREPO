@@ -13,8 +13,10 @@
       *  NOTE: Check LE5110 for changes that may apply to it if there *                       CAS005
       *        are amendments done to this program.                   *                       CAS005
       *                                                               *                       CAS005
-      *  Last Amend No. CGL184             Date 07Dec16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 CGL184             Date 07Dec16               *
+      *                 CLE141             Date 08Feb16               *
       *                 AR830785           Date 07May13               *
       *                 AR996895           Date 25Nov12               *
       *                 CLE134             Date 01Aug12               *
@@ -102,6 +104,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  CGL184 - New Frequencies for Account Statements (Recompile)  *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -305,7 +311,8 @@
      E                    ACI       150  1                                CLE031
       **  Array of System Values                                                              218782
      E*********           SVAL    1   1 20                                             218782 137353
-     E                    SVAL    1   2 20                                                    137353
+     E**********          SVAL    1   2 20                                           137353 MD035545
+     E                    SVAL    1   3 20                                                  MD035545
      E/COPY ZSRSRC,ZHOLE                                                  S01195
      E/COPY ZSRSRC,ZDATE9Z1                                               066550
      E                    ##BR      999  3               Branch codes                         CSC042
@@ -710,6 +717,7 @@
      I                                       11  11 SSF                   S01117
      I                                       12  12 DATF                  S01117
      I                                       13  13 MBIN                  S01117
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      I/COPY ZSRSRC,ZINTDYZ1                                               066550
      I/COPY ZSRSRC,ZDATE9Z2                                               066550
      I/COPY ZSRSRC,ZDAT10Z1                                               126017
@@ -934,7 +942,8 @@
      C                     PARM *BLANKS   P@RTCD                                              137353
      C                     PARM SVAL,2    P@OP01                                              137353
      C                     PARM *BLANKS   P@VL01                                              137353
-     C                     PARM *BLANKS   P@OP02                                              137353
+     C**********           PARM *BLANKS   P@OP02                                     137353 MD035545
+     C                     PARM SVAL,3    P@OP02                                            MD035545
      C                     PARM *BLANKS   P@VL02                                              137353
      C                     PARM *BLANKS   P@OP03                                              137353
      C                     PARM *BLANKS   P@VL03                                              137353
@@ -965,6 +974,7 @@
       *                                                                                       137353
       ** Save value of FutValLoansOnIntAccr in a one character field                          137353
      C                     MOVELP@VL01    FUTVAL  1                                           137353
+     C                     MOVELP@VL02    WCALC6                                            MD035545
      C                     ENDIF                                                              137353
       *                                                                   CEU004
      C*                                                                   S01194
@@ -986,6 +996,12 @@
 0258 C***99******          GOTO END                                       S01117
 0258 C   99                GOTO ABEND                                     S01117
      C/COPY WNCPYSRC,LE1110C011
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
 0259 C**
 0260 C**   CALCULATE TITLE DATE AND REPORT CONTROL DATE
 0261 C**
@@ -2654,6 +2670,7 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 **   SVAL  -  SYSTEM VALUES ARRAY                                                             218782
 Settlement09Postings                                                                          218782
 FutValLoansOnIntAccr                                                                          137353
+LECalcBasis6LeapYear                                                                        MD035545
 ** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
 00366007310109601461
 ** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

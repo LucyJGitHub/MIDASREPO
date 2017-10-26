@@ -12,8 +12,10 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033575           Date 20Jun17               *
-      *  Prev Amend No. MD045091           Date 10May17               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 MD033575           Date 20Jun17               *
+      *                 MD045091           Date 10May17               *
       *                 MD039672           Date 12May17               *
       *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
@@ -374,6 +376,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD033575 - Added interest part of LS on split narrative      *
       *             introduced by MD027475.                           *
       *  MD045091 - When loan matures, system generates separate      *
@@ -1880,6 +1886,7 @@
      D AMLPRI          C                   CONST('ZAAMLSETLE')
      D SECTN1          C                   CONST('LE0450001')                                 CFC006
      D SECTN2          C                   CONST('LE0450002')                                 CFC006
+     D WPARML          S             20A   INZ('LECalcBasis6LeapYear')                      MD035545
      D WPARML1         S             20A   INZ('RepayDateOnMaturity')                       MD045091
      I*                                                                   S01408
       *                                                                                       CLE134
@@ -5111,6 +5118,13 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                     MD027475
       ** Save value of SplitPrinInterestFlg in a one character field                        MD027475
      C                   MOVEL     P@VL01        SPLITF            1                        MD027475
+     C                   MOVEL     P@VL02        WCALC6            1                        MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
       *                                                                                     MD045091
      C                   CALL      'AOSVALR0'                                               MD045091
      C                   PARM      *BLANKS       @RTCD                                      MD045091

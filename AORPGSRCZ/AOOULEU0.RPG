@@ -10,9 +10,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD030939           Date 12Jul17               *
-      *  Prev Amend No. MD021236           Date 12Jul17               *
-      *                 AR792284           Date 12Jul17               *      
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 MD030939           Date 12Jul17               *
+      *                 MD021236           Date 12Jul17               *
+      *                 AR792284           Date 12Jul17               *
       *                 MD035919A          Date 07Jul17               *
       *                 MD033759           Date 14Apr15               *
       *                 MD045010           Date 05Apr17               *
@@ -133,6 +135,10 @@
      F*                                                                  *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD030939 - REVERSE 252039. MATURITY PRINCIPAL PROJECTION     *
       *             will cover all unpaid principal amount.           *
       *           - Applied for MD-36113.                             *
@@ -144,7 +150,7 @@
       *             occurs. Amended program to ensure that calculated *
       *             interest for specific period + CPAM is considered *
       *             for posting when amendment is made.               *
-      *           - Applied for MD-36113.                             *      
+      *           - Applied for MD-36113.                             *
       *  MD035919A - No PAMV generated for LOAM/BC                    *
       *             Reversal posting generated when a back valued base*
       *             rate change is issued to a PDCL interest when     *
@@ -434,7 +440,8 @@
      E**  System values array                                             CLE033
      E**********          SVAL    1   3 20                                             CLE033 218782
      E**********          SVAL    1   4 20                                             218782 241166
-     E                    SVAL    1   5 20                                                    241166
+     E**********          SVAL    1   5 20                                           241166 MD035545
+     E                    SVAL    1   6 20                                                  MD035545
       *                                                                   CLE033
      E*  Amendment types                                                  CLE033
      E                    #AM     1   3 20                                CLE033
@@ -3554,7 +3561,8 @@
      C**********           PARM *BLANKS   P@OP05 20                       CLE033              241166
      C                     PARM SVAL,5    P@OP05 20                                           241166
      C                     PARM *BLANKS   P@VL05200                       CLE033
-     C                     PARM *BLANKS   P@OP06 20                       CLE033
+     C**********           PARM *BLANKS   P@OP06 20                                  CLE033 MD035545
+     C                     PARM SVAL,6    P@OP06 20                                         MD035545
      C                     PARM *BLANKS   P@VL06200                       CLE033
      C                     PARM *BLANKS   P@OP07 20                       CLE033
      C                     PARM *BLANKS   P@VL07200                       CLE033
@@ -3578,6 +3586,7 @@
      C                     MOVELP@VL04    SET09   1                                           218782
       * Save value of SdwPstIncTransRef in a one character field                              241166
      C                     MOVELP@VL05    TRSNAR  1                                           241166
+     C                     MOVELP@VL06    WCALC6                                            MD035545
       *                                                                   CLE033
      C                     ELSE                                           CLE033
      C*                                                                   CLE033
@@ -3595,7 +3604,8 @@
      C                     PARM *BLANKS   W0RTCD                                           BUG25226A
      C                     PARM SVAL,5    P@OP01 20                                        BUG25226A
      C                     PARM *BLANKS   P@VL01200                                        BUG25226A
-     C                     PARM *BLANKS   P@OP02 20                                        BUG25226A
+     C**********           PARM *BLANKS   P@OP02 20                                         MD035545
+     C                     PARM SVAL,6    P@OP02 20                                         MD035545
      C                     PARM *BLANKS   P@VL02200                                        BUG25226A
      C                     PARM *BLANKS   P@OP03 20                                        BUG25226A
      C                     PARM *BLANKS   P@VL03200                                        BUG25226A
@@ -3623,9 +3633,17 @@
      C                     ENDIF                                                           BUG25226A
       * Save value of SdwPstIncTransRef in a one character field                           BUG25226A
      C                     MOVELP@VL01    TRSNAR  1                                        BUG25226A
+     C                     MOVELP@VL02    WCALC6                                            MD035545
       *                                                                                    BUG25226A
      C*                                                                   CLE033
      C                     ENDIF                                          CLE033
+      *                                                                                     MD035545
+     C           WCALC6    IFEQ 'Y'                                                         MD035545
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C                     MOVE 'Y'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ENDIF                                                            MD035545
       *                                                                                       CLE034
       **  Check if CLE034 is installed                                                        CLE034
       *                                                                                       CLE034
@@ -5157,6 +5175,7 @@ Settlement09AccCode                                                             
 Settlement09Hostpgm                                                                           CLE033
 Settlement09Postings                                                                          218782
 SdwPstIncTransRef                                                                             241166
+LECalcBasis6LeapYear                                                                        MD035545
 **   #AM   -  AMENDMENT TYPE                                                                  CLE033
 Participation P.                                                                              CLE033
 Participation S.                                                                              CLE033

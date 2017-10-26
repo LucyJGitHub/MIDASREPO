@@ -15,12 +15,14 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 247544             Date 16May07               *
+      *                 247544             Date 16May07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CIR013             Date 25Apr05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 194012             Date 08Jun01              *
@@ -34,6 +36,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  247544 - Increase definition of W@NLP2 to match w/ ZINTDYZ2  *
       *           processing as amended by 242286.  (Recompile)       *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -114,6 +120,8 @@
      I                                      181 1830DBASE
      ISDBANK    E DSSDBANKPD
       ** BANK DETAILS ACCESSED VIA ACCESS PORGRAM
+     I***SDGELR*   E DSSDGELRPD                                                    MD035545 MD047993
+     I**GENERAL*LEDGER*DETAILS*ACCESSED*VIA*ACCESS*PROGRAM*************            MD035545 MD047993
      IDSFDY     E DSDSFDY
      I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      I/COPY WNCPYSRC,DL1965I001
@@ -133,6 +141,7 @@
      I                                        5   60ZZMMB                 182370
      I                                        7   80ZZDDB                 182370
       *                                                                   182370
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      C*****************************************************************
      C/EJECT
      C*****************************************************************
@@ -175,6 +184,60 @@
      C           BJDFIN    IFEQ 'M'
      C                     MOVE '1'       *IN98
      C                     END
+      *****************************************************************            MD035545 MD047993
+      ***Call*access*program*for*General*Ledger*details.***************            MD035545 MD047993
+      *****************************************************************            MD035545 MD047993
+     C**********           CALL 'AOGELRR1'                                         MD035545 MD047993
+     C**********           PARM '*MSG   ' @RTCD   7                                MD035545 MD047993
+     C**********           PARM '*FIRST ' @OPTN   7                                MD035545 MD047993
+     C********** SDGELR    PARM SDGELR    DSSDY                                    MD035545 MD047993
+      *                                                                                     MD035545
+     C********** @RTCD     IFNE *BLANK                                             MD035545 MD047993
+     C**********           MOVEL'SDGELRPD'DBFILE                                   MD035545 MD047993
+     C**********           MOVEL'062'     DBASE                                    MD035545 MD047993
+     C**********           MOVEL@OPTN     DBKEY                                    MD035545 MD047993
+     C**********           EXSR *PSSR                                              MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+      *                                                                                     MD035545
+      ** Retrieve system value setting                                                      MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   W0RTCD  7                                         MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'                             MD035545
+      *                                                                                     MD035545
+     C           W0RTCD    IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
       *
      C/COPY WNCPYSRC,DL1965C001
       ** Initialize

@@ -7,8 +7,10 @@
       *  Any changes made to this /COPY member may also need to be    *
       *  applied to ZINTDYZ2.                                         *
       *                                                               *
-      *  Last Amend No. AR996895           Date 25Nov12               *
-      *  Prev Amend No. 263666             Date 29Jan10               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 AR996895           Date 25Nov12               *
+      *                 263666             Date 29Jan10               *
       *                 CER059             Date 19Jul10               *
       *                 CER016A            Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -25,6 +27,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  AR996895 - Incorrect accrual interest calculation            *
       *             (Child:AR996897)                                  *
       *  263666  - Missing a ZZMM1 = 2 condition on processing calc.  *
@@ -85,6 +91,7 @@
      C                   MOVE      ZZCALC        ZZCALC            1
      C                   Z-ADD     *ZEROS        ZZINDY            5 0
      C                   Z-ADD     *ZEROS        ZZLPNM            5 0
+     C                   MOVEL     WCALC6        WCALC6            1                        MD035545
       *
       * Call access objects only once in a /COPY
       *
@@ -291,12 +298,25 @@
      C                   Z-ADD     ZZDATB        DATBSV            8 0
      C                   Z-ADD     ZZYY2         YY2SAV            4 0
       *
+      ***Get*Midas*day*number*for*1st*Jan*of*year*after*start*date*****            MD035545 MD047993
+      ***when*accrue*on*last*day*is*'N';*get*midas*day*number*for*31***            MD035545 MD047993
+      ***dec*of*the*start*date*year*when*accrue*on*last*day*is*Y*******            MD035545 MD047993
+      ***and*LECalcBasis6LeapYear*=*'Y'********************************            MD035545 MD047993
+      ** Get Midas Day Number for 31 Dec of the start date year when                        MD047993
+      ** LECalcBasis6LeapYear = 'Y'                                                         MD047993
+      *                                                                                     MD035545
+     C     WCALC6        IFEQ      'Y'                                                      MD035545
+     C                   Z-ADD     ZZYY1         ZZYY2                                      MD035545
+     C                   MOVE      '12'          ZZMM2                                      MD035545
+     C                   MOVE      '31'          ZZDD2                                      MD035545
+     C                   ELSE                                                               MD035545              
       * Add 1 to starting year number
      C     ZZYY1         ADD       1             ZZYY2
       *
       * Get Midas day number for 1st Jan of year after start date
      C                   MOVE      '01'          ZZMM2
      C                   MOVE      '01'          ZZDD2
+     C                   ENDIF                                                              MD035545          
      C                   MOVE      ZZDATB        ZZDTIN
      C                   EXSR      ZDAT10
      C                   Z-ADD     ZZMDNO        ZZENDW            5 0
@@ -310,6 +330,16 @@
      C                   ELSE
      C                   ADD       ZZWDAT        LEAP50
      C                   END
+      *                                                                                     MD035545
+      ***Add*1*to*start*date*year*when*accrue*on*last*day*is*'Y'*since*            MD035545 MD047993
+      ***1st*period*is*already*computed.*When*accrue*on*last*day*is****            MD035545 MD047993
+      ***'N'*the*year*is*already*start*date*+*1.***********************            MD035545 MD047993
+      ** Add 1 to start date year since 1st period is already computed                      MD047993
+      ** when LECalcBasis6LeapYear = 'Y'                                                    MD047993
+      *                                                                                     MD035545
+     C     WCALC6        IFEQ      'Y'                                                      MD035545
+     C                   ADD       1             ZZYY2                                      MD035545
+     C                   ENDIF                                                              MD035545          
       *
       * Accumulate leap year and non-leap year days for complete
       * years in the interest period
@@ -332,12 +362,33 @@
       * to the end date
       *
       * Get Midas day number for 1st Jan of current year
+      ** when LECalcBasis6LeapYear <> 'Y' else                                              MD047993
+      ** get Midas Day Number for 31 Dec of the start date year.                            MD047993
+      ***when*accrue*on*last*day*is*'N';*get*midas*day*number*for******            MD035545 MD047993
+      ***31st*Dec*of*previous*year*when*accrue*on*last*day*is*'Y'******            MD035545 MD047993
+      ***and*LECalcBasis6LeapYear*=*'Y'********************************            MD035545 MD047993
+      *                                                                                     MD035545
+     C     WCALC6        IFEQ      'Y'                                                      MD035545
+     C                   MOVE      '12'          ZZMM2                                      MD035545
+     C                   MOVE      '31'          ZZDD2                                      MD035545
+     C     ZZYY2         SUB       1             ZZYY2                                      MD035545
+     C                   ELSE                                                               MD035545           
      C                   MOVE      '01'          ZZMM2
      C                   MOVE      '01'          ZZDD2
+     C                   ENDIF                                                              MD035545       
      C                   MOVE      ZZDATB        ZZDTIN
      C                   EXSR      ZDAT10
      C                   Z-ADD     ZZMDNO        ZZBEG
      C     ZZEND         SUB       ZZBEG         ZZWDAT
+      *                                                                                     MD035545
+      ** Set the year back to current year since it was set to                              MD035545
+      ** previous year when LECalcBasis6LeapYear = 'Y'                                      MD047993
+      ***previous*year*when*accrue*on*last*indicator*=*'Y'*************            MD035545 MD047993
+      ***and*LECalcBasis6LeapYear*=*'Y'********************************            MD035545 MD047993
+      *                                                                                     MD035545
+     C     WCALC6        IFEQ      'Y'                                                      MD035545
+     C     ZZYY2         ADD       1             ZZYY2                                      MD035545
+     C                   ENDIF                                                              MD035545          
       *
       * Check if year is a leap year
      C     ZZYY2         DIV       4             ZZWN5

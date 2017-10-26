@@ -547,6 +547,7 @@
      D IRRTFX          C                   CONST('IRRTFXCNV')                   CIR005
      D ZAAML           C                   CONST('ZAAMLSETDL')
      D FRAAccNHL       C                   Const('DLFRAAccrueNoHdgLnk')                       245308
+     D WPARML          C                   CONST('LECalcBasis6LeapYear')                    MD035545
      D UseDealCust     C                   Const('UseDealCustforEuTax')                     MD026788
      D UseHistRate     C                   Const('UseHistRateforBVDeal')                    MD031283
      D/COPY ZSRSRC,ZHOLILE                                                                   BUG6293
@@ -3263,6 +3264,47 @@
      C                   GOTO      EOJ                                                         S0119
      C                   END                                                                   S0119
      C                   END                                                                   S0119
+      *                                                                                     MD035545
+      ** Retrieve system value setting                                                      MD035545
+      *                                                                                     MD035545
+     C                   MOVEL     WPARML        P@OP01                                     MD035545
+     C                   CALL      'AOSVALR0'                                               MD035545
+     C                   PARM      *BLANKS       W0RTCD            7                        MD035545
+     C                   PARM                    P@OP01           20                        MD035545
+     C                   PARM                    P@VL01          200                        MD035545
+     C                   PARM                    P@OP02           20                        MD035545
+     C                   PARM                    P@VL02          200                        MD035545
+     C                   PARM                    P@OP03           20                        MD035545
+     C                   PARM                    P@VL03          200                        MD035545
+     C                   PARM                    P@OP04           20                        MD035545
+     C                   PARM                    P@VL04          200                        MD035545
+     C                   PARM                    P@OP05           20                        MD035545
+     C                   PARM                    P@VL05          200                        MD035545
+     C                   PARM                    P@OP06           20                        MD035545
+     C                   PARM                    P@VL06          200                        MD035545
+     C                   PARM                    P@OP07           20                        MD035545
+     C                   PARM                    P@VL07          200                        MD035545
+     C                   PARM                    P@OP08           20                        MD035545
+     C                   PARM                    P@VL08          200                        MD035545
+     C                   PARM                    P@OP09           20                        MD035545
+     C                   PARM                    P@VL09          200                        MD035545
+     C                   PARM                    P@OP10           20                        MD035545
+     C                   PARM                    P@VL10          200                        MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'                             MD035545
+      *                                                                                     MD035545
+     C     W0RTCD        IFNE      '       '                                                MD035545
+     C                   MOVE      'N'           WCALC6                                     MD035545
+     C                   ELSE                                                               MD035545
+     C                   MOVEL     P@VL01        WCALC6                                     MD035545
+     C*****WCALC6        IFEQ      'Y'                                             MD035545 MD047993
+     C*****BKALDI        ANDEQ     'Y'                                             MD035545 MD047993
+     C**********         MOVE      'Y'           WCALC6                            MD035545 MD047993
+     C**********         ELSE                                                      MD035545 MD047993
+     C**********         MOVE      'N'           WCALC6                            MD035545 MD047993
+     C**********         ENDIF                                                     MD035545 MD047993
+     C                   ENDIF                                                              MD035545
+      *                                                                                     MD035545
      C/COPY WNCPYSRC,DLH00133
 0646 C*
 0652 C**N01*****         SETON                                        86LRU8                AR547995

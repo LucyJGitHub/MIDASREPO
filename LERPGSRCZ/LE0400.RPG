@@ -10,8 +10,10 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037495           Date 11Feb16               *
-      *  Prev Amend No. AR1057551          Date 05Jun17               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 MD037495           Date 11Feb16               *
+      *                 AR1057551          Date 05Jun17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD038509           Date 02May16               *
       *                 CLE154             Date 02Aug12               *
@@ -244,6 +246,10 @@
 0009 F*                                                               *
 0011 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD037495 - Incorrect Repayment Priority Retrieved for        *
       *             category code ZPRIM                               *
       *           - Pass CLOANZTD as the file parameter when accessing*
@@ -2468,6 +2474,7 @@
      IDSSDY     E DSDSSDY                                                 S01194
      I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
      I*                                                                   S01194
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      I/COPY ZSRSRC,ZINTDYZ1                                               066550
      I/COPY ZSRSRC,ZDATE9Z2                                               066550
      I/COPY ZSRSRC,ZDAT10Z1                                               126017
@@ -13793,6 +13800,53 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     GOTO INITEN                                                        CLE154
      C                     ENDIF                                                              CLE154
      C                     ENDIF                                                              CLE154
+      *****************************************************************            MD035545 MD047993
+      ***Access*general*ledger*details.********************************            MD035545 MD047993
+      *****************************************************************            MD035545 MD047993
+     C**********           CALL 'AOGELRR1'                                         MD035545 MD047993
+     C**********           PARM '*DBERR ' @RTCD                                    MD035545 MD047993
+     C**********           PARM '*FIRST ' @OPTN                                    MD035545 MD047993
+     C********** SDGELR    PARM SDGELR    DSSDY                                    MD035545 MD047993
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   @RTCD                                             MD035545
+     C                     PARM           P@OP01                                            MD035545
+     C                     PARM           P@VL01                                            MD035545
+     C                     PARM           P@OP02                                            MD035545
+     C                     PARM           P@VL02                                            MD035545
+     C                     PARM           P@OP03                                            MD035545
+     C                     PARM           P@VL03                                            MD035545
+     C                     PARM           P@OP04                                            MD035545
+     C                     PARM           P@VL04                                            MD035545
+     C                     PARM           P@OP05                                            MD035545
+     C                     PARM           P@VL05                                            MD035545
+     C                     PARM           P@OP06                                            MD035545
+     C                     PARM           P@VL06                                            MD035545
+     C                     PARM           P@OP07                                            MD035545
+     C                     PARM           P@VL07                                            MD035545
+     C                     PARM           P@OP08                                            MD035545
+     C                     PARM           P@VL08                                            MD035545
+     C                     PARM           P@OP09                                            MD035545
+     C                     PARM           P@VL09                                            MD035545
+     C                     PARM           P@OP10                                            MD035545
+     C                     PARM           P@VL10                                            MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           @RTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
       *                                                                   S01408
      C/COPY WNCPYSRC,LE0400CP21                                           S01408
       *                                                                   S01408

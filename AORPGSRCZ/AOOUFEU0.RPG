@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037658           Date 19Feb16               *      
-      *  Prev Amend No. MD046351           Date 23Aug17               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 MD037658           Date 19Feb16               *      
+      *                 MD046351           Date 23Aug17               *
       *                 MD034020           Date 19Jul17               *
       *                 AR943686           Date 23Sep16               *
       *                 MD041443           Date 19Sep16               *
@@ -82,6 +84,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD037658 - Define NDAYS/WDAYS w/decimal to cater calc basis 6*      
       *  MD046351 - Rounding and truncation in fee accrual            *
       *             calculations due to mult/div using 15,9 fields    *
@@ -647,6 +653,11 @@
      IPSDS       SDS                                                                          CSC022
      I                                     *PROGRAM WDSPGM                                    CSC022
      I                                      244 253 WDSJOB                                    CSC022
+     I***SDGELR*   E DSSDGELRPD                                                    MD035545 MD047993
+     I**********    QQACCD                          ACCDQQ                         MD035545 MD047993
+      ***General*ledger*details****************************************            MD035545 MD047993
+      *                                                                                     MD035545
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      C/EJECT
       *****************************************************************
       * Process     :  MAINLINE                                       *
@@ -3528,6 +3539,53 @@
      C           WRTCD     IFEQ *BLANKS                                                       CLE134
      C                     MOVE 'Y'       CLE134                                              CLE134
      C                     ENDIF                                                              CLE134
+      *****************************************************************            MD035545 MD047993
+      ***Access*general*ledger*details.********************************            MD035545 MD047993
+      *****************************************************************            MD035545 MD047993
+     C**********           CALL 'AOGELRR1'                                         MD035545 MD047993
+     C**********           PARM '*DBERR ' WRTCD                                    MD035545 MD047993
+     C**********           PARM '*FIRST ' WOPTN                                    MD035545 MD047993
+     C********** SDGELR    PARM SDGELR    DSSDY                                    MD035545 MD047993
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   W0RTCD                                            MD035545
+     C                     PARM           P@OP01                                            MD035545
+     C                     PARM           P@VL01                                            MD035545
+     C                     PARM           P@OP02                                            MD035545
+     C                     PARM           P@VL02                                            MD035545
+     C                     PARM           P@OP03                                            MD035545
+     C                     PARM           P@VL03                                            MD035545
+     C                     PARM           P@OP04                                            MD035545
+     C                     PARM           P@VL04                                            MD035545
+     C                     PARM           P@OP05                                            MD035545
+     C                     PARM           P@VL05                                            MD035545
+     C                     PARM           P@OP06                                            MD035545
+     C                     PARM           P@VL06                                            MD035545
+     C                     PARM           P@OP07                                            MD035545
+     C                     PARM           P@VL07                                            MD035545
+     C                     PARM           P@OP08                                            MD035545
+     C                     PARM           P@VL08                                            MD035545
+     C                     PARM           P@OP09                                            MD035545
+     C                     PARM           P@VL09                                            MD035545
+     C                     PARM           P@OP10                                            MD035545
+     C                     PARM           P@VL10                                            MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           W0RTCD    IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
       *
       ** Set up subroutine stack name
       *

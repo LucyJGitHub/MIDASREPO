@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 245692             Date 09Dec13               *
-      *  Prev Amend No. AR318276           Date 01Oct12               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 245692             Date 09Dec13               *
+      *                 AR318276           Date 01Oct12               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -65,6 +67,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  245692 - Incorrect validation of rates when the decimal se-  *
       *           parator in the Dealing ICD was defined as "," ins-  *
       *           tead of ".".                                        *
@@ -464,6 +470,7 @@
       * Now1Time is the time before the READ and Now2Time the time after        CAAA02
      d Now1Time        s               t                                        CAAA02
      d Now2Time        s               t                                        CAAA02
+     D WPARML          C                   CONST('LECalcBasis6LeapYear')                    MD035545
                                                                                 CAAA02
       ***/COPY ZSRSRC,ZDAYSZ1                                                   CAAA02
       ***/COPY ZSRSRC,ZRATE2Z1                                                  CAAA02
@@ -610,6 +617,46 @@
      C                   MOVE      WSSNB         @KRCRD
      C                   MOVE      WINCY         @WINCY            1
      C                   MOVE      *BLANKS       @STRNG
+      *                                                                                     MD035545
+      ** Retrieve system value setting                                                      MD035545
+      *                                                                                     MD035545
+     C                   MOVEL     WPARML        P@OP01                                     MD035545
+     C                   CALL      'AOSVALR0'                                               MD035545
+     C                   PARM      *BLANKS       W0RTCD            7                        MD035545
+     C                   PARM                    P@OP01           20                        MD035545
+     C                   PARM                    P@VL01          200                        MD035545
+     C                   PARM                    P@OP02           20                        MD035545
+     C                   PARM                    P@VL02          200                        MD035545
+     C                   PARM                    P@OP03           20                        MD035545
+     C                   PARM                    P@VL03          200                        MD035545
+     C                   PARM                    P@OP04           20                        MD035545
+     C                   PARM                    P@VL04          200                        MD035545
+     C                   PARM                    P@OP05           20                        MD035545
+     C                   PARM                    P@VL05          200                        MD035545
+     C                   PARM                    P@OP06           20                        MD035545
+     C                   PARM                    P@VL06          200                        MD035545
+     C                   PARM                    P@OP07           20                        MD035545
+     C                   PARM                    P@VL07          200                        MD035545
+     C                   PARM                    P@OP08           20                        MD035545
+     C                   PARM                    P@VL08          200                        MD035545
+     C                   PARM                    P@OP09           20                        MD035545
+     C                   PARM                    P@VL09          200                        MD035545
+     C                   PARM                    P@OP10           20                        MD035545
+     C                   PARM                    P@VL10          200                        MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'                             MD035545
+      *                                                                                     MD035545
+     C     W0RTCD        IFNE      '       '                                                MD035545
+     C                   MOVE      'N'           WCALC6                                     MD035545
+     C                   ELSE                                                               MD035545
+     C                   MOVEL     P@VL01        WCALC6                                     MD035545
+     C*****WCALC6        IFEQ      'Y'                                             MD035545 MD047993
+     C*****BKALDI        ANDEQ     'Y'                                             MD035545 MD047993
+     C**********         MOVE      'Y'           WCALC6                            MD035545 MD047993
+     C**********         ELSE                                                      MD035545 MD047993
+     C**********         MOVE      'N'           WCALC6                            MD035545 MD047993
+     C**********         ENDIF                                                     MD035545 MD047993
+     C                   ENDIF                                                              MD035545
      C*
      C** IF THIS IS FIRST CALL OF PROGRAM - COULD BE FROM MENU OR FROM
      C** STACK - CALCULATE DEFAULT VALUES FOR FUTURE REFERENCE

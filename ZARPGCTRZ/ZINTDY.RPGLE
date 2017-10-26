@@ -41,8 +41,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. AR996895           Date 25Nov12               *
-      *  Prev Amend No. 263666             Date 01Feb10               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 AR996895           Date 25Nov12               *
+      *                 263666             Date 01Feb10               *
       *                 CER059             Date 19Jul10               *
       *                 CER016A            Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -64,6 +66,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  AR996895 - Incorrect accrual interest calculation            *
       *             (Child:AR996897)                                  *
       *  263666 - Missing a ZZMM1 = 2 condition on processing calc.   *
@@ -89,7 +95,7 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -108,31 +114,32 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+     D*SDGELR***     E DS                  EXTNAME(SDGELRPD)                       MD035545 MD047993
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -143,25 +150,30 @@
                                                                                               CIR004
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CIR004
       ** Second DS for Access Programs, Long Data Structure                                   CIR004
- 
+     D*DSSDY****     E DS                  EXTNAME(DSSDY)                          MD035545 MD047993
+      ***Short*Data*Structure*for*Access*Programs**********************            MD035545 MD047993
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+     D*PRtrnCode       S              7A                                           MD035545 MD047993
+     D*POptn****       S              7A                                           MD035545 MD047993
+     D WCALC6          S              1A                                                    MD035545
+
       ** +-----------------------------------------------------------------+
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
+
       ** Return code for the ZDATE9 call
      D @@RTN           S              1A
- 
+
       ** Date returned from ZDATE9
      D  @@VDT          S              8S 0
                                                                                               CIR013
@@ -175,9 +187,9 @@
       ** Define Fields for ZDATE10                                                            191870
      D ZZMDNO          S              5P 0                                                    191870
      D ZZDTIN          S              8S 0                                                    191870
- 
+
       ** +--- The converted ZINTDYZ1 starts here --------------------------+
- 
+
      D**  DATA STRUCTURE FOR SR. ZINTDY - DATE FIELD YYYYMMDD.
      D                 DS
      D  ZZDATA                 1      8  0
@@ -191,9 +203,11 @@
      D  ZZYY2                  1      4  0
      D  ZZMM2                  5      6  0
      D  ZZDD2                  7      8  0
- 
+                                                                                            MD035545
+     D WPARML          S             20A   INZ('LECalcBasis6LeapYear')                      MD035545
+
       ** +--- The converted ZINTDYZ1 ends here ----------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -201,7 +215,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -209,24 +223,24 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Calculate the number of interest days between two dates in the
       **  five-digiot day number format (5,0)
      C                   EXSR      ZINTDY
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C/EJECT
- 
+
       ** +--- The converted ZINTDYZ2 starts here --------------------------+
- 
+
      C*****************************************************************
      C     ZINTDY        BEGSR
- 
+
      C     *IN80         IFEQ      '1'
      C                   MOVE      '1'           IN80SV            1
      C                   ELSE
@@ -255,29 +269,29 @@
      C     ZZCALC        OREQ      '0'                                                       CER016A
      C*
      C                   Z-ADD     ZZBEG         @@DAYN            5 0
- 
+
       ** +--- The converted ZINTDYZ2 changes here -------------------------+
- 
+
      C                   CALLB     'ZDATE9'
      C                   PARM                    @@DAYN
      C                   PARM                    @@VDT
      C                   PARM                    @@RTN
- 
+
       ** +--- The converted ZINTDYZ2 continues here -----------------------+
- 
+
      C                   Z-ADD     @@VDT         ZZDATA
      C*
      C                   Z-ADD     ZZEND         @@DAYN
- 
+
       ** +--- The converted ZINTDYZ2 changes here -------------------------+
- 
+
      C                   CALLB     'ZDATE9'
      C                   PARM                    @@DAYN
      C                   PARM                    @@VDT
      C                   PARM                    @@RTN
- 
+
       ** +--- The converted ZINTDYZ2 continues here -----------------------+
- 
+
      C                   Z-ADD     @@VDT         ZZDATB
      C                   END                                                                  191870
      C*                                                                                       CIR013
@@ -414,10 +428,23 @@
      C                   Z-ADD     ZZDATB        DATBSV            8 0                        191870
      C                   Z-ADD     ZZYY2         YY2SAV            4 0                        191870
       *                                                                                       191870
+      ***Get*Midas*day*number*for*1st*Jan*of*year*after*start*date*****            MD035545 MD047993
+      ***when*accrue*on*last*day*is*'N';*get*midas*day*number*for*31***            MD035545 MD047993
+      ***dec*of*the*start*date*year*when*accrue*on*last*day*is*Y*******            MD035545 MD047993
+      ***and*LECalcBasis6LeapYear*=*'Y'********************************            MD035545 MD047993
+      ** Get Midas Day Number for 31 Dec of the start date year when                        MD047993
+      ** LECalcBasis6LeapYear = 'Y'                                                         MD047993
+      *                                                                                     MD035545
+     C     WCALC6        IFEQ      'Y'                                                      MD035545
+     C                   Z-ADD     ZZYY1         ZZYY2                                      MD035545
+     C                   MOVE      '12'          ZZMM2                                      MD035545
+     C                   MOVE      '31'          ZZDD2                                      MD035545
+     C                   ELSE                                                               MD035545
      C     ZZYY1         ADD       1             ZZYY2                                        191870
       *                                                                                       191870
      C                   MOVE      '01'          ZZMM2                                        191870
      C                   MOVE      '01'          ZZDD2                                        191870
+     C                   ENDIF                                                              MD035545
      C                   MOVE      ZZDATB        ZZDTIN                                       191870
       *                                                                                       191870
      C                   CALLB     'ZDATE10'                                                  191870
@@ -434,6 +461,16 @@
      C                   ELSE                                                                 191870
      C                   ADD       ZZWDAT        LEAP50                                       191870
      C                   END                                                                  191870
+      *                                                                                     MD035545
+      ***Add*1*to*start*date*year*when*accrue*on*last*day*is*'Y'*since*            MD035545 MD047993
+      ***1st*period*is*already*computed.*When*accrue*on*last*day*is****            MD035545 MD047993
+      ***'N'*the*year*is*already*start*date*+*1.***********************            MD035545 MD047993
+      ** Add 1 to start date year since 1st period is already computed                      MD047993
+      ** when LECalcBasis6LeapYear = 'Y'                                                    MD047993
+      *                                                                                     MD035545
+     C     WCALC6        IFEQ      'Y'                                                      MD035545
+     C                   ADD       1             ZZYY2                                      MD035545
+     C                   ENDIF                                                              MD035545
       *                                                                                       191870
      C     ZZYY2         DOWLT     YY2SAV                                                     191870
       *                                                                                       191870
@@ -448,8 +485,21 @@
      C                   ADD       1             ZZYY2                                        191870
      C                   ENDDO                                                                191870
       *                                                                                       191870
+      ***Get*Midas*day*number*for*1st*Jan*of*year*after*start*date*****            MD035545 MD047993
+      ***when*accrue*on*last*day*is*'N';*get*midas*day*number*for*31***            MD035545 MD047993
+      ***dec*of*the*start*date*year*when*accrue*on*last*day*is*Y*******            MD035545 MD047993
+      ***and*LECalcBasis6LeapYear*=*'Y'********************************            MD035545 MD047993
+      ** Get Midas Day Number for 31 Dec of the start date year when                        MD047993
+      ** LECalcBasis6LeapYear = 'Y'                                                         MD047993
+      *                                                                                     MD035545
+     C     WCALC6        IFEQ      'Y'                                                      MD035545
+     C                   MOVE      '12'          ZZMM2                                      MD035545
+     C                   MOVE      '31'          ZZDD2                                      MD035545
+     C     ZZYY2         SUB       1             ZZYY2                                      MD035545
+     C                   ELSE                                                               MD035545
      C                   MOVE      '01'          ZZMM2                                        191870
      C                   MOVE      '01'          ZZDD2                                        191870
+     C                   ENDIF                                                              MD035545
      C                   MOVE      ZZDATB        ZZDTIN                                       191870
       *                                                                                       191870
      C                   CALLB     'ZDATE10'                                                  191870
@@ -459,6 +509,14 @@
      C                   Z-ADD     ZZMDNO        ZZBEG                                        191870
      C     ZZEND         SUB       ZZBEG         ZZWDAT                                       191870
       *                                                                                       191870
+      ** Set the year back to current year since it was set to                              MD035545
+      ** previous year when LECalcBasis6LeapYear = 'Y'                                      MD047993
+      ***previous*year*when*accrue*on*last*indicator*=*'Y'*************            MD035545 MD047993
+      ***and*LECalcBasis6LeapYear*=*'Y'********************************            MD035545 MD047993
+      *                                                                                     MD035545
+     C     WCALC6        IFEQ      'Y'                                                      MD035545
+     C     ZZYY2         ADD       1             ZZYY2                                      MD035545
+     C                   ENDIF                                                              MD035545
      C     ZZYY2         DIV       4             ZZWN5                                        191870
      C                   MVR                     ZZWN5                                        191870
      C     ZZWN5         IFNE      0                                                          191870
@@ -728,13 +786,13 @@
      C                   ELSE
      C                   MOVE      '0'           *IN80
      C                   END
- 
+
      C                   ENDSR
      C*****************************************************************
- 
+
       ** +--- The converted ZINTDYZ2 ends here ----------------------------+
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -746,9 +804,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       ** Incoming return code (10A, returned to caller)
      C                   PARM                    RetCodeIn
@@ -762,7 +820,7 @@
      C                   PARM                    ZZCALC
       ** Number of interest days (15,7P, returned to caller)                                  191870
      C                   PARM                    INT6DY                                       191870
- 
+
       ** Access Switchable Features File                                                      CIR004
                                                                                               CIR004
      C                   CallB     'AOSARDR0'                                                 CIR004
@@ -786,13 +844,57 @@
      C                   If        PRtcd = *Blanks                                           CER016A
      C                   Eval      CER016 = 'Y'                                              CER016A
      C                   Endif                                                               CER016A
+      *                                                                                     MD035545
+     C**********         CALL      'AOGELRR1'                                      MD035545 MD047993
+     C**********         PARM      '*DBERR '     PRtrnCode                         MD035545 MD047993
+     C**********         PARM      '*FIRST '     POptn                             MD035545 MD047993
+     C*****SDGELR        PARM      SDGELR        DSSDY                             MD035545 MD047993
+      *                                                                                     MD035545
+      ** Check System Value:                                                                MD035545
+      *                                                                                     MD035545
+     C                   EVAL      SVALK1 = WPARML                                          MD035545
+      ** Call Access Object                                                                 MD035545
+     C                   CALL      'AOSVALR0'                                               MD035545
+     C                   PARM                    RTNCDE            7                        MD035545
+     C                   PARM                    SVALK1           20                        MD035545
+     C                   PARM                    SVAL1           200                        MD035545
+     C                   PARM                    SVALK2           20                        MD035545
+     C                   PARM                    SVAL2           200                        MD035545
+     C                   PARM                    SVALK3           20                        MD035545
+     C                   PARM                    SVAL3           200                        MD035545
+     C                   PARM                    SVALK4           20                        MD035545
+     C                   PARM                    SVAL4           200                        MD035545
+     C                   PARM                    SVALK5           20                        MD035545
+     C                   PARM                    SVAL5           200                        MD035545
+     C                   PARM                    SVALK6           20                        MD035545
+     C                   PARM                    SVAL6           200                        MD035545
+     C                   PARM                    SVALK7           20                        MD035545
+     C                   PARM                    SVAL7           200                        MD035545
+     C                   PARM                    SVALK8           20                        MD035545
+     C                   PARM                    SVAL8           200                        MD035545
+     C                   PARM                    SVALK9           20                        MD035545
+     C                   PARM                    SVAL9           200                        MD035545
+     C                   PARM                    SVALK0           20                        MD035545
+     C                   PARM                    SVAL10          200                        MD035545
+      * If the system value is not found then default value to 'N'                          MD035545
+     C     RTNCDE        IFNE      '        '                                               MD035545
+     C                   MOVE      'N'           WCALC6                                     MD035545
+     C                   ELSE                                                               MD035545
+     C                   MOVEL     SVAL1         WCALC6                                     MD035545
+     C*****WCALC6        IFEQ      'Y'                                             MD035545 MD047993
+     C*****BKALDI        ANDEQ     'Y'                                             MD035545 MD047993
+     C**********         MOVE      'Y'           WCALC6                            MD035545 MD047993
+     C**********         ELSE                                                      MD035545 MD047993
+     C**********         MOVE      'N'           WCALC6                            MD035545 MD047993
+     C**********         ENDIF                                                     MD035545 MD047993
+     C                   ENDIF                                                              MD035545
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

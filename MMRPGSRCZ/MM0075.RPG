@@ -17,8 +17,10 @@
      F*                                                              *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                              *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CDL093             Date 08Apr14               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CDL093             Date 08Apr14               *
       *                 AR996895           Date 25Nov12               *
       *                 263666             Date 01Feb10               *
       *                 CER059             Date 19Jul10               *
@@ -80,6 +82,10 @@
      F*                                                              *
      F****************************************************************
      F*                                                              *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CDL093 - MM Interest calculation type 9.                     *
@@ -366,9 +372,13 @@
      ISDBANK    E DSSDBANKPD                                              S01194
      I** EXTERNAL DS FOR BANK DETAILS                                     S01194
      I*                                                                   S01194
+     I***SDGELR*   E DSSDGELRPD                                                    MD035545 MD047993
+     I**GENERAL*LEDGER*DETAILS*ACCESSED*VIA*ACCESS*PROGRAM*************            MD035545 MD047993
      IDSFDY     E DSDSFDY                                                 S01194
      I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
      I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                                   MD035545
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                                  MD035545
      I/EJECT
      IPSDS       SDS
      I/COPY WNCPYSRC,MM0075I002
@@ -503,6 +513,7 @@
      I** Data area containing phase flag
      I*
      I** Data structure to hold Phase of system
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      ISCSARD    E DSSCSARDPD                                                                  CDL033
       /EJECT
      C*****************************************************************
@@ -4558,6 +4569,46 @@ U    C*************@@BEG**-*Beginning*of*interest*period************S01149056095
      C                     ENDIF                                                              CDL033
      C                     ENDIF                                                              CDL033
       *                                                                                       CDL033
+      ** Retrieve system value setting                                                      MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   W0RTCD  7                                         MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'                             MD035545
+      *                                                                                     MD035545
+     C           W0RTCD    IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+      *                                                                                     MD035545
      C           #A9       ENDSR
      C*****************************************************************
      C/EJECT

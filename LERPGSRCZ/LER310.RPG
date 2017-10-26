@@ -19,8 +19,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD024222           Date 05May14               *
-      *  Prev Amend No. MD022067           Date 27Aug13               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 MD024222           Date 05May14               *
+      *                 MD022067           Date 27Aug13               *
       *                 AR996895           Date 25Nov12               *
       *                 AR1056323          Date 14Nov12               *
       *                 AR567790           Date 01Aug12               *
@@ -69,6 +71,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD024222 - Changed variable RECI to LNRECI on the condition  *
       *             for tagging a delete on LEPEMGD. LNRECI is the    *
       *             renamed RECI for CLOANCL. (Child: AR961727)       *
@@ -378,6 +384,7 @@
      ISCSARD    E DSSCSARDPD                                              CLE005
       ** SAR File Details Accessed via Access Program AOSARDR0            CLE005
       *                                                                   CLE005
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      I/COPY ZSRSRC,ZINTDYZ1                                                                   208013
      I/COPY ZSRSRC,ZDATE9Z2                                                                   208013
      I/COPY ZSRSRC,ZDAT10Z1                                                                   208013
@@ -1771,6 +1778,46 @@
      C           PRTCD     IFEQ *BLANK                                                        CGL020
      C                     MOVE 'Y'       CGL020                                              CGL020
      C                     ENDIF                                                              CGL020
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   @RTCD                                             MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           @RTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
      C/COPY WNCPYSRC,LEH01283
       *                                                                                       CGL020
      C                     MOVE *BLANKS   F1FFLG                                              CGL020

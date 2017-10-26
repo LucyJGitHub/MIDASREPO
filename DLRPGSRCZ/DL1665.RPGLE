@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD047993           Date 23Sep17               *
+      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CDL093             Date 08Apr14               *
       *                 AR996895           Date 25Nov12               *
@@ -44,6 +46,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -136,11 +142,13 @@
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       *
       ** Long data structure for access programs
+     D*SDGELR***     E DS                  EXTNAME(SDGELRPD)                       MD035545 MD047993
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       204923
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     204923
       ** Short data structure for access programs                                             204923
       *
+     D WPARML          C                   CONST('LECalcBasis6LeapYear')                    MD035545
       /EJECT
      D*COPY ZSRSRC,ZINTDYZ1                                                                   220859
      D/COPY ZSRSRC,ZINTDYZ1LE                                                                 220859
@@ -229,6 +237,60 @@
      C                   MOVEL     '*FIRST  '    DBKEY                                        204923
      C                   EXSR      *PSSR                                                      204923
      C                   ENDIF                                                                204923
+      *****************************************************************            MD035545 MD047993
+      ***Call*access*program*for*General*Ledger*details.***************            MD035545 MD047993
+      *****************************************************************            MD035545 MD047993
+     C**********         CALL      'AOGELRR1'                                      MD035545 MD047993
+     C**********         PARM      '*MSG'        @RTCD             7               MD035545 MD047993
+     C**********         PARM      '*FIRST '     @OPTN             7               MD035545 MD047993
+     C*****SDGELR        PARM      SDGELR        DSSDY                             MD035545 MD047993
+      *                                                                                     MD035545
+     C*****@RTCD         IFNE      *BLANK                                          MD035545 MD047993
+     C**********         MOVEL     'SDGELRPD'    W0FILE                            MD035545 MD047993
+     C**********         MOVEL     '062'         W0ERNB                            MD035545 MD047993
+     C**********         MOVEL     @OPTN         W0KEY                             MD035545 MD047993
+     C**********         EXSR      SRERR                                           MD035545 MD047993
+     C**********         ENDIF                                                     MD035545 MD047993
+      *                                                                                     MD035545
+      ** Retrieve system value setting                                                      MD035545
+      *                                                                                     MD035545
+     C                   MOVEL     WPARML        P@OP01                                     MD035545
+     C                   CALL      'AOSVALR0'                                               MD035545
+     C                   PARM      *BLANKS       W0RTCD            7                        MD035545
+     C                   PARM                    P@OP01           20                        MD035545
+     C                   PARM                    P@VL01          200                        MD035545
+     C                   PARM                    P@OP02           20                        MD035545
+     C                   PARM                    P@VL02          200                        MD035545
+     C                   PARM                    P@OP03           20                        MD035545
+     C                   PARM                    P@VL03          200                        MD035545
+     C                   PARM                    P@OP04           20                        MD035545
+     C                   PARM                    P@VL04          200                        MD035545
+     C                   PARM                    P@OP05           20                        MD035545
+     C                   PARM                    P@VL05          200                        MD035545
+     C                   PARM                    P@OP06           20                        MD035545
+     C                   PARM                    P@VL06          200                        MD035545
+     C                   PARM                    P@OP07           20                        MD035545
+     C                   PARM                    P@VL07          200                        MD035545
+     C                   PARM                    P@OP08           20                        MD035545
+     C                   PARM                    P@VL08          200                        MD035545
+     C                   PARM                    P@OP09           20                        MD035545
+     C                   PARM                    P@VL09          200                        MD035545
+     C                   PARM                    P@OP10           20                        MD035545
+     C                   PARM                    P@VL10          200                        MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'                             MD035545
+      *                                                                                     MD035545
+     C     W0RTCD        IFNE      '       '                                                MD035545
+     C                   MOVE      'N'           WCALC6                                     MD035545
+     C                   ELSE                                                               MD035545
+     C                   MOVEL     P@VL01        WCALC6                                     MD035545
+     C*****WCALC6        IFEQ      'Y'                                             MD035545 MD047993
+     C*****BKALDI        ANDEQ     'Y'                                             MD035545 MD047993
+     C**********         MOVE      'Y'           WCALC6                            MD035545 MD047993
+     C**********         ELSE                                                      MD035545 MD047993
+     C**********         MOVE      'N'           WCALC6                            MD035545 MD047993
+     C**********         ENDIF                                                     MD035545 MD047993
+     C                   ENDIF                                                              MD035545
       *
      C                   ENDSR
       *****************************************************************

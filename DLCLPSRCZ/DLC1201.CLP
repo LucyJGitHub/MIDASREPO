@@ -10,12 +10,13 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Amend No. CDL098             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG7956            Date 12Jul05              */
-/*       Prev Amend No. 228542             Date 05Aug04              */
+/*       Prev Amend No. BUG7956            Date 12Jul05              */
+/*                      228542             Date 05Aug04              */
 /*                      CLE025             Date 20Oct03              */
 /*                      CDL012             Date 19Aug03              */
 /*                      CSC020             Date 31Mar04              */
@@ -61,6 +62,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CDL098 - Cancelled Deal Numbers                             */
 /*       BUG7956 - FOOB in DLC1201                                   */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       CLE025 - Credit Lines                                       */
@@ -161,6 +163,7 @@
              DCL        VAR(&CIR003) TYPE(*CHAR) LEN(1)                                   /*CIR003*/
              DCL        VAR(&CDL012) TYPE(*CHAR) LEN(1)                                   /*CDL012*/
              DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1)                                   /*CLE025*/
+             DCL        VAR(&CDL098) TYPE(*CHAR) LEN(1)                                   /*CDL098*/
 /* */                                                                 /*AUS019*/
 /** NEW PARAMETER: DEAL TYPE SELECTION (FX, MM OR BLANKS FOR BOTH) */ /*AUS019*/
 /* */                                                                 /*AUS019*/
@@ -190,7 +193,7 @@
 /*/COPY WNCPYSRC,DLC1201008                                          /*S01408*/
 /*                                                                   /*S01408*/
 /**/                                                                  /*048933*/
- 
+  
 /**/
 /********    DCLDTAARA  DTAARA(DLSTAT)                                  S01179*/
 /********    DCLDTAARA  DTAARA(MMOD)                                    S01179*/
@@ -445,8 +448,9 @@ NOJRNRCV:       CHGVAR VAR(&STAT) VALUE('N')                          /*048933*/
              IF         COND(%SUBSTRING(&SWS 8 1) *EQ '1') THEN(DO)   /*048933*/
                 SNDMSG     MSG(&MSG2)  TOMSGQ(MOPERQ)                 /*048933*/
                 GOTO       END                                        /*048933*/
-                ENDDO                                                 /*048933*/
+             ENDDO       /*048933*/
 /**/                                                                  /*048933*/
+
 /**/
              IF         COND(%SUBSTRING(&SWS 6 1) *NE '1') THEN(DO)
 /**/
@@ -528,7 +532,7 @@ NOJRNRCV:       CHGVAR VAR(&STAT) VALUE('N')                          /*048933*/
                 SNDMSG     MSG('Deals by customer this month report')         +
                            TOMSGQ(MRUNQ)
 /************** CALL       PGM(DL1060)                                /*S01117*/
- 
+
 /***REPORT*BY*SYSTEM***/                                  /*S01117*/  /*048932*/
 /************IF    COND(&RLEV *EQ 'S') THEN(CALL PGM(DL1060)) *S01117* *E27942*/
 /************IF         COND(&RLEV *EQ 'S' *OR &RLEV *EQ ' ') +
@@ -611,6 +615,35 @@ NOJRNRCV:       CHGVAR VAR(&STAT) VALUE('N')                          /*048933*/
                       SNDMSG     MSG(&MSG2) TOMSGQ(MOPERQ)
                       GOTO       END
              ENDDO
+/**/                                                                                      /*CDL098*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CDL098*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CDL098*/
+             CHGVAR     VAR(&SARD) VALUE('CDL098')                                        /*CDL098*/
+             CHGVAR     VAR(&CDL098) VALUE('N')                                           /*CDL098*/
+/**  Check if Enhancement is installed */                                                 /*CDL098*/
+                                                                                          /*CDL098*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &AOFMT)                      /*CDL098*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CDL098) +
+                          VALUE('Y'))                                                     /*CDL098*/
+/**/                                                                                      /*CDL098*/
+             IF         COND(&CDL098 *EQ 'Y') THEN(DO)                                    /*CDL098*/
+/**/                                                                                      /*CDL098*/
+                SNDMSG     MSG('Remove old cancelled deals') TOMSGQ(MRUNQ)                /*CDL098*/
+/**/                                                                                      /*CDL098*/
+                CALL       PGM(DL000110)                                                  /*CDL098*/
+                RTVJOBA    SWS(&SWS)                                                      /*CDL098*/
+/**/                                                                                      /*CDL098*/
+                IF         COND(%SUBSTRING(&SWS 7 1) *EQ '1') THEN(DO)                    /*CDL098*/
+                   SNDMSG     MSG(&MSG1)  TOMSGQ(MOPERQ)                                  /*CDL098*/
+                   GOTO       END                                                         /*CDL098*/
+                ENDDO                                                                     /*CDL098*/
+/**/                                                                                      /*CDL098*/
+                IF         COND(%SUBSTRING(&SWS 8 1) *EQ '1') THEN(DO)                    /*CDL098*/
+                   SNDMSG     MSG(&MSG2) TOMSGQ(MOPERQ)                                   /*CDL098*/
+                   GOTO       END                                                         /*CDL098*/
+                ENDDO                                                                     /*CDL098*/
+/**/                                                                                      /*CDL098*/
+             ENDDO                                                                        /*CDL098*/
                                                                                           /*CDL012*/
              IF         COND(&CDL012 *EQ 'Y') THEN(DO)                                    /*CDL012*/
 /**********      RGZPFM     FILE(DLTCSTPD)                                     /*CDL012*/ /*228542*/

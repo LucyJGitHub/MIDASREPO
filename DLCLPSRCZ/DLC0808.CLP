@@ -9,21 +9,23 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. CDL098             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Last Amend No. 169253             Date 21FEB02              */
+/*       Prev Amend No. 169253             Date 21Feb02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. E266              Date  14Mar90             */
+/*                      E266               Date 14Mar90              */
 /*                      E243              Date  23Feb90             */
 /*                      S01117            DATE  17/07/89            */
 /*                      S01179            DATE  12/09/88            */
 /*                                                                  */
 /********************************************************************/
+/*       CDL098 - Cancelled Deal Numbers                             */
 /*       169253 - Call DL0850 before calling DL0851. New PF is       */
 /*                created and used for DL0850.                       */
 /*       E266    -  PROG SHOULD RECEIVE SEQ, LEVEL, ENTITY PARMS    */
@@ -51,6 +53,12 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
 /**********  DCLDTAARA  DTAARA(LDA)                                     S01179*/
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)                /*S01179*/
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(2)                                     /*CDL098*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CDL098*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CDL098*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CDL098*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CDL098*/
+             DCL        VAR(&CDL098) TYPE(*CHAR) LEN(1)                                   /*CDL098*/
 /*/COPY WNCPYSRC,DLC0808001                                          */
 /**/
              CHGJOB     SWS(00000000)
@@ -67,6 +75,22 @@
              CALL       PGM(DL0851) PARM(&RSEQ)                       /*E266*/
              CLRPFM     FILE(DLGAPNPD)                                /*169253*/
 /**********  DLTOVR     FILE(TABLE)                                   /*S01194*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CDL098*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CDL098*/
+             CHGVAR     VAR(&SAR) VALUE('CDL098')                                         /*CDL098*/
+             CHGVAR     VAR(&CDL098) VALUE('N')                                           /*CDL098*/
+/**  Check if Enhancement is installed */                                                 /*CDL098*/
+                                                                                          /*CDL098*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CDL098*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                         VAR(&CDL098) VALUE('Y'))                                         /*CDL098*/
+/**/                                                                                      /*CDL098*/
+             IF         COND(&CDL098 *EQ 'Y') THEN(DO)                                    /*CDL098*/
+/**/                                                                                      /*CDL098*/
+/* DEAL CANCELLATION LIST                                                                 /*CDL098*/
+             CALL       PGM(DLC000112) PARM(&TYPE &RSEQ &RLEV &RENT)                      /*CDL098*/
+/**/                                                                                      /*CDL098*/
+             ENDDO       /*CDL098*/
 /**/
 /*/COPY WNCPYSRC,DLC0808002                                          */
              IF         COND(%SWITCH(XXXXXX00)) THEN(RETURN)

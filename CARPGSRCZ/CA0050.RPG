@@ -10,8 +10,10 @@
      F*                                                              *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                              *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL098             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSC054             Date 23Feb12               *
       *                 CER059             Date 19Jul10               *
@@ -52,6 +54,8 @@
      F*                                                              *
      F****************************************************************
      F*
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CDL098 - Cancelled Deal Numbers                              *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -121,6 +125,8 @@
      F*FDICDRLLIF**E********** K        DISK         KINFSR INFSR     UC  S01194
      F************************                      KINFDS @ICDR          S01194
      FFDDLNMLLIF  E                    DISK         KINFSR INFSR      UC
+     FDLCANCI0IF  E           K        DISK         KINFSR INFSR      UC                      CDL098
+      *                                                                                       CDL098
      F/COPY WNCPYSRC,CA0050F001
      FCANDLNLLUF  E                    DISK         KINFSR INFSR      UC
      FCADLFKLLO   E           K        DISK         KINFSR INFSR A    UC
@@ -366,10 +372,26 @@
      C***********FTNDLS    SETLLCAMIDNLL                 62        E21005 042960
      C           FTNDLS    SETLLDEALSALL                 62               042960
      C*                                                                   E21005
+      ** If not found on Live DEALS files ensure the DEAL NO. is not CANCELLED                CDL098
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C           *IN62     IFEQ '0'                                                           CDL098
+     C           FTNDLS    SETLLDLCANCI0                 62                                   CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
      C           *IN62     DOWEQ'1'                        B1             E21005
      C                     ADD  1         FTNDLS           *1             E21005
      C***********FTNDLS    SETLLCAMIDNLL                 62*1      E21005 042960
      C           FTNDLS    SETLLDEALSALL                 62*1             042960
+      *                                                                                       CDL098
+      ** If not found on LIVE Deals files ensure the DEAL NO. is not CANCELLED                CDL098
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C           *IN62     IFEQ '0'                                                           CDL098
+     C           FTNDLS    SETLLDLCANCI0                 62                                   CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
      C                     END                             E1             E21005
      C                     MOVE '0'       *IN64                           E21005
      C*                                                                   E21005
@@ -419,6 +441,24 @@
      C********             OPEN FDICDRLL                   *1             S01194
      C********             END                             E1             S01194
      C                     OPEN FDDLNMLL
+      *                                                                                       CDL098
+      ** Check if enhancement CDL098 (Cancelled Deal Numbers) is ON                           CDL098
+      *                                                                                       CDL098
+     C                     MOVE 'N'       CDL098  1                                           CDL098
+     C                     CALL 'AOSARDR0'                                                    CDL098
+     C                     PARM *BLANKS   @RTCD                                               CDL098
+     C                     PARM '*VERIFY' @OPTN                                               CDL098
+     C                     PARM 'CDL098'  @SARD                                               CDL098
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL098
+      *                                                                                       CDL098
+     C           @RTCD     IFEQ *BLANKS                                                       CDL098
+     C                     MOVE 'Y'       CDL098                                              CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C                     OPEN DLCANCI0                                                      CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
      C/COPY WNCPYSRC,CA0050C004
      C                     OPEN CANDLNLL
      C*
@@ -549,6 +589,10 @@
      C***********          CLOSECAMIDNLL                                  042960
      C                     CLOSEDEALSALL                                  042960
      C                     CLOSEFDDLNMLL
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C                     CLOSEDLCANCI0                                                      CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
      C/COPY WNCPYSRC,CA0050C010
      C*
      C                     RETRN

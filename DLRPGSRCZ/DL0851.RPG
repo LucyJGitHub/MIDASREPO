@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL098             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
@@ -53,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CDL098 - Cancelled Deal Numbers                              *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -126,6 +130,8 @@
      F            DLGHISD0                          KRENAMEDLGHISD1
       **  All deal numbers including historic
       *
+     FDLCANCI0IF  E           K        DISK                                                   CDL098
+      *                                                                                       CDL098
       /TITLE FUNCTION OF INDICATORS
      F*****************************************************************
      F*                                                               *
@@ -176,6 +182,7 @@
      E                    FNR       100  6 0
      E                    LNR       100  6 0
      E                    NAN       100  6 0
+     E                    MSD       100  6 0                                                  CDL098
       *
      E/COPY ZSRSRC,ZEDITZ1
       *
@@ -232,6 +239,9 @@
      I                                        1   40RYER
      I                                        5   60RMON
      I                                        7   80RDAY
+     ISCSARD    E DSSCSARDPD                                                                  CDL098
+      ** External DS for SAR Details                                                          CDL098
+      *                                                                                       CDL098
      ISDBANK    E DSSDBANKPD
       **  Data structure for bank details
       *
@@ -251,6 +261,14 @@
       **  Position file to Deal Transaction Date = Rundate
       *
      C           K@KEY     SETLLDLGAPNL0
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C           K@KEY     SETLLDLGAPNL0             71                                       CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C           *IN71     IFEQ *OFF                                                          CDL098
+     C           CDL098    ANDEQ'Y'                                                           CDL098
+     C           CDL098    OREQ 'N'                                                           CDL098
       *
       **  Read the record on file
       *
@@ -274,6 +292,16 @@
       ** Deal number is out of range
       *
      C           DLNO      WHLT FDELR
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+      *                                                                                       CDL098
+     C           DDLT      IFEQ 'D'                                                           CDL098
+     C                     MOVE *ON       *IN04                                               CDL098
+     C                     ELSE                                                               CDL098
+     C                     MOVE *OFF      *IN04                                               CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
      C                     EXSR #OVERF
      C                     WRITEOUTRNG
       *
@@ -401,10 +429,87 @@
       ** Deal number(s) before this deal is reported as not used
       *
      C           DLNO      WHGT WNADL
+      *                                                                                       CDL098
+      ** Check first if deals are to be reported as "MISSING".                                CDL098
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C                     Z-ADDWNADL     GAPNO                                               CDL098
+      *                                                                                       CDL098
+      ** Clear array MSD (List Of Missing Deals)                                              CDL098
+      *                                                                                       CDL098
+     C                     Z-ADD0         MD      30                                          CDL098
+     C                     CLEARMSD                                                           CDL098
+     C           GAPNO     DOWLTDLNO                                                          CDL098
+     C           GAPNO     IFLT DLNO                                                          CDL098
+      *                                                                                       CDL098
+     C           GAPNO     CHAINDLCANCI0             73                                       CDL098
+     C           *IN73     IFEQ *OFF                                                          CDL098
+     C           CLRECI    ANDEQ'D'                                                           CDL098
+     C                     SETOF                     73                                       CDL098
+     C                     ELSE                                                               CDL098
+     C                     SETON                     73                                       CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITEGAPS                                                          CDL098
+      *                                                                                       CDL098
+      ** Add "MISSING" Deal Number to array MSD (Missing Deals)                               CDL098
+      *                                                                                       CDL098
+     C           *IN73     IFEQ '0'                                                           CDL098
+     C                     ADD  1         MD                                                  CDL098
+     C                     MOVE GAPNO     MSD,MD                                              CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ADD  1         GAPNO                                               CDL098
+     C                     MOVEL'0'       *IN60                                               CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDDO                                                              CDL098
+      *                                                                                       CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
      C           DLNO      SUB  1         @DLNOB
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'N'                                                           CDL098
      C           @DLNOB    COMP WNADL                31
      C                     EXSR #OVERF
      C                     WRITENOTUSE
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+      *                                                                                       CDL098
+      **  Verify deals from array msd (missing deals) if already reported as missing          CDL098
+      *                                                                                       CDL098
+     C                     MOVE WNADL     TWNADL  60                                          CDL098
+     C                     MOVE WNADL     TWNAD2  60                                          CDL098
+     C                     MOVE @DLNOB    TDLNOB  60                                          CDL098
+     C           TWNADL    DOWLETDLNOB                                                        CDL098
+     C           TWNADL    LOKUPMSD                      74                                   CDL098
+     C           *IN74     IFEQ '0'                                                           CDL098
+     C           *IN75     IFEQ '0'                                                           CDL098
+     C                     MOVE TWNADL    WNADL                                               CDL098
+     C                     MOVE '1'       *IN75                                               CDL098
+     C                     ELSE                                                               CDL098
+     C                     MOVE '1'       *IN31                                               CDL098
+     C                     MOVE TWNADL    @DLNOB                                              CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ELSE                                                               CDL098
+     C           *IN75     IFEQ '1'                                                           CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITENOTUSE                                                        CDL098
+     C                     MOVE '0'       *IN75                                               CDL098
+     C                     MOVE '0'       *IN31                                               CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ADD  1         TWNADL                                              CDL098
+     C                     ENDDO                                                              CDL098
+     C           *IN75     IFEQ '1'                                                           CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITENOTUSE                                                        CDL098
+     C                     MOVE '0'       *IN75                                               CDL098
+     C                     MOVE '0'       *IN31                                               CDL098
+     C                     ENDIF                                                              CDL098
+     C                     MOVE TWNAD2    WNADL                                               CDL098
+     C                     MOVE TDLNOB    @DLNOB                                              CDL098
+     C                     ENDIF                                                              CDL098
       *
       ** Check status of this deal if deleted
       *
@@ -433,6 +538,10 @@
      C                     READ DLGAPNL0                 20
       *
      C                     ENDDO
+      *                                                                                       CDL098
+     C                     ELSE                                                               CDL098
+     C                     EXSR #RNGRD                                                        CDL098
+     C                     ENDIF                                                              CDL098
       *
       ** Check for remaining ranges
       *
@@ -440,6 +549,45 @@
      C                     EXSR #OUTRG
      C                     EXSR #RNGRD
      C                     ENDDO
+      *
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+      *                                                                                       CDL098
+     C           *LOVAL    SETLLDLCANCI0                                                      CDL098
+     C                     READ DLCANCI0                 74                                   CDL098
+      *                                                                                       CDL098
+     C           *IN74     DOWEQ*OFF                                                          CDL098
+     C                     Z-ADD1         XX      30                                          CDL098
+      *                                                                                       CDL098
+      ** Check for deal number not in any of the deal ranges                                  CDL098
+      *                                                                                       CDL098
+     C           CLDLNO    IFLT FNR,XX                                                        CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITEOORCAN                                                        CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C           XX        DOWLESAVX                                                          CDL098
+     C                     Z-ADDXX        YY      30                                          CDL098
+     C                     ADD  1         XX                                                  CDL098
+      *                                                                                       CDL098
+     C           XX        IFLE SAVX                                                          CDL098
+      *                                                                                       CDL098
+     C           CLDLNO    IFGT LNR,YY                                                        CDL098
+     C           CLDLNO    ANDLTFNR,XX                                                        CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITEOORCAN                                                        CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDDO                                                              CDL098
+      *                                                                                       CDL098
+     C           CLDLNO    IFGT LNR,SAVX                                                      CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITEOORCAN                                                        CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C                     READ DLCANCI0                 74                                   CDL098
+     C                     ENDDO                                                              CDL098
+      *                                                                                       CDL098
+     C                     ENDIF                                                              CDL098
       *
       ** Output trailer records
       *
@@ -537,6 +685,19 @@
       ** Initialise count of records read
       *
      C                     Z-ADD0         @COUNT
+      *                                                                                       CDL098
+      ** Check if enhancement CDL098 (Cancelled Deal Numbers) is ON                           CDL098
+      *                                                                                       CDL098
+     C                     MOVE 'N'       CDL098  1                                           CDL098
+     C                     CALL 'AOSARDR0'                                                    CDL098
+     C                     PARM *BLANKS   PRTCD   7                                           CDL098
+     C                     PARM '*VERIFY' POPTN   7                                           CDL098
+     C                     PARM 'CDL098'  PSARD   6                                           CDL098
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL098
+      *                                                                                       CDL098
+     C           PRTCD     IFEQ *BLANKS                                                       CDL098
+     C                     MOVE 'Y'       CDL098                                              CDL098
+     C                     ENDIF                                                              CDL098
       *
       ** Set up range arrays
       *
@@ -818,6 +979,10 @@
      C                     ENDIF
      C                     ENDIF
       *
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C                     Z-ADDX         SAVX    30                                          CDL098
+     C                     SUB  1         SAVX                                                CDL098
+     C                     ENDIF                                                              CDL098
      C                     Z-ADD0         X
       *
      C                     ENDSR

@@ -1,0 +1,445 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Deals Cancelled Maintenance')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL000111 -  Midas DL Deals Cancelled Maintenance             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *                                                               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL098 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CDL098 - Cancelled Deal Numbers.                             *
+      *                                                               *
+      *****************************************************************
+      *
+     FDL0111FMCF  F     202            WORKSTN
+     FDLCANCI0UF  E           K        DISK                      A
+     FTABTB10 IF  E                    DISK
+     FDEALSALLIF  E           K        DISK
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      * 01            WRKSTN - INITIAL   SCREEN, CODE SF.
+      * 02                   - INSERTION SCREEN, CODE SI.
+      * 03                   - AMENDMENT SCREEN, CODE SA.
+      * 04                   - DELETION  SCREEN, CODE SD.
+      * 05                   - ENQUIRY   SCREEN, CODE SE.
+      * 13            USED TO CONDITION FIRST TIME PASS THROUGH RPG CALC CYCLE
+      * 14            SET ON IF ERROR DURING READ FROM THE WORK STATION
+      *
+      *    15         RECORD EXISTS ON THE CANCELLED FILE
+      *    16         A LIVE RECORD DOES NOT EXIST ON ANY DEALS FILE
+      *    17         RECORD DOES NOT EXIST ON ANY OF THE DEALS FILES
+      *
+      *    22         WRKSTN-DEAL NUMBER IN ERROR
+      *    23         WRKSTN-AUTHORISATION BLANK.
+      *
+      *       25      INVALID DEAL ENTERED
+      *       39      FIRST CYCLE ONLY CALCULATIONS EXECUTED.
+      *       40      PREVENT OUTPUT TO WORKSTN, OVERRIDEN BY 41.
+      *       41      OUTPUT INITIAL SCREEN, ID.SF, TO WORKSTN.
+      *       42      PASS INITIAL FIELDS FROM INPUT TO OUTPUT WORKSTN.
+      *       43      PASS OTHER FIELDS FROM INPUT TO OUTPUT WORKSTN.
+      *       44      PASS FIELDS FROM DEALS CANCELLATION RCD. TO WORKSTN.
+      *       52      ACTION CODE IS 'I' - INSERTION.
+      *       53      ACTION CODE IS 'A' - AMENDMENT.
+      *       54      ACTION CODE IS 'D' - DELETION.
+      *       55      ACTION CODE IS 'E' - ENQUIRY.
+      *       56      ACTION CODE NOT I, A, D OR E, ERROR.
+      *
+      *       80      IF ACTION AND DEAL NUMBER  VALID PROTECT
+      *               BOTH FIELDS ON SCREEN AND OUTPUT NEW SCREEN ID.
+      *       81      NON-DISPLAY OUTPUT LABELS OTHER THAN ACTION & DLNO
+      *       82      PROTECT OUTPUT FIELDS OTHER THAN ACTION & DLNO
+      *       83      ERROR CODE LINE IS NON-DISPLAY IF ON.
+      *       84      ERROR MESSAGE LINE IS NON DISPLAY IF ON.
+      *
+      *       98      ZSYSTM, DATE FORMAT MMDDYY IF ON.
+      *       99      ZSYSTM, INSTALLATION CONTROL DATA RECORD NOT FOUND.
+      *
+      *       KD      CMD4, DELETE RECORD REQUEST, VALID IF DELETE SCREEN.
+      *       KE      CMD5, INITIAL SCREEN REQUEST.
+      *       KG      CMD7, END OF PROGRAM REQUEST.
+      *
+      *          U7   SYSTEM ERROR, LOG FILE HEADER FOUND, WRONG STATUS.
+      *          U8   DATABASE ERROR, REQUIRED RECORDS NOT FOUND.
+      *               N.B. U7 & U8 END THE PROGRAM AND CONDITION
+      *                    FOLLOWING CL EXECUTION.
+      *
+     E                    ERCD        6  4               ERROR CODE OUTPUT
+      *
+     E                    ERRMSG  1  10 47               ERROR MESSAGES
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ** Workstation file
+      *
+     IDL0111FMNS  01   1 CS   2 CF
+     I       OR   02   1 CS   2 CI
+     I       OR   03   1 CS   2 CA
+     I       OR   04   1 CS   2 CD
+     I       OR   05   1 CS   2 CE
+     I                                        1   2 STID
+     I                                        3   3 ACTCD
+     I                                        4   90DLND          2222
+     I                                        4   9 DLNDX
+     I                                       10  39 AUTD            23
+     I                                       40  46 VLDT
+      *
+      ** CATCHALL
+      *
+     I        NS
+      *
+      ** Data Structure to retrieve workstation ID
+      *
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      245 246 WSID2
+      *
+      ** First Cycle only calculations
+      *
+     C   13                READ DL0111FM                 14
+     C  N13                SETON                     13
+     C                     SETOF                     14
+     C   39                GOTO ENDFC
+     C                     SETON                     39
+      *
+      ** Get Installation Control Data Record And Release.
+      *
+     C                     READ TABTB10                  99
+     C   99                SETON                     U840  NOT FOUND,
+     C   99                GOTO ENDD                       DATABASE ERROR.
+      *
+      ** Set up blank and zero fields
+      *
+     C                     MOVE ' '       BLANKS150
+     C                     Z-ADD0         ZERO05  50
+      *
+     C           ENDFC     TAG                             ** ENDFC TAG **
+      *
+      ** Reset Indicators
+      *
+     C                     SETOF                     151617
+     C                     SETOF                     25
+     C                     SETOF                     404142
+     C                     SETOF                     434455
+     C                     SETOF                     56
+     C                     SETOF                     808182
+      *
+     C                     SETON                     8384
+      *
+      ** Clear error output area and workfield.
+      *
+     C                     MOVE BLANKS    ERCD
+     C                     Z-ADD0         S       10
+      *
+      ** Handle Input and take appropriate action
+      ** Command key tests, set WRKSTN CONTROL INDS. as required
+      *
+     C   KC                SETON                     40
+     C   KC                GOTO ENDD                       END OF JOB
+      *
+     C   KL                GOTO SFOUT                      SCREEN SF REQ.
+      *
+     C   KJ 04             GOTO UDLOG                      DELETE RECORD
+      *
+      ** Invalid key or invalid command key for screen type tests
+     C   04
+     COR KJN04             SETON                     4243
+     C   42                SETOF                     842223
+     C   42N01             SETON                     80
+     C   42 01             SETON                     81
+     C   42N02N03          SETON                     82
+     C   42                MOVE ERRMSG,4  ERMSG  47
+     C   42 04             MOVE ERRMSG,5  ERMSG
+     C   42                GOTO SCNOUT
+      *
+      ** Action screen Type
+      *
+     C   01                GOTO INITAL
+     C   02
+     COR 03                GOTO INSAMD
+      *
+      ** First Cycle blank screen, 'SE' screen or CMD5 input,
+      ** Output initial screen, ID SF
+      *
+     C           SFOUT     TAG                             ** SFOUT TAG **
+     C                     SETON                     404181
+     C                     SETON                     82
+     C   KL                SETOF                     22
+     C                     GOTO SCNOUT
+      *
+      ** Handle initial screen, type SF
+      *
+     C           INITAL    TAG                             ** INITAL TAG *
+      *
+      ** Validate Action Code
+      *
+     C           ACTCD     COMP 'I'                      52INSERT
+     C           ACTCD     COMP 'A'                      53AMEND
+     C           ACTCD     COMP 'D'                      54DELETE
+     C  N52N53N54ACTCD     COMP 'E'                  565655ENQUIRY
+      *
+      ** Set error code, Message and WRKSTN CONTROL indicators
+      *
+     C  N56                GOTO DLNOV
+     C                     Z-ADD1         S
+     C                     MOVE '001'     ERCD,S
+     C                     MOVE ERRMSG,1  ERMSG
+     C                     SETON                     428182
+     C                     SETOF                     8384
+     C                     GOTO SCNOUT
+      *
+      ** Validate Deal Number - Ensure Numeric
+      *
+     C           DLNOV     TAG                             ** DLNOV TAG **
+     C                     MOVELDLNDX     NFLD7   70
+     C                     MOVELNFLD7     AFLD6   6
+     C  N22      DLNDX     COMP AFLD6                2222
+     C   22                SETON                     25
+      *
+      ** Not valid deal number
+      *
+     C           *IN25     IFEQ '1'
+     C                     Z-ADD1         S
+     C                     MOVE '005'     ERCD,S
+     C                     MOVE ERRMSG,7  ERMSG
+     C                     SETON                     428182
+     C                     SETOF                     8384
+     C                     GOTO SCNOUT
+     C                     ELSE
+      *
+      ** Determine the deal status compated with the action
+      *
+     C           DLND      CHAINDLCANCI0             15
+      *
+      ** Chain to all of the deals files to find if record exists.
+      *
+     C           DLND      CHAINDEALSALL             17
+      *
+     C           *IN17     IFEQ '0'
+      *
+      ** If the deal is reversed the number can be cancelled.
+      *
+     C           RECI      IFEQ 'R'
+     C                     MOVE '1'       *IN16
+     C                     END
+     C                     END
+      *
+     C           *IN17     IFEQ '1'
+     C                     MOVE '1'       *IN16
+     C                     END
+      *
+      ** Validate insert
+      *
+     C           *IN52     IFEQ '1'
+      *
+      ** Already on file
+      *
+     C           *IN15     IFEQ '0'
+     C                     Z-ADD1         S
+     C                     MOVE '003'     ERCD,S
+     C                     MOVE ERRMSG,3  ERMSG
+     C                     SETON                     428182
+     C                     SETOF                     8384
+     C                     GOTO SCNOUT
+     C                     ELSE
+      *
+      ** Already allocated to a deal
+      *
+     C           *IN16     IFEQ '0'
+     C                     Z-ADD1         S
+     C                     MOVE '008'     ERCD,S
+     C                     MOVE ERRMSG,8  ERMSG
+     C                     SETON                     428182
+     C                     SETOF                     8384
+     C                     GOTO SCNOUT
+     C                     END
+     C                     END
+      *
+      ** Validate delete
+      *
+     C                     ELSE
+     C           *IN54     IFEQ '1'
+      *
+      ** Not on file
+      *
+     C           *IN15     IFEQ '1'
+     C                     Z-ADD1         S
+     C                     MOVE '004'     ERCD,S
+     C                     MOVE ERRMSG,2  ERMSG
+     C                     SETON                     428182
+     C                     SETOF                     8384
+     C                     GOTO SCNOUT
+     C                     END
+      *
+      ** Validate amend/enquire
+      *
+     C                     ELSE
+      *
+      ** Not on file
+      *
+     C           *IN15     IFEQ '1'
+     C                     Z-ADD1         S
+     C                     MOVE '004'     ERCD,S
+     C                     MOVE ERRMSG,2  ERMSG
+     C                     SETON                     428182
+     C                     SETOF                     8384
+     C                     GOTO SCNOUT
+     C                     ELSE
+      *
+      ** Already allocated to a deal
+      *
+     C           *IN16     IFEQ '0'
+     C                     Z-ADD1         S
+     C                     MOVE '009'     ERCD,S
+     C                     MOVE ERRMSG,9  ERMSG
+     C                     SETON                     428182
+     C                     SETOF                     8384
+     C                     GOTO SCNOUT
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Prepare data for output if applicable
+      *
+     C           *IN15     IFEQ '0'
+     C                     SETON                     43
+     C                     MOVE CLAUTH    AUTD
+     C                     MOVE CLVALD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    VLDT
+     C                     END
+      *
+      ** Set WRKSTN CONTROL indicators
+      *
+     C                     SETON                     4280
+     C  N52                SETON                     44
+     C  N52N53             SETON                     82
+     C                     SETOF                     23
+     C                     GOTO SCNOUT
+      *
+      ** Handle insertions and Amendments
+      *
+     C           INSAMD    TAG                             ** INSAMD TAG *
+      *
+      ** Validate Authorisation 23 Set ON input
+      ** Set error code and WRKSTN CONTROL indicators
+      *
+     C  N23                GOTO UDLOG
+     C                     Z-ADD1         S
+     C                     MOVE '006'     ERCD,S
+     C                     MOVE ERRMSG,10 ERMSG
+     C                     SETON                     424380
+     C                     SETOF                     8384
+     C                     GOTO SCNOUT
+      *
+      ** Calculations Update, update the file
+      *
+     C           UDLOG     TAG                             ** UDLOG TAG **
+      *
+      **   Update/Add/Delete detail record
+      *
+     C           *IN02     IFEQ '1'
+     C                     MOVE 'D'       CLRECI
+     C                     Z-ADDDLND      CLDLNO
+     C                     MOVE AUTD      CLAUTH
+     C                     MOVE RUND      CLVALD
+     C                     MOVE 'I'       CLCHTP
+     C                     Z-ADDRUND      CLLCD
+     C                     WRITEDLCANCD0
+     C                     ELSE
+     C           *IN03     IFEQ '1'
+     C                     MOVE AUTD      CLAUTH
+     C                     MOVE 'A'       CLCHTP
+     C                     Z-ADDRUND      CLLCD
+     C                     UPDATDLCANCD0
+     C                     ELSE
+     C           *IN04     IFEQ '1'
+     C                     DELETDLCANCD0
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Output initial screen
+      *
+     C                     SETON                     404181
+     C                     SETON                     82
+      *
+      ** Obtain TIME for screen display
+      *
+     C           SCNOUT    TAG                             ** SCNOUT TAG *
+     C                     EXSR TIME
+      *
+     C           ENDD      TAG                             ** ENDD TAG **
+      *
+     C   KC
+     COR U8
+     COR U7                SETON                     LR
+      *
+      *****************************************************************
+      *                                                               *
+      *  TIME  - Subroutine to obtain time                            *
+      *                                                               *
+      *****************************************************************
+     C           TIME      BEGSR
+      *
+     C                     TIME           MTIME   60
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+      ** Output to WORK-STATION
+      *
+     ODL0111FMD        01N40
+     O       OR        02N40
+     O       OR        03N40
+     O       OR        04N40
+     O       OR        05N40
+     O       OR        41
+     O                                   K8 'DL0111F1'
+     O                         STID       2
+     O                 01 52 80           2 'SI'
+     O                 01 53 80           2 'SA'
+     O                 01 54 80           2 'SD'
+     O                 01 55 80           2 'SE'
+     O                 41                 2 'SF'
+     O                         WSID      12
+     O                         MTIME     20 '  .  .  '
+     O                 42      ACTCD     21
+     O                 42      DLND      27
+     O                 43      AUTD      57
+     O                 43      VLDT      64
+     O                         ERCD      88
+     O                         ERMSG    187
+      *
+      ** NB. ERCD & ERMSG are displayed as 76 Characters on screen
+      *
+**   ERRMSG - ERROR MESSAGES
+Invalid action code                              1
+Deal number not found                            2
+Deal already cancelled                           3
+Invalid command key                              4
+Invalid key                                      5
+Record has been updated by another work-station  6
+Enter valid deal number                          7
+Deal number already allocated to a deal          8
+Deal live on system; Remove from cancelled       9
+Authority field is blank                        10
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

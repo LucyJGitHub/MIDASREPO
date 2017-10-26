@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL098             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
       *                 MD000091           Date 07May13               *
       *                 AR585869           Date 07Nov12               *
@@ -78,6 +80,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CDL098 - Cancelled Deal Numbers                              *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -160,6 +164,8 @@
      F                                     RENAME(FXDEALP0:FXDELFOI)
      FFXDEALLL  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FXDEALP0:FXDEALXX)
+     FDLCANCI0  IF   E           K DISK    INFSR(*PSSR)                                       CDL098
+      *                                                                                       CDL098
      FFXTDOPLL  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FXDEALP0:FXTDOPL0)
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)
@@ -299,6 +305,7 @@
                                                                                               CAS004
      D CSC011          S              1                                                       CSD015
      D CSD015          S              1                                                       CSD015
+     D CDL098          S              1                                                       CDL098
      D WFuncType       S              8                                                       CSD015
      D WIdntifier      S             40                                                       CSD015
      D WBranch         S              3                                                       CSD015
@@ -790,7 +797,21 @@
      C                   ADD       1             Ix
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)
      C                   MOVEL     'FXM0163'     MsgIdArr(Ix)
+     C                   GOTO      EVALAI                                                     CDL098
      C                   ELSE
+      *                                                                                       CDL098
+     C     CDL098        IFeq      'Y'                                                        CDL098
+     C     @@DLNO        Setll     DLCANCI0                               99                  CDL098
+      *                                                                                       CDL098
+     C     *IN99         IFeq      '1'                                                        CDL098
+     C                   Move      'N'           OKDLNO                                       CDL098
+     C                   Add       1             Ix                                           CDL098
+     C                   MoveL     'DDDLNO'      FldNameArr(Ix)                               CDL098
+     C                   MoveL     'FXM7004'     MsgIdArr(Ix)                                 CDL098
+     C                   GOTO      EVALAI                                                     CDL098
+     C                   Endif                                                                CDL098
+     C                   Endif                                                                CDL098
+      *                                                                                       CDL098
      C                   IF        WPEAInd <> 'Y'                                           AR996631
       *
       ** check deal number is in allowed range
@@ -1635,6 +1656,31 @@
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
                                                                                               CSD083
+      ** Check if Cancelled Deal Numbers Enhancement (CDL098) is on.                          CDL098
+                                                                                              CDL098
+     C                   EVAL      CDL098 = 'N'                                               CDL098
+     C                   CALLB     'AOSARDR0'                                                 CDL098
+     C                   PARM      *BLANKS       PRetCode                                     CDL098
+     C                   PARM      '*VERIFY'     POption                                      CDL098
+     C                   PARM      'CDL098'      PSard                                        CDL098
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL098
+                                                                                              CDL098
+      ** Database error                                                                       CDL098
+                                                                                              CDL098
+     C                   IF        (PRetCode <> *BLANKS) and                                  CDL098
+     C                             (PRetCode <> '*NRF   ')                                    CDL098
+     C     *LOCK         IN        LDA                                                        CDL098
+     C                   EVAL      DBKEY = 'CDL098'                                           CDL098
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CDL098
+     C                   EVAL      DBASE = 910                                                CDL098
+     C                   OUT       LDA                                                        CDL098
+     C                   EXSR      *PSSR                                                      CDL098
+     C                   ENDIF                                                                CDL098
+      *                                                                                       CDL098
+     C                   IF        PRetCode = *BLANKS                                         CDL098
+     C                   EVAL      CDL098 = 'Y'                                               CDL098
+     C                   ENDIF                                                                CDL098
+      *                                                                                       CDL098
      C                   CALLB     'AOSARDR0'                                               AR996631
      C                   PARM      *BLANKS       @RTCD                                      AR996631
      C                   PARM      '*VERIFY'     @OPTN                                      AR996631

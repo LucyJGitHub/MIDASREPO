@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL098             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD000091           Date 09May13               *
       *                 259924A            Date 28May09               *
@@ -59,6 +61,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CDL098 - Cancelled Deal Numbers                              *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -113,6 +117,8 @@
      F                                     RENAME(ABDEALP0:ABDELFOI)
      FABDEALL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ABDEALP0:ABDELAFO)
+     FDLCANCI0  IF   E           K DISK    INFSR(*PSSR)                                       CDL098
+      *                                                                                       CDL098
      FABCOMPLL  IF   E           K DISK    INFSR(*PSSR)
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)
      FFDDLNMLL  IF   E             DISK    INFSR(*PSSR)
@@ -219,6 +225,9 @@
      D Ix              S              3P 0
  
      D CSC011          S              1A                                                      CSC011
+      ** Cancelled Deal Numbers                                                               CDL098
+     D  CDL098         S              1    INZ('N')                                           CDL098
+                                                                                              CDL098
      D WRunDay         S                   LIKE(BJRDNB)                                       CSC011
      D PSARD           S              6A                                                      CSC011
      D PRTCD           S              7A                                                      CSC011
@@ -609,6 +618,18 @@
      C                   MOVEL     'DDL1DN'      FldNameArr(Ix)
      C                   MOVEL     'FXM0163'     MsgIdArr(Ix)
      C                   ELSE
+      *                                                                                       CDL098
+     C     CDL098        IFeq      'Y'                                                        CDL098
+     C     @@DLNO1       Setll     DLCANCI0                               99                  CDL098
+      *                                                                                       CDL098
+     C     *IN99         IFeq      '1'                                                        CDL098
+     C                   Move      'N'           ddL1DNok                                     CDL098
+     C                   Add       1             Ix                                           CDL098
+     C                   MoveL     'DDL1DN'      FldNameArr(Ix)                               CDL098
+     C                   MoveL     'FXM7004'     MsgIdArr(Ix)                                 CDL098
+     C                   GOTO      EVALAI                                                     CDL098
+     C                   Endif                                                                CDL098
+     C                   Endif                                                                CDL098
       *
       ** check deal number is in allowed range
       *
@@ -634,6 +655,18 @@
      C                   MOVEL     'DDL2DN'      FldNameArr(Ix)
      C                   MOVEL     'FXM0163'     MsgIdArr(Ix)
      C                   ELSE
+      *                                                                                       CDL098
+     C     CDL098        IFeq      'Y'                                                        CDL098
+     C     @@DLNO2       Setll     DLCANCI0                               99                  CDL098
+      *                                                                                       CDL098
+     C     *IN99         IFeq      '1'                                                        CDL098
+     C                   Move      'N'           ddL2DNok                                     CDL098
+     C                   Add       1             Ix                                           CDL098
+     C                   MoveL     'DDL2DN'      FldNameArr(Ix)                               CDL098
+     C                   MoveL     'FXM7004'     MsgIdArr(Ix)                                 CDL098
+     C                   GOTO      EVALAI                                                     CDL098
+     C                   Endif                                                                CDL098
+     C                   Endif                                                                CDL098
       *
       ** check deal number is in allowed range
       *
@@ -1075,6 +1108,26 @@
      C                   EVAL      DBASE = 905                                                CSC011
      C                   EXSR      *PSSR                                                      CSC011
      C                   ENDIF                                                                CSC011
+      *                                                                                       CDL098
+      ** Check if feature CDL098 is installed                                                 CDL098
+      *                                                                                       CDL098
+     C                   CALLB     'AOSARDR0'                                                 CDL098
+     C                   PARM      *BLANKS       PRTCD                                        CDL098
+     C                   PARM      '*VERIFY'     POPTN                                        CDL098
+     C                   PARM      'CDL098'      PSARD                                        CDL098
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL098
+                                                                                              CDL098
+     C                   IF        PRTCD = *Blanks                                            CDL098
+     C                   EVAL      CDL098 = 'Y'                                               CDL098
+     C                   ELSE                                                                 CDL098
+     C                   EVAL      CDL098 = 'N'                                               CDL098
+     C                   IF        PRTCD <> '*NRF'                                            CDL098
+     C                   EVAL      DBKEY = 'CDL098'                                           CDL098
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CDL098
+     C                   EVAL      DBASE = 906                                                CDL098
+     C                   EXSR      *PSSR                                                      CDL098
+     C                   ENDIF                                                                CDL098
+     C                   ENDIF                                                                CDL098
                                                                                               CSC011
      C                   ENDIF                                                                CSC011
                                                                                               CSC011

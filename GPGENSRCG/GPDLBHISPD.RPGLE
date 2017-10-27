@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 30May14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 30May14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG25189           Date 27Jul09               *
       *                 CER034  *CREATE    Date 28Jul08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL094 - Enhance  Receive Settlement Instructions (Recompile)*
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG25189 - MARG field on DLCHISPD contains invalid data after*
@@ -25,7 +27,7 @@
       *  CER034 - German Features - New fields and enquiries          *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZDLBHISL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZDLBHISPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -34,9 +36,9 @@ O    F                                     USROPN
 O
 O    D Z_DLBHISPD    E DS                  EXTNAME(GZDLBHISPD)
 O    D G_DLBHISPD    E DS                  EXTNAME(GZDLBHISPD) PREFIX(G_)
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -79,9 +81,9 @@ O    C                   ELSE
 O    C                   WRITE     W_DLBHISD0
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -100,7 +102,7 @@ O
 O    C     K_GZDLBHISL1  KLIST
 O    C                   KFLD                    BRCA
 O    C                   KFLD                    DLNO
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -108,15 +110,15 @@ O    C                   KFLD                    DLNO
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -131,10 +133,10 @@ O    C                   KFLD                    DLNO
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

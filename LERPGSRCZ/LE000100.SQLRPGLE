@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. MD021155 *REWRITE  Date 09Jul13               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 MD021155 *REWRITE  Date 09Jul13               *
       *                 AR407323           Date 04Dec12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD021155 - COB Restructure Phase 1 remnants                  *
       *           - Program not rewritten. Parameter mismatch.        *
@@ -69,31 +71,31 @@
       * Main Processing Routine                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PFNAME            8
- 
+
       ** Process the files based on the parameter passed
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PFNAME = 'DLDLDBQD'
      C                   EXSR      DEALBSR
- 
+
      C                   WHEN      PFNAME = 'DLDLDCQD'
      C                   EXSR      DEALCSR
- 
+
      C                   WHEN      PFNAME = 'DLDLDGQD'
      C                   EXSR      DEALGSR
- 
+
      C                   WHEN      PFNAME = 'GLACNTQD'
      C                   EXSR      GLACSR
- 
+
      C                   WHEN      PFNAME = 'LEFCLTQD'
      C                   EXSR      FCLTYSR
- 
+
      C                   ENDSL
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -104,10 +106,10 @@
       *                                                               *
       *****************************************************************
      C     DEALBSR       BEGSR
- 
+
       ** If a deal exists on DLDLDBQD but does not exist on DEALSDB,
       ** DLBHISPD and FXDEALPP, then delete record from DLDLDBQD.
- 
+
      C/EXEC SQL
      C+ delete from DLDLDBQD A where
      C+   not exists (select * from DEALSDB  B where A.F1DLNO = B.DLNO) and
@@ -115,25 +117,25 @@
      C+   not exists (select * from DLBHISPD D where A.F1DLNO = D.DLNO)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If a deal exists on DEALSDB but does not exist on DLDLDBQD,
       ** then insert record into DLDLDBQD.
- 
+
      C/EXEC SQL
      C+ insert into DLDLDBQD (F1BRCA, F1DLNO)
      C+   select BRCA, DLNO from DEALSDB A where not exists
      C+     (select * from DLDLDBQD B where A.DLNO = B.F1DLNO)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -143,10 +145,10 @@
       *                                                               *
       *****************************************************************
      C     DEALCSR       BEGSR
- 
+
       ** If a deal exists on DLDLDCQD but does not exist on DEALSDC,
       ** DLCHISPD and MMDELDPP, then delete record from DLDLDCQD.
- 
+
      C/EXEC SQL
      C+ delete from DLDLDCQD A where
      C+   not exists (select * from DEALSDC  B where A.F1DLNO = B.DLNO) and
@@ -154,25 +156,25 @@
      C+   not exists (select * from DLCHISPD D where A.F1DLNO = D.DLNO)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If a deal exists on DEALSDC but does not exist on DLDLDCQD,
       ** then insert record into DLDLDCQD.
- 
+
      C/EXEC SQL
      C+ insert into DLDLDCQD (F1BRCA, F1DLNO)
      C+   select BRCA, DLNO from DEALSDC A where not exists
      C+     (select * from DLDLDCQD B where A.DLNO = B.F1DLNO)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -182,35 +184,35 @@
       *                                                               *
       *****************************************************************
      C     DEALGSR       BEGSR
- 
+
       ** If a deal exists on DLDLDGQD but does not exist on DEALSDG and
       ** DLGHISPD, then delete record from DLDLDGQD.
- 
+
      C/EXEC SQL
      C+ delete from DLDLDGQD A where
      C+   not exists (select * from DEALSDG  B where A.F1DLNO = B.DLNO) and
      C+   not exists (select * from DLGHISPD C where A.F1DLNO = C.DLNO)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If a deal exists on DEALSDG but does not exist on DLDLDGQD,
       ** then insert record into DLDLDGQD.
- 
+
      C/EXEC SQL
      C+ insert into DLDLDGQD (F1BRCA, F1DLNO)
      C+   select BRCA, DLNO from DEALSDG A where not exists
      C+     (select * from DLDLDGQD B where A.DLNO = B.F1DLNO)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -220,10 +222,10 @@
       *                                                               *
       *****************************************************************
      C     GLACSR        BEGSR
- 
+
       ** If an account exists on GLACNTQD but does not exist on ACCNTAB,
       ** then delete record from GLACNTQD.
- 
+
      C/EXEC SQL
      C+ delete from GLACNTQD A where not exists
      C+   (select * from ACCNTAB B where
@@ -231,14 +233,14 @@
      C+   A.F1ACSQ = B.ACSQ and A.F1BRCA = B.BRCA)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If an account exists on ACCNTAB but does not exist on GLACNTQD,
       ** then insert record into GLACNTQD.
- 
+
      C/EXEC SQL
      C+ insert into GLACNTQD (F1CNUM, F1CCY, F1ACOD, F1ACSQ, F1BRCA)
      C+   select CNUM, CCY, ACOD, ACSQ, BRCA from ACCNTAB A where not exists
@@ -247,11 +249,11 @@
      C+     A.ACSQ = B.F1ACSQ and A.BRCA = B.F1BRCA)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -261,24 +263,24 @@
       *                                                               *
       *****************************************************************
      C     FCLTYSR       BEGSR
- 
+
       ** If a facility exists on LEFCLTQD but does not exist on FCLTYFM,
       ** then delete record from LEFCLTQD.
- 
+
      C/EXEC SQL
      C+ delete from LEFCLTQD A where not exists
      C+   (select * from FCLTYFM B where A.FCXFCU = B.CNUM and
      C+   A.FCXFTP = B.FACT and A.FCXFNO = B.FCNO)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If a facility exists on FCLTYFM but does not exist on LEFCLTQD,
       ** then insert record into LEFCLTQD.
- 
+
      C/EXEC SQL
      C+ insert into LEFCLTQD (FCXFCU, FCXFTP, FCXFNO, FCXBRC)
      C+   select CNUM, FACT, FCNO, BRCA from FCLTYFM A where not exists
@@ -286,11 +288,11 @@
      C+     A.FACT = B.FCXFTP and A.FCNO = B.FCXFNO)
      C+ with NC
      C/END-EXEC
- 
+
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -303,16 +305,16 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C     RunBefore     IFEQ      *BLANKS
      C                   MOVE      'Y'           RunBefore         1
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
      C                   ENDSR
       *****************************************************************

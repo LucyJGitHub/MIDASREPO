@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD041996           Date 12Oct16               *
-      *  Prev Amend No. MD042042           Date 14Feb17               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD041996           Date 12Oct16               *
+      *                 MD042042           Date 14Feb17               *
       *                 MD042033           Date 30Sep16               *
       *                 MD043890           Date 06Feb17               *
       *                 MD039986           Date 10Aug16               *
@@ -207,6 +208,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  MD041996 - Incorrect mapping for FX Netting                  *
       *  MD042042 - Input Officer 1 and Input Officer 2 in IPAY and   *
       *             OPAY are being populated with WIP authoriser.     *

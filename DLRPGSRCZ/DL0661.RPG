@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -56,6 +57,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -256,6 +258,14 @@
      I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
      I**
      I/EJECT
+      *                                                                                       CDL099
+     I            DS                                                                          CDL099
+     I                                        1   3 UOTHD                                     CDL099
+     I                                    P   1   30OTHD                                      CDL099
+      ** Data structure for other date OTHD                                                   CDL099
+      *                                                                                       CDL099
+     I@SARD     E DSSCSARDPD                                                                  CDL099
+      * Data Structure for AOSARDR0 call                                                      CDL099
       *                                                                                       CGL029
      IDSSDY     E DSDSSDY                                                                     CGL029
       *                                                                                       CGL029
@@ -333,6 +343,19 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0661CCP1                                           S01408
      C*                                                                   S01408
+      ** Call Access Program to check if CDL099 feature is enabled                            CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM           URTCD   7                                           CDL099
+     C                     PARM '*KEY   ' UOPTN   7                                           CDL099
+     C                     PARM 'CDL099'  USARC   6                                           CDL099
+     C           @SARD     PARM @SARD     DSFDY                                               CDL099
+     C           URTCD     IFNE *BLANKS                                                       CDL099
+     C                     MOVE 'N'       CDL099  1                                           CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'Y'       CDL099                                              CDL099
+     C                     SETON                     35                                       CDL099
+     C                     ENDIF                                                              CDL099
      C**
      C**
      C           DETAIL    TAG                             **  DETAIL  **
@@ -345,6 +368,11 @@
      C                     SETOF                     21
      C   22                SETOF                     22
      C  N42                SETON                     4142
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     SETOF                     59                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C                     SETOF                     646566
      C                     SETOF                     67
      C                     SETOF                     26                   090893
@@ -448,6 +476,26 @@
      C  N61      ETYP      COMP '18M1'                   62
      C  N61N62   ETYP      COMP '15M1'                   62 PLACING
      C  N61N62   ETYP      COMP '17M1'                   62
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** Include Sale Leg events for Split Value Dates with Purchase                          CDL099
+      ** already processed.                                                                   CDL099
+      *                                                                                       CDL099
+     C  N61      ETYP      COMP '11V2'                   59                                   CDL099
+     C  N61N59   ETYP      COMP '13V2'                   59                                   CDL099
+     C  N61N59   ETYP      COMP '14V2'                   59                                   CDL099
+     C   59                SETON                     61                                       CDL099
+      *                                                                                       CDL099
+      ** Exclude 'V2' events if purchase value date is not reached, as                        CDL099
+      ** 'V1' events exist.                                                                   CDL099
+      *                                                                                       CDL099
+     C   59 61   OTHD      COMP BJRDNB                 6161                                   CDL099
+     C   59 61   OTHD      COMP 0                    6161                                     CDL099
+     C   59 61   UOTHD     COMP '   '                6161                                     CDL099
+     C                     SETOF                     59                                       CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
      C*
      C**  TEST FOR FRA/IRS EVENT TYPES
      C*
@@ -558,6 +606,41 @@
      C                     END
      C*
      C                     END
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** Convert value & maturity dates to alpha format.                                      CDL099
+      *                                                                                       CDL099
+     C  N20                Z-ADDEDAT      ZDAYNO                                              CDL099
+     C   20                Z-ADDOTHD      ZDAYNO                                              CDL099
+     C   59                Z-ADDOTHD      ZDAYNO                                              CDL099
+     C                     EXSR ZDATE2                                                        CDL099
+     C                     MOVE ZADATE    VDATA   7                                           CDL099
+     C  N20                Z-ADDOTHD      ZDAYNO                                              CDL099
+     C   20                Z-ADDEDAT      ZDAYNO                                              CDL099
+     C   59                Z-ADDEDAT      ZDAYNO                                              CDL099
+     C                     EXSR ZDATE2                                                        CDL099
+     C                     MOVE ZADATE    MDATA   7                                           CDL099
+     C*                                                                                       CDL099
+     C                     MOVE '       ' UOTHDA                                              CDL099
+     C           OTHD      COMP 0                        36                                   CDL099
+     C           UOTHD     COMP '   '                    37                                   CDL099
+     C   20                SETON                     36                                       CDL099
+     C   59                SETON                     36                                       CDL099
+     C   35N36N37          Z-ADDOTHD      ZDAYNO                                              CDL099
+     C   35N36N37          EXSR ZDATE2                                                        CDL099
+     C   35N36N37          MOVE ZADATE    UOTHDA  7                                           CDL099
+     C           ETYP      IFEQ '11V1'                                                        CDL099
+     C           ETYP      OREQ '13V1'                                                        CDL099
+     C           ETYP      OREQ '14V1'                                                        CDL099
+     C           OTHD      IFEQ EDAT                                                          CDL099
+     C                     MOVE *BLANKS   MDATA                                               CDL099
+     C                     MOVE *BLANKS   UOTHDA                                              CDL099
+     C                     ENDIF                                                              CDL099
+     C                     ENDIF                                                              CDL099
+     C                     GOTO #BTAG1                                                        CDL099
+     C*                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
      C**
      C**   CONVERT VALUE & MATURITY DATES TO ALPHA FORMAT
      C  N20                Z-ADDEDAT      ZDAYNO
@@ -574,6 +657,8 @@
      C           ETYP      COMP '20V1'                   25
      C   25      FSLI      COMP 2                        25
      C   25                MOVE '       ' MDATA
+      *                                                                                       CDL099
+     C           #BTAG1    TAG                                                                CDL099
      C*
      C**  IF NON FRA/IRS EVENT TYPE CONDITION OUTPUT
      C*
@@ -810,6 +895,16 @@
      C                     MOVE ECCY      INCCY
      C                     MOVE ECCY      XCCY
      C                     Z-ADDEAMT      INAMT
+      *
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** Set up incoming amounts & currency fields.                                           CDL099
+      *                                                                                       CDL099
+     C   59                MOVE OTHC      INCCY                                               CDL099
+     C   59                MOVE OTHC      XCCY                                                CDL099
+     C   59                Z-ADDOTHA      INAMT                                               CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
      C**
      C**   FOR EVENT TYPE 16M1 READ EVENT FILE FOR PRINCIPAL
      C**   INCREASES/DECREASES AND SUB/ADD THESE TO AMOUNT TO BE OUTPUT.
@@ -854,6 +949,10 @@
      C           OUTFLD    BEGSR                           **  OUTFLD  **
      C   66
      COR 61                MOVE OTHC      OUTCCY
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C   59                MOVE ECCY      OUTCCY                                              CDL099
+     C                     ENDIF                                                              CDL099
      C*
      C   30                                                SALES
      COR 62                MOVE ECCY      OUTCCY
@@ -862,6 +961,10 @@
      COR 61                Z-ADDOTHA      OUTAMT
      C   30                                                SALES
      COR 62                Z-ADDEAMT      OUTAMT
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C   59                Z-ADDEAMT      OUTAMT                                              CDL099
+     C                     ENDIF                                                              CDL099
      C**
      C**   FOR EVENT TYPE 15M1 READ EVENT FILE FOR PRINCIPAL
      C**   INCREASES/DECREASES AND SUB/ADD THESE TO AMOUNT TO BE OUTPUT.
@@ -1250,6 +1353,10 @@
      O***********************************40 'DEAL   DEAL'          S01378 CDL038
      O                                   38 'DEAL   DEAL'                 CDL038
      O                                   61 'VALUE  MATURITY'             S01378
+      *                                                                                       CDL099
+     O                N35                61 'VALUE  MATURITY'                                 CDL099
+     O                 35                62 'VALUE  MAT/OTHER'                                CDL099
+      *                                                                                       CDL099
      O                                   86 'PURCHASE/'
      O                                  126 'SALE/'
      O        H 1      22NLR 77
@@ -1327,6 +1434,9 @@
      O                      N11          61 ' DAYS'
      O                    10 11          61 'CALL'
      O                    61 10          61 '       '
+      *                                                                                       CDL099
+     O                 35 61N36UOTHDA    61                                                   CDL099
+      *                                                                                       CDL099
      O                         INCCY     65
      O                       44INAMT     84 ' ,   ,   ,   , 0 -'
      O                       45INAMT     86 '   ,   ,   , 0 . -'

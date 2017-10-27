@@ -10,8 +10,9 @@
 0006 F*                                                                  *
       *  (c) Misys International Banking Systems Ltd. 2001            *
 0008 F*                                                                  *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -40,6 +41,7 @@
 0008 F*                                                                  *
 0011 F********************************************************************
       *                                                                  *
+      *  CDL099 - Split Value Date                                    *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -229,6 +231,21 @@
      C***********          END                                            S01153
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0700CCP2                                           S01408
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** Set On Indicator 06 If Split Value Dates Event Types.                                CDL099
+      *                                                                                       CDL099
+     C                     SETOF                     06                                       CDL099
+     C           ETYP      IFEQ '11V2'                                                        CDL099
+     C           ETYP      OREQ '12V2'                                                        CDL099
+     C           ETYP      OREQ '13V2'                                                        CDL099
+     C           ETYP      OREQ '14V2'                                                        CDL099
+     C           ETYP      OREQ '20V2'                                                        CDL099
+     C                     SETON                     06                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
      C*                                                                   S01408
      C*                                                                   S01153
 0153 C*    FIRST CYCLE CALCULATIONS.
@@ -262,6 +279,20 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0700CCP1                                           S01408
      C*                                                                   S01408
+      ** Check if feature CDL099 is enabled                                                   CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM '       ' @RTCD   7                                           CDL099
+     C                     PARM '*VERIFY' @OPTN   7                                           CDL099
+     C                     PARM 'CDL099'  @SARD   6                                           CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANK                                                        CDL099
+     C                     MOVE 'Y'       CDL099  1                                           CDL099
+     C                     MOVE '1'       *IN35                                               CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     MOVE '0'       *IN35                                               CDL099
+     C                     ENDIF                                                              CDL099
 0159 C*
 0160 C*    SET UP ARRAY OF CURRENCY DECIMAL PLACES.
 0161 C                     EXSR CCYARR
@@ -292,6 +323,17 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0700CCP3                                           S01408
      C*                                                                   S01408
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** Set Off 'OP' Deal Indicator.                                                         CDL099
+      *                                                                                       CDL099
+     C                     SETOF                     39                                       CDL099
+      *                                                                                       CDL099
+      ** Increment Count of Records Read.                                                     CDL099
+      *                                                                                       CDL099
+     C   06      NREC      ADD  1         NREC                                                CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
 0167 C*
 0168 C*    INCREMENT COUNT OF RECORDS READ.
 0169 C***01******                                                         S01153
@@ -307,6 +349,14 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0700CCP4                                           S01408
      C*                                                                   S01408
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** End Process if not Detail Record.                                                    CDL099
+      *                                                                                       CDL099
+     C  N02N06             GOTO END                                                           CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
 0176 C  N02                GOTO END                                       S01153
 0177 C*
 0178 C*    ADD EVENT AMOUNT TO INPUT HASH TOTAL.
@@ -318,6 +368,20 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0700CCP5                                           S01408
      C*                                                                   S01408
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** End Process if not a Detail Record or CDL099 does not Exist.                         CDL099
+      *                                                                                       CDL099
+     C  N02N06             GOTO END                                                           CDL099
+     C   06N35             GOTO END                                                           CDL099
+      *                                                                                       CDL099
+      ** Ignore 'V2' Records if 'OP' Deal.                                                    CDL099
+      *                                                                                       CDL099
+     C           DTYP      COMP 'OP'                     39                                   CDL099
+     C   06 39             GOTO END                                                           CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
 0184 C  N02                GOTO END
      C/COPY WNCPYSRC,DL0700C001
      C*
@@ -370,6 +434,40 @@
      C                     END                                            CDL049
      C                     END                                            CDL049
       *                                                                   CDL049
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** Set up Sale Details for Output.                                                      CDL099
+      *                                                                                       CDL099
+     C                     MOVE OTHC      UOTHC   3                                           CDL099
+     C                     Z-ADDOTHA      UOTHA  130                                          CDL099
+      *                                                                                       CDL099
+      ** Process Split Value Dates.                                                           CDL099
+      *                                                                                       CDL099
+     C                     SETOF                     3738                                     CDL099
+     C   39                                                                                   CDL099
+     CORN35                GOTO END                                                           CDL099
+     C           OTHD      COMP 0                        36                                   CDL099
+     C   36                GOTO END                                                           CDL099
+     C  N36                Z-ADDOTHD      ZDAYNO                                              CDL099
+     C  N36                EXSR ZDATE2                                                        CDL099
+     C  N36                MOVE ZADATE    ODATE                                               CDL099
+     C                     MOVE ETYP      UCHECK  2                                           CDL099
+     C           UCHECK    COMP 'V1'                     37                                   CDL099
+     C           UCHECK    COMP 'V2'                     38                                   CDL099
+      *                                                                                       CDL099
+      * If 'V2' Record then output Purchase Details as Sale Details and                       CDL099
+      * Reset Decimal Places Indicators.                                                      CDL099
+      *                                                                                       CDL099
+     C   38                MOVE ECCY      UOTHC                                               CDL099
+     C   38                Z-ADDEAMT      UOTHA                                               CDL099
+     C   38                SETOF                     404142                                   CDL099
+     C   38                SETOF                     43                                       CDL099
+     C   38 30             SETON                     40                                       CDL099
+     C   38 31             SETON                     41                                       CDL099
+     C   38 32             SETON                     42                                       CDL099
+     C   38 33             SETON                     43                                       CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
      C*                                                                   S01408
 0217 C***********          GOTO END                                       S01153
 0218 C*
@@ -798,6 +896,7 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0700OOP1                                           S01408
      O*                                                                   S01408
+     O       OR  203   06 23 35                                                               CDL099
 0546 O***********                        22 'REFERENCE DL0700'            S01117
 0546 O                                   24 'REFERENCE DL0700P1'          S01117
 0547 O*************************TITL******89                               S01194
@@ -816,6 +915,7 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0700OOP2                                           S01408
      O*                                                                   S01408
+     O       OR  1     06 23 35                                                               CDL099
 0554 O                                   74 'FX DEALS BY VALUE DATE'
 0555 O********H  2     01                                                 E00094
 0556 O*******OR  2     02 23                                              E00094
@@ -826,6 +926,7 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0700OOP3                                           S01408
      O*                                                                   S01408
+     O       OR  2     06 23 35                                                               CDL099
 0557 O                                   74 '----------------------'
      O********H  1     01                                           S01117E00094
      O*******OR  1     02 23                                        S01117E00094
@@ -844,6 +945,7 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0700OOP8                                           S01408
      O*                                                                   S01408
+     O       OR  1     06 23 35                                                               CDL099
 0560 O                                   64 'DEAL   DEAL   OPTION  --'
 0561 O                                   86 '-------PURCHASE-------'
 0562 O                                  101 'EXCHANGE'
@@ -857,11 +959,14 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0700OOP9                                           S01408
      O*                                                                   S01408
+     O       OR  1     06 23 35                                                               CDL099
 0566 O                                   12 'CUSTOMER'
 0567 O                                   59 'NUMBER  TYPE    FROM'
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0700OOP4                                           S01408
      O*                                                                   S01408
+     O                      N35          59 'NUMBER  TYPE    FROM'                            CDL099
+     O                       35          60 'NUMBER  TYPE   /OTHER'                           CDL099
 0568 O                                   86 'F/F CCY           AMOUNT'
 0569 O                                  109 'RATE       CCY'
 0570 O                                  128 'AMOUNT'
@@ -882,12 +987,15 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0700OOP5                                           S01408
      O*                                                                   S01408
+     O       OR 12     06 L1 35                                                               CDL099
+     O       OR 12     06 23 35                                                               CDL099
 0573 O                                    4 'DATE'
 0574 O                         VDATE     13
 0575 O        D  1     02
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0700OOP6                                           S01408
      O*                                                                   S01408
+     O       AND      N06                                                                     CDL099
 0576 O*************************CNUM       6                               S01117
 0576 O                         CUNR       6                               S01117
 0577 O                         CRNM      27
@@ -917,6 +1025,39 @@
 0597 O                 43      OTHA     130 ' ,   ,   , 0 .   '
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0700OOP7                                           S01408
+     O        D  1     02 06 35                                                               CDL099
+     O       AND      N39N36                                                                  CDL099
+     O                         CUNR       6                                                   CDL099
+     O                         CRNM      27                                                   CDL099
+     O                         CTWN      38                                                   CDL099
+     O                         DLNO      45                                                   CDL099
+     O                         DTYP      48                                                   CDL099
+     O                                   49 '-'                                               CDL099
+     O                         DLST      51                                                   CDL099
+     O                         ODATE  B  60                                                   CDL099
+     O                 44      FFIN      63                                                   CDL099
+     O                N44      OCFF      63                                                   CDL099
+     O                      N35ECCY      69                                                   CDL099
+     O                    35N38ECCY      69                                                   CDL099
+     O                 30N35   EAMT  1   86                                                   CDL099
+     O                 30 35N38EAMT  1   86                                                   CDL099
+     O                 31N35   EAMT      88 '   ,   ,   , 0 . '                               CDL099
+     O                 31 35N38EAMT      88 '   ,   ,   , 0 . '                               CDL099
+     O                 32N35   EAMT      89 '  ,   ,   , 0 .  '                               CDL099
+     O                 32 35N38EAMT      89 '  ,   ,   , 0 .  '                               CDL099
+     O                 33N35   EAMT      90 ' ,   ,   , 0 .   '                               CDL099
+     O                 33 35N38EAMT      90 ' ,   ,   , 0 .   '                               CDL099
+     O                      N35UOTHC    109                                                   CDL099
+     O                    35N37UOTHC    109                                                   CDL099
+     O                 40N35   UOTHA 1  126                                                   CDL099
+     O                 40 35N37UOTHA 1  126                                                   CDL099
+     O                 41N35   UOTHA    128 '   ,   ,   , 0 . '                               CDL099
+     O                 41 35N37UOTHA    128 '   ,   ,   , 0 . '                               CDL099
+     O                 42N35   UOTHA    129 '  ,   ,   , 0 .  '                               CDL099
+     O                 42 35N37UOTHA    129 '  ,   ,   , 0 .  '                               CDL099
+     O                 43N35   UOTHA    130 ' ,   ,   , 0 .   '                               CDL099
+     O                 43 35N37UOTHA    130 ' ,   ,   , 0 .   '                               CDL099
+      *                                                                                       CDL099
       *                                                                   CDL049
       * Display only if CDL049 is on                                      CDL049
      O        D  1     02 11                                              CDL049

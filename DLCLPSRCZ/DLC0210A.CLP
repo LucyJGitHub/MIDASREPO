@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CSW214             Date 25Nov14              */
-/*       Prev Amend No. AR583880           Date 19Aug14              */
+/*       Last Amend No. CDL099             Date 09Oct17              */
+/*       Prev Amend No. CSW214             Date 25Nov14              */
+/*                      AR583880           Date 19Aug14              */
 /*                      AR402334           Date 19Aug14              */
 /*                      MD023241           Date 03Jun13              */
 /*                      CSW213             Date 03Jun13              */
@@ -62,6 +63,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*     CDL099 - Split Value Dates                                    */
 /*     CSW214 - SWIFT Changes 2014                                   */
 /*     AR583880 - CPYF command on file MGF300PD resulted to an error */
 /*              that prevented the generation of MT300 messages.     */
@@ -121,13 +123,13 @@
 /*/                                                             */    /*S01408*/
 /*/COPY WNCPYSRC,DLC0210A03                                     */    /*S01408*/
 /*/                                                             */    /*S01408*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')
- 
+
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
- 
+
              DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
                                                                       /*041579*/
@@ -156,7 +158,7 @@
              DCL        VAR(&CSW005) TYPE(*CHAR) LEN(1) VALUE('N')    /*CSW005*/
              DCL        VAR(&CSW011) TYPE(*CHAR) LEN(1) VALUE('N')    /*CSW011*/
              DCL        VAR(&CSW097) TYPE(*CHAR) LEN(1) VALUE('N')    /*CSW097*/
- 
+
              DCL        VAR(&CSE006) TYPE(*CHAR) LEN(1) VALUE(' ')    /*CSE006*/
              DCL        VAR(&S01401) TYPE(*CHAR) LEN(1) VALUE(' ')    /*CSE006*/
              DCL        VAR(&CDL008) TYPE(*CHAR) LEN(1) VALUE(' ')    /*CDL008*/
@@ -164,7 +166,7 @@
              DCL        VAR(&CSW200) TYPE(*CHAR) LEN(6)               /*CSW200*/
              DCL        VAR(&ACTION)     TYPE(*CHAR) LEN(8)                               /*CCG015*/
 /*/COPY WNCPYSRC,DLC0210A25                                          */
- 
+
              DCL        VAR(&CSC011) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC011*/
              DCL        VAR(&S1SUPP) TYPE(*CHAR) LEN(2) VALUE(' ')                        /*CSC011*/
              DCL        VAR(&LIBR) TYPE(*CHAR) LEN(2) VALUE(' ')                          /*CSC011*/
@@ -177,14 +179,14 @@
              DCL        VAR(&CMG003) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CMG003*/
                                                                                           /*CMG003*/
              DCLF       FILE(SDMGMEPD)
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              ALCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))                 /*103997*/
              CHGDTAARA  DTAARA(DLSTAT (6 1)) VALUE('Y')               /*103997*/
              DLCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))                 /*103997*/
- 
+
 /* Check if switchable feature CSC011 is on */                                            /*CSC011*/
                                                                                           /*CSC011*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CSC011*/
@@ -208,21 +210,21 @@
 /* Notify MRUNQ */
              SNDPGMMSG  MSG('Input Cycle Confirmations Print') +
                         TOMSGQ(MRUNQ)
- 
+
 /* Begin commitment control */
 /**********  STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))            /*CPK009*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                              /*CPK009*/
- 
+
 /* Zero switches */
              CHGJOB     LOG(4) LOGCLPGM(*YES) SWS(10010000)
- 
+
 /* Create LDA */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' ') TEXT('Midas SD AS400 LOCAL +
                           DATA AREA EQUIVALENT')
              MONMSG     MSGID(CPF0000)
- 
+
 /*/COPY WNCPYSRC,DLC0210A12                                          */
 /*  MULTIPLE LANGUAGE SUPPORT -                  */                   /*E38955*/
 /*  SET OP OVERRIDES FOR MESSAGE FILES           */                   /*E38955*/
@@ -249,7 +251,7 @@
              RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)                  /*E40242*/
              RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&SDATE)                  /*E40242*/
 /*/COPY WNCPYSRC,DLC0210A10                                          */
- 
+
              RTVDTAARA  DTAARA(DLSTAT) RTNVAR(&DLSTAT)
 /**/                                                                  /*CSW097*/
 /* Check if switchable feature CSW097 is on */                        /*CSW097*/
@@ -345,11 +347,11 @@
              ENDDO                                                                        /*CSW213*/
                                                                                           /*CSW213*/
 /*/COPY WNCPYSRC,DLC0210A23                                          */
- 
+
              IF COND(%SST(&DLSTAT 98 1) *EQ 'A') THEN(GOTO TAGA)
              IF COND(%SST(&DLSTAT 98 1) *EQ 'B') THEN(GOTO TAGB)
              IF COND(%SST(&DLSTAT 98 1) *EQ 'C') THEN(GOTO TAGC)
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')                   /*AUS009*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*AUS009*/
              CHGVAR     VAR(&SAR) VALUE('AUS009')                     /*AUS009*/
@@ -390,7 +392,7 @@
 /***  extract confirmations)                                     ***/ /*CSE006*/
                                                                       /*CSE006*/
              IF (&CSE006 *EQ 'Y') THEN(DO)                            /*CSE006*/
- 
+
              IF (&S01401 *EQ 'Y') THEN(DO)                            /*CSE006*/
                OVRDBF (MGOREFL0) SHARE(*NO)                           /*CSE006*/
                                                                       /*CSE006*/
@@ -406,7 +408,7 @@
              DLTOVR     FILE(MGOREFL0)                                /*CSE006*/
                                                                       /*CSE006*/
              ENDDO                                                    /*CSE006*/
- 
+
              ENDDO                                                    /*CSE006*/
                                                                       /*CSE006*/
 /***  If MT5XX Feature present and switchable feature CSE006 ***/     /*CSE006*/
@@ -477,7 +479,7 @@
 /*/                                                             */    /*S01408*/
 /*/COPY WNCPYSRC,DLC0210A02                                     */    /*S01408*/
 /*/                                                             */    /*S01408*/
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Confirmations print failure')
@@ -501,19 +503,19 @@
 /**********  ENDDO                                                               /*CSW213 MD023241*/
                                                                                           /*CSW213*/
 /**********  ENDDO                                                               /*CSW213 MD023241*/
- 
+
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
              IF COND(%SST(&MMOD 25 1) *EQ 'Y') THEN(DO)
- 
+
 TAGA:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('A')
- 
+
 /* Extract messages */
              OVRDBF     FILE(MGOREFL0) SHARE(*NO)
              OVRDBF     FILE(DEALS) SHARE(*NO)
              OVRDBF     FILE(CLOAN) SHARE(*NO)
 /*/COPY WNCPYSRC,DLC0210A14                                          */
              CALL       PGM(DL6305)  /* COMIT ONLY DEALS */
- 
+
 /* If all CONEX not processed report failure */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
@@ -586,7 +588,7 @@ TAGA:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('A')
                           'Y')) FMTOPT(*MAP *DROP)                                      /*AR583880*/
              MONMSG     MSGID(CPF2817 CPF0000)                                          /*AR583880*/
              ENDDO                                                                      /*AR583880*/
- 
+
 TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
                                                                                           /*CSW213*/
              IF         COND(&CSW2013 *EQ 'CSW2013') THEN(DO)                             /*CSW213*/
@@ -617,16 +619,20 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              CLRPFM     FILE(CONEXCY)
              CLRPFM     FILE(CONEXCZ)
 /*/COPY WNCPYSRC,DLC0210A16                                          */
- 
+
 /* GDFs records are deleted as they are processed */
- 
+
 /* Process foreign exchange confirmations */
 /**********  IF         COND(&CSW097 = 'N') THEN( +                */                     /*255986*/
 /**********  CALL       PGM(MG0300))                               */              /*CSW097 255986*/
              IF         COND(&CSW097 = 'N') THEN()                                        /*255986*/
-             ELSE       CMD(CALL PGM(MG0300A))                        /*CSW097*/
+/**********  ELSE       CMD(CALL PGM(MG0300A))                      */             /*CSW097 CDL099*/
+             ELSE       DO /*CDL099*/
+                OVRDBF     FILE(DEALS) SHARE(*NO) /*CDL099*/
+                CALL       PGM(MG0300A) /*CDL099*/
+             ENDDO      /*CDL099*/
 /*********** CALL       PGM(MG0300)                                */ /*CSW097*/
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +
              SNDPGMMSG  MSG('Foreign exchange confirmation +
@@ -686,10 +692,10 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              ENDDO                                                    /*CSW005*/
              ENDDO                                                    /*CSW005*/
                                                                       /*CSW005*/
- 
+
 /* Process fixed loan/deposit confirmations */
              CALL       PGM(MG0320)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +
              SNDPGMMSG  MSG('Loan/deposit confirmation +
@@ -703,7 +709,7 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
 /*/COPY WNCPYSRC,DLC0210A18                                          */
- 
+
              IF         COND(&CMG003 *EQ 'Y') THEN(DO)                                    /*CMG003*/
              CALL       PGM(MG000600)                                                     /*CMG003*/
                                                                                           /*CMG003*/
@@ -717,14 +723,14 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)                                                     /*CMG003*/
              ENDDO                                                                        /*CMG003*/
              ENDDO                                                                        /*CMG003*/
- 
+
 /* Clear MGX320PD after successful call to MG0320 */                                      /*CSW208*/
              IF         COND(&CSW2008 *EQ 'CSW2008') THEN( +
                           CLRPFM FILE(MGX320PD))                                          /*CSW208*/
                                                                                           /*CSW208*/
 /* Process secondary certificate of deposits */
              CALL       PGM(MG0321)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +
              SNDPGMMSG  MSG('Secondary certificate of deposit +
@@ -737,12 +743,12 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              ROLLBACK
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Process liquidation of loan/deposits */
 /*                  (only if CSW200 is off)                        */ /*CSW200*/
              IF         COND(&CSW200 *NE 'CSW200') THEN(DO)           /*CSW200*/
              CALL       PGM(MG0324)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +
              SNDPGMMSG  MSG('Loan/deposit liquidation +
@@ -756,10 +762,10 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
              ENDDO                                                    /*CSW200*/
- 
+
 /* Process call loan/deposits */
              CALL       PGM(MG0330)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +
              SNDPGMMSG  MSG('Call loan/deposit confirmation +
@@ -773,12 +779,12 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
 /*/COPY WNCPYSRC,DLC0210A19                                          */
- 
+
 /* Process interest rate change advices */
 /*                  (only if CSW200 is off)                        */ /*CSW200*/
              IF         COND(&CSW200 *NE 'CSW200') THEN(DO)           /*CSW200*/
              CALL       PGM(MG0335)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +
              SNDPGMMSG  MSG('Interest rate change advice +
@@ -792,10 +798,10 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
              ENDDO                                                    /*CSW200*/
- 
+
 /* Process interest advices */
              CALL       PGM(MG0350)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +
              SNDPGMMSG  MSG('Interest rate advice +
@@ -809,7 +815,7 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
 /*/COPY WNCPYSRC,DLC0210A24                                          */
- 
+
 /**********  RGZPFM     FILE(MGF300PD)                                                    /*228542*/
 /**********  MONMSG     MSGID(CPF2995 CPF2981)                                            /*228542*/
              CALL       PGM(SCC000060) PARM('MGF300PD' '*FIRST')                          /*228542*/
@@ -923,9 +929,9 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              ENDDO                                                                        /*CMG003*/
                                                                                           /*CMG003*/
 /*/COPY WNCPYSRC,DLC0210A20                                          */
- 
+
 TAGC:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('C')
- 
+
 /* If ISO confirmations required print messages */
              RCVF
              IF         COND(&ENFFCR = 'N') THEN(DO)
@@ -940,7 +946,7 @@ TAGC:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('C')
              ENDDO
              ENDDO
 /*/COPY WNCPYSRC,DLC0210A21                                          */
- 
+
              CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE(' ')
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)       /*086137*/
                                                                       /*081938*/
@@ -990,7 +996,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ) +
                           MSGTYPE(*INFO)                              /*041579*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /* Send database error message to workstation & MOPERQ */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MSG)
@@ -1009,7 +1015,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
                 CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')                                 /*CCG015*/
                 CALL       PGM(CGC3605) PARM(&ACTION)                                     /*CCG015*/
              ENDDO                                                                        /*205448*/
- 
+
 END:         ENDCMTCTL
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /*/                                                             */    /*S01408*/
@@ -1022,11 +1028,11 @@ END:         ENDCMTCTL
                           &SDATE &STIME)                              /*E40242*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*E40242*/
 /*/COPY WNCPYSRC,DLC0210A11                                          */
- 
+
 /* Ensure stop confirmations indicator set off */
              CALL       PGM(DL0106)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /* Reset busy flag in DLSTAT */
              ALCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD)) WAIT(32000)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
@@ -1035,8 +1041,8 @@ END:         ENDCMTCTL
              DLCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /*/COPY WNCPYSRC,DLC0210A22                                          */
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
- 
+
              ENDPGM

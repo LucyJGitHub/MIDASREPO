@@ -17,11 +17,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. CSW214  *CREATE    Date 25Nov14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CSW214  *CREATE    Date 25Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014                                  *
       *                                                               *

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039203           Date 14Jun16               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD039203           Date 14Jun16               *
+      *                 CDL094             Date 01Sep14               *
       *                 AR720772           Date 19Aug14               *
       *                 CDL091             Date 12Dec12               *
       *                 CSW212             Date 03May12               *
@@ -87,6 +88,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  MD039203 - When creating an FX Deal, the value of Forward    *
       *             points and sign were not save upon completion of  *
       *             the transaction                                   *
@@ -372,7 +374,10 @@
                                                                                               CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
       ** SD data area                                                                         CSC011
-
+                                                                                              CDL099
+     D InCDL099      E DS                  EXTNAME(FXDLEXPD)                                  CDL099
+      * FX Deal Extra Data Layout Definition (input)                                          CDL099
+                                                                                              CDL099
      D ZMUSER          DS            17
      D  ZUSER                  1     10                                                       CDL010
      D  BRC                   11     13
@@ -513,7 +518,14 @@
      D CGL058          S              1A   INZ('N')                                           CGL058
      D/COPY WNCPYSRC,FXH00018
      D CER043          S              1A                                                      CER043
+     D CDL099          S              1A                                                      CDL099
+     D
      D/COPY OFCPYSRCZ,CDL091_012                                                              CDL091
+     D @YYYYMMDD       DS                                                                     CDL099
+     D @YYYY                          4S 0                                                    CDL099
+     D @MM                            2S 0                                                    CDL099
+     D @DD                            2S 0                                                    CDL099
+      *                                                                                       CDL099
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -757,6 +769,57 @@
      C                   IF        CDL049 = 'Y'                                               CDL049
      C                   EXSR      VRRAT                                                      CDL049
      C                   ENDIF                                                                CDL049
+      *                                                                                       CDL099
+     C                   IF        CDL099 ='Y'                                                CDL099
+      *                                                                                       CDL099
+     C                   EXSR      RESETERRS                                                  CDL099
+      *                                                                                       CDL099
+      ** Call New Split Value Date Validation Module                                          CDL099
+     C                   CALLB     'FXVSPVDT'                                                 CDL099
+     C                   Parm                    RetCodeOut                                   CDL099
+     C                   Parm                    DDSDAT                                       CDL099
+     C                   Parm                    DDVDAT                                       CDL099
+     C                   Parm                    DDSCCY                                       CDL099
+     C                   Parm                    BJDFIN                                       CDL099
+     C                   Parm                    FldNamXAr                                    CDL099
+     C                   Parm                    MsgIDXAr                                     CDL099
+     C                   Parm                    MsgDtaXAr                                    CDL099
+     C                   Parm                    WFldNmXAr                                    CDL099
+     C                   Parm                    WMsgIDXAr                                    CDL099
+     C                   Parm                    WMsgDtXAr                                    CDL099
+     C                   Parm                    OK#SVDT           1                          CDL099
+     C                   Parm                    SVSVDT            6                          CDL099
+      *                                                                                       CDL099
+      ** Update Valid File Parameters if Sell Value Date is valid                             CDL099
+     C                   IF        OK#SVDT <> 'N'                                             CDL099
+      *                                                                                       CDL099
+     C                   EVAL      DDSDAT = SVSVDT                                            CDL099
+      *                                                                                       CDL099
+      ** Convert to Midas Number                                                              CDL099
+     C                   CALLB     'ZAVDATE'                                                  CDL099
+     C                   PARM      *BLANK        RetCodeOut                                   CDL099
+     C                   PARM      DDSDAT        @@DATE            6                          CDL099
+     C                   PARM                    BJDFIN                                       CDL099
+     C                   PARM                    ValuDtDN          5 0                        CDL099
+      *                                                                                       CDL099
+      ** Convert to YYYYMMDD format                                                           CDL099
+     C                   CALLB     'ZDATE9'                                                   CDL099
+     C                   PARM      ValuDtDN      @DAYN                                        CDL099
+     C                   PARM                    @YMD                                         CDL099
+     C                   PARM                    @RETN                                        CDL099
+      *                                                                                       CDL099
+     C                   EVAL      @YYYYMMDD = %CHAR(@YMD)                                    CDL099
+     C                   EVAL      F3VS2Y = @YYYY                                             CDL099
+     C                   EVAL      F3VS2M = @MM                                               CDL099
+     C                   EVAL      F3VS2D = @DD                                               CDL099
+      *                                                                                       CDL099
+     C                   EVAL      F3S2DN = ValuDtDN                                          CDL099
+     C                   EVAL      F3S1DN = 0                                                 CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   EXSR      UPDATERRS                                                  CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
 
       /COPY WNCPYSRC,FXFXDLV027
 
@@ -2736,6 +2799,7 @@
       * Valid Deals layout (DS) from/to caller
      C                   PARM                    ValidDeal
      C                   PARM                    DDDTYP            1                          242477
+     C                   PARM                    InCDL099                                     CDL099
      C/COPY WNCPYSRC,FXFXDLVC02
                                                                                               CDL029
      C     KBRANCHAUTH   KLIST                                                                CDL029
@@ -3172,6 +3236,29 @@
      C                   IF        PRTCD = *BLANKS                                            CER043
      C                   EVAL      CER043 = 'Y'                                               CER043
      C                   ENDIF                                                                CER043
+      *                                                                                       CER043
+      ** Call AOSARDR0 to check if CDL099 is switched on                                      CDL099
+      *                                                                                       CDL099
+     C                   EVAL      CDL099 = 'N'                                               CDL099
+     C                   CALLB     'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       PRTCD                                        CDL099
+     C                   PARM      '*VERIFY'     POPTN                                        CDL099
+     C                   PARM      'CDL099'      PSARD                                        CDL099
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL099
+                                                                                              CDL099
+     C                   IF        PRTCD <> *BLANKS AND                                       CDL099
+     C                             PRTCD <> '*NRF   '                                         CDL099
+     C     *LOCK         IN        LDA                                                        CDL099
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CDL099
+     C                   EVAL      DBASE = 910                                                CDL099
+     C                   EVAL      DBKEY = 'CDL099'                                           CDL099
+     C                   OUT       LDA                                                        CDL099
+     C                   EXSR      *PSSR                                                      CDL099
+     C                   ENDIF                                                                CDL099
+                                                                                              CDL099
+     C                   IF        PRTCD = *BLANKS                                            CDL099
+     C                   EVAL      CDL099 = 'Y'                                               CDL099
+     C                   ENDIF                                                                CDL099
      C/COPY OFCPYSRCZ,CDL091_014                                                              CDL091
       *
      C/COPY WNCPYSRC,FXH00019

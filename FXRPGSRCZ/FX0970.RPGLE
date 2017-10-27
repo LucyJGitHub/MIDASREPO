@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *

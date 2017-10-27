@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 247151A            Date 29Jun17               *
-      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. 247151A            Date 29Jun17               *
+      *                 MD030956           Date 09Oct14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025244           Date 09May14               *
       *                 AR990243           Date 14Jun12               *
@@ -67,6 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  247151A- Initialise flag introduced for RecSd and PaySd      *
       *         - Applied for MD045858                                *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
@@ -228,6 +230,13 @@
      D                 DS
      D  @XTIME                 1      6  0
      D  DXTIM                  1      4  0
+     D                 DS                                                                     CDL099
+      **  Data structure for date in, to change format.                                       CDL099
+     D  DateIn                 1      8  0                                                    CDL099
+     D  @@YY                   1      4  0                                                    CDL099
+     D  @@MM                   5      6  0                                                    CDL099
+     D  @@DD                   7      8  0                                                    CDL099
+      *                                                                                       CDL099
      D/COPY WNCPYSRC,FXFXDLDD01
                                                                                               CRE020
       ** CRE020 Variables                                                                     CRE020
@@ -296,6 +305,7 @@
      D CSW050          S              1A                                                      246801
      D CER043          S              1A                                                      CER043
      D CTI006          S              1A                                                    MD030956
+     D CDL099          S              1A                                                      CDL099
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -433,6 +443,9 @@
      C                   Z-ADD     PUAM          ##PUAM           13 0
      C                   Z-ADD     SLAM          ##SLAM           13 0
      C                   MOVE      DSTI          ##DSTI            1
+     C                   IF        CDL099 = 'Y'                                               CDL099
+     C                   Z-ADD     BSDT2         ##SOL_SDT2        5 0                        CDL099
+     C                   ENDIF                                                                CDL099
       *
       ** DO SWAP, OPTION OR BROKER SWAP UPDATES ON INSERTION
       *
@@ -811,6 +824,21 @@
      C                   IF        CSW212 = 'Y'                                               CSW212
      C                   MOVEL     @FXISDA       @DLISDA                                      CSW212
      C                   ENDIF                                                                CSW212
+      *                                                                                       CDL099
+     C                   IF        CDL099 = 'Y'                                               CDL099
+      *                                                                                       CDL099
+     C                   Z-ADD     F3VS2Y        @@YY                                         CDL099
+     C                   Z-ADD     F3VS2M        @@MM                                         CDL099
+     C                   Z-ADD     F3VS2D        @@DD                                         CDL099
+      *                                                                                       CDL099
+     C                   CALLB     'ZDATE10'                                                  CDL099
+     C                   PARM                    DateIn                                       CDL099
+     C                   PARM                    ZZMDNO            5 0                        CDL099
+     C                   Z-ADD     ZZMDNO        BSDT2                                        CDL099
+      *                                                                                       CDL099
+     C                   EVAL      BSDT1 = 0                                                  CDL099
+     C                   EVAL      BRSD2 = 0                                                  CDL099
+     C                   ENDIF                                                                CDL099
       *
       *  WRITE DEAL
       *
@@ -1636,6 +1664,12 @@
       *
      C     ##SOL_VDAT    IFGE      BJRDNB
      C     ##SOL_VDAT    ANDLE     @TLXDU
+     C     ##SOL_SDT2    ANDEQ     0                                                          CDL099
+     C     ##SOL_SDT2    ORGT      0                                                          CDL099
+     C     ##SOL_SDT2    ANDGE     BJRDNB                                                     CDL099
+     C     ##SOL_SDT2    ANDLE     @TLXDU                                                     CDL099
+     C     CDL099        ANDEQ     'Y'                                                        CDL099
+      *                                                                                       CDL099
      C/COPY WNCPYSRC,FXFXDLDC13
      C                   Z-ADD     1             @@PRI3
      C                   END
@@ -2482,7 +2516,31 @@
      C                   EXSR      SRErr                                                    MD030956
      C                   ENDIF                                                              MD030956
      C                   ENDIF                                                              MD030956
-                                                                                            MD030956
+      *                                                                                       CDL099
+      ** Check if CDL099 is enabled.                                                          CDL099
+      *                                                                                       CDL099
+     C                   CALLB     'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       PRtCd                                        CDL099
+     C                   PARM      '*VERIFY'     POptn                                        CDL099
+     C                   PARM      'CDL099'      PSARD                                        CDL099
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL099
+                                                                                              CDL099
+     C                   EVAL      CDL099 = 'N'                                               CDL099
+                                                                                              CDL099
+     C                   IF        PRtCd = *BLANKS                                            CDL099
+     C                   EVAL      CDL099 = 'Y'                                               CDL099
+     C                   ELSE                                                                 CDL099
+                                                                                              CDL099
+     C                   IF        PRtCd <> '*NRF'                                            CDL099
+     C     *LOCK         IN        LDA                                                        CDL099
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CDL099
+     C                   EVAL      DBase = 912                                                CDL099
+     C                   EVAL      DBKey = 'CDL099'                                           CDL099
+     C                   OUT       LDA                                                        CDL099
+     C                   EXSR      SRErr                                                      CDL099
+     C                   ENDIF                                                                CDL099
+     C                   ENDIF                                                                CDL099
+                                                                                              CDL099
      C                   ENDSR
      C****************************************************************
       /EJECT

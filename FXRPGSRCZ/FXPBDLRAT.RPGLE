@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CSW212             Date 03May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CDL049             Date 07Jul06               *
+      *                 CDL049             Date 07Jul06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CFX114             Date 15Jun04               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

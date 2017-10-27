@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
       *                 207288             Date 10Jun03               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *            (Recompile)                                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *

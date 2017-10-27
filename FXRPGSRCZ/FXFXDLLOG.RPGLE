@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. AR990243           Date 14Jun12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 AR990243           Date 14Jun12               *
       *                 CSW212             Date 03May12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompile)                                         *
       *  AR990243 - Additional deliveries for CSW212                  *
@@ -123,6 +125,10 @@
  
      D ExtDataDS     E DS                  EXTNAME(FXFXEXPD)
  
+     D OutCDL099     E DS                  EXTNAME(FXDLEXPD)                                  CDL099
+     D                                     PREFIX(@)                                          CDL099
+      * FX Deal Extra Data Layout Definition (output)                                         CDL099
+                                                                                              CDL099
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -184,6 +190,7 @@
      C                   PARM                    PDNBRF
      C                   PARM                    PDNSRF
      C                   PARM                    PDSTS
+     C                   PARM                    OutCDL099                                    CDL099
  
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'

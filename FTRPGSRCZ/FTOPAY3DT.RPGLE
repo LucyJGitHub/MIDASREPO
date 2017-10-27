@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. AR1080200          Date 24Jan13               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 AR1080200          Date 24Jan13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  AR1080200 - In Charge details 2 tab, charges on the left and *

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD044506           Date 28Mar17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD044506           Date 28Mar17               *
+      *                 CSW216             Date 14Mar16               *
       *                 CSW214             Date 25Nov14               *
       *                 CDL094             Date 30May14               *
       *                 CSW213             Date 03Jun13               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  MD044506 - MT300 98D trade execution date can not be before  *
       *             value date.                                       *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
@@ -77,45 +79,45 @@
       *  CAP084 - Java wrapper project                                *
       *                                                               *
       *****************************************************************
-
+ 
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** SCREEN FORMATS
       **--------------------------------------------------------------------------------------------
-
+ 
      D DealScnFmt    E DS                  EXTNAME(FXFXDLPD)
       * Deal in Screen Format
-
+ 
      D*TranInCust    E DS                  EXTNAME(SDCUCUPD)                           CER043 CSF011
       ***Customers*Extension*Screen*Format*based*on*SDCUCUPD                           CER043 CSF011
                                                                                               CER043
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
-
+ 
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
-
+ 
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** FILE FORMATS
       **--------------------------------------------------------------------------------------------
-
+ 
      D DealFilFmt    E DS                  EXTNAME(FXDEALPP)
       ** Deal in File Format
      D  FHREC                414    468                                                       TCA002
@@ -123,7 +125,7 @@
      D**FHREC****************400    468                                                       TCA002
      D**FHPAY****************469   1027                                                       TCA002
      D  FH@ISDA             1394   2043                                                       CSW212
-
+ 
      D InfData       E DS                  EXTNAME(FXFXIFPD)                                  CTI004
       * FX (FXDL) Extra Data - File (D/B) format                                              CTI004
                                                                                               CTI004
@@ -134,17 +136,17 @@
      D**FLREC******************1     69                                                       TCA002
      D  FLREC2                21     75                                                       TCA002
       ** FILE RECEIVE INSTRUCTIONS
-
+ 
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
      D**FLPAY******************1    559                                                       TCA002
      D  FLPAY2                21    565                                                       TCA002
       *** FILE PAYMENT INSTRUCTIONS
-
+ 
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ***FILE*FRA/IRS*INSTRUCTIONS*************************************                       CSW212
       ** Extended Settlement Instructions                                                     CSW212
      D  FL@ISDA                1    650                                                       CSW212
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER043
       ** External DS for SAR details                                                          CER043
                                                                                               CER043
@@ -166,28 +168,32 @@
       ** DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       *
-
+ 
       ** DS for access programs - long data structure                                         CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
                                                                                               CGL029
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR DEALING DETAILS
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CER043
       ** External DS for Customer Details                                                     CER043
       *                                                                                       CER043
+     D OutCDL099     E DS                  EXTNAME(FXDLEXPD)                                  CDL099
+     D                                     PREFIX(@)                                          CDL099
+      ** FX Deal Extra Data Layout Definition (output)                                        CDL099
+      *                                                                                       CDL099
       **--------------------------------------------------------------------------------------------
-
+ 
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
-
+ 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
-
+ 
       ** Timestamp                                                                           BUG4087
      D @Timestamp      S             26                                                      BUG4087
                                                                                              BUG4087
@@ -216,7 +222,7 @@
      D CSW213          S              1                                                       CSW213
                                                                                               CSW213
       **--------------------------------------------------------------------------------------------
-
+ 
      C                   CLEAR                   DealFilFmt
      C                   CLEAR                   PDlRILkpd                                    CSW213
                                                                                              CSF011A
@@ -231,7 +237,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -244,7 +250,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      FXFXDLRED
@@ -276,9 +282,9 @@
      C                   EXSR      FXFXDLCVT
      C                   EXSR      ZASETINCVT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDDLNO'      FldNameArr(1)
@@ -294,7 +300,7 @@
      C                   EVAL      DLRPIFS3In = DLRPIFScn3Fmt                                 CSW213
      C                   EVAL      DLRPIFS4In = DLRPIFScn4Fmt                                 CSW214
      C                   ENDIF                                                                CSW213
-
+ 
      C                   MOVE      FHTMST        @Timestamp                                  BUG4087
       *                                                                                       CER043
       ** Population of Customer Details                                                       CER043
@@ -318,7 +324,8 @@
      C                                           + ##FRIS                                     CSW212
      C                                           + InfData                                    CTI004
      C                                           + ExtData + InSwift2013                      CSW213
-
+     C                                           + OutCDL099                                  CDL099
+ 
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************                       CSF011
@@ -344,13 +351,13 @@
       *****************************************************************                       CSF011
       /EJECT                                                                                  CSF011
       **********************************************************************
-
+ 
       *****************************************************************
       *                                                               *
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
@@ -362,14 +369,14 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
-
+ 
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
-
+ 
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,FXFXDLM01
-
+ 
       ** ACCESS DEALING DETAILS
       *
      C**********         CALL      'AODEALR0'                                                 CGL029
@@ -437,10 +444,24 @@
       *                                                                                       CSW213
      C                   ENDIF                                                                CSW213
       *                                                                                       CSW213
+      ** Check if CDL099 feature if installed.                                                CDL099
+      *                                                                                       CDL099
+     C                   CALL      'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       @RTCD                                        CDL099
+     C                   PARM      '*VERIFY'     @OPTN                                        CDL099
+     C                   PARM      'CDL099'      @SARD             6                          CDL099
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL099
+      *                                                                                       CDL099
+     C     @RTCD         IFEQ      *BLANK                                                     CDL099
+     C                   MOVEL     'Y'           CDL099            1                          CDL099
+     C                   ELSE                                                                 CDL099
+     C                   MOVEL     'N'           CDL099                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
      C                   ENDSR
       **********************************************************************
      C     FXFXDLRED     BEGSR
-
+ 
      C                   CALLB     'FXFXDLRED'
       *
       * INPUT PARAMETERS
@@ -478,11 +499,11 @@
       *
       * Front Office Deal Read
      C                   PARM                    @FTRED           20
-
+ 
      C                   ENDSR
       **********************************************************************
      C     FXFXDLRTV     BEGSR
-
+ 
      C                   CALLB     'FXFXDLRTV'
       *
       * INPUTS
@@ -543,29 +564,29 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
-
+ 
       ** Warning error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM      *BLANKS       WFldNamArr
      C                   PARM      *BLANKS       WMsgIdArr
      C                   PARM      *BLANKS       WMsgDtaArr
-
+ 
       ** Warning array index (3P0) from/to caller
-
+ 
      C                   PARM      *ZEROS        WIdx
-
+ 
      C                   ENDSR
       **********************************************************************
      C     FXFXDLCVT     BEGSR
-
+ 
      C                   CALLB     'FXFXDLCVT'
-
+ 
       * INPUTS
       * Return Code
      C                   PARM      *BLANK        ReturnCode       10
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
-
+ 
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
@@ -574,11 +595,12 @@
      C                   PARM                    DDNSRF           19
       * Deal Status
      C                   PARM                    DDSTS            24
+     C                   PARM                    OutCDL099                                    CDL099
                                                                                               CTI004
      C                   Eval      DDFOID = FHFRNT                                            CTI004
      C                   EVAL      DDAFID = FHAFRT                                            261692
      C                   Eval      AUTH = FHAUTH                                              CTI004
-
+ 
      C                   ENDSR
       **********************************************************************
       /EJECT

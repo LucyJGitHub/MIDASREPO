@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG25240           Date 29Jul09               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
@@ -84,7 +86,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -103,92 +105,95 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Deal Status
      D @STSA           S             24    DIM(6) CTDATA PERRCD(1)
       * Scaling Factors
      D @SF             S             10  0 DIM(10) CTDATA PERRCD(1)
- 
+
       * Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(FXDEALPP)
- 
+
       * Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(FXFXDLPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** EXTERNAL DS FOR Portfolio Management DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
+     D OutCDL099     E DS                  EXTNAME(FXDLEXPD)                                  CDL099
+      ** FX Deal Extra Data Layout Definition (output)                                        CDL099
+                                                                                              CDL099
      D                 DS
      D  @@YEAR                 1      4  0
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   First scaling exponent
      D     @@SXP1      S              1S 0
       **   Second scaling exponent
@@ -201,8 +206,9 @@
      D POPTN           S              7A                                                      CAS001
      D PSARD           S              6A                                                      CAS001
      D CER043          S              1A                                                      CER043
+     D CDL099          S              1A                                                      CDL099
      D/COPY WNCPYSRC,FXH00231
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -667,6 +673,30 @@
      C                   EXSR      FMTAMT                                                     CDL049
      C                   MOVE      @@AMTD        DDRRAT                                       CDL049
      C                   ENDIF                                                                CDL049
+      *                                                                                       CDL099
+     C                   IF        CDL099 = 'Y'                                               CDL099
+      *                                                                                       CDL099
+      ** Update only if Sell Date Year is not zero to avoid Substring Error                   CDL099
+     C                   IF        FHVS2Y <> *ZEROS                                           CDL099
+      *                                                                                       CDL099
+     C                   MOVE      FHVS2M        TEMMM             2                          CDL099
+     C                   MOVE      FHVS2D        TEMDD             2                          CDL099
+      *                                                                                       CDL099
+      ** If BJDFIN = 'M', DDSDAT is MMDDYY, else DDSDAT is DDMMYY                             CDL099
+     C                   IF        BJDFIN = 'M'                                               CDL099
+     C                   EVAL      DDSDAT = TEMMM + TEMDD                                     CDL099
+     C                                      + %SUBST(%CHAR(FHVS2Y):3:2)                       CDL099
+     C                   ELSE                                                                 CDL099
+     C                   EVAL      DDSDAT = TEMDD + TEMMM                                     CDL099
+     C                                      + %SUBST(%CHAR(FHVS2Y):3:2)                       CDL099
+     C                   ENDIF                                                  BJDFIN = 'M'  CDL099
+      *                                                                                       CDL099
+     C                   ELSE                                                                 CDL099
+      *                                                                                       CDL099
+     C                   EVAL      DDSDAT = *ZEROS                                            CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                  FHVS2Y <> 0   CDL099
+     C                   ENDIF                                                                CDL099
       *
      C                   ENDSR
       *****************************************************************
@@ -743,6 +773,7 @@
       *
       * Deal Status
      C                   PARM                    DDSTS            24
+     C                   PARM                    OutCDL099                                    CDL099
       *
       ** Initialize program name
       *
@@ -1012,6 +1043,29 @@
      C                   EVAL      CER043 = 'Y'                                               CER043
      C                   ENDIF                                                                CER043
       *
+      ** Call AOSARDR0 to check if CDL099 is switched on                                      CDL099
+      *                                                                                       CDL099
+     C                   EVAL      CDL099 = 'N'                                               CDL099
+     C                   CALLB     'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       PRTCD                                        CDL099
+     C                   PARM      '*VERIFY'     POPTN                                        CDL099
+     C                   PARM      'CDL099'      PSARD                                        CDL099
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL099
+                                                                                              CDL099
+     C                   IF        PRTCD <> *BLANKS AND                                       CDL099
+     C                             PRTCD <> '*NRF   '                                         CDL099
+     C     *LOCK         IN        LDA                                                        CDL099
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CDL099
+     C                   EVAL      DBASE = 912                                                CDL099
+     C                   EVAL      DBKEY = 'CDL099'                                           CDL099
+     C                   OUT       LDA                                                        CDL099
+     C                   EXSR      *PSSR                                                      CDL099
+     C                   ENDIF                                                                CDL099
+                                                                                              CDL099
+     C                   IF        PRTCD = *BLANKS                                            CDL099
+     C                   EVAL      CDL099 = 'Y'                                               CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
      C                   ENDSR
       *****************************************************************
       /EJECT

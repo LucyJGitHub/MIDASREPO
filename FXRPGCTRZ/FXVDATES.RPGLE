@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD008008           Date 24Apr14               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD008008           Date 24Apr14               *
+      *                 MD000091           Date 07May13               *
       *                 207288             Date 10Jun03               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 254420             Date 20May08               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  MD008008 - Deal Date validation does not take into account   *
       *            local holidays. (Applied for MD026390)             *
       *  MD000091 - Event Codes Substitution                          *
@@ -183,6 +185,8 @@
       ** EXTERNAL DS FOR SHORT DUMMY DATA STRUCTURE                             141077
      D SDBANK        E DS                  EXTNAME(SDBANKPD) PREFIX(XX:2)                     254420
       ** EXTERNAL DS FOR BANK DETAILS                                                         254420
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL099
+      ** External DS Fof SAR Details
  
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
@@ -736,6 +740,7 @@
       ** If sell currency settled through a nostro                              141077
       ** Check that value date is not a holiday in in sell currency             141077
       *                                                                         141077
+     C                   IF        CDL099 <> 'Y'                                              CDL099
      C     PaySetMeth    IFEQ      01                                           141077
      C     PaySetMeth    OREQ      07                                           141077
      C     PaySetMeth    OREQ      08                                           141077
@@ -751,6 +756,7 @@
      C                   MOVEL     'FXM0418'     WMsgIdXAr(WIx)                 141077
      C                   END                                                    141077
      C                   END                                                    141077
+     C                   ENDIF                                                                CDL099
       *                                                                         141077
       ** If purchase or sell currency not settled through a nostro              141077
       ** Check that value date is not a holiday in local currency               141077
@@ -1178,7 +1184,19 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+      *                                                                                       CDL099
+      ** Check to see if Split Value Date processing is on                                    CDL099
+     C                   CALLB     'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       PRTCD             7                          CDL099
+     C                   PARM      '*VERIFY'     POPTN             7                          CDL099
+     C                   PARM      'CDL099'      PSARD             6                          CDL099
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL099
+                                                                                              CDL099
+     C                   IF        PRTCD = *BLANKS                                            CDL099
+     C                   MOVE      'Y'           CDL099            1                          CDL099
+     C                   ELSE                                                                 CDL099
+     C                   MOVE      'N'           CDL099                                       CDL099
+     C                   ENDIF                                                                CDL099
      C/COPY ZACPYSRC,DBFIELDS
  
      C                   ENDSR                                                  *** InzEnd ***

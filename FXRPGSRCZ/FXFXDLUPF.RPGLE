@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 30May14               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 30May14               *
+      *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       *                 BUG27841           Date 09Aug10               *
@@ -74,6 +75,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *  CSW212 - SWIFT 2012 Changes                                  *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -161,7 +163,7 @@
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
                                                                                               CRE020
      F/COPY WNCPYSRC,FXFXDLFF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -180,20 +182,20 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006 -------------
       ** The following /COPY line includes the definitions for error and        CAP006
       ** warning message arrays.                                                CAP006
@@ -204,14 +206,14 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** DEFINE FIELDS FOR ZDATE9
      D @DAYN           S              5P 0
      D @YMD            S              8S 0
      D @RETN           S              1A
- 
+
       ** Timestamp for the transaction                                          CAP006
      D TimeStamp       S               Z                                        CAP006
                                                                                 CAP006
@@ -231,7 +233,7 @@
      D  @F3PAY               469   1027
      D  @F3ISDA             1394   2043                                                       CSW212
      D/COPY WNCPYSRC,FXFXDLFD02
- 
+
       **  DEALS FILE - FX DEALS
      D FXDEAL        E DS                  EXTNAME(FXDEALPP)
      D FXDEALRONS    E                     EXTFLD(QQRONS)                                     CGL029
@@ -250,7 +252,7 @@
      D  @FHPAY               469   1027
      D  @FHISDA             1394   2043                                                       CSW212
      D/COPY WNCPYSRC,FXFXDLFD03
- 
+
      D ChkDealFmt    E DS                  EXTNAME(FXDEALPP)                    CAP006
       ** Rename fields for Timestamp checking                                   CAP006
      D                                     PREFIX(CH)                           CAP006
@@ -264,24 +266,24 @@
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
      D Z#XSTS        E DS                  EXTNAME(Z#XST)                       154448
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       * DATA STRUCTURE FOR DEAL DATA CODES
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR MODULE DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP051
       * DATA STRUCTURE FOR SWITCHABLE FEATURE DETAILS                           CAP051
                                                                                 CAP051
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
                                                                                               CSC011
@@ -301,7 +303,7 @@
      D                                     PREFIX(R:2)                          208884
                                                                                 208884
       * RUN DATE & MULTI-BRANCHING INDICATOR
- 
+
      D RUNDAT          DS
      D  @DLUP                  1      2  0
      D  @MLUP                  3      5
@@ -424,6 +426,7 @@
      D WSysVal01       S              1A                                                      CRE020
                                                                                               CRE020
      D CER043          S              1A                                                      CER043
+     D CDL099          S              1A                                                      CDL099
      D/COPY WNCPYSRC,FXH00076
       /EJECT
      C*****************************************************************
@@ -721,6 +724,26 @@
                                                                                               CSD015
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
+     C                   IF        CDL099 = 'Y'                                               CDL099
+      *                                                                                       CDL099
+     C                   IF        F3VS2Y = *ZEROS                                            CDL099
+     C                   Z-ADD     FHVDYY        FHVS2Y                                       CDL099
+     C                   Z-ADD     FHVDMM        FHVS2M                                       CDL099
+     C                   Z-ADD     FHVDDD        FHVS2D                                       CDL099
+     C                   Z-ADD     FHVDDN        FHS2DN                                       CDL099
+      *                                                                                       CDL099
+     C                   ELSE                                                                 CDL099
+      *                                                                                       CDL099
+     C                   EVAL      FHVS2Y = F3VS2Y                                            CDL099
+     C                   EVAL      FHVS2D = F3VS2D                                            CDL099
+     C                   EVAL      FHVS2M = F3VS2M                                            CDL099
+     C                   EVAL      FHS2DN = F3S2DN                                            CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   EVAL      FHS1DN = 0                                                 CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
      C*  WRITE (OR UPDATE IF PRESENT) NEW DEAL
      C*
      C     *IN99         IFEQ      '0'
@@ -2532,6 +2555,29 @@
      C                   EVAL      CSW212 = 'N'                                               CSW212
      C                   ENDIF                                                                CSW212
       *                                                                                       CSW212
+      ** Call AOSARDR0 to check if CDL099 is switched on                                      CDL099
+      *                                                                                       CDL099
+     C                   EVAL      CDL099 = 'N'                                               CDL099
+     C                   CALLB     'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       PRTCD                                        CDL099
+     C                   PARM      '*VERIFY'     POPTN                                        CDL099
+     C                   PARM      'CDL099'      PSARD                                        CDL099
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL099
+                                                                                              CDL099
+     C                   IF        PRTCD <> *BLANKS AND                                       CDL099
+     C                             PRTCD <> '*NRF   '                                         CDL099
+     C     *LOCK         IN        LDA                                                        CDL099
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CDL099
+     C                   EVAL      DBASE = 913                                                CDL099
+     C                   EVAL      DBKEY = 'CDL099'                                           CDL099
+     C                   OUT       LDA                                                        CDL099
+     C                   EXSR      SRERR                                                      CDL099
+     C                   ENDIF                                                                CDL099
+                                                                                              CDL099
+     C                   IF        PRTCD = *BLANKS                                            CDL099
+     C                   EVAL      CDL099 = 'Y'                                               CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
      C/COPY WNCPYSRC,FXFXDLFC02

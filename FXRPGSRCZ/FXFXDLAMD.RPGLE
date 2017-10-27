@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
@@ -178,6 +180,13 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
  
+     D NwExtDlScnFmt E DS                  EXTNAME(FXDLEXPD)                                  CDL099
+      ** New Extra Deal in Screen Format                                                      CDL099
+                                                                                              CDL099
+     D CrExtDlScnFmt E DS                  EXTNAME(FXDLEXPD)                                  CDL099
+     D                                     PREFIX(@)                                          CDL099
+      ** Current Extra Deal in Screen Format                                                  CDL099
+                                                                                              CDL099
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -228,6 +237,7 @@
      D  DDOylcOK                      1A                                                      CDL038
      D  DDTylcOK                      1A                                                      CDL038
      D  DDClasOK                      1A                                                      CDL038
+     D  ddSDATOK                      1A                                                      CDL099
  
       ** Date out
      D DateOut         S              6P 0
@@ -668,6 +678,16 @@
      C                   EVAL      MsgIDArr(Idx)   = 'FXM0378'
      C                   EVAL      ddSAMTok        = 'N'
      C                   END
+      *                                                                                       CDL099
+      ** Split Value Date                                                                     CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+     C     DDSDAT        IFNE      @DDSDAT                                                    CDL099
+     C                   ADD       1             Idx                                          CDL099
+     C                   EVAL      FldNameArr(Idx) = 'DDSDAT'                                 CDL099
+     C                   EVAL      MsgIDArr(Idx)   = 'FXM7005'                                CDL099
+     C                   EVAL      ddSDATok        = 'N'                                      CDL099
+     C                   ENDIF                                                                CDL099
+     C                   ENDIF                                                                CDL099
      C*
      C*-----------------------------------------*
      C* Profit Centre                           *
@@ -857,6 +877,13 @@
      C     ddCLASOK      IFEQ      'N'                                                        CDL038
      C                   MOVEL     @DDCLAS       DDCLAS                                       CDL038
      C                   END                                                                  CDL038
+      *                                                                                       CDL099
+      ** Split Value Date                                                                     CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+     C     ddSDATOK      IFEQ      'N'                                                        CDL099
+     C                   MOVEL     @DDSDAT       DDSDAT                                       CDL099
+     C                   ENDIF                                                                CDL099
+     C                   ENDIF                                                                CDL099
      C*
      C                   ENDSR
       *****************************************************************
@@ -933,6 +960,8 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM                    ResetErrs         1
+     C                   PARM                    NwExtDlScnFmt                                CDL099
+     C                   PARM                    CrExtDlScnFmt                                CDL099
       *
       ** Initialize program name
       *
@@ -1024,6 +1053,19 @@
      C                   ELSE                                                                 CDL039
      C                   MOVEL     'N'           CDL039                                       CDL039
      C                   END                                                                  CDL039
+      *                                                                                       CDL039
+      ** Access SAR details file to determine if CDL099 is installed                          CDL099
+     C                   CALL      'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       @RTCD                                        CDL099
+     C                   PARM      '*VERIFY'     @OPTN                                        CDL099
+     C                   PARM      'CDL099'      @SARD             6                          CDL099
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL099
+      *                                                                                       CDL099
+     C     @RTCD         IFEQ      *BLANK                                                     CDL099
+     C                   MOVEL     'Y'           CDL099            1                          CDL099
+     C                   ELSE                                                                 CDL099
+     C                   MOVEL     'N'           CDL099                                       CDL099
+     C                   ENDIF                                                                CDL099
       *
       ** Get FX complete deal amendable fields details
       *

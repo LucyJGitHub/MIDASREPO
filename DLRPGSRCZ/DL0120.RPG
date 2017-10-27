@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 245692             Date 09Dec13               *
       *                 CER059             Date 19Jul10               *
@@ -107,6 +108,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -1218,6 +1220,14 @@
      ISCSARD    E DSSCSARDPD                                              CDL006
       ** External Data Structure for Switchable Features                  CDL006
       *                                                                   CDL006
+      ** Data Structure for Sell Date                                                         CDL099
+      *                                                                                       CDL099
+     I            DS                                                                          CDL099
+     I                                        1   80USDAT                                     CDL099
+     I                                        1   40FHVS2Y                                    CDL099
+     I                                        5   60FHVS2M                                    CDL099
+     I                                        7   80FHVS2D                                    CDL099
+      *                                                                                       CDL099
      I/COPY WNCPYSRC,DL0120IIP1                                           S01408
      I*                                                                   S01408
      I*                                                                   S01136
@@ -1461,6 +1471,19 @@
      C           @RTCD     IFEQ *BLANKS                                   CDL006
      C                     MOVE 'Y'       CDL006  1                       CDL006
      C                     ENDIF                                          CDL006
+      *                                                                                       CDL099
+      ** Access SAR details file to see if CDL099 SAR is installed.                           CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   @RTCD                                               CDL099
+     C                     PARM '*VERIFY' @OPTN                                               CDL099
+     C                     PARM 'CDL099'  @SARD                                               CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANK                                                        CDL099
+     C                     MOVE 'Y'       CDL099  1                                           CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
      C/COPY WNCPYSRC,DL0120CCP4                                           S01408
      C*                                                                   S01408
      C*                                                                   S01119
@@ -5107,6 +5130,20 @@
      C*                                                                   S01136
      C** SET UP DEAL STATUS INDICATORS                                    S01136
      C                     EXSR #J                                        S01136
+      *                                                                                       CDL099
+      ** If CDL099 exists and deal type is not FX option then format                          CDL099
+      ** sell date.                                                                           CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C           FHTYPE    IFNE 'OP'                                                          CDL099
+     C           FHTYPE    ANDNE'OT'                                                          CDL099
+     C           USDAT     ANDNE0                                                             CDL099
+     C                     Z-ADDUSDAT     @@DTIN                                              CDL099
+     C                     EXSR ZA0660                                                        CDL099
+     C                     MOVEA@@DATE    LIN,18                                              CDL099
+     C                     ENDIF                                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0120CCP3                                           S01408
      C*                                                                   S01408

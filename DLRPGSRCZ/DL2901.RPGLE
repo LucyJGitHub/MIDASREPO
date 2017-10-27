@@ -13,8 +13,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. AR743357 *CREATE   Date 06Jul17               *
-      *  Prev Amend No. AR812349           Date 23Oct12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. AR743357           Date 06Jul17               *
+      *                 AR812349           Date 23Oct12               *
       *                 AR746335           Date 17Oct12               *
       *                 CLE134             Date 01Aug12               *
       *                 CCB020             Date 06Aug12               *
@@ -47,6 +48,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  AR743357 - Clone of DL2900 where it will use DLPCSCRX        *
       *             instead of DLPCSCPD.                              *
       *           - Applied for MD033602                              *

@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. MD045010           Date 05Apr17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *                 CGL184             Date 07Dec16               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -51,6 +52,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  CGL184 - New Frequencies for Account Statements (Recompile)  *

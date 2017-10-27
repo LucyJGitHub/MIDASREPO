@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD047993           Date 23Sep17               *
-      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
       *                 MD039525A          Date 22Dec16               *
       *                 CSW216             Date 14Mar16               *
       *                 MD039525           Date 13Jul16               *
@@ -309,6 +310,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
@@ -1634,6 +1636,9 @@
 0273 I                                        1 250 LOTD1
 0274 I******                                251 400 LOTD2          S01117 S01177
 0274 I                                      2511069 LOTD2                 S01177
+     I                                    P223622380BSDT1                                     CDL099
+     I                                    P223922410BSDT2                                     CDL099
+     I                                    P224222440BRSD2                                     CDL099
 0275 I*
 0278 I*
 0279 I        NS  04   1 CD   8 CC
@@ -3236,7 +3241,12 @@
      C                     GOTO END                                       S01194
      C                     END                                            S01194
 0327 C*    CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
-0328 C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  S01194
+0328 C********** BJDFIN    COMP 'M'                      98MMDDYY, 98 ON               S01194 CDL099
+     C           BJDFIN    IFEQ 'M'                                                           CDL099
+     C                     Z-ADD1         FMDAT   10                                          CDL099
+     C                     ELSE                                                               CDL099
+     C                     Z-ADD0         FMDAT                                               CDL099
+     C                     ENDIF                                                              CDL099
       *                                                                   S01408
      C/COPY WNCPYSRC,DL0110CP32                                           S01408
       *                                                                   S01408
@@ -4160,6 +4170,24 @@
      C                     MOVELSVAL1     W#BSRD  1                                           CDL081
      C                     MOVELSVAL2     W#NBRD  1                                           CDL081
      C                     ENDIF                                                              CDL081
+      *                                                                                       CDL099
+      ** Access AOSARDR0 to check if CDL099 is installed                                      CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   @RTCD                                               CDL099
+     C                     PARM '*VERIFY' @OPTN                                               CDL099
+     C                     PARM 'CDL099'  @SARD                                               CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVE 'Y'       CDL099  1                                           CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVEL'PURCHASE'SPNAR1 14                                           CDL099
+     C                     MOVE 'VALUE'   SPNAR1                                              CDL099
+     C                     MOVELSPNAR1    SPNAR  22                                           CDL099
+     C                     ENDIF                                                              CDL099
      C/COPY WNCPYSRC,DLH00021
      C           *LIKE     DEFN PCPL      DIFF                            S01434
      C           *LIKE     DEFN PCPL      DFPCPL                          079771
@@ -4906,6 +4934,9 @@
      C                     SETOF                     1012                 S01392
      C                     SETOF                     7071                 S01119
      C                     MOVE '0'       *INKG                           208051
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     SETOF                     98                                       CDL099
+     C                     ENDIF                                                              CDL099
      C/COPY WNCPYSRC,DL0110C168
 0921 C*
 0922 C*    CHECK TYPE OF CONFIRMATION
@@ -5412,6 +5443,21 @@
      C                     Z-ADDDDAT      ZDAYNO                          S01370
      C                     EXSR ZDATE2                                    S01370
      C                     MOVE ZADATE    SDLDAT  7                       S01370
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+     C           BSDT2     IFNE 0                                                             CDL099
+      *                                                                                       CDL099
+     C                     Z-ADDBSDT2     ZDAYNO                                              CDL099
+     C                     EXSR ZDATE2                                                        CDL099
+     C                     MOVE ZADATE    SPLITD  7                                           CDL099
+      *                                                                                       CDL099
+     C                     MOVE '1'       *IN98                                               CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C/COPY WNCPYSRC,DL0110C081
      C*                                                                   S01370
      C*****CANCELLATION*AND*AMENDMENTS*-*USE*RUN*DATE******************   056754
@@ -5570,6 +5616,9 @@
      C***********          MOVELZWRK4     TXDATE  60                      S01310
      C***********          MOVE ZYEAR     TXDATE                          S01310
 1035 C                     MOVE ZADATE    VALUE
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE ZADATE    SPVALD  7                                           CDL099
+     C                     ENDIF                                                              CDL099
      C/COPY WNCPYSRC,DL0110C106
 1036 C   38                MOVE ZADATE    ICMDAT  7
      C/COPY WNCPYSRC,DL0110C082
@@ -5754,6 +5803,24 @@
      C/COPY WNCPYSRC,DL0110C111
      C*                                                                   S01157
      C                     MOVE ZADATE    @MATDT  7                       S01157
+      *                                                                                       CDL099
+      ** Set up Narrative for Split Value Date                                                CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C           BSDT2     ANDNE0                                                             CDL099
+     C           *IN39     ANDEQ'0'                                                           CDL099
+      *                                                                                       CDL099
+     C                     MOVE SPVALD    SPNAR                                               CDL099
+      *                                                                                       CDL099
+     C           *IN37     IFEQ '1'                                                           CDL099
+     C                     MOVELSPNAR     ARR52  52                                           CDL099
+     C                     MOVE ARR52     NARR                                                CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVELSPNAR     ARR30  30                                           CDL099
+     C                     MOVE ARR30     NARR                                                CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C/COPY WNCPYSRC,DL0110C087
      C*                                                                   S01157
      C***********DTYP******IFNE 'RS'                                S01119S01157
@@ -7630,6 +7697,20 @@
 1230 C*    SET INDICATORS FOR INTERNAL CONTRACTS OUTPUT
 1231 C*
 1232 C*    OUTPUT INTERNAL CONTRACTS LOAN CONFIRMATION
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** Set start date of loan to value date of 1st leg                                      CDL099
+     C                     Z-ADDMDAT      ZDAYNO                                              CDL099
+     C                     EXSR ZDATE2                                                        CDL099
+     C                     MOVE ZADATE    ICVDAT                                              CDL099
+      *                                                                                       CDL099
+      ** Set end date of loan to split value date of 2nd leg                                  CDL099
+     C                     Z-ADDBSDT2     ZDAYNO                                              CDL099
+     C                     EXSR ZDATE2                                                        CDL099
+     C                     MOVE ZADATE    ICMDAT                                              CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
       *                                                                   S01408
      C/COPY WNCPYSRC,DL0110CP25                                           S01408
       *                                                                                       234893
@@ -7650,6 +7731,19 @@
 1236 C***********          SETOF                     14            054780 161927
      C                     MOVE *OFF      *IN56                           161927
       *                                                                   S01408
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** Set start date of deposit to split value date of 1st leg                             CDL099
+     C                     Z-ADDBRSD2     ZDAYNO                                              CDL099
+     C                     EXSR ZDATE2                                                        CDL099
+     C                     MOVE ZADATE    ICVDAT                                              CDL099
+      *                                                                                       CDL099
+      ** Set end date of deposit to value date of 2nd leg                                     CDL099
+     C                     Z-ADDVDAT      ZDAYNO                                              CDL099
+     C                     EXSR ZDATE2                                                        CDL099
+     C                     MOVE ZADATE    ICMDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C/COPY WNCPYSRC,DL0110CP26                                           S01408
       *                                                                   S01408
 1237 C                     EXSR EXCPT
@@ -11269,10 +11363,20 @@ TA06 CORN62 51             MOVELPAY       ADD
 1715 C   93      ZDAY      ADD  1         ZDAY
 1716 C**
 1717 C**   FORMAT DATE, DDMMYY OR MMDDYY.
-1718 C  N98                MOVELZDAY      ZWRK4   40
-1719 C   98                MOVE ZDAY      ZWRK4
-1720 C  N98                MOVE ZMTH      ZWRK4
-1721 C   98                MOVELZMTH      ZWRK4
+     C           FMDAT     IFNE 1                                                             CDL099
+1718 C**N98*****           MOVELZDAY      ZWRK4   40                                          CDL099
+     C                     MOVELZDAY      ZWRK4   40                                          CDL099
+     C                     ELSE                                                               CDL099
+1719 C***98*****           MOVE ZDAY      ZWRK4                                               CDL099
+     C                     MOVE ZDAY      ZWRK4                                               CDL099
+     C                     ENDIF                                                              CDL099
+     C           FMDAT     IFNE 1                                                             CDL099
+1720 C**N98*****           MOVE ZMTH      ZWRK4                                               CDL099
+     C                     MOVE ZMTH      ZWRK4                                               CDL099
+     C                     ELSE                                                               CDL099
+     C***98*****           MOVELZMTH      ZWRK4                                               CDL099
+1721 C                     MOVELZMTH      ZWRK4                                               CDL099
+     C                     ENDIF                                                              CDL099
 1722 C                     MOVELZWRK4     ZDATE
 1723 C                     MOVE ZYEAR     ZDATE
 1724 C**
@@ -15018,6 +15122,12 @@ TA06 CORN62 51             MOVELPAY       ADD
      O*************************NARR      82                               S01157
      O*********************    NARR      87                         S01157BHF490
      O                         NARR      88                               BHF490
+     O        E  1     69 07N08                                           S01373
+     O       AND       98                                                 S01373
+     O                N37                72 'FOR SALE VALUE'                                  CDL099
+     O                N37      SPLITD    80                                                   CDL099
+     O                 37                53 'FOR SALE VALUE'                                  CDL099
+     O                 37      SPLITD    62                                                   CDL099
      O/COPY WNCPYSRC,DL0110O042
      O*                                                                   S01157
      O** Headings for FRA's                                               S01157
@@ -15235,16 +15345,34 @@ TA06 CORN62 51             MOVELPAY       ADD
 1776 O********E  2     69N09 07                                    S01117 S01392
      O*******AND      N08                                          S01373 S01392
 1776 O********E  2     69N09 07                                    S01392 172231
-     O        E  1     69N09 07                                           172231
+     O********E* 1     69N09 07                                                        172231 CDL099
      O/COPY WNCPYSRC,DL0110O246
      O*******AND*     N08N11                                              S01392              237332
      O*******AND*     N95 52                                                           CDL033 237332
-     O       AND      N08N52                                                                  237332
+     O*******AND      N08N52                                                           237332 CDL099
      O/COPY WNCPYSRC,DL0110O259
-     O       OR  1     69N09 07                                           S01392
+     O*******OR* 1     69N09 07                                                        S01392 CDL099
      O*******AND*     N08 11                                                           S01392 237332
      O*******AND*     N95 52                                                           CDL033 237332
-     O       AND      N08N95 52                                                               237332
+     O*******AND      N08N95 52                                                        237332 CDL099
+     O        E  1     69N09 07                                                               CDL099
+     O       AND      N08N11 98                                                               CDL099
+     O       AND      N52                                                                     CDL099
+     O       OR  1     69N09 07                                                               CDL099
+     O       AND      N08 11 98                                                               CDL099
+     O       AND      N52                                                                     CDL099
+     O       OR  2     69N09 07                                                               CDL099
+     O       AND      N08N11N98                                                               CDL099
+     O       AND      N52                                                                     CDL099
+     O       OR  2     69N09 07                                                               CDL099
+     O       AND      N08 11N98                                                               CDL099
+     O       AND      N52                                                                     CDL099
+     O       OR  1     69N09 07                                                               CDL099
+     O       AND      N08N11                                                                  CDL099
+     O       AND      N95 52                                                                  CDL099
+     O       OR  1     69N09 07                                                               CDL099
+     O       AND      N08 11                                                                  CDL099
+     O       AND      N95 52                                                                  CDL099
      O/COPY WNCPYSRC,DL0110O198
 1777 O                    04 29          23 'WITH INTEREST DUE ON'
 1778 O                    04 29ZADATE    31
@@ -17486,6 +17614,12 @@ TA06 CORN62 51             MOVELPAY       ADD
      O/COPY WNCPYSRC,DL0110O314
      O                                   12 'WE CONFIRM'                  S01373
      O                         NARR      88                               S01373
+     O        E  1     69 07 08                                                               CDL099
+     O       AND       98                                                                     CDL099
+     O                N37                72 'FOR SALE VALUE'                                  CDL099
+     O                N37      SPLITD    80                                                   CDL099
+     O                 37                53 'FOR SALE VALUE'                                  CDL099
+     O                 37      SPLITD    62                                                   CDL099
      O/COPY WNCPYSRC,DL0110O043
      O*                                                                   S01373
      O** Headings for FRA's                                               S01373

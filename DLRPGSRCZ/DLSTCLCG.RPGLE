@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -45,79 +47,79 @@
       *  CDL038 - Extended Deal Sub Type                              *
       *                                                               *
       *****************************************************************
- 
+
      FDEALSDB   IF   E             DISK    INFSR(*PSSR)
- 
+
      FDEALSDC   IF   E             DISK    INFSR(*PSSR)
      FMMDEMULL  UF   E           K DISK    INFSR(*PSSR)  INCLUDE(DEAMSDIF)
      F                                     PREFIX(A_)
      FMMDAMULL  UF   E           K DISK    INFSR(*PSSR)  INCLUDE(MMDEAMP0)
- 
+
      FDEALSDD   IF   E             DISK    INFSR(*PSSR)
- 
+
      FDEALSDE   IF   E             DISK    INFSR(*PSSR)
- 
+
      FDEALSDG   IF   E             DISK    INFSR(*PSSR)
      FASHTRNLA  IF   E           K DISK    INFSR(*PSSR)
      FASHGLKL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FDLSTCLL0  IF   E           K DISK    INFSR(*PSSR) PREFIX(O_)
      FDLSTCLPD  O    E             DISK    INFSR(*PSSR) RENAME(DLSTCLD0:NEW)
      FDLDKEYPD  O    E             DISK    INFSR(*PSSR) PREFIX(K_) EXTIND(*INU1)
- 
+
      D AKY             S              1    DIM(14)
- 
+
      D DKEYS         E DS                  EXTNAME(DLDKEYPD) PREFIX(K_)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDFAIS        E DS                  EXTNAME(SDFAISPD)
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      IDEALSDBF      01
      IDEALSDCF      02
      IDEALSDDF      03
      IDEALSDEF      04
      IDEALSDGF      05
- 
+
       * FOREX
- 
+
      C                   MOVE      *OFF          *IN
      C                   IF         P_FILE = 'B' OR P_FILE = ' '
      C                   EXSR      P_DEALSDB
      C                   ENDIF
- 
+
       * LOANS & DEPOSITS
- 
+
      C                   MOVE      *OFF          *IN
      C                   IF         P_FILE = 'C' OR P_FILE = ' '
      C                   EXSR      P_DEALSDC
      C                   ENDIF
- 
+
       * NAS PURCHASED
- 
+
      C                   MOVE      *OFF          *IN
      C                   IF         P_FILE = 'D' OR P_FILE = ' '
      C                   EXSR      P_DEALSDD
      C                   ENDIF
- 
+
       * NAS SOLD
- 
+
      C                   MOVE      *OFF          *IN
      C                   IF         P_FILE = 'E' OR P_FILE = ' '
      C                   EXSR      P_DEALSDE
      C                   ENDIF
- 
+
       * DERIVATIVES
- 
+
      C                   MOVE      *OFF          *IN
      C                   IF         P_FILE = 'G' OR P_FILE = ' '
      C                   EXSR      P_DEALSDG
      C                   ENDIF
- 
+
      C                   SETON                                        LR
      C                   RETURN
- 
+
       /SPACE 5
       ********************************************************************
      C     P_DEALSDB     BEGSR
@@ -125,13 +127,13 @@
      C     *IN99         DOWEQ     *OFF
      C                   IF         RECI <> 'N' AND RECI <> 'M' AND RECI <> 'E'
      C                              AND DTYP <> 'NX' AND DTYP <> 'OT'
- 
+
      C                   EXSR      CHK_STCL
- 
+
      C     STCL_Changed  IFEQ      'Y'
- 
+
       * If deal date accounting has been done, generate fx deal date a/c keys
- 
+
      C                   TESTB     '0'           ACEI                     98
      C   98              DO
      C                   MOVEL     O_DLST        DealSubType       2
@@ -157,14 +159,14 @@
      C     *IN99         DOWEQ     *OFF
      C                   IF         RECI <> 'N' AND RECI <> 'M' AND RECI <> 'E'
      C                   EXSR      DEAM_SYNC
- 
+
      C                   EXSR      CHK_STCL
- 
+
      C     STCL_Changed  IFEQ      'Y'
- 
+
       * If deal date accounting has been done,
       * but value date accounting has NOT been done, generate loan/deposit deal date a/c keys
- 
+
      C                   TESTB     '0'           ACEI                     98
      C                   TESTB     '1'           ACEI                     99
      C   98
@@ -178,9 +180,9 @@
      C                   Z-ADD     0             ReversalInd
      C                   EXSR      LOANDEP_DEAL
      C                   ENDDO
- 
+
       * If value date accounting has been done, generate loan/deposit transfer a/c keys
- 
+
      C                   TESTB     '1'           ACEI                     99
      C   99              DO
      C                   MOVEL     O_DLST        DealSubType
@@ -205,14 +207,14 @@
      C                   READ      DEALSDD                                99
      C     *IN99         DOWEQ     *OFF
      C                   IF         RECI <> 'N' AND RECI <> 'M' AND RECI <> 'E'
- 
+
      C                   EXSR      CHK_STCL
- 
+
      C     STCL_Changed  IFEQ      'Y'
- 
+
       * If deal date accounting has been done,
       * but value date accounting has NOT been done, generate na purchased deal date a/c keys
- 
+
      C                   TESTB     '0'           ACEI                     98
      C                   TESTB     '1'           ACEI                     99
      C   98
@@ -226,9 +228,9 @@
      C                   Z-ADD     0             ReversalInd
      C                   EXSR      NAPURCH_DEAL
      C                   ENDDO
- 
+
       * If value date accounting has been done, generate na purchased transfer a/c keys
- 
+
      C                   TESTB     '1'           ACEI                     99
      C   99              DO
      C                   MOVEL     O_DLST        DealSubType
@@ -253,14 +255,14 @@
      C                   READ      DEALSDE                                99
      C     *IN99         DOWEQ     *OFF
      C                   IF         RECI <> 'N' AND RECI <> 'M' AND RECI <> 'E'
- 
+
      C                   EXSR      CHK_STCL
- 
+
      C     STCL_Changed  IFEQ      'Y'
- 
+
       * If deal date accounting has been done,
       * but value date accounting has NOT been done, generate na purchased deal date a/c keys
- 
+
      C                   TESTB     '0'           ACEI                     98
      C                   TESTB     '1'           ACEI                     99
      C   98
@@ -287,9 +289,9 @@
      C                   READ      DEALSDG                                99
      C     *IN99         DOWEQ     *OFF
      C                   IF         RECI <> 'N' AND RECI <> 'M' AND RECI <> 'E'
- 
+
      C                   EXSR      CHK_STCL
- 
+
      C     STCL_Changed  IFEQ      'Y'
      C                   SELECT
      C     DTYP          WHENEQ    'FR'
@@ -307,9 +309,9 @@
       /SPACE 5
       ********************************************************************
      C     DEAM_SYNC     BEGSR
- 
+
       * Synchronize DEAMSDI
- 
+
      C     DLNO          SETLL     DEAMSDIF
      C     DLNO          READE     DEAMSDIF                               99
      C     *IN99         DOWEQ     *OFF
@@ -318,9 +320,9 @@
      C                   EXCEPT    DEAMSDIO
      C     DLNO          READE     DEAMSDIF                               99
      C                   ENDDO
- 
+
       * Synchronize MMDEAMPP
- 
+
      C     DLNO          SETLL     MMDEAMP0
      C     DLNO          READE     MMDEAMP0                               99
      C     *IN99         DOWEQ     *OFF
@@ -334,12 +336,12 @@
       /SPACE 5
       ********************************************************************
      C     FOREX_DEAL    BEGSR
- 
+
      C     PUCY          COMP      BJCYCD                                 65
      C     SLCY          COMP      BJCYCD                                 66
- 
+
       * Purchase currency deal date a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -352,9 +354,9 @@
      C                   Z-ADD     SLAM          OtherAmount      13 0
      C                   MOVE      SLCY          OtherCurrency     3
      C                   EXSR      WRITE_KEY
- 
+
       * Sale currency deal date a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -367,12 +369,12 @@
      C                   Z-ADD     PUAM          OtherAmount
      C                   MOVE      PUCY          OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
       * Unaccrued swap profit/loss deal date a/c key (on 2nd leg swap deal)
- 
+
      C     DTYP          IFEQ      'SW'
      C     FSLI          ANDEQ     2
- 
+
      C     SPLA          SUB       SPPD          EventAmount          6768
      C   68              Z-SUB     EventAmount   EventAmount
      C                   MOVE      *BLANK        AKY
@@ -385,17 +387,17 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     LOANDEP_DEAL  BEGSR
- 
+
       * Deal date Principal a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -406,15 +408,15 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     LOANDEP_TRANS BEGSR
- 
+
       * Transfer principal a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'T'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -425,9 +427,9 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
       * Transfer unaccrued interest a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'T'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -439,15 +441,15 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     NAPURCH_DEAL  BEGSR
- 
+
       * Deal date face value a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -458,9 +460,9 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
       * Deal date Purchase price a/c key
- 
+
      C     DTYP          IFNE      'C1'
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
@@ -473,15 +475,15 @@
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     NAPURCH_TRANS BEGSR
- 
+
       * Transfer face value a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'T'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -492,9 +494,9 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
       * Transfer unaccrued discount/premium a/c key
- 
+
      C     DISA          SUB       DPTD          EventAmount            53
      C   53              Z-SUB     EventAmount   EventAmount
      C                   MOVE      *BLANK        AKY
@@ -507,9 +509,9 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
       * Transfer unaccrued interest a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'T'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -520,15 +522,15 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     NASOLD_DEAL   BEGSR
- 
+
       * Deal date sale price a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -539,17 +541,17 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     FRAS          BEGSR
- 
+
       * If deal date accounting has been done,
       * but value date accounting has NOT been done, generate FRA deal date a/c keys
       * (FRAS balances run from deal date to value date)
- 
+
      C                   TESTB     '0'           ACEI                     98
      C                   TESTB     '1'           ACEI                     99
      C   98
@@ -563,10 +565,10 @@
      C                   Z-ADD     0             ReversalInd
      C                   EXSR      FRAS_DEAL
      C                   ENDDO
- 
+
       * If this is a hedged FRA and FRA accruals are done
       * If value date accounting has been done, generate FRA transfer a/c keys
- 
+
      C     HEDIN         IFEQ      'Y'
      C     BQHFRA        ANDEQ     'Y'
      C                   TESTB     '1'           ACEI                     99
@@ -586,9 +588,9 @@
       /SPACE 5
       ********************************************************************
      C     FRAS_DEAL     BEGSR
- 
+
       * Deal date FRA notional principal a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -599,9 +601,9 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
       * Deal date FRA exposure a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -612,15 +614,15 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     FRAS_TRANS    BEGSR
- 
+
       ** Check Percentage of Ineffective/Effective Linkages present
- 
+
      C     CAS006        IFEQ      'Y'
      C                   MOVE      'N'           WHDGFL
      C                   Z-ADD     *ZEROS        WEFPTG
@@ -640,16 +642,16 @@
      C                   ENDDO
      C                   DIV       100           WEFPTG
      C                   ENDIF
- 
- 
+
+
       ** If CAS006 is on only generate a key if the hedge linkages are effective
- 
+
      C     CAS006        IFEQ      'N'
      C     CAS006        OREQ      'Y'
      C     WHDGFL        ANDEQ     'Y'
- 
+
       * Transfer FRA unaccrued settlement amount a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'T'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -669,9 +671,9 @@
      C     AKY(9)        IFEQ      'R'
      C     TIPRD         SUB       TAIPD         EventAmount
      C                   END
- 
+
       ** When CAS006 is on output the effectively hedged percentage
- 
+
      C     CAS006        IFEQ      'Y'
      C                   MULT      WEFPTG        EventAmount
      C                   ENDIF
@@ -679,17 +681,17 @@
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     OTHERDERIVS   BEGSR
- 
+
       * If deal date accounting has been done,
       *    generate deal date a/c keys
       *   (derivative balances run from deal date to maturity date)
- 
+
      C                   TESTB     '0'           ACEI                     98
      C   98              DO
      C                   MOVEL     O_DLST        DealSubType
@@ -701,9 +703,9 @@
      C                   Z-ADD     0             ReversalInd
      C                   EXSR      DERIVS_DEAL
      C                   ENDDO
- 
+
       * If value date accounting has been done, generate transfer a/c keys
- 
+
      C                   TESTB     '1'           ACEI                     99
      C   99              DO
      C                   MOVEL     O_DLST        DealSubType
@@ -720,9 +722,9 @@
       /SPACE 5
       ********************************************************************
      C     DERIVS_DEAL   BEGSR
- 
+
       * Deal date notional principal a/c key (NOT 'RX')
- 
+
      C     DTYP          IFNE      'RX'
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
@@ -735,9 +737,9 @@
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
      C                   ENDIF
- 
+
       * Deal date exposure a/c key  (NOT 'RX')
- 
+
      C     DTYP          IFNE      'RX'
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
@@ -750,9 +752,9 @@
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
      C                   ENDIF
- 
+
       * Deal date notional principal a/c key ('RX')
- 
+
      C     DTYP          IFEQ      'RX'
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
@@ -770,9 +772,9 @@
      C                   MOVE      TCUCY         EventCurrency
      C                   EXSR      WRITE_KEY
      C                   ENDIF
- 
+
       * Deal date exposure a/c key  ('RX')
- 
+
      C     DTYP          IFEQ      'RX'
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'D'           AKY(3)
@@ -790,9 +792,9 @@
      C                   MOVE      TCUCY         EventCurrency
      C                   EXSR      WRITE_KEY
      C                   ENDIF
- 
+
       * If value date accounting has NOT been done, generate fee key
- 
+
      C                   TESTB     '1'           ACEI                     99
      C  N99              DO
      C                   MOVE      *BLANK        AKY
@@ -812,9 +814,9 @@
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
      C                   ENDDO
- 
+
       * If buy-out date accounting has NOT been done, generate buy-out key
- 
+
      C                   TESTB     '4'           ACEI                     99
      C  N99              DO
      C                   MOVE      *BLANK        AKY
@@ -834,15 +836,15 @@
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     DERIVS_TRANS  BEGSR
- 
+
       * Transfer our unaccrued interest a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'T'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -854,9 +856,9 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
       * Transfer their unaccrued interest a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'T'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -868,9 +870,9 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
       * Transfer unaccrued fee a/c key
- 
+
      C                   MOVE      *BLANK        AKY
      C                   MOVE      'T'           AKY(3)
      C                   MOVEA     DealSubType   AKY(4)
@@ -887,16 +889,16 @@
      C                   Z-ADD     0             OtherAmount
      C                   MOVE      *BLANK        OtherCurrency
      C                   EXSR      WRITE_KEY
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     WRITE_KEY     BEGSR
- 
+
      C     *INU1         CABEQ     *OFF          NO_KEY
      C     EventAmount   CABEQ     0             NO_KEY
- 
+
      C                   CLEAR                   DKEYS
      C                   MOVEL     'D'           K_RECI
      C                   MOVEA     AKY           K_AKEY
@@ -929,27 +931,27 @@
      C                   MOVEL     BOKC          K_BOKC
      C                   EVAL      Key_DLST = %SubST(K_AKEY:4:2)
      C                   EVAL      Key_CLAS = %SubST(K_AKEY:11:4)
- 
+
       * Current or New
- 
+
      C     Key_DLST      IFEQ      O_DLST
      C     Key_CLAS      ANDEQ     O_CLAS
      C                   MOVEL     'C'           K_ZZ002
      C                   ELSE
      C                   MOVEL     'N'           K_ZZ002
      C                   ENDIF
- 
+
      C                   WRITE     DKEYSDPF
      C     NO_KEY        ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     CHK_STCL      BEGSR
- 
+
       * Check if sub-type or class have changed
- 
+
      C                   MOVEL     'N'           STCL_Changed      1
- 
+
      C     DLNO          CHAIN     DLSTCLD0                           99
      C     *IN99         IFEQ      *OFF
      C     DLST          IFNE      O_DLST
@@ -957,7 +959,7 @@
      C                   MOVEL     'Y'           STCL_Changed
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -976,23 +978,23 @@
      C     *INZSR        BEGSR
      C     *ENTRY        PLIST
      C                   PARM                    P_FILE            1
- 
+
       * Access Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      '*FIRST '     POPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Access FRA/IRS details
- 
+
      C                   CALL      'AOFAISR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST  '    POPTN
      C     SDFAIS        PARM      SDFAIS        DSFDY
- 
+
       ** Access AOSARDR0 and check if CAS006 is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
@@ -1003,13 +1005,13 @@
      C                   ELSE
      C                   MOVE      'N'           CAS006
      C                   ENDIF
- 
+
      C                   MOVE      'DL'          ModuleID
      C                   MOVE      *BLANK        KEY_DLST          2
      C                   MOVE      *BLANK        KEY_CLAS          4
- 
+
       * Key lists
- 
+
      C     KHDGKY        KLIST
      C                   KFLD                    ModuleID          2
      C**********         KFLD                    DLNO                                         CLE148

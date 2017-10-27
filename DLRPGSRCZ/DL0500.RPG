@@ -12,9 +12,10 @@
       *                                                               *
       *  NOTE: Check DL5110 for changes that may apply to it if there *                       CAS005
       *        are amendments done to this program.                   *                       CAS005
-      *                                                               *                       CAS005
-      *  Last Amend No. MD047993           Date 23Sep17               *
-      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *                                                               * 
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
       *                 CGL165             Date 17Mar15               *
       *                 AR814519           Date 06Mar15               *
       *                 234893             Date 06Mar15               *
@@ -116,6 +117,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
@@ -580,6 +582,9 @@
 0085 I                                     12921309 OPCA                                      CGL029
 0088 I                                     13101327 OSCA                                      CGL029
      I                                     13641367 CLAS                                      CDL038
+     I                                    P223622380BSDT1                                     CDL099
+     I                                    P223922410BSDT2                                     CDL099
+     I                                    P224222440BRSD2                                     CDL099
 0122 I*
 0123 I*
 0124 I*    DEALS FILE - DETAIL - TAKINGS/PLACINGS/TIME DEPOSITS/LOANS.
@@ -1276,6 +1281,21 @@
      C                     END                                            S01119
       *                                                                   S01408
      C/COPY WNCPYSRC,DL0500CCP6                                           S01408
+      *                                                                                       CDL099
+      ** Determine if feature CDL099 is On                                                    CDL099
+      *                                                                                       CDL099
+     C                     MOVE *BLANK    CDL099  1                                           CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   @RTCD                                               CDL099
+     C                     PARM '*VERIFY' @OPTN                                               CDL099
+     C                     PARM 'CDL099'  @SARD                                               CDL099
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVE 'Y'       CDL099                                              CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
       *                                                                   S01408
       *                                                                                       CDL033
       ** Determine if Floating Rate CD Issued feature is                                      CDL033
@@ -1604,6 +1624,28 @@
      C   72                Z-ADDVDAT      ZIEND
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0500C110                                           S01408
+      *                                                                                       CDL099
+      ** CDL099 Split Value Dates processing                                                  CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     SETOF                     68                                       CDL099
+     C           *IN01     IFEQ '1'                                                           CDL099
+     C                     SETON                     68                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+      ** Move appropriate values to ZIBEG & ZIEND.                                            CDL099
+      *                                                                                       CDL099
+     C           *IN68     IFEQ '1'                                                           CDL099
+     C           BRSD2     ANDNE0                                                             CDL099
+     C                     Z-ADDOTDT      UOTDT   60                                          CDL099
+     C                     Z-ADDBRSD2     OTDT                                                CDL099
+     C           REPCD     COMP OTDT                   57                                     CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C                     Z-ADDREPCD     ZIEND                                               CDL099
+     C                     Z-ADDOTDT      ZIBEG                                               CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
      C*                                                                   S01408
 0413 C                     MOVE IDCM      ZICALC
 0414 C                     Z-ADDIDAM      ZIAMT
@@ -1626,6 +1668,15 @@
      C   57                Z-ADD0         AMAD
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0500C111                                           S01408
+      *                                                                                       CDL099
+      ** If value date is less than report control date, then move                            CDL099
+      ** internal deposit interest amount to AMAD.                                            CDL099
+      *                                                                                       CDL099
+     C           VDAT      IFLT REPCD                                                         CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDIDIA      AMAD                                                CDL099
+     C                     ENDIF                                                              CDL099
+      *
      C*                                                                   S01408
 0418 C           IDIA      SUB  AMAD      AMTA
 0419 C                     Z-SUBAMAD      AMAD
@@ -1651,6 +1702,19 @@
 0427 C*    OUTPUT RECORD FOR INTERNAL LOAN
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0500C112                                           S01408
+      *                                                                                       CDL099
+      ** If sell date is not zero, then move appropriate value to ZIBEG.                      CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C           *IN68     IFEQ '1'                                                           CDL099
+     C           BSDT2     ANDNE0                                                             CDL099
+     C                     Z-ADDUOTDT     OTDT                                                CDL099
+     C                     Z-ADDBSDT2     VDAT                                                CDL099
+     C                     Z-ADDOTDT      ZIBEG                                               CDL099
+     C                     END                                                                CDL099
+     C           REPCD     COMP OTDT                   57                                     CDL099
+     C                     ENDIF                                                              CDL099
+      *
      C*                                                                   S01408
 0428 C                     MOVE ILCM      ZICALC
 0429 C                     Z-ADDILAM      ZIAMT
@@ -1673,6 +1737,17 @@
      C   57                Z-ADD0         AMAD
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0500C113                                           S01408
+      *                                                                                       CDL099
+      ** If sell date is not zero and value date is less than report                          CDL099
+      ** control date, then move internal deposit interest to AMAD.                           CDL099
+      *                                                                                       CDL099
+     C           *IN68     IFEQ '1'                                                           CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C           BSDT2     ANDNE0                                                             CDL099
+     C           VDAT      ANDLTREPCD                                                         CDL099
+     C                     Z-ADDIDIA      AMAD                                                CDL099
+     C                     ENDIF                                                              CDL099
+      *
      C*                                                                   S01408
 0433 C           ILIA      SUB  AMAD      AMTA
       *                                                                                       234893
@@ -1705,6 +1780,25 @@
 0449 C                     SETON                     47
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0500C114                                           S01408
+      *                                                                                       CDL099
+      ** If sell date is not zero, then determine P/L currency value                          CDL099
+      ** date.                                                                                CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+     C           *IN68     IFEQ '1'                                                           CDL099
+     C           BSDT2     ANDNE0                                                             CDL099
+     C           SPLC      IFNE PUCY                                                          CDL099
+     C                     Z-ADDBSDT2     VDAT                                                CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C           VDAT      CABLTREPCD     TOTAL                                               CDL099
+     C           REPCD     SUB  OTDT      DAYS                                                CDL099
+     C           VDAT      SUB  OTDT      PERIOD                                              CDL099
+     C                     GOTO #BTAG1                                                        CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
      C*                                                                   S01408
 0450 C*
 0451 C*    CALCULATE 'ACCRUED TO DATE' AND PUT INTO AMAD
@@ -1712,6 +1806,7 @@
 0453 C           VDAT      SUB  OTDT      PERIOD  50
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0500C115                                           S01408
+     C           #BTAG1    TAG                                                                CDL099
      C*                                                                   S01408
 0454 C*
 0455 C           SPLA      MULT DAYS      PRODUC 150

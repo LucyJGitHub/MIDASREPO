@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD047993           Date 23Sep17               *
-      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *

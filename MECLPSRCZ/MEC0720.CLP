@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2002           */
 /*                                                                   */
-/*       Last Amend No. MD033914           Date 26Oct17              */
-/*       Prev Amend No. AR1031152          Date 06Dec12              */
+/*       Last Amend No. MD048403           Date 27Oct17              */
+/*       Prev Amend No. MD033914           Date 26Oct17              */
+/*                      AR1031152          Date 06Dec12              */
 /*                      AR549937           Date 27Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -27,6 +28,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD048403 - Cannot compile due to missing command WRKMLCASIF.*/
+/*                  (Temporary Fix)Remove WRKMLCASIF and related     */
+/*                  commands.                                        */
 /*       MD033914 - Housekeep DTAQs in xxDPLIB                       */
 /*                - Applied for MD047530.                            */
 /*       AR1031152 - Error issuing WRKMMMSVR command which calls     */
@@ -134,9 +138,9 @@
                 ENDDO                                                                  /*AR1031152*/
 /* Start Meridian - SWIFT (CAS) interface. */
                 IF         COND(&CSW026 *EQ 'Y') THEN(DO)                                 /*207006*/
-                RTVDTAARA  DTAARA(MESTAT (61 10)) RTNVAR(&MDL2CASLIB)
-                CHGCURLIB  CURLIB(&MDL2CASLIB)
-                WRKMLCASIF   OPERATION(*STARTUP)
+/*              RTVDTAARA  DTAARA(MESTAT (61 10)) RTNVAR(&MDL2CASLIB)                   /*MD048403*/
+/*              CHGCURLIB  CURLIB(&MDL2CASLIB)                                          /*MD048403*/
+/*              WRKMLCASIF   OPERATION(*STARTUP)                                        /*MD048403*/
                 ENDDO                                                                     /*207006*/
 /* Reset the current library. */
                 IF         COND(&CURLIB *EQ '*NONE     ') THEN(DO)

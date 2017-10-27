@@ -15,14 +15,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045   *CREATE   Date 20Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *           Change compilation directive from RPGBASEBND to     *
       *           RPGBASEMOD and create associated program.           *

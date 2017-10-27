@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. MD027863           Date 09Feb15               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD027863           Date 09Feb15               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR970738           Date 04Dec12               *
@@ -109,6 +110,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  MD027863 - Drop records from extension files only            *
       *             dropping from DLxHIS.                             *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -1039,6 +1041,20 @@
       *                                                                                       CAS009
      C                     ENDIF                                                              CAS009
       *                                                                                       CAS009
+      ** Call AOSARDR0 to check if CDL099 is enabled                                          CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM           URTCD   7                                           CDL099
+     C                     PARM '*KEY   ' UOPTN   7                                           CDL099
+     C                     PARM 'CDL099'  USARC   6                                           CDL099
+     C           @SARD     PARM @SARD     DSFDY                                               CDL099
+      *                                                                                       CDL099
+     C           URTCD     IFNE *BLANKS                                                       CDL099
+     C                     MOVE 'N'       CDL099  1                                           CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'Y'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C/COPY WNCPYSRC,DL1070C011
      C** Call Access program for Midas Modules Details                    S01486
      C                     CALL 'AOMMODR0'                                S01486
@@ -1180,6 +1196,17 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1070CCP4                                           S01408
      C*                                                                   S01408
+      *                                                                                       CDL099
+      ** If CDL099 Exists in System, then Initialise Field MDATW.                             CDL099
+      ** NOTE: Work Field MDATW is updated in this part of the program                        CDL099
+      **       if all conditions are Satisfied.                                               CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C           *IN01     ANDEQ'1'                                                           CDL099
+     C           MDATW     ANDLTBSDT2                                                         CDL099
+     C                     Z-ADDBSDT2     MDATW                                               CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C**   FOR N.A.SOLD USE VALUE DATE                                    E11887
      C   04                Z-ADDVDAT      MDATW                           E11887
      C*                                                                   S01408

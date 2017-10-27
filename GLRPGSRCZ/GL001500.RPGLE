@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -145,88 +147,88 @@
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
      FSEBLKPL1  UF A E           K DISK    INFSR(*PSSR)
      FGL001500P1O    E             PRINTER INFDS(SPOOL1)  USROPN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
       ** Data Area Giving Installation Control Details
-
+ 
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
      D WRPG            C                   CONST('rpg')
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D ArrUPPER        S              1    CTDATA DIM(26) PERRCD(26)
      D ArrLOWER        S              1    CTDATA DIM(26) PERRCD(26)
-
+ 
      D WSystem         DS
      D   WChar1                1      1
      D   WChar2                2      2
-
+ 
      D WTMST           S             26A   DIM(9999)
      D WACTAMT         S             15A   DIM(9999)
-
+ 
      D SPOOL1          DS
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
-
+ 
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for currency details
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External DS for switchable details
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access Programs, Long Data Structure
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D TIMESTAMP       S               Z
-
+ 
       ** Calculator Parameters
-
+ 
      D PCAVTD          S             15  0
      D PCAVD1          S             15  0
      D PCAVD2          S             15  0
@@ -251,9 +253,9 @@
      D PPCTAL          S             10  7
      D PNUMAL          S              4S 0
      D PALAMT          S           9999
-
+ 
       ** Convert Variables
-
+ 
      D WINAMT          S             15  0
      D WRATE           S             13  8
      D WSPRT1          S             13  8
@@ -266,23 +268,23 @@
      D WNBDP1          S              1  0
      D WNBDP2          S              1  0
      D WOUTAMT         S             15  0
-
+ 
       ** Access Object Variables
-
+ 
      D PRTCD           S              7
      D POPTN           S              7
      D PSARD           S              6
      D CGL014          S              1
      D CAP205          S              1                                                       CAP205
-
+ 
       ** Key Fields
-
+ 
      D KCNUM           S              6
      D KFACT           S              3
      D KFCNO           S              2
-
+ 
       ** Work Variables
-
+ 
      D WRUN            S              1
      D WERROR          S              1
      D WLESCD          S              1
@@ -323,18 +325,18 @@
      D WFolder         S              5
      D WAllocErr       S              1
      D Idx             S              2  0
-
+ 
       ** +--------------------------------------+
       ** ¦ Prototypes                           ¦
       ** ¦ ==========                           ¦
       ** +--------------------------------------+
-
+ 
       ** Prototype for a Java String object
      D crtString       PR              O   EXTPROC(*JAVA:
      D                                             'java.lang.String':
      D                                             *CONSTRUCTOR)
      D   value                       10A   CONST VARYING
-
+ 
       ** Prototype for RPGWrapper object creation (instantiation)
      D crtCalcClass    PR              O   EXTPROC(*JAVA:
      D                                     'com.misys.midas.midasplus.+
@@ -344,7 +346,7 @@
      D                                     *CONSTRUCTOR)
      D   String7                       O   CLASS(*JAVA:'java.lang.String')
      D                                     CONST
-
+ 
       ** Prototype for CalcClass' calculateCavClvAllocation method
      D getValues       PR              O   EXTPROC(*JAVA:
      D                                     'com.misys.midas.midasplus.+
@@ -366,20 +368,20 @@
      D                                     CONST
      D   String6                       O   CLASS(*JAVA:'java.lang.String')
      D                                     CONST
-
+ 
       ** Prototype for java string's getBytes method
      D cvtToBytes      PR          9999A   EXTPROC(*JAVA:
      D                                             'java.lang.String':
      D                                             'getBytes')
      D                                     VARYING
-
+ 
       ** Create CalcClass object field
      D CalcClassObj    S               O   CLASS(*JAVA:
      D                                     'com.misys.midas.midasplus.+
      D**********                           calculationmanager.collend.+                       CLE041
      D**********                           wrapper.as400.RPGWrapper')                         CLE041
      D                                     wrapper.access.RPGWrapper')                        CLE041
-
+ 
       ** Create string objects
      D Parm1           S               O   CLASS(*JAVA:'java.lang.String')
      D Parm2           S               O   CLASS(*JAVA:'java.lang.String')
@@ -390,7 +392,7 @@
      D Parm6           S               O   CLASS(*JAVA:'java.lang.String')
      D Parm7           S               O   CLASS(*JAVA:'java.lang.String')
      D RcvParms        S               O   CLASS(*JAVA:'java.lang.String')
-
+ 
      D WRcvStr         S           9999A   VARYING
      D WRcvFld0        S              1
      D WRcvFld1        S             15
@@ -417,86 +419,86 @@
      D WRcvFld22       S             10
      D WRcvFld23       S              4
      D WRcvFld24       S           9670
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
-
+ 
       ** Update Collateral Details file
-
+ 
      C                   EXSR      SRCOLLDET
-
+ 
       ** Update Collateral Allocation file
-
+ 
      C                   EXSR      SRCOLLALL
-
+ 
       ** Update Client Limits file
-
+ 
      C                   EXSR      SRCLLIMIT
-
+ 
       ** Update Futures & Options Clients file
-
+ 
      C                   EXSR      SRFOCLDET
-
+ 
       ** Update Facilities file
-
+ 
      C                   EXSR      SRFACILTY
-
+ 
       ** Update Customer Loans file
-
+ 
      C                   EXSR      SRCUSLOAN
-
+ 
       ** Update Account Details file
-
+ 
      C                   EXSR      SRACCOUN1
-
+ 
       ** Update MM Loan/Deposit/CD Issued file
-
+ 
      C                   EXSR      SRDEALING
-
+ 
       ** Update SE Manually Blocked Positions file
-
+ 
      C                   EXSR      SRSEMBLKP
-
+ 
       ** Update Account Details file
-
+ 
      C                   EXSR      SRACCOUN2
-
+ 
       ** Check that sufficient lines remain for the format
-
+ 
      C                   EVAL      RQDLN1 = 1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
-
+ 
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
-
+ 
       ** Write 'No Details' if no error was reported
-
+ 
      C                   IF        WERROR = 'N'
      C                   WRITE     NODTLS
      C                   ENDIF
-
+ 
       ** Write out trailer format
-
+ 
      C                   WRITE     TRAILP1
-
+ 
      C                   CLOSE     GL001500P1
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -504,24 +506,24 @@
       * SRCOLLDET - Update Collateral Details File                    *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRCOLLDET     BEGSR
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C**********         IF        CDRECI = 'D'                                              BUG6436
      C                   IF        CDRECI = 'D' and CDSTAT = 'C'                             BUG6436
-
+ 
       ** Compute for collateral's current asset valuation, lending value
       ** and total allocation
-
+ 
      C                   EXSR      SRGETCOLD
-
+ 
       ** Update GLCOLLPD file
-
+ 
      C                   EVAL      CDVAMT = PCAVD1
      C                   EVAL      CDLAMT = PCLVD1
      C                   EVAL      CDTOTA = PTOTAL
@@ -546,28 +548,28 @@
      C                   EVAL      CDCLV8 = PCLVD7
      C                   EVAL      CDCLV9 = PCLVD8
      C                   EVAL      CDCL10 = PCLVD9
-
+ 
       ** Generate a timestamp
-
+ 
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TIMESTAMP
-
+ 
      C                   EVAL      CDTSTP = TIMESTAMP
-
+ 
      C                   IF        CDCOPT = 'P'
      C                   EVAL      CDREVP = CDPRTP
      C                   ENDIF
-
+ 
      C                   UPDATE    GLCOLLD0
-
+ 
       ** Move timestamp and actual amounts to array
-
+ 
      C                   IF        WLIMIT <> 0
-
+ 
      C                   EVAL      A = 1
      C                   EVAL      B = 1
      C                   EVAL      C = 27
-
+ 
      C                   DOW       A <= PNUMAL
      C                   EVAL      WTMST(A) = (%SUBST(PALAMT:B:26))
      C                   EVAL      WACTAMT(A) = (%SUBST(PALAMT:C:15))
@@ -575,35 +577,35 @@
      C                   EVAL      B = B + 41
      C                   EVAL      C = C + 41
      C                   ENDDO
-
+ 
       ** Update GLCOLAPD file
-
+ 
      C                   EVAL      A = 1
-
+ 
      C                   DOW       A <= PNUMAL
-
+ 
      C     WTMST(A)      CHAIN     GLCOLAL8                           15
-
+ 
      C                   IF        *IN15 = *OFF
      C                   MOVE      WACTAMT(A)    CAACMT
      C                   UPDATE    GLCOLAN0
      C                   ENDIF
-
+ 
      C                   EVAL      A = A + 1
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Read next record
-
+ 
      C                   READ      GLCOLLL1
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -611,31 +613,31 @@
       * SRCOLLALL - Update Collateral Allocation File                 *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRCOLLALL     BEGSR
-
+ 
       ** Access all records in GLCOLAPD file
-
+ 
      C     *LOVAL        SETLL     GLCOLAL2
      C                   READ      GLCOLAL2
-
+ 
      C                   DOW       NOT %EOF(GLCOLAL2)
-
+ 
      C     CACREF        CHAIN     GLCOLLL1                           15
-
+ 
       ** If not found in PF/GLCOLLPD, delete record
-
+ 
      C                   IF        *IN15 = *ON or CDGNSP <> 'G'
      C                   DELETE    GLCOLAD0
      C                   ENDIF
-
+ 
       ** Read next record
-
+ 
      C                   READ      GLCOLAL2
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -643,34 +645,34 @@
       * SRCLLIMIT - Update Client Limits File                         *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRCLLIMIT     BEGSR
-
+ 
       ** Access all records in SDCLLMPD file
-
+ 
      C     *LOVAL        SETLL     SDCLLML1
      C                   READ      SDCLLML1
-
+ 
      C                   DOW       NOT %EOF(SDCLLML1)
-
+ 
      C                   EVAL      WLESCD = *BLANKS
      C                   EVAL      WFXSCD = *BLANKS
-
+ 
       ** If LE limit amount > 0
-
+ 
      C                   IF        DZMMAM > 0
-
+ 
       ** If on system level
-
+ 
      C                   IF        DZLEVL = 'S' and DZBCCD = 'SYS'
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   MOVE      CDCNUM        WCDCNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDSTAT = 'C' and
      C                             CDENTY = 'K' and WCDCNUM = DZCUST and
      C                             CDMODS = 'MM' AND CDGNSP = 'S'
@@ -679,18 +681,18 @@
      C                   ELSE
      C                   READ      GLCOLLL1
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   IF        WLESCD = *BLANKS
-
+ 
      C     *LOVAL        SETLL     GLCOLLJ0
      C                   READ      GLCOLLJ0
-
+ 
      C                   DOW       NOT %EOF(GLCOLLJ0)
-
+ 
      C                   MOVE      CACNUM        WCACNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'G' and
      C                             CABRCA = *BLANKS and WCACNUM = DZCUST and
      C                             CAMODS = 'MM' and CDSTAT = 'C'
@@ -699,24 +701,24 @@
      C                   ELSE
      C                   READ      GLCOLLJ0
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** If on branch level
-
+ 
      C                   IF        DZLEVL = 'B'
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   MOVE      CDCNUM        WCDCNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'S' and
      C                             CDENTY = 'B' and WCDCNUM = DZCUST and
      C                             CDMODS = 'MM' AND CDSTAT = 'C' and
@@ -726,18 +728,18 @@
      C                   ELSE
      C                   READ      GLCOLLL1
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   IF        WLESCD = *BLANKS
-
+ 
      C     *LOVAL        SETLL     GLCOLLJ0
      C                   READ      GLCOLLJ0
-
+ 
      C                   DOW       NOT %EOF(GLCOLLJ0)
-
+ 
      C                   MOVE      CACNUM        WCACNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'G' and
      C                             CABRCA = DZBCCD and WCACNUM = DZCUST and
      C                             CAMODS = 'MM' and CDSTAT = 'C'
@@ -746,24 +748,24 @@
      C                   ELSE
      C                   READ      GLCOLLJ0
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** If on company level
-
+ 
      C                   IF        DZLEVL = 'C'
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   MOVE      CDCNUM        WCDCNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'S' and
      C                             CDENTY = 'C' and CDCMPY = DZBCCD and
      C                             WCDCNUM = DZCUST and CDMODS = 'MM' and
@@ -773,28 +775,28 @@
      C                   ELSE
      C                   READ      GLCOLLL1
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** If FX limit amount > 0
-
+ 
      C                   IF        DZFLAM > 0
-
+ 
       ** If on system level
-
+ 
      C                   IF        DZLEVL = 'S' and DZBCCD = 'SYS'
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   MOVE      CDCNUM        WCDCNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'S' and
      C                             CDENTY = 'K' and WCDCNUM = DZCUST and
      C                             CDMODS = 'FX' AND CDSTAT = 'C'
@@ -803,18 +805,18 @@
      C                   ELSE
      C                   READ      GLCOLLL1
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   IF        WFXSCD = *BLANKS
-
+ 
      C     *LOVAL        SETLL     GLCOLLJ0
      C                   READ      GLCOLLJ0
-
+ 
      C                   DOW       NOT %EOF(GLCOLLJ0)
-
+ 
      C                   MOVE      CACNUM        WCACNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'G' and
      C                             CABRCA = *BLANKS and WCACNUM = DZCUST and
      C                             CAMODS = 'FX' and CDSTAT = 'C'
@@ -823,24 +825,24 @@
      C                   ELSE
      C                   READ      GLCOLLJ0
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** If on branch level
-
+ 
      C                   IF        DZLEVL = 'B'
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   MOVE      CDCNUM        WCDCNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'S' and
      C                             CDENTY = 'B' and WCDCNUM = DZCUST and
      C                             CDMODS = 'FX' AND CDSTAT = 'C' and
@@ -850,18 +852,18 @@
      C                   ELSE
      C                   READ      GLCOLLL1
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   IF        WFXSCD = *BLANKS
-
+ 
      C     *LOVAL        SETLL     GLCOLLJ0
      C                   READ      GLCOLLJ0
-
+ 
      C                   DOW       NOT %EOF(GLCOLLJ0)
-
+ 
      C                   MOVE      CACNUM        WCACNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'G' and
      C                             CABRCA = DZBCCD and WCACNUM = DZCUST and
      C                             CAMODS = 'FX' and CDSTAT = 'C'
@@ -870,24 +872,24 @@
      C                   ELSE
      C                   READ      GLCOLLJ0
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** If on company level
-
+ 
      C                   IF        DZLEVL = 'C'
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   MOVE      CDCNUM        WCDCNUM
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'S' and
      C                             CDENTY = 'C' and CDCMPY = DZBCCD and
      C                             WCDCNUM = DZCUST and CDMODS = 'FX' and
@@ -897,26 +899,26 @@
      C                   ELSE
      C                   READ      GLCOLLL1
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Update file
-
+ 
      C                   EVAL      DZSECD = WLESCD
      C                   EVAL      DZFLSC = WFXSCD
      C                   UPDATE    @DZREHT
-
+ 
       ** Read next record
-
+ 
      C                   READ      SDCLLML1
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -924,32 +926,32 @@
       * SRFOCLDET - Update Futures & Options Clients File             *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRFOCLDET     BEGSR
-
+ 
       ** Access all records in FOCLTD file
-
+ 
      C     *LOVAL        SETLL     FOCLT
      C                   READ      FOCLT
-
+ 
      C                   DOW       NOT %EOF(FOCLT)
-
+ 
      C                   EVAL      WCOLAMT = 0
-
+ 
      C     *LOVAL        SETLL     GLCOLLJ0
      C                   READ      GLCOLLJ0
-
+ 
      C                   IF        %EOF(GLCOLLJ0)
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   IF        CDRECI ='D' and CDGNSP = 'S' and
      C                             CDCNUM = CBCD and CDMODS = 'FO' and
      C                             CDSTAT = 'C'
-
+ 
      C                   IF        CDCCY <> CLCC
      C                   EVAL      WCCY1 = CDCCY
      C                   EVAL      WCCY2 = CLCC
@@ -959,22 +961,22 @@
      C                   ELSE
      C                   EVAL      WCOLAMT = WCOLAMT + CDLAMT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLL1
      C                   ENDDO
-
+ 
      C                   ELSE
-
+ 
      C                   DOW       NOT %EOF(GLCOLLJ0)
-
+ 
       ** Convert amount
-
+ 
      C                   IF        CDRECI ='D' and CDGNSP = 'S' and
      C                             CDCNUM = CBCD and CDMODS = 'FO' and
      C                             CDSTAT = 'C'
-
+ 
      C                   IF        CDCCY <> CLCC
      C                   EVAL      WCCY1 = CDCCY
      C                   EVAL      WCCY2 = CLCC
@@ -984,13 +986,13 @@
      C                   ELSE
      C                   EVAL      WCOLAMT = WCOLAMT + CDLAMT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'G' and
      C                             CACNUM = CBCD and CAMODS = 'FO' and
      C                             CDSTAT = 'C'
-
+ 
      C                   IF        CDCCY <> CLCC
      C                   EVAL      WCCY1 = CDCCY
      C                   EVAL      WCCY2 = CLCC
@@ -1000,38 +1002,38 @@
      C                   ELSE
      C                   EVAL      WCOLAMT = WCOLAMT + CAACMT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLJ0
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        WCOLAMT < 0
      C                   EVAL      WCOLAMT = 0
      C                   ENDIF
-
+ 
       ** Update file
-
+ 
      C                   EVAL      CLAM = WCOLAMT
      C                   UPDATE    FOCLTDF
-
+ 
      C                   MOVE      CBCD          BHCUST
      C     BHCUST        CHAIN     SDFOCSL0                           15
-
+ 
      C                   IF        *IN15 = *OFF
      C                   EVAL      BHCOAM = WCOLAMT
      C                   UPDATE    @BHRED0
      C                   ENDIF
-
+ 
       ** Read next record
-
+ 
      C                   READ      FOCLT
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1039,32 +1041,32 @@
       * SRFACILTY - Update Facilities File                            *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRFACILTY     BEGSR
-
+ 
       ** Access all records in FCLTYFM file
-
+ 
      C     *LOVAL        SETLL     FCLTYL1
      C                   READ      FCLTYL1
-
+ 
      C                   DOW       NOT %EOF(FCLTYL1)
-
+ 
      C     KFCLT         KLIST
      C                   KFLD                    BRCA
      C                   KFLD                    KCNUM
      C                   KFLD                    KFACT
      C                   KFLD                    KFCNO
-
+ 
      C                   MOVE      CNUM          KCNUM
      C                   MOVE      FACT          KFACT
      C                   MOVE      FCNO          KFCNO
-
+ 
      C     KFCLT         CHAIN     LEFCLTLG                           15
-
+ 
       ** Initialise fields
-
+ 
      C                   IF        *IN15 = *OFF
-
+ 
      C                   EVAL      WSECURED = 'N'
      C                   EVAL      WLENDD1 = 0
      C                   EVAL      WLENDD2 = 0
@@ -1076,14 +1078,14 @@
      C                   EVAL      WLENDD8 = 0
      C                   EVAL      WLENDD9 = 0
      C                   EVAL      WLENDD10 = 0
-
+ 
      C     TRCA          IFNE      'CA'                                                       252005
                                                                                               252005
      C     *LOVAL        SETLL     GLCOLLJ0
      C                   READ      GLCOLLJ0
-
+ 
      C**********         IF        %EOF(GLCOLLJ0)                                             252005
-
+ 
      C                   DOW       NOT %EOF(GLCOLLJ0)                                         252005
                                                                                               252005
      C                   IF        CDRECI = 'D' and CDGNSP = 'G' and                          252005
@@ -1130,20 +1132,20 @@
                                                                                               252005
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'S' and
      C                             CDMODS = 'LE' and CDFCUS = CNUM and
      C                             CDFTYP = FACT and CDFSEQ = FCNO and
      C                             CDSTAT = 'C'
-
+ 
      C                   EVAL      WSECURED = 'Y'
-
+ 
       ** Convert amount
-
+ 
      C                   IF        CDCCY = FCCY
-
+ 
      C                   EVAL      WLENDD1 = WLENDD1 + CDCLV1
      C                   EVAL      WLENDD2 = WLENDD2 + CDCLV2
      C                   EVAL      WLENDD3 = WLENDD3 + CDCLV3
@@ -1154,61 +1156,61 @@
      C                   EVAL      WLENDD8 = WLENDD8 + CDCLV8
      C                   EVAL      WLENDD9 = WLENDD9 + CDCLV9
      C                   EVAL      WLENDD10 = WLENDD10 + CDCL10
-
+ 
      C                   ELSE
-
+ 
       ** Convert amount
-
+ 
      C                   EVAL      WCCY1 = CDCCY
      C                   EVAL      WCCY2 = FCCY
      C                   EVAL      WINAMT = CDCLV1
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD1 = WLENDD1 + WOUTAMT
-
+ 
      C                   EVAL      WINAMT = CDCLV2
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD2 = WLENDD2 + WOUTAMT
-
+ 
      C                   EVAL      WINAMT = CDCLV3
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD3 = WLENDD3 + WOUTAMT
-
+ 
      C                   EVAL      WINAMT = CDCLV4
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD4 = WLENDD4 + WOUTAMT
-
+ 
      C                   EVAL      WINAMT = CDCLV5
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD5 = WLENDD5 + WOUTAMT
-
+ 
      C                   EVAL      WINAMT = CDCLV6
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD6 = WLENDD6 + WOUTAMT
-
+ 
      C                   EVAL      WINAMT = CDCLV7
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD7 = WLENDD7 + WOUTAMT
-
+ 
      C                   EVAL      WINAMT = CDCLV8
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD8 = WLENDD8 + WOUTAMT
-
+ 
      C                   EVAL      WINAMT = CDCLV9
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD9 = WLENDD9 + WOUTAMT
-
+ 
      C                   EVAL      WINAMT = CDCL10
      C                   EXSR      SRCONVERT
      C                   EVAL      WLENDD10 = WLENDD10 + WOUTAMT
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLL1
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDIF                                                                252005
      C**********         ELSE                                                                 252005
       **********                                                                              252005
@@ -1331,54 +1333,54 @@
      C**********         ENDDO                                                                252005
       **********                                                                              252005
      C**********         ENDIF                                                                252005
-
+ 
       ** Set lending values to 0 if negative
-
+ 
      C                   IF        WLENDD1 < 0
      C                   EVAL      WLENDD1 = 0
      C                   ENDIF
-
+ 
      C                   IF        WLENDD2 < 0
      C                   EVAL      WLENDD2 = 0
      C                   ENDIF
-
+ 
      C                   IF        WLENDD3 < 0
      C                   EVAL      WLENDD3 = 0
      C                   ENDIF
-
+ 
      C                   IF        WLENDD4 < 0
      C                   EVAL      WLENDD4 = 0
      C                   ENDIF
-
+ 
      C                   IF        WLENDD5 < 0
      C                   EVAL      WLENDD5 = 0
      C                   ENDIF
-
+ 
      C                   IF        WLENDD6 < 0
      C                   EVAL      WLENDD6 = 0
      C                   ENDIF
-
+ 
      C                   IF        WLENDD7 < 0
      C                   EVAL      WLENDD7 = 0
      C                   ENDIF
-
+ 
      C                   IF        WLENDD8 < 0
      C                   EVAL      WLENDD8 = 0
      C                   ENDIF
-
+ 
      C                   IF        WLENDD9 < 0
      C                   EVAL      WLENDD9 = 0
      C                   ENDIF
-
+ 
      C                   IF        WLENDD10 < 0
      C                   EVAL      WLENDD10 = 0
      C                   ENDIF
-
+ 
       ** Update file
-
+ 
      C                   EVAL      SECI = WSECURED
      C                   UPDATE    FCLTYFMF
-
+ 
      C                   EVAL      FCXCV1 = WLENDD1
      C                   EVAL      FCXCV2 = WLENDD2
      C                   EVAL      FCXCV3 = WLENDD3
@@ -1390,11 +1392,11 @@
      C                   EVAL      FCXCV9 = WLENDD9
      C                   EVAL      FCXC10 = WLENDD10
      C                   UPDATE    LEFCLTD0
-
+ 
      C                   ENDIF
-
+ 
       ** Read next record
-
+ 
      C                   READ      FCLTYL1
      C                   ENDDO
       *                                                                                       252005
@@ -1564,9 +1566,9 @@
                                                                                               252005
      C                   READ      FCLTYL1                                                    252005
      C                   ENDDO                                                                252005
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1574,69 +1576,69 @@
       * SRCUSLOAN - Update Customer Loans File                        *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRCUSLOAN     BEGSR
-
+ 
       ** Access all records in CLOANCL file
-
+ 
      C     *LOVAL        SETLL     CLOANL4
      C                   READ      CLOANL4
-
+ 
      C                   DOW       NOT %EOF(CLOANL4)
-
+ 
      C                   EVAL      WSECURED = 'N'
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'S' and
      C                             CDMODS = 'LE' and CDLNLM = LNRF and
      C                             CDSTAT = 'C'
      C                   EVAL      WSECURED = 'Y'
      C                   LEAVE
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLL1
      C                   ENDDO
-
+ 
      C                   IF        WSECURED = 'N'
-
+ 
      C     *LOVAL        SETLL     GLCOLLJ0
      C                   READ      GLCOLLJ0
-
+ 
      C                   DOW       NOT %EOF(GLCOLLJ0)
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'G' and
      C                             CAMODS = 'LE' and CALNLM = LNRF and
      C                             CDSTAT = 'C'
      C                   EVAL      WSECURED = 'Y'
      C                   LEAVE
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLJ0
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
       ** Update file
-
+ 
      C                   IF        WSECURED = 'Y'
      C                   BITON     '0'           RELI
      C                   ELSE
      C                   BITOFF    '0'           RELI
      C                   ENDIF
-
+ 
      C                   UPDATE    CLOANCLF
-
+ 
       ** Read next record
-
+ 
      C                   READ      CLOANL4
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1644,25 +1646,25 @@
       * SRACCOUN1 - Update Account Details File                       *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRACCOUN1     BEGSR
-
+ 
       ** Access all records in ACCNTAB file
-
+ 
      C     *LOVAL        SETLL     ACCNTL0
      C                   READ      ACCNTL0
-
+ 
      C                   DOW       NOT %EOF(ACCNTL0)
-
+ 
      C                   IF        ATYP = 'R'
-
+ 
      C                   EVAL      WSECURED = 'N'
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'S' and
      C                             CDMODS = 'RE' and CDSBRC = BRCA and
      C                             CDSCNM = CNUM  and CDSCCY = CCY and
@@ -1671,17 +1673,17 @@
      C                   EVAL      WSECURED = 'Y'
      C                   LEAVE
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLL1
      C                   ENDDO
-
+ 
      C                   IF        WSECURED = 'N'
-
+ 
      C     *LOVAL        SETLL     GLCOLLJ0
      C                   READ      GLCOLLJ0
-
+ 
      C                   DOW       NOT %EOF(GLCOLLJ0)
-
+ 
      C                   IF        CDRECI = 'D' and CDGNSP = 'G' and
      C                             CASBRC = BRCA and CASCNM = CNUM and
      C                             CASCCY = CCY and CASACD = ACOD and
@@ -1690,26 +1692,26 @@
      C                   EVAL      WSECURED = 'Y'
      C                   LEAVE
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLJ0
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
       ** Update file
-
+ 
      C                   EVAL      ODSC = WSECURED
      C                   UPDATE    ACCNTABF
-
+ 
      C                   ENDIF
-
+ 
       ** Read next record
-
+ 
      C                   READ      ACCNTL0
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1717,27 +1719,27 @@
       * SRDEALING - Update MM Loan/Deposit/CD Issued File             *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRDEALING     BEGSR
-
+ 
       ** Access all records in DEALSDC file
-
+ 
      C     *LOVAL        SETLL     DEALALL
      C                   READ      DEALALL
-
+ 
      C                   DOW       NOT %EOF(DEALALL)
-
+ 
      C                   EVAL      WCOLAMT = 0
      C                   EVAL      WCBLKAM = 0
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   IF        CDRECI = 'D' and CDCOPT = 'D' and
      C                             CDDEAL = DLNO and CDSTAT = 'C'
-
+ 
      C**********         IF        CDAPCT = 'A'                                             BUG17986
      C**********         EVAL      WCOLVAL = CDNAMT                                         BUG17986
      C**********         ELSE                                                               BUG17986
@@ -1745,9 +1747,9 @@
      C                   IF        CDMNNA <> 0                                              BUG17986
      C                   EVAL      WCOLVAL = CDMNNA
      C                   ENDIF
-
+ 
       ** Convert amount
-
+ 
      C                   IF        CDCCY = CCY
      C                   EVAL      WCOLAMT = WCOLAMT + WCOLVAL
      C                   ELSE
@@ -1757,9 +1759,9 @@
      C                   EXSR      SRCONVERT
      C                   EVAL      WCOLAMT = WCOLAMT + WOUTAMT
      C                   ENDIF
-
+ 
      C                   IF        CDBCOL = 'Y'
-
+ 
      C                   IF        CDCCY = CCY
      C                   EVAL      WCBLKAM = WCBLKAM + WCOLVAL
      C                   ELSE
@@ -1769,48 +1771,48 @@
      C                   EXSR      SRCONVERT
      C                   EVAL      WCBLKAM = WCBLKAM + WOUTAMT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLL1
      C                   ENDDO
-
+ 
      C                   IF        WCBLKAM < 0
      C                   EVAL      WCBLKAM = 0
      C                   ENDIF
-
+ 
      C                   IF        WCOLAMT <= 0
      C                   EVAL      WCOLAMT = 0
      C***********        EVAL      WCOLFLG = 'N'                                              249974
      C***********        ELSE                                                                 249974
      C***********        EVAL      WCOLFLG = 'Y'                                              249974
      C                   ENDIF
-
+ 
       ** Update file
-
+ 
      C                   EVAL      COLA = WCOLAMT
      C***********        EVAL      COLF = WCOLFLG                                             249974
      C                   EVAL      BCAM = WCBLKAM
      C                   UPDATE    DEALSDCF
-
+ 
      C     DLNO          CHAIN     MMDELDP0                           15
-
+ 
      C                   IF        *IN15 = *OFF
      C                   EVAL      HKCOLA = WCOLAMT
      C***********        EVAL      HKCOLF = WCOLFLG                                           249974
      C                   EVAL      HKBCAM = WCBLKAM
      C                   UPDATE    MMDELDP0
      C                   ENDIF
-
+ 
       ** Read next record
-
+ 
      C                   READ      DEALALL
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1818,60 +1820,60 @@
       * SRSEMBLKP - Update SE Manually Blocked Positions File         *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRSEMBLKP     BEGSR
-
+ 
       ** Access all records in GLCOLLPD file
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   IF        CDRECI = 'D' and CDCOPT = 'P' and
      C                             CDSTAT = 'C' and CDCSEC <> *BLANKS
-
+ 
      C     CDCSEC        CHAIN     SECTY                              15
-
+ 
      C                   IF        *IN15 = *OFF
-
+ 
      C     *LOVAL        SETLL     SEBLKPL1
      C                   READ      SEBLKPL1
-
+ 
       ** Determine Warning/Error indicator
-
+ 
      C                   IF        CGL014 = 'N'
      C                   EVAL      WERRIN = 'W'
      C                   ELSE
-
+ 
      C                   IF        CDBCOL = 'Y'
      C                   EVAL      WERRIN = 'E'
      C                   ELSE
      C                   EVAL      WERRIN = 'W'
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Determine sequence
-
+ 
      C                   IF        WERRIN = 'W'
      C                   EVAL      WSEQN = 99900
      C                   ELSE
      C                   EVAL      WSEQN = 99901
      C                   ENDIF
-
+ 
      C                   EVAL      WFOUND = 'N'
-
+ 
       ** Check if record exists in SEBLKPPD
-
+ 
      C                   DOW       NOT %EOF(SEBLKPL1)
-
+ 
      C                   IF        VDBLTY = 'P' and VDBRCD = CDCSBR and
      C                             VDCNUM = CDCSCN and VDPTFR = CDPTFR and
      C                             VDSESN = CDCSEC and ((WSEQN = 99900 and
      C                             WERRIN = 'W') or (WSEQN = 99901 and
      C                             WERRIN = 'E'))
-
+ 
      C                   IF        (CDEDAT = VDBEDT and (MATY = 0 or
      C                             (CDEDAT <> 0 and CDEDAT < MATY))) or
      C                             (MATY = VDBEDT and (CDEDAT = 0 or
@@ -1879,16 +1881,16 @@
      C                   EVAL      WFOUND = 'Y'
      C                   LEAVE
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      SEBLKPL1
      C                   ENDDO
-
+ 
       ** If record not found in SEBLKPPD, write new record
-
+ 
      C                   IF        WFOUND = 'N'
-
+ 
      C                   EVAL      VDRECI = 'D'
      C                   EVAL      VDLCD = 99999
      C                   EVAL      VDCHTP = 'I'
@@ -1898,150 +1900,150 @@
      C                   EVAL      VDPTFR = CDPTFR
      C                   EVAL      VDBLTY = 'P'
      C                   EVAL      VDSESN = CDCSEC
-
+ 
      C                   IF        MATY <> 0 and MATY < CDEDAT or
      C                             CDEDAT = 0
      C                   EVAL      VDBEDT = MATY
      C                   ELSE
-
+ 
      C                   IF        CDEDAT <> 0 and CDEDAT < MATY or
      C                             MATY = 0
      C                   EVAL      VDBEDT = CDEDAT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      VDSEQN = WSEQN
      C                   EVAL      VDNOMB = 0
-
+ 
      C                   IF        CDDESC <> *BLANKS
      C                   EVAL      VDBNAR = CDDESC
      C                   ELSE
      C                   EVAL      VDBNAR = 'COLLATERAL'
      C                   ENDIF
-
+ 
      C                   EVAL      VDBSTT = CDVDAT
      C                   EVAL      VDEWIN = WERRIN
      C                   EVAL      VDCOLF = 'Y'
      C                   EVAL      VDCOLA = 0
-
+ 
      C                   WRITE     SEBLKPD0
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLL1
      C                   ENDDO
-
+ 
       ** Access all records in SEBLKPPD file
-
+ 
      C     *LOVAL        SETLL     SEBLKPL1
      C                   READ      SEBLKPL1
-
+ 
      C                   DOW       NOT %EOF(SEBLKPL1)
-
+ 
      C                   IF        VDBLTY = 'P' and VDSEQN = 99900 or
      C                             VDBLTY = 'P' and VDSEQN = 99901
-
+ 
      C                   EVAL      WCOLNOM = 0
      C                   EVAL      WBLKNOM = 0
      C                   EVAL      WBLKDAT = VDBSTT
-
+ 
      C     VDSESN        CHAIN     SECTY                              15
-
+ 
      C                   IF        *IN15 = *OFF
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   IF        CDRECI = 'D' and CDCOPT = 'P' and
      C                             CDCSBR = VDBRCD and CDCSCN = VDCNUM and
      C                             CDPTFR = VDPTFR and CDCSEC = VDSESN and
      C                             CDSTAT = 'C' and CDCSEC <> *BLANKS
-
+ 
      C                   IF        CDBCOL = 'N' and VDSEQN = 99900 or
      C                             CDBCOL = 'Y' and VDSEQN = 99901
-
+ 
      C                   IF        (CDEDAT = VDBEDT and (MATY = 0 or
      C                             (CDEDAT <> 0 and CDEDAT < MATY))) or
      C                             (MATY = VDBEDT and (CDEDAT = 0 or
      C                             (MATY <> 0 and MATY < CDEDAT)))
-
+ 
      C                   IF        CDAPCT = 'A'
      C                   EVAL      WCOLVAL = CDNAMT
      C                   ELSE
      C                   EVAL      WCOLVAL = CDMNNA
      C                   ENDIF
-
+ 
      C                   EVAL      WCOLNOM = WCOLNOM + WCOLVAL
      C                   EVAL      WBLKNOM = WBLKNOM + WCOLVAL
-
+ 
      C                   IF        CDVDAT < WBLKDAT or WBLKDAT = 0
      C                   EVAL      WBLKDAT = CDVDAT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLL1
      C                   ENDDO
-
+ 
      C                   IF        WBLKNOM < 0
      C                   EVAL      WBLKNOM = 0
      C                   ENDIF
-
+ 
      C                   IF        WCOLNOM <= 0
      C                   EVAL      WCOLNOM = 0
      C***********        EVAL      WCOLFLG = 'N'                                              249974
      C***********        ELSE                                                                 249974
      C***********        EVAL      WCOLFLG = 'Y'                                              249974
      C                   ENDIF
-
+ 
       ** Update file
-
+ 
      C                   EVAL      VDCOLA = WCOLNOM
      C***********        EVAL      VDCOLF = WCOLFLG                                           249974
      C                   EVAL      VDBSTT = WBLKDAT
-
+ 
      C                   IF        VDLCD = 99999
      C                   EVAL      VDLCD = BJRDNB
      C                   EVAL      VDNOMB = WBLKNOM
      C                   ENDIF
-
+ 
      C                   IF        VDNOMB < WCOLNOM
      C                   EVAL      VDNOMB = WCOLNOM
      C                   ENDIF
-
+ 
      C                   IF        VDSEQN = 99900
      C                   EVAL      VDEWIN = 'W'
      C                   ELSE
-
+ 
      C                   IF        VDSEQN = 99901
      C                   EVAL      VDEWIN = 'E'
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   UPDATE    SEBLKPD0
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Read next record
-
+ 
      C                   READ      SEBLKPL1
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2049,33 +2051,33 @@
       * SRACCOUN2 - Update Account Details File                       *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRACCOUN2     BEGSR
-
+ 
      C                   IF        CGL014 = 'Y'
-
+ 
       ** Access all records in ACCNTAB file
-
+ 
      C     *LOVAL        SETLL     ACCNTL0
      C                   READ      ACCNTL0
-
+ 
      C                   DOW       NOT %EOF(ACCNTL0)
-
+ 
      C                   IF        ATYP = 'R'
-
+ 
      C                   EVAL      WBLKAMT = 0
      C                   EVAL      WCOLAMT = 0
-
+ 
      C     *LOVAL        SETLL     GLCOLLL1
      C                   READ      GLCOLLL1
-
+ 
      C                   DOW       NOT %EOF(GLCOLLL1)
-
+ 
      C                   IF        CDRECI = 'D' and CDCOPT = 'A' and
      C                             CDCBRC = BRCA and CDCCNM = CNUM and
      C                             CDCCCY = CCY and CDCACD = ACOD and
      C                             CDCSEQ = ACSQ and CDSTAT = 'C'
-
+ 
      C**********         IF        CDAPCT = 'A'                                             BUG17986
      C**********         EVAL      WCOLVAL = CDNAMT                                         BUG17986
      C**********         ELSE                                                               BUG17986
@@ -2083,7 +2085,7 @@
      C                   IF        CDMNNA <> 0                                              BUG17986
      C                   EVAL      WCOLVAL = CDMNNA
      C                   ENDIF
-
+ 
      C                   IF        CDCCY = CCY
      C                   EVAL      WCOLAMT = WCOLAMT + WCOLVAL
      C                   ELSE
@@ -2093,9 +2095,9 @@
      C                   EXSR      SRCONVERT
      C                   EVAL      WCOLAMT = WCOLAMT + WOUTAMT
      C                   ENDIF
-
+ 
      C                   IF        CDBCOL = 'Y'
-
+ 
      C                   IF        CDCCY = FCCY
      C                   EVAL      WBLKAMT = WBLKAMT + WCOLVAL
                                                                                               CAP205
@@ -2128,27 +2130,27 @@
      C                   UPDATE    GLCOLQD0                                                   CAP205
      C                   ENDIF                                                                CAP205
      C                   ENDIF                                                                CAP205
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      GLCOLLL1
      C                   ENDDO
-
+ 
      C                   IF        WBLKAMT < 0
      C                   EVAL      WBLKAMT = 0
      C                   ENDIF
-
+ 
      C                   IF        WCOLAMT <= 0
      C                   EVAL      WCOLAMT = 0
      C***********        EVAL      WCOLFLG = 'N'                                              249974
      C***********        ELSE                                                                 249974
      C***********        EVAL      WCOLFLG = 'Y'                                              249974
      C                   ENDIF
-
+ 
       ** Update file
-
+ 
      C                   EVAL      BCOA = WBLKAMT
      C***********        EVAL      COLF = WCOLFLG                                             249974
      C                   EVAL      COLA = WCOLAMT
@@ -2168,25 +2170,25 @@
      C                   EXSR      *PSSR                                                    BUG27959
      C                   ENDIF                                                              BUG27959
      C                   EVAL      WNBDP2 = A6NBDP                                          BUG27959
-
+ 
      C                   EVAL      WCOLAMT = WCOLAMT / 10**WNBDP2                           BUG27655
      C                   IF        MINB < WCOLAMT
      C                   EVAL      MINB = WCOLAMT
      C                   ENDIF
-
+ 
      C                   UPDATE    ACCNTABF
-
+ 
      C                   ENDIF
-
+ 
       ** Read next record
-
+ 
      C                   READ      ACCNTL0
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2194,57 +2196,57 @@
       * SRCONVERT - Convert Currency                                  *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRCONVERT     BEGSR
-
+ 
       ** From currency
-
+ 
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM                    WCCY1
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDCURRPD'
      C                   EVAL      DBASE = 3
      C                   EVAL      DBKEY = WCCY1
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Save necessary details
-
+ 
      C                   EVAL      WSPRT1 = A6SPRT
      C                   EVAL      WMDIN1 = A6MDIN
      C                   EVAL      WNBDP1 = A6NBDP
-
+ 
       ** To currency
-
+ 
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM                    WCCY2
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDCURRPD'
      C                   EVAL      DBASE = 4
      C                   EVAL      DBKEY = WCCY2
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Save necessary details
-
+ 
      C                   EVAL      WSPRT2 = A6SPRT
      C                   EVAL      WMDIN2 = A6MDIN
      C                   EVAL      WNBDP2 = A6NBDP
-
+ 
       ** Get exchange rate
-
+ 
      C                   CALLB     'ZXRATE'
      C                   PARM                    WSPRT1
      C                   PARM                    WMDIN1
@@ -2252,9 +2254,9 @@
      C                   PARM                    WMDIN2
      C                   PARM                    WRATE
      C                   PARM                    WMDIN
-
+ 
       ** Convert amount
-
+ 
      C                   CALLB     'ZCONVZ1'
      C                   PARM                    WINAMT
      C                   PARM                    WRATE
@@ -2264,9 +2266,9 @@
      C                   PARM                    WNBDP1
      C                   PARM                    WNBDP2
      C                   PARM                    WOUTAMT
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2274,21 +2276,21 @@
       *  SRGETCOLD - Get Collateral Details                           *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRGETCOLD     BEGSR
-
+ 
       ** Create/Instantiate "CalcClass" java object (one time only)
       ** so as to access its "calculateCavClvAllocation" method later
-
+ 
      C                   IF        WFIRST = 'Y'
      C                   EVAL      Parm7 = crtString(WFolder)
      C                   EVAL      CalcClassObj = crtCalcClass(Parm7)
      C                   EVAL      WFIRST = 'N'
      C                   ENDIF
-
+ 
       ** Create java string objects for all parameters to be passed to
       ** calculateCavClvAllocation
-
+ 
      C                   EVAL      Parm1 = crtString(CDCREF)
      C                   EVAL      Parm2 = crtString(CDCOPT)
      C                   EVAL      Parm3 = crtString(CDCSBR)
@@ -2296,9 +2298,9 @@
      C                   EVAL      Parm4 = crtString(CDCSCN)                                  CSD027
      C                   EVAL      Parm5 = crtString(CDPTFR)
      C                   EVAL      Parm6 = crtString(CDCSEC)
-
+ 
       ** Invoke the calculateCavClvAllocation method of the CalcClass object
-
+ 
      C                   EVAL      RcvParms = getValues(CalcClassObj:
      C                                                  Parm1:
      C                                                  Parm2:
@@ -2306,20 +2308,20 @@
      C                                                  Parm4:
      C                                                  Parm5:
      C                                                  Parm6)
-
+ 
       ** Convert the received java string to RPG bytes (Varying alpha field)
-
+ 
      C                   EVAL      WRcvStr = *BLANKS
      C                   EVAL      WRcvStr = cvtToBytes(RcvParms)
-
+ 
       ** Retrieve all fields from received string via substring function
-
+ 
      C                   EVAL      WRcvFld0 = %SUBST(WRcvStr:1:1)
-
+ 
       ** Report if error occurred in calculator processing
-
+ 
      C                   IF        WRcvFld0 = 'E'
-
+ 
      C                   MOVEL     *ZEROS        PCAVTD
      C                   MOVEL     *ZEROS        PCAVD1
      C                   MOVEL     *ZEROS        PCAVD2
@@ -2344,14 +2346,14 @@
      C                   MOVEL     *ZEROS        PPCTAL
      C                   MOVEL     *ZEROS        PNUMAL
      C                   MOVEL     *ZEROS        PALAMT
-
+ 
       ** Produce report
-
+ 
      C                   EVAL      WERROR = 'Y'
      C                   EXSR      SRREPORT
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      WRcvFld1 = %SUBST(WRcvStr:1:15)
      C                   EVAL      WRcvFld2 = %SUBST(WRcvStr:16:15)
      C                   EVAL      WRcvFld3 = %SUBST(WRcvStr:31:15)
@@ -2375,27 +2377,27 @@
      C                   EVAL      WRcvFld21 = %SUBST(WRcvStr:301:15)
      C                   EVAL      WRcvFld22 = %SUBST(WRcvStr:316:10)
      C                   EVAL      WRcvFld23 = %SUBST(WRcvStr:326:4)
-
+ 
      C                   EVAL      WAllocErr = %SUBST(WRcvStr:326:1)
-
+ 
      C                   IF        WAllocErr = 'E'
      C                   EVAL      WERROR = 'Y'
      C                   EXSR      SRREPORT
      C                   ENDIF
-
+ 
      C                   IF        WRcvFld23 <> *ZEROS and WAllocErr <> 'E'
      C                   MOVE      WRcvFld23     WLIMIT
      C                   ELSE
      C                   MOVE      *ZEROS        WLIMIT
      C                   ENDIF
-
+ 
      C                   IF        WLIMIT <> 0
      C                   EVAL      WEND = WLIMIT * 41
      C                   EVAL      WRcvFld24 = %SUBST(WRcvStr:330:WEND)
      C                   ELSE
      C                   EVAL      WRcvFld24 = *BLANKS
      C                   ENDIF
-
+ 
      C                   MOVEL     WRcvFld1      PCAVTD
      C                   MOVEL     WRcvFld2      PCAVD1
      C                   MOVEL     WRcvFld3      PCAVD2
@@ -2420,11 +2422,11 @@
      C                   MOVEL     WRcvFld22     PPCTAL
      C                   MOVEL     WRcvFld23     PNUMAL
      C                   MOVEL     WRcvFld24     PALAMT
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2432,25 +2434,25 @@
       * SRREPORT - Report Errors Encountered in Calculator            *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRREPORT      BEGSR
-
+ 
      C                   MOVEL     CDCREF        RCDCREF
      C                   EVAL      RCDDESC = 'ERROR OCCURRED IN CALCULATOR +
      C                                       PROCESSING'
-
+ 
       ** Check that sufficient lines remain for the format
-
+ 
      C                   EVAL      RQDLN1 = 2
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
-
+ 
      C                   WRITE     DETAIL
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2458,49 +2460,49 @@
       * *INZSR - Program Initialisation Routine                       *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     KBrchRef      KLIST                                                                CAP205
      C                   KFLD                    CDCBRC                                       CAP205
      C                   KFLD                    CDCREF                                       CAP205
                                                                                               CAP205
      C                   EVAL      DBPGM = 'GL001500'
-
+ 
       ** Access bank details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 1
      C                   EVAL      DBKEY = POPTN
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Check if CGL014 is switched on
-
+ 
      C                   EVAL      CGL014 = 'N'
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CGL014'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRTCD <> *BLANKS and PRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 2
      C                   EVAL      DBKEY = 'CGL014'
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CGL014 = 'Y'
      C                   ENDIF
@@ -2526,41 +2528,41 @@
      C                   IF        PRTCD = *BLANKS                                            CAP205
      C                   EVAL      CAP205 = 'Y'                                               CAP205
      C                   ENDIF                                                                CAP205
-
+ 
      C                   EVAL      WFIRST = 'Y'
      C                   EVAL      WERROR = 'N'
-
+ 
       ** Open report file
-
+ 
      C                   EVAL      RQDLN1 = 0
      C                   EVAL      DIFLN1 = 0
-
+ 
      C                   OPEN      GL001500P1
      C                   WRITE     HEADP1
-
+ 
       ** Get system prefix and convert it to lowercase
-
+ 
      C                   IN        SDSTAT
      C                   EVAL      WSystem = LIBR
-
+ 
      C                   EVAL      Idx = 1
      C     WChar1        LOOKUP    ArrUPPER(Idx)                          89
-
+ 
      C                   IF        *IN89 = *ON
      C                   EVAL      WChar1 = ArrLOWER(Idx)
      C                   ENDIF
-
+ 
      C                   EVAL      Idx = 1
      C     WChar2        LOOKUP    ArrUPPER(Idx)                          89
-
+ 
      C                   IF        *IN89 = *ON
      C                   EVAL      WChar2 = ArrLOWER(Idx)
      C                   ENDIF
-
+ 
      C     WSystem       CAT       WRPG          WFolder
-
+ 
      C                   ENDSR
-
+ 
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -2568,22 +2570,22 @@
       * *PSSR  - Program Exception Error Routine                          *
       *                                                                   *
       *********************************************************************
-
+ 
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   IF        WRUN = *BLANK
      C                   EVAL      WRUN = 'Y'
      C                   ENDIF
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C                   ENDSR
-
+ 
       ********************************************************************
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2002

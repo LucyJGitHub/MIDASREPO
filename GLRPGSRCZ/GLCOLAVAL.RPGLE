@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -106,7 +108,7 @@
       *  CGL011 - Collateral Processing for Midas DBA.                *
       *                                                               *
       *****************************************************************
- 
+
      FFOCLTLXX  IF   E           K DISK    INFSR(*PSSR)
      FFCLTYLXX  IF   E           K DISK    INFSR(*PSSR)
      FCLOANLXX  IF   E           K DISK    INFSR(*PSSR)
@@ -115,7 +117,7 @@
       ** Deal Details File                                                      CGL018
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)                         CGL018
      F                                     INCLUDE(DEALSDCF)                    CGL018
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -134,90 +136,90 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the standard program name,proce-
       ** dures etc.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       ** Collateral Allocation File Format
      D ValidTran     E DS                  EXTNAME(GLCOLAPD)
- 
+
       ** Collateral Allocation Screen Format(Current)
      D TranIn        E DS                  EXTNAME(GLSCLAPD)
- 
+
       ** Collateral Allocation Screen Error Format
      D OKFlags       E DS                  EXTNAME(GLECLAPD)
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Module Details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Dealing ICD
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
- 
+
       ** Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D SDCUDFAC      E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
       ** Client Limits Details
      D SDCLLM        E DS                  EXTNAME(SDCLLMPD)
- 
+
       ** Facility Types Details
      D SDFACT        E DS                  EXTNAME(SDFACTPD)
- 
+
       ** Retail Standing Data
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D SDREACCD      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** Retail Account Details
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
- 
+
       ** SAR descriptions                                                                     CGL018
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL018
      D                                     PREFIX(S1)                                         CGL018
       ** DS for Access Object Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for Access Object Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** DS for Access Object Programs
      D DSLDY         E DS                  EXTNAME(DSLDY)
                                                                                               224995
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)                     224995
       ** Java user information                                                                224995
- 
+
       ** Display Account Data Structure
      D DSADREAC        DS
      D  WReAcctNo              1     10
@@ -228,26 +230,26 @@
      D**WAcctSeq              17     18                                                       CGL029
      D  WAcctCde              13     22                                                       CGL029
      D  WAcctSeq              23     24                                                       CGL029
- 
+
      ** DS to check whether ADREAC only contain Retail Account (WEnd = ' ')
      D**WEnd                  11     18                                                       CGL029
      D  WEnd                  11     24                                                       CGL029
- 
+
       ** Facility
      D DSADFCTY        DS            11
      D  WFcty1                 1      6
      D  WFcty2                 7      9
      D  WFcty3                10     11
- 
+
       ** Index for arrays of of error message ids etc
      D RIdx            S              3P 0
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -271,76 +273,76 @@
      C                   ELSE                                                                BUG8550
      C                   MOVE      'N'           JAVAUSER                                    BUG8550
      C                   ENDIF                                                               BUG8550
- 
+
       ** Reset error variable RIdx
- 
+
      C                   Eval      RIdx = 0
- 
+
       ** Validate Action code
- 
+
      C                   ExSr      SrActCde
- 
+
       ** Validate input fields when action is 'I' or 'A'
- 
+
      C                   If        (ADACTN = 'I') Or (ADACTN = 'A')
- 
+
       ** Validate Branch code
- 
+
      C                   ExSr      SrBrCd
- 
+
       ** Validate Customer
- 
+
      C                   ExSr      SrCustNo
- 
+
       ** Validate Module
- 
+
      C                   ExSr      SrModule
- 
+
       ** Validate Priority
- 
+
      C                   ExSr      SrPrSq
- 
+
       ** Validate Facility
- 
+
      C                   ExSr      SrFclty
- 
+
       ** Validate Loan/Limit
- 
+
      C                   ExSr      SrLnLm
- 
+
       ** Validate Account
- 
+
      C                   ExSr      SrAcct
- 
+
       ** Validate Amount/Percentage indicator
- 
+
      C                   ExSr      SrAmPc
- 
+
       ** Validate Amount
- 
+
      C                   ExSr      SrAmnt
- 
+
       ** Validate Percentage
- 
+
      C                   ExSr      SrPct
- 
+
       ** No error on validations
- 
+
      C                   If        RIdx = 0
      C                   ExSr      SrSetValid
      C                   EndIf
      C                   EndIf
- 
+
       ** If Action is 'D', setup external data structure(Validtran) from the
       ** current screen format data structure(TranIn). No validation is
       ** needed
- 
+
      C                   If        ADACTN = 'D'
      C                   ExSr      SrSetDel
      C                   EndIf
- 
+
      C                   Return
- 
+
       *****************************************************************
       *                                                               *
       * SR/*InzSr: Initialisation Routine                             *
@@ -353,11 +355,11 @@
       * AODEALR0   Access Object                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSr        BegSr
- 
+
       ** Entry Parameters
- 
+
      C     *Entry        PList
      C                   Parm                    RespMode          1
      C                   Parm                    TranIn
@@ -376,7 +378,7 @@
      C                   Parm                    SBlank            1
      C                   Parm                    WChgDel           1
      C                   Parm                    CGL072            1                          CGL072
- 
+
       *
       ** Access SAR details file to determine if CGL018 is on.                                CGL018
       *                                                                                       CGL018
@@ -401,19 +403,19 @@
      C                   ELSE                                                                 CGL018
      C                   MOVE      'N'           CGL018                                       CGL018
      C                   END                                                                  CGL018
- 
+
      C/COPY WNCPYSRC,GLCOLAVC07
       ** Initialise Program name
- 
+
      C                   Eval      DbPgm = 'GLCOLAVAL'
- 
+
       ** Access Bank Details via Access Object AOBANKR0
- 
+
      C                   Call      'AOBANKR0'
      C                   Parm      '*DBERR '     @RtCd
      C                   Parm      '*FIRST '     @Optn
      C     SDBANK        Parm      SDBANK        DSFDY
- 
+
      C     @RtCd         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -424,14 +426,14 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Access Module details
- 
+
      C                   Call      'AOMMODR0'
      C                   Parm      '*DBERR '     @Rtcd
      C                   Parm      '*FIRST '     @Optn
      C     SDMMOD        Parm      SDMMOD        DSFDY
- 
+
      C     @Rtcd         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -442,20 +444,20 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Dealing Module switched *ON
- 
+
      C     BGDLMM        IfEq      'Y'
- 
+
       ** Access Dealing ICD
- 
+
      C**********         Call      'AODEALR0'                                                 CGL029
      C                   CALL      'AODEALR1'                                                 CGL029
      C                   Parm      '*DBERR '     @Rtcd
      C                   Parm      '*FIRST '     @Optn
      C*****SDDEAL        Parm      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
      C     @Rtcd         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -466,13 +468,13 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Dealing Module not installed
- 
+
      C                   Else
      C                   Movel     '.'           BNDCSP
      C                   EndIf
- 
+
       * If the user is connected via a browser, the job user name is QUSER -                  224995
       * their user name is stored in ZMUSER                                                   224995
      C**********         IN        ZMUSER                                             224995 BUG8550
@@ -485,7 +487,7 @@
      C**********         ENDIF                                                        224995 BUG8550
                                                                                               224995
       ** Parameter list for AOCLLMR0
- 
+
      C     PAoCllmR0     PList
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
@@ -493,9 +495,9 @@
      C                   Parm                    WKeyB             1
      C                   Parm                    WKeyC             3
      C     SDCLLM        Parm      SDCLLM        DSFDY
- 
+
       ** Parameter list for ZA0840
- 
+
      C     PZA0840       PList
      C                   Parm                    RetCodeOut
      C                   Parm                    W@ALPH           16
@@ -505,9 +507,9 @@
      C                   Parm                    W@ERCD            1 0
      C                   Parm                    W@AMT            15 0
      C                   Parm                    BNDCSP
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrActCde: Validate Action Code                             *
@@ -517,17 +519,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrActCde      BegSr
- 
+
       ** Action code not 'I' 'A' or 'D'
- 
+
      C                   If        (ADACTN <> 'I') And
      C                             (ADACTN <> 'A') And
      C                             (ADACTN <> 'D')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADACTN                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADACTN'                                 CAP084
@@ -535,16 +537,16 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKActn = 'N'
- 
+
       ** Action Code is 'I' and the global field SBlank is not 'Y'
- 
+
      C                   Else
      C                   If        (ADACTN = 'I') And (SBlank = 'N')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADACTN                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADACTN'                                 CAP084
@@ -552,16 +554,16 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKActn = 'N'
      C                   EndIf
- 
+
       ** Action code is 'D' and change in input fields has been trapped
- 
+
      C                   If        (ADACTN = 'D') And (WChgDel = 'Y')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADACTN                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADACTN'                                 CAP084
@@ -569,14 +571,14 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKActn = 'N'
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrBrCd: Validate Branch Code                               *
@@ -587,14 +589,14 @@
       * AOBRCHR0   Access Object                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SrBrCd        BegSr
- 
+
       ** Branch not blank validate branch by calling access object AO
       ** BRCHR0
- 
+
      C                   Movel     ADBRCA        WBrca             1
- 
+
      C                   If        ADBRCA <> *Blank
      C**********         Call      'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
@@ -603,11 +605,11 @@
      C                   Parm      ADBRCA        WKey              3
      C*****SDBRCH        Parm      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
      C     @Rtcd         IfNe      *BLANKS
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADBRCA                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADBRCA'                                 CAP084
@@ -615,19 +617,19 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKBRCA = 'N'
      C                   Else
- 
+
      C                   If        (WBrca = '?')
      C                   Eval      ADBRCA = A8BRCD
      C                   EndIf
      C
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrCustNo: Validate Customer Number/Shortname               *
@@ -638,27 +640,27 @@
       * AOCUSTR1   Access Object                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SrCustNo      BegSr
- 
+
      C**********         Z-Add     0             WCsNo             6 0                        CSD027
      C                   Move      *BLANKS       WCsNo             6                          CSD027
- 
+
       ** Validate customer number via AOCUSTR1
- 
+
      C                   Movel     ADCUSN        WCust             1
- 
+
      C                   Call      'AOCUSTR1'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm      ADCUSN        WKey1            10
      C                   Parm      *Blanks       WKyst             7
      C     SDCUST        Parm      SDCUST        DSLDY
- 
+
      C     @Rtcd         IfNe      *BLANKS
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADCUSN                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADCUSN'                                 CAP084
@@ -666,21 +668,21 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKCUSN = 'N'
      C                   Else
- 
+
       ** Valid Customer
- 
+
      C                   If        (WCust = '?')
      C                   Eval      ADCUSN = BBCUST
      C                   EndIf
- 
+
      C                   Movel     BBCUST        WCsNo
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrModule: Validate Module Field                            *
@@ -691,17 +693,17 @@
       * SrValMod  - Validate Module                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrModule      BegSr
- 
+
       ** Validate Module field, if not blank
- 
+
      C                   If        ADMODI <> *Blank
      C                   ExSr      SrValMod
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrValMod: Validate Module Field                            *
@@ -712,11 +714,11 @@
       * AOCLLMR0   Access Object                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SrValMod      BegSr
- 
+
       ** Validate Module field
- 
+
      C                   If        (ADMODI <> 'LE') And
      C                             (ADMODI <> 'RE') And
      C                             (ADMODI <> 'MM') And
@@ -728,7 +730,7 @@
      C/COPY WNCPYSRC,GLCOLAVC01
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADMODI                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADMODI'                                 CAP084
@@ -740,16 +742,16 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKMODI = 'N'
      C                   Else
- 
+
       ** Module 'LE' and lending not switched *On
- 
+
      C                   If        (ADMODI = 'LE') And  (BGCSLN = 'N')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADMODI                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADMODI'                                 CAP084
@@ -757,16 +759,16 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKMODI = 'N'
      C                   EndIf
- 
+
       ** Module 'MM' and Money Market not switched *On
- 
+
      C                   If        (ADMODI = 'MM') And  (BGDLMM = 'N')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADMODI                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADMODI'                                 CAP084
@@ -774,16 +776,16 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKMODI = 'N'
      C                   EndIf
- 
+
       ** Module 'MM' and Module OK Flag is 'Y'
- 
+
      C                   If        (ADMODI = 'MM') And  (OKMODI = 'Y')
- 
+
       ** Access Client Limits
- 
+
      C                   If        ADBRCA <> *Blank
      C                   Movel     WCsNo         WKeyA
      C                   Eval      WKeyB = 'B'
@@ -793,15 +795,15 @@
      C                   Eval      WKeyB = ' '
      C                   Eval      WKeyC = *Blanks
      C                   EndIf
- 
+
      C                   Call      'AOCLLMR0'    PAoCllmR0
- 
+
      C     @Rtcd         IfNe      *Blank
      C     DZLLAM        OrEq      0
      C                   If        (CGL018='Y') and (ADLNLM<>*Blank)                          CGL018
      C                   Else                                                                 CGL018
      C                   Add       1             WIdx
- 
+
      C                   If        WIdx <= 75
      C*******************Eval      WFldNamArr (WIdx) = ADMODI                                 CAP084
      C                   Eval      WFldNamArr (WIdx) = 'ADMODI'                               CAP084
@@ -812,15 +814,15 @@
      C                   Eval      OKMODI = 'N'
      C                   EndIf                                                                CGL018
      C                   EndIf
- 
+
      C                   EndIf
- 
+
       ** Module 'FX' and Foreign Exchange  not switched *On
- 
+
      C                   If        (ADMODI = 'FX') And  (BGDLFX = 'N')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADMODI                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADMODI'                                 CAP084
@@ -828,16 +830,16 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKMODI = 'N'
      C                   EndIf
- 
+
       ** Module 'FX' and Module OK Flag is 'Y'
- 
+
      C                   If        (ADMODI = 'FX') And  (OKMODI = 'Y')
- 
+
       ** Access Client Limits
- 
+
      C                   If        ADBRCA <> *Blank
      C                   Movel     WCsNo         WKeyA
      C                   Eval      WKeyB = 'B'
@@ -847,7 +849,7 @@
      C                   Eval      WKeyB = ' '
      C                   Eval      WKeyC = *Blanks
      C                   EndIf
- 
+
      C                   Call      'AOCLLMR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
@@ -855,11 +857,11 @@
      C                   Parm                    WKeyB
      C                   Parm                    WKeyC
      C     SDCLLM        Parm      SDCLLM        DSFDY
- 
+
      C     @Rtcd         IfNe      *Blank
      C     DZFLAM        OrEq      0
      C                   Add       1             WIdx
- 
+
      C                   If        WIdx <= 75
      C*******************Eval      WFldNamArr (WIdx) = ADMODI                                 CAP084
      C                   Eval      WFldNamArr (WIdx) = 'ADMODI'                               CAP084
@@ -869,15 +871,15 @@
      C                   EndIf
      C                   Eval      OKMODI = 'N'
      C                   EndIf
- 
+
      C                   EndIf
- 
+
       ** Module 'FO' and Futures and Option is not switched *On
- 
+
      C                   If        (ADMODI = 'FO') And  (BGFUOP = 'N')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADMODI                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADMODI'                                 CAP084
@@ -885,19 +887,19 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKMODI = 'N'
      C                   EndIf
- 
+
       ** Module 'FO' and Module OK Flag is 'Y'
- 
+
      C                   If        (ADMODI = 'FO') And  (OKMODI = 'Y')
      C     WCsNo         Chain     FOCLTLXX                           30
- 
+
      C                   If        (*IN30 = *On) Or
      C                             (*IN30 = *Off) And  (RECI <> 'D')
      C                   Add       1             WIdx
- 
+
      C                   If        WIdx <= 75
      C*******************Eval      WFldNamArr (WIdx) = ADMODI                                 CAP084
      C                   Eval      WFldNamArr (WIdx) = 'ADMODI'                               CAP084
@@ -908,11 +910,11 @@
      C                   Eval      OKMODI = 'N'
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrPrSq: Validate Priority Sequence                         *
@@ -922,18 +924,18 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrPrSq        BegSr
- 
+
       ** Priority Sequence not blank
- 
+
      C                   If        ADPRSQ <> *Blank
      C                   TesTn                   ADPRSQ               31
      C                   If        (*IN31 = *Off) Or
      C                             (ADPRSQ = '000')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADPRSQ                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADPRSQ'                                 CAP084
@@ -941,18 +943,18 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKPRSQ = 'N'
      C                   EndIf
      C                   Else
- 
+
       ** Default to 001
- 
+
      C                   Eval      ADPRSQ = '001'
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrFclty: Validate Facility Field                           *
@@ -963,18 +965,18 @@
       * AOCUSTR1   Access Object                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SrFclty       BegSr
- 
+
       ** If Facility fields are not blank and module is not 'LE'
- 
+
      C                   Eval      DSADFCTY = ADFCTY
- 
+
      C                   If        (ADFCTY <> *Blank) And
      C                             (ADMODI <> 'LE')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADFCTY                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADFCTY'                                 CAP084
@@ -982,15 +984,15 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKFCTY = 'N'
      C                   EndIf
- 
+
       ** Facility Flag OK, Validate customer portion of the facility
- 
+
      C                   If        (ADMODI = 'LE') And (ADFCTY <> *Blank)
      C                   Movel     WFcty1        WFct1             1
- 
+
      C                   If        OKFCTY = 'Y'
      C                   Call      'AOCUSTR1'
      C                   Parm      *Blanks       @Rtcd
@@ -998,11 +1000,11 @@
      C                   Parm      WFcty1        WKey1
      C                   Parm      *Blanks       WKyst
      C     SDCUST        Parm      SDCUST        DSLDY
- 
+
      C     @Rtcd         IfNe      *BLANKS
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = WFcty1                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADFCTY'                                 CAP084
@@ -1010,32 +1012,32 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKFCTY = 'N'
      C                   Else
- 
+
      C                   If        (WFct1 = '?')
      C                   Eval      WFcty1 = BBCUST
      C                   EndIf
      C
      C                   EndIf
      C                   EndIf
- 
+
       ** Facility Flag still OK, Validate Facility type
- 
+
      C                   Movel     WFcty2        WFct2             1
- 
+
      C                   If        OKFCTY = 'Y'
      C                   Call      'AOFACTR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm      WFcty2        @Ftyp             3
      C     SDFACT        Parm      SDFACT        DSFDY
- 
+
      C     @Rtcd         IfNe      *BLANKS
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = WFcty2                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADFCTY'                                 CAP084
@@ -1043,26 +1045,26 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKFCTY = 'N'
      C                   Else
- 
+
      C                   If        (WFct2 = '?')
      C                   Eval      WFcty2 = AMFCTY
      C                   EndIf
- 
+
      C                   EndIf
      C                   EndIf
- 
+
       ** Facility Flag still OK, Validate sequence no. if numeric
- 
+
      C                   If        OKFCTY = 'Y'
      C                   TesTn                   WFcty3               31
      C                   If        (*IN31 = *Off) Or
      C                             (ADPRSQ = '00')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = WFcty3                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADFCTY'                                 CAP084
@@ -1070,35 +1072,35 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKFCTY = 'N'
      C                   EndIf
      C                   EndIf
- 
+
      C                   Eval      ADFCTY = DSADFCTY
- 
+
       ** Facility Flag still OK, Validate the whole facility field
- 
+
      C                   If        OKFCTY = 'Y'
- 
+
       ** Keyflds on chaining Facility
- 
+
      C**********         Move      WFcty1        WKfldCus          6 0                        CSD027
      C                   Move      WFcty1        WKfldCus          6                          CSD027
      C                   Move      WFcty2        WKfldTyp          3 0
      C                   Move      WFcty3        WKfldSeq          2 0
- 
+
      C     WKeyFcty      Klist
      C                   KFld                    WKfldCus
      C                   KFld                    WKfldTyp
      C                   KFld                    WKfldSeq
- 
+
      C     WKeyFcty      Chain     FCLTYLXX                           32
- 
+
      C                   If        (*IN32 = *On) Or
      C                             (*IN32 = *Off) And  (RECI <> 'D')
      C                   Add       1             WIdx
- 
+
      C                   If        WIdx <= 75
      C*******************Eval      WFldNamArr (WIdx) = ADFCTY                                 CAP084
      C                   Eval      WFldNamArr (WIdx) = 'ADFCTY'                               CAP084
@@ -1108,12 +1110,12 @@
      C                   EndIf
      C                   Eval      OKFCTY = 'N'
      C                   EndIf
- 
+
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrLnLm: Validate Loan/Limit Field                          *
@@ -1123,18 +1125,18 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrLnLm        BegSr
- 
+
       ** If Loan/Limit not blank and module is not 'LE' or 'CM'
- 
+
      C**********         If        ((ADLNLM <> *Blank) And                                    CGL018
      C**********                   (ADMODI <> 'LE') And                                       CGL018
      C**********                   (ADMODI <> 'CM') and (ADMODI <> 'MM'))                     CGL018
      C                   If        (ADLNLM <> *Blank) And                                     CGL018
      C                             (ADMODI <> 'LE') And                                       CGL018
      C                             (ADMODI <> 'CM')                                           CGL018
- 
+
       * Error if module RE, FX and FO. For MM, only error if CGL018                           CAP084
       * is switched off.                                                                      CAP084
                                                                                               CAP084
@@ -1143,7 +1145,7 @@
                                                                                               CAP084
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADLNLM                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADLNLM'                                 CAP084
@@ -1151,7 +1153,7 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKLNLM = 'N'
                                                                                               CAP084
      C                   EndIf                                                                CAP084
@@ -1200,9 +1202,9 @@
      C                   ENDIF                                                                CAP084
                                                                                               CAP084
      C                   ENDIF                                                                CGL018
- 
+
       ***If*Loan/Limit*not*blank*and*OKLNLM*=*'Y'*(Module*=*LE*or*CM)                         CLE148
- 
+
      C**********         If        (ADLNLM <> *Blank) And                                     CLE148
      C**********                   (OKLNLM = 'Y')                                             CLE148
      C                   IF        ADMODI <> 'LE'                                             CLE148
@@ -1211,7 +1213,7 @@
      C                             (ADLNLM = '000000')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADLNLM                            CGL018 CAP084
      C                   Eval      FldNameArr(Idx) = 'ADLNLM'                                 CAP084
@@ -1219,20 +1221,20 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKLNLM = 'N'
      C                   EndIf
      C                   EndIf
- 
+
       ** Module = 'LE'
       ** Facility already been entered, loan cannot be entered
- 
+
      C                   If        ADMODI = 'LE'
      C                   If        (ADFCTY <> *Blank) And (ADLNLM <> *Blank)
      C                             And (OKFCTY = 'Y') And (OKLNLM = 'Y')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADLNLM                            CGL018 CAP084
      C                   Eval      FldNameArr(Idx) = 'ADLNLM'                                 CAP084
@@ -1240,24 +1242,24 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKLNLM = 'N'
      C                   EndIf
- 
+
       ** Loan/Limit Flag still OK, Check if existing
- 
+
      C**********         Move      ADLNLM        WLnLm             6 0                        CLE148
      C                   MOVE      ADLNLM        WLnLmA            6                          CLE148
- 
+
      C                   If        (OKLNLM = 'Y') And (ADLNLM <> *Blank)
      C*****WLnLm         Chain     CLOANLXX                           33                      CLE148
      C     WLnLmA        CHAIN     CLOANLXX                           33                      CLE148
- 
+
      C                   If        (*IN33 = *On) Or
      C                             (*IN33 = *Off) And  (RECI <> 'D')
      C                   If        (ADFCTY = *Blank)
      C                   Add       1             WIdx
- 
+
      C                   If        WIdx <= 75
      C*******************Eval      WFldNamArr (WIdx) = ADLNLM                                 CAP084
      C                   Eval      WFldNamArr (WIdx) = 'ADLNLM'                               CAP084
@@ -1268,14 +1270,14 @@
      C                   Eval      OKLNLM = 'N'
      C                   EndIf
      C                   Else
- 
+
       ** Loan found, must have a valid loan processing type(not parts sold)
- 
+
      C                   If        (PTYP = 66) Or (PTYP = 67) Or
      C                             (PTYP = 69) Or (PTYP = 72)
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADLNLM                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADLNLM'                                 CAP084
@@ -1283,16 +1285,16 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKLNLM = 'N'
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrAcct: Validate Account Field                             *
@@ -1303,13 +1305,13 @@
       * AOACCTR0   Access Object                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAcct        BegSr
- 
+
       ** If Account field not blank and module not 'RE'
- 
+
      C                   Eval      DSADREAC = ADREAC
- 
+
      C/COPY WNCPYSRC,GLCOLAVC03
       *** If CGL072 is on then allow GL accounts.                                             CGL072
       *** Account can only be entered if module is 'RE' or 'GL'                               CGL072
@@ -1335,7 +1337,7 @@
      C                             (ADMODI <> 'RE')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADREAC                                   CAP084
      C     JAVAUSER      IFEQ      'Y'                                                        224995
@@ -1347,26 +1349,26 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKREAC = 'N'
      C                   EndIf
       *                                                                                       CGL072
      C                   ENDIF                                                                CGL072
       *                                                                                       CGL072
      C/COPY WNCPYSRC,GLCOLAVC04
- 
+
       ** If Account field not blank and OKACCT = 'Y' (Module = RE)
- 
+
      C                   If        (ADREAC <> *Blank) And
      C                             (OKREAC = 'Y')
- 
+
       ** Check if Retail account number supported
- 
+
      C                   Call      'AORETLR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*FIRST  '    @Optn
      C     SdRetl        Parm      SdRetl        Dsfdy
- 
+
      C     @Rtcd         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -1377,15 +1379,15 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Retail account number not supported
- 
+
      C                   If        (WEnd = *Blank) And (BMRANR = 'N') Or
      C**********                   (WEnd = '00000000') And (BMRANR = 'N')                     CGL029
      C                             (WEnd = '00000000000000') And (BMRANR = 'N')               CGL029
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADREAC                                   CAP084
      C     JAVAUSER      IFEQ      'Y'                                                        224995
@@ -1397,12 +1399,12 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKREAC = 'N'
      C                   EndIf
- 
+
       ** Set up parameter
- 
+
      C                   If        (WEnd = *Blank) And (BMRANR = 'Y') Or
      C**********                   (WEnd = '00000000') And (BMRANR = 'Y')                     CGL029
      C                             (WEnd = '00000000000000') And (BMRANR = 'Y')               CGL029
@@ -1432,7 +1434,7 @@
      C                   Parm                    W@AcctSeq         2
      C                   Parm                    W@Brch            3
      C     ACCNT         Parm      ACCNT         DSSDY
- 
+
      C/COPY WNCPYSRC,GLCOLAVC05
       *** If CGL072 & 'GL': error message 'Account number not valid'                          CGL072
       *** Core processing: check ATYP = 'R', warning message GLM0225                          CGL072
@@ -1460,7 +1462,7 @@
      C     RECI          OrEq      'C'
      C     RECI          OrEq      'R'
      C                   Add       1             WIdx
- 
+
      C                   If        WIdx <= 75
      C*******************Eval      WFldNamArr (WIdx) = ADREAC                                 CAP084
      C     JAVAUSER      IFEQ      'Y'                                                        224995
@@ -1475,13 +1477,13 @@
      C                   Eval      OKREAC = 'N'
      C                   EndIf
      C                   EndIf
- 
+
       *                                                                                       CGL072
      C                   ENDIF                                                                CGL072
       *                                                                                       CGL072
      C/COPY WNCPYSRC,GLCOLAVC06
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrAmPc: Validate Amt/Pct Field                             *
@@ -1491,22 +1493,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAmPc        BegSr
- 
+
       ** Default Amt/Pct to 'A' if blank
- 
+
      C                   If        (ADAMPC = *Blank)
      C                   Eval      ADAMPC = 'A'
      C                   EndIf
- 
+
       ** Invalid Amt/Pct entered
- 
+
      C                   If        (ADAMPC <> 'A') And
      C                             (ADAMPC <> 'P')
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADAMPC                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADAMPC'                                 CAP084
@@ -1514,12 +1516,12 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKAMPC = 'N'
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrAmnt: Validate Amount Field                              *
@@ -1531,16 +1533,16 @@
       * AOCURRR0    Access Object                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAmnt        BegSr
- 
+
       ** Amount not blank while Amt/Pct field is not 'A'
- 
+
      C                   If        (ADAMPC <> 'A') And
      C                             (ADAMNT <> *Blank)
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADAMNT                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADAMNT'                                 CAP084
@@ -1548,19 +1550,19 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKAMNT = 'N'
      C                   EndIf
- 
+
       ** Amount OK field still 'Y', validate amount
- 
+
      C                   If        (ADAMPC = 'A') And (OKAMNT = 'Y')
      C                   Call      'AOCURRR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm      PColCur       @Ajcd             3
      C     SdCurr        Parm      SdCurr        Dssdy
- 
+
      C     @Rtcd         IfNe      *BLANK
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -1571,23 +1573,23 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Set up parameter for ZA0840
- 
+
      C                   Z-Add     A6NBDP        W@IDP
      C     15            Sub       W@IDP         W@IINT
      C                   Move      *Blanks       W@ALPH
      C                   Movel     ADAMNT        W@ALPH
      C                   Move      'Y'           W@MTID
- 
+
      C                   CallB     'ZA0840'      PZA0840
- 
+
       ** Error on validation
- 
+
      C                   If        (W@ERCD <> 0) Or (W@Amt = 0)
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADAMNT                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADAMNT'                                 CAP084
@@ -1595,7 +1597,7 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKAMNT = 'N'
      C                   Else
      C                   Eval      ADAMNT = W@ALPH
@@ -1604,9 +1606,9 @@
      C                   Else
      C                   Z-Add     *Zero         WZAMT
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrPct: Validate Percent Field                              *
@@ -1617,16 +1619,16 @@
       * ZA0840    - Validate numeric fields                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SrPct         BegSr
- 
+
       ** Percent field not blank while Amt/Pct field is not 'P'
- 
+
      C                   If        (ADAMPC <> 'P') And
      C                             (ADPRCT <> *Blank)
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADPRCT                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADPRCT'                                 CAP084
@@ -1634,33 +1636,33 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKPRCT = 'N'
      C                   EndIf
- 
+
       ** Percent OK field still 'Y', validate Percent
- 
+
      C                   If        (ADPRCT <> *Blank) And
      C                             (OKPRCT = 'Y')
- 
+
       ** Set up parameter for ZA0840
- 
+
      C                   Z-Add     2             W@IDP
      C                   Z-Add     3             W@IINT
      C                   Move      *Blanks       W@ALPH
      C                   Movel     ADPRCT        W@ALPH
      C                   Move      'N'           W@MTID
- 
+
      C                   CallB     'ZA0840'      PZA0840
- 
+
       ** Error on validation
- 
+
      C                   If        (W@ERCD <> 0) Or
      C                             (W@AMT < 00001) Or
      C                             (W@AMT > 10000)
      C                   Add       1             Idx
      C                   Add       1             RIdx
- 
+
      C                   If        Idx <= 75
      C*******************Eval      FldNameArr(Idx) = ADPRCT                                   CAP084
      C                   Eval      FldNameArr(Idx) = 'ADPRCT'                                 CAP084
@@ -1668,7 +1670,7 @@
      C                   Else
      C                   Eval      Idx = 75
      C                   EndIf
- 
+
      C                   Eval      OKPRCT = 'N'
      C                   Else
      C                   Move      W@ALPH        ADPRCT
@@ -1677,9 +1679,9 @@
      C                   Else
      C                   Z-Add     *Zero         WZPCT
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrSetValid: Move all valid fields to file fields           *
@@ -1689,9 +1691,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSetValid    BegSr
- 
+
      C*******************Eval      CACREF = PColRef                                           CAP084
      C*******************Eval      CAFRNT = *Blanks                                           CAP084
      C*******************Eval      CAREPA = *Blanks                                           CAP084
@@ -1714,7 +1716,7 @@
      C                   Movel     WFcty2        CAFTYP
      C                   Movel     WFcty3        CAFSEQ
      C                   Movel     ADLNLM        CALNLM
- 
+
      C                   If        (ADMODI = 'RE') And
      C                             (ADREAC <> *Blank)
      C                   If        (OKREAC = 'N')
@@ -1734,7 +1736,7 @@
      C                   Move      WAcctSeq      CASSEQ
      C                   Move      *Zeros        CASACN
      C                   EndIf
- 
+
      C                   Else
      C                   Eval      CASBRC = BRCA
      C                   Eval      CASCNM = CNUM
@@ -1743,7 +1745,7 @@
      C                   Eval      CASSEQ = ACSQ
      C                   Eval      CASACN = ACNO
      C                   EndIf
- 
+
      C                   Else
      C                   Eval      CASBRC = *Blank
      C**********         Eval      CASCNM = *Zero                                             CSD027
@@ -1753,12 +1755,12 @@
      C                   Eval      CASSEQ = *Zero
      C                   Eval      CASACN = *Zero
      C                   EndIf
- 
+
      C                   Eval      CACHTP = ADACTN
      C                   Eval      CALCD  = BJRDNB
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrSetDel: Setup ValidTran data structure for action delete *
@@ -1768,12 +1770,12 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSetDel      BegSr
- 
+
       ** Setup Key fields of file GLCOLAL0 to be use in chaining record
       ** in module GLCOLAUPD
- 
+
      C                   Eval      CACREF = PColRef
      C                   Eval      CAFRNT = *Blanks
      C                   Eval      CAREPA = *Blanks
@@ -1781,15 +1783,15 @@
      C                   Eval      CABRCA = ADBRCA
      C                   Movel     ADCUSN        CACNUM
      C                   Eval      CAAPCT = ADAMPC
- 
+
       ** Setup Amount
- 
+
      C                   Call      'AOCURRR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm      PColCur       @Ajcd
      C     SdCurr        Parm      SdCurr        Dssdy
- 
+
      C     @Rtcd         IfNe      *BLANK
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -1800,31 +1802,31 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Set up parameter for ZA0840 for amount conversion
- 
+
      C                   Z-Add     A6NBDP        W@IDP
      C     15            Sub       W@IDP         W@IINT
      C                   Move      *Blanks       W@ALPH
      C                   Movel     ADAMNT        W@ALPH
      C                   Move      'Y'           W@MTID
- 
+
       ** Convert amount from char to numeric
- 
+
      C                   CallB     'ZA0840'      PZA0840
      C                   Eval      CAAMT = W@AMT
- 
+
       ** Set up parameter for ZA0840 for Percentage conversion
- 
+
      C                   Z-Add     2             W@IDP
      C                   Z-Add     3             W@IINT
      C                   Move      *Blanks       W@ALPH
      C                   Movel     ADPRCT        W@ALPH
      C                   Move      'N'           W@MTID
- 
+
      C                   CallB     'ZA0840'      PZA0840
      C     W@AMT         Div       100           CAPCNT
- 
+
      C                   Movel     ADPRSQ        CAPRTY
      C                   Eval      CAMODS = ADMODI
      C                   Movel     WFcty1        CAFCUS
@@ -1832,14 +1834,14 @@
      C                   Movel     WFcty3        CAFSEQ
      C                   Movel     ADLNLM        CALNLM
      C                   Eval      DSADREAC = ADREAC
- 
+
      C**********         If        (WEnd = *Blank) Or (WEnd = '00000000')                     CGL029
      C                   If        (WEnd = *Blank) Or (WEnd = '00000000000000')               CGL029
      C                   Movel     WReAcctNo     CASACN
      C                   Else
      C                   Z-Add     *Zeros        CASACN
      C                   EndIf
- 
+
      C                   Eval      DSADFCTY = ADFCTY
      C                   Eval      CASBRC = WBrnch
      C                   Move      WCustNo       CASCNM
@@ -1848,9 +1850,9 @@
      C                   Move      WAcctSeq      CASSEQ
      C                   Eval      CACHTP = ADACTN
      C                   Eval      CALCD  = BJRDNB
- 
+
      C                   EndSr
- 
+
       ****************************************************************
       /EJECT
       *****************************************************************

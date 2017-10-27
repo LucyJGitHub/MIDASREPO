@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 222427             Date 05Dec16               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. 222427             Date 05Dec16               *
+      *                 CGL165             Date 23Feb15               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CER055             Date 06Dec10               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
       *           value is 0.00.  Data structure which includes       *
       *           DDSTFQ should be included in the module entry       *
@@ -90,13 +92,13 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
-
+ 
       ** Customer Group Code
      FTABLEV4   IF   E             DISK    INFSR(*PSSR)
-
+ 
       ** Retail ICD by currency
      FRECCY     IF   E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -115,61 +117,61 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the GL standard declares
      D/COPY GLCPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
-
+ 
      D/COPY ZACPYSRC,PROCPARMS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** Array Index
      D Idx1            S              2P 0 INZ(0)
-
+ 
       ** Client Group Code
      D GRP             S              1    DIM(8)
       ** Account Commission Indicators
@@ -186,16 +188,16 @@
      D AIN6            S              1    DIM(8)
       ** Fixed Commission Indicators
      D AIN7            S              1    DIM(8)
-
+ 
      D   ZFIELD        S             16A
-
+ 
      D   ZADEC         S              1P 0
-
+ 
       ** DATA STRUCTURE TO GET THE RIGHT CUSTOMER GROUP
      D                 DS
      D  ZZ010                  1     10
      D  CGRP                  10     10
-
+ 
       * Account in File Format
      D AccnFilFmt    E DS                  EXTNAME(GLVAMADPD)
      D ExBXFilFmt    E DS                  EXTNAME(GLVAMBXPD)
@@ -206,45 +208,45 @@
      D GLCOACOD      E                     EXTFLD(QQACOD)                                     CGL029
      D ExPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)
      D GLPWACOD      E                     EXTFLD(QQACOD)                                     CGL029
-
+ 
       * Account in Screen Format
      D AccScnMast    E DS                  EXTNAME(GLAMADPD)
      D AccScnDebi    E DS                  EXTNAME(GLAMDIPD)
      D AccScnCred    E DS                  EXTNAME(GLAMCIPD)
      D AccScnComm    E DS                  EXTNAME(GLAMCOPD)
      D AccScnOthe    E DS                  EXTNAME(GLAMODPD)
-
+ 
       * External DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
-
+ 
       * External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       * External DS for Customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
-
+ 
       * Switchable Features File
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
-
+ 
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
      D ValidDeal     E DS                  EXTNAME(FXVFXDLPD)
       * Valid Deals layout
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D CDE002          S              1A                                        CDE002
      D DDDRMG1         S             12A                                        CDE002
      D DDCRMG1         S             12A                                        CDE002
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -257,19 +259,19 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       * Initial Processing
      C                   EXSR      INIT
-
+ 
       *
       *  Rerieve default commisions
       *
      C                   EXSR      SRRTVCG
      C                   EXSR      SRRTVCM
-
+ 
       * RETURN
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -433,7 +435,7 @@
       *****************************************************************
       * *INIT - INITIALIZATION                                        *
       *****************************************************************
-
+ 
      C     INIT          BEGSR
       *
       ** Get the currency decimal places of accounting ccy
@@ -453,23 +455,23 @@
      C                   MOVEL     '901'         DBASE                          * DBERR 901*
      C                   EXSR      *PSSR                                        ************
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       * Return Code
      C                   PARM                    RetCodeIn
-
+ 
       * Customer Retail Group
      C                   PARM                    @BCGRP            1
-
+ 
       * CCRM Revenue Analysis                                                   CDE002
      C                   PARM                    CDE002                         CDE002
                                                                                 CDE002
@@ -478,7 +480,7 @@
       * Valid Account layout (extension file) (DS) from/to caller               208221
      C                   PARM                    ExBXFilFmt                     208221
      C                   PARM                    AccScnMast                                   222427
-
+ 
       * OUTPUTS
       * Screen 4 Output
      C                   PARM                    DDCEXA1          11
@@ -491,12 +493,12 @@
      C                   PARM                    DDDRMG1                        CDE002
      C                   PARM                    DDCRMG1                        CDE002
       *                                                                         CDE002
-
+ 
       *  Move program name into *LDA field.
      C     *LOCK         In        LDA
      C                   Movel     'GLAMAD4DT'   DBPGM
      C                   Out       LDA
-
+ 
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -517,7 +519,7 @@
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
-
+ 
       *
       ** READ UP TO EIGHT GROUP RECORDS AND STORE RELEVANT DETAILS
       ** IN INTERNAL ARRAYS

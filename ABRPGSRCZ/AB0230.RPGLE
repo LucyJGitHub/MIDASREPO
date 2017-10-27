@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. CDL094             Date 01Sep14               *
-      *  Prev Amend No. MD027531           Date 30Jun14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *                 MD027531           Date 30Jun14               *
       *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -50,6 +51,7 @@
      F*                                                              *
      F*****************************************************************
      F*                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompiled)                                        *
       *  MD027531 - Locking in OLPOS file                             *
@@ -696,6 +698,13 @@
      C                   Z-ADD     JUFDA2        @FRNEG                         *1
      C                   Z-ADD     JUFDA1        @FRPOS                         *1
      C                   END                                                    E1
+      *                                                                                       CDL099
+     C                   IF        CDL099 = 'Y'                                               CDL099
+     C                   Z-ADD     0             ULNDAT            5 0                        CDL099
+     C                   Z-ADD     0             ULFDAT            5 0                        CDL099
+     C                   Z-ADD     JUNDAT        ULNDAT                                       CDL099
+     C                   Z-ADD     JUFDAT        ULFDAT                                       CDL099
+     C                   ENDIF                                                                CDL099
      C/COPY WNCPYSRC,AB0230C001
       *
       **  Process FX insertions & deletions.
@@ -762,6 +771,11 @@
       ** Write record to GLOLPSTD                                                           MD027531
      C                   EVAL      pOLposKey = @BRCA + @CCY + %EDITC(@1:'X')                MD027531
      C                   EXSR      WrtOLPOS                                                 MD027531
+     C                   IF        CDL099 = 'Y'                                               CDL099
+     C     ULFDAT        IFNE      0                                                          CDL099
+     C                   Z-ADD     ULFDAT        @MDNO                                        CDL099
+     C                   ENDIF                                                                CDL099
+     C                   ENDIF                                                                CDL099
      C/COPY WNCPYSRC,AB0230C002
       **********************************************************************                MD027531
       ****If*INS*amount*to*be*subtracted*,if*DEL*amount*to*be*added*********                MD027531
@@ -787,6 +801,11 @@
       ** Write record to GLOLPSTD                                                           MD027531
      C                   EVAL      pOLposKey = @BRCA + @CCY + %EDITC(@1:'X')                MD027531
      C                   EXSR      WrtOLPOS                                                 MD027531
+     C                   IF        CDL099 = 'Y'                                               CDL099
+     C     ULNDAT        IFNE      0                                                          CDL099
+     C                   Z-ADD     ULNDAT        @MDNO                                        CDL099
+     C                   ENDIF                                                                CDL099
+     C                   ENDIF                                                                CDL099
      C/COPY WNCPYSRC,AB0230C003
      C**********         EXSR      #ZC                                                      MD027531
      C*
@@ -862,6 +881,11 @@
       ** Write record to GLOLPSTD                                                           MD027531
      C                   EVAL      pOLposKey = @BRCA + @CCY + %EDITC(@3:'X')                MD027531
      C                   EXSR      WrtOLPOS                                                 MD027531
+     C                   IF        CDL099 = 'Y'                                               CDL099
+     C     ULFDAT        IFNE      0                                                          CDL099
+     C                   Z-ADD     ULFDAT        @MDNO                                        CDL099
+     C                   ENDIF                                                                CDL099
+     C                   ENDIF                                                                CDL099
      C/COPY WNCPYSRC,AB0230C004
       ****@ADSUB*use*same*value*as*set*in*previous*update.*************                     MD027531
      C**********         EXSR      #ZC                                                      MD027531
@@ -881,6 +905,11 @@
       ** Write record to GLOLPSTD                                                           MD027531
      C                   EVAL      pOLposKey = @BRCA + @CCY + %EDITC(@3:'X')                MD027531
      C                   EXSR      WrtOLPOS                                                 MD027531
+     C                   IF        CDL099 = 'Y'                                               CDL099
+     C     ULNDAT        IFNE      0                                                          CDL099
+     C                   Z-ADD     ULNDAT        @MDNO                                        CDL099
+     C                   ENDIF                                                                CDL099
+     C                   ENDIF                                                                CDL099
      C/COPY WNCPYSRC,AB0230C005
       *****************************************************************                     MD027531
       ****If*INS*amount*to*be*subtracted*,if*DEL*amount*to*be*added****                     MD027531
@@ -940,6 +969,11 @@
       ** Write record to GLOLPSTD                                                           MD027531
      C                   EVAL      pOLposKey = @BRCA + @CCY + %EDITC(@2:'X')                MD027531
      C                   EXSR      WrtOLPOS                                                 MD027531
+     C                   IF        CDL099 = 'Y'                                               CDL099
+     C     ULFDAT        IFNE      0                                                          CDL099
+     C                   Z-ADD     ULFDAT        @MDNO                                        CDL099
+     C                   ENDIF                                                                CDL099
+     C                   ENDIF                                                                CDL099
      C/COPY WNCPYSRC,AB0230C006
       *****************************************************************                     MD027531
       ****If*INS*amount*to*be*added*,if*DEL*amount*to*be*subtracted****                     MD027531
@@ -1406,6 +1440,26 @@
      C                   GOTO      #A9                                          *1             AB010
      C                   END                                                    E1             AB010
       *                                                                   AB0102
+      ** Call AOSARDR0 to check if CDL099 is switched on                                      CDL099
+      *                                                                                       CDL099
+     C                   EVAL      CDL099 = 'N'                                               CDL099
+     C                   CALLB     'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       PRTCD             7                          CDL099
+     C                   PARM      '*VERIFY'     POPTN             7                          CDL099
+     C                   PARM      'CDL099'      PSARD             6                          CDL099
+     C                   PARM                    DSFDY                                        CDL099
+      *                                                                                       CDL099
+     C                   IF        PRTCD = *BLANKS                                            CDL099
+     C                   MOVE      'Y'           CDL099            1                          CDL099
+     C                   ENDIF                                                                CDL099
+     C                   IF        PRTCD <> *BLANKS AND                                       CDL099
+     C                             PRTCD <> '*NRF   '                                         CDL099
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CDL099
+     C                   EVAL      DBASE = '011'                                              CDL099
+     C                   EVAL      DBKEY = 'CDL099'                                           CDL099
+     C                   EXSR      *PSSR                                                      CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
      C                   Z-ADD     1             @1                2 0
      C                   Z-ADD     2             @2                2 0
      C                   Z-ADD     3             @3                2 0

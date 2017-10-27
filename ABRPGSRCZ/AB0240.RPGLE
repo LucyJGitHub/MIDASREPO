@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompiled)                                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
@@ -542,6 +544,11 @@
       ** DEAL CLASS                                                                           CDL038
       *                                                                                       CDL038
      C                   MOVE      JUCLAS        CLAS                                         CDL038
+      *                                                                                       CDL099
+     C                   IF        CDL099 = 'Y'                                               CDL099
+     C                   Z-ADD     JUNDAT        BSDT2                                        CDL099
+     C                   Z-ADD     JUFDAT        BRSD2                                        CDL099
+     C                   ENDIF                                                                CDL099
       *
       *
       ** WRITE LEG 1 RECORD OF NEW DEAL ON RECORD FORMAT DEALSDBF
@@ -827,6 +834,11 @@
       *                                                                                       241641
      C                   Z-ADD     0             LITD                                         241641
      C                   Z-ADD     0             DITD                                         241641
+      *
+     C                   IF        CDL099 = 'Y'                                               CDL099
+     C                   Z-ADD     JUFDAT        BSDT2                                        CDL099
+     C                   Z-ADD     JUNDAT        BRSD2                                        CDL099
+     C                   ENDIF                                                                CDL099
       *
       *
       *
@@ -1516,6 +1528,30 @@
      C*********************MOVE '10'      @KEY2            *1             AB0102
      C***********@KEY2*****CHAINFDICDRLL             60                   AB0102
      C********** *IN60*****IFEQ '1'                        B*2            AB0102
+      *                                                                   AB0102
+      ** Call AOSARDR0 to check if CDL099 is switched on                                      CDL099
+      *                                                                                       CDL099
+     C                   EVAL      CDL099 = 'N'                                               CDL099
+     C                   CALLB     'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       PRTCD             7                          CDL099
+     C                   PARM      '*VERIFY'     POPTN             7                          CDL099
+     C                   PARM      'CDL099'      PSARD             6                          CDL099
+     C                   PARM                    DSFDY                                        CDL099
+      *                                                                                       CDL099
+     C                   IF        PRTCD = *BLANKS                                            CDL099
+     C                   MOVE      'Y'           CDL099            1                          CDL099
+     C                   ENDIF                                                                CDL099
+     C                   IF        PRTCD <> *BLANKS AND                                       CDL099
+     C                             PRTCD <> '*NRF   '                                         CDL099
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CDL099
+     C                   EVAL      DBASE = '011'                                              CDL099
+     C                   EVAL      DBKEY = 'CDL099'                                           CDL099
+     C                   MOVE      '1'           *INU7                                        CDL099
+     C                   MOVE      '1'           *INU8                                        CDL099
+     C                   DUMP                                                                 CDL099
+     C                   GOTO      #A9                                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
      C                   CALL      'AOBANKR0'                                                  S0119
      C                   PARM      *BLANKS       @RTCD             7                           S0119
      C                   PARM      '*FIRST '     @OPTN             7                           S0119

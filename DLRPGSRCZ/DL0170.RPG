@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD047993           Date 23Sep17               *
-      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
       *                 MD031938           Date 26Jul17               *
       *                 MD042153           Date 21Oct16               *
       *                 CSW216             Date 14Mar16               *
@@ -381,6 +382,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Dates                                   *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
@@ -1186,7 +1188,8 @@
      F***DL0170FMCF  F     776            WORKSTN                                    CER048 BUG22873
      F***DL0170FMCF  F     784            WORKSTN                                  BUG22873 BUG23096
      F***DL0170FMCF  F     785            WORKSTN                                  BUG23096 BUG23325
-     FDL0170FMCF  F     770            WORKSTN                                              BUG23325
+     F***DL0170FMCF  F     770            WORKSTN                                    BUG23325 CDL099
+     FDL0170FMCF  F     777            WORKSTN                                                CDL099
      F/COPY WNCPYSRC,DL0170F004
 0014 F*
 0015 F*EALS***IF**F*****400**6AI*****2 DISK                               S01104
@@ -2531,6 +2534,13 @@
      I                                        1   40@@YR                  S01136
      I                                        5   60@@Z71M                S01136
      I                                        7   80@@Z71D                S01136
+      *                                                                                       CDL099
+      ** DS for Sell Value Date                                                               CDL099
+     I            DS                                                                          CDL099
+     I                                        1   80@SDAT                                     CDL099
+     I                                        1   40FHVS2Y                                    CDL099
+     I                                        5   60FHVS2M                                    CDL099
+     I                                        7   80FHVS2D                                    CDL099
      I*                                                                   S01136
      I*   DATASTUCTURE TO CONVERT @@IAMT DECIMAL FIELD TO ALPHA FIELD     S01136
      I*                                                                   S01136
@@ -4508,6 +4518,19 @@
      C                     ENDIF                                                              CER049
      C                     ENDIF                                                              CER049
       *                                                                                       CER049
+      ** Access SAR details file to determine if CDL099 is switched ON                        CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   @RTCD                                               CDL099
+     C                     PARM '*VERIFY' @OPTN                                               CDL099
+     C                     PARM 'CDL099'  @SARD                                               CDL099
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL099
+     C                     MOVE 'N'       CDL099  1                                           CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVE 'Y'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C** Save the date format indicator to correctly format the dates     CIR001
      C**   passed to the schedule programs.                               CIR001
      C*                                                                   CIR001
@@ -6127,12 +6150,26 @@
      C           CDL008    IFEQ 'Y'                                       CDL008
      C                     MOVE *ON       *IN29                           CDL008
      C**********           MOVE CLSS      DDCLSS                                       CDL008 230257
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE *IN94     SAV94   1                                           CDL099
+     C                     MOVE *ON       *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     EXCPTDRSFX                                     CDL008
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE SAV94     *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     ELSE                                           CDL008
      C           *IN29     IFEQ *ON                                       CDL008
      C                     MOVE *OFF      *IN29                           CDL008
      C                     ENDIF                                          CDL008
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE *IN94     SAV94   1                                           CDL099
+     C                     MOVE *ON       *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     EXCPTDRSFX                                     CEU003
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE SAV94     *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     ENDIF                                          CDL008
      C                     EXSR RSTRAT                                    CDL049
       *                                                                   CDL008
@@ -11399,6 +11436,7 @@
      C                     MOVE *BLANKS   CPST   15                       S01184
      C                     MOVE *BLANKS   BKTX   11                       S01184
      C                     MOVE *BLANKS   BKST   15                       S01184
+     C                     MOVE *BLANKS   DDBSDT  7                                           CDL099
      C                     MOVE *BLANKS   DDOSRT 14                       S01453
      C                     MOVE *BLANKS   DDSGN1  1                       S01453
      C                     MOVE *BLANKS   DDFWPP  8                       S01453
@@ -12052,6 +12090,20 @@
      C                     EXSR AZ0660                     *1             E23417
      C                     MOVE @@DATE    DDODAT           *1             S01136
      C                     END                             E1             S01136
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C           FHTYPE    IFEQ 'FP'                                                          CDL099
+     C           FHTYPE    OREQ 'FS'                                                          CDL099
+     C           FHTYPE    OREQ 'CX'                                                          CDL099
+     C           FHTYPE    OREQ 'PI'                                                          CDL099
+     C           FHTYPE    OREQ 'SI'                                                          CDL099
+     C           FHTYPE    OREQ 'SW'                                                          CDL099
+     C           FHTYPE    OREQ 'PS'                                                          CDL099
+     C                     MOVE @SDAT     @@DTIN                                              CDL099
+     C                     EXSR AZ0660                                                        CDL099
+     C                     MOVE @@DATE    DDBSDT                                              CDL099
+     C                     ENDIF                                                              CDL099
+     C                     ENDIF                                                              CDL099
      C*                                                                   S01136
      C** SET INDICATORS ACCORDING TO D.P. OF BUY AND SELL CURRENCIES      S01136
      C** DETERMINE WHICH IS BUY AND WHICH IS SELL CURRENCY                S01136
@@ -12542,12 +12594,26 @@
      C           CDL008    IFEQ 'Y'                                       CDL008
      C                     MOVE *ON       *IN29                           CDL008
      C**********           MOVE CLSS      DDCLSS                                       CDL008 230257
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE *IN94     SAV94   1                                           CDL099
+     C                     MOVE *ON       *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     EXCPTDRSFX                                     CDL008
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE SAV94     *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     ELSE                                           CDL008
      C           *IN29     IFEQ *ON                                       CDL008
      C                     MOVE *OFF      *IN29                           CDL008
      C                     ENDIF                                          CDL008
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE *IN94     SAV94   1                                           CDL099
+     C                     MOVE *ON       *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     EXCPTDRSFX                                     S01136
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE SAV94     *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     ENDIF                                          CDL008
       *                                                                   CDL008
      C                     SETOF                     90                   S01311
@@ -15089,7 +15155,14 @@
      C           CDL008    IFEQ 'Y'                                       CDL008
      C                     MOVE *ON       *IN29                           CDL008
      C                     MOVE CLSS      DDCLSS                          CDL008
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE *IN94     SAV94   1                                           CDL099
+     C                     MOVE *ON       *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     EXCPTDRSFX                                     CDL008
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE SAV94     *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     ELSE                                           CDL008
      C           *IN29     IFEQ *ON                                       CDL008
      C                     MOVE *OFF      *IN29                           CDL008
@@ -15104,7 +15177,14 @@
      C**********           MOVE WA7ND     PSDSP                                      CER043 BUG21600
      C                     ENDIF                                                              CER043
       *                                                                                       CER043
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE *IN94     SAV94   1                                           CDL099
+     C                     MOVE *ON       *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     EXCPTDRSFX                                     S01145
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     MOVE SAV94     *IN94                                               CDL099
+     C                     ENDIF                                                              CDL099
      C                     ENDIF                                          CDL008
      C                     EXSR RSTRAT                                    CDL049
       *                                                                   CDL008
@@ -24890,30 +24970,55 @@
      O                         DDSLCY   271                                                   CDL049
      O                         DDSLAM   288                                                   CDL049
      O                         DDSLNR   307                                                   CDL049
-     O                         DDOSRT   321                                                   CDL049
-     O                         DDSGN1   322                                                   CDL049
-     O                         DDFWPP   330                                                   CDL049
-     O                         DDSGN2   331                                                   CDL049
-     O                         DDMGPT   339                                                   CDL049
-     O                         DDPSCY   342                                                   CDL049
-     O                         DDBCEQ   359                                                   CDL049
-     O                         DDDSTI   362                                                   CDL049
-     O                         DDPRFC   366                                                   CDL049
-     O                         DDORBR   369                                                   CDL049
-     O                         DDMGAM   387                                                   CDL049
-     O                         DDMGCY   390                                                   CDL049
-     O                         DDMMPC   394                                                   CDL049
-     O                         DDBDBS   408                                                   CDL049
-     O                         DDIND    409                                                   CDL049
-     O                         DDSDBS   423                                                   CDL049
-     O                         DDSDBE   441                                                   CDL049
-     O                         DDBDBF   449                                                   CDL049
-     O                         DDSGN3   450                                                   CDL049
-     O                         DDSDBF   458                                                   CDL049
-     O                         DDSGN4   459                                                   CDL049
-     O                         DDPTFR   463                                                   CDL049
-     O                         MATCH    464                                                   CDL049
-     O                         DDCLSS   465                                                   235343
+     O                 94      DDBSDT   314                                                   CDL099
+     O**********               DDOSRT   321                                            CDL049 CDL099
+     O**********               DDSGN1   322                                            CDL049 CDL099
+     O**********               DDFWPP   330                                            CDL049 CDL099
+     O**********               DDSGN2   331                                            CDL049 CDL099
+     O**********               DDMGPT   339                                            CDL049 CDL099
+     O**********               DDPSCY   342                                            CDL049 CDL099
+     O**********               DDBCEQ   359                                            CDL049 CDL099
+     O**********               DDDSTI   362                                            CDL049 CDL099
+     O**********               DDPRFC   366                                            CDL049 CDL099
+     O**********               DDORBR   369                                            CDL049 CDL099
+     O**********               DDMGAM   387                                            CDL049 CDL099
+     O**********               DDMGCY   390                                            CDL049 CDL099
+     O**********               DDMMPC   394                                            CDL049 CDL099
+     O**********               DDBDBS   408                                            CDL049 CDL099
+     O**********               DDIND    409                                            CDL049 CDL099
+     O**********               DDSDBS   423                                            CDL049 CDL099
+     O**********               DDSDBE   441                                            CDL049 CDL099
+     O**********               DDBDBF   449                                            CDL049 CDL099
+     O**********               DDSGN3   450                                            CDL049 CDL099
+     O**********               DDSDBF   458                                            CDL049 CDL099
+     O**********               DDSGN4   459                                            CDL049 CDL099
+     O**********               DDPTFR   463                                            CDL049 CDL099
+     O**********               MATCH    464                                            CDL049 CDL099
+     O**********               DDCLSS   465                                            235343 CDL099
+     O                         DDOSRT   328                                                   CDL099
+     O                         DDSGN1   329                                                   CDL099
+     O                         DDFWPP   337                                                   CDL099
+     O                         DDSGN2   338                                                   CDL099
+     O                         DDMGPT   346                                                   CDL099
+     O                         DDPSCY   349                                                   CDL099
+     O                         DDBCEQ   366                                                   CDL099
+     O                         DDDSTI   369                                                   CDL099
+     O                         DDPRFC   373                                                   CDL099
+     O                         DDORBR   376                                                   CDL099
+     O                         DDMGAM   394                                                   CDL099
+     O                         DDMGCY   397                                                   CDL099
+     O                         DDMMPC   401                                                   CDL099
+     O                         DDBDBS   415                                                   CDL099
+     O                         DDIND    416                                                   CDL099
+     O                         DDSDBS   430                                                   CDL099
+     O                         DDSDBE   448                                                   CDL099
+     O                         DDBDBF   456                                                   CDL099
+     O                         DDSGN3   457                                                   CDL099
+     O                         DDSDBF   465                                                   CDL099
+     O                         DDSGN4   466                                                   CDL099
+     O                         DDPTFR   470                                                   CDL099
+     O                         MATCH    471                                                   CDL099
+     O                         DDCLSS   472                                                   CDL099
      O***********              DDLRDF   450                        CDL002 CDL008
      O***********              DDICM1   451                        CDL002 CDL008
      O***********              DDIRT1   462                        CDL002 CDL008
@@ -24969,8 +25074,10 @@
      O**********               BKTX     564                                            205611 CDL049
      O**********               BKST     579                                            205611 CDL049
      O**********               MSG      655                                            205611 CDL049
-     O                         #15OYL   471                                                   CDL049
-     O                         DDICM1   472                                                   CDL049
+     O**********               #15OYL   471                                            CDL049 CDL099
+     O**********               DDICM1   472                                            CDL049 CDL099
+     O                         #15OYL   478                                                   CDL099
+     O                         DDICM1   479                                                   CDL099
      O**********               DDIRT1   483                                          CDL049 MD027717
      O**********               DDINA1   500                                          CDL049 MD027717
      O**********               DDDRDF   501                                          CDL049 MD027717
@@ -24985,20 +25092,34 @@
      O**********               MSG      669                                          CDL049 MD027717
      O**********               DDCSSN   679                                          CER043 MD027717
      O**********               PSDS1    680                                          CER043 MD027717
-     O                         DDIRT1   484                                                 MD027717
-     O                         DDINA1   501                                                 MD027717
-     O                         DDDRDF   502                                                 MD027717
-     O                         #15TYL   507                                                 MD027717
-     O                         DDICM2   508                                                 MD027717
-     O                         DDIRT2   520                                                 MD027717
-     O                         DDINA2   537                                                 MD027717
-     O                         CPTX     554                                                 MD027717
-     O                         CPST     569                                                 MD027717
-     O                         BKTX     580                                                 MD027717
-     O                         BKST     595                                                 MD027717
-     O                         MSG      671                                                 MD027717
-     O                         DDCSSN   681                                                 MD027717
-     O                         PSDS1    682                                                 MD027717
+     O**********               DDIRT1   484                                          MD027717 CDL099
+     O**********               DDINA1   501                                          MD027717 CDL099
+     O**********               DDDRDF   502                                          MD027717 CDL099
+     O**********               #15TYL   507                                          MD027717 CDL099
+     O**********               DDICM2   508                                          MD027717 CDL099
+     O**********               DDIRT2   520                                          MD027717 CDL099
+     O**********               DDINA2   537                                          MD027717 CDL099
+     O**********               CPTX     554                                          MD027717 CDL099
+     O**********               CPST     569                                          MD027717 CDL099
+     O**********               BKTX     580                                          MD027717 CDL099
+     O**********               BKST     595                                          MD027717 CDL099
+     O**********               MSG      671                                          MD027717 CDL099
+     O**********               DDCSSN   681                                          MD027717 CDL099
+     O**********               PSDS1    682                                          MD027717 CDL099
+     O                         DDIRT1   491                                                   CDL099
+     O                         DDINA1   508                                                   CDL099
+     O                         DDDRDF   509                                                   CDL099
+     O                         #15TYL   514                                                   CDL099
+     O                         DDICM2   515                                                   CDL099
+     O                         DDIRT2   527                                                   CDL099
+     O                         DDINA2   544                                                   CDL099
+     O                         CPTX     561                                                   CDL099
+     O                         CPST     576                                                   CDL099
+     O                         BKTX     587                                                   CDL099
+     O                         BKST     602                                                   CDL099
+     O                         MSG      678                                                   CDL099
+     O                         DDCSSN   688                                                   CDL099
+     O                         PSDS1    689                                                   CDL099
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0170OOP8                                           S01408
      O*                                                                   S01408

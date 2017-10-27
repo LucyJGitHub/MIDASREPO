@@ -206,6 +206,7 @@
       **  Deal Principal Amount.                                          CDL006
       *                                                                   CDL006
      D/COPY WNCPYSRC,DL0280EEP1                                           S01408
+     D BBE             S             15    DIM(2) CTDATA PERRCD(1)                            CDL099
       *                                                                                       CDL033
       ** FRCD arrays.                                                                         CDL033
       *                                                                                       CDL033
@@ -749,6 +750,9 @@
      I                               2016 2021 0AGDT                                          CSW212
      I                               2022 2023 0AGVV                                          CSW212
      I                               2024 2025 0AGVC                                          CSW212
+     I                             P 2236 2238 0BSDT1                                         CDL099
+     I                             P 2239 2241 0BSDT2                                         CDL099
+     I                             P 2242 2244 0BRSD2                                         CDL099
 0197 I*
 0198 I*    DEALS FILE - DETAIL - TAKINGS/PLACINGS/TIME DEPOSITS/LOANS.
 0199 I*
@@ -2846,6 +2850,21 @@
      C     *LOCK         IN        GLWHT                                                      CDL013
      C                   ENDIF                                                                CDL013
      C/COPY WNCPYSRC,DL0280C111                                           S01408
+      *                                                                                       CDL099
+      ** Determine if CDL099 feature is enabled                                               CDL099
+      *                                                                                       CDL099
+     C                   MOVE      *BLANK        CDL099            1                          CDL099
+     C                   CALL      'AOSARDR0'                                                 CDL099
+     C                   PARM      *BLANKS       PRTCD                                        CDL099
+     C                   PARM      '*VERIFY'     POPTN                                        CDL099
+     C                   PARM      'CDL099'      PSARD                                        CDL099
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL099
+      *                                                                                       CDL099
+     C     PRTCD         IFEQ      *BLANKS                                                    CDL099
+     C                   MOVE      'Y'           CDL099                                       CDL099
+     C                   ELSE                                                                 CDL099
+     C                   MOVE      'N'           CDL099                                       CDL099
+     C                   ENDIF                                                                CDL099
       *                                                                                       CDL033
       ** Determine if Floating Rate CD Issued feature is                                      CDL033
       ** switched on.                                                                         CDL033
@@ -3946,6 +3965,36 @@
 0829 C*
 0830 C*****     F/X OUTRIGHTS AND OPTIONS.
      C/COPY WNCPYSRC,DL0280C126                                           S01408
+      *                                                                                       CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+      *                                                                                       CDL099
+      ** If Sale Value Date is Zero, Set Equal to Value Date.                                 CDL099
+      *                                                                                       CDL099
+     C     BSDT2         IFEQ      0                                                          CDL099
+     C                   Z-ADD     VDAT          BSDT2                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+      ** If Other Leg Value Date is Zero, Set to other Leg Value Date                         CDL099
+      *                                                                                       CDL099
+     C     BRSD2         IFEQ      0                                                          CDL099
+     C                   Z-ADD     OTDT          BRSD2                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+      ** Ensure SWAP P/L 'END' Date (TDAT) is the Value Date of P/L Ccy                       CDL099
+      *                                                                                       CDL099
+     C     PCCY          IFEQ      SPLC                                                       CDL099
+     C                   Z-ADD     VDAT          TDAT              6 0                        CDL099
+     C                   ELSE                                                                 CDL099
+     C                   Z-ADD     BSDT2         TDAT                                         CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+      ** Reset 'ACCRUALS COMPLETE' Flag.                                                      CDL099
+      *                                                                                       CDL099
+     C                   MOVE      *BLANK        @DACCF            1                          CDL099
+     C                   MOVE      *BLANK        @LACCF            1                          CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
 0832 C   02DTYP          COMP      'FP'                                   50
      C   02
 0833 CANN50DTYP          COMP      'FS'                                   50
@@ -7702,6 +7751,73 @@
 1693 C     FXOUTV        TAG                                                    ** FXOUTV TAG *
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0280C127                                           S01408
+      *                                                                                       CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+      *                                                                                       CDL099
+     C     *IN47         IFEQ      '1'                                                        CDL099
+     C                   GOTO      EOJ                                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVEL     NEV(2)        NARREV                                       CDL099
+     C     DTYP          COMP      'OP'                                   53                  CDL099
+     C   53              GOTO      FXOPMT                                                     CDL099
+      *                                                                                       CDL099
+     C                   TESTB     '1'           ACEI                     53                  CDL099
+     C  N53                                                                                   CDL099
+     CANN47VDAT          COMP      EVCD                               53                      CDL099
+     C   47                                                                                   CDL099
+     CANN53                                                                                   CDL099
+     COR 53                                                                                   CDL099
+     CANN47              GOTO      #BFXOS                                                     CDL099
+      *                                                                                       CDL099
+     C                   MOVE      'V'           AKY(3)                                       CDL099
+     C                   Z-ADD     VDAT          KYDAT                                        CDL099
+      *                                                                                       CDL099
+      ** Generate Purchase Value Date Keys.                                                   CDL099
+      *                                                                                       CDL099
+     C     DTYP          IFEQ      'NX'                                                       CDL099
+     C                   EXSR      FXDV                                                       CDL099
+     C                   BITON     '1'           ACEI                                         CDL099
+     C                   MOVE      'M'           RECR                                         CDL099
+     C                   GOTO      EOJ                                                        CDL099
+     C                   ELSE                                                                 CDL099
+     C                   EXSR      #BFXPV                                                     CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   BITON     '1'           ACEI                                         CDL099
+     C                   TESTB     '4'           ACEI                     53                  CDL099
+     C   53                                                                                   CDL099
+     CANN47              MOVE      'M'           RECR                                         CDL099
+      *                                                                                       CDL099
+      ** Generate Sale Value Date Keys.                                                       CDL099
+      *                                                                                       CDL099
+     C     #BFXOS        TAG                                                                  CDL099
+      *                                                                                       CDL099
+      ** Nostro transfers do not have split value date so skip this                           CDL099
+      *                                                                                       CDL099
+     C     DTYP          IFEQ      'NX'                                                       CDL099
+     C                   GOTO      EOJ                                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   TESTB     '4'           ACEI                     53                  CDL099
+     C  N53                                                                                   CDL099
+     CANN47BSDT2         COMP      EVCD                               53                      CDL099
+     C   47                                                                                   CDL099
+     CANN53                                                                                   CDL099
+     COR 53                                                                                   CDL099
+     CANN47              GOTO      EOJ                                                        CDL099
+      *                                                                                       CDL099
+     C                   MOVE      'V'           AKY(3)                                       CDL099
+     C                   Z-ADD     BSDT2         KYDAT                                        CDL099
+     C                   EXSR      #BFXSV                                                     CDL099
+      *                                                                                       CDL099
+     C                   BITON     '4'           ACEI                                         CDL099
+     C                   TESTB     '1'           ACEI                     53                  CDL099
+     C   53                                                                                   CDL099
+     CANN47              MOVE      'M'           RECR                                         CDL099
+     C                   GOTO      #BTAG1                                                     CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
      C*                                                                   S01408
 1694 C   47              GOTO      EOJ
 1695 C                   MOVEL     NEV(2)        NARREV
@@ -7778,6 +7894,7 @@
      C                   ENDIF
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0280C128                                           S01408
+     C     #BTAG1        TAG                                                                  CDL099
      C*                                                                   S01408
      C                   Z-ADD     AIPD          TOTI                                          E1043
      C                   Z-ADD     0             AIPD                                          E1043
@@ -7943,6 +8060,85 @@
 1789 C                   TESTB     '1'           ACEI                     53
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0280C129                                           S01408
+      *                                                                                       CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+      *                                                                                       CDL099
+     C   47                                                                                   CDL099
+     CANN53              GOTO      #BFX1S                                                     CDL099
+     C  N47                                                                                   CDL099
+     CANN53VDAT          COMP      EVCD                               53                      CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              GOTO      #BFX1S                                                     CDL099
+      *                                                                                       CDL099
+      ** Set deals file update indicator                                                      CDL099
+      *                                                                                       CDL099
+     C                   MOVE      '1'           *IN15                                        CDL099
+     C                   Z-ADD     VDAT          KYDAT                                        CDL099
+     C                   MOVE      'S'           AKY(3)                                       CDL099
+      *                                                                                       CDL099
+      ** Generate 1st leg purchase value date keys                                            CDL099
+      *                                                                                       CDL099
+     C                   EXSR      #BFXPV                                                     CDL099
+     C   51              MOVEA     '   '         AKY(6)                                       CDL099
+     C   51              MOVE      'L'           AKY(9)                                       CDL099
+     C   51              MOVE      'G'           AKY(10)                                      CDL099
+     C   51              Z-ADD     PAMT          KYAMT                                        CDL099
+     C   51              MOVE      PCCY          KYCCY                                        CDL099
+     C   51              MOVE      RSCY          KYSCY                                        CDL099
+     C   51              MOVE      ROBR          KYSTBR                                       CDL099
+     C   51              SETON                                        30                      CDL099
+     C   51              EXSR      EXCP                                                       CDL099
+     C   51              SETOFF                                       30                      CDL099
+     C                   BITON     '1'           ACEI                                         CDL099
+     C                   TESTB     '4'           ACEI                     53                  CDL099
+     C   53                                                                                   CDL099
+     CANN47              MOVE      'E'           RECR                                         CDL099
+      *                                                                                       CDL099
+      ** Generate 1st leg sale value date keys                                                CDL099
+      *                                                                                       CDL099
+     C     #BFX1S        TAG                                                                  CDL099
+     C                   TESTB     '4'           ACEI                     53                  CDL099
+     C   47                                                                                   CDL099
+     CANN53              GOTO      FXSWP2                                                     CDL099
+     C  N47                                                                                   CDL099
+     CANN53BSDT2         COMP      EVCD                               53                      CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              GOTO      FXSWP2                                                     CDL099
+     C                   Z-ADD     BSDT2         KYDAT                                        CDL099
+     C                   MOVE      'S'           AKY(3)                                       CDL099
+     C                   EXSR      #BFXSV                                                     CDL099
+     C                   TESTB     '1'           ACEI                     53                  CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              MOVE      'E'           RECR                                         CDL099
+     C  N47              BITON     '4'           ACEI                                         CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              MOVE      '1'           *IN84                                        CDL099
+      *                                                                                       CDL099
+      ** Update file controls                                                                 CDL099
+      *                                                                                       CDL099
+     C  N47*IN53         IFEQ      '1'                                                        CDL099
+     C  N47TOTNDM        ADD       1             TOTNDM                                       CDL099
+     C  N47              Z-ADD     TOTIM         ZZTOTI                                       CDL099
+     C  N47              Z-ADD     TOTDM         ZZTOTD                                       CDL099
+     C  N47PAMT          DIV       1000          ZZAMT                                        CDL099
+     C  N47              EXSR      GLZADD                                                     CDL099
+     C  N47              Z-ADD     ZZTOTI        TOTIM            15 0                        CDL099
+     C  N47              Z-ADD     ZZTOTD        TOTDM             3 0                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C  N51              GOTO      FXSWP2                                                     CDL099
+     C                   MOVEA     '   '         AKY(6)                                       CDL099
+     C                   MOVE      'D'           AKY(9)                                       CDL099
+     C                   MOVE      'F'           AKY(10)                                      CDL099
+     C                   Z-ADD     SLAM          KYAMT                                        CDL099
+     C                   MOVE      SLCY          KYCCY                                        CDL099
+     C                   MOVE      PSCY          KYSCY                                        CDL099
+     C                   MOVE      POBR          KYSTBR                                       CDL099
+     C                   SETON                                        30                      CDL099
+     C                   EXSR      EXCP                                                       CDL099
+     C                   GOTO      #BTAG2                                                     CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
      C*                                                                   S01408
      C   47
 1790 CANN53              GOTO      FXSWP2
@@ -7952,8 +8148,6 @@
      C/COPY WNCPYSRC,DL0280C052
      C  N47
 1792 CAN 53              GOTO      EOJ
-      *                                                                                       CAS005
-      ** DEALSDB - Value Date (Maturity) Reversals (PS,SW)                                    CAS005
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
      C                   Z-ADD     VDAT          KYDAT
@@ -8008,6 +8202,7 @@
 1810 C                   SETON                                        30
 1811 C                   EXSR      EXCP
      C/COPY WNCPYSRC,DL0280C130                                           S01408
+     C     #BTAG2        TAG                                                                  CDL099
 1812 C*
 1813 C*****    FXSWP2 IS A ROUTINE TO HANDLE SECOND LEG VALUE DATE
 1814 C*          PROCESSING FOR SWAPS.
@@ -8015,6 +8210,132 @@
 1816 C     FXSWP2        TAG                                                    ** FXSWP2 TAG *
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0280C131                                           S01408
+      *                                                                                       CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+      *                                                                                       CDL099
+      ** Initialise 2nd Leg Purchase and Sale Value Processed Inds.                           CDL099
+      *                                                                                       CDL099
+     C                   MOVE      ' '           SWMATP            1                          CDL099
+     C                   MOVE      ' '           SWMATS            1                          CDL099
+      *                                                                                       CDL099
+      ** LDAT is latest of 2nd Leg Value Dates.                                               CDL099
+      *                                                                                       CDL099
+     C     OTDT          COMP      BRSD2                              53                      CDL099
+     C   53              Z-ADD     OTDT          LDAT              6 0                        CDL099
+     C  N53              Z-ADD     BRSD2         LDAT                                         CDL099
+     C     FSLI          COMP      1                                      53                  CDL099
+     C   53LDAT          COMP      EVCD                                 5353                  CDL099
+     C   53              TESTB     '3'           ACEI                 53                      CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              BITON     '3'           ACEI                                         CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              MOVE      'M'           RECR                                         CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              Z-ADD     AIPD          TOTI                                         CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              Z-ADD     0             AIPD                                         CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              Z-ADD     0             AITC                                         CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              Z-ADD     0             AIAN                                         CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              Z-ADD     0             AIAP                                         CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              BITOFF    '2'           DNSI                                         CDL099
+      *                                                                                       CDL099
+      ** Set Deals File Update Indicator.                                                     CDL099
+      *                                                                                       CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              MOVE      '1'           *IN15                                        CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              GOTO      EOJ                                                        CDL099
+     C     FSLI          COMP      2                                      53                  CDL099
+     C   47                                                                                   CDL099
+     CANN53              GOTO      EOJ                                                        CDL099
+     C  N53              GOTO      FXSWAC                                                     CDL099
+     C                   TESTB     '1'           ACEI                     53                  CDL099
+     C   47                                                                                   CDL099
+     CANN53              GOTO      #BFX2S                                                     CDL099
+     C  N47                                                                                   CDL099
+     CANN53VDAT          COMP      EVCD                               53                      CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              GOTO      #BFX2S                                                     CDL099
+     C  N47              TESTB     '1'           ACEI                     53                  CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              GOTO      #BFX2S                                                     CDL099
+     C                   MOVEL     NEV(2)        NARREV                                       CDL099
+     C                   Z-ADD     VDAT          KYDAT                                        CDL099
+     C                   MOVE      'M'           AKY(3)                                       CDL099
+      *                                                                                       CDL099
+      ** Generate 2nd Leg Purchase Value Date Keys.                                           CDL099
+      *                                                                                       CDL099
+     C                   EXSR      #BFXPV                                                     CDL099
+     C                   MOVE      'P'           SWMATP                                       CDL099
+     C                   BITON     '1'           ACEI                                         CDL099
+     C                   TESTB     '4'           ACEI                     53                  CDL099
+     C   53                                                                                   CDL099
+     CANN47              MOVE      'M'           RECR                                         CDL099
+      *                                                                                       CDL099
+      ** Generate 2nd Leg Sale Value Date Keys.                                               CDL099
+      *                                                                                       CDL099
+     C     #BFX2S        TAG                                                                  CDL099
+     C                   TESTB     '4'           ACEI                     53                  CDL099
+     C   47                                                                                   CDL099
+     CANN53              GOTO      #BFPPL                                                     CDL099
+     C  N47                                                                                   CDL099
+     CANN53BSDT2         COMP      EVCD                               53                      CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              GOTO      #BFPPL                                                     CDL099
+     C                   Z-ADD     BSDT2         KYDAT                                        CDL099
+     C                   MOVE      'M'           AKY(3)                                       CDL099
+     C                   MOVE      'S'           SWMATS                                       CDL099
+     C                   EXSR      #BFXSV                                                     CDL099
+     C                   BITON     '4'           ACEI                                         CDL099
+     C                   TESTB     '1'           ACEI                     53                  CDL099
+      *                                                                                       CDL099
+      ** Set Deals File Update Indicator.                                                     CDL099
+      *                                                                                       CDL099
+     C                   MOVE      '1'           *IN15                                        CDL099
+     C  N47                                                                                   CDL099
+     CAN 53              MOVE      'M'           RECR                                         CDL099
+     C  N47              Z-ADD     AIPD          TOTI                                         CDL099
+     C  N47              Z-ADD     0             AIPD                                         CDL099
+     C  N47              Z-ADD     0             AITC                                         CDL099
+     C  N47              Z-ADD     0             AIAN                                         CDL099
+     C  N47              Z-ADD     0             AIAP                                         CDL099
+     C  N47              BITOFF    '2'           DNSI                                         CDL099
+     C   51              GOTO      PSINT                                                      CDL099
+     C     SPLA          COMP      0                                  676853                  CDL099
+     C   53              GOTO      FXSWAC                                                     CDL099
+      *                                                                                       CDL099
+      ** If Purchase Keys have beeb Generated abive and Purchase                              CDL099
+      ** Currency is P/L Currency then Generate P/L Keys Below.                               CDL099
+      *                                                                                       CDL099
+     C     #BFPPL        TAG                                                                  CDL099
+     C   51              GOTO      PSINT                                                      CDL099
+      *                                                                                       CDL099
+     C     SWMATP        IFEQ      'P'                                                        CDL099
+     C     SPLC          ANDEQ     PCCY                                                       CDL099
+     C                   Z-ADD     VDAT          KYDAT                                        CDL099
+     C                   GOTO      #BFSPL                                                     CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+      ** If Sale Keys have been Generated above and Sale Currency is                          CDL099
+      ** P/L Currency then Generate Keys below.                                               CDL099
+      *                                                                                       CDL099
+     C     SWMATS        IFEQ      'S'                                                        CDL099
+     C     SPLC          ANDEQ     SLCY                                                       CDL099
+     C                   Z-ADD     BSDT2         KYDAT                                        CDL099
+     C                   ELSE                                                                 CDL099
+     C                   GOTO      FXSWAC                                                     CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C     #BFSPL        TAG                                                                  CDL099
+     C     SPLA          COMP      0                                  676853                  CDL099
+     C   53              GOTO      PSINT                                                      CDL099
+     C                   GOTO      #BTAG3                                                     CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
      C*                                                                   S01408
 1817 C     FSLI          COMP      1                                      53
 1818 C   53OTDT          COMP      EVCD                                 5353
@@ -8105,6 +8426,7 @@
 1839 C     SPLA          COMP      0                                  676853     PROFIT
 1840 C   53              GOTO      FXSWAC                                         / LOSS
      C/COPY WNCPYSRC,DL0280C132                                           S01408
+     C     #BTAG3        TAG                                                                  CDL099
 1841 C                   MOVEA     '   '         AKY(6)                                  KEY
 1842 C                   MOVEA     DLST          AKY(4)
 1843 C                   MOVE      ' '           AKY(9)
@@ -8148,6 +8470,110 @@
 1877 C     PSINT         TAG                                                    ** PSINT TAG **
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0280C133                                           S01408
+      *                                                                                       CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+      *                                                                                       CDL099
+      ** If Purchase Processing Performed above then Output Keys below                        CDL099
+      *                                                                                       CDL099
+     C     SWMATP        CABNE     'P'           #BFSAK                                       CDL099
+      *                                                                                       CDL099
+     C                   Z-ADD     VDAT          KYDAT                                        CDL099
+     C                   MOVE      'M'           AKY(3)                                       CDL099
+     C                   MOVEA     '   '         AKY(6)                                       CDL099
+     C                   MOVE      'D'           AKY(9)                                       CDL099
+     C                   MOVE      'F'           AKY(10)                                      CDL099
+     C                   Z-ADD     IDAM          KYAMT                                        CDL099
+     C                   MOVE      IDCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+     C                   MOVE      'D'           AKY(9)                                       CDL099
+     C                   MOVE      'I'           AKY(10)                                      CDL099
+     C                   Z-ADD     IDIA          KYAMT                                        CDL099
+     C                   MOVE      IDCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+     C                   MOVE      'D'           AKY(9)                                       CDL099
+     C                   MOVE      'B'           AKY(10)                                      CDL099
+     C     IDAM          ADD       IDIA          KYAMT                                        CDL099
+     C                   MOVE      IDCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+      ** Remaining Deposit Interest                                                           CDL099
+      *                                                                                       CDL099
+     C     IDIA          SUB       DIPD          KYAMT                                        CDL099
+     C                   Z-ADD     IDIA          DIPD                                         CDL099
+     C                   MOVE      'D'           AKY(9)                                       CDL099
+     C                   MOVE      'A'           AKY(3)                                       CDL099
+     C                   MOVE      'A'           AKY(10)                                      CDL099
+     C                   MOVE      IDCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   Z-ADD     KYAMT         NRRSAL                                       CDL099
+     C                   MOVE      KYCCY         SALCY                                        CDL099
+     C                   SETON                                        3071                    CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+     C                   SETOFF                                       3071                    CDL099
+     C                   MOVE      'Y'           @DACCF                                       CDL099
+      *                                                                                       CDL099
+     C     #BFSAK        TAG                                                                  CDL099
+      *                                                                                       CDL099
+      ** If Sale Currency Processed Above then Output Keys below                              CDL099
+      *                                                                                       CDL099
+     C     SWMATS        CABNE     'S'           FXSWAC                                       CDL099
+     C                   Z-ADD     BSDT2         KYDAT                                        CDL099
+     C                   MOVEA     '   '         AKY(6)                                       CDL099
+     C                   MOVE      'M'           AKY(3)                                       CDL099
+     C                   MOVE      'L'           AKY(9)                                       CDL099
+     C                   MOVE      'G'           AKY(10)                                      CDL099
+     C                   Z-ADD     ILAM          KYAMT                                        CDL099
+     C                   MOVE      ILCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+     C                   MOVE      'L'           AKY(9)                                       CDL099
+     C                   MOVE      'I'           AKY(10)                                      CDL099
+     C                   Z-ADD     ILIA          KYAMT                                        CDL099
+     C                   MOVE      ILCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+     C                   MOVE      'L'           AKY(9)                                       CDL099
+     C                   MOVE      'B'           AKY(10)                                      CDL099
+     C     ILAM          ADD       ILIA          KYAMT                                        CDL099
+     C                   MOVE      ILCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+      ** Remaining Loan Interest                                                              CDL099
+      *                                                                                       CDL099
+     C     ILIA          SUB       LIPD          KYAMT                                        CDL099
+     C                   Z-ADD     ILIA          LIPD                                         CDL099
+     C                   MOVE      'A'           AKY(3)                                       CDL099
+     C                   MOVE      'A'           AKY(10)                                      CDL099
+     C                   MOVE      'L'           AKY(9)                                       CDL099
+     C                   MOVE      ILCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   Z-ADD     KYAMT         NRRSAL                                       CDL099
+     C                   MOVE      KYCCY         SALCY                                        CDL099
+     C                   SETON                                        3071                    CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+     C                   SETOFF                                       3071                    CDL099
+     C                   MOVE      'Y'           @LACCF                                       CDL099
+     C                   GOTO      #BTAG4                                                     CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
      C*                                                                   S01408
 1878 C                   MOVE      'M'           AKY(3)
 1879 C                   MOVEA     '   '         AKY(6)
@@ -8155,26 +8581,6 @@
 1881 C                   MOVE      'F'           AKY(10)                          CONTRACT
 1882 C                   Z-ADD     IDAM          KYAMT                             PROCESSING
 1883 C                   MOVE      IDCY          KYCCY
-     C                   MOVE      *BLANKS       KYSCY                                         CEU00
-1883 C                   MOVE      PRFC          OPPRFC                                        S0111
-1884 C                   EXSR      EXCP
-1885 C                   MOVE      'L'           AKY(9)
-1886 C                   MOVE      'G'           AKY(10)
-1887 C                   Z-ADD     ILAM          KYAMT
-1888 C                   MOVE      ILCY          KYCCY
-     C                   MOVE      *BLANKS       KYSCY                                         CEU00
-1883 C                   MOVE      PRFC          OPPRFC                                        S0111
-1889 C                   EXSR      EXCP
-1890 C                   MOVE      'D'           AKY(9)
-1891 C                   MOVE      'I'           AKY(10)
-1892 C                   Z-ADD     IDIA          KYAMT
-1893 C                   MOVE      IDCY          KYCCY
-     C                   MOVE      *BLANKS       KYSCY                                         CEU00
-1883 C                   MOVE      PRFC          OPPRFC                                        S0111
-1894 C                   EXSR      EXCP
-1895 C                   MOVE      'L'           AKY(9)
-1896 C                   Z-ADD     ILIA          KYAMT
-1897 C                   MOVE      ILCY          KYCCY
      C                   MOVE      *BLANKS       KYSCY                                         CEU00
 1883 C                   MOVE      PRFC          OPPRFC                                        S0111
 1898 C                   EXSR      EXCP
@@ -8213,6 +8619,7 @@
 1923 C                   EXSR      EXCP
 1924 C                   GOTO      EOJ
      C/COPY WNCPYSRC,DL0280C134                                           S01408
+     C     #BTAG4        TAG                                                                  CDL099
 1925 C*
 1926 C*****    FXSWAC IS A ROUTINE TO HANDLE ACCRUAL DATE PROCESSING
 1927 C*          FOR F/X SWAPS.
@@ -8231,10 +8638,30 @@
 1938 C   51              GOTO      INTCAL
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0280C135                                           S01408
+      *                                                                                       CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+      *                                                                                       CDL099
+     C     TDAT          SUB       OTDT          SWPDYS            5 0                        CDL099
+      *                                                                                       CDL099
+      ** If Swap Accrual 'END' Date is Less than Event Date then Accrue                       CDL099
+      ** to Swap 'END' Date                                                                   CDL099
+      *                                                                                       CDL099
+     C     EVCD          IFLT      TDAT                                                       CDL099
+     C     EVCD          SUB       OTDT          SWPTD             5 0                        CDL099
+     C                   Z-ADD     EVCD          KYDAT                                        CDL099
+     C                   ELSE                                                                 CDL099
+     C     TDAT          SUB       OTDT          SWPTD             5 0                        CDL099
+     C                   Z-ADD     TDAT          KYDAT                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   GOTO      #BTAG5                                                     CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
      C*                                                                   S01408
 1939 C     VDAT          SUB       OTDT          SWPDYS            5 0          SWAP PERIOD
 1940 C     EVCD          SUB       OTDT          SWPTD             5 0          PERIOD TO DATE
      C/COPY WNCPYSRC,DL0280C136                                           S01408
+     C     #BTAG5        TAG                                                                  CDL099
 1941 C     SWPTD         COMP      0                                    53
 1942 C   53              GOTO      EOJ
 1943 C     SWPTD         COMP      SWPDYS                             53  53
@@ -8265,7 +8692,9 @@
 1962 C                   MOVEA     DLST          AKY(4)
 1963 C                   MOVE      ' '           AKY(9)
      C/COPY WNCPYSRC,DL0280C137                                           S01408
+     C     CDL099        IFNE      'Y'                                                        CDL099
 1964 C                   Z-ADD     EVCD          KYDAT
+     C                   ENDIF                                                                CDL099
      C/COPY WNCPYSRC,DL0280C138                                           S01408
 1965 C   67              Z-ADD     WORKTP        KYAMT
 1966 C   67              MOVE      'P'           AKY(3)
@@ -8301,6 +8730,72 @@
 1991 C   47              GOTO      EOJ
 1992 C     INTCAL        TAG                                                    ** INTCAL TAG *
      C/COPY WNCPYSRC,DL0280C139                                           S01408
+      *                                                                                       CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+      *                                                                                       CDL099
+      ** Set up Loan Beginning and End Dates for Accrual.                                     CDL099
+      *                                                                                       CDL099
+     C                   Z-ADD     OTDT          ZIBEG                                        CDL099
+      *                                                                                       CDL099
+      ** If Loan End Date is Earlier than EVCD then Accrue to Loan End                        CDL099
+      ** Date.                                                                                CDL099
+      *                                                                                       CDL099
+     C     BSDT2         IFLT      EVCD                                                       CDL099
+     C                   Z-ADD     BSDT2         ZIEND                                        CDL099
+     C                   Z-ADD     BSDT2         KYDAT                                        CDL099
+     C                   ELSE                                                                 CDL099
+     C                   Z-ADD     EVCD          ZIEND                                        CDL099
+     C                   Z-ADD     EVCD          KYDAT                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C  N29ZIEND         ADD       1             ZIEND                                        CDL099
+     C                   Z-ADD     ILAM          ZIAMT                                        CDL099
+     C                   Z-ADD     ILCM          ZICALC                                       CDL099
+     C                   Z-ADD     ILIR          ZIRATE                                       CDL099
+     C                   MOVEL     JLRDF         ZIRDFC            1                          CDL099
+     C                   EXSR      GLINTC                                                     CDL099
+      *                                                                                       CDL099
+      * To replace a line removed from the internally described GLINTC                        CDL099
+      *                                                                                       CDL099
+     C     *IN02         IFEQ      '1'                                                        CDL099
+     C     ZIRDFC        ANDEQ     'Y'                                                        CDL099
+     C     *IN03         OREQ      '1'                                                        CDL099
+     C     JRDFC         ANDEQ     'Y'                                                        CDL099
+     C     *IN04         OREQ      '1'                                                        CDL099
+     C     JRDFC         ANDEQ     'Y'                                                        CDL099
+     C                   Z-ADD     ZINTR         WKINT                                        CDL099
+     C                   ELSE                                                                 CDL099
+     C                   Z-ADD(H)  ZINTR         WKINT                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   Z-ADD     WKINT         LITD             13 0                        CDL099
+      *                                                                                       CDL099
+      ** Set Up Deposit Beginning and End Dates for Accrual.                                  CDL099
+      *                                                                                       CDL099
+     C                   Z-ADD     BRSD2         ZIBEG                                        CDL099
+      *                                                                                       CDL099
+      ** If Deposit End Date is Earlier than EVCD then Accrue to                              CDL099
+      ** Deposit End Date.                                                                    CDL099
+      *                                                                                       CDL099
+     C     VDAT          IFLT      EVCD                                                       CDL099
+     C                   Z-ADD     VDAT          ZIEND                                        CDL099
+     C                   Z-ADD     VDAT          KYDAT                                        CDL099
+     C                   ELSE                                                                 CDL099
+     C                   Z-ADD     EVCD          ZIEND                                        CDL099
+     C                   Z-ADD     EVCD          KYDAT                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C  N29ZIEND         ADD       1             ZIEND                                        CDL099
+      *                                                                                       CDL099
+     C                   Z-ADD     IDAM          ZIAMT                                        CDL099
+     C                   Z-ADD     IDCM          ZICALC                                       CDL099
+     C                   Z-ADD     IDIR          ZIRATE                                       CDL099
+     C                   MOVEL     JDRDF         ZIRDFC                                       CDL099
+      *                                                                                       CDL099
+     C                   GOTO      #BTAG7                                                     CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
 1993 C                   Z-ADD     OTDT          ZIBEG
 1994 C                   Z-ADD     EVCD          ZIEND
 1995 C  N29ZIEND         ADD       1             ZIEND
@@ -8352,6 +8847,7 @@
       *                                                                                       262186
      C                   MOVEL     JDRDF         ZIRDFC                                        S0139
      C/COPY WNCPYSRC,DL0280CP32                                           S01408
+     C     #BTAG7        TAG                                                                  CDL099
 2004 C                   EXSR      GLINTC
      C/COPY WNCPYSRC,DL0280CP33                                           S01408
      C* To replace a line removed from the internally described GLINTC    066550
@@ -8384,6 +8880,46 @@
 2017 C                   MOVE      'D'           AKY(9)
 2018 C                   MOVE      'A'           AKY(10)
      C/COPY WNCPYSRC,DL0280C140                                           S01408
+      *                                                                                       CDL099
+     C     CDL099        IFEQ      'Y'                                                        CDL099
+      *                                                                                       CDL099
+     C                   Z-ADD     DITP          KYAMT                                        CDL099
+     C   47              Z-ADD     DIPD          KYAMT                                        CDL099
+     C                   Z-ADD     IDIR          NRRT                                         CDL099
+     C                   MOVE      IDCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   Z-ADD     KYAMT         NRRSAL                                       CDL099
+     C                   MOVE      KYCCY         SALCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   Z-ADD     NRRT          ICIR             11 7                        CDL099
+      *                                                                                       CDL099
+     C     OTDT          IFLE      EVCD                                                       CDL099
+     C     @DACCF        ANDNE     'Y'                                                        CDL099
+     C                   SETON                                        3071                    CDL099
+     C                   EXSR      EXCP                                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVE      'L'           AKY(9)                                       CDL099
+     C                   Z-ADD     LITP          KYAMT                                        CDL099
+     C   47              Z-ADD     LIPD          KYAMT                                        CDL099
+     C                   Z-ADD     ILIR          NRRT                                         CDL099
+     C                   MOVE      ILCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVE      KYCCY         SALCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   Z-ADD     KYAMT         NRRSAL                                       CDL099
+     C                   Z-ADD     NRRT          ICIR                                         CDL099
+      *                                                                                       CDL099
+     C     OTDT          IFLE      EVCD                                                       CDL099
+     C     @LACCF        ANDNE     'Y'                                                        CDL099
+     C                   SETON                                        3071                    CDL099
+     C                   EXSR      EXCP                                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   GOTO      #BTAG8                                                     CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
 2019 C                   Z-ADD     EVCD          KYDAT
 2020 C                   Z-ADD     DITP          KYAMT
 2021 C   47              Z-ADD     DIPD          KYAMT
@@ -8407,6 +8943,7 @@
 2036 C                   SETON                                        3071
 2037 C                   EXSR      EXCP
      C/COPY WNCPYSRC,DL0280C141                                           S01408
+     C     #BTAG8        TAG                                                                  CDL099
 2038 C  N47LIPD          ADD       LITP          LIPD
 2039 C  N47DIPD          ADD       DITP          DIPD
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01093
@@ -11085,6 +11622,217 @@
 2584 C*
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0280C142                                           S01408
+      *                                                                                       CDL099
+      ********************************************************************                    CDL099
+      ** #BFXPV IS A SUBROUTINE TO GENERATE ACCOUNT KEYS FOR PURCHASE    *                    CDL099
+      **        VALUE DATE FOR F/X OUTRIGHTS AND OPTIONS.                *                    CDL099
+      ********************************************************************                    CDL099
+      *                                                                                       CDL099
+     C     #BFXPV        BEGSR                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVE      ' '           SPLIT             1                          CDL099
+     C     BSDT2         COMP      VDAT                                 53                    CDL099
+     C   53              MOVE      'S'           SPLIT                                        CDL099
+     C     VDAT          COMP      BSDT2                                53                    CDL099
+     C   53              MOVE      'P'           SPLIT                                        CDL099
+     C     DTYP          COMP      'OP'                                   53                  CDL099
+     C                   MOVEA     DLST          AKY(4)                                       CDL099
+     C                   MOVEA     '   '         AKY(6)                                       CDL099
+     C   65              MOVE      'B'           AKY(9)                                       CDL099
+     C                   MOVE      'B'           AKY(10)                                      CDL099
+     C                   MOVEL     BBE(2)        NARREV                                       CDL099
+     C                   Z-ADD     PAMT          KYAMT                                        CDL099
+     C  N47                                                                                   CDL099
+     CAN 53                                                                                   CDL099
+     CANN72              Z-ADD     ORPA          KYAMT                                        CDL099
+     C                   MOVE      PCCY          KYCCY                                        CDL099
+     C                   MOVE      RSCY          KYSCY                                        CDL099
+     C                   MOVE      ROBR          KYSTBR                                       CDL099
+     C                   Z-ADD     PCST          KYSETL                                       CDL099
+     C                   MOVE      OPCA          KYOSTL                                       CDL099
+     C                   Z-ADD     SLAM          KYOTH                                        CDL099
+     C                   MOVE      SLCY          KYOCCY                                       CDL099
+      *                                                                                       CDL099
+      ** Calculate the Federal Fund Value date                                                CDL099
+      *                                                                                       CDL099
+     C                   EXSR      FEDAT                                                      CDL099
+     C  N65              MOVE      'F'           AKY(9)                                       CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+     C                   Z-ADD     KYAMT         NRRPUR                                       CDL099
+     C                   MOVEA     PCCY          AKY(6)                                       CDL099
+     C                   MOVEA     ' '           AKY(9)                                       CDL099
+     C   11              MOVE      SPLIT         AKY(9)                                       CDL099
+     C                   MOVE      'P'           AKY(10)                                      CDL099
+     C                   Z-ADD     BCEQ          KYAMT                                        CDL099
+      *                                                                                       CDL099
+      ** Reset 53 again                                                                       CDL099
+      *                                                                                       CDL099
+     C     DTYP          COMP      'OP'                                   53                  CDL099
+     C  N47                                                                                   CDL099
+     CAN 53                                                                                   CDL099
+     CANN72              Z-ADD     OBCE          KYAMT                                        CDL099
+     C                   MOVE      BJCYCD        KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   Z-ADD     PCST          KYSETL                                       CDL099
+     C                   MOVE      OPCA          KYOSTL                                       CDL099
+     C                   MOVE      SLCY          KYOCCY                                       CDL099
+     C                   MOVE      SLCY          SALCY                                        CDL099
+     C                   Z-ADD     SLAM          KYOTH                                        CDL099
+      *                                                                                       CDL099
+      ** Calculate the Federal Fund Value date                                                CDL099
+      *                                                                                       CDL099
+     C                   EXSR      FEDAT                                                      CDL099
+     C                   SETON                                        3871                    CDL099
+      *                                                                                       CDL099
+     C     BGN0ST        IFEQ      'Y'                                                        CDL099
+     C     MGCY          ANDEQ     SLCY                                                       CDL099
+     C     MGCY          ANDEQ     BJCYCD                                                     CDL099
+     C                   ADD       MGAM          KYAMT                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C     BGN0ST        IFEQ      'Y'                                                        CDL099
+     C     MGCY          ANDEQ     PCCY                                                       CDL099
+     C     MGCY          ANDEQ     BJCYCD                                                     CDL099
+     C                   SUB       MGAM          KYAMT                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+     C                   SETOFF                                       3871                    CDL099
+      *                                                                                       CDL099
+     C     BGN0ST        IFEQ      'Y'                                                        CDL099
+     C     MGCY          ANDEQ     PCCY                                                       CDL099
+      *                                                                                       CDL099
+      ** If Analytical Accounting module is available, set-up account                         CDL099
+      ** key for the transaction profit centre.                                               CDL099
+      *                                                                                       CDL099
+     C     MGCY          IFEQ      BJCYCD                                                     CDL099
+     C                   MOVE      'B'           AKY(9)                                       CDL099
+     C                   ELSE                                                                 CDL099
+     C                   MOVE      'F'           AKY(9)                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVEA     '   '         AKY(6)                                       CDL099
+     C                   MOVE      'M'           AKY(10)                                      CDL099
+     C                   MOVE      MGCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   Z-ADD     MGAM          KYAMT                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+     C                   MOVE      ' '           AKY(9)                                       CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVE      '1'           *IN15                                        CDL099
+      *                                                                                       CDL099
+     C                   ENDSR                                                                CDL099
+      *                                                                                       CDL099
+      *******************************************************************                     CDL099
+      *  #BFXSV IS A SUBROUTINE TO GENERATE ACCOUNT KEYS FOR SALE VALUE *                     CDL099
+      *         DATE FOR F/X OUTRIGHTS AND OPTIONS.                     *                     CDL099
+      *******************************************************************                     CDL099
+      *                                                                                       CDL099
+     C     #BFXSV        BEGSR                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVE      ' '           SPLIT             1                          CDL099
+     C     BSDT2         COMP      VDAT                                 53                    CDL099
+     C   53              MOVE      'S'           SPLIT                                        CDL099
+     C     VDAT          COMP      BSDT2                                53                    CDL099
+     C   53              MOVE      'P'           SPLIT                                        CDL099
+     C                   MOVEA     DLST          AKY(4)                                       CDL099
+     C                   MOVEA     '   '         AKY(6)                                       CDL099
+     C   66              MOVE      'B'           AKY(9)                                       CDL099
+     C  N66              MOVE      'F'           AKY(9)                                       CDL099
+     C                   MOVE      'C'           AKY(10)                                      CDL099
+     C                   MOVEL     BBE(1)        NARREV                                       CDL099
+     C                   Z-ADD     SLAM          KYAMT                                        CDL099
+      *                                                                                       CDL099
+      ** Reset 53 again                                                                       CDL099
+      *                                                                                       CDL099
+     C     DTYP          COMP      'OP'                                   53                  CDL099
+     C  N47                                                                                   CDL099
+     CAN 53                                                                                   CDL099
+     CANN72              Z-ADD     ORSA          KYAMT                                        CDL099
+     C                   MOVE      SLCY          KYCCY                                        CDL099
+     C                   MOVE      PSCY          KYSCY                                        CDL099
+     C                   MOVE      POBR          KYSTBR                                       CDL099
+     C                   Z-ADD     SCST          KYSETL                                       CDL099
+     C                   MOVE      OSCA          KYOSTL                                       CDL099
+     C                   Z-ADD     PAMT          KYOTH                                        CDL099
+     C                   MOVE      PCCY          KYOCCY                                       CDL099
+      *                                                                                       CDL099
+      ** Calculate the Federal Fund Value date                                                CDL099
+      *                                                                                       CDL099
+     C                   EXSR      FEDAT                                                      CDL099
+     C                   SETON                                        71                      CDL099
+     C                   Z-ADD     KYAMT         NRRSAL                                       CDL099
+     C                   MOVE      KYCCY         SALCY                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+     C                   Z-ADD     BCEQ          KYAMT                                        CDL099
+     C     DTYP          COMP      'OP'                                   53                  CDL099
+     C  N47                                                                                   CDL099
+     CAN 53                                                                                   CDL099
+     CANN72              Z-ADD     OBCE          KYAMT                                        CDL099
+     C                   MOVE      BJCYCD        KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   MOVEA     SLCY          AKY(6)                                       CDL099
+     C                   MOVE      'S'           AKY(10)                                      CDL099
+     C                   MOVEA     ' '           AKY(9)                                       CDL099
+     C   11              MOVE      SPLIT         AKY(9)                                       CDL099
+     C                   Z-ADD     SCST          KYSETL                                       CDL099
+     C                   MOVE      OSCA          KYOSTL                                       CDL099
+     C                   Z-ADD     PAMT          KYOTH                                        CDL099
+     C                   MOVE      PCCY          KYOCCY                                       CDL099
+     C                   Z-ADD     KYDAT         KYFED                                        CDL099
+     C                   SETON                                        38                      CDL099
+      *                                                                                       CDL099
+     C     BGN0ST        IFEQ      'Y'                                                        CDL099
+     C     MGCY          ANDEQ     SLCY                                                       CDL099
+     C     MGCY          ANDEQ     BJCYCD                                                     CDL099
+     C                   ADD       MGAM          KYAMT                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C     BGN0ST        IFEQ      'Y'                                                        CDL099
+     C     MGCY          ANDEQ     PCCY                                                       CDL099
+     C     MGCY          ANDEQ     BJCYCD                                                     CDL099
+     C                   SUB       MGAM          KYAMT                                        CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+     C                   SETOFF                                       38                      CDL099
+      *                                                                                       CDL099
+     C     BGN0ST        IFEQ      'Y'                                                        CDL099
+     C     MGCY          ANDEQ     SLCY                                                       CDL099
+      *                                                                                       CDL099
+      ** If Analytical Accounting module is available, set-up account                         CDL099
+      ** key for the transaction profit centre.                                               CDL099
+      *                                                                                       CDL099
+     C     MGCY          IFEQ      BJCYCD                                                     CDL099
+     C                   MOVE      'B'           AKY(9)                                       CDL099
+     C                   ELSE                                                                 CDL099
+     C                   MOVE      'F'           AKY(9)                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVEA     '   '         AKY(6)                                       CDL099
+     C                   MOVE      'M'           AKY(10)                                      CDL099
+     C                   MOVE      MGCY          KYCCY                                        CDL099
+     C                   MOVE      *BLANKS       KYSCY                                        CDL099
+     C                   Z-ADD     MGAM          KYAMT                                        CDL099
+     C                   MOVE      PRFC          OPPRFC                                       CDL099
+     C                   EXSR      EXCP                                                       CDL099
+      *                                                                                       CDL099
+     C                   MOVE      ' '           AKY(9)                                       CDL099
+      *                                                                                       CDL099
+     C                   ENDIF                                                                CDL099
+      *                                                                                       CDL099
+     C                   MOVE      '1'           *IN15                                        CDL099
+      *                                                                                       CDL099
+     C                   ENDSR                                                                CDL099
+      *                                                                                       CDL099
      C*                                                                   S01408
 2585 C********************************************************************
 2586 C*
@@ -32347,6 +33095,9 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0280OOP1                                           S01408
      O*                                                                   S01408
+** BBE - ADDITIONAL EVENT TYPES                                                               CDL099
+SALE VALUE                                                                                    CDL099
+PURCH. VALUE                                                                                  CDL099
 ** CPY@   **      OBJECT COPYRIGHT
 (c) Misys International Banking Systems Ltd. 2001
 **   ZFMD  -  NUMBER OF DAYS IN THE MONTH

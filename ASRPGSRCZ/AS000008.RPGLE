@@ -24,8 +24,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -121,24 +123,24 @@
       * *PSSR     - Program Exception Error Routine                   *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FDEALSDB   UF   E             DISK    INFSR(*PSSR)
       ** Midas DL Foreign Exchange Deals File
-
+ 
      FDEALSDC   UF   E             DISK    INFSR(*PSSR)
       ** Midas DL Money Market and Loans Deals File
-
+ 
      FDEALSDD   UF   E             DISK    INFSR(*PSSR)
       ** Midas DL Negotiable Assets Purchased Deals File
-
+ 
      FCLOANCL   UF   E             DISK    INFSR(*PSSR)
       ** Midas LE Customer Loans File
-
+ 
      FTRANSD    UF   E             DISK    INFSR(*PSSR)                                       CAS003
       ** Midas FF Transaction Details File                                                    CAS003
                                                                                               CAS003
@@ -160,7 +162,7 @@
      F                                     RENAME(RXNPVAD0:RXNPVBD0)                          CAS005
      F                                     PREFIX(CB)                                         CAS005
       ** Midas IR Revalued CIRS Using Base Rate                                               CAS005
-
+ 
      FFFNPVLPD  UF   E             DISK    INFSR(*PSSR)                                       CAS003
       ** Midas FF Revalued Futures and Options Positions File                                 CAS003
                                                                                               CAS003
@@ -201,16 +203,16 @@
      FASFHTRPD  UF   E             DISK    INFSR(*PSSR)                                       CAS006
      F                                                                                        CAS006
       ** Midas AS Forecast Transactions File                                                  CAS006
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -222,13 +224,13 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
-
+ 
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
-
+ 
       ** DS for SC Switchable Features                                                        CAS003
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS003
                                                                                               CAS003
@@ -241,42 +243,42 @@
      D POptn           S              7A                                                      CAS003
      D CAS003          S              1A                                                      CAS003
      D CAS004          S              1A                                                      CAS004
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
      C                   EXSR      SRForEx
-
+ 
      C                   EXSR      SRMonMrkt
-
+ 
      C                   EXSR      SRNegAsst
-
+ 
      C                   EXSR      SRLending
                                                                                               CAS006
      C                   EXSR      SRForeTrn                                                  CAS006
-
+ 
      C                   EXSR      SRIRNPV
-
+ 
      C                   IF        CAS003 = 'Y'                                               CAS003
      C                   EXSR      SRFFTrans                                                  CAS003
                                                                                               CAS003
      C                   EXSR      SRFFNPV                                                    CAS003
      C                   ENDIF                                                                CAS003
-
+ 
      C                   EXSR      SRSENPV
-
+ 
      C                   EVAL      *INLR = *ON
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -289,11 +291,11 @@
       *  Calls    :  None                                             *
       *                                                               *
       ****************************************************************
-
+ 
      C     SRForEx       BEGSR
-
+ 
      C                   READ      DEALSDB
-
+ 
      C                   DOW       NOT %EOF(DEALSDB)
      C                   EVAL      FSYUPL = FSURPL
                                                                                               CAS004
@@ -307,9 +309,9 @@
      C                   UPDATE    DEALSDBF
      C                   READ      DEALSDB
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -322,11 +324,11 @@
       *  Calls    :  None                                             *
       *                                                               *
       ****************************************************************
-
+ 
      C     SRMonMrkt     BEGSR
-
+ 
      C                   READ      DEALSDC
-
+ 
      C                   DOW       NOT %EOF(DEALSDC)
      C***********        EVAL      FSYUPL = FSURPL                                            CAS005
      C                   EVAL      FSYUPL = FSTUPL                                            CAS005
@@ -353,9 +355,9 @@
      C                   UPDATE    MMNPVAD0                                                   CAS006
      C                   READ      MMNPVAPD                                                   CAS006
      C                   ENDDO                                                                CAS006
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -369,20 +371,20 @@
       *  Calls    :  None                                             *
       *                                                               *
       ****************************************************************
-
+ 
      C     SRNegAsst     BEGSR
-
+ 
      C                   READ      DEALSDD
-
+ 
      C                   DOW       NOT %EOF(DEALSDD)
      C***********        EVAL      FSYUPL = FSURPL                                            CAS005
      C                   EVAL      FSYUPL = FSTUPL                                            CAS005
      C                   UPDATE    DEALSDDF
      C                   READ      DEALSDD
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -395,11 +397,11 @@
       *  Calls    :  None                                             *
       *                                                               *
       ****************************************************************
-
+ 
      C     SRLending     BEGSR
-
+ 
      C                   READ      CLOANCL
-
+ 
      C                   DOW       NOT %EOF(CLOANCL)
      C***********        EVAL      FSYUPL = FSURPL                                            CAS005
      C                   EVAL      FSYUPL = FSPLAM                                            CAS005
@@ -426,9 +428,9 @@
      C                   UPDATE    LENPVAD0                                                   CAS006
      C                   READ      LENPVAPD                                                   CAS006
      C                   ENDDO                                                                CAS006
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT                                                                                  CAS006
       *****************************************************************                       CAS006
@@ -465,14 +467,14 @@
       *  Calls    :  None                                             *
       *                                                               *
       ****************************************************************
-
+ 
      C     SRIRNPV       BEGSR
-
+ 
       ** Single Currency using All-in-Rate                                                    CAS005
                                                                                               CAS005
      C**********         READ      IRNPVLPD                                                   CAS005
      C                   READ      IRNPVAPD                                                   CAS005
-
+ 
      C**********         DOW       NOT %EOF(IRNPVLPD)                                         CAS005
      C                   DOW       NOT %EOF(IRNPVAPD)                                         CAS005
      C                   EVAL      IRYUPL = IRURPL
@@ -481,7 +483,7 @@
      C                   UPDATE    IRNPVAD0                                                   CAS005
      C                   READ      IRNPVAPD                                                   CAS005
      C                   ENDDO
-
+ 
       ** Cross Currency using All-in-Rate                                                     CAS005
                                                                                               CAS005
      C                   READ      RXNPVAPD                                                   CAS005
@@ -533,7 +535,7 @@
      C                   ENDDO                                                                CAS006
                                                                                               CAS006
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT                                                                                  CAS003
       *****************************************************************                       CAS003
@@ -598,9 +600,9 @@
       *  Calls    :  None                                             *
       *                                                               *
       ****************************************************************
-
+ 
      C     SRSENPV       BEGSR
-
+ 
      C**********         READ      SENPVLPD                                                   CAS006
       **********                                                                              CAS006
      C**********         DOW       NOT %EOF(SENPVLPD)                                         CAS006
@@ -628,9 +630,9 @@
      C                   UPDATE    SEMKVLD0                                                   CAS006
      C                   READ      SEMKVLPD                                                   CAS006
      C                   ENDDO                                                                CAS006
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************                       CAS003
       /EJECT                                                                                  CAS003
       *****************************************************************                       CAS003
@@ -703,20 +705,20 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
-
+ 
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C                   ENDSR
       *****************************************************************

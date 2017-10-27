@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -73,6 +74,7 @@
      F*  SEPARATES ITS REPORT BY BRANCH                               *
      F*****************************************************************
      F*                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -402,6 +404,19 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1061CCP1                                           S01408
      C*                                                                   S01408
+      ** Call Access Program to check if feature CDL099 is enabled                            CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM           URTCD   7                                           CDL099
+     C                     PARM '*VERIFY' UOPTN   7                                           CDL099
+     C                     PARM 'CDL099'  USARC   6                                           CDL099
+      *                                                                                       CDL099
+     C           URTCD     IFNE *BLANKS                                                       CDL099
+     C                     MOVE 'N'       CDL099  1                                           CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'Y'       CDL099                                              CDL099
+     C                     SETON                     35                                       CDL099
+     C                     ENDIF                                                              CDL099
      C*
      C** Save customer number for comparison to next output record        066721
      C*                                                                   066721
@@ -683,6 +698,22 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1061CCP2                                           S01408
      C*                                                                   S01408
+     C                     MOVE *BLANKS   USDATE  7                                           CDL099
+     C                     SETOF                     36                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C           *IN43     ANDEQ'1'                                                           CDL099
+     C           *IN45     ANDEQ'0'                                                           CDL099
+     C           BSDAT     ANDNE0                                                             CDL099
+     C           BSDAT     ANDNEEDAT                                                          CDL099
+      *                                                                                       CDL099
+      ** Format sale date.                                                                    CDL099
+      *                                                                                       CDL099
+     C                     Z-ADDBSDAT     ZDAYNO                                              CDL099
+     C                     EXSR ZDATE2                                                        CDL099
+     C                     MOVE ZADATE    USDATE  7                                           CDL099
+     C                     SETON                     36                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C           *IN10     IFEQ '1'
      C           RECIN     ADD  1         RECIN   50
      C           EAMT      DIV  1000      ZZAMT
@@ -1226,6 +1257,8 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL1061OOP1                                           S01408
      O*                                                                   S01408
+     O                N35                64 'MATURITY'                                        CDL099
+     O                 35                64 'MAT/OTHER'                                       CDL099
      O                                   86 'INCOMING'
      O                                  130 'OUTGOING'
      O        H  2     L2 10
@@ -1279,6 +1312,7 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL1061OOP2                                           S01408
      O*                                                                   S01408
+     O                    36   USDATE    63                                                   CDL099
      O********************47***FFIN      62                               CDL038
      O*******************N68N42ECCY      67                               CDL038
      O                   N68N42EAMT      87 ' ,   ,   ,   , 0 -'

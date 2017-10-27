@@ -16,8 +16,9 @@
      F*                                                                  *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSC042             Date 22Dec08               *
@@ -60,6 +61,7 @@
      F*                                                                  *
 0010 F*------------------------------------------------------------------*
       *                                                                  *
+      *  CDL099 - Split Value Date                                    *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -130,7 +132,8 @@
 0016 FEVDCMHH O   F     128            DISK
 0016 F*VDCMED*O***F*****128            DISK                               S01117
 0016 F*EVDCMED*O***F*****134************DISK                       S01117 CDL038
-     FEVDCMED O   F     138            DISK                               CDL038
+     F*EVDCMED*O***F*****138************DISK**************                             CDL038 CDL099
+     FEVDCMED O   F     141            DISK                                                   CDL099
 0016 FEVDCMZZ O   F     128            DISK
 0017 F*PRINT  O   F     132            PRINTER                            S01124
 0017 F*L1040P1O   F     132            PRINTER                     S01124 S01117
@@ -254,6 +257,9 @@
      I                                     12921309 OPCA                                      CGL029
      I                                     13101327 OSCA                                      CGL029
      I                                     13641367 CLAS                                      CDL038
+     I                                    P223622360BSDT1                                     CDL099
+     I                                    P223922410BSDT2                                     CDL099
+     I                                    P224222440BRSD2                                     CDL099
 0106 I*
 0107 I*
 0108 I*    DEALS FILE - DETAIL - TAKINGS/PLACINGS/TIME DEPOSITS/LOANS.
@@ -932,6 +938,20 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1040CCP1                                           S01408
      C*                                                                   S01408
+      *                                                                                       CDL099
+      ** Check if feature CDL099 is enabled                                                   CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   @RTCD                                               CDL099
+     C                     PARM '*VERIFY' @OPTN                                               CDL099
+     C                     PARM 'CDL099'  @SARD                                               CDL099
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVE 'Y'       CDL099  1                                           CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
      C*                                                                   S01119
 0477 C* INITIALIZING FINISHED.
 0478 C*****                EXSR ZSYSTM                                    S01194
@@ -1669,6 +1689,7 @@ C795 O                         BBCRNM    82                               S01194
      O                 03      RDLN     134                               S01117
      O                N03               134 '000000'                      S01117
      O                         CLAS     138                               CDL038
+     O                         BSDT2    141P                                                  CDL099
 0798 OEVDCMZZ T        LR
 0799 O                                    1 'Z'
 0800 O                         RECOUT     6

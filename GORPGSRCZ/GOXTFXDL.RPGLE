@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
@@ -44,11 +46,11 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
       ** P O S I T I O N    D E T A I L S
@@ -57,12 +59,12 @@
      D E_EVNT        E DS                  EXTNAME(GOWEVNTPD)
      D**E_SETD***************179    198                                                       TDA102
      D  E_SETD               185    210                                                       TDA102
- 
- 
+
+
      D FXDEAL        E DS                  EXTNAME(FXDEALPP)
      D DEALDB        E DS                  EXTNAME(DEALSDB)
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D  W#PAYA                 3     20                                                       TDA102
@@ -79,21 +81,21 @@
      D**W#RECA**************** 3     14                                                       TDA102
      D**W#RECB****************15     17                                                       TDA102
      D**W#RSCY****************18     20                                                       TDA102
- 
- 
+
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
       * INPUTS
      C                   PARM                    I#LOC             4
      C                   PARM                    I#CCID           10 0
- 
+
      C                   PARM                    I#RDNB            5 0          * RUN DATE
      C                   PARM                    I#DNWD            5 0          * DATE OF NXT W DAY
      C                   PARM                    I#PCOD            5 0          * PROJECTION DATE
@@ -101,60 +103,60 @@
      C                   PARM                    FXDEAL
      C                   PARM                    DEALDB
      C                   PARM                    OL_ACEI           1
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * NO VALUE DATE POSITION EXTRACT IS REQUIRED IF MATURED
- 
+
      C     I#TVDI        IFEQ      'V'
      C     T_MATI        ANDEQ     'Y'
      C                   RETURN
      C                   ENDIF
- 
+
       * SETUP SETTLEMENT INSTRUCTIONS
- 
+
      C                   EXSR      SETUP_SETI
- 
- 
+
+
       * 'ASSET' POSITION
       * ----------------
- 
+
      C                   MOVE      'A'           W#ASLI            1
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
       * 'LIABILITY' POSITION
       * --------------------
- 
+
      C                   MOVE      'L'           W#ASLI
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
       * WRITE TRANSACTION INDEX RECORD
       * Commitment Cycle ID
      C     I#TVDI        IFEQ      'T'
      C                   Z-ADD     I#CCID        T_CCID
      C                   EXSR      WRITE_TRAP
      C                   ENDIF
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -170,11 +172,11 @@
      C                   PARM                    OTDT
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    DealDate          5 0            Midas day no.
      C                   PARM                    ValueDate         5 0            Midas day no.
      C                   PARM                    OptnEndDate       5 0            Midas day no.
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETFXDL'
      C                   EXSR      *PSSR
@@ -187,11 +189,11 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -409,7 +411,7 @@
       *
      C                   MOVEL     W#CCY         @CYCD
      C                   EXSR      ACSCCY
- 
+
      C                   MOVE      FHCCY2        W#OCCY            3
      C                   Z-ADD     FHDSEL        W#OAMT           13 0
      C     FHTYPE        IFEQ      'OP'
@@ -470,7 +472,7 @@
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

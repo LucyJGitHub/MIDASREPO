@@ -12,10 +12,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG15716           Date 18Feb08               *
+      *                 BUG15716           Date 18Feb08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CDL049             Date 07Jul06               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG15716 - Increase array size to handle up to 999 branches  *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *

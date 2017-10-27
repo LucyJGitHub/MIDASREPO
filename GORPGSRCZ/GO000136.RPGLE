@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD020167           Date 23Apr13               *
-      *  Prev Amend No. CCB023   *CREATE   Date 06Aug12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *                 CCB023   *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  CCB023 - COB Restructure - Input Cycle Termination           *
       *           Restructuring                                       *

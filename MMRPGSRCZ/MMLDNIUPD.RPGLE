@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR784570           Date 21Feb17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. AR784570           Date 21Feb17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD026719           Date 19Aug14               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  AR784570 - Condition whether internal customer of customer   *
       *             inputted by the user to be used for CI deal.      *
       *             Apply fixes 255909 and 256390. (Child: AR784571)  *

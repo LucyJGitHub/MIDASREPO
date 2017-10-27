@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 245692             Date 12Dec13               *
       *                 CSF011A            Date 28Nov11               *
@@ -86,6 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -175,27 +177,27 @@
      FMMRPDLDF  CF   E             WORKSTN
      F                                     SFILE(MMRPDLS1:RRN)
      F                                     INFSR(*PSSR)
-
+ 
      FMMRPDHPD  IF   E           K DISK
      F                                     INFSR(*PSSR)
-
+ 
      FSEDPMVL3  IF   E           K DISK
      F                                     INFSR(*PSSR)
-
+ 
      FMMRPDDPD  IF   E           K DISK
      F                                     INFSR(*PSSR)
      F                                     RENAME(MMRPDHD0:MMRPDHD1)
-
+ 
      FDPTMVDL1  IF   E           K DISK    PREFIX(A)
      F                                     INFSR(*PSSR)
      F                                     RENAME(DPTMVDF:DPTMVL1)
-
+ 
      FSECTY     IF   E           K DISK
      F                                     INFSR(*PSSR)
-
+ 
      FINVTP     IF   E           K DISK
      F                                     INFSR(*PSSR)
-
+ 
      FSEDMRPXX  UF A E             DISK    USROPN
      F                                     INFSR(*PSSR)
      F                                     RENAME(DPTMVDF:SEDMRPX9)
@@ -259,68 +261,68 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D @EI             S              1    DIM(19)
-
+ 
      D CrDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
      D DIACTN        E                     EXTFLD(DDACTN)
      D DICUST        E                     EXTFLD(DDCUST)
       * Parameter passed from MMREPOSIN with Deal Details
-
+ 
      D CrRpScnFmt    E DS                  EXTNAME(MMRPDDPD)
      D                                     PREFIX(D)
       * Current Repo in Screen Format
-
+ 
      D NwRpScnFmt    E DS                  EXTNAME(MMRPDDPD)
      D                                     PREFIX(IK:2)
      D VIKDLNO       E                     EXTFLD(DDDLNO)
       * New Repo delivery Screen format
-
+ 
      D MMEREP        E DS                  EXTNAME(MMERPDDPD)
       * Error indicators
-
+ 
      D CrRhScnFmt    E DS                  EXTNAME(MMRPDHPD)
      D DODLNO        E                     EXTFLD(DDDLNO)
      D DOCUST        E                     EXTFLD(DDCUST)
@@ -328,52 +330,52 @@
      D DOMDAT        E                     EXTFLD(DDMDAT)
      D DOCCY         E                     EXTFLD(DDCCY)
       * Current Repo Header in Screen Format
-
+ 
      D NwRhScnFmt    E DS                  EXTNAME(MMRPDHPD)
      D                                     PREFIX(IK:2)
      D QQACC1        E                     EXTFLD(QQACCN)                                     CGL029
       * New Repo Header in Screen Format
-
+ 
      D MMERHD        E DS                  EXTNAME(MMERPDHPD)
      D DLNOOK        E                     EXTFLD(OKDLNO)
-
+ 
       * New Repo Detail in File Format
-
+ 
      D NwRpFilFmt    E DS                  EXTNAME(MMVRPDDPD)
       * New Repo Header in File Format
-
+ 
      D NwRhFilFmt    E DS                  EXTNAME(MMVRPDHPD)
      D IFDEAL        E                     EXTFLD(IFDLNO)
      D QQACC2        E                     EXTFLD(QQACCN)                                     CGL029
       * Error indicators
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCLCD         E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR Switchable Features
-
+ 
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
       ** EXTERNAL DS FOR Trading Data
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D**  Customer details
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D**  Currency details
-
+ 
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D QQACC3        E                     EXTFLD(QQACCD)                                     CGL029
      D**  Retail ICD details
-
+ 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D QQDFC1        E                     EXTFLD(QQDFAC)                                     CGL029
      D**  Branch Details
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D**  Branch Details
-
+ 
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
      D**  Securities Trading ICD Data
-
+ 
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  245692
      D ##ACCD        E                     EXTFLD(QQACCD)                                     245692
       ** External DS for dealing details                                                      245692
@@ -382,7 +384,7 @@
      D QQACC4        E                     EXTFLD(QQACCD)                                     CGL029
      D BFZONE        E                     EXTFLD(SEZONE)                                    BUG3122
      D**  Securities Trading ICD Data
-
+ 
      D**  Security Details
      D SECTYD        E DS                  EXTNAME(SECTY)
      D SECRECI       E                     EXTFLD(RECI)
@@ -391,7 +393,7 @@
      D SECCHTP       E                     EXTFLD(CHTP)
      D SECTNLU       E                     EXTFLD(TNLU)
      D SECREPI       E                     EXTFLD(REPI)                         CPB001
-
+ 
      D**  External Record format
      D RPDLS1          DS
      D  SDACTN                 1      1
@@ -424,7 +426,7 @@
      D  S@NWRC               278    278
      D  S@IN51               279    279
      D  S@IN70               280    280
-
+ 
      D PDATA         E DS                  EXTNAME(SE70DT)
      D PPTFR         E                     EXTFLD(PTFR)                                       CSE028
      D**  Branch Details
@@ -434,7 +436,7 @@
      D**  Short data structure
      D PMCWL           DS          9999                                                       CSD015
       ** Additional entry parameter for Midas Compliance Watch                                CSD015
-
+ 
      D DDDATA          DS            73
      D  DDSECT
      D  DDNOML
@@ -442,7 +444,7 @@
      D  DDORDP
      D  DDCPDP
      D  DDEXCR
-
+ 
      D**  Data structure of Temporary Depot Movement Extension File
      D SEDXX         E DS                  EXTNAME(SEDMRPXX)
      D XXPTFR        E                     EXTFLD(PTFR)                                       194231
@@ -464,20 +466,20 @@
      D TEMPTT        E DS                  EXTNAME(SECRTTTPPD)
      D**  Data structure of Certificates Units File
      D RTTT1         E DS                  EXTNAME(SECRTTL1) PREFIX(D)
-
+ 
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
-
+ 
      D                 DS
       **  Data structure for dummy reference number for depo extension
      D  DRefNo                 1      6
      D  DumConst               1      1
      D  DumRef                 2      6
-
+ 
      D                 DS
       **  Data structure to split  fee account number into 12 and 3
      D**W#ACCN*                1     16                                                       CGL029
@@ -486,38 +488,38 @@
      D  W#ACCN                 1     22                                                       CGL029
      D  DDACCA                 1     18                                                       CGL029
      D  DDACCB                19     21                                                       CGL029
-
+ 
       ** Loan/Deposit Ccy
      D LoanCcy         S                            LIKE(DDCCY)
-
+ 
       ** Branch
      D Branch          S                            LIKE(DDBRCA)
-
+ 
       ** Midas Day No Formatted Value Date
      D ValueDate       S              5  0
-
+ 
       ** Midas Day No Formatted Maturity Date
      D MaturDate       S              5  0
-
+ 
       ** ErrorFlag for call to standard routines. (Equates to *IN99).
      D ErrorFlag       S              1A            INZ('N')
-
+ 
       ** Index for Arrays of Error message indicators etc.
      D Idx             S              3P 0
-
+ 
       ** Index for Arrays of Warning message indicators etc.
      D Widx            S              3P 0
-
+ 
       ** Respnose Mode, recieved as a parameter from the common header
      D RespMode        S              1A
-
+ 
       ** Value Date as a Midas Day number
      D ValDateMdn      S              5P 0
-
+ 
       ** FeeSave indicates whether FEe details have been saved from
       ** first depot movement.
      D FeeSave         S              1A
-
+ 
       ** Parameter list for ZA0840                                                            245692
       ** =========================                                                            245692
       ** Return code for numeric validation module call                                       245692
@@ -578,13 +580,13 @@
      D ActMode         S              1A
      D DepRef          S              6A
      D W#ORED          S                   LIKE(ORED)
-
+ 
      D*XArrayMax       C                   CONST(20)                                          249481
      D XArrayMax       C                   CONST(40)                                          249481
      D FldNamXAr       S             10A   DIM(XArrayMax)
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
      D** Data Structure for PGM MM0011 entry parameter.
      D*
      D P#0010          DS           256
@@ -617,13 +619,13 @@
      D  P#INTC                82     99  3
      D  P#INTD               100    117  3
       *
-
+ 
       **--------------------------------------------------------------------------------------------
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -715,61 +717,61 @@
      C                   IF        *IN89 = *ON
      C                   EXSR      SEC_DEL
      C                   ENDIF
-
+ 
       **Display the subfile until End Requested (ER = 0)
-
+ 
      C                   Z-ADD     99            ER                2 0
      C     ER            DOWNE     *ZERO
       **Display Message Subfile
-
+ 
       **Display Subfile control
-
+ 
      C                   WRITE     MMRPDLM0
-
+ 
      C                   EXSR      FmtInd
-
+ 
      C*
      C** Do not display screen if module is called in Delete mode.
      C** Deletion should be performed automatically without user interaction
      C                   IF        DIACTN <> 'D'
      C                   EXFMT     MMRPDLC1
      C                   ENDIF
-
+ 
       **Clear Message Subfile
-
+ 
      C                   CALL      'ZA0250'
-
+ 
       **inz_sfloption taken
-
+ 
      C                   SELECT
-
+ 
       **If F3 is pressed
-
+ 
      C     *INKC         WHENEQ    *ON
      C                   Z-ADD     0             ER
      C                   MOVEL     'F3'          ReturnCode
      C
-
+ 
       **If F9 is pressed
-
+ 
      C     *INKI         WHENEQ    *ON
      C                   MOVE      *INKI         @INKI             1
      C                   MOVE      *Blank        Exit
      C                   EXSR      Inz_Sfl
-
+ 
       **If F10 is pressed
-
+ 
      C     *INKJ         WHENEQ    *ON
      C                   MOVE      'Confirm'     Status            7
      C                   EXSR      DELET
      C                   IF        DIACTN = 'D'
      C                   EVAL      *INKL = *ON
      C                   ENDIF
-
+ 
       **If F12 is pressed
-
+ 
      C     *INKL         WHENEQ    *ON
-
+ 
       ** User wishes to accept input
      C                   IF        Exit = 'Y'
      C                   Z-ADD     0             ER
@@ -777,20 +779,20 @@
      C                   MOVE      'Y'           ChgCmd            1
      C                   MOVE      DIACTN        ChgActn           1
      C                   ELSE
-
+ 
       ** User cancels on Add screen
      C                   IF        @INKI = '1'
      C                   EXSR      ClrFil
      C                   MOVE      *Blank        Exit
      C                   EXSR      Con_Inp
      C                   ELSE
-
+ 
       ** User cancels on Confirm Delete Screen
      C                   IF        *IN20 = '1'
      C                   EXSR      Restore
      C                   MOVE      *Blank        Exit
      C                   EVAL      *IN77 = '0'
-
+ 
      C                   ELSE
      C                   Z-ADD     0             ER
      C                   MOVEL     'F12'         ReturnCode
@@ -803,9 +805,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   OTHER
-
+ 
       ** Send error if enter pressed when confirm delete screen is displayed
      C                   IF        *IN20 = *On
      C                   MOVEL     'MMA0779'     @MSGID
@@ -815,13 +817,13 @@
      C                   MOVE      *Blank        Exit
      C                   EXSR      Con_Inp
      C                   ENDIF
-
+ 
      C                   ENDSL
-
+ 
      C                   ENDDO
-
+ 
      C                   CLOSE     SEDMRPXX
-
+ 
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -834,9 +836,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     Pro_Inp       BEGSR
-
+ 
       * Validate Subfile
       *
      C                   Z-ADD     0             W#NOML           15 0
@@ -910,13 +912,13 @@
       ** depot movements in update module.
       *
      C                   IF        D@DPRN = *Blanks
-
+ 
      C** Set up dummy reference number
      C                   ADD       1             DRef              5 0
      C                   MOVE      DRef          DumRef
      C                   MOVEL     'X'           DumConst
      C                   MOVEL     DRefNo        D@DPRN
-
+ 
      C                   ENDIF
       *
       ** Set up Depot Reference numver to export to module MMVACCD
@@ -1038,9 +1040,9 @@
      C
       ** Access Security Details
      C                   IF        Idx = 0 and DDSECT <> *Blanks
-
+ 
      C     DDSECT        CHAIN     SECTY                              88
-
+ 
      C                   CLEAR                   P#0010
      C                   MOVE      NMCY          P#DBCY
      C                   Z-ADD     IFVDVL        P#DBAM
@@ -1149,7 +1151,7 @@
      C                   ADD       1             RRN
       *
      C                   ENDDO
-
+ 
      C                   IF        PRRN = 0
      C                   EVAL      PRRN = 1
      C                   ENDIF
@@ -1198,10 +1200,10 @@
      C                   EVAL      IKFESM = DDFESM
      C                   EVAL      IKACCN = DDACCN
      C                   EVAL      IKFEAM = DDFEAM
-
+ 
       *
       ** Set up deal amount in case amount has been ameneded
-
+ 
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -1220,7 +1222,7 @@
      C                   Z-ADD     LoanDP        @@IDP                                        245692
      C     15            SUB       @@IDP         @@IINT                                       245692
      C                   MOVE      *BLANKS       @@MTID                                       245692
-
+ 
      C                   IF        LoanDp <> 0
      C**********         CALLB     'ZALIGN'                                                   245692
      C**********         PARM                    ZALIGNok          1                          245692
@@ -1324,7 +1326,7 @@
      C                   EVAL      DDFESM = IKFESM
      C                   EVAL      DDACCN = IKACCN
      C                   EVAL      DDFEAM = IKFEAM
-
+ 
      C                   EVAL      W#ACCN = DDACCN
       *
      C                   ELSE
@@ -1387,16 +1389,16 @@
      C                   ELSE
      C                   EVAL      *IN70 = *Off
      C                   ENDIF
-
+ 
      C                   UPDATE    MMRPDLS1
      C                   MOVE      *Blank        D@EXT1
      C                   MOVE      ' '           D@NWRC
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
      C                   ENDSR
@@ -1412,12 +1414,12 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     Con_Inp       BEGSR
      C
      C* Validate whole subfile
      C                   EXSR      Pro_Inp
-
+ 
       *
       ** Process if there are no validation errors. Rebuild whole subfile
       ** for action code 'M' if F9 has been pressed and new records entered.
@@ -1430,12 +1432,12 @@
       ** If input is valid and record is newly inserted
       *
      C                   Z-ADD     0             RRN
-
+ 
      C                   IF        *INKL = *Off
      C                   DO        Zn
-
+ 
      C                   ADD       1             RRN
-
+ 
      C     RRN           CHAIN     MMRPDLS1                           86
       *
      C                   IF        DDDATA <> *Blanks
@@ -1478,9 +1480,9 @@
      C                   ADD       1             En                3 0
      C                   MOVEL     RPDLS1        SRPDL(En)
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
       ** Save Control Nominal
       *
      C**********         MOVE      DDCNTN        NewNoml          15 4                        239789
@@ -1488,25 +1490,25 @@
      C                   DIV       100           NewNoml
       *
      C                   ENDIF
-
+ 
       ** Set *IN19 back on to allow further input of records
       *
      C                   EVAL      *IN19 = '1'
-
+ 
       ** Need to clear subfile to clear records before rewriting array
       *
      C                   MOVEA     '000'         *IN(1)
      C                   WRITE     MMRPDLC1
      C                   MOVEA     '111'         *IN(1)
-
+ 
       ** Write Arrays back in to subfile for further processing
-
+ 
      C                   Z-ADD     0             Zn
      C                   Z-ADD     0             RRN
-
+ 
       ** Make action code input capable again
      C                   EVAL      *IN76 = '0'
-
+ 
      C                   DO        En
      C                   ADD       1             Zn
      C                   ADD       1             RRN
@@ -1553,27 +1555,27 @@
       ** Restore values of protect indicators
       *
      C                   EXSR      FmtInd
-
+ 
      C                   WRITE     MMRPDLS1
-
+ 
      C                   ENDDO
-
+ 
       *
       ** Add Old Control Nominal to New Control Nominal
      C                   ADD       OldNoml       NewNoml
      C                   EVAL      DDCNTN = *Blanks
      C                   MOVE      NewNoml       ZFLD15
-
+ 
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM      4             ZADEC
      C                   PARM      *BLANK        ZECODE            1
      C                   PARM                    ZOUT21           21
      C                   MOVE      ZOUT21        DDCNTN
-
+ 
       ** Revalidate subfile to calculate new totals
      C                   EXSR      Pro_Inp
-
+ 
      C                   ENDIF
       *
       ** If there are no errors
@@ -1634,13 +1636,13 @@
      C                   ENDSL
      C
      C                   ENDIF
-
+ 
       ** Execute Subroutine to update temporary depot movements file
-
+ 
      C                   IF        DDACTN <> 'D' and DDDATA <> *Blanks
      C                   EXSR      UPTEMP
      C                   ENDIF
-
+ 
       *
       ** Save all records that are not to be deleted in an array so that
       ** they can used to update subfile after deletion of records
@@ -1715,7 +1717,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     CERTS         BEGSR
      C*
      C* Override QTEMP/SECRTNTPPD to SECRTNL1
@@ -1781,7 +1783,7 @@
      C                   PARM                    ##ACTN            1
      C                   PARM      *BLANK        WWRTCD            1
      C                   PARM      'R'           Mode              1
-
+ 
      C                   IF        WWRTCD = '2'
      C                   Z-ADD     0             ER
      C                   MOVEL     'F3'          ReturnCode
@@ -1814,7 +1816,7 @@
      C                   ENDIF
      C*
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1827,16 +1829,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     DEPEXT        BEGSR
-
+ 
       ** Access Security Details
      C     DDSECT        CHAIN     SECTY                              88
-
+ 
       ** Access Customer number for Beneficiary customer
      C                   MOVE      *BLANKS       @@KEY1
      C                   MOVEL     DICUST        @@KEY1
-
+ 
      C                   CALLB     'AOCUSTR0'
      C                   PARM      '*DBERR '     @@RTCD            7
      C                   PARM      '*KEY   '     @@OPTN            7
@@ -1844,16 +1846,16 @@
      C                   PARM      *BLANKS       @@KYST            7
      C     SDCUST        PARM      SDCUST        DSSDY
      C                   MOVE      BBCUST        PDPBN
-
+ 
      C                   MOVE      'I'           PACTN
      C                   MOVE      DDSECT        PDPSS
-
+ 
      C** Set up depot reference number. In amend mode this will be a real
      C** reference number whereas if record is newly generated a dummy
      C** reference number will have been generated.
-
+ 
      C                   MOVE      D@DPRN        PDPRN
-
+ 
      C                   MOVE      DDBRCA        PDPBA
      C                   MOVE      DDTRTP        PDPMV
      C                   MOVE      DDTRTP        PTNTP
@@ -2013,7 +2015,7 @@
      C                   EVAL      DDACTN = ' '                                               203990
                                                                                               203990
      C                   ENDIF                                                                201231
-
+ 
      C                   ELSE
       *
       ** Check if subfile records changed indicator has been set on.
@@ -2033,7 +2035,7 @@
       **  Extra parameter needed to pass detail for Midas Compliance                          CSD015
       **  Watch Enhancement.                                                                  CSD015
      C                   PARM                    PMCWL                                        CSD015
-
+ 
      C**********         ELSE                                                                 243696
       **********                                                                              243696
      C**********         CALL      'SE1807'                                                   243696
@@ -2088,15 +2090,15 @@
      C                   Z-ADD     0             ER
      C                   MOVEL     'F3'          ReturnCode
      C                   ENDIF
-
+ 
      C** Move New Output parameter to subfile field
-
+ 
      C                   EVAL      DDOUTP = POUTP
-
+ 
      C** Save Reference number in hidden subfile field
-
+ 
      C                   EVAL      D@DPRN = PDPRN
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2109,15 +2111,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     DELET         BEGSR
-
+ 
      C                   IF        Status <> 'Confirm'
-
+ 
      C                   IF        DELCOUNT <> 100
-
+ 
      C                   ADD       1             DELCOUNT          3 0
-
+ 
      C                   ADD       1             Xn                3 0
       *
       ** Save deleted records in array for redisplay
@@ -2178,10 +2180,10 @@
       ** Process all 100 records of Array
       *
      C                   DO        DELCOUNT
-
+ 
      C                   ADD       1             Xn
      C                   ADD       1             RRN
-
+ 
      C                   MOVEL     RPDL(Xn)      RPDLS1
      C                   CLEAR                   RPDL(Xn)
       *
@@ -2221,9 +2223,9 @@
      C                   EVAL      D@NWRC = S@NWRC
      C                   EVAL      D@IN51 = S@IN51
      C                   EVAL      D@IN70 = S@IN70
-
+ 
      C                   WRITE     MMRPDLS1
-
+ 
      C                   ENDDO
       *
       ** Set on indicator tp display F10 = Delete option
@@ -2402,9 +2404,9 @@
      C                   EVAL      *IN70 = *Off
      C                   ENDIF
       *
-
+ 
      C                   WRITE     MMRPDLS1
-
+ 
      C                   ENDDO
       *
       ** Set off indicator to display F10 = Delete option
@@ -2469,44 +2471,44 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     UPTEMP        BEGSR
-
+ 
      C                   IF        DIACTN = 'I' or DIACTN = 'A'
      C                             or DIACTN = 'R' or DIACTN = 'M'
-
+ 
       ** Write out record to temporary file. Module MMRPDLUPD will check
       ** whether Depot Movement has been changed.
-
+ 
      C                   EXSR      WRTDEP
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
      C********************************************************************
      C* WRTDEP - Write to Temporary Depot Movements File
      C********************************************************************
      C     WRTDEP        BEGSR
-
+ 
      ** Initialise all fields prior to update
-
+ 
      C                   CLEAR                   SEDMRPX9
       *
       **Reaccess Security Details
      C     DDSECT        CHAIN     SECTY                              88
-
+ 
      C                   EVAL      RECI = 'D'
-
+ 
       ** If a Rollover, DPRN needs to be blanked so that MMRPDLUPD writes
       ** a new Depot Movement rather than updating the original one.
      C                   IF        DPRN = *BLANKS and DIACTN <> 'R'
      C                   EVAL      DPRN = D@DPRN
      C                   ENDIF
-
+ 
      C                   EVAL      DPSS = DDSECT
      C                   EVAL      DPMV = DDTRTP
      C                   EVAL      DPID = D@ORDP
-
+ 
      C                   IF        DDTRTP = 'RR' or DDTRTP = 'BB'
      C                             or DDTRTP = 'PL'
      C                   EVAL      DPMD = ValueDate
@@ -2530,9 +2532,9 @@
      C                   EVAL      DPMD = Maturdate
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   EVAL      DPOD = D@CPDP
-
+ 
      C                   IF        DDTRTP = 'RP' or DDTRTP = 'BL'
      C                             or DDTRTP = 'PD'
      C                   EVAL      DPDO = ValueDate
@@ -2556,11 +2558,11 @@
      C                   ENDIF
      C                   EVAL      DPDO = MaturDate
      C                   ENDIF
-
+ 
      C                   EVAL      DPBA = DDBRCA
-
+ 
      C                   EVAL      ORBR = *BLANKS
-
+ 
       *
       ** If CAC005 is on convert Book Code to Pseudo Book
      C                   IF        CAC005 = 'Y'
@@ -2576,65 +2578,65 @@
      C                   ELSE
      C                   EVAL      DPBK = DDBOKC
      C                   ENDIF
-
+ 
      C                   EVAL      DPMK = MKTI
-
+ 
      C                   EVAL      DPBN = W#CNPT
-
+ 
      C                   EVAL      DPNA = D@NOML
-
+ 
      C                   EVAL      DPNR = DDNARR
-
+ 
      C                   EVAL      MKTP = D@VALP
-
+ 
      C                   MOVE      DDDLNO        DPAD
-
+ 
      C                   EVAL      DCFR = 'Y'
-
+ 
      C                   IF        DIACTN = 'I'
      C                   EVAL      CHTP = 'I'
      C                   ELSE
      C                   EVAL      CHTP = 'A'
      C                   ENDIF
-
+ 
      C                   IF        DDTRTP = 'RP' or DDTRTP = 'RR'
      C                   EVAL      RPIN = 'R'
-
+ 
      C                   ELSE
-
+ 
      C                   IF        DDTRTP = 'PL' or DDTRTP = 'PD'
      C                   EVAL      RPIN = 'P'
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      RPIN = 'B'
-
+ 
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Only update Fee Details for first depot movement
      C                   IF        RRN = 1
-
+ 
      C                   EVAL      DCCE = IFFECY
-
+ 
      C                   EVAL      DCHA = IFFEAM
-
+ 
      C                   EVAL      DCSE = IFFESM
-
+ 
      C                   EVAL      DCAB = IFBRCA
-
+ 
      C                   EVAL      DCAT = IFACCN
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      DVIN = D@VDIN
-
+ 
      C                   EVAL      DMIN = D@MDIN
-
+ 
      C                   EVAL      DEXRT = D@EXCR
-
+ 
      C                   EVAL      DFROM = 'R'
-
+ 
      C*
      C** Set Switch in-out indicator to be 'I' if depot movement is added
      C** via Margin Call program
@@ -2642,10 +2644,10 @@
      C                   IF        DIACTN = 'M' and DumConst = 'X'
      C                   EVAL      SIOI = 'I'
      C                   ENDIF
-
+ 
       ** Write record to file
      C                   WRITE     SEDMRPX9
-
+ 
      C                   ENDSR
      C********************************************************************
       *****************************************************************
@@ -2660,26 +2662,26 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     Sec_Det       BEGSR
      C                   CLEAR                   CrRpScnFmt
-
+ 
      ** Set Hidden field for reference number
      C                   EVAL      D@DPRN = DPRN
-
+ 
      ** Set Action to Blanks
      C                   EVAL      DDACTN = *BLANKS
-
+ 
      ** Set up Security Shortname
      C                   EVAL      DDSECT = DPSS
-
+ 
      ** Set up Nominal
       *
      ** Access Security Details
      C     DDSECT        CHAIN     SECTY                              99
-
+ 
      C** Access no of decimal places of Nominal currency
-
+ 
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -2687,11 +2689,11 @@
      C     SDCURR        PARM      SDCURR        DSSDY
      C
      C                   MOVE      A6NBDP        NomCcyDec
-
+ 
      C
      C                   MOVE      DPNA          ZFLD15
      C                   MOVE      NMDP          ZADEC
-
+ 
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZADEC
@@ -2739,7 +2741,7 @@
      C                   MOVEL     *BLANK        ZFLD15
      C                   MOVEL     *BLANK        ZOUT21
      C                   MOVE      MKTP          ZFLD15
-
+ 
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZADEC
@@ -2747,7 +2749,7 @@
      C                   PARM                    ZOUT21           21
      C
      C                   MOVE      ZOUT21        DDVALP
-
+ 
       ** Set up Our Depot
      C                   MOVE      DPID          W#DEPIN           6
       ** Access Customer data via access program
@@ -2761,7 +2763,7 @@
      C*
      C                   MOVE      BBCSSN        DDORDP
      C                   MOVE      *BLANKS       W#DEPIN
-
+ 
      ** Set up Counterparty Depot
      C                   MOVE      DPOD          W#DEPOT           6
       *
@@ -2776,7 +2778,7 @@
      C*
      C                   MOVE      BBCSSN        DDCPDP
      C                   MOVE      *BLANKS       W#DEPOT
-
+ 
      ** Set Up Exchange Rate
      C*                  Z-ADD     8             ZADEC             1 0
      C                   MOVEL     *BLANK        ZFLD15
@@ -2790,7 +2792,7 @@
      C                   PARM                    ZOUT21           21
      C
      C                   MOVE      ZOUT21        DDEXCR
-
+ 
      ** Set Up Value Date interest
      C
      ** Access Investment Details
@@ -2824,7 +2826,7 @@
      C                   PARM                    ACIN              1
       *
      C                   CALLB     'ZPCINT'
-
+ 
      C                   PARM                    SECTYD
      C                   PARM      *BLANK        DADJN
      C                   PARM                    NomCcyDec
@@ -2843,17 +2845,17 @@
      C** Calculate cross currency rate
      C*
      C     ZITRA         MULT      DEXRT         ZFLD15
-
-
+ 
+ 
      C                   MOVE      ZITRA         W#ITRA           13 0
      C                   ELSE
      C                   Z-ADD     0             W#ITRA           13 0
      C                   ENDIF
-
+ 
      C                   Z-ADD     0             ZADEC
      C                   MOVEL     *BLANK        ZFLD15
      C                   MOVE      W#ITRA        ZFLD15
-
+ 
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -2862,17 +2864,17 @@
      C
      C                   MOVE      A6NBDP        ZADEC
      C                   MOVE      A6NBDP        LoanDP            1 0
-
+ 
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZADEC
      C                   PARM      *BLANK        ZECODE            1
      C                   PARM                    ZOUT21           21
-
+ 
      C                   MOVE      ZOUT21        DDVDIN
-
+ 
      ** Set Up Value Date Value
-
+ 
      C                   MOVE      MKTP          ZPRCIN           15 8
      C                   MOVE      ValueDate     ZFDATE            5 0
       *
@@ -2887,26 +2889,26 @@
      C                   ELSE
      C                   Z-ADD     0             WRKPI
      C                   END
-
+ 
      C                   EXSR      PRICD
       *
       ** Set up ZPRC. Multiply ZPRCOT by 10 first as ZPRC has an extra Decimal place
      C                   Z-ADD     0             ZPRC
      C                   MULT      10            ZPRCOT
      C                   MOVE      ZPRCOT        ZPRC
-
+ 
      C                   CALLB     'ZCNSD'
      C                   PARM                    ZNOML            15 0
      C                   PARM                    ZPRC             16 9
      C                   PARM                    SPBS
      C                   PARM                    NMDP
      C                   PARM                    NomCcyDec
-
+ 
       * OUTPUTS
-
+ 
       **  Consideration
      C                   PARM                    ZCONS            15 0
-
+ 
       **  Add consideration to any interest
      C     ZCONS         ADD       ZFLD15        W#VDVL           15 0
      C
@@ -2968,19 +2970,19 @@
      C                   MOVE      ZOUT21        DDEXCR
      C                   ENDIF
      C
-
+ 
      ** Set Up Maturity Date Interest
-
+ 
      C                   Z-ADD     0             W#ITRA
      C                   Z-ADD     0             W#VALU
      ** Set Up Maturity Date Interest if security is interest bearing
-
+ 
      C                   IF        PROT <> '2' and PROT <> '4' and PROT <> '7'
-
+ 
      C                   MOVE      DPNA          NOML
-
+ 
      C                   CALLB     'ZPCINT'
-
+ 
      C                   PARM                    SECTYD
      C                   PARM      *BLANK        DADJN
      C                   PARM                    NomCcyDec
@@ -3000,7 +3002,7 @@
      C*
      C     ZITRA         MULT      DEXRT         ZFLD15
      C                   MOVE      ZITRA         ZFLD15                                       CAP087
-
+ 
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -3022,7 +3024,7 @@
      C                   MOVE      A6NBDP        ZADEC
      C                   MOVE      *BLANKS       DDMDIN
      C                   Z-ADD     0             ZFLD15
-
+ 
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZADEC
@@ -3031,9 +3033,9 @@
      C
      C                   MOVE      ZOUT21        DDMDIN
      C                   ENDIF
-
+ 
      ** Set Up Maturity Date Value
-
+ 
       **  Add consideration to any interest
      C     ZCONS         ADD       ZFLD15        W#VDVL           15 0
      C
@@ -3046,7 +3048,7 @@
      C
      C                   MOVE      *BLANKS       DDMDVL
      C                   MOVE      ZOUT21        DDMDVL
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -3057,7 +3059,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     Header        Begsr
      C
      ** Set up Total Nominal
@@ -3109,7 +3111,7 @@
      ** Set up Customer Number and Customer name
      C                   MOVE      *BLANKS       @@KEY1
      C                   MOVEL     DICUST        @@KEY1
-
+ 
      C                   CALLB     'AOCUSTR0'
      C                   PARM      '*DBERR '     @@RTCD            7
      C                   PARM      '*KEY   '     @@OPTN            7
@@ -3118,7 +3120,7 @@
      C     SDCUST        PARM      SDCUST        DSSDY
      C                   MOVEL     BBCUST        D@CUST
      C                   MOVEL     BBCRNM        D@CRNM
-
+ 
      C** Set up Fee Details
      C* Charge currency
      C                   EVAL      DDFECY = W#DCCE
@@ -3146,13 +3148,13 @@
      C                   PARM      '*DBASE '     @@OPTN            7
      C                   PARM      W#DCCE        @@AJCD            3
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
      C                   MOVE      W#DCHA        ZFLD15
-
+ 
      C                   MOVE      A6NBDP        ZADEC
      C*****13***         SUB       A6NBDP        ZADIG                                        245692
      C     13            SUB       A6NBDP        ZADIG             2 0                        245692
-
+ 
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZADEC
@@ -3173,7 +3175,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     Inz_Sfl       BEGSR
       *
       ** Save all records currently in array for redisplay
@@ -3216,7 +3218,7 @@
      C                   EVAL      S@IN70 = D@IN70
       *
      C                   MOVEL     RPDLS1        SRPDL(RRN)
-
+ 
      C                   ENDDO
       *
       ** Clear subfile
@@ -3244,9 +3246,9 @@
      C                   CLEAR                   MMRPDLS1
      C                   MOVE      *ON           *IN76
      C                   WRITE     MMRPDLS1
-
+ 
      C                   ENDDO
-
+ 
      C                   MOVE      *OFF          *IN09
      C                   MOVE      *OFF          *IN19
      C                   MOVE      *OFF          *IN20
@@ -3257,7 +3259,7 @@
      C                   Z-ADD     0             OLDNoml          19 4                        239789
      C                   EVAL      OldNOML= W#NOML                              198195
      C                   DIV       100           OldNoml
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -3268,9 +3270,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     Sec_Del       BEGSR
-
+ 
       ** Reset subfile indicators
      C                   RESET                   *IN70
      C                   RESET                   *IN71
@@ -3279,14 +3281,14 @@
      C                   RESET                   *IN75
      C                   RESET                   *IN76
      C                   RESET                   *IN77
-
+ 
       ** Reset subfile
      C                   MOVEA     '000'         *IN(1)
      C                   WRITE     MMRPDLC1
      C                   MOVEA     '111'         *IN(1)
-
+ 
      C** Reset indictaors
-
+ 
      C                   MOVEA     '00'          *IN(19)
      C                   MOVEA     '000000'      *IN(40)
      C                   MOVEA     '00000000000' *IN(50)
@@ -3375,7 +3377,7 @@
      C                   PARM                    ValDateMDN
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
-
+ 
      C                   EVAL      ValueDate = ValDateMDN
      C                   EVAL      ValDateMDN=*Zeros
       *
@@ -3386,13 +3388,13 @@
      C                   PARM                    ValDateMDN
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
-
+ 
      C                   EVAL      MaturDate = ValDateMDN
-
+ 
      C                   EVAL      Branch = DDBRCA
      C                   EVAL      BenCust = DICUST
      C                   EVAL      PortRef = DDPTFR
-
+ 
      C**********         MOVE      DDAMNP        ZFIELD                         198195
      C                   Z-ADD     0             @@AMT                                        245692
      C                   Z-ADD     0             @@ERCD                                       245692
@@ -3403,7 +3405,7 @@
      C*****15***         SUB       ZADEC         ZADIG                                        245692
      C                   Z-ADD     NomCcyDec     @@IDP                                        245692
      C     15            SUB       @@IDP         @@IINT                                       245692
-
+ 
      C**********         CALLB     'ZALIGN'                                                   245692
      C**********         PARM                    ZALIGNok          1                          245692
      C**********         PARM                    ZFIELD                         198195
@@ -3442,7 +3444,7 @@
      C                   DO        100
      C
      C                   ADD       1             RRN               4 0
-
+ 
       * If program is in Insert Mode write 100 blank records
       * This bit of code has been moved to section marked HERE
      C                   IF        DIACTN = 'I'
@@ -3453,32 +3455,32 @@
      C                   ADD       1             Zn
      C                   WRITE     MMRPDLS1
      C                   ENDIF
-
+ 
      ** If Program is in enquire or authorise mode
-
+ 
      C                   IF        DIACTN = 'E' or DIACTN = 'X'
      C                             or DIACTN = 'D'
-
+ 
      ** Protect all subfile records and control record fields
-
+ 
      C                   MOVE      *ON           *IN71
-
+ 
      ** Non-display Control nominal
-
+ 
      C                   MOVE      *ON           *IN77
-
+ 
       * Save value of *IN74 for use later
      C                   MOVE      '1'           Ind71             1
-
+ 
      ** Use input parameter deal no. to access depot movements
-
+ 
      C     W#DLNO        READE     SEDPMVL3                               89
-
+ 
      C** If a record is found set up the details of Depo Movement on file
      C** as long as record has not been deleted i.e. RECI = '*'
-
+ 
      C                   IF        *IN89 = *Off and RECI = 'D'
-
+ 
      C                   IF        FeeSave<>'Y' and *IN72 <> *On
       *
       ** Save value of Fee Details
@@ -3488,9 +3490,9 @@
      C                   EVAL      W#DCSE=DCSE
      C                   EVAL      W#DCAB=DCAB
      C                   EVAL      W#DCAT=DCAT
-
+ 
      C                   EVAL      FeeSave='Y'
-
+ 
      C                   ENDIF
      C                   EXSR      SEC_DET
      C                   ADD       1             Zn
@@ -3502,11 +3504,11 @@
      C                   CLEAR                   MMRPDLS1
      C                   SUB       1             RRN
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       * If program is in Amend mode
-
+ 
      C                   IF        DIACTN='A'
       *
       ** Set Security field to protect so that securtiy cannot be changed
@@ -3515,11 +3517,11 @@
       *
      C                   EVAL      *IN75 = *ON
      C                   MOVE      '1'           Ind75             1
-
+ 
      ** Use input parameter deal no. to access depot movements
-
+ 
      C     W#DLNO        READE     SEDPMVL3                               89
-
+ 
      C                   IF        FeeSave<>'Y' and *IN72 <> *On
      C                             and *IN89 = *Off and RECI = 'D'                           BUG6282
       *
@@ -3530,16 +3532,16 @@
      C                   EVAL      W#DCSE=DCSE
      C                   EVAL      W#DCAB=DCAB
      C                   EVAL      W#DCAT=DCAT
-
+ 
      C                   EVAL      FeeSave='Y'
-
+ 
      C                   ENDIF
      C** If a record is found set up the details of Depot Movements on
      C** file otherwise blank out the record format and do not write record
-
+ 
      C                   IF        *IN89 = *Off and RECI = 'D'
      C                   MOVE      *OFF          *IN74
-
+ 
       * Save value of *IN74 for use later
      C                   MOVE      '0'           Ind74             1
      C                   EXSR      SEC_DET
@@ -3547,29 +3549,29 @@
      C                   IF        S01401 = 'Y'
      C                   EXSR      Bld_Ext
      C                   ENDIF
-
+ 
      C                   WRITE     MMRPDLS1
      C                   ELSE
      C                   CLEAR                   MMRPDLS1
      C                   SUB       1             RRN
      C                   ENDIF
-
+ 
      ** Set on indicator to allow F9 to be pressed if deal was entered today
-
+ 
      C                   IF        W#ORED = BJRDNB
      C                   MOVE      *ON           *IN19
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       * If program is in Rollover Mode
-
+ 
      C                   IF        DIACTN='R'
-
+ 
      ** Use old deal no. to access depot movements
-
+ 
      C     W#DLNO        READE     SEDPMVL3                               89
-
+ 
      C                   IF        FeeSave<>'Y' and *IN72 <> *On
       *
       ** Save value of Fee Details
@@ -3579,26 +3581,26 @@
      C                   EVAL      W#DCSE=DCSE
      C                   EVAL      W#DCAB=DCAB
      C                   EVAL      W#DCAT=DCAT
-
+ 
      ** Set on flag to indicate the recalculation of Maturity Date Interest
      ** is required
-
+ 
      C                   MOVE      'Y'           RecalReq          1
-
+ 
      C                   EVAL      FeeSave='Y'
-
+ 
      C                   ENDIF
-
+ 
      ** Set on indicator to allow F9 to be pressed
-
+ 
      C                   MOVE      *ON           *IN19
-
+ 
      C** If a record is found set up the details of Depot Movement on file
      C** as long as it has not been deleted i.e. RECI = '*'
-
+ 
      C                   IF        *IN89 = *Off and RECI = 'D'
      C                   MOVE      *OFF          *IN74
-
+ 
       * Save value of *IN74 for use later
      C                   MOVE      '0'           Ind74             1
      C                   EXSR      SEC_DET
@@ -3611,17 +3613,17 @@
      C                   CLEAR                   MMRPDLS1
      C                   SUB       1             RRN
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       * If program is in Margin Mode
-
+ 
      C                   IF        DIACTN='M'
-
+ 
      ** Use input parameter deal no. to access depot movements
-
+ 
      C     W#DLNO        READE     SEDPMVL3                               89
-
+ 
      C                   IF        FeeSave<>'Y' and *IN72 <> *On
       *
       ** Save value of Fee Details
@@ -3632,29 +3634,29 @@
      C                   EVAL      W#DCAB=DCAB
      C                   EVAL      W#DCAT=DCAT
      C                   EVAL      FeeSave='Y'
-
+ 
      C                   ENDIF
-
+ 
      ** Set on indicator to protect all fields except for Action Code and
      ** control Nominal.
-
+ 
      C                   MOVE      *ON           *IN(73)
-
+ 
       * Save value of *IN73 for use later
      C                   MOVE      '1'           Ind73             1
-
+ 
      ** Set on indicator to allow F9 to be pressed
-
+ 
      C                   MOVE      *ON           *IN(19)
-
-
+ 
+ 
      C** If a record is found set up the details of Depo Movement on file
      C** if record has not been deleted i.e. RECI = '*'
-
+ 
      C                   IF        *IN89 = *Off and RECI = 'D'
      C                             and SIOI <> 'O'
      C                   MOVE      *OFF          *IN74
-
+ 
       * Save value of *IN74 for use later
      C                   MOVE      '0'           Ind74             1
      C                   EXSR      SEC_DET
@@ -3667,15 +3669,15 @@
      C                   CLEAR                   MMRPDLS1
      C                   SUB       1             RRN
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
       ** Reset Depot Extension indicator
       *
      C                   EVAL      D@EXT1 = *Blank
-
+ 
      C                   ENDDO
-
+ 
      C                   Z-ADD     1             PRRN
       *
       ** Check Zn to see if Any records are written, else Write a blank
@@ -3713,9 +3715,9 @@
      C                   PARM                    ZOUT21           21
      C                   MOVE      ZOUT21        DDTOTN
      C                   MOVE      ZOUT21        DDCNTN
-
+ 
      C** Access no of decimal places of Loan Ccy to format value price
-
+ 
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -3781,11 +3783,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
-
+ 
      C                   PARM                    CrDlScnFmt
      C                   PARM                    OldDlNo           6
      C                   PARM                    ReturnCode
@@ -3869,7 +3871,7 @@
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    ##CF
      C                   PARM                    MESLEN
-
+ 
      C*
      C* Create Temporary Depot Movements for Repos Extension File 1
      C*
@@ -4041,25 +4043,25 @@
      C                   ELSE
      C                   EVAL      *In70 = *Off
      C                   ENDIF
-
+ 
      C                   IF        Ind71 = '1'
      C                   EVAL      *In71 = *On
      C                   ELSE
      C                   EVAL      *In71 = *Off
      C                   ENDIF
-
+ 
      C                   IF        Ind73 = '1'
      C                   EVAL      *In73 = *On
      C                   ELSE
      C                   EVAL      *In73 = *Off
      C                   ENDIF
-
+ 
      C                   IF        Ind74 = '1'
      C                   EVAL      *In74 = *On
      C                   ELSE
      C                   EVAL      *In74 = *Off
      C                   ENDIF
-
+ 
      C                   IF        Ind75 = '1'
      C                   EVAL      *In75 = *On
      C                   ELSE
@@ -4127,7 +4129,7 @@
      C                   EVAL      D@NWRC = S@NWRC
      C                   EVAL      D@IN51 = S@IN51
      C                   EVAL      D@IN70 = S@IN70
-
+ 
      C*
      C** Restore protection to subfile for amend mode past entry date
      C                   IF        D@IN70 = 'Y'
@@ -4135,9 +4137,9 @@
      C                   ELSE
      C                   EVAL      *IN70 = *Off
      C                   ENDIF
-
+ 
      C                   WRITE     MMRPDLS1
-
+ 
      C                   ENDDO
       *
       ** Set off indicator to display F10 = Delete option
@@ -4214,10 +4216,10 @@
      C                   PARM                    BJDFIN
      C                   PARM                    ZYLDOk            1
      C                   PARM                    ZPRCOT           15 8
-
+ 
      C                   ENDSR
      C********************************************************************
-
+ 
       **--------------------------------------------------------------------------------------------
       *****************************************************************
       /EJECT

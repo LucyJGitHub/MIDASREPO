@@ -11,8 +11,9 @@
 0007 F*                                                                  *
       *  (c) Misys International Banking Systems Ltd. 2001            *
 0009 F*                                                                  *
-      *  Last Amend No. MD047993           Date 23Sep17               *
-      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
       *                 CGL165             Date 17Feb15               *
       *                 AR847323           Date 28Oct14               *
       *                 CDL096             Date 22Sep14               *
@@ -81,6 +82,7 @@
      F*                                                                  *
 0011 F********************************************************************
 0009 F*                                                                  *
+      *  CDL099 - Split Value Date                                    *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
@@ -194,7 +196,8 @@
      FBKRAT   IF  E           K        DISK                               AUS007
 0018 FDEALRD  UF  F     400  6AI     2 DISK                           U1
 0019 FBROKXHH O   F      96            DISK
-0019 FBROKXBD O   F      96            DISK
+0019 F*****BROKXBD*O***F******96            DISK                                              CDL099
+0019 FBROKXBD O   F      99            DISK                                                   CDL099
 0019 FBROKXTT O   F      96            DISK
 0019 FSDCURRL1IF  E           K        DISK                               S01194
 0020 F*PRINT  O   F     132            PRINTER                            S01124
@@ -353,6 +356,9 @@
 0155 I                                    P 398 4000TNLU
      I                                     12921309 OPCA                                      CGL029
      I                                     13101327 OSCA                                      CGL029
+     I                                    P223622380BSDT1                                     CDL099
+     I                                    P223922410BSDT2                                     CDL099
+     I                                    P224222440BRSD2                                     CDL099
 0156 I*
 0157 I*
 0158 I*    DEALS FILE - DETAIL - TAKINGS/PLACINGS/TIME DEPOSITS/LOANS.
@@ -1309,6 +1315,22 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1200CCP1                                           S01408
      C*                                                                   S01408
+      ** Check if feature CDL099 is enabled                                                   CDL099
+      *                                                                                       CDL099
+     C                     MOVEL*BLANKS   CDL099  1                                           CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   @RTCD                                               CDL099
+     C                     PARM '*VERIFY' @OPTN                                               CDL099
+     C                     PARM 'CDL099'  @SARD                                               CDL099
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVEL'Y'       CDL099                                              CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVEL'N'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
 0726 C*                                                                  *
 0727 C*    DETAIL PROCESSING
 0728 C           BEGIN     TAG                             ** BEGIN TAG **
@@ -1341,6 +1363,9 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1200CCP3                                           S01408
      C*                                                                   S01408
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     SETOF                     71                                       CDL099
+     C                     ENDIF                                                              CDL099
 0750 C*
 0751 C*    SELECT RECORDS FOR EXTRACTION
 0752 C   01
@@ -1500,8 +1525,40 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1200CCP4                                           S01408
      C*                                                                   S01408
+      ** For FX deal or swap treated as 2 seperate FX deals, London                           CDL099
+      ** brokerage uses spot rate regardless of period.                                       CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+     C  N22      VDAT      SUB  DDAT      TERM           58                                   CDL099
+      *                                                                                       CDL099
+     C           *IN22     IFEQ '1'                                                           CDL099
+     C                     Z-ADDVDAT      USTRDT  50                                          CDL099
+      *                                                                                       CDL099
+     C           BSDT2     IFNE 0                                                             CDL099
+     C           BSDT2     ANDGT0                                                             CDL099
+     C           BSDT2     ANDGTVDAT                                                          CDL099
+     C                     Z-ADDBSDT2     USTRDT                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C                     Z-ADDOTDT      UENDDT  50                                          CDL099
+     C           BSDT2     IFNE 0                                                             CDL099
+     C           BSDT2     ANDGT0                                                             CDL099
+     C           BRSD2     ANDLTOTDT                                                          CDL099
+     C                     Z-ADDBRSD2     UENDDT                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+      ** Calculate term.                                                                      CDL099
+      *                                                                                       CDL099
+     C           UENDDT    SUB  USTRDT    TERM    50     58                                   CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFNE 'Y'                                                           CDL099
 0822 C   22      OTDT      SUB  VDAT      TERM    50     58  SWAP
 0823 C  N22      VDAT      SUB  DDAT      TERM           58  OUTRIGHT
+     C                     ENDIF                                                              CDL099
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1200CCP5                                           S01408
      C*                                                                   S01408
@@ -1538,6 +1595,28 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1200CCP6                                           S01408
      C*                                                                   S01408
+      ** Calculate dates 6 months, 1 & 2 years foward.                                        CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C                     Z-ADDUSTRDT    ZDAYNO                                              CDL099
+     C                     MOVE 'X'       ZFREQ                                               CDL099
+     C                     EXSR FREQ                                                          CDL099
+     C                     Z-ADDZDAYNO    PR,1                                                CDL099
+      *                                                                                       CDL099
+     C                     Z-ADDUSTRDT    ZDAYNO                                              CDL099
+     C                     MOVE 'Y'       ZFREQ                                               CDL099
+     C                     EXSR FREQ                                                          CDL099
+     C                     Z-ADDZDAYNO    PR,2                                                CDL099
+      *                                                                                       CDL099
+     C                     Z-ADDUSTRDT    ZDAYNO                                              CDL099
+     C                     MOVE 'Z'       ZFREQ                                               CDL099
+     C                     EXSR FREQ                                                          CDL099
+     C                     Z-ADDZDAYNO    PR,3                                                CDL099
+     C                     Z-ADD1         R                                                   CDL099
+     C           UENDDT    LOKUPPR,R                 80  80                                   CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFNE 'Y'                                                           CDL099
 0854 C                     Z-ADDVDAT      ZDAYNO
 0855 C  N22                Z-ADDDDAT      ZDAYNO
 0856 C                     MOVE 'X'       ZFREQ
@@ -1558,6 +1637,7 @@
 0871 C                     Z-ADD1         R
 0872 C   22      OTDT      LOKUPPR,R                 80  80
 0873 C  N22      VDAT      LOKUPPR,R                 80  80
+     C                     ENDIF                                                              CDL099
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1200CCP7                                           S01408
      C*                                                                   S01408
@@ -1679,6 +1759,17 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1200CCP8                                           S01408
      C*                                                                   S01408
+      *                                                                                       CDL099
+      ** If sale date is less than purchase date, then move sale date                         CDL099
+      ** to ZIEND.                                                                            CDL099
+      *                                                                                       CDL099
+     C           BSDT2     IFNE 0                                                             CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C           BSDT2     ANDLTVDAT                                                          CDL099
+     C           *IN22     ANDEQ'0'                                                           CDL099
+     C                     Z-ADDBSDT2     ZIEND                                               CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
 0949 C***********FXMD******COMP 'P'**********************39               E12891
 0950 C***39****************MOVE FRA*******RATE****77*******               E12891
 0951 C**N39****************MOVE FRA*******CHAM****70*******               E12891
@@ -3161,6 +3252,9 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL1200OOP1                                           S01408
      O*                                                                   S01408
+     O                    02 22OTDT      21P                                                  CDL099
+     O                 02 71 22UENDDT    21P                                                  CDL099
+      *                                                                                       CDL099
 2167 O                       05PMDT      21P
 2168 O*************************CRNM      41                               S01194
 2168 O                         BBCRNM    41                               S01194
@@ -3188,6 +3282,7 @@
 2188 O                         DTYP      84
 2189 O***********              BRCD      82                               S01117
 2189 O                         BRCA      82                               S01117
+2189 O                         BSDT2     99P                                                  CDL099
 2190 O* BROKR - TRAILER RECORD
 2191 OBROKXTT T        LRNU8NU7
 2192 O                                    1 'T'

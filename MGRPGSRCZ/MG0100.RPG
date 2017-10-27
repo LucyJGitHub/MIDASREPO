@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
-      *  Prev Amend No. MD031087           Date 25Nov14               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *                 MD031087           Date 25Nov14               *
       *                 MD026727           Date 26May14               *
       *                 MD023383           Date 12Nov13               *
       *                 MD022039           Date 27Aug13               *
@@ -99,6 +100,7 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  MD031087 - Recompile due to changes in SWIFTTRANS Table in   *
       *             order to avoid corruption of German Chars         *
@@ -262,6 +264,13 @@
      FMG0100P1O   E                    PRINTER                        UC
      FMG0100AUO   E                    PRINTER                        UC
      FMGCOVRPDO   E           K        DISK                               105577
+     FDEALS   IF  E           K        DISK                           UC                      CDL099
+     F            DEALSDAF                          KIGNORE                                   CDL099
+     F            DEALSDCF                          KIGNORE                                   CDL099
+     F            DEALSDDF                          KIGNORE                                   CDL099
+     F            DEALSDEF                          KIGNORE                                   CDL099
+     F            DEALSDGF                          KIGNORE                                   CDL099
+     F            DEALSDFF                          KIGNORE                                   CDL099
      F*                                                                   S01408
      F/COPY WNCPYSRC,MG0100FFP1                                           S01408
      F*                                                                   S01408
@@ -1193,6 +1202,15 @@
       **  Format value date to SWIFT standard
      C                     MOVE MGVDAT    ZMDAY
      C/COPY WNCPYSRC,MG0100C005
+      *                                                                                       CDL099
+      * Only check for SVD if FX/MM                                                           CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     MOVELMGTNUM    KYDLNO  60                                          CDL099
+     C           KYDLNO    CHAINDEALS                40                                       CDL099
+     C                     MOVE BSDT2     ZMDAY                                               CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C                     CALL 'ZM0060'               15
      C                     PARM           ZMDAY
      C                     PARM           ZSDATE
@@ -2562,10 +2580,28 @@
       *                                                                   E29588
       **  Format value date to YYMMDD format                              E29588
      C/COPY WNCPYSRC,MG0100C006
+      *                                                                                       CDL099
+      ** Only check for SVD if FX/MM                                                          CDL099
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDMGVDAT    ULVDT   50                                          CDL099
+     C                     MOVELMGTNUM    KYDLNO                                              CDL099
+     C           KYDLNO    CHAINDEALS                40                                       CDL099
+     C                     MOVE BSDT2     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C                     CALL 'ZM0060'               15                 E29588
      C                     PARM MGVDAT    ZMDAY   50                      E29588
      C                     PARM           ZMDATE  6                       E29588
      C/COPY WNCPYSRC,MG0100C007
+      *                                                                                       CDL099
+      ** Only check for SVD if FX/MM                                                          CDL099
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDULVDT     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
       *                                                                   E29588
      C           *IN15     IFEQ '1'                                       E29588
      C           *LOCK     IN   LDA                                       E29588
@@ -3859,6 +3895,16 @@
       *                                                                   CFT013
       **  Format value date to SWIFT standard                             CFT013
      C                     MOVE MGVDAT    ZMDAY                           CFT013
+      *                                                                                       CDL099
+      ** Only check for SVD if FX/MM ie not LE or other modules                               CDL099
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     MOVELMGTNUM    KYDLNO                                              CDL099
+     C           KYDLNO    CHAINDEALS                40                                       CDL099
+     C                     MOVE BSDT2     ZMDAY                                               CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                   135679
      C                     CALL 'ZM0060'               15                 CFT013
      C                     PARM           ZMDAY                           CFT013
      C                     PARM           ZSDATE                          CFT013
@@ -5000,6 +5046,21 @@
      C                     MOVE 'N'       CMG001                          CMG001
      C                     ENDIF                                          CMG001
       *                                                                   CMG001
+      ** Check if feature CDL099 is enabled                                                   CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   PRTCD   7                                           CDL099
+     C                     PARM '*VERIFY 'POPTN   7                                           CDL099
+     C                     PARM 'CDL099'  PSARD   6                                           CDL099
+     C           SCSARD    PARM SCSARD    DSSDY                                               CDL099
+      *                                                                                       CDL099
+     C           PRTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVE 'Y'       CDL099  1                                           CDL099
+     C                     OPEN DEALS                                                         CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
       ** Access system value for CustNoFirstLineFld50                                       MD026727
       *                                                                                     MD026727
      C                     CALL 'AOSVALR0'                                                  MD026727

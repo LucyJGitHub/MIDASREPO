@@ -11,9 +11,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD036542           Date 02Dec15               *
-      *  Prev Amend No. MD035921           Date 16Oct15               *
-      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD036542           Date 02Dec15               *
+      *                 MD035921           Date 16Oct15               *
+      *                 CSW215             Date 06Apr15               *
       *                 CLE148             Date 23Jul12               *
       *                 AR1002987          Date 11Jul12               *
       *                 CSW212             Date 03Mau12               *
@@ -106,6 +107,7 @@
      F*                                                               *
       *****************************************************************
       *                                                               *
+      *  CDL099 - Split Value Dates                                   *
       *  MD036542 - Missing "/" before the account in the 53B field   *
       *             of MT0202.                                        *
       *  MD035921 - MT202 missing tag 53 - Account Identification     *
@@ -303,6 +305,13 @@
      FMGCOVRPDIF  E           K        DISK                               105577
      FMGOMSGLAIF  E           K        DISK                                                   CSW209
      F            MGOMSGD0                          KRENAMEMGOMSGA                            CSW209
+     FDEALS   IF  E           K        DISK                           UC                      CDL099
+     F            DEALSDAF                          KIGNORE                                   CDL099
+     F            DEALSDCF                          KIGNORE                                   CDL099
+     F            DEALSDDF                          KIGNORE                                   CDL099
+     F            DEALSDEF                          KIGNORE                                   CDL099
+     F            DEALSDGF                          KIGNORE                                   CDL099
+     F            DEALSDFF                          KIGNORE                                   CDL099
       *
       *                                                                   S01408
      F/COPY WNCPYSRC,MG0202FFP1                                           S01408
@@ -1205,6 +1214,21 @@
      C                     MOVE 'N'       CMG001                          CMG001
      C                     ENDIF                                          CMG001
       *                                                                   CMG001
+      ** Check if feature CDL099 is enabled                                                   CDL099
+      *                                                                                       CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   PRTCD   7                                           CDL099
+     C                     PARM '*VERIFY 'POPTN   7                                           CDL099
+     C                     PARM 'CDL099'  PSARD   6                                           CDL099
+     C           SCSARD    PARM SCSARD    DSSDY                                               CDL099
+      *                                                                                       CDL099
+     C           PRTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVE 'Y'       CDL099  1                                           CDL099
+     C                     OPEN DEALS                                                         CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C/COPY WNCPYSRC,MG0202CCP6                                           S01408
       *                                                                   S01408
       *
@@ -1854,6 +1878,15 @@
      C                     MOVELMGPOBR    KPOBR   3
      C                     MOVELMGVDAT    KVDAT   50
      C/COPY WNCPYSRC,MG0202C007
+      *                                                                                       CDL099
+      ** Only check for SVD if FX/MM                                                          CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     MOVELMGTNUM    KYDLNO  60                                          CDL099
+     C           KYDLNO    CHAINDEALS                40                                       CDL099
+     C                     MOVE BSDT2     KVDAT                                               CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C                     MOVELMGCCY     KCCY    3
      C**********           MOVELMGPOBN    KPOBN   60                                          CSD027
      C                     MOVELMGPOBN    KPOBN   6                                           CSD027
@@ -1959,6 +1992,16 @@
       *
      C           CHECK     BEGSR
      C/COPY WNCPYSRC,MG0202C008
+      *                                                                                       CDL099
+      ** Only check for SVD if FX/MM                                                          CDL099
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDMGVDAT    ULMVD   50                                          CDL099
+     C                     MOVELMGTNUM    KYDLNO                                              CDL099
+     C           KYDLNO    CHAINDEALS                40                                       CDL099
+     C                     MOVE BSDT2     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
       *
       **  Determine if matching criteria are met for an MT203
       *
@@ -2107,6 +2150,12 @@
      C                     END
       *
      C/COPY WNCPYSRC,MG0202C009
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDULMVD     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C           CSW025    IFEQ 'Y'                                                           CSW025
      C           CSW050    ANDNE'Y'                                                           242622
      C                     MOVE 'N'       MATCH                                               CSW025
@@ -2396,10 +2445,26 @@
      C                     ADD  1         X
      C           X         OCUR MULT
      C/COPY WNCPYSRC,MG0202C010
+      *                                                                                       CDL099
+      ** Only check for SVD if FX/MM                                                          CDL099
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDMGVDAT    ULMVD   50                                          CDL099
+     C                     MOVELMGTNUM    KYDLNO                                              CDL099
+     C           KYDLNO    CHAINDEALS                40                                       CDL099
+     C                     MOVE BSDT2     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C                     CALL 'ZM0060'               15
      C                     PARM MGVDAT    ZMDAY   50
      C                     PARM           ZMDATE  6
      C/COPY WNCPYSRC,MG0202C011
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDULMVD     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
       *
       **  Error on call ?
      C           *IN15     IFEQ '1'
@@ -2741,6 +2806,16 @@
       **  Format value date to SWIFT standard
      C                     MOVE MGVDAT    ZMDAY
      C/COPY WNCPYSRC,MG0202C012
+      *                                                                                       CDL099
+      ** Only check for SVD if FX/MM                                                          CDL099
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     MOVELMGTNUM    KYDLNO                                              CDL099
+     C           KYDLNO    CHAINDEALS                40                                       CDL099
+     C                     MOVE BSDT2     ZMDAY                                               CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C                     CALL 'ZM0060'               15
      C                     PARM           ZMDAY
      C                     PARM           ZSDATE
@@ -4632,10 +4707,26 @@
       *
       **  Format value date to YYMMDD format
      C/COPY WNCPYSRC,MG0202C013
+      *                                                                                       CDL099
+      ** Only check for SVD if FX/MM                                                          CDL099
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDMGVDAT    ULMVD   50                                          CDL099
+     C                     MOVELMGTNUM    KYDLNO                                              CDL099
+     C           KYDLNO    CHAINDEALS                40                                       CDL099
+     C                     MOVE BSDT2     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C                     CALL 'ZM0060'               15
      C                     PARM MGVDAT    ZMDAY   50
      C                     PARM           ZMDATE  6
      C/COPY WNCPYSRC,MG0202C014
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDULMVD     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
       *
      C           *IN15     IFEQ '1'
      C           *LOCK     IN   LDA
@@ -4820,10 +4911,26 @@
       *
       **  Format value date to YYMMDD format
      C/COPY WNCPYSRC,MG0202C015
+      *                                                                                       CDL099
+      ** Only check for SVD if FX/MM                                                          CDL099
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDMGVDAT    ULMVD   50                                          CDL099
+     C                     MOVELMGTNUM    KYDLNO                                              CDL099
+     C           KYDLNO    CHAINDEALS                40                                       CDL099
+     C                     MOVE BSDT2     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
      C                     CALL 'ZM0060'               15
      C                     PARM MGVDAT    ZMDAY   50
      C                     PARM           ZMDATE  6
      C/COPY WNCPYSRC,MG0202C016
+      *                                                                                       CDL099
+     C           MGMODI    IFEQ 'DL'                                                          CDL099
+     C           CDL099    ANDEQ'Y'                                                           CDL099
+     C                     Z-ADDULMVD     MGVDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
       *
      C           *IN15     IFEQ '1'
      C           *LOCK     IN   LDA

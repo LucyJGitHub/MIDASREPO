@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. MD035515           Date 19Aug15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD035515           Date 19Aug15               *
       *                 MD033754           Date 21Apr15               *
       *                 CGL165             Date 17Feb15               *
       *                 MD026953           Date 25Nov14               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW216 - SWIFT Changes 2016                                  *
       *  MD035515 - No MT600 generated if branch internal customer is *
       *             alphanumeric                                      *
@@ -1459,7 +1461,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C**********         MOVE      *BLANKS       WBICN             6 0                      MD035515
      C                   MOVE      *BLANKS       WBICN             6                        MD035515
      C                   MOVEL     A8BICN        WBICN

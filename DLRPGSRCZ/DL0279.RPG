@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD047993           Date 23Sep17               *
-      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CIR018             Date 31Aug14               *
@@ -165,6 +166,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date                                    *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
@@ -853,6 +855,9 @@
      I                                     12061208 IC72                  CEU003
      I                                     12921309 OPCA                                      CGL029
      I                                     13101327 OSCA                                      CGL029
+     I                                    P223622380BSDT1                                     CDL099
+     I                                    P223922410BSDT2                                     CDL099
+     I                                    P224222440BRSD2                                     CDL099
 0257 I*****                                   1 256 LOTA          *****   S01117
 0258 I*****                                 257 400 LOTB          *****   S01117
      I*****                                 257 500 LOTB          *****   S01117
@@ -1776,6 +1781,21 @@
      C                     GOTO FINEND                                                        CIR014
      C                     ENDIF                                                              CIR014
      C                     ENDIF                                                              CIR014
+      *                                                                                       CIR014
+      ** Check if feature CDL099 is On                                                        CDL099
+      *                                                                                       CDL099
+     C                     MOVE *BLANK    CDL099  1                                           CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   @RTCD                                               CDL099
+     C                     PARM '*VERIFY' @OPTN                                               CDL099
+     C                     PARM 'CDL099'  @SARD                                               CDL099
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVE 'Y'       CDL099                                              CDL099
+     C                     ELSE                                                               CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     ENDIF                                                              CDL099
       *                                                                   CSW005
 0327 C* CALL MODULE PROG. FOR MODULE DETAILS.                             S01194
      C                     CALL 'AOMMODR0'                                S01194
@@ -2244,6 +2264,16 @@
 0686 C   06N23             Z-ADDVDAT      ADAT    50
      F*                                                                   S01408
      F/COPY WNCPYSRC,DL0279CP17                                           S01408
+      *
+      *                                                                                       CDL099
+      ** If CDL099 is on, set-up Sell Value Date                                              CDL099
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+     C           *IN06     ANDEQ'1'                                                           CDL099
+     C           *IN23     ANDEQ'0'                                                           CDL099
+     C           BSDT2     ANDNE0                                                             CDL099
+     C                     Z-ADDBSDT2     ADAT                                                CDL099
+     C                     ENDIF                                                              CDL099
      F*                                                                   S01408
 0687 C  N06                Z-ADDMDAT      ADAT
 0688 C   06 23             Z-ADDOTDT      ADAT

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD036601           Date 29Aug16               *
-      *  Prev Amend No. AR743357           Date 22Apr15               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. MD036601           Date 29Aug16               *
+      *                 AR743357           Date 22Apr15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -114,6 +115,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  MD036601 - DLC0606B failed in RU production dd 10.11.2015    *
       *             Reset URFIN / TRFIN whenever fix date is less than*
       *             rate change date.                                 *
@@ -258,7 +260,7 @@
      FSDTIX     UF A E           K DISK
      F                                     COMMIT
      F                                     PREFIX(DX)
- 
+
      FDLDTSCPD  UF A E           K DISK                                         CAP004
      F                                     PREFIX(@)                            CAP004
      F                                     COMMIT                               CAP004
@@ -311,19 +313,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006 -------------
       ** The following /COPY line includes the definitions for error and        CAP006
       ** warning message arrays.                                                CAP006
@@ -334,9 +336,9 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID CROSS CCY IRS
      D IRVCIRS       E DS                  EXTNAME(IRVCIRSPD)
      D  @RXDET1               11    715
@@ -357,7 +359,7 @@
      D  @RXRECExt           2505   2522                                                       TDA041
      D  @RXPY1Ext           2523   2540                                                       TDA041
      D  @RXDET3             2551   2602                                                       CDL028
- 
+
       **  DEALS FILE - FORWARD RATE AGREEMENTS
      D DEALS         E DS                  EXTNAME(DEALSDG)
      D  @DLDET1               11    715
@@ -432,7 +434,7 @@
       ** Last processing date (82nd PRDT) UR/UP/TR/TP                                         CAP043
      D PLastPRDT       DS                                                                     CAP043
      D WLastPRDT               1     12P 0 DIM(4) INZ(0)                                      CAP043
- 
+
      D** Define external data-structures for before and after image
      D**   of deal for on-line updates.
      D*
@@ -516,15 +518,15 @@
                                                                                               CAP043
       ** FRA/IRS Interface Non-Screen Data                                                    CAP043
      D InfData       E DS                  EXTNAME(IRRXIFPD)                                  CAP043
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
       ** External DS for TRADE Details
- 
+
      D SDFAIS        E DS                  EXTNAME(SDFAISPD)
       ** External data structure for FRA/IRS I.C.D. details
       *
@@ -534,16 +536,16 @@
                                                                                               200400
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** External DS for BRANCH Details
- 
+
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       ** External DS for BASE RATE Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for CURRENCY Details
- 
+
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
       ** External DS for BOOK Details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP004
      D SCA_LCD       E                     EXTFLD(LCD)                          CAP004
       ** EXTERNAL DS FOR SAR DETAILS                                            CAP004
@@ -570,10 +572,10 @@
                                                                                               CSD015
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
       *                                                                                       CSC011
@@ -590,17 +592,17 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D***OVRDLPCSC       C                   Const('OVRDBF DLPCSCRX DLPCSCPD +       246966 AR743357
      D**********                           OVRSCOPE(*JOB)')                          246966 AR743357
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Value Date in Midas Day Number format returned as a parameter
      D ZDAYNO          S              5  0
- 
+
       * Date Array index (3P0) for use with IRCs                                CAP004
      D   X             S              2P 0 INZ(*ZEROS)                          CAP004
                                                                                 CAP004
@@ -650,7 +652,7 @@
                                                                                               CAP056
      D PModeOfOp       S              6A                                                      CAP056
      D WkActn          S              1A                                                      CIR008
- 
+
       ** Fields defined for Enhancement CSC011                                                CSC011
      D CSC011          S              1A                                                      CSC011
      D TRANSDTL        S           5800A                                                      CSC011
@@ -804,10 +806,10 @@
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
       * EXIT IF NOT INSERTION, AMENDMENT OR REVERSAL
       ** only if CIR008 is switched off                                                       CIR008
- 
+
      C                   EVAL      WLastPRDT(1) = *ZERO                                       CGL029
      C                   EVAL      WLastPRDT(2) = *ZERO                                       CGL029
      C                   EVAL      WLastPRDT(3) = *ZERO                                       CGL029
@@ -842,7 +844,7 @@
                                                                                               CIR008
      C                   EVAL      WkActn = RXCHTP                                            CIR008
      C                   EVAL      WSCHTP = RXCHTP                                            CRE020
- 
+
       ** Ensure transaction has not been updated by another workstation         CAP006
       ** - if so, bypass updating and return to calling program.                CAP006
      C                   EXSR      CHKOTHUPD                                    CAP006
@@ -866,39 +868,39 @@
                                                                                               CAP056
       * INSERT, AMEND, OR REVERSE THE DEAL
       ** or Authorise                                                                         CIR008
- 
+
      C     RXCHTP        CASEQ     'I'           CIRINS
      C     RXCHTP        CASEQ     'A'           CIRAMD
      C     RXCHTP        CASEQ     'R'           CIRDEL
      C     RXCHTP        CASEQ     'X'           SrAuthorise                                  CIR008
      C                   END
      C/COPY WNCPYSRC,IRH00070
- 
+
       * SET PAY/RECEIVE INDICATORS TO BE WRITTEN TO DTRIX
       ** when CIR008 is switched off or when reversing a deal                                 CIR008
       ** Or Authorisation/Re-authorisation flags are both 'N'                                 CIR008
                                                                                               CIR008
      C                   IF        RXCHTP <> *BLANKS                                          CIR008
- 
+
      C                   EXSR      PYRCIN
- 
+
       * WRITE A DTRIX RECORD
      C/COPY WNCPYSRC,IRCIRSDC01
- 
+
      C                   EXSR      WRTDTX
      C/COPY WNCPYSRC,IRCIRSDC02
- 
+
       * UPDATE THE DTRIX HEADER RECORD
      C/COPY WNCPYSRC,IRCIRSDC03
- 
+
      C                   EXSR      UPDDTH
      C/COPY WNCPYSRC,IRCIRSDC04
                                                                                               CIR008
      C                   ENDIF                                                                CIR008
- 
+
       ** UPDATE THE DEALS FILE TRAILER
       ** ON INSERTS AND REVERSALS
- 
+
      C     RXCHTP        IFEQ      'I'
      C     RXCHTP        OREQ      'R'
      C                   EXSR      UPDTRL
@@ -1180,11 +1182,11 @@
      C*                                                              *
      C****************************************************************
      C     CIRINS        BEGSR
- 
+
       * SET CONFIRMATION REQUIRED INDICATOR
       * TO BE WRITTEN TO DTRIX
       ** when CIR008 is switched off                                                          CIR008
- 
+
      C                   IF        CIR008 = 'N'  OR                                           CIR008
      C                             CIR008 = 'Y'  AND  BQFIAU <> 'Y'                           CIR008
      C                   EXSR      CNFINS
@@ -1203,9 +1205,9 @@
      C                   PARM      *BLANK        RXCHTP                                       CIR008
                                                                                               CIR008
      C                   ENDIF                                                                CIR008
- 
+
       * INITIALIZE DEAL
- 
+
      C                   CLEAR                   DEALS
      C                   EVAL      FSOSDT = *ZEROS                                           BUG7535
      C                   EVAL      FSOS1B = *ZEROS                                           BUG7535
@@ -1234,26 +1236,26 @@
      C                   MOVE      *BLANKS       Z#YSTS                                       CIR003
      C                   MOVE      *BLANKS       Z#ZSTS                                       CIR003
      C                   ENDIF                                                                CIR003
- 
+
       ** Initialise "before" status of deal for on-line updates.
       *
      C                   MOVEL     *BLANK        Z#BSTS
- 
+
       * RECORD ID
- 
+
      C                   MOVEL     'D'           RECI
- 
+
       * DEAL NUMBER & RECORD TYPE
- 
+
      C                   Z-ADD     RXDLNO        DLNO
      C                   MOVE      'G'           RCDT
- 
+
       * DEAL RECORD CODE
- 
+
      C                   Z-ADD     23            RCDC
- 
+
       *  DEAL DETAILS
- 
+
      C                   MOVE      @RXDET1       @DLDET1
      C                   MOVE      @RXDET1Ext    @DLDET1Ext                                   CGL029
      C                   MOVE      @RXDET2       @DLDET2
@@ -1543,7 +1545,7 @@
      C**********         IF        RXCHTP <> *BLANKS                                  CIR008 BUG5519
      C                   MOVEL     DEALS         Z#BSTS
      C                   MOVE      RXDLNO        PDLNO
- 
+
       ** Store "before" values for later comparison.
      C                   Z-ADD     UEINR         ##UEINR
      C                   Z-ADD     TEINR         ##TEINR
@@ -1577,7 +1579,7 @@
      C                   Z-ADD     TNIPD         WTNIPD            5 0          CIR005
      C                   MOVEL     L1AMCN        WL1AMC            2            CIR005
      C                   MOVEL     L2AMCN        WL2AMC            2            CIR005
- 
+
      C**********         CALLB     'DL2900'                                                 AR743357
      C**********         PARM      *BLANK        PRTCD                                      AR743357
      C**********         PARM                    PDLNO                                      AR743357
@@ -1607,7 +1609,7 @@
      C**********         ENDIF                                                       CIR008 BUG6877N
       *
       *  DEAL DETAILS
- 
+
      C                   MOVE      @RXDET1       @DLDET1
      C                   MOVE      @RXDET1Ext    @DLDET1Ext                                   CGL029
      C                   MOVE      @RXDET2       @DLDET2
@@ -2134,7 +2136,7 @@
      C**********         IF        RXCHTP <> *BLANKS                                  CIR008 BUG5519
      C                   MOVEL     IRVCIRS       Z#BSTS
      C                   MOVE      RXDLNO        PDLNO
- 
+
      C**********         CALLB     'DL2900'                                                 AR743357
      C**********         PARM      *BLANK        PRTCD                                      AR743357
      C**********         PARM                    PDLNO                                      AR743357
@@ -2183,7 +2185,7 @@
       *                                                                                       CIR003
      C                   UPDATE    DEALSDGF
      C/COPY WNCPYSRC,IRCIRSDC07
- 
+
       ** If Interest Rate Calendars feature present and data has been           CAP004
       ** input via server clear dates from file.                                CAP004
      C     CIR001        IFEQ      'Y'                                          CAP004
@@ -2480,7 +2482,7 @@
       *
       * User pays Fixed Rate, Counterparty pays Floating Rate
      C     RXTBRTT       IFEQ      *ZEROS
- 
+
      C                   Z-ADD     0             TINFD
      C                   ELSE
       *
@@ -2602,7 +2604,7 @@
       * Start/Last Interest Payment Date
      C                   Z-ADD     VDAT          USLIP
      C                   Z-ADD     VDAT          TSLIP
- 
+
       *                                                                        CPL002
       * Our/Their Last Rate Change Date                                        CPL002
      C                   Z-ADD     VDAT          PLULRC                        CPL002
@@ -2634,7 +2636,7 @@
       * Interest Accrual Control Date
      C                   Z-ADD     VDAT          UIACD
      C                   Z-ADD     VDAT          TIACD
- 
+
       * Last Interest Payment/Change Date
      C     RXUBRTT       IFEQ      *ZEROS
      C                   Z-ADD     0             ULPCD
@@ -2660,7 +2662,7 @@
      C     RXTSPIN       ANDEQ     *BLANK
      C                   MOVE      'A'           TSPIN
      C                   END
- 
+
       * Our and Their original principal amount
      C                   Z-ADD     UPAMT         UOPAM
      C                   Z-ADD     TPAMT         TOPAM
@@ -2971,7 +2973,7 @@
       * (Defaulting done in IRVRTFXDAY)
       *
      C     RXTBRTT       IFEQ      *ZEROS
- 
+
      C                   Z-ADD     0             TINFD
      C                   ELSE
       *
@@ -3118,7 +3120,7 @@
       * Start/Last Interest Payment Date
      C**********         Z-ADD     VDAT          USLIP                                        184363
      C**********         Z-ADD     VDAT          TSLIP                                        184363
- 
+
       * Interest Rate Change Base Date
      C                   Z-ADD     UNICD         UICBD
      C                   Z-ADD     TNICD         TICBD
@@ -3182,7 +3184,7 @@
      C     RXTSPIN       ANDEQ     *BLANK
      C                   MOVE      'A'           TSPIN
      C                   END
- 
+
       **  Our and Their original base rate code
      C     RXUEINR       IFNE      *ZEROS
      C     BJRDNB        ANDLE     VDAT

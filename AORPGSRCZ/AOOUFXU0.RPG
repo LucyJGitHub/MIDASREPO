@@ -10,8 +10,9 @@
      F*                                                                  *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                                  *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CSW212             Date 03May12               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG25226A          Date 08Sep09               *
@@ -42,6 +43,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  CDL099 - Split Value Date                                    *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -857,6 +859,19 @@
       *
       * Value date and posting date
      C                     Z-ADD##VDAT    C#VDAT
+      *                                                                                       CDL099
+     C           CDL099    IFEQ 'Y'                                                           CDL099
+      *                                                                                       CDL099
+      ** If a payment update is to be generated                                               CDL099
+     C           ##PYRC    IFEQ 'P'                                                           CDL099
+     C                     Z-ADDFHVS2Y    ZWYYYY                                              CDL099
+     C                     Z-ADDFHVS2M    ZWMTH                                               CDL099
+     C                     Z-ADDFHVS2D    ZWDAY                                               CDL099
+     C                     EXSR ZDAT10                                                        CDL099
+     C                     Z-ADDZZMDNO    C#VDAT                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
+     C                     ENDIF                                                              CDL099
      C/COPY WNCPYSRC,AOOUFXU0C1
      C                     Z-ADD##VDAT    C#PSTD
       *
@@ -1372,6 +1387,25 @@
      C                     ENDIF                                                              CAP205
      C                     ENDIF                                                              CAP205
       *                                                                                       CAP205
+      ** Check if CDL099 is switched *ON.                                                     CDL099
+     C                     MOVE 'N'       CDL099                                              CDL099
+     C                     CALL 'AOSARDR0'                                                    CDL099
+     C                     PARM *BLANKS   @RTCD                                               CDL099
+     C                     PARM '*VERIFY' @OPTN                                               CDL099
+     C                     PARM 'CDL099'  @SARD                                               CDL099
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL099
+      *                                                                                       CDL099
+     C           @RTCD     IFEQ *BLANKS                                                       CDL099
+     C                     MOVE 'Y'       CDL099  1                                           CDL099
+     C                     ELSE                                                               CDL099
+     C           @RTCD     IFNE '*NRF   '                                                     CDL099
+     C                     MOVEL'SCSARDPD'W0FILE                                              CDL099
+     C                     MOVEL'CDL099'  W0KEY                                               CDL099
+     C                     Z-ADD7         W0ERNB                                              CDL099
+     C                     EXSR SRERR                                                         CDL099
+     C                     ENDIF                                                              CDL099
+     C                     ENDIF                                                              CDL099
+      *                                                                                       CDL099
       * Check system values                                                                   241166
      C                     CALL 'AOSVALR0'                                                    241166
      C                     PARM *BLANKS   @RTCD                                               241166

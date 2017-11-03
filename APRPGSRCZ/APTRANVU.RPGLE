@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CDL099             Date 03Nov17               *
       *  Prev Amend No. MD041996           Date 12Oct16               *
       *                 MD042042           Date 14Feb17               *
       *                 MD042033           Date 30Sep16               *
@@ -209,6 +209,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CDL099 - Split Value Date                                    *
+      *           Applied for MD-48461                                *
       *  MD041996 - Incorrect mapping for FX Netting                  *
       *  MD042042 - Input Officer 1 and Input Officer 2 in IPAY and   *
       *             OPAY are being populated with WIP authoriser.     *
@@ -681,6 +682,10 @@
      D SDCUXC        E DS                  EXTNAME(SDCUXCPD)                                  CGL132
      D SDFTCR        E DS                  EXTNAME(SDFTCRPD)                                  CGL132
      D  DDCUST_FC    E                     EXTFLD(DDCUST)                                     CGL132
+                                                                                              CDL099
+      ** CDL099 Split Value Date with additional extra fields                                 CDL099
+     D InCDL099      E DS                  EXTNAME(FXDLEXPD)                                  CDL099
+     D DDEXDT_FX     E                     EXTFLD(DDEXDT)                                     CDL099
       *                                                                                     BUG23742
      D POthNarr1       S            500A                                                    BUG23742
       *                                                                                     BUG23742
@@ -1167,6 +1172,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C***/COPY*OFCPYSRCZ,CAP090_002                                                    CAP090 CLE164
      C                   CLEAR                   SBJBParm                                     CLE164
      C                   CLEAR                   InputUser                                  MD042042
+     C                   CLEAR                   InCDL099                                     CDL099
      C/COPY OFCPYSRCZ,CGL135_042                                                             CGL135A
      C/COPY OFCPYSRCZ,CRE101_002                                                              CRE101
      C/COPY OFCPYSRCZ,CGL158_002                                                              CGL158
@@ -1207,6 +1213,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     FXFXLn        SUBST     BUFFER:Bfp    ExtData
      C                   ADD       FXFXLn        Bfp                                          CSW213
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
+     C                   ADD       RPIFLn        Bfp                                          CDL099
+     C     FXEDLn        SUBST     BUFFER:Bfp    InCDL099                                     CDL099
 
      C                   CALL      'FXFXDLVU'
       * Common header information (DS) from source system
@@ -1232,6 +1240,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4190
+     C                   PARM                    InCDL099                                     CDL099
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'FXFXDLUPD'                                       CRE020
@@ -5057,6 +5066,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     FXFXLn            4 0
 
+     C                   MOVEL     'FXDLEXPD'    FileName                                     CDL099
+     C                   EXSR      GETRCDLN                                                   CDL099
+     C                   Z-ADD     RecordLen     FXEDLn            4 0                        CDL099
+                                                                                              CDL099
      C**********         MOVEL     'SDCUCUPD'    FileName                              CER043 CSF011
      C**********         EXSR      GETRCDLN                                            CER043 CSF011
      C**********         Z-ADD     RecordLen     SDCULn                                CER043 CSF011

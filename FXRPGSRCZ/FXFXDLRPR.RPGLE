@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *  Last Amend No. MD047971           Date 16Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 AR990243           Date 14Jun12               *
@@ -82,6 +83,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047971 - Do not allow amendment to settlement account if   *
+      *             that side is already netted.                      *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -433,6 +436,8 @@
      D WSkpCom         S              1A                                                      CSC022
      D WPos            S              2S 0                                                    CSC022
      D CSW212          S              1A                                                      CSW212
+     D DDRonxOK        S              1A   INZ('Y')                                         MD047971
+     D DDPonxOK        S              1A   INZ('Y')                                         MD047971
      D/COPY WNCPYSRC,FXH00067
  
       ** +--------------------------------------+
@@ -1128,6 +1133,13 @@
       *
       * Current Deal in file format
      C                   PARM                    CrDlFilFmt
+      *                                                                                     MD047971
+      ** Pay/rcv settlement account                                                         MD047971
+      *                                                                                     MD047971
+     C                   PARM                    DDRONX                                     MD047971
+     C                   PARM                    DDPONX                                     MD047971
+     C                   PARM                    DDRONXOK                                   MD047971
+     C                   PARM                    DDPONXOK                                   MD047971
       *
       * OUTPUTS
       *

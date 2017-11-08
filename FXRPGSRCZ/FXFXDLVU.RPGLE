@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. MD044506           Date 28Mar17               *
+      *  Last Amend No. MD047971           Date 16Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
       *                 CSW214             Date 25Nov14               *
       *                 MD030956           Date 24Nov14               *
@@ -112,6 +113,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047971 - Do not allow amendment to settlement account if   *
+      *             that side is already netted.                      *
       *  CDL099 - Split Value Date                                    *
       *  MD044506 - MT300 98D trade execution date can not be before  *
       *             value date.                                       *
@@ -1530,6 +1533,13 @@
      C                   PARM                    DealScnfmt
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
+      *                                                                                     MD047971
+      ** Pay/rcv settlement account                                                         MD047971
+      *                                                                                     MD047971
+     C                   PARM                    DDRONX                                     MD047971
+     C                   PARM                    DDPONX                                     MD047971
+     C                   PARM                    DDRONXOK                                   MD047971
+     C                   PARM                    DDPONXOK                                   MD047971
  
       * OUTPUTS
       * Field OK flags (DS) from/to caller

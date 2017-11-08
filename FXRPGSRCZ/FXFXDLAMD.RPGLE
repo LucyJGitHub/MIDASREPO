@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD047971           Date 17Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSW212             Date 03May12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -51,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047971 - Do not allow amendment to settlement account if   *
+      *             that side is already netted.                      *
       *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -244,6 +247,11 @@
  
       ** Deal Transaction Date in Midas Dayno. format
      D TransDate       S              5P 0
+
+     D DDRONX          S             21A                                                    MD047971
+     D DDPONX          S             21A                                                    MD047971
+     D DDRonxOK        S              1A                                                    MD047971
+     D DDPonxOK        S              1A                                                    MD047971
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
@@ -741,6 +749,34 @@
      C                   EVAL      MsgIDArr(Idx)   = 'FXM0512'                                CDL038
      C                   EVAL      ddCLASok        = 'N'                                      CDL038
      C                   ENDIF                                                                CDL038
+      *                                                                                     MD047971
+      *-----------------------------------------*                                           MD047971
+      * Receipt settlement account              *                                           MD047971
+      *-----------------------------------------*                                           MD047971
+      ** This field is non-amendable when buy side of deal is netted                        MD047971
+      ** already.                                                                           MD047971
+      *                                                                                     MD047971
+     C     FHNBRF        IFNE      ' '                                                      MD047971
+     C     DDRONX        ANDNE     FHRONS                                                   MD047971
+     C                   ADD       1             Idx                                        MD047971
+     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                               MD047971
+     C                   EVAL      MsgIDArr(Idx)   = 'FXM7006'                              MD047971
+     C                   EVAL      ddRonxok        = 'N'                                    MD047971
+     C                   ENDIF                                                              MD047971
+      *                                                                                     MD047971
+      *-----------------------------------------*                                           MD047971
+      * Payment settlement account              *                                           MD047971
+      *-----------------------------------------*                                           MD047971
+      ** This field is non-amendable when sell side of deal is netted                       MD047971
+      ** already.                                                                           MD047971
+      *                                                                                     MD047971
+     C     FHNSRF        IFNE      ' '                                                      MD047971
+     C     DDPONX        ANDNE     FHPONS                                                   MD047971
+     C                   ADD       1             Idx                                        MD047971
+     C                   EVAL      FldNameArr(Idx) = 'DDPONX'                               MD047971
+     C                   EVAL      MsgIDArr(Idx)   = 'FXM7007'                              MD047971
+     C                   EVAL      ddPonxok        = 'N'                                    MD047971
+     C                   ENDIF                                                              MD047971
      C*
      C                   ENDSR
       *****************************************************************
@@ -941,6 +977,13 @@
       *
       * Current Deal in file format
      C                   PARM                    DealFilFmt
+      *                                                                                     MD047971
+      ** Pay/rcv settlement account                                                         MD047971
+      *                                                                                     MD047971
+     C                   PARM                    DDRONX                                     MD047971
+     C                   PARM                    DDPONX                                     MD047971
+     C                   PARM                    DDRONXOK                                   MD047971
+     C                   PARM                    DDPONXOK                                   MD047971
       *
       * OUTPUTS
       *

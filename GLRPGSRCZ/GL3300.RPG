@@ -20,8 +20,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR1008615          Date 25Nov12               *
-      *  Prev Amend No. AR995788           Date 25Nov12               *
+      *  Last Amend No. CER073C            Date 09Oct17               *
+      *  Prev Amend No. CER073A            Date 05Sep17               *
+      *                 CER073             Date 10Jul17               *
+      *                 AR1008615          Date 25Nov12               *
+      *                 AR995788           Date 25Nov12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -47,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER073C - CER073 Change Control 3 (Recompile)                *
+      *  CER073A - CER073 Change Control 1                            *
+      *  CER073 - AnaCredit Reporting                                 *
       *  AR1008615 - Input 'no. of units' is missing (Child:AR1008618)*
       *  AR995788 - Unit Amount in Collateral Details Report is not   *
       *             displayed (Child:AR995974)                        *
@@ -85,6 +91,9 @@
       * RTW: Collateral Risk Weigted Assets Code/Set                      CGL018
       *                                                                   CGL018
      F*                                                                   CGL018
+     FGLANACI0IF  E           K        DISK                                                   CER073
+      ** AnaCredit Reporting File                                                             CER073
+      *                                                                                       CER073
      FGL3300AUO   E                    PRINTER
      F                                              KINFDS SPOOLU
      FGL3300P1O   E                    PRINTER                        UC
@@ -461,6 +470,19 @@
      C                     SETOF                     81                   CGL018
      C                     ENDIF                                          CGL018
       *                                                                   CGL018
+      ***  Determine if switchable feature CER073 is activated                                CER073
+      *                                                                                       CER073
+     C                     CALL 'AOSARDR0'                                                    CER073
+     C                     PARM *BLANKS   PRTCD                                               CER073
+     C                     PARM '*VERIFY' POPTN                                               CER073
+     C                     PARM 'CER073'  PSARD                                               CER073
+     C           SCSARD    PARM SCSARD    DSSDY                                               CER073
+      *                                                                                       CER073
+     C           PRTCD     IFEQ *BLANK                                                        CER073
+     C                     MOVE 'Y'       CER073  1                                           CER073
+     C                     ELSE                                                               CER073
+     C                     MOVE 'N'       CER073                                              CER073
+     C                     ENDIF                                                              CER073
       *
       ** Determine which header tp print
       *
@@ -1133,6 +1155,12 @@
      C                     EXSR RWADTL                                    CGL018
      C                     ENDIF                                          CGL018
       *                                                                   CGL018
+      * Output AnaCredit details for each collateral                                          CER073
+      *                                                                                       CER073
+     C           CER073    IFEQ 'Y'                                                           CER073
+     C                     SETON                     82                                       CER073
+     C                     EXSR ANADTL                                                        CER073
+     C                     ENDIF                                                              CER073
       *
       ** Write out Detail Record
       *
@@ -1692,6 +1720,65 @@
      C                     ENDIF                                          CGL018
       *                                                                   CGL018
      C                     ENDSR                                          CGL018
+      *****************************************************************                       CER073
+      ** AnaCredit : Output AnaCredit information from GLANACQD       *                       CER073
+      ** ---                                                          *                       CER073
+      ** Called By : SRDETL                                           *                       CER073
+      ** Calls     : None                                             *                       CER073
+      *****************************************************************                       CER073
+     C           ANADTL    BEGSR                                                              CER073
+      *                                                                                       CER073
+     C                     MOVE *BLANKS   RTPPC                                               CER073
+     C                     MOVE *BLANKS   RPROD                                               CER073
+     C                     MOVE *BLANKS   RDSCP                                               CER073
+     C                     MOVE *BLANKS   RDTDS                                               CER073
+     C                     MOVE *BLANKS   RTOPV                                              CER073A
+     C                     MOVE *BLANKS   RPVAP                                              CER073A
+     C                     MOVE *BLANKS   RORPV                                              CER073A
+      *                                                                                       CER073
+     C           RCREF     CHAINGLANACI0             98                                       CER073
+     C           *IN98     IFEQ '0'                                                           CER073
+      *                                                                                       CER073
+      ** AnaCredit Reporting                                                                  CER073
+      *                                                                                       CER073
+     C                     MOVE ACTPPC    RTPPC                                               CER073
+     C                     MOVE ACPROD    RPROD                                               CER073
+     C                     MOVE ACDSCP    RDSCP                                               CER073
+     C                     MOVE ACTOPV    RTOPV                                              CER073A
+     C                     MOVE ACPVAP    RPVAP                                              CER073A
+     C                     MOVE ACORPV    RORPV                                              CER073A
+      *                                                                                       CER073
+      ** Convert Date of the Default Status of the Counterparty to DDMMMYY                    CER073
+      *                                                                                       CER073
+     C           ACDTDS    IFEQ 0                                                             CER073
+     C                     MOVE *BLANK    RDTDS                                               CER073
+     C                     ELSE                                                               CER073
+     C                     MOVE ACDTDS    ZDAYNO                                              CER073
+     C                     CALL 'ZDATE2'                                                      CER073
+     C                     PARM           ZDAYNO                                              CER073
+     C                     PARM           BJDFIN                                              CER073
+     C                     PARM           ZDATE                                               CER073
+     C                     PARM           ZADATE                                              CER073
+      *                                                                                       CER073
+     C                     MOVE ZADATE    RDTDS                                               CER073
+     C                     ENDIF                                                              CER073
+      *                                                                                       CER073
+      ** Convert Date of Original Protection Value to DDMMMYY                                CER073A
+      *                                                                                      CER073A
+     C           ACDOPV    IFEQ 0                                                            CER073A
+     C                     MOVE *BLANK    RDOPV                                              CER073A
+     C                     ELSE                                                              CER073A
+     C                     MOVE ACDOPV    ZDAYNO                                             CER073A
+     C                     CALL 'ZDATE2'                                                     CER073A
+     C                     PARM           ZDAYNO                                             CER073A
+     C                     PARM           BJDFIN                                             CER073A
+     C                     PARM           ZDATE                                              CER073A
+     C                     PARM           ZADATE                                             CER073A
+      *                                                                                      CER073A
+     C                     MOVE ZADATE    RDOPV                                              CER073A
+     C                     ENDIF                                                             CER073A
+     C                     ENDIF                                                              CER073
+     C                     ENDSR                                                              CER073
       /TITLE SR/ZDATE2
      C/COPY ZSRSRC,ZDATE2Z2
       /TITLE SR/ZFRPED

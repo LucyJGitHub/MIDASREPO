@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CGL052             Date 02Dec15               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. CER073A            Date 05Sep17               *
+      *  Prev Amend No. CER073             Date 10Jul17               *
+      *                 CGL052             Date 02Dec15               *
+      *                 CGL165             Date 23Feb15               *
       *                 CLE164             Date 18Aug14               *
       *                 MD030467           Date 14Oct14               *
       *                 MD029077           Date 30Jul14               *
@@ -75,6 +77,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER073A - CER073 Change Control 1 (Recompile)                *
+      *  CER073 - AnaCredit Reporting                                 *
       *  CGL052 - Amend Washout Processing                            *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -325,6 +329,7 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDRPKYTD  '  GLOB_SDRPKYTD                                CLE164
      C     PFLNAME       CASEQ     'SDMTRXTD  '  GLOB_SDMTRXTD                                CLE164
      C     PFLNAME       CASEQ     'SDBRCHX0  '  GLOB_SDBRCHX0                                CGL052
+     C     PFLNAME       CASEQ     'SDANACQD  '  GLOB_SDANACQD                                CER073
      C                   ENDCS
      C                   ENDIF
 
@@ -1077,6 +1082,12 @@ O                                                                               
      C     GLOB_SDBRCHX0 BEGSR                                                                CGL052
       /COPY GPCPYSRCG,GPSDBRCHX0                                                              CGL052
      C                   ENDSR                                                                CGL052
+      *****************************************************************                       CER073
+      * Global Updates - AnaCredit Reporting                                                  CER073
+      *****************************************************************                       CER073
+     C     GLOB_SDANACQD BEGSR                                                                CER073
+      /COPY GPCPYSRCG,GPSDANACQD                                                              CER073
+     C                   ENDSR                                                                CER073
       *****************************************************************                       CGL155
       /SPACE 5                                                                                CGL155
       *****************************************************************

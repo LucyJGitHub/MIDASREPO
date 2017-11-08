@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD029739           Date 15Aug14               *
-      *  Prev Amend No. MD033486           Date 27Feb15               *
+      *  Last Amend No. CER073A            Date 05Sep17               *
+      *  Prev Amend No. CER073             Date 10Jul17               *
+      *                 MD029739           Date 15Aug14               *
+      *                 MD033486           Date 27Feb15               *
       *                 MD031974           Date 16Jan15               *
       *                 CGL158             Date 22Aug14               *
       *                 CRE101             Date 27Aug14               *
@@ -46,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER073A - CER073 Change Control 1 (Recompile)                *
+      *  CER073 - AnaCredit Reporting                                 *
       *  MD029739 - File renaming for integration layer.              *
       *  MD033486 - Add new Beneficiary Account field (Recompile)     *
       *  MD031974 - Failed COB Component GOC0100 seq 002234 due to    *
@@ -186,6 +190,7 @@
      C     PFLNAME       CASEQ     'GLFRBLTD  '  GLOB_GLFRBLTD                                CGL155
      C     PFLNAME       CASEQ     'GLACMI1D  '  GLOB_GLACMI1D                                CRE101
      C     PFLNAME       CASEQ     'GLNSRUTD  '  GLOB_GLNSRUTD                                CGL158
+     C     PFLNAME       CASEQ     'GLANACQD  '  GLOB_GLANACQD                                CER073
      C/COPY WNCPYSRC,GOH00001
      C                   ENDCS
      C*****CLE025        IFEQ      'Y'                                                CLE025 BUG3286
@@ -456,6 +461,14 @@
      C                   ENDSR                                                                CGL158
       *****************************************************************                       CGL158
       /SPACE 5                                                                                CGL158
+      *****************************************************************                       CER073
+      * Global Updates - AnaCredit Reporting                                                  CER073
+      *****************************************************************                       CER073
+     C     GLOB_GLANACQD BEGSR                                                                CER073
+      /COPY GPCPYSRCG,GPGLANACQD                                                              CER073
+     C                   ENDSR                                                                CER073
+      *****************************************************************                       CER073
+      /SPACE 5                                                                                CER073
       *****************************************************************
       * Determine Updates
       *****************************************************************

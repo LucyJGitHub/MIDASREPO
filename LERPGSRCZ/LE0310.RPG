@@ -10,8 +10,12 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD021416           Date 09Mar15               *
+      *  Last Amend No. CER073C            Date 09Oct17               *
+      *  Prev Amend No. CER073B            Date 25Sep17               *
+      *                 CER073A            Date 05Sep17               *
+      *                 CER073             Date 10Jul17               *
+      *                 CLE141             Date 08Feb16               *
+      *                 MD021416           Date 09Mar15               *
       *                 AR847588           Date 09Mar15               *
       *                 AR833482           Date 09Mar15               *
       *                 MD020563           Date 21May13               *
@@ -124,6 +128,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CER073C - CER073 Change Control 3                            *
+      *  CER073B - CER073 Change Control 2                            *
+      *  CER073A - CER073 Change Control 1                            *
+      *  CER073 - AnaCredit Reporting                                 *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           for LE Transactions                                 *
       *  MD021416 - Minus sign is missing in Rollover spread rate.    *
@@ -327,6 +335,8 @@
      FFCLTYL1 IF  E           K        DISK                               140821
      FLESTALL5IF  E           K        DISK                                                   CLE034
      FSDCURRPDIF  E                    DISK                                                   CLE038
+     FLEANACI1IF  E           K        DISK                                                   CER073
+      ** CER073 AnaCredit - Loans Extension File                                              CER073
 0018 F*E0310P1O   F     132     OF     PRINTER                      S01124S01117
      FLE0310AUO   F     132     OA     PRINTER      KINFDS SPOOLU         S01117
      F*                                                                   S01408
@@ -442,6 +452,8 @@
      F*       88      CEU020 is switched *ON                              CEU020
       *       89      Receipt: Settlement Allocation by Amount                                CLE038
       *       90      Difference in trailer file values.                                      236008
+      *       92      CER073 is switched ON                                                   CER073
+      *       96      CER073 is switched ON                                                   CER073
 0083 F*
 0084 F*          U7+U8DATABASE ERROR
 0085 F*          U8   FILE CONTROLS OUT OF BALANCE
@@ -1009,6 +1021,10 @@
       *                                                                                       CLE038
       ** External DS for System Values                                                        CLE038
       *                                                                                       CLE038
+     IANACDS    E DSLEANACQD                                                                 CER073A
+      *                                                                                      CER073A
+     I** AnaCredit Details                                                                   CER073A
+      *                                                                                      CER073A
      IRUNDT       DS                                                      S01117
       **  DATA AREA RUNDAT                                                S01117
      I                                        1   7 RUNA                  S01117
@@ -1823,6 +1839,18 @@
      C                     MOVE 'Y'       CLE141                                              CLE141
      C                     MOVE *ON       *IN83                                               CLE141
      C                     ENDIF                                                              CLE141
+      *                                                                                       CER073
+      ** Check if CER073 is switched ON                                                       CER073
+      *                                                                                       CER073
+     C                     MOVE 'N'       CER073  1                                           CER073
+     C                     CALL 'AOSARDR0'                                                    CER073
+     C                     PARM *BLANKS   PRTCD                                               CER073
+     C                     PARM '*VERIFY' POPTN                                               CER073
+     C                     PARM 'CER073'  PSARD                                               CER073
+      *                                                                                       CER073
+     C           PRTCD     IFEQ *BLANKS                                                       CER073
+     C                     MOVE 'Y'       CER073                                              CER073
+     C                     ENDIF                                                              CER073
       *                                                                                       CLE034
       ** Define new output variables for exception header.                                    CLE034
       *                                                                                       CLE034
@@ -2301,6 +2329,20 @@ STOP  *                                                                   CLE004
      C                     MOVE VKIMEX    XRIMEX                                              CER001
      C                     ENDIF                                                              CER001
      C                     ENDIF                                                              CER001
+      *                                                                                       CER073
+      ** Get AnaCredit Details                                                                CER073
+      *                                                                                       CER073
+     C           CER073    IFEQ 'Y'                                                           CER073
+      *                                                                                       CER073
+      ** AnaCredit Reporting indicator for printing                                           CER073
+      *                                                                                       CER073
+     C                     MOVEL'1'       *IN96                                               CER073
+     C                     CLEARANACDS                                                       CER073A
+     C                     MOVE *BLANKS   ADTPS                                              CER073A
+     C                     MOVE *BLANKS   DTRS                                               CER073A
+     C                     MOVE *BLANKS   DDSI                                               CER073A
+     C                     EXSR LEANAC                                                        CER073
+     C                     ENDIF                                                              CER073
 0496 C*
 0497 C*****CHAIN*TO*CUSTOMER*FILE*FOR*CUSTOMER*NAME                       S01194
      C*    CALL AOCUSTR0 FOR CUSTOMER NAME                                S01194
@@ -4358,6 +4400,52 @@ STOP  *                                                                   CLE004
       *                                                                                       CLE038
      C                     ENDSR                                                              CLE038
       *****************************************************************                       CLE038
+      * LEANAC    : Output AnaCredit Reporting from LEANACQD            *                     CER073
+      * ---                                                             *                     CER073
+      * Called By : DETA                                                *                     CER073
+      * Calls     : None                                                *                     CER073
+      *******************************************************************                     CER073
+     C           LEANAC    BEGSR                                                              CER073
+      *                                                                                       CER073
+     C           KANAC     KLIST                                                              CER073
+     C                     KFLD           BRCA                                                CER073
+     C                     KFLD           LNRF                                                CER073
+     C           KANAC     CHAINLEANACI1             92                                       CER073
+      *                                                                                       CER073
+     C           *IN92     IFEQ *OFF                                                          CER073
+      *                                                                                       CER073
+      ** Convert Date of the Performing Status of the instrument to DDMMMYY                   CER073
+      *                                                                                       CER073
+     C           ACDTPS    IFEQ 0                                                             CER073
+     C                     MOVE *BLANK    ADTPS   7                                           CER073
+     C                     ELSE                                                               CER073
+     C                     Z-ADDACDTPS    ZDAYNO                                              CER073
+     C                     EXSR ZDATE2                                                        CER073
+     C                     MOVE ZADATE    ADTPS                                               CER073
+     C                     ENDIF                                                              CER073
+      *                                                                                       CER073
+      ** Convert Date of Forbearance and Renegotiation to DDMMCCYY                            CER073
+      *                                                                                       CER073
+     C           ACDTRS    IFEQ 0                                                             CER073
+     C                     MOVE *BLANK    DTRS    7                                           CER073
+     C                     ELSE                                                               CER073
+     C                     Z-ADDACDTRS    ZDAYNO                                              CER073
+     C                     EXSR ZDATE2                                                        CER073
+     C                     MOVE ZADATE    DTRS                                                CER073
+     C                     ENDIF                                                              CER073
+      *                                                                                      CER073A
+      ** Convert Date of the Default Status of the Instruments                               CER073A
+      *                                                                                      CER073A
+     C           ACDDSI    IFEQ 0                                                            CER073A
+     C                     MOVE *BLANK    DDSI    7                                          CER073A
+     C                     ELSE                                                              CER073A
+     C                     Z-ADDACDDSI    ZDAYNO                                             CER073A
+     C                     EXSR ZDATE2                                                       CER073A
+     C                     MOVE ZADATE    DDSI                                               CER073A
+     C                     ENDIF                                                             CER073A
+     C                     ENDIF                                                              CER073
+     C                     ENDSR                                                              CER073
+      *****************************************************************                       CER073
       *                                                                   CLE004
       /EJECT                                                              CLE004
      C/COPY ZSRSRC,ZFRPEDZ3                                               CLE004
@@ -5445,7 +5533,109 @@ STOP  *                                                                   CLE004
      O                         C0PR      75                                                   CLE141
      O                                   85 'LOC10'                                           CLE141
      O                         L0PR      95                                                   CLE141
-      *                                                                                       CLE034
+     O        D  1     96 30                                                                  CER073
+     O                                   23 'ANACREDIT DETAILS'                               CER073
+     O        D  1     96 30                                                                 CER073A
+     O                                   27 'COUNTERPARTY ROLE-CRE'                          CER073A
+     O                                   32 'DITOR'                                          CER073A
+     O                         ACCRC1    40                                                  CER073A
+     O                         ACCRC2    47                                                  CER073A
+     O                         ACCRC3    54                                                  CER073A
+     O                         ACCRC4    61                                                  CER073A
+     O                         ACCRC5    68                                                  CER073A
+     O                                   90 'COUNTERPARTY ROLE-SER'                          CER073A
+     O                                   95 'VICER'                                          CER073A
+     O                         ACCPRS   102                                                  CER073A
+     O                                  125 'COUNTERPARTY ROLE-ORIG'                         CER073A
+     O                         ACCPRO   132                                                  CER073A
+     O        D  1     96 30                                                                 CER073A
+     O                                   27 'COUNTERPARTY ROLE-DEB'                          CER073A
+     O                                   30 'TOR'                                            CER073A
+     O                         ACCRD1    48                                                  CER073A
+     O                         ACCRD2    69                                                  CER073A
+     O                         ACCRD3    90                                                  CER073A
+     O                         ACCRD4   111                                                  CER073A
+     O                         ACCRD5   132                                                  CER073A
+     O        D  1     96 30                                                                 CER073A
+     O                                   25 'JOINT LIABILITY AMT'                            CER073B
+     O                         ACJLA1    48 ' ,   ,   ,   , 0 .  -'                          CER073B
+     O                         ACJLA2    69 ' ,   ,   ,   , 0 .  -'                          CER073B
+     O                         ACJLA3    90 ' ,   ,   ,   , 0 .  -'                          CER073B
+     O                         ACJLA4   111 ' ,   ,   ,   , 0 .  -'                          CER073B
+     O                         ACJLA5   132 ' ,   ,   ,   , 0 .  -'                          CER073B
+     O        D  1     96 30                                                                  CER073
+     O                                   23 'INTEREST RATE CAP'                               CER073
+     O**********               ACINRC    56 ' 0 .       '                             CER073 CER073B
+     O                         ACINRC    56 ' 0 .       -'                                   CER073B
+     O                                   76 'INTEREST RATE FLOOR'                             CER073
+     O**********               ACINRF   101 ' 0 .       '                             CER073 CER073B
+     O                         ACINRF   101 ' 0 .       -'                                   CER073B
+     O                                  109 'PURPOSE'                                        CER073A
+     O                         ACPURP   132                                                  CER073A
+     O        D  1     96 30                                                                  CER073
+     O                                   29 'FV CHANGES BEFORE PURCH'                         CER073
+     O                                   32 'ASE'                                             CER073
+     O**********               ACFVCH    56 ' ,   ,   ,   , 0 .  '                    CER073 CER073C
+     O                         ACFVCH    56 ' ,   ,   ,   , 0 .  -'                          CER073C
+     O                                   79 'TYPE OF SECURITISATION'                          CER073
+     O                         ACTYOS   101                                                   CER073
+     O                                  119 'SUBORDINATED DEBT'                              CER073A
+     O                         ACSUBD   132                                                  CER073A
+     O        D  1     96 30                                                                 CER073A
+     O                                   24 'TRANSFERRED AMOUNT'                              CER073
+     O**********               ACTRFA    56 ' ,   ,   ,   , 0 .  '                    CER073 CER073C
+     O                         ACTRFA    56 ' ,   ,   ,   , 0 .  -'                          CER073C
+     O                                   80 'DEFAULT STATUS OF THE I'                        CER073A
+     O                                   89 'NSTRUMENT'                                      CER073A
+     O                         ACDFSI   101                                                  CER073A
+     O                                  119 'ACCOUNTING CLASSI'                               CER073
+     O                                  127 'FICATION'                                        CER073
+     O                         ACACOI   132                                                   CER073
+     O        D  1     96 30                                                                  CER073
+     O                                   28 'ACCUMULATED WRITE-OFFS'                          CER073
+     O**********               ACACWO    56 ' ,   ,   ,   , 0 .  '                    CER073 CER073C
+     O                         ACACWO    56 ' ,   ,   ,   , 0 .  -'                          CER073C
+     O                                   76 'DATE OF THE DEFAULT'                            CER073A
+     O                                   83 'STATUS'                                         CER073A
+     O                         DDSI     101                                                  CER073A
+     O                                  124 'SOURCES OF ENCUMBRANCE'                          CER073
+     O                         ACSOEN   132                                                   CER073
+     O        D  1     96 30                                                                  CER073
+     O                                   27 'ACC.IMPAIRMENT AMOUNT'                           CER073
+     O**********               ACAIMA    56 ' ,   ,   ,   , 0 .  '                    CER073 CER073C
+     O                         ACAIMA    56 ' ,   ,   ,   , 0 .  -'                          CER073C
+     O                                   79 'DATE OF THE PERFORMING'                          CER073
+     O                                   86 'STATUS'                                          CER073
+     O                         ADTPS    101                                                   CER073
+     O                                  123 'IMPAIRMENT ASSESSMENT'                           CER073
+     O                                  130 'METHOD'                                          CER073
+     O                         ACIAMD   132                                                   CER073
+     O        D  1     96 30                                                                  CER073
+     O                                   29 'ACC.CHANGES IN FV(CREDI'                         CER073
+     O                                   35 'T RISK)'                                         CER073
+     O**********               ACACFV    56 ' ,   ,   ,   , 0 .  '                    CER073 CER073C
+     O                         ACACFV    56 ' ,   ,   ,   , 0 .  -'                          CER073C
+     O                                   76 'DATE OF FORBEARANCE'                             CER073
+     O                                   83 'STATUS'                                          CER073
+     O                         DTRS     101                                                   CER073
+     O                                  123 'STATUS OF FORBEARANCE'                           CER073
+     O                         ACSFAR   132                                                   CER073
+     O        D  1     96 30                                                                  CER073
+     O                                   29 'OFF-BALANCE SHEET PROVI'                         CER073
+     O                                   34 'SIONS'                                           CER073
+     O**********               ACPASE    56 ' ,   ,   ,   , 0 .  '                    CER073 CER073C
+     O                         ACPASE    56 ' ,   ,   ,   , 0 .  -'                          CER073C
+     O                                   78 'BALANCE SHEET RECOGNI'                           CER073
+     O                                   82 'TION'                                            CER073
+     O                         ACBSRE   101                                                   CER073
+     O                                  120 'TYPE OF IMPAIRMENT'                              CER073
+     O                         ACTOIM   132                                                   CER073
+     O        D  1     96 30                                                                  CER073
+     O                                   21 'CARRYING AMOUNT'                                 CER073
+     O**********               ACCARA    56 ' ,   ,   ,   , 0 .  '                    CER073 CER073C
+     O                         ACCARA    56 ' ,   ,   ,   , 0 .  -'                          CER073C
+     O                                   68 'CONTRACT ID'                                     CER073
+     O                         ACSCID   132                                                   CER073
      O        E  2 3           EHDR1                                                          CLE034
      O                                   24 'REFERENCE  LE0310P1'                             CLE034
      O                         TITL      89                                                   CLE034

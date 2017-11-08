@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CLE068             Date 02Aug16               *      
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. CER073B            Date 25Sep17               *
+      *  Prev Amend No. CER073A            Date 05Sep17               *
+      *                 CER073             Date 10Jul17               *
+      *                 CLE068             Date 02Aug16               *
+      *                 CLE164             Date 18Aug14               *
       *                 MD021528           Date 01Aug13               *
       *                 CGP017             Date 06Aug12               *
       *                 263108             Date 23Nov12               *
@@ -38,6 +41,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER073B - CER073 Change Control 2 (Recompile)                *
+      *  CER073A - CER073 Change Control 1 (Recompile)                *
+      *  CER073 - AnaCredit Reporting                                 *
       *  CLE068 - Loan Event Modeller                                 *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD021528 - Missing facility after authorization (Recompile)  *
@@ -172,6 +178,7 @@
      C     PFLNAME       CASEQ     'CLOANZTD'    GLOB_CLOANZTD                                CLE164
      C     PFLNAME       CASEQ     'LEFEEZTD'    GLOB_LEFEEZTD                                CLE164
      C     PFLNAME       CASEQ     'LELEMRWPD'   GLOB_LELEMRWPD                               CLE068
+     C     PFLNAME       CASEQ     'LEANACQD'    GLOB_LEANACQD                                CER073
      C                   ENDCS
      C*****CLE025        IFEQ      'Y'                                                CLE025 BUG3286
      C*****PFLNAME       ANDEQ     'LEFCLTQD'                                         CLE025 BUG3286
@@ -375,6 +382,14 @@
       /COPY GPCPYSRCG,GPLELEMRPD                                                              CLE068
      C                   ENDSR                                                                CLE068
       *****************************************************************                       CLE068
+      /SPACE 5                                                                                CER073
+      *****************************************************************                       CER073
+      * Global Updates - AnaCredit Reporting                                                  CER073
+      *****************************************************************                       CER073
+     C     GLOB_LEANACQD BEGSR                                                                CER073
+      /COPY GPCPYSRCG,GPLEANACQD                                                              CER073
+     C                   ENDSR                                                                CER073
+      *****************************************************************                       CER073
       /SPACE 5
       *****************************************************************
       * Determine Updates

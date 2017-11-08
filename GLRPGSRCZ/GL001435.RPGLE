@@ -14,19 +14,23 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
+      *  Last Amend No. MD045731           Date 27Sep17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGL013  *CREATE    Date 31Apr02               *
+      *  Prev Amend No. CGL013  *CREATE    Date 31Apr02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045731 - Checking of holiday is done by comparing the      *
+      *             current date to the system rundate.               *
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
       *****************************************************************
  
-     FGLNWKAPD  UF A E           K DISK                   INFSR(*PSSR)
+     F**********GLNWKAPD  UF A E           K DISK                   INFSR(*PSSR)            MD045731
+     FGLNWKAL0  UF A E           K DISK                   INFSR(*PSSR)                      MD045731
       ** Midas GL Network Activity Control File
  
       *****************************************************************
@@ -92,6 +96,25 @@
      D DSLDY         E DS                  EXTNAME(DSLDY)
       **  Third DS for access programs, very long data structure.
  
+      * 'Now' date                                                                          MD045731
+     D                 DS                                                                   MD045731
+     D CurDATE                 1      6  0                                                  MD045731
+     D CurDD                   1      2  0                                                  MD045731
+     D CurMM                   3      4  0                                                  MD045731
+     D CurYY                   5      6  0                                                  MD045731
+     D CurDDA                  1      2                                                     MD045731
+     D CurMMA                  3      4                                                     MD045731
+     D CurYYA                  5      6                                                     MD045731
+      * 'Now' time                                                                          MD045731
+     D                 DS                                                                   MD045731
+     D CurTIME                 1      6  0                                                  MD045731
+     D CurHH                   1      2  0                                                  MD045731
+     D CurMI                   3      4  0                                                  MD045731
+     D CurSS                   5      6  0                                                  MD045731
+     D CurHHA                  1      2                                                     MD045731
+     D CurMIA                  3      4                                                     MD045731
+     D CurSSA                  5      6                                                     MD045731
+                                                                                            MD045731
       ** Declared variables
       ** ------------------
  
@@ -128,8 +151,12 @@
  
       **  Access Network Activity Control File.
  
-     C     EDNWRK        CHAIN     GLNWKAPD                           99
+     C*****EDNWRK        CHAIN     GLNWKAPD                           99                    MD045731
+     C     EDNWRK        CHAIN     GLNWKAL0                           99                    MD045731
  
+     C                   EXSR      GET_CurDT                                                MD045731
+     C                   MOVE      CurDATE       ZDATEI                                     MD045731
+     C                   EXSR      ZDATE1                                                   MD045731
       ** If prevent automatic submission at start of business.
  
      C                   IF        EDPASS = 'Y'
@@ -141,7 +168,8 @@
       ** If prevent automatic submission if non-working day.
  
      C                   IF        EDPASN = 'Y'
-     C                             AND BJDNWD > BJRDNB + 1
+     C**********                   AND BJDNWD > BJRDNB + 1                                  MD045731
+     C                             AND BJRDNB <> ZDAYNO                                     MD045731
      C                   EVAL      MTSSTS = 'I'                                 Inactive
      C                   ENDIF
  
@@ -163,13 +191,59 @@
      C                   EVAL      *INLR = *On
      C                   RETURN
  
+      ********************************************************************                  MD045731
+      /SPACE 5                                                                              MD045731
+      ********************************************************************                  MD045731
+      * Get Current Date and Time                                                           MD045731
+      ********************************************************************                  MD045731
+     C     GET_CurDT     BEGSR                                                              MD045731
+     C                   TIME                    TimeDate         12 0                      MD045731
+     C                   MOVE      TimeDate      DMY               6                        MD045731
+      *                                                                                     MD045731
+     C     PDTFMT        IFEQ      'DMY'                                                    MD045731
+     C                   EVAL      CurDDA = %SUBST(DMY:1:2)                                 MD045731
+     C                   EVAL      CurMMA = %SUBST(DMY:3:2)                                 MD045731
+     C                   EVAL      CurYYA = %SUBST(DMY:5:2)                                 MD045731
+     C                   END                                                                MD045731
+      *                                                                                     MD045731
+     C     PDTFMT        IFEQ      'MDY'                                                    MD045731
+     C                   EVAL      CurDDA = %SUBST(DMY:3:2)                                 MD045731
+     C                   EVAL      CurMMA = %SUBST(DMY:1:2)                                 MD045731
+     C                   EVAL      CurYYA = %SUBST(DMY:5:2)                                 MD045731
+     C                   END                                                                MD045731
+      *                                                                                     MD045731
+     C     PDTFMT        IFEQ      'YMD'                                                    MD045731
+     C                   EVAL      CurDDA = %SUBST(DMY:5:2)                                 MD045731
+     C                   EVAL      CurMMA = %SUBST(DMY:3:2)                                 MD045731
+     C                   EVAL      CurYYA = %SUBST(DMY:1:2)                                 MD045731
+     C                   END                                                                MD045731
+     C                   MOVEL     TimeDate      CurTIME                                    MD045731
+     C                   ENDSR                                                              MD045731
+      ********************************************************************                  MD045731
+      ********************************************************************                  MD045731
+      /SPACE 5                                                                              MD045731
+      ********************************************************************                  MD045731
+      * Convert a date to day number                                                        MD045731
+      ********************************************************************                  MD045731
+     C     ZDATE1        BEGSR                                                              MD045731
+     C                   CALLB     'ZDATE1'                                                 MD045731
+     C                   PARM                    ZDATEI            6                        MD045731
+     C                   PARM      *ZEROS        ZDAYNO            5 0                      MD045731
+     C                   PARM      BJDFIN        ZDFIN             1                        MD045731
+     C                   PARM                    ErrorFlag         1                        MD045731
+     C                   ENDSR                                                              MD045731
+      ********************************************************************                  MD045731
+      /SPACE 5                                                                              MD045731
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *------------------------------------------------------------------------*
  
      C     *INZSR        BEGSR
       *    ------        -----
- 
+      *                                                                                     MD045731
+     C     *ENTRY        PLIST                                                              MD045731
+     C                   PARM                    PDTFMT            3                        MD045731
+      *
       ** Initialise Copyright Array
      C                   MOVEA     CPY@          CPY@@            80
  

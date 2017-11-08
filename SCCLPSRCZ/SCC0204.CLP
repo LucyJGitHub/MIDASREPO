@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2003           */
 /*                                                                   */
-/*       Last Amend No. MD031644           Date 08Jan15              */
-/*       Prev Amend No. CGL155             Date 21Mar14              */
+/*       Last Amend No. MD045731           Date 27Sep17              */
+/*       Prev Amend No. MD031644           Date 08Jan15              */
+/*                      CGL155             Date 21Mar14              */
 /*                      MD025679A          Date 12May14              */
 /*                      MD025679           Date 12May14              */
 /*                      AR927362A          Date 05Dec12              */
@@ -33,6 +34,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD045731 - Restart batch job for MT94x if not active.       */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
 /*                  Status of Interfaced FT Payments). Unable        */
 /*                  to compile GP002900 due to zonal access.         */
@@ -77,6 +79,7 @@
              DCL        VAR(&CITYDLR) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&CDE001) TYPE(*CHAR) LEN(1) VALUE('N' )
              DCL        VAR(&CLE010) TYPE(*CHAR) LEN(1) VALUE('N' )
+             DCL        VAR(&CGL013) TYPE(*CHAR) LEN(1) VALUE('N' )                     /*MD045731*/
              DCL        VAR(&CSE039) TYPE(*CHAR) LEN(1) VALUE('N' )
              DCL        VAR(&CGP004) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CGP004*/
              DCL        VAR(&CAP002) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*240093*/
@@ -251,6 +254,16 @@
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CSD083) VALUE('Y'))                                        /*CSD083*/
                                                                                           /*CSD083*/
+/**/                                                                                    /*MD045731*/
+/*    Check if the MT94x Messages Generation is active (CGL013) */                      /*MD045731*/
+/**/                                                                                    /*MD045731*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD045731*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD045731*/
+             CHGVAR     VAR(&SAR) VALUE('CGL013')                                       /*MD045731*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*MD045731*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CGL013) VALUE('Y'))                                      /*MD045731*/
+/**/                                                                                    /*MD045731*/
 /*/COPY WNCPYSRC,SCC0204001                                        */
  
 /*    If Citydealer Interface feature is on, call SCC0103.          */
@@ -272,6 +285,11 @@
  
                    IF         COND(&CSE039 *EQ 'Y') THEN(CALL +
                                 PGM(SCC0103) PARM('SE'))
+/**/                                                                                    /*MD045731*/
+/* If Cash Management is on (CGL013)  *                                                 /*MD045731*/
+/**/                                                                                    /*MD045731*/
+                   IF         COND(&CGL013 *EQ 'Y') THEN(CALL +
+                                PGM(SCC0103) PARM('MT'))                                /*MD045731*/
  
 /* If APIs SF is on, create the API DUMP information data area.    */                     /*240093*/
                                                                                           /*240093*/

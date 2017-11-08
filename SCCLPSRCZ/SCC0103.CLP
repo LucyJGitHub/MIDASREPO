@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CSD083             Date 27May10              */
+/*       Last Amend No. MD045731           Date 27Sep17              */
+/*       Prev Amend No. CSD083             Date 27May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 22May08              */
+/*                      BG18886            Date 22May08              */
 /*                      253716 (BUG17735)  Date 07Apr08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -59,6 +60,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD045731 - Restart MT94x batch job.                         */
 /*       CSD083 - Watch List Compliance Upgrade                      */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       253716 - Deallocate data area only after the program/job    */
@@ -507,6 +509,17 @@ CGLABL:                                                               /*CGL004*/
              CALL       PGM(REC101501)                                                    /*CRE008*/
              ENDDO                                                                        /*CRE008*/
 /**/                                                                  /*CCM002*/
+/* If the program module is 'MT', call programs to submit */                            /*MD045731*/
+/* the MT94x Production Job.                              */                            /*MD045731*/
+/**/                                                                                    /*MD045731*/
+             IF         COND(&MODULE *EQ 'MT') THEN(DO)                                 /*MD045731*/
+                ALCOBJ     OBJ((GLM94XDA *DTAARA *EXCL)) WAIT(0)                        /*MD045731*/
+                MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(TP))                         /*MD045731*/
+             CALL       PGM(GLC001410) PARM('*START' '       ' +
+                          '       ')                                                    /*MD045731*/
+             DLCOBJ     OBJ((GLM94XDA *DTAARA *EXCL))                                   /*MD045731*/
+             ENDDO                                                                      /*MD045731*/
+ TP:                                                                                    /*MD045731*/
 /*/COPY WNCPYSRC,SCC0103002                                          */
 /* Submit the Technical Platform background jobs */
  

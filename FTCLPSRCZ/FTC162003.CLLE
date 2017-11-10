@@ -1,0 +1,77 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas FT MT900 Bank Transfer Supplementary Message')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Funds Transfer Module                               */
+/*                                                                   */
+/*       FTC162003 - MT900 Bank Transfer Supplementary Messages      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2017           */
+/*                                                                   */
+/*       Last Amend No. CFT162   *Create   Date 05Sep17              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CFT162 - MT900 and MT910 Message Generation                 */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&RMODE &MSG &RSEQ)
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2017')
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MSG)     TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RMODE)   TYPE(*CHAR) LEN(1) VALUE(I)
+             DCL        VAR(&RSEQ)    TYPE(*CHAR) LEN(5)
+/*  AOSARDRO variables.                                              */
+             DCL        VAR(&CFT162)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SFMT)    TYPE(*CHAR) LEN(200)
+
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Is CFT162 switched ON ?                                           */
+             CALL       PGM(AOSARDR0) PARM(&CFT162 '*VERIFY' 'CFT162' +
+                            &SFMT)
+             IF         COND(&CFT162 *NE ' ') THEN(GOTO CMDLBL(END))
+
+
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+
+             CALL       PGM(FT162003) PARM(&RMODE &MSG &RSEQ)
+
+/* Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+/* Abnormal termination */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          FTC162003 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+
+
+ END:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                    Misys International Banking Systems Ltd.')
+
+             ENDPGM

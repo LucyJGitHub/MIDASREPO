@@ -1,0 +1,297 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('FT - Generate MT900/MT910')                           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Fund Transfer Module                                */
+/*                                                                   */
+/*       FTC162001 - Midas FT Generate MT900 and MT910 messages      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2017           */
+/*                                                                   */
+/*       Last Amend No. CFT162   *Create   Date 05Sep17              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*        CFT162 - MT900 and MT910 Message Generation                */
+/*                                                                   */
+/*********************************************************************/
+           PGM        PARM(&RSEQ &RLEV &RENT)
+/**/
+           DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2017')
+            DCL     VAR(&DATA)  TYPE(*CHAR) LEN(50)
+            DCL     VAR(&USER) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+            DCL     VAR(&RLEV) TYPE(*CHAR) LEN(1)
+            DCL     VAR(&RENT) TYPE(*CHAR) LEN(3)
+            DCL     VAR(&MSG01) TYPE(*CHAR) LEN(1)
+            DCL     VAR(&MSG02) TYPE(*CHAR) LEN(1)
+            DCL     VAR(&MSG03) TYPE(*CHAR) LEN(1)
+            DCL     VAR(&MSG04) TYPE(*CHAR) LEN(1)
+            DCL     VAR(&MSG05) TYPE(*CHAR) LEN(1)
+            DCL     VAR(&MSG06) TYPE(*CHAR) LEN(1)
+            DCL     VAR(&MSG07) TYPE(*CHAR) LEN(1)
+            DCL     VAR(&RMODE) TYPE(*CHAR) LEN(1) VALUE(I)
+            DCL     VAR(&DQLEN) TYPE(*DEC) LEN(5 0) VALUE(1)
+            DCL     VAR(&CMTSWS) TYPE(*CHAR) LEN(1)
+            DCL     VAR(&GROUP) TYPE(*CHAR) LEN(50)
+            DCL     VAR(&USR) TYPE(*CHAR) LEN(25)
+            DCL     VAR(&SLEVEL) TYPE(*DEC) LEN(4)
+            DCL     VAR(&TIMEO) TYPE(*DEC) LEN(5)
+            DCL     VAR(&ERRORC) TYPE(*DEC) LEN(1) VALUE(0)
+            DCL     VAR(&MULT) TYPE(*CHAR) LEN(2)
+            DCL     VAR(&USELG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&BASLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&USE) TYPE(*DEC) LEN(4 0) VALUE(11)
+            DCL     VAR(&BAS) TYPE(*DEC) LEN(4 0) VALUE(1)
+            DCL     VAR(&ZZMSGF) TYPE(*CHAR) LEN(8)
+            DCL     VAR(&SDUSRLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&GLUSRLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&MIDASLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&DRSMMLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&MACLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&MIUSRLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&WNLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&Y1USRLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&Y2USRLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&Y2USRPMLG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&Y2MGFLA8) TYPE(*CHAR) LEN(8)
+            DCL     VAR(&MIMGFLA8) TYPE(*CHAR) LEN(8)
+            DCL     VAR(&Y2MGFLA10) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&MIMGFLA10) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&FTUSRMSG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&MEMSG) TYPE(*CHAR) LEN(10)
+            DCL     VAR(&CGUSRMSG) TYPE(*CHAR) LEN(10)
+
+            DCL     VAR(&SDATE) TYPE(*CHAR) LEN(6)
+            DCL     VAR(&STIME) TYPE(*CHAR) LEN(6)
+            DCL     VAR(&W0RTN) TYPE(*CHAR) LEN(7)
+            DCL     VAR(&W0CMT) TYPE(*CHAR) LEN(3) VALUE('YES')
+            DCL     VAR(&FMT)  TYPE(*CHAR) LEN(200)
+            DCL     VAR(&RTCD) TYPE(*CHAR) LEN(7)
+            DCL     VAR(&OPTN) TYPE(*CHAR) LEN(7)
+            DCL     VAR(&W0UPF) TYPE(*CHAR) LEN(3) VALUE('YES')
+
+/* Declare the variables to check the enhancements file */
+            DCL     VAR(&RTCD) TYPE(*CHAR) LEN(7)
+            DCL     VAR(&SARD) TYPE(*CHAR) LEN(6)
+            DCL     VAR(&FMT) TYPE(*CHAR) LEN(200)
+            DCL     VAR(&MSG08) TYPE(*CHAR) LEN(1)
+
+/* Global message monitor :                                     */
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/**/
+/*     Retrieve job attributes to get user profile to be   */
+/*     sent as a parameter to the called programs.         */
+/**/
+             RTVJOBA USER(&USER)
+/**/
+
+             RTVDTAARA  DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10)
+             RTVDTAARA  DTAARA(MIMGFLA) RTNVAR(&MIMGFLA10)
+
+             CALL       PGM(SF0410) PARM(&GROUP &USR &SLEVEL &TIMEO  +
+                          &ERRORC &MULT)
+
+             IF         COND(&MULT *EQ '  ') THEN(DO)
+             CHGVAR     VAR(&MULT) VALUE('GB')
+             ENDDO
+
+             CHGVAR   VAR(&ZZMSGF) VALUE('ZZ' *CAT &MULT *CAT 'MSGF')
+
+             CHGVAR     VAR(&Y2MGFLA8) VALUE(%SST(&Y2MGFLA10 1 8))
+             CHGVAR     VAR(&MIMGFLA8) VALUE(%SST(&MIMGFLA10 1 8))
+
+             CHGVAR     VAR(&SDUSRLG) VALUE(&MULT *CAT &Y2MGFLA8)
+             CHGVAR     VAR(&GLUSRLG) VALUE(&MULT *CAT &MIMGFLA8)
+             CHGVAR     VAR(&MIDASLG) VALUE(&MULT *CAT 'MIDAS     ')
+             CHGVAR     VAR(&DRSMMLG) VALUE(&MULT *CAT 'DRSMM     ')
+             CHGVAR     VAR(&MACLG) VALUE(&MULT *CAT 'MACMSG    ')
+             CHGVAR     VAR(&MIUSRLG) VALUE(&MULT *CAT 'MIUSRMSG  ')
+             CHGVAR     VAR(&WNLG) VALUE(&MULT *CAT 'WNMSGF    ')
+             CHGVAR     VAR(&Y1USRLG) VALUE(&MULT *CAT 'Y1USRMSG  ')
+             CHGVAR     VAR(&Y2USRLG) VALUE(&MULT *CAT 'Y2USRMSG  ')
+             CHGVAR    VAR(&Y2USRPMLG) VALUE(&MULT *CAT 'Y2USRPMT  ')
+             CHGVAR     VAR(&FTUSRMSG) VALUE(&MULT *CAT 'FTUSRMSG  ')
+             CHGVAR     VAR(&MEMSG) VALUE(&MULT *CAT 'MEMSG  ')
+             CHGVAR     VAR(&CGUSRMSG) VALUE(&MULT *CAT 'CGUSRMSG  ')
+
+             OVRMSGF    MSGF(ZZGBMSGF) TOMSGF(&ZZMSGF)
+
+             OVRMSGF    MSGF(&Y2MGFLA10) TOMSGF(&SDUSRLG)
+             OVRMSGF    MSGF(&MIMGFLA10) TOMSGF(&GLUSRLG)
+             OVRMSGF    MSGF(MIDAS) TOMSGF(&MIDASLG)
+             OVRMSGF    MSGF(DRSMM) TOMSGF(&DRSMMLG)
+             OVRMSGF    MSGF(MACMSG) TOMSGF(&MACLG)
+             OVRMSGF    MSGF(MIUSRMSG) TOMSGF(&MIUSRLG)
+             OVRMSGF    MSGF(WNMSGF) TOMSGF(&WNLG)
+             OVRMSGF    MSGF(Y1USRMSG) TOMSGF(&Y1USRLG)
+             OVRMSGF    MSGF(Y2USRMSG) TOMSGF(&Y2USRLG)
+             OVRMSGF    MSGF(Y2USRPMT) TOMSGF(&Y2USRPMLG)
+             OVRMSGF    MSGF(FTUSRMSG) TOMSGF(&FTUSRMSG)
+             OVRMSGF    MSGF(MEMSG) TOMSGF(&MEMSG)
+             OVRMSGF    MSGF(CGUSRMSG) TOMSGF(&CGUSRMSG)
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/*     C O M P O N E N T   A C T I V E  ?                  */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/**/
+            ALCOBJ     OBJ((FTC162001 *DTAARA *EXCLRD)) WAIT(1)
+            MONMSG     MSGID(CPF1002) EXEC(DO)
+            SNDPGMMSG  MSG('FTC162001 - Procedure already Active') +
+                          TOPGMQ(*EXT)
+                       GOTO ENDB
+            ENDDO
+/**/
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/*    Create LDA if not in Library List - Eg.submitted job */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/**/
+      CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD LOCAL +
+                          DATA AREA EQUIVALENT') AUT(*USE))
+/**/
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/*  Retrieve System Date and Time - required to extract journal*/
+/*  entries for audit report.                                  */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&SDATE)
+/**/
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/*     P R O C E S S   C O M P O N E N T                   */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/**/
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&CMTSWS) +
+                          VALUE('1'))
+
+/*                    - - - - - - - - - - -        */
+/**  Call Program    - - -- M T 9 1 0 ------      **/
+/*                    - - - - - - - - - - -        */
+        CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(FTC162002) PARM(&RMODE &MSG06 &RSEQ)
+        MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                   ROLLBACK
+                   SNDPGMMSG  MSG('Transaction Failed. +
+                                   Re-input Necessary. +
+                                   Press Enter to Continue.') +
+                              TOPGMQ(*EXT)
+        CHGJOB     SWS(XXXXXXX1)
+                   GOTO END
+        ENDDO
+/**/
+/**  Check for Database Errors Trapped by Program  **/
+/**/
+        IF COND(%SWITCH(XXXXXX11)) THEN(GOTO DBERR)
+
+/*                    - - - - - - - - - - -        */
+/**  Call Program    - - -- M T 9 0 0 ------      **/
+/*                    - - - - - - - - - - -        */
+        CHGJOB     SWS(XXXXXX00)
+        CHGVAR     VAR(&RSEQ) VALUE('     ')
+             CALL       PGM(FTC162003) PARM(&RMODE &MSG08 &RSEQ)
+        MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                   ROLLBACK
+                   SNDPGMMSG  MSG('Transaction Failed. +
+                                   Re-input Necessary. +
+                                   Press Enter to Continue.') +
+                              TOPGMQ(*EXT)
+        CHGJOB     SWS(XXXXXXX1)
+                   GOTO END
+        ENDDO
+/**/
+/**  Check for Database Errors Trapped by Program  **/
+/**/
+        IF COND(%SWITCH(XXXXXX11)) THEN(GOTO DBERR)
+
+/**/
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/*     A N Y   M E S S A G E   P R O D U C T I O N  ?      */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/**/
+/**/
+
+             IF         COND((&MSG01 = 'Y')  +
+                         *OR (&MSG02 = 'Y')  +
+                         *OR (&MSG03 = 'Y')  +
+                         *OR (&MSG04 = 'Y')  +
+                         *OR (&MSG05 = 'Y')  +
+                         *OR (&MSG06 = 'Y')  +
+                         *OR (&MSG07 = 'Y')  +
+                         *OR (&MSG08 = 'Y')) +
+                         THEN(DO)
+/**/
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/*     S E N D   M E S S A G E   ' C '   T O   D T A Q     */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/**/
+             CALL       PGM(QSNDDTAQ) PARM(MSDTQA *LIBL &DQLEN 'C')
+             ENDDO
+        DLCOBJ OBJ((FTSTAT *DTAARA *EXCLRD))
+/**/
+/**/
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/**       S U C C E S S F U L   C O M P L E T I O N       **/
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/*  */
+/*  If phase A and UDC then prompt */
+/*  */
+             IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)
+
+/* Prompt for immediate print */
+             CALL       PGM(CGC5217) PARM(' ')
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             SNDPGMMSG  MSG('MT900/MT910 message generation +
+                          completed successfully') TOMSGQ(MRUNQ)      /*085214*/
+                                                                      /*086139*/
+        GOTO END
+/**/
+/**  Report  Database  Errors Trapped by Program  **/
+/**/
+DBERR:     RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+           SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                      TOMSGQ(MOPERQ MRUNQ)  TOPGMQ(*EXT)
+/**/
+/*  Abnormal termination processing  */
+ABNOR:
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSG('Request has terminated abnormally. +
+                          Please contact your system supervisor') +
+                          TOPGMQ(*EXT)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSG('MT900/MT910 message generation +
+                          completed - ABNORMALLY') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGJOB     SWS(XXXXXXX1)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+/*  Normal termination processing  */
+ END:        DLCOBJ     OBJ((FTC162001 *DTAARA *EXCLRD))
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+/* Call Message Generation Audit Report with parameters of Module  */
+/* ID, Type of run, Current Journal and Date and Time of job       */
+             CALL       PGM(MEC0890) PARM('FT' 'P' 'ICJRN     ' +
+                          &SDATE &STIME)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+             IF         COND(&CMTSWS *NE '1') THEN(DO)
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDDO
+/**/
+ ENDB:    CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                   Misys International Banking Systems Ltd.')

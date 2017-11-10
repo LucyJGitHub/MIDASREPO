@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Amend No. CFT162             Date 05Sep17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CRE020             Date 20Jan04              */
-/*       Prev Amend No. CSC022             Date 24Feb04              */
+/*       Prev Amend No. CRE020             Date 20Jan04              */
+/*                      CSC022             Date 24Feb04              */
 /*                      CSC023             Date 29Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CPK014             Date 14Nov01              */
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CFT162 - MT900 and MT910 Message Generation                 */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
@@ -48,7 +50,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PREF &RETC)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')
@@ -73,6 +75,8 @@
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1) +
                           VALUE(' ')                                                      /*CRE020*/
                                                                                           /*CRE020*/
+             DCL        VAR(&CFT162) TYPE(*CHAR) LEN(1) +
+                          VALUE(' ')                                                      /*CFT162*/
 /*/COPY WNCPYSRC,FTC0060001                                          */
                                                                       /*042167*/
 /*           DCLF       FILE(TABTB11)                        */      /*S01194*/
@@ -176,6 +180,17 @@
                                                                                           /*CRE020*/
              IF         COND(&RTNCDE *EQ '       ') THEN(CHGVAR +
                           VAR(&CRE020) VALUE('Y'))                                        /*CRE020*/
+                                                                                          /*CFT162*/
+/* Check if enhancement CFT162 in installed */                                            /*CFT162*/
+                                                                                          /*CFT162*/
+             CHGVAR     VAR(&SARD) VALUE('CFT162')                                        /*CFT162*/
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE &OPTN &SARD &FMT)                      /*CFT162*/
+                                                                                          /*CFT162*/
+             IF         COND(&RTNCDE *NE '       ' *AND &RTNCDE *NE +
+                          '*NRF   ') THEN(GOTO CMDLBL(END))                               /*CFT162*/
+                                                                                          /*CFT162*/
+             IF         COND(&RTNCDE *EQ '       ') THEN(CHGVAR +
+                          VAR(&CFT162) VALUE('Y'))                                        /*CFT162*/
 /**/
 /*/COPY WNCPYSRC,FTC0060002                                          */
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
@@ -198,11 +213,11 @@
                   CHGJOB SWS(X1XXXXXX)
              ENDDO
 /**/
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /*  CALL PROGRAM & MONITOR FOR ERRORS                               */
- 
+
              CALL       PGM(FT0060) PARM(&PREF &RETC)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
  /**/                                                                                     /*CSC022*/
@@ -266,15 +281,24 @@
              SBMJOB     CMD(CALL PGM(MIDASRMV)) JOB(MIDASRMV) +
                           JOBD(MBATCH) USER(*JOBD) RTGDTA(*JOBD) +
                           INLLIBL(*JOBD) OUTQ(*JOBD)                                      /*CSC023*/
+/**/                                                                                      /*CFT162*/
+             IF         COND(&CFT162 = 'Y') THEN(DO)                                      /*CFT162*/
+                SBMJOB     JOB(FTC162001) JOBD(MBATCH) USER(*JOBD) +
+                             RTGDTA(*JOBD) RQSDTA('CALL +
+                             PGM(FTC162001) PARM('''' '''' '''' )') +
+                             INLLIBL(*JOBD) /*CFT162*/
+             SBMJOB     CMD(CALL PGM(MIDASRMV)) JOB(MIDASRMV) +
+                JOBD(MBATCH) RTGDTA(*JOBD) INLLIBL(*JOBD) USER(*JOBD)                     /*CFT162*/
+             ENDDO       /*CFT162*/
 /*/COPY WNCPYSRC,FTC0060003                                          */
              ENDDO
              ENDDO
 /**/
              ENDDO
 /**/
- 
+
 /**   DATABASE ERROR HANDLING   **/
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
  /**/                                                                                     /*CSC022*/
  /** Execute rollback if SAR CSC022 is not enrolled or */                                 /*CSC022*/
@@ -299,12 +323,12 @@
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
 /*/COPY WNCPYSRC,FTC0060009                                          */
              ENDDO
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
- 
+
 /*END:********ENDPGM****/                                             /*042167*/
- 
+
 /**/                                                                  /*042167*/
 /* CALL AOC8000 to release locks */                                   /*042167*/
 /* */                                                                 /*042167*/
@@ -325,4 +349,4 @@ END:         CHGVAR     VAR(&MODULE) VALUE('FT')                      /*042167*/
                 ENDDO                                                                     /*CRE020*/
                                                                                           /*CRE020*/
              ENDPGM                                                   /*042167*/
- 
+

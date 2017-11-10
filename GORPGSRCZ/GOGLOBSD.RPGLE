@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CGL052             Date 02Dec15               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. CFT162             Date 05Sep17               *
+      *  Prev Amend No. CGL052             Date 02Dec15               *
+      *                 CGL165             Date 23Feb15               *
       *                 CLE164             Date 18Aug14               *
       *                 MD030467           Date 14Oct14               *
       *                 MD029077           Date 30Jul14               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation                  *
       *  CGL052 - Amend Washout Processing                            *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -325,6 +327,7 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDRPKYTD  '  GLOB_SDRPKYTD                                CLE164
      C     PFLNAME       CASEQ     'SDMTRXTD  '  GLOB_SDMTRXTD                                CLE164
      C     PFLNAME       CASEQ     'SDBRCHX0  '  GLOB_SDBRCHX0                                CGL052
+     C     PFLNAME       CASEQ     'SDM901PD  '  GLOB_SDM901PD                                CFT162
      C                   ENDCS
      C                   ENDIF
 
@@ -1077,6 +1080,12 @@ O                                                                               
      C     GLOB_SDBRCHX0 BEGSR                                                                CGL052
       /COPY GPCPYSRCG,GPSDBRCHX0                                                              CGL052
      C                   ENDSR                                                                CGL052
+      *****************************************************************                       CFT162
+      * Global Updates - Account/Customer MT900/MT910 Details                                 CFT162
+      *****************************************************************                       CFT162
+     C     GLOB_SDM901PD BEGSR                                                                CFT162
+      /COPY GPCPYSRCG,GPSDM901PD                                                              CFT162
+     C                   ENDSR                                                                CFT162
       *****************************************************************                       CGL155
       /SPACE 5                                                                                CGL155
       *****************************************************************

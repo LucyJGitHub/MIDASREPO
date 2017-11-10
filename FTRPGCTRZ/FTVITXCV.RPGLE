@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  MD000091 - Event Codes Substitution                          *
@@ -273,7 +275,7 @@
      C                   EVAL      WMSGDTXAR = *BLANKS                          CFT009
      C                   EVAL      WIX = 0                                      CFT009
      C                   MOVEL     *Blanks       WVCHG            20
- 
+
       * If CFT009 is on, validate telex charge code                             CFT009
                                                                                 CFT009
      C                   IF        CFT009 = 'Y' AND TXCDE <> *BLANKS            CFT009
@@ -560,17 +562,17 @@
      C     SRValVAT      BEGSR
       *
      C                   MOVEL     WMsgArr(1)    WVCHG
- 
+
       *  If CFT010 on, flag is 'Y'                                              CFT009
       *
      C                   IF        DDVAT2 = *Blanks
- 
+
      C                   IF        CFT010 = 'Y'                                 CFT009
      C                   MOVEL     'Y'           DDVAT2                         CFT009
      C                   ELSE                                                   CFT009
      C                   MOVEL     PVATT         DDVAT2
      C                   ENDIF                                                  CFT009
- 
+
      C                   ELSE
      C                   If        DDVAT2 <> 'Y' and
      C                             DDVAT2 <> 'N'

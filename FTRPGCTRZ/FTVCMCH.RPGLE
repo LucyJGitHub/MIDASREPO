@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 CER059             Date 19Jul10               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -75,9 +77,9 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FFTPCHGL0  IF   E           K DISK                                         CFT009
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -96,49 +98,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                 CFT009
@@ -150,16 +152,16 @@
                                                                                 CFT009
       ** Array of Warning message data.                                         CFT009
      D WMSGDTAXAR      S                   DIM(XARRAYMAX) LIKE(#MSGDATA)        CFT009
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D*TranInThir****E*DS***               EXTNAME(FTOPY4PD)                    CFT014
      D TranInFour    E DS                  EXTNAME(FTOPY6PD)                    CFT014
- 
+
       * Flags to indicate whether transaction fields are valid
      D*OKFlagsDS*****E*DS***               EXTNAME(FTEOPY3PD)                   CFT014
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY4PD)                   CFT014
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
                                                                                 CFT009
@@ -177,10 +179,10 @@
       * Valid Payments layout (default)                                         CFT009
      D DEFVALID      E DS                  EXTNAME(FTVOPAYPD)                   CFT009
      D                                     PREFIX(D#)                           CFT009
- 
+
       * External DS for General Ledger details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       * External DS for Funds Transfer details                                  CFT009
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)                    CFT009
                                                                                 CFT009
@@ -201,25 +203,25 @@
                                                                                 CFT009
       *  Transaction details extension file parameter for FT000652              CFT009
      D TRNEXT          DS          3000                                         CFT009
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                 CFT009
       ** Index for arrays of warning message ids etc                            CFT009
      D WIX             S              3P 0                                      CFT009
- 
+
      D WDATE           S              5  0
- 
+
      D ZalignOK        S              1
      D ZFIELD          S             16
      D ZADEC           S              1  0
@@ -275,7 +277,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *Blanks
@@ -287,7 +289,7 @@
      C                   EVAL      WMSGDTAXAR = *BLANKS                         CFT009
      C                   EVAL      WIX = 0                                      CFT009
      C                   Eval      Idx = 0
- 
+
       * If CFT009 is on, validate FX/Change charge code                         CFT009
                                                                                 CFT009
      C                   IF        @CFT009 = 'Y'                                CFT009
@@ -306,7 +308,7 @@
      C                   MOVEL     'FTF3177'     WMSGIDXAR(WIX)                 CFT009
      C                   ENDIF                                                  CFT009
      C                   ENDIF                                                  CFT009
- 
+
       * Validate
      C                   Exsr      VCOMCHG
                                                                                 CFT009
@@ -322,14 +324,14 @@
      C                   ENDIF                                                  CFT009
      C                   ENDIF                                                  CFT009
      C                   ENDIF                                                  CFT009
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKChcd = 'N'
      C                             OR @CFT009 = 'Y' AND OKFXCDE = 'N'           CFT009
      C                   Eval      RetCodeIn = 'Error'
      C                   End
- 
+
       * RETURN
       *
      C                   RETURN
@@ -340,22 +342,22 @@
       ************************************************************
       *
      C     VCOMCHG       BEGSR
- 
+
       * FX/Change commission only allowed if Pay and Settle currencies
       * are different.  If entered must be valid for charge currency
       * details.
- 
+
       * If EMU FT Enhancement is switched on then set work date.
      C                   If        @CEU006 = 'Y'
- 
+
      C                   If        SADDC = 'A'
      C                   Eval      WDATE = @SLDT
      C                   Else
      C                   Eval      WDATE = @PVDT
      C                   End
- 
+
      C                   End
- 
+
      C                   If        SCHCD <> *blanks                                          BUG8914
      C                   Eval      SCHCDCHK = SCHCD                                          BUG8689
      C                   Eval      pos = %scan ('.':SCHCDCHK)                                BUG8689
@@ -378,9 +380,9 @@
                                                                                              BUG8689
      C                   If        SCHCD <> *Blanks
      C                             and @@Amt <> 0                                            BUG8689
- 
+
      C                   If        SSMCY <> SPCCY
- 
+
       * If EMU FT  Enhancement is switched on
       *  and both Settle Ccy and Pay Ccy are either 'In' or Euros,
       *  then FX/Change Commission must be zero.
@@ -388,12 +390,12 @@
      C                             @INCYS = 'Y' and
      C                             @TPSDS <= WDATE and
      C                             SPCCY = BKEURO or
- 
+
      C                             @CEU006 = 'Y' and
      C                             @INCYP = 'Y' and
      C                             @TPSDP <= WDATE and
      C                             SSMCY = BKEURO or
- 
+
      C                             @CEU006 = 'Y' and
      C                             @INCYS = 'Y' and
      C                             @TPSDS <= WDATE and
@@ -404,7 +406,7 @@
      C                   Add       1             Idx
      C                   Movel     'SCHCD'       FldNamXAr(Idx)
      C                   Movel     'MMA1091'     MsgIdXAr(Idx)
- 
+
      C                   Else
                                                                                 CFT009
       * ? processing - Charge enquiry                                           CFT009
@@ -439,21 +441,21 @@
      C                   Move(P)   SCHCD         ZFIELD
      C                   Eval      ZADIG = 11 - @NBDP
      C                   Eval      ZADEC = @NBDP
- 
+
       * Validate amount as numeric with correct d.p.
      C                   CALLB     'ZALIGN'
      C                   Parm                    ZalignOK
      C                   Parm                    ZFIELD
      C                   Parm                    ZADEC
      C                   Parm                    ZADIG
- 
+
      C                   If        ZalignOK = 'N'
       * Send error to screen
      C                   Move      'N'           OKChcd
      C                   Add       1             Idx
      C                   Movel     'SCHCD'       FldNamXAr(Idx)
      C                   Movel     'MMA1092'     MsgIdXAr(Idx)
- 
+
      C                   Else
      C                   Move      ZFIELD        @CHCD
       * Format amount for screen
@@ -462,9 +464,9 @@
      C                   EXSR      FMTAMT
      C                   MOVE      @@AMTD        SCHCD
      C                   End
- 
+
      C                   End
- 
+
      C                   Else
       * Send error to screen
      C                   Move      'N'           OKChcd
@@ -472,9 +474,9 @@
      C                   Movel     'SCHCD'       FldNamXAr(Idx)
      C                   Movel     'MMA1093'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   End
- 
+
       * If SCHCD blank or zero initialise output fields
      C***********        IF        SCHCD = *BLANKS                              CFT009
       ** Change to IF conditioning to re-default if SCHCD = *blanks or          CFT009
@@ -563,7 +565,7 @@
      C                   Z-ADD     *ZERO         @CHCM
      C                   ENDIF                                                  CFT009
      C                   END
- 
+
      C                   ENDSR
      C************************************************************
       /EJECT                                                                    CFT009
@@ -677,16 +679,16 @@
      C     *INZSR        BEGSR
      C*
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
      C***********        Parm                    TranInThir                     CFT014
      C                   Parm                    TranInFour                     CFT014
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -699,10 +701,10 @@
       *
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
      C                   PARM                    VALIDPMNT                      CFT009
      C                   PARM                    VALIDPMTX                      CFT009
       *  Saved default charges                                                  CFT009
@@ -711,7 +713,7 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG          1            CFT009
- 
+
       ** ACCESS GENERAL LEDGER DETAILS
       *
      C**********         CALL      'AOGELRR0'                                                 CGL029
@@ -764,9 +766,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

@@ -11,20 +11,22 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
-      *  Last Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD000091           Date 06May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG24510           Date 24Jun09               *
+      *                 BUG24510           Date 24Jun09               *
       *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD000091 - Event Codes Substitution                          *
       *  BUG24510 - Instructed Amount Cover must be entered if        *
       *             Instructed Currency is not blank                  *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -42,93 +44,93 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Incoming Message
      D NwOPFilFmt    E DS                  EXTNAME(FTVOPY2PD)
- 
+
       ** Cover Message
      D NwOPAScnFmt   E DS                  EXTNAME(FTOPYAPD)
      D NwOPCScnFmt   E DS                  EXTNAME(FTOPYCPD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D FTEOPYC       E DS                  EXTNAME(FTEOPYCPD)
- 
+
       ** External data structure for Currency standing data
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIX             S              3P 0
- 
+
       ** Work fields
      D PRTCD           S              7A
      D POPTN           S              7A
@@ -137,7 +139,7 @@
      D ZFIELD          S             16A
      D ZADEC           S              1P 0
      D ZADIG           S              2P 0
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -157,7 +159,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialization
       *
@@ -170,7 +172,7 @@
      C                   Eval      WMsgDtaXAr = *Blanks
      C                   Eval      WIX = 0
      C                   Eval      Idx = 0
- 
+
       ** Validate
      C                   ExSr      VOCIC
       *
@@ -180,14 +182,14 @@
      C                             OKCIAM = 'N'
      C                   Eval      RetCodeIn = 'Error'
      C                   Else
- 
+
      C                   If        SCICY = *Blanks
      C                   Eval      O2CICY = *Blanks
      C                   EndIf
      C                   If        SCIAM = *Blanks
      C                   Eval      O2CIAM = 0
      C                   EndIf
- 
+
      C                   EndIf
       *
       ** RETURN
@@ -320,9 +322,9 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BegSr
- 
+
      C     *Entry        PList
- 
+
      C                   Parm                    RetCodeIn
      C                   Parm                    NwOPFilFmt
      C                   Parm                    NwOPAScnFmt
@@ -340,9 +342,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   EndSr
       *****************************************************************
       /EJECT

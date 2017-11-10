@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT120             Date 28Sep12               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -43,7 +45,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -62,68 +64,68 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in
       ** the PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error
       ** and warning message arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT                                                          *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       /COPY FTCPYSRC,SFTVALCSLE
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 details
      D NwIP4ScnFmt   E DS                  EXTNAME(FTIPY4PD)
- 
+
       ** Incoming Payments Valid extension file
      D NwIP2FilFmt   E DS                  EXTNAME(FTVIPY2PD)
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 error indicators
      D OKIPY3DS      E DS                  EXTNAME(FTEIPY3PD)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error messages
      D Idx             S              3P 0
- 
+
       **
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -132,23 +134,23 @@
       *****************************************************************
       /EJECT                                                          *
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
      C                   EVAL      Idx = 0
- 
+
      C                   EXSR      SRBOCD
- 
+
       ** If an error was found, set the return code appropriately
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      ReturnCode = 'ERROR'
      C                   ENDIF
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -156,20 +158,20 @@
       *  SRBOCD - Validation of Bank Operation Code.                  *
       *****************************************************************
      C     SRBOCD        BEGSR
- 
+
       *
       ** If blank, default to 'CRED'
- 
+
      C                   IF        DDBOCD  = *BLANKS
      C                   EVAL      DDBOCD = 'CRED'
      C                   EVAL      I2INBOCD = 'CRED'
      C                   GOTO      EXBOCD
      C                   ENDIF
- 
+
       *
       ** Otherwise, Bank Operation Code can only be 'CRED', 'SPAY',
       **    'SSTD', or 'SPRI'
- 
+
      C                   IF        (DDBOCD <> 'CRED') AND
      C                             (DDBOCD <> 'SPAY') AND
      C                             (DDBOCD <> 'SSTD') AND
@@ -180,11 +182,11 @@
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      OKBOCD = 'N'
      C                   ENDIF
- 
+
      C                   IF        ErrorFound = 'N'
      C                   EVAL      I2INBOCD = DDBOCD
      C                   ENDIF
- 
+
      C     EXBOCD        ENDSR
       *****************************************************************
       /EJECT
@@ -192,7 +194,7 @@
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       ** O: Return Code
      C                   PARM                    ReturnCode
@@ -212,15 +214,15 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** ==============================================================
       ** Program, module and procedure names for database error proc'g.
       ** ==============================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

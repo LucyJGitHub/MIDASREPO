@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD000091           Date 07May13               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD000091           Date 07May13               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD000091 - Event Codes Substitution                          *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -55,7 +57,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -74,62 +76,62 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in
       ** the PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error
       ** and warning message arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT                                                          *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       /COPY FTCPYSRC,SFTVALCSLE
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 details
      D NwIP4ScnFmt   E DS                  EXTNAME(FTIPY4PD)
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 file 2 details
      D NwIP4AScnFmt  E DS                  EXTNAME(FTIPY4APD)
- 
+
       ** Incoming Payments Valid extension file
      D NwIP2FilFmt   E DS                  EXTNAME(FTVIPY2PD)
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 error indicators
      D OKIPY3DS      E DS                  EXTNAME(FTEIPY3PD)
- 
+
       ** Table of Instruction Codewords
      D*TABICD***       S              4    DIM(12) CTDATA PERRCD(1)                           CSW202
      D TABICD          S              4    DIM(13) CTDATA PERRCD(1)                           CSW202
- 
+
       ** General-purpose Instruction Code array
      D WA1             S             35    DIM(5)
       *                                                                                       CSW201
@@ -139,7 +141,7 @@
       ** Array of Instruction codewords in correct order                                      CSW201
      D*WICOR****       S              4    DIM(12) CTDATA PERRCD(12)                   CSW201 CSW202
      D WICOR           S              4    DIM(13) CTDATA PERRCD(13)                          CSW202
- 
+
      D                 DS
      D WICDDS                  1    175
      D  WICD1                  1     35
@@ -147,23 +149,23 @@
      D  WICD3                 71    105
      D  WICD4                106    140
      D  WICD5                141    175
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error messages
      D Idx             S              3P 0
- 
+
       ** General index variable
      D J               S              3P 0
- 
+
       ** Switchable feature indicator                                                         CSW201
      D CSW201          S              1A                                                      CSW201
                                                                                               CSW201
@@ -203,14 +205,14 @@
       *****************************************************************
       /EJECT                                                          *
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
      C                   EVAL      Idx = 0
      C                   EVAL      ErrorFound = 'N'                                           CSW201
      C                   EVAL      WICD1 = DDICD1
@@ -218,14 +220,14 @@
      C                   EVAL      WICD3 = DDICD3
      C                   EVAL      WICD4 = DDICD4
      C                   EVAL      WICD5 = DDICD5
- 
+
      C                   EXSR      SRICDE
- 
+
       ** If an error was found, set the return code appropriately
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      ReturnCode = 'ERROR'
      C                   ENDIF
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -233,10 +235,10 @@
       *  SRICDE - Validation of Instruction Code.                     *
       *****************************************************************
      C     SRICDE        BEGSR
- 
+
       *
       ** Entry is optional
- 
+
      C                   IF        (WICDDS = *BLANKS)
      C                   EVAL      I2INICD1 = *BLANKS
      C                   EVAL      I2INICD2 = *BLANKS
@@ -245,10 +247,10 @@
      C                   EVAL      I2INICD5 = *BLANKS
      C                   GOTO      EXICDE
      C                   ENDIF
- 
+
       *
       ** If Bank Operation Code is 'SSTD' or 'SPAY', entry is prohibited
- 
+
      C                   IF        (DDBOCD = 'SSTD') OR (DDBOCD = 'SPAY')
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdXAr = 'FTM5011'
@@ -261,11 +263,11 @@
      C                   EVAL      OKICD5 = 'N'
      C                   GOTO      EXICDE
      C                   ENDIF
- 
+
       *
       ** There should be no blank line preceding a nonblank line among
       **   the Instruction Code lines
- 
+
      C                   IF        (DDICD1 = *BLANK AND DDICD2 <> *BLANK)   OR
      C                             (DDICD2 = *BLANK AND DDICD3 <> *BLANK)   OR
      C                             (DDICD3 = *BLANK AND DDICD4 <> *BLANK)   OR
@@ -281,25 +283,25 @@
      C                   EVAL      OKICD5 = 'N'
      C                   GOTO      EXICDE
      C                   ENDIF
- 
+
       *
       ** Validation that is done on each of the 5 Instruction Code
       **    fields
       *
- 
+
      C                   MOVEA     *BLANKS       WA1
      C                   MOVEA     WICDDS        WA1
      C                   EVAL      J = 0
      C                   MOVEA     *BLANKS       Codeword                                     CSW201
- 
+
      C                   DOW       (J < 5)
- 
+
      C                   EVAL      J = J + 1
- 
+
      C                   IF        (WA1(J) = *BLANKS)
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   MOVEL     WA1(J)        WCHR04            4
      C                   MOVE      WA1(J)        WCHR31           31
      C                   MOVEL     WCHR31        WCHR05TH          1
@@ -308,7 +310,7 @@
      C     WCHR04        LOOKUP    TABICD                                 40
       *
      C                   SELECT
- 
+
       ** Check if positions 1-4 is a valid codeword.
                                                                                               CSW206
      C                   WHEN      WCHR04 = 'BONL' AND                                        CSW206
@@ -337,7 +339,7 @@
      C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(WCHR04)                   MD000091
      C                   EVAL      ErrorFound = 'Y'
      C                   EXSR      SROKFLG
- 
+
       ** When Bank Operation Code is 'SPRI', codeword should be
       ** 'SDVA', 'TELB', 'PHOB' or 'INTC'.
      C                   WHEN      (DDBOCD = 'SPRI') AND
@@ -352,7 +354,7 @@
      C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(WCHR04)                   MD000091
      C                   EVAL      ErrorFound = 'Y'
      C                   EXSR      SROKFLG
- 
+
       ** Pos. 5-35 should not contain additional information
       ** when codeword is not PHON/PHOB/PHOI/TELE/TELB/TELI/HOLD.
                                                                                               CSW202
@@ -379,7 +381,7 @@
      C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(WCHR04)                   MD000091
      C                   EVAL      ErrorFound = 'Y'
      C                   EXSR      SROKFLG
- 
+
       ** Codeword must be followed by '/' if additional info is
       ** supplied in pos. 6-35.
      C                   WHEN      (WCHR31 <> *BLANKS) AND
@@ -391,7 +393,7 @@
      C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(WCHR04)                   MD000091
      C                   EVAL      ErrorFound = 'Y'
      C                   EXSR      SROKFLG
- 
+
       ** Additional info must be supplied in pos. 6-35 when '/' has
       ** been entered after the codeword.
      C                   WHEN      (WCHR05TH = '/') AND
@@ -403,7 +405,7 @@
      C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(WCHR04)                   MD000091
      C                   EVAL      ErrorFound = 'Y'
      C                   EXSR      SROKFLG
- 
+
       ** Additional info in pos. 6-35 should be valid SWIFT characters.
      C                   WHEN      (WCHR30 <> *BLANKS)
      C                   MOVEL     *BLANKS       FLD              35
@@ -475,7 +477,7 @@
      C                   EXSR      SROKFLG                                                    CSW201
       *
      C                   ENDSL
- 
+
      C                   ENDDO
                                                                                               CSW201
      C                   IF        CSW201 = 'Y'                                               CSW201
@@ -604,7 +606,7 @@
                                                                                               CSW201
      C                   ENDDO                                                                CSW201
      C                   ENDIF                                                                CSW201
- 
+
      C                   IF        ErrorFound = 'N'
      C                   EVAL      I2INICD1 = DDICD1
      C                   EVAL      I2INICD2 = DDICD2
@@ -612,7 +614,7 @@
      C                   EVAL      I2INICD4 = DDICD4
      C                   EVAL      I2INICD5 = DDICD5
      C                   ENDIF
- 
+
      C     EXICDE        ENDSR
       *****************************************************************
       /EJECT
@@ -620,7 +622,7 @@
       *  SROKFLG - Sets off the appropriate OK flag.                  *
       *****************************************************************
      C     SROKFLG       BEGSR
- 
+
      C                   SELECT
      C                   WHEN      (J = 1)
      C                   EVAL      OKICD1 = 'N'
@@ -638,7 +640,7 @@
      C                   EVAL      OKICD5 = 'N'
      C                   EVAL      FldNamXAr(Idx) = 'DDICD5'
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -646,7 +648,7 @@
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** O: Return Code
@@ -677,7 +679,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
                                                                                               CSW202
       ** Check if switchable feature CSW202 is switched on                                    CSW202
                                                                                               CSW202
@@ -705,9 +707,9 @@
       ** ==============================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

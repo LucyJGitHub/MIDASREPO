@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  MD000091 - Event Codes Substitution                          *
@@ -66,7 +68,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -85,61 +87,61 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in
       ** the PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error
       ** and warning message arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT                                                          *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       /COPY FTCPYSRC,SFTVALCSLE
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Incoming Payments for file update - file format
      D NwIPFilFmt    E DS                  EXTNAME(FTVIPAYPD)
- 
+
       ** Incoming Payments Lvl 1 details
      D NwIP1ScnFmt   E DS                  EXTNAME(FTIPY1PD)
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 details
      D NwIP5ScnFmt   E DS                  EXTNAME(FTIPY5PD)
- 
+
       ** Incoming Payments Valid extension file
      D NwIP2FilFmt   E DS                  EXTNAME(FTVIPY2PD)
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 error indicators
      D OKIPY4DS      E DS                  EXTNAME(FTEIPY4PD)
- 
+
       ** DS for access programs - Long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       CFT120
@@ -148,30 +150,30 @@
       *                                                                                       CFT120
       ** DS for Access Objects - short data structure                                         CFT120
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CFT120
- 
+
       ** External DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error messages
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning messages
      D WIdx            S              3P 0
      D CFT120          S              1A                                                      CFT120
- 
+
       **  Data Structure for input/output parameters
      D/COPY FTCPYSRC,FT0010D001
- 
+
       **
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -185,25 +187,25 @@
       *****************************************************************
       /EJECT                                                          *
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
      C                   EVAL      Idx = 0
      C                   EVAL      WIdx = 0
      C                   EVAL      WRCRM = 0                                                  220327
- 
+
      C                   EXSR      SRRCRM
- 
+
       ** If an error was found, set the return code appropriately
      C                   IF        ErrorFound = 'Y' OR WarnFound = 'Y'
      C                   EVAL      ReturnCode = 'ERROR'
      C                   ENDIF
- 
+
       ** Otherwise, set up file field                                                         220327
                                                                                               220327
      C                   IF        OKRCRM <> 'N'                                              220327
@@ -233,11 +235,11 @@
      C                   MOVEL     'SDCURRPD'    DBFILE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *
       ** Bypass validation if Receiver's Charges Remitted is blank
       ** and details of charge is not 'OUR'.
- 
+
      C                   IF        (DDRCRM = *BLANKS)
      C                   IF        (DDDTCH <> 'OUR')
      C                   GOTO      EXRCRM
@@ -254,10 +256,10 @@
      C                   EndIf                                                                209868
      C                   ENDIF
      C                   ENDIF
- 
+
       *
       ** May only be entered if Details of Charges is 'OUR'
- 
+
      C                   IF        (DDDTCH <> 'OUR')
      C                             AND (DDRCRM <> *BLANKS)
      C                   EVAL      Idx = Idx + 1
@@ -267,10 +269,10 @@
      C                   EVAL      OKRCRM = 'N'
      C                   GOTO      EXRCRM
      C                   ENDIF
- 
+
       *
       ** Entry must be a valid amount in Settlement currency
- 
+
      C                   EVAL      WRCRM = 0
      C                   EVAL      PICHR16 = DDRCRM
      C                   EVAL      PDIG = 11 - A6NBDP
@@ -304,15 +306,15 @@
      C                   MOVE      PInOutChr16   DDRCRM
      C                   EndIf                                                                209868
      C                   ENDIF
- 
+
       *
       ** Send warning message if Receiver's Charges is not equal to total
       ** charges calculated
- 
+
      C                   EVAL      WTOTCHG = 0
- 
+
      C                   SELECT
- 
+
       *
       ** Entry charge currency = Settle currency
      C                   WHEN      (PENTCHGCCY = DDSMCY)
@@ -336,7 +338,7 @@
      C                   IF        (S01499 = 'Y')
      C                   ADD       IPINDUM8      WTOTCHG
      C                   ENDIF
- 
+
       *
       ** File charge currency = Settle currency
      C                   WHEN      (PFILCHGCCY = DDSMCY)
@@ -360,7 +362,7 @@
      C                   IF        (S01499 = 'Y')
      C                   ADD       IPINVATT      WTOTCHG
      C                   ENDIF
- 
+
       *
       ** Catchall
      C                   OTHER
@@ -384,7 +386,7 @@
      C                   IF        (S01499 = 'Y')
      C                   ADD       IPINDUM8      WTOTCHG
      C                   ENDIF
- 
+
       ** Convert total charge calculated if neither Input Charge ccy
       ** nor File Charge ccy is equal to Settle ccy
      C                   CLEAR                   P#0010
@@ -407,9 +409,9 @@
      C                   EXSR      SRFT0010
      C                   ENDIF                                                                CFT120
      C                   EVAL      WTOTCHG = P#TOAM
- 
+
      C                   ENDSL
- 
+
      C                   IF        (WRCRM <> WTOTCHG)
      C                   IF        (DDRCRM <> PPrvDDRCRM)
      C                             OR (WTOTCHG <> PPrvTOTCHG)
@@ -424,7 +426,7 @@
      C                   GOTO      EXRCRM
      C                   ENDIF
      C                   ENDIF
- 
+
       *
       ***If*Instructed*amount/currency*from*Level*1*were*not*entered,                         208219
       ******Sender's*charges*should*not*be*entered.                                           208219
@@ -438,7 +440,7 @@
      C**********         EVAL      OKRCRM = 'N'                                               208219
      C**********         GOTOF     EXRCRM                                                     208219
      C**********         ENDIF                                                                208219
- 
+
      C     EXRCRM        ENDSR
       *****************************************************************
       /EJECT
@@ -448,17 +450,17 @@
       *                                                               *
       *****************************************************************
      C     SRFT0010      BEGSR
- 
+
      C                   CALL      'FT0010'
      C                   PARM                    P#0010
- 
+
      C                   IF        (P#RTCD <> *BLANKS)
      C                   EVAL      DBASE = 1
      C                   EVAL      DBKEY = '*CALL  '
      C                   EVAL      DBFILE = 'FT0010 '
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -468,7 +470,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** O: Return Code
@@ -517,15 +519,15 @@
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
- 
+
       ** ==============================================================
       ** Program, module and procedure names for database error proc'g.
       ** ==============================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       *                                                                                       CFT120
       ** Access SAR details file to determine if CFT120 enhancement is                        CFT120
       ** switched on.                                                                         CFT120

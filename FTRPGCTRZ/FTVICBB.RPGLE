@@ -11,15 +11,17 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CSW209  *CREATE    Date 01Apr09               *
+      *  Prev Amend No. CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -37,71 +39,71 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Incoming Transaction
      D NwIP7ScnFmt   E DS                  EXTNAME(FTIPY7PD)
      D NwIP8ScnFmt   E DS                  EXTNAME(FTIPY8PD)
- 
+
       ** Valid Incoming Payments Extension File (default)
      D NwIP2FilFmt   E DS                  EXTNAME(FTVIPY2PD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D FTEIPY8       E DS                  EXTNAME(FTEIPY8PD)
- 
+
       ** Sender to Receiver data structure
      D SNDRCV          DS           210
      D  WCBB1                  1     35
@@ -110,33 +112,33 @@
      D  WCBB4                106    140
      D  WCBB5                141    175
      D  WCBB6                176    210
- 
+
       *
       /COPY FTCPYSRC,SFTVALCSLE
       *
       /COPY FTCPYSRC,SFTADDRILE
       *
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIX             S              3P 0
- 
+
       ** Work fields
      D ADLINE          S              1A
      D ADSLON          S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -151,7 +153,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialization
       *
@@ -164,7 +166,7 @@
      C                   EVAL      WMsgDtaXAr = *BLANKS
      C                   EVAL      WIX = 0
      C                   EVAL      Idx = 0
- 
+
       ** Validate
      C                   EXSR      VICBB
       *
@@ -265,7 +267,7 @@
      C     *INZSR        BEGSR
      C*
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       ** Return Code
      C                   Parm                    RetCodeIn
@@ -274,7 +276,7 @@
       ** - screen format
      C                   PARM                    NwIP7ScnFmt
      C                   PARM                    NwIP8ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -286,7 +288,7 @@
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtaXAr
@@ -296,9 +298,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

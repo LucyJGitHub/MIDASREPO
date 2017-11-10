@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -76,9 +78,9 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FFTPCHGL0  IF   E           K DISK                                         CFT009
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,49 +99,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                 CFT009
@@ -151,16 +153,16 @@
                                                                                 CFT009
       ** Array of Warning message data.                                         CFT009
      D WMSGDTAXAR      S                   DIM(XARRAYMAX) LIKE(#MSGDATA)        CFT009
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D*TranInThir****E*DS***               EXTNAME(FTOPY4PD)                    CFT014
      D TranInFour    E DS                  EXTNAME(FTOPY6PD)                    CFT014
- 
+
       * Flags to indicate whether transaction fields are valid
      D*OKFlagsDS*****E*DS***               EXTNAME(FTEOPY3PD)                   CFT014
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY4PD)                   CFT014
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
                                                                                 CFT009
@@ -200,23 +202,23 @@
       ** Switchable Features File                                                             CFT120
       *                                                                                       CFT120
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CFT120
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                 CFT009
       ** Index for arrays of warning message ids etc                            CFT009
      D WIX             S              3P 0                                      CFT009
- 
+
      D ZalignOK        S              1
      D ZFIELD          S             16
      D ZADEC           S              1  0
@@ -247,7 +249,7 @@
      D*CHARGEDR*       S             12A                                               CFT009 CGL029
      D CHARGEDR        S             18A                                                      CGL029
      D ADDDEDUCT       S              1A                                        CFT009
- 
+
       * Parameters for AOCURRR0                                                 CFT009
      D C#CURR          S              3                                         CFT009
      D C#OPTN          S              7                                         CFT009
@@ -278,7 +280,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *Blanks
@@ -290,7 +292,7 @@
      C                   EVAL      WMSGDTAXAR = *BLANKS                         CFT009
      C                   EVAL      WIX = 0                                      CFT009
      C                   Eval      Idx = 0
- 
+
       * If CFT009 is on, validate telex charge code                             CFT009
                                                                                 CFT009
      C                   IF        @CFT009 = 'Y'                                CFT009
@@ -329,16 +331,16 @@
      C                   Exsr      VTLXCHG                                                    205554
                                                                                               205554
      C                   ENDIF                                                  CFT009
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKTxcd = 'N'
      C                             OR @CFT009 = 'Y' AND OKTXCDE = 'N'           CFT009
      C                   Eval      RetCodeIn = 'Error'
      C                   End
- 
+
       * RETURN
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT                                                                    CFT009
@@ -381,7 +383,7 @@
       ************************************************************
       *
      C     VTLXCHG       BEGSR
- 
+
       *  Telex Charge is mandatory, on insert only, if settlement
       *  type is '01'
       *
@@ -394,10 +396,10 @@
      C                   Movel     'STXCD'       FldNamXAr(Idx)
      C                   Movel     'MMA1085'     MsgIdXAr(Idx)
      C                   End
- 
+
       * No errors
      C                   If        OKTxcd = 'Y'
- 
+
      C                   If        STXCD <> *Blanks
                                                                                 CFT009
       * ? processing - Charge enquiry                                           CFT009
@@ -428,11 +430,11 @@
      C                   ENDIF                                                  CFT009
      C                   ENDIF                                                  CFT009
      C                   ENDIF                                                  CFT009
- 
+
      C                   Move(P)   STXCD         ZFIELD
      C                   Eval      ZADIG = 11 - @NBDP
      C                   Eval      ZADEC = @NBDP
- 
+
       * Validate amount as numeric with correct d.p.
      C                   CALLB     'ZALIGN'
      C                   Parm                    ZalignOK
@@ -455,10 +457,10 @@
      C                   EXSR      FMTAMT
      C                   MOVE      @@AMTD        STXCD
      C                   End
- 
+
      C                   End
      C                   End
- 
+
       * If STXCD blank or zero initialise output fields
      C***********        IF        STXCD = *BLANKS                              CFT009
                                                                                 CFT009
@@ -548,7 +550,7 @@
      C                   Z-ADD     *ZERO         @TXCH
      C                   ENDIF                                                  CFT009
      C                   END
- 
+
      C                   ENDSR
      C************************************************************
      C* END VALIDATION
@@ -575,16 +577,16 @@
      C     *INZSR        BEGSR
      C*
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
      C***********        Parm                    TranInThir                     CFT014
      C                   Parm                    TranInFour                     CFT014
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -597,10 +599,10 @@
       *
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
      C                   PARM                    VALIDPMNT                      CFT009
      C                   PARM                    VALIDPMTX                      CFT009
       *  Saved default charges                                                  CFT009
@@ -640,15 +642,15 @@
       *                                                                                       CFT120
      C                   ENDIF                                                                CFT120
      C                   ENDIF                                                                CFT120
- 
+
       ** =================================================================
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

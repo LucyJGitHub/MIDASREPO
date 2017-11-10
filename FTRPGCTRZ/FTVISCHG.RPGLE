@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
       *  MD000091 - Event Codes Substitution                          *
@@ -61,7 +63,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -80,63 +82,63 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in
       ** the PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error
       ** and warning message arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT                                                          *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       /COPY FTCPYSRC,SFTVALCSLE
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
- 
+
       ** Incoming Payments Lvl 1 details
      D NwIP1ScnFmt   E DS                  EXTNAME(FTIPY1PD)
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 details
      D NwIP5ScnFmt   E DS                  EXTNAME(FTIPY5PD)
- 
+
       ** Incoming Payments Valid extension file
      D NwIP2FilFmt   E DS                  EXTNAME(FTVIPY2PD)
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 error indicators
      D OKIPY4DS      E DS                  EXTNAME(FTEIPY4PD)
- 
+
       ** Second data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Data structure for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Sender's Charges Currency data structure
      D WSNDCCYDS       DS            15
      D  WSNDCCY1               1      3
@@ -144,7 +146,7 @@
      D  WSNDCCY3               7      9
      D  WSNDCCY4              10     12
      D  WSNDCCY5              13     15
- 
+
       ** Sender's Charges data structure
      D WSNDCHGDS       DS            60
      D  WSNDCHG1               1     12
@@ -152,29 +154,29 @@
      D  WSNDCHG3              25     36
      D  WSNDCHG4              37     48
      D  WSNDCHG5              49     60
- 
+
       ** Sender's Charges array
      DWSndChgArr       S             12A   DIM(5)
- 
+
       ** Sender's Charges Currency array
      DWSndCcyArr       S              3A   DIM(5)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error messages
      D Idx             S              3P 0
- 
+
       ** General Index for arrays
      D J               S              3P 0
- 
+
       **
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -187,14 +189,14 @@
       *****************************************************************
       /EJECT                                                          *
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
      C                   EVAL      Idx = 0
      C                   EVAL      ErrorFound = 'N'
      C                   EVAL      WSNDCCY1 = DDSCC1
@@ -207,14 +209,14 @@
      C                   EVAL      WSNDCHG3 = DDSCH3
      C                   EVAL      WSNDCHG4 = DDSCH4
      C                   EVAL      WSNDCHG5 = DDSCH5
- 
+
      C                   EXSR      SRSCHG
- 
+
       ** If an error was found, set the return code appropriately
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      ReturnCode = 'ERROR'
      C                   ENDIF
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -222,40 +224,40 @@
       *  SRSCHG - Validation of Sender's Charges/Currencies.          *
       *****************************************************************
      C     SRSCHG        BEGSR
- 
+
       *
       ** Default to Settle currency and zero charge if Details of
       ** charges is 'BEN'
- 
+
      C                   IF        (WSNDCCYDS = *BLANKS)
      C                             AND (WSNDCHGDS = *BLANKS)
- 
+
      C                   IF        (DDDTCH = 'BEN')
       ** Only default if Instructed Amount Currency on First Screen was entered               209868
      C                             And DDNDCY <> *BLANKS                                      209868
      C                   EVAL      DDSCC1 = DDSMCY
      C                   ENDIF
- 
+
      C                   EVAL      I2INSCC1 = DDSCC1
      C                   EVAL      I2INSCC2 = DDSCC2
      C                   EVAL      I2INSCC3 = DDSCC3
      C                   EVAL      I2INSCC4 = DDSCC4
      C                   EVAL      I2INSCC5 = DDSCC5
- 
+
      C                   EVAL      I2INSCH1 = 0
      C                   EVAL      I2INSCH2 = 0
      C                   EVAL      I2INSCH3 = 0
      C                   EVAL      I2INSCH4 = 0
      C                   EVAL      I2INSCH5 = 0
- 
+
      C                   GOTO      EXSCHG
- 
+
      C                   ENDIF
- 
+
       *
       ** If Details of Charges is 'OUR', no Sender's charges should
       **    be made
- 
+
      C                   IF        DDDTCH = 'OUR'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdXAr(Idx) = 'FTM5034'
@@ -264,7 +266,7 @@
      C                   EXSR      SROFFOK
      C                   GOTO      EXSCHG
      C                   ENDIF
- 
+
       *
       ***If*Instructed*amount/currency*from*Level*1*were*not*entered,                         208219
       ******Sender's*charges*should*not*be*entered.                                           208219
@@ -277,10 +279,10 @@
      C**********         EXSR      SROFFOK                                                    208219
      C**********         GOTO      EXSCHG                                                     208219
      C**********         ENDIF                                                                208219
- 
+
       *
       ** Move Sender's charges input to work arrays
- 
+
      C                   EVAL      WSndCcyArr(1) = DDSCC1
      C                   EVAL      WSndCcyArr(2) = DDSCC2
      C                   EVAL      WSndCcyArr(3) = DDSCC3
@@ -291,22 +293,22 @@
      C                   EVAL      WSndChgArr(3) = DDSCH3
      C                   EVAL      WSndChgArr(4) = DDSCH4
      C                   EVAL      WSndChgArr(5) = DDSCH5
- 
+
      C                   IF        DDDTCH  = 'BEN' OR DDDTCH = 'SHA'
- 
+
       *
       ** Validate Sender's Charges/Currencies
- 
+
      C                   EVAL      J = 0
- 
+
      C                   DOW       J < 5
- 
+
      C                   EVAL      J = J + 1
- 
+
       ** Sender's Charge ccy is not blank, Validate currency/charge entries
- 
+
      C                   IF        WSndCcyArr(J) <> *BLANKS
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*KEY   '     @Optn
@@ -317,11 +319,11 @@
      C                   ELSE
      C                   EXSR      SRCHGVAL
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** Sender's Charge ccy is blank, Sender's Charge entry is invalid
- 
+
      C                   IF        WSndChgArr(J) <> *BLANKS
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdXAr(Idx) = 'FTM5044'
@@ -344,18 +346,18 @@
      C                   EVAL      OKSCH5 = 'N'
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   GOTO      EXSCHG
      C                   ENDIF
- 
+
       *
       ** Fields should not be preceded by blank field
- 
+
      C                   IF        (DDSCC5 <> *BLANKS  AND
      C                             DDSCC4 = *BLANKS)  OR
      C                             (DDSCC4 <> *BLANKS  AND
@@ -377,9 +379,9 @@
      C                   GOTO      EXSCHG
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EXSCHG        ENDSR
       *****************************************************************
       /EJECT
@@ -387,7 +389,7 @@
       *  SRSCCERR - Handles invalid Sender's Charge Currency.         *
       *****************************************************************
      C     SRSCCERR      BEGSR
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdXAr(Idx) = 'FTM5042'
      C**********         EVAL      MsgDtaXAr(Idx) = WSndCcyArr(J)                           MD000091
@@ -411,7 +413,7 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDSCC5'
      C                   EVAL      OKSCC5 = 'N'
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -420,23 +422,23 @@
       *             Charges info for output to file and screen.       *
       *****************************************************************
      C     SRCHGVAL      BEGSR
- 
+
       *
       ** Charge must be a valid amount in Sender's Charge currency.
- 
+
      C                   EVAL      PInChr16 = *BLANKS
      C                   EVAL      PInNum010 = A6NBDP
      C                   EVAL      PInNum020 = 12 - A6NBDP
- 
+
      C                   CALL      'ZALIGN'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      WSndChgArr(J) PInChr16         16
      C                   PARM                    PInNum010         1 0
      C                   PARM                    PInNum020         2 0
      C                   PARM      *BLANKS       POutChr16        16
- 
+
      C                   IF        @RtCd <> *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdXAr(Idx) = 'FTM5036'
      C**********         EVAL      MsgDtaXAr(Idx)=WSndChgArr(J)+WSndCcyArr(J)               MD000091
@@ -446,7 +448,7 @@
      C                   EVAL      MsgDtaXAr(Idx) = %TRIM(MsgDtaXAr(Idx))                   MD000091
      C                                            + LenStr +%TRIM(WSndCcyArr(J))            MD000091
      C                   EVAL      ErrorFound = 'Y'
- 
+
      C                   SELECT
      C                   WHEN      (J = 1)
      C                   EVAL      FldNamXAr(Idx) = 'DDSCH1'
@@ -464,17 +466,17 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDSCH5'
      C                   EVAL      OKSCH5 = 'N'
      C                   ENDSL
- 
+
      C                   ELSE
- 
+
       ** Valid amount, save formatted charge
- 
+
      C                   MOVE      *BLANKS       PInOutChr16
      C                   MOVE      POutChr16     PInOutChr16
      C                   CALL      'ZEDIT'
      C                   PARM                    PInOutChr16      16
      C                   PARM      A6NBDP        PInNum010
- 
+
      C                   SELECT
      C                   WHEN      (J = 1)
      C                   MOVE      DDSCC1        I2INSCC1
@@ -497,9 +499,9 @@
      C                   MOVE      POutChr16     I2INSCH5
      C                   MOVE      PInOutChr16   DDSCH5
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -507,37 +509,37 @@
       *  SROFFOK  - Sets off the OK indicator of the field.           *
       *****************************************************************
      C     SROFFOK       BEGSR
- 
+
      C                   IF        (DDSCC1 <> *BLANKS) OR
      C                             (DDSCH1 <> *BLANKS)
      C                   EVAL      OKSCC1 = 'N'
      C                   EVAL      OKSCH1 = 'N'
      C                   ENDIF
- 
+
      C                   IF        (DDSCC2 <> *BLANKS) OR
      C                             (DDSCH2 <> *BLANKS)
      C                   EVAL      OKSCC2 = 'N'
      C                   EVAL      OKSCH2 = 'N'
      C                   ENDIF
- 
+
      C                   IF        (DDSCC3 <> *BLANKS) OR
      C                             (DDSCH3 <> *BLANKS)
      C                   EVAL      OKSCC3 = 'N'
      C                   EVAL      OKSCH3 = 'N'
      C                   ENDIF
- 
+
      C                   IF        (DDSCC4 <> *BLANKS) OR
      C                             (DDSCH4 <> *BLANKS)
      C                   EVAL      OKSCC4 = 'N'
      C                   EVAL      OKSCH4 = 'N'
      C                   ENDIF
- 
+
      C                   IF        (DDSCC5 <> *BLANKS) OR
      C                             (DDSCH5 <> *BLANKS)
      C                   EVAL      OKSCC5 = 'N'
      C                   EVAL      OKSCH5 = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -545,7 +547,7 @@
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       ** O: Return Code
      C                   PARM                    ReturnCode
@@ -571,15 +573,15 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** ==============================================================
       ** Program, module and procedure names for database error proc'g.
       ** ==============================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

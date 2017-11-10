@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. MD000091           Date 03May13               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 MD000091           Date 03May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  MD000091 - Event Codes Substitution                          *
@@ -273,7 +275,7 @@
      C                   EVAL      WMSGDTXAR = *BLANKS                          CFT009
      C                   EVAL      WIX = 0                                      CFT009
      C                   MOVEL     *Blanks       WVCHG            20
- 
+
       * If CFT009 is on, validate FX/Change charge code                         CFT009
                                                                                 CFT009
      C                   IF        CFT009 = 'Y' AND FXCDE <> *BLANKS            CFT009
@@ -514,7 +516,7 @@
       *
      C                   ENDIF
       *
- 
+
      C                   ENDIF                                                                CFT009
       *                                                                         CFT009
       * If charge code <> blank and charge amount = blank, recalculate          CFT009
@@ -541,7 +543,7 @@
      C     SDCURR        PARM      *BLANKS       DSSDY                          CFT009
                                                                                 CFT009
      C                   EVAL      CHGEXC = A6SPRT                              CFT009
- 
+
       * If use transaction exchange rate, add it in                             CFT009
      C                   IF        CHTRCY = 'Y'                                 CFT009
      C                   IF        PICCY = IPSMCY AND POCCY = IPPCCY            CFT009
@@ -613,17 +615,17 @@
      C     SRValVAT      BEGSR
       *
      C                   MOVEL     WMsgArr(1)    WVCHG
- 
+
       *  If CFT010 on, flag is 'Y'                                              CFT009
       *
      C                   IF        DDVAT7 = *Blanks
- 
+
      C                   IF        CFT010 = 'Y'                                 CFT009
      C                   MOVEL     'Y'           DDVAT7                         CFT009
      C                   ELSE                                                   CFT009
      C                   MOVEL     PVATT         DDVAT7
      C                   ENDIF                                                  CFT009
- 
+
      C                   ELSE
      C                   If        DDVAT7 <> 'Y' and
      C                             DDVAT7 <> 'N'

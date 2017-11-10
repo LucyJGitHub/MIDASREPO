@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *                 MD000091           Date 06May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24663           Date 29Jun09               *
       *                 BUG24496           Date 22Jun09               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  MD000091 - Event Codes Substitution                          *
       *  BUG24663 - Second line should be entered even if input is    *
@@ -31,7 +33,7 @@
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -49,89 +51,89 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
      D Alpha           S              1    DIM(26) CTDATA PERRCD(26)
      D Numeric         S              1    DIM(10) CTDATA PERRCD(10)
- 
+
       ** Incoming Transaction
      D NwOPFilFmt    E DS                  EXTNAME(FTVOPAYPD)
      D NwOPFilFmx    E DS                  EXTNAME(FTVOPY2PD)
- 
+
       ** Cover Message
      D NwOPAScnFmt   E DS                  EXTNAME(FTOPYAPD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D FTEOPYA       E DS                  EXTNAME(FTEOPYAPD)
- 
+
       ** External data structure for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Externally described DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Externally described DS for BIC Directory
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
- 
+
       ** Externally described DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Externally described DS for Counterparty Nostros
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
- 
+
       ** Beneficiary Customer data structure
      D BENCUS          DS           175
      D  WCBC1                  1     35
@@ -139,29 +141,29 @@
      D  WCBC3                 71    105
      D  WCBC4                106    140
      D  WCBC5                141    175
- 
+
       *
       /COPY FTCPYSRC,SFTVALCSLE
       *
       /COPY FTCPYSRC,SFTADDRILE
       *
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIX             S              3P 0
- 
+
       ** Work fields
      D CFT004          S              1A
      D PRTCD           S              7A
@@ -176,12 +178,12 @@
      D P@IBAN          S             34A
      D POWith          S             47A
      D PONobl          S             34A
- 
+
       ** Fields used for SWIFT validation
      D ADLINE          S              1A
      D ADSLON          S              1A
      D ##CSID          S              1A
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -220,7 +222,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialization
       *
@@ -233,7 +235,7 @@
      C                   Eval      WMsgDtaXAr = *Blanks
      C                   Eval      WIX = 0
      C                   Eval      Idx = 0
- 
+
       ** Validate
      C                   ExSr      VOCBC
       *                                                                                       CSW215
@@ -350,7 +352,7 @@
      C                   EndIf
       *
      C                   EndSr
- 
+
      C*****************************************************************
       /EJECT
       *****************************************************************
@@ -411,7 +413,7 @@
      C                   EndIf
       *
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -485,7 +487,7 @@
      C                   Eval      WMsgIdXAr(WIX) = 'FTM2401'
       *
       ** Invalid character
- 
+
      C                   When      PRTCD = '      3'
      C                   Eval      WMsgIdXAr(WIX) = 'FTM2402'
       *
@@ -645,7 +647,7 @@
      C                   ENDIF                                                                CSW215
      C                   ENDSR                                                                CSW215
       *****************************************************************                       CSW215
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -666,7 +668,7 @@
      C     *INZSR        BegSr
       *
      C     *Entry        PList
- 
+
      C                   Parm                    RetCodeIn
      C                   Parm                    NwOPFilFmt
      C                   Parm                    NwOPFilFmx
@@ -719,9 +721,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   EndSr
       *****************************************************************
       /EJECT

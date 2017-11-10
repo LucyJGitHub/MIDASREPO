@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. AR1080200          Date 24Jan13               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 AR1080200          Date 24Jan13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *  AR1080200 - In Charge details 2 tab, charges on the left and *
       *              right hand side of the screen is incorrect       *
@@ -135,7 +137,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -154,55 +156,55 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Payment Status
      D/COPY WNCPYSRC,FTH00457
      D*@STSA****       S             24    DIM(5) CTDATA PERRCD(1)                            CFT157
      D @STSA           S             24    DIM(6) CTDATA PERRCD(1)                            CFT157
      D/COPY WNCPYSRC,FTH00458
- 
+
       * Payment details in file format
      D PmntFilFmt    E DS                  EXTNAME(OTPAYDD)
                                                                                 CFT014
       ** Payment detail extension in file format                                CFT014
      D PmntFilFmX    E DS                  EXTNAME(OTPAYXPD)                    CFT014
- 
+
       * Payment details in screen formats
      D PmtScnFmt1    E DS                  EXTNAME(FTOPY1PD)
      D PmtScnFm1b    E DS                  EXTNAME(FTOPY1APD)                   CFT014
@@ -214,41 +216,41 @@
      D PmtScnFmt7    E DS                  EXTNAME(FTOPY7PD)                    CFT014
      D PmtScnFmtA    E DS                  EXTNAME(FTOPYAPD)                                  CSW209
      D PmtScnFmtC    E DS                  EXTNAME(FTOPYCPD)                                  CSW209
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D*SDFODA****    E DS                  EXTNAME(SDFODAPD)                    179994
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)                    179994
       ** EXTERNAL DS FOR FUNDS TRANSFER ICD DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
      D XLCD          E                     EXTFLD(LCD)
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDMGME        E DS                  EXTNAME(SDMGMEPD)                                  219241
       ** External DS for Midas Message Management ICD                                         219241
                                                                                               219241
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
       *                                                                                       CER030
      D PmtScnFmt7A   E DS                  EXTNAME(FTOPY7APD)                                 CER030
       *                                                                                       CER030
      D PmtScnFmt7B   E DS                  EXTNAME(FTOPY7BPD)                                 CER030
- 
+
      D P8FT            DS           128                                                       195220
       *                                                                                       195220
       ** Currency                                                                             195220
@@ -309,11 +311,11 @@
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
+
      D                 DS
      D  @@SXP1                 1      1  0
      D  @@SXP2                 2      2  0
- 
+
      D*
      D                 DS
      D**  Data structures for re-definition of screen fields
@@ -342,7 +344,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Msg Unique Reference                                                                  190845
      D SHMSGR          S              8  0                                                    190845
      D                                                                                        190845
@@ -358,7 +360,7 @@
      D CER030          S              1                                                       CER030
      D CFT003          S              1                                                       CER030
      D CGL013          S              1                                                       CER030
- 
+
       *                                                                                       CFT120
       ** CFT120 switchable field                                                              CFT120
       *                                                                                       CFT120
@@ -753,7 +755,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       SNDAT
      C                   END
- 
+
      C**  Final Payment Date
      C     FDATD1        IFNE      0
      C     BJDFIN        IFEQ      'D'
@@ -765,7 +767,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       SFIND
      C                   END
- 
+
      C**  Transfer Comission tariff
      C                   MOVEL     TRCT          STRCT
      C*
@@ -1227,7 +1229,7 @@
      C                   EXSR      FMTAMT                                                  BUG17019A
      C                   MOVE      @@AMTD        STOTVA                                    BUG17019A
                                                                                 CFT014
- 
+
       ** Get currency's number of decimal places                                CFT014
                                                                                 CFT014
      C                   If        (SCDRO <> *Blank)                            CFT014
@@ -1509,7 +1511,7 @@
      C                   EXSR      FMTAMT                                       CAP084
      C                   MOVE      @@AMTD        STOTVB                         CAP084
      C                   ENDIF                                                  CFT009
- 
+
      C*
      C**  V.A.T. flags
      C                   MOVEL     OPVAT1        SVAT1
@@ -1519,7 +1521,7 @@
      C                   MOVEL     OPVAT5        SVAT5
      C                   MOVEL     OPVAT6        SVAT6
      C                   MOVEL     OPVAT7        SVAT7
- 
+
      C                   IF        @CFT010 = 'Y'                                CFT009
      C                   EVAL      VAT9 = VMIC1                                 CFT009
      C                   EVAL      VAT10 = VMIC2                                CFT009
@@ -1539,7 +1541,7 @@
      C*
      C**  Set up FX margin fields if feature on.
      C     BGN0ST        IFEQ      'Y'
- 
+
      C**  FX Margin Points.
      C*
      C**  Format amount
@@ -1565,7 +1567,7 @@
      C                   MOVEL     MSIG          SMSIG
      C*
      C                   END
- 
+
      C* Set up STATUS FLAG for display.
      ** Authorised
      C     RECI          IFEQ      'D'
@@ -1610,10 +1612,10 @@
      C     DTCH          IFNE      *BLANKS
      C                   MOVEL     DTCH          SDTCH
      C                   ELSE
- 
+
      C                   if        PmtScnFmt2 <> *blanks OR PmtScnFmt3
      C                             <> *blanks OR PmtScnFmt4 <> *blanks
- 
+
       ** If CFT014 is installed, retrieve the default value from the                          219241
       ** Message Management ICD                                                               219241
                                                                                               219241
@@ -1623,9 +1625,9 @@
      C                   MOVEL     'BEN'         SDTCH
      C/COPY WNCPYSRC,FTOPAYNC03
      C                   ENDIF                                                                219241
- 
+
      C                   endif
- 
+
      C                   ENDIF
      C*                                                                         175479
      C**  Deal Reference                                                        175476
@@ -2041,7 +2043,7 @@
       *
       *  Validation Work Fields
      C                   PARM                    Val@Fields
- 
+
       * Payment Status
      C                   PARM                    PmntStatus       24
       *

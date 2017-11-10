@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 MD000091           Date 07May13               *
       *                 261152             Date 24Apr13               *
       *                 MD019877           Date 10Apr13               *
       *                 CFT120             Date 28Sep12               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *  MD000091 - Event Codes Substitution                          *
       *  261152 - Payment reference should be blank at insert mode.   *
@@ -116,7 +118,7 @@
      F                                     INFDS(INFDS)
      FOTPAYXL0  IF   E           K DISK    INFSR(*PSSR)                         CFT014
      F/COPY WNCPYSRC,FTOPAYIF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -135,39 +137,39 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -175,37 +177,37 @@
                                                                                               CSC024
       ** String for System Values Array                                                       CSC024
      D SysValOME       C                   CONST('OMEIndicator')                              CSC024
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Data structure for file status of FT deals file.
      D INFDS           DS
      D  RECORD           *RECORD
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D*SDFODA*****   E DS                  EXTNAME(SDFODAPD)                    179994
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)                    179994
       ** EXTERNAL DS FOR FUNDS TRANSFER ICD DETAILS
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
      D/COPY WNCPYSRC,FTOPAYID01
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D PmntFilFmt    E DS                  EXTNAME(OTPAYDD)
       ** Payment in File Format
                                                                                 CFT014
@@ -218,19 +220,19 @@
       ** Externally described DS for SAR details                                              CSC024
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC024
      D SLCD          E                     EXTFLD(LCD)                                        CSC024
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
       *                                                                                       CGL029
      D/COPY WNCPYSRC,FTH00334
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       *                                                                                     MD000091
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -243,45 +245,45 @@
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * INITIALIZATION
      C                   EXSR      INIT
- 
+
       * IF THE MODE IS 'FRONT OFFICE TRANSACTION INTERFACE'
       * DO (EXTRA) VALIDATION FOR FRONT OFFICE TRANSACTION INTERFACE
      C     ModeofOp      IFEQ      '*FRONT'
      C                   EXSR      VFRNT
- 
+
       **  Carry out no further validation if errors have occurred.
      C     OKACTN        IFEQ      'N'
      C     OKPREF        OREQ      'N'
      C                   RETURN
      C                   END
      C                   END
- 
+
       * VALIDATE ACTION CODE & Payment Reference
      C                   EXSR      VAL
- 
+
       **  Carry out no further validation if errors have occurred.
      C     OKACTN        IFEQ      'N'
      C     OKPREF        OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       *  *--------------------------------*
       *  * Validation for Action Code 'E' *
       *  *--------------------------------*
      C     SACTION       IFEQ      'E'
      C                   EXSR      VALACE
      C                   END
- 
+
       *  *--------------------------------*
       *  * Validation for Action Code 'I' *
       *  *--------------------------------*
@@ -290,14 +292,14 @@
      C     SPREF         ANDNE     *BLANKS
      C                   EXSR      VALACI
      C                   END
- 
+
       *  *--------------------------------*
       *  * Validation for Action Code 'A' *
       *  *--------------------------------*
      C     SACTION       IFEQ      'A'
      C                   EXSR      VALACA
      C                   END
- 
+
       *  *--------------------------------*
       *  * Validation for Action Code 'D' *
       *  *--------------------------------*
@@ -315,20 +317,20 @@
      C                   EVAL      MsgIdArr(Ix) = '5047363'                                   CFT157
      C                   ENDIF                                                                CFT157
      C                   ENDIF                                                                CFT157
- 
+
       **  Carry out no further validation if errors occurred.
      C     OKACTN        IFEQ      'N'
      C     OKPREF        OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       *  *-----------------------------------------------*
       *  * Access Security Checking                      *
       *  *-----------------------------------------------*
      C     RespMode      IFEQ      'S'
      C                   EXSR      ACSSEC
      C                   END
- 
+
       * Return
      C                   RETURN
       *****************************************************************
@@ -338,7 +340,7 @@
       *****************************************************************
      C     VFRNT         BEGSR
      C/COPY WNCPYSRC,FTH00502
- 
+
       * ERROR IF ACTION CODE IS NOT 'I', 'A, or 'D'
      C     SACTION       IFNE      'I'
      C     SACTION       ANDNE     'A'
@@ -360,7 +362,7 @@
      C                   GOTO      EVFRNT                                                     CFT157
      C                   ENDIF                                                                CFT157
       *                                                                                       CFT157
- 
+
       * ERROR IF FRONT OFFICE TRANSACTION ID IS BLANK
      C     FOTRID        IFEQ      *BLANK
      C                   MOVE      'N'           OKACTN
@@ -369,13 +371,13 @@
      C                   MOVEL     'APM0101'     MsgIdArr(Ix)
      C                   GOTO      EVFRNT
      C                   END
- 
+
       * ACCESS Payment WITH FRONT OFFICE TRANSACTION ID
      C     FOTRID        CHAIN     OTPAYFOI                           99
- 
+
       * IF INSERT
      C     SACTION       IFEQ      'I'
- 
+
       * FRONT OFFICE TRANSACTION ID CAN'T BE PRESENT ALREADY
      C     *IN99         IFEQ      '0'
      C                   MOVE      'N'           OKACTN
@@ -387,9 +389,9 @@
      C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOTRID)                    MD000091
      C                   GOTO      EVFRNT
      C                   END
- 
+
      C                   ELSE
- 
+
       * IF NOT INSERT, FRONT OFFICE TRANSACTION ID MUST BE PRESENT
      C     *IN99         IFEQ      '1'
      C/COPY WNCPYSRC,FTH00467
@@ -405,12 +407,12 @@
      C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOTRID)                    MD000091
      C                   GOTO      EVFRNT
      C                   END
- 
+
       * IF NOT INSERT, UPDATE MIDAS Payment Reference
      C                   MOVEL     PREF          SPREF
- 
+
      C                   END
- 
+
      C     EVFRNT        ENDSR
       *****************************************************************
       /EJECT
@@ -418,12 +420,12 @@
       * VAL - VALIDATION OF ACTION CODE AND PAYMENT REFERENCE
       *****************************************************************
      C     VAL           BEGSR
- 
+
       **  For Level 1 maintenance....
      C     @Level        IFEQ      '1'
- 
+
       **  Check that the action code is valid.
- 
+
      C/COPY WNCPYSRC,FTH00468
      C*****SACTION       IFNE      'I'                                                     MD019877
      C*****SACTION       ANDNE     'A'                                                     MD019877
@@ -436,17 +438,17 @@
      C**********         GOTO      EVALAI                                                  MD019877
      C**********         END                                                               MD019877
      C/COPY WNCPYSRC,FTH00335
- 
+
       **  If action code not 'I' payment reference must be entered....
      C     SACTION       IFNE      'I'
- 
+
      C     SPREF         IFEQ      *BLANKS
      C                   MOVE      'N'           OKPREF
      C                   ADD       1             Ix
      C                   MOVEL     'SPREF  '     FldNameArr(Ix)
      C                   MOVEL     'MMA1062'     MsgIdArr(Ix)
      C                   ELSE
- 
+
      **  .... and must match that on file.
      C     SPREF         CHAIN     OTPAYDDF                           88
      C     *IN88         IFEQ      '1'
@@ -502,7 +504,7 @@
      C                   ELSE
       *
       **  Check that the action code is valid.
- 
+
      C     SACTION       IFNE      'I'
      C     SACTION       ANDNE     'A'
      C     SACTION       ANDNE     'E'
@@ -512,7 +514,7 @@
      C                   MOVEL     'FDM0099'     MsgIdArr(Ix)
      C                   GOTO      EVALAI
      C                   END
- 
+
       ** Record must be on file.
      C     SPREF         CHAIN     OTPAYDDF                           88
      C     *IN88         IFEQ      '1'
@@ -558,9 +560,9 @@
       * VALACE - VALIDATION OF ACTION CODE 'E'
       *****************************************************************
      C     VALACE        BEGSR
- 
+
       **  If the Payment reference is blank, it is an error.
- 
+
      C     SPREF         IFEQ      *BLANKS
      C                   MOVE      'N'           OKPREF
      C                   ADD       1             Ix
@@ -568,10 +570,10 @@
      C                   MOVEL     'MMM0111'     MsgIdArr(Ix)
      C                   GOTO      EVALAE
      C                   END
- 
+
      C**  If there is no valid record on OTPAY, it is an error.
      C     SPREF         CHAIN     OTPAY                              65
- 
+
      C     *IN65         IFEQ      '1'
      C                   MOVE      'N'           OKPREF
      C                   ADD       1             Ix
@@ -579,7 +581,7 @@
      C                   MOVEL     'MMA1061'     MsgIdArr(Ix)
      C                   GOTO      EVALAE
      C                   END
- 
+
      C     EVALAE        ENDSR
      C/COPY WNCPYSRC,FTH00469
       /EJECT
@@ -642,24 +644,24 @@
       * VALACI - VALIDATION OF ACTION CODE 'I'
       *****************************************************************
      C     VALACI        BEGSR
- 
+
       **  For Level 1 input:
      C/COPY WNCPYSRC,FTH00336
       **  If the Action code is 'I', payment reference must be blank.
      C     @Level        IFEQ      '2'
- 
+
       ** Else for Level 2 input
       ** Payment reference must not already contain level 2 details
- 
+
      C     LVL2          IFEQ      'Y'
      C                   MOVE      'N'           OKPREF
      C                   ADD       1             Ix
      C                   MOVEL     'SPREF  '     FldNameArr(Ix)
      C                   MOVEL     'MMA1102'     MsgIdArr(Ix)
      C                   END
- 
+
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -667,10 +669,10 @@
       * VALACA - VALIDATION OF ACTION CODE 'A'
       *****************************************************************
      C     VALACA        BEGSR
- 
+
       **  If there is no valid, live record on OTPAY, it is an error.
      C     SPREF         CHAIN     OTPAY                              65
- 
+
      C     *IN65         IFEQ      '1'
      C     RECI          ORNE      'D'
      C                   MOVE      'N'           OKPREF
@@ -679,7 +681,7 @@
      C                   MOVEL     'MMA1061'     MsgIdArr(Ix)
      C                   GOTO      EVALAA
      C                   END
- 
+
      **  Error if payment authorised.
      C     PYTP          IFNE      'RP'
      C     AUIN          ANDEQ     'Y'
@@ -691,7 +693,7 @@
       *
       ** If amend and level 2 not complete, error when called from
       ** Level 2 maintenance.
- 
+
      C     @Level        IFEQ      '2'
      C     RECI          IFEQ      'D'
      C     LVL2          ANDNE     'Y'
@@ -701,7 +703,7 @@
      C                   MOVEL     'MMA1103'     MsgIdArr(Ix)
      C                   END
      C                   END
- 
+
      C     EVALAA        ENDSR
       *****************************************************************
       /EJECT
@@ -709,10 +711,10 @@
       * VALACD - VALIDATION OF ACTION CODE 'D'
       *****************************************************************
      C     VALACD        BEGSR
- 
+
       **  If there is no valid, live record on OTPAY, it is an error.
      C     SPREF         CHAIN     OTPAY                              65
- 
+
      C     *IN65         IFEQ      '1'
      C     RECI          ORNE      'D'
      C                   MOVE      'N'           OKPREF
@@ -721,7 +723,7 @@
      C                   MOVEL     'MMA1061'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   END
- 
+
      **  Error if payment authorised.
      C     PYTP          IFNE      'RP'
      C     AUIN          ANDEQ     'Y'
@@ -739,7 +741,7 @@
       * ACSSEC - ACCESS SECURITY CHECKING
       *****************************************************************
      C     ACSSEC        BEGSR
- 
+
       * If not multi-branching, check authority to only action code
      C     BJSBRC        IFNE      *BLANK
       *                                                                                       209408
@@ -760,7 +762,7 @@
      C                   GOTO      EACSSE
      C                   END
      C                   END
- 
+
       * If multi-branching, check authority to booking branch
      C     BJSBRC        IFEQ      *BLANK
      C     SACTION       IFEQ      'I'
@@ -773,7 +775,7 @@
      C                   ELSE
      C                   MOVE      BRCA          ZBR
      C                   END
- 
+
      C     SACTION       IFEQ      'I'
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
@@ -782,7 +784,7 @@
      C                   PARM      SBRCA         @DSNB             3
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      'N'           OKBRCA
      C                   ADD       1             Ix
@@ -805,7 +807,7 @@
      C                   ENDIF                                                                201852
      C     @@ERR         IFEQ      1
      C                   MOVE      'N'           OKACTN
- 
+
       ** (If Insert then highlight branch field else Payment reference)
      C     SACTION       IFEQ      'I'
      C                   MOVE      'N'           OKBRCA
@@ -819,7 +821,7 @@
      C                   END
      C     @@ERR         IFEQ      2
      C                   MOVE      'N'           OKACTN
- 
+
       ** (If Insert then highlight branch field else Payment reference)
      C     SACTION       IFEQ      'I'
      C                   MOVE      'N'           OKBRCA
@@ -831,7 +833,7 @@
      C                   MOVEL     'FXM0291'     MsgIdArr(Ix)
      C                   GOTO      EACSSE
      C                   END
- 
+
       * Check authority to originating branch
      C     BKOBUV        IFEQ      'Y'
      C     SACTION       ANDNE     'E'
@@ -857,7 +859,7 @@
      C                   END
      C                   END
      C                   END
- 
+
      C     EACSSE        ENDSR
       *****************************************************************
       /EJECT
@@ -871,14 +873,14 @@
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C                   IN        ZMUSER                                                    BUG7029
      C                   UNLOCK    ZMUSER                                                    BUG7029
- 
+
       * CLEAR OUTPUTS
      C                   CLEAR                   PmntFilFmt
      C                   CLEAR                   PmntFilFmX                     CFT014
      C                   MOVEL     'Y'           OKACTN
      C                   MOVEL     'Y'           OKPREF
      C                   MOVEL     'Y'           OKBRCA
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -886,10 +888,10 @@
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Parameters
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       * Return code
      C                   PARM                    RetCodeIn
@@ -910,7 +912,7 @@
      C                   PARM                    @Level            1
       * @CFT014 workfield                                                       CFT014
      C                   PARM                    Val@Fields                     CFT014
- 
+
       * OUTPUTS
       * (Current) Payment in file format
      C                   PARM                    PmntFilFmt
@@ -951,9 +953,9 @@
      C                   Else                                                                 CFT157
      C                   Movel     'N'           CFT157                                       CFT157
      C                   ENDIF                                                                CFT157
- 
+
       ** Initialize program name
- 
+
      C                   MOVEL     'FTOPAYRTV'   DBPGM
       *                                                                                       201852
       ** Check if enquiry comes from GL4442                                                   201852
@@ -961,7 +963,7 @@
      C                   MOVEL     ' '           @GL442                                       201852
      C                   MOVEL     RetCodeIn     @GL442            1                          201852
      C                   MOVE      *Blanks       RetCodeIn                                    201852
- 
+
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -1005,7 +1007,7 @@
      C                   Parm      '*DBERR'      @RTCD                          179994
      C                   Parm      '*FIRST'      @OPTN                          179994
      C     SDFTFR        Parm      SDFTFR        DSFDY                          179994
- 
+
       * DATABASE ERROR
      C     @RTCD         IFNE      *BLANK
      C                   MOVEL     @OPTN         DBKEY
@@ -1083,7 +1085,7 @@
      C**********         IN        ZMUSER                                                    BUG7029
      C**********         UNLOCK    ZMUSER                                                    BUG7029
      C/COPY WNCPYSRC,FTH00338
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

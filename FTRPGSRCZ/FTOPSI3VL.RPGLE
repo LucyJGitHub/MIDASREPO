@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. AR1097264          Date 27Mar13               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 AR1097264          Date 27Mar13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -42,6 +43,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  AR1097264 - Field validation that if charge to debit of      *

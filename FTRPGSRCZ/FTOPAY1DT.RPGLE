@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR898162           Date 25Nov14               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. AR898162           Date 25Nov14               *
+      *                 CFT157             Date 29Aug14               *
       *                 AR895223           Date 19Nov12               *
       *                 CFT120             Date 28Sep12               *
       *                 AR572042           Date 21Sep12               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  AR898162 - Charge codes passed via API are lost              *
       *             (Child: AR898163)                                 *
       *  CFT157 - Stop FT Transaction after Authorisation             *
@@ -111,7 +113,7 @@
       ** +--------------------------------------+
      FFTPCHGL0  IF   E           K DISK
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -130,113 +132,113 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XARRAYMAX       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Factors table
      D FCTR            S              4  0 DIM(4) CTDATA PERRCD(1)
- 
+
       ** Array of Fields in error.
      D FLDNAMXAR       S             10A   DIM(XARRAYMAX)
- 
+
       ** Array of error message IDs
      D MSGIDXAR        S                   DIM(XARRAYMAX) LIKE(#MSGID)
- 
+
       ** Array of error message data.
      D MSGDTAXAR       S                   DIM(XARRAYMAX) LIKE(#MSGDATA)
- 
+
       ** Array of Warning in error.
      D WFLDNMXAR       S             10A   DIM(XARRAYMAX)
- 
+
       ** Array of Warning message IDs
      D WMSGIDXAR       S                   DIM(XARRAYMAX) LIKE(#MSGID)
- 
+
       ** Array of Warning message data.
      D WMSGDTAXAR      S                   DIM(XARRAYMAX) LIKE(#MSGDATA)
- 
+
       * Incoming Transaction
      D TRANINPRIM    E DS                  EXTNAME(FTOPY1PD)
- 
+
       ** Payment Extension Details layout
      D TRANINPRMB    E DS                  EXTNAME(FTOPY1APD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFLAGSDS     E DS                  EXTNAME(FTEOPY1PD)
- 
+
       * Validation Work Fields
      D VAL@FIELDS    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       * Valid Payments layout
      D VALIDPMNT     E DS                  EXTNAME(FTVOPAYPD)
      D  QQCDR1       E                     EXTFLD(QQCDRO)                                     CGL029
- 
+
       ** Valid Outgoing Payments Extension File
      D VALIDPMTX     E DS                  EXTNAME(FTVOPY2PD)
- 
+
       ** New Payment in Screen Format (Lvl 2 Screen 4 Chrgs and Comms screen)
      D NEWPMTSCN4    E DS                  EXTNAME(FTOPY6PD)
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       * External data structure for currency codes
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       * External DS for Funds Transfer details
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       *  Transaction details file parameter for FT000980
      D TRNDET          DS          3000
- 
+
       *  Transaction details extension file parameter for FT000980
      D TRNEXT          DS          3000
- 
+
       *  Data structure to retrieve VAT rate
      DVATDS            DS
      D WVATR                  10     12P 4
- 
+
      D* Parameters for AOCCYCV0
      D D#DTA           DS           256
      D  D#FCCY                 1      3
@@ -255,60 +257,60 @@
      D   FTM28RT2             18     33A                                                     242480A
      D   FTM28SP2             34     34A                                                     242480A
                                                                                              242480A
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D IDX             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIX             S              3P 0
- 
+
       * Parameters for FT000980
- 
+
      D RTN980          S             10
      D TRNTYP          S              2
      D PRCMTD          S              1
      D MESTYP          S              3
      D SETNUM          S              3
- 
+
       * Parameters for ZALIGN/ZEDIT
- 
+
      D ZFIELD          S             16
      D ZADEC           S              1  0
      D ZALIGNOK        S              1
      D ZADIG           S              2  0
- 
+
       * Parameters for AOCURRR0
- 
+
      D C#RTCD          S              7
      D C#OPTN          S              7
      D C#K101          S              3
- 
+
       * Work fields
- 
+
      D CRATE           S             14
      D CDATE           S              6
- 
+
      D* Parameters for AOCCYCV0
      D C#ACTN          S              8
- 
+
       * Charges Currency Decimal Places
      D ChgCcyDP        S                   Like(A6NBDP)
- 
+
       *                                                                                       CFT120
       ** CFT120 switchable field                                                              CFT120
       *                                                                                       CFT120
      D CFT120          S              1A                                                      CFT120
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -323,9 +325,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   EVAL      RETCODEIN = *BLANKS
      C                   EVAL      FLDNAMXAR = *BLANKS
      C                   EVAL      MSGIDXAR  = *BLANKS
@@ -338,38 +340,38 @@
       *
      C                   CLEAR                   TRNDET
      C                   CLEAR                   TRNEXT
- 
+
       * Charge currency
- 
+
      C                   SELECT
      C                   WHEN      BTCHCY = 'C'
- 
+
      C                   IF        OTADDC = 'A'
      C                   EVAL      O2CCDE = OTSMCY
      C                   ELSE
      C                   EVAL      O2CCDE = OTPCCY
      C                   ENDIF
- 
+
      C                   WHEN      BTCHCY = 'L'
      C                   EVAL      O2CCDE = BJLCCY
- 
+
      C                   WHEN      BTCHCY = 'F'
      C                   EVAL      O2CCDE = FCHCCY
- 
+
      C                   WHEN      BTCHCY = 'B'
      C                   EVAL      O2CCDE = BJCYCD
- 
+
      C                   OTHER
      C                   MOVEL     '001'         DBASE
      C                   MOVEL     O2CCDE        DBKEY
      C                   EXSR      *PSSR
      C                   ENDSL
- 
+
      C                   EVAL      @CCCY = O2CCDE
- 
+
       * If using exchange rate from transaction, move in the correct
       * rate.
- 
+
      C                   IF        CHTRCY = 'Y'
      C                   EVAL      O2XRTE = OTRATE
      C                   ENDIF
@@ -387,12 +389,12 @@
      C                   EVAL      RTN980 = '*NONE   '
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      TRNDET = VALIDPMNT
      C                   EVAL      TRNEXT = VALIDPMTX
- 
+
       * Default charges
- 
+
      C                   CALLB     'FT000980'
      C                   PARM                    RTN980
      C                   PARM                    TRNDET
@@ -401,7 +403,7 @@
      C                   PARM      'M'           PRCMTD
      C                   PARM      *BLANKS       MESTYP
      C                   PARM      *BLANKS       SETNUM
- 
+
      C                   EVAL      VALIDPMNT = TRNDET
      C                   EVAL      VALIDPMTX = TRNEXT
                                                                                             AR898162
@@ -418,9 +420,9 @@
      C                   EXSR      SET_CHARGECODS                                           AR898162
      C                   EXSR      SET_CHARGEAMTS                                           AR898162
      C                   ENDIF                                                              AR898162
- 
+
       * Move charge codes to screen fields
- 
+
      C                   IF        TRCDE = *BLANKS AND STRCD = *BLANKS                      AR572042
      C                   EVAL      TRCDE = O2TFCD
      C                   ELSE                                                               AR572042
@@ -551,18 +553,18 @@
      C                   IF        SRATE <> *BLANKS
      C                   EVAL      FTM0028DS = *BLANKS                                       242480A
                                                                                              242480A
- 
+
       * Convert decimal rate to character rate for comparison against
       * screen rate
- 
+
      C                   EVAL      ZFIELD = *BLANKS
      C                   MOVE      OTRATE        ZFIELD
      C                   EVAL      ZADEC = 8
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
- 
+
      C                   MOVE      ZFIELD        CRATE
      C                   MOVEL     CRATE         FTM28RT1                                    242480A
      C                   MOVEL     SRATE         FTM28RT2                                    242480A
@@ -583,10 +585,10 @@
                                                                                              242480A
      C     *LIKE         DEFINE    OTRATE        TPRATE                                      242480A
      C                   MOVE      ZFIELD        TPRATE                                      242480A
- 
+
      C**********         IF        CRATE <> SRATE                                            242480A
      C                   IF        OTRATE <> TPRATE                                          242480A
- 
+
       **Convert*screen*rate to decimal rate for update                                       242480A
       *********                                                                              242480A
      C*********          EVAL      ZFIELD = *BLANKS                                          242480A
@@ -602,9 +604,9 @@
       *********                                                                              242480A
      C*********          MOVE      ZFIELD        OTRATE                                      242480A
      C                   Z-ADD     TPRATE        OTRATE                                      242480A
- 
+
       * Warning
- 
+
      C                   MOVE      'W'           OKRATE
      C                   ADD       1             WIX
      C                   MOVEL     'SRATE'       WFLDNMXAR(WIX)
@@ -614,19 +616,19 @@
      C                   Z-ADD     WIX           WX                                          242480A
      C                   MOVEL     FTM0028DS     WMSGDTAXAR(WX)                              242480A
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      ZFIELD = *BLANKS
      C                   MOVE      OTRATE        ZFIELD
      C                   EVAL      ZADEC = 8
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
- 
+
      C                   MOVE      ZFIELD        SRATE
- 
+
      C                   IF        @MDIN = 1
      C                   EVAL      OTRATED = OTRATE
      C                   ELSE
@@ -634,45 +636,45 @@
      C                   ENDIF
       * Pay amount
      C                   MOVE      SPCCY         C#K101
- 
+
      C                   EXSR      CURRED
- 
+
      C                   EVAL      ZFIELD = *BLANKS
      C                   MOVE      OTPYAM        ZFIELD
      C                   EVAL      ZADEC = A6NBDP
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
- 
+
      C                   MOVE      ZFIELD        SPYAM
- 
+
      C                   EVAL      OTPYAMD = OTPYAM
      C                   DO        A6NBDP
      C                   EVAL      OTPYAMD = OTPYAMD / 10
      C                   ENDDO
- 
+
       * Settle amount
      C                   MOVE      SSMCY         C#K101
- 
+
      C                   EXSR      CURRED
- 
+
      C                   EVAL      ZFIELD = *BLANKS
      C                   MOVE      OTSMAM        ZFIELD
      C                   EVAL      ZADEC = A6NBDP
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
- 
+
      C                   MOVE      ZFIELD        SSMAM
- 
+
      C                   Eval      OTSMAMD = OTSMAM
- 
+
      C                   DO        A6NBDP
      C                   EVAL      OTSMAMD = OTSMAMD / 10
      C                   ENDDO
- 
+
      C                   ENDIF
       *
       ** If screen settle date <> defaulted date, issue warning
@@ -681,9 +683,9 @@
       *
      C                   IF        SPYDT <> *BLANKS
      C                   MOVE      OTSLDTD1      CDATE
- 
+
      C                   IF        SPYDT <> CDATE
- 
+
      C                   MOVE      SPYDT         OTSLDTD1
       * Warning
      C                   MOVE      'W'           OKPYDT
@@ -691,37 +693,37 @@
      C                   MOVEL     'SPYDT'       WFLDNMXAR(WIX)
      C                   MOVEL     'FTF3156'     WMSGIDXAR(WIX)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   MOVE      OTSLDTD1      SPYDT
- 
+
       ** Convert settle date into various formats
- 
+
      C                   CALLB     'FTVSEDT'
       * INPUTS
       *  Return Code
      C                   PARM                    RETCODEOUT
- 
+
       *  Screen fields
      C                   PARM                    TRANINPRIM
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FLDNAMXAR
      C                   PARM                    MSGIDXAR
      C                   PARM                    MSGDTAXAR
- 
+
      C                   PARM                    WFLDNMXAR
      C                   PARM                    WMSGIDXAR
      C                   PARM                    WMSGDTAXAR
- 
+
       *  OK Flags
      C                   PARM                    OKFLAGSDS
- 
+
       *  Validation Work Fields
      C                   PARM                    VAL@FIELDS
- 
+
      C                   EVAL      OTSLDT = @SLDT
      C                   EVAL      OTSLDTD1 = @SLDTD1
      C                   EVAL      OTSLDTD2 = @SLDTD2
@@ -735,7 +737,7 @@
      C                   IF        SPYVD <> *BLANKS
      C                   MOVE      OTPVDTD1      CDATE
      C                   IF        SPYVD <> CDATE
- 
+
      C                   MOVE      SPYVD         OTPVDTD1
       * Warning
      C                   MOVE      'W'           OKPYVD
@@ -743,273 +745,273 @@
      C                   MOVEL     'SPYVD'       WFLDNMXAR(WIX)
      C                   MOVEL     'FTF3155'     WMSGIDXAR(WIX)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVE      OTPVDTD1      SPYVD
- 
+
       ** Convert pay date into various formats
- 
+
      C                   CALLB     'FTVPYDT'
       * INPUTS
       *  Return Code
      C                   PARM                    RETCODEOUT
- 
+
       *  Screen fields
      C                   PARM                    TRANINPRIM
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FLDNAMXAR
      C                   PARM                    MSGIDXAR
      C                   PARM                    MSGDTAXAR
- 
+
      C                   PARM                    WFLDNMXAR
      C                   PARM                    WMSGIDXAR
      C                   PARM                    WMSGDTAXAR
- 
+
       *  OK Flags
      C                   PARM                    OKFLAGSDS
- 
+
       *  Validation Work Fields
      C                   PARM                    VAL@FIELDS
- 
+
      C                   Eval      OTPRBD = @PRBD
      C                   Eval      OTPVDT = @PVDT
      C                   Eval      OTPVDTD1 = @PVDTD1
      C                   Eval      OTPVDTD2 = @PVDTD2
      C                   Eval      OTPVDTD3 = @PVDTD3
- 
+
      C                   ENDIF
- 
+
       ** Default VAT flags, total VAT, VAT rate, file DAF format for
       ** charges, entry charges
- 
+
      C                   EXSR      CHGENT
      C                   EXSR      CHGVAT
       * RETURN
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
       *****************************************************************
       * CURRED - READ CURRENCY FILE                                   *
       *****************************************************************
- 
+
      C     CURRED        BEGSR
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*DBERR '     C#RTCD
      C                   PARM      '*KEY   '     C#OPTN
      C                   PARM                    C#K101
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * CHGVAT - Default VAT flags, VAT rate, VAT totals              *
       *****************************************************************
- 
+
      C     CHGVAT        BEGSR
- 
+
       ** Default VAT flags
- 
+
      C                   IF        @CFT010 = 'Y'
- 
+
       ** Telex VAT flag
- 
+
      C                   IF        O2TXCD <> *BLANKS
      C     O2TXCD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      SVAT2 = 'Y'
      C                   ELSE
      C                   EVAL      SVAT2 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      SVAT2 = 'Y'
      C                   ENDIF
- 
+
       ** Cheque VAT flag
- 
+
      C                   IF        O2CQCD <> *BLANKS
      C     O2CQCD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      SVAT3 = 'Y'
      C                   ELSE
      C                   EVAL      SVAT3 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      SVAT3 = 'Y'
      C                   ENDIF
- 
+
       ** Costs Abroad VAT flag
- 
+
      C                   IF        O2CACD <> *BLANKS
      C     O2CACD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      SVAT4 = 'Y'
      C                   ELSE
      C                   EVAL      SVAT4 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      SVAT4 = 'Y'
      C                   ENDIF
- 
+
       ** SWIFT standard VAT flag
- 
+
      C                   IF        O2SSCD <> *BLANKS
      C     O2SSCD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      VAT14 = 'Y'
      C                   ELSE
      C                   EVAL      VAT14 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      VAT14 = 'Y'
      C                   ENDIF
- 
+
       ** SWIFT priority VAT flag
- 
+
      C                   IF        O2SPCD <> *BLANKS
      C     O2SPCD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      SVAT5 = 'Y'
      C                   ELSE
      C                   EVAL      SVAT5 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      SVAT5 = 'Y'
      C                   ENDIF
- 
+
       ** Miscellaneous VAT flag
- 
+
      C                   IF        O2MSCD <> *BLANKS
      C     O2MSCD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      SVAT6 = 'Y'
      C                   ELSE
      C                   EVAL      SVAT6 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      SVAT6 = 'Y'
      C                   ENDIF
- 
+
       ** Miscellaneous 1 VAT flag
- 
+
      C                   IF        O2M1CD <> *BLANKS
      C     O2M1CD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      VAT9 = 'Y'
      C                   ELSE
      C                   EVAL      VAT9 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      VAT9 = 'Y'
      C                   ENDIF
- 
+
       ** Miscellaneous 2 VAT flag
- 
+
      C                   IF        O2M2CD <> *BLANKS
      C     O2M2CD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      VAT10 = 'Y'
      C                   ELSE
      C                   EVAL      VAT10 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      VAT10 = 'Y'
      C                   ENDIF
- 
+
       ** Miscellaneous 3 VAT flag
- 
+
      C                   IF        O2M3CD <> *BLANKS
      C     O2M3CD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      VAT11 = 'Y'
      C                   ELSE
      C                   EVAL      VAT11 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      VAT11 = 'Y'
      C                   ENDIF
- 
+
       ** Miscellaneous 4 VAT flag
- 
+
      C                   IF        O2M4CD <> *BLANKS
      C     O2M4CD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      VAT12 = 'Y'
      C                   ELSE
      C                   EVAL      VAT12 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      VAT12 = 'Y'
      C                   ENDIF
- 
+
       ** Miscellaneous 5 VAT flag
- 
+
      C                   IF        O2M5CD <> *BLANKS
      C     O2M5CD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      VAT13 = 'Y'
      C                   ELSE
      C                   EVAL      VAT13 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      VAT13 = 'Y'
      C                   ENDIF
- 
+
       ** Transfer Commission VAT flag
- 
+
      C                   IF        O2TFCD <> *BLANKS
      C     O2TFCD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      SVAT1 = 'Y'
      C                   ELSE
      C                   EVAL      SVAT1 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      SVAT1 = 'Y'
      C                   ENDIF
- 
+
       ** FX/change VAT flag
- 
+
      C                   IF        O2FXCD <> *BLANKS
      C     O2FXCD        CHAIN     FTPCHGL0
- 
+
      C                   IF        VATLIN = 'Y'
      C                   EVAL      SVAT7 = 'Y'
      C                   ELSE
      C                   EVAL      SVAT7 = 'N'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      SVAT7 = 'Y'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      SVAT2 = 'N'
      C                   EVAL      SVAT3 = 'N'
@@ -1025,130 +1027,130 @@
      C                   EVAL      SVAT1 = 'N'
      C                   EVAL      SVAT7 = 'N'
      C                   ENDIF
- 
+
       ** VAT totals
- 
+
      C                   EVAL      @VATD = 0
      C                   EVAL      @VATT = 0
- 
+
       * If apply V.A.T. flag is 'Y', calculate V.A.T. charge
- 
+
       * Transfer commission
- 
+
      C                   IF        SVAT1 = 'Y'
      C                   EVAL      @VATD = @VATD + @TRCD
      C                   EVAL      @VATT = @VATT + @TRCM
      C                   ENDIF
- 
+
       * Telex
- 
+
      C                   IF        SVAT2 = 'Y'
      C                   EVAL      @VATD = @VATD + @TXCD
      C                   EVAL      @VATT = @VATT + @TXCH
      C                   ENDIF
- 
+
       * Cheque
- 
+
      C                   IF        SVAT3 = 'Y'
      C                   EVAL      @VATD = @VATD + @CQCD
      C                   EVAL      @VATT = @VATT + @CQCH
      C                   ENDIF
- 
+
       * Costs
- 
+
      C                   IF        SVAT4 = 'Y'
      C                   EVAL      @VATD = @VATD + @CSTD
      C                   EVAL      @VATT = @VATT + @CSTA
      C                   ENDIF
- 
+
       * SWIFT priority
- 
+
      C                   IF        SVAT5 = 'Y'
      C                   EVAL      @VATD = @VATD + @SPCD
      C                   EVAL      @VATT = @VATT + @SPCH
      C                   ENDIF
- 
+
       * Miscellaneous
- 
+
      C                   IF        SVAT6 = 'Y'
      C                   EVAL      @VATD = @VATD + @MSCD
      C                   EVAL      @VATT = @VATT + @MSCH
      C                   ENDIF
- 
+
       * Fx/Change commission
- 
+
      C                   IF        SVAT7 = 'Y' and @S01494 = 'Y'
      C                   EVAL      @VATD = @VATD + @CHCD
      C                   EVAL      @VATT = @VATT + @CHCM
      C                   ENDIF
- 
+
       * Miscellaneous 1
- 
+
      C                   IF        VAT9  = 'Y'
      C                   EVAL      @VATD = @VATD + @MI1CD
      C                   EVAL      @VATT = @VATT + @M1CH
      C                   ENDIF
- 
+
       * Miscellaneous 2
- 
+
      C                   IF        VAT10 = 'Y'
      C                   EVAL      @VATD = @VATD + @MI2CD
      C                   EVAL      @VATT = @VATT + @M2CH
      C                   ENDIF
- 
+
       * Miscellaneous 3
- 
+
      C                   IF        VAT11 = 'Y'
      C                   EVAL      @VATD = @VATD + @MI3CD
      C                   EVAL      @VATT = @VATT + @M3CH
      C                   ENDIF
- 
+
       * Miscellaneous 4
- 
+
      C                   IF        VAT12 = 'Y'
      C                   EVAL      @VATD = @VATD + @MI4CD
      C                   EVAL      @VATT = @VATT + @M4CH
      C                   ENDIF
- 
+
       * Miscellaneous 5
- 
+
      C                   IF        VAT13 = 'Y'
      C                   EVAL      @VATD = @VATD + @MI5CD
      C                   EVAL      @VATT = @VATT + @M5CH
      C                   ENDIF
- 
+
       * SWIFT standard
- 
+
      C                   IF        VAT14 = 'Y'
      C                   EVAL      @VATD = @VATD + @SSCD
      C                   EVAL      @VATT = @VATT + @SSCH
      C                   ENDIF
- 
+
       * V.A.T. amount = total x V.A.T. rate.
- 
+
      C                   If        @VATD <> 0 and @VATR <> 0                                  257897
      C                   Eval(H)   @VATD = @VATD * @VATR
      C                   EndIf                                                                257897
      C                   If        @VATT <> 0 and @VATR <> 0                                  257897
      C                   Eval(H)   @VATT = @VATT * @VATR
      C                   EndIf                                                                257897
- 
+
       * Now convert to levied currency
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = @VATD
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
- 
+
+
       ** Set up rate to use, depending on flag from SDFTFRPD.
      C     *LIKE         Define    OTRATE        Rate_to_use
- 
+
      C                   If        CHTRCY = 'Y'
      C                   Eval      Rate_to_use = OTRATE
      C                   Else
      C                   Eval      Rate_to_use = O2XRTE
      C                   EndIf
- 
+
      C                   ENDSR
       /EJECT                                                                                AR898162
       *****************************************************************                     AR898162
@@ -1265,23 +1267,23 @@
       *****************************************************************
       * CHGENT - Default entry charges, DAF format                    *
       *****************************************************************
- 
+
      C     CHGENT        BEGSR
- 
+
       * Get Charges Currency Decimal Places
      C                   Eval      C#K101  = O2CCDE
      C                   Exsr      CURRED
      C                   Eval      ChgCcyDP = A6NBDP
- 
+
       ** Set up rate to use, depending on flag from SDFTFRPD.
      C                   If        CHTRCY = 'Y'
      C                   Eval      Rate_to_use = OTRATE
      C                   Else
      C                   Eval      Rate_to_use = O2XRTE
      C                   EndIf
- 
+
       * Entry charges
- 
+
      C**********         IF        OTCDRO <> *ZEROS                                           256255
      C                   IF        OTCDRO <> *BLANKS                                          256255
       *                                                                                       CFT120
@@ -1299,13 +1301,13 @@
      C                   EVAL      @RCCY = OTPCCY
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      @CCCY         C#K101
      C                   EXSR      CURRED
- 
- 
+
+
       ** Transfer commission (Returned in Charges Ccy.  Should be in Levied Ccy).
- 
+
      C                   If        OTDUMA1 <> 0                                               258229
      C                   Eval      OTTRCM = OTDUMA1                                           258229
      C                   EndIf                                                                258229
@@ -1314,17 +1316,17 @@
      C                             AND STRCD = ' '                                            258341
      C                   Z-ADD     OTTRCM        OTDUMA1
      C                   Eval      OtTrcmd = OTTRCM
- 
+
      C                   Eval      @@AmtW = OTTRCM
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        STRCD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = OTTRCM
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1336,10 +1338,10 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @TRCM
      C                   Z-ADD     OTTRCMD       @TRCD
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @TRCD
      C                   Z-ADD     *ZEROS        @TRCM
@@ -1348,24 +1350,24 @@
      C**********         MOVE      *BLANKS       STRCD                                        258341
      C                   Z-ADD     *ZEROS        OTTRCM                                       258341
      C                   ENDIF
- 
+
       ** FX/Change
- 
+
      C                   IF        OTOPCHCM <> 0
      C                             AND SCHCD = ' '                                            258341
      C                   Z-ADD     OTOPCHCM      OTOPDUM7
      C                   Eval      OTOPDUM7 = OTOPCHCM
- 
+
      C                   Eval      @@AmtW = OTOPCHCM
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        SCHCD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = OTOPCHCM
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1377,10 +1379,10 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @CHCM
      C                   Z-ADD     OTOPDUM7      @CHCD
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @CHCD
      C                   Z-ADD     *ZEROS        @CHCM
@@ -1388,24 +1390,24 @@
      C**********         MOVE      *BLANKS       SCHCD                                        258341
      C                   Z-ADD     *ZEROS        OTOPCHCM                                     258341
      C                   ENDIF
- 
+
       ** Telex
- 
+
      C                   IF        OTTXCH <> 0
      C                             AND STXCD = ' '                                            258341
      C                   Z-ADD     OTTXCH        OTDUMA2
      C                   Eval      OTTXCHD = OTTXCH
- 
+
      C                   Eval      @@AmtW = OTTXCH
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        STXCD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = OTTXCH
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1417,10 +1419,10 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @TXCH
      C                   Z-ADD     OTTXCHD       @TXCD
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @TXCD
      C                   Z-ADD     *ZEROS        @TXCH
@@ -1428,24 +1430,24 @@
      C**********         MOVE      *BLANKS       STXCD                                        258341
      C                   Z-ADD     *ZEROS        OTTXCH                                       258341
      C                   ENDIF
- 
+
       ** Cheque
- 
+
      C                   IF        OTCQCH <> 0
      C                             AND SCQCD = ' '                                            258341
      C                   Z-ADD     OTCQCH        OTDUMA3
      C                   Eval      OTCQCHD = OTCQCH
- 
+
      C                   Eval      @@AmtW = OTCQCH
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        SCQCD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = OTCQCH
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1457,10 +1459,10 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @CQCH
      C                   Z-ADD     OTCQCHD       @CQCD
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @CQCD
      C                   Z-ADD     *ZEROS        @CQCH
@@ -1468,24 +1470,24 @@
      C**********         MOVE      *BLANKS       SCQCD                                        258341
      C                   Z-ADD     *ZEROS        OTCQCH                                       258341
      C                   ENDIF
- 
+
       ** Costs abroad
- 
+
      C                   IF        OTCSTA <> 0
      C                             AND SCSTD = ' '                                            258341
      C                   Z-ADD     OTCSTA        OTDUMA4
      C                   Eval      OTCSTAD = OTCSTA
- 
+
      C                   Eval      @@AmtW = OTCSTAD
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        SCSTD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = OTCSTA
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1497,10 +1499,10 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @CSTA
      C                   Z-ADD     OTCSTAD       @CSTD
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @CSTD
      C                   Z-ADD     *ZEROS        @CSTA
@@ -1508,22 +1510,22 @@
      C**********         MOVE      *BLANKS       SCSTD                                        258341
      C                   Z-ADD     *ZEROS        OTCSTA                                       258341
      C                   ENDIF
- 
+
       ** SWIFT standard
- 
+
      C                   IF        O2AMCS <> 0
      C                             AND STCD = ' '                                             258341
- 
+
      C                   Eval      @@AmtW = O2AMCS
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        STCD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = O2AMCS
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1535,34 +1537,34 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @SSCH
      C                   Z-ADD     O2AMCS        @SSCD
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @SSCD
      C                   Z-ADD     *ZEROS        @SSCH
      C**********         MOVE      *BLANKS       STCD                                         258341
      C                   Z-ADD     *ZEROS        O2AMCS                                       258341
      C                   ENDIF
- 
+
       ** SWIFT priority
- 
+
      C                   IF        OTSPCH <> 0
      C                             AND SSPCD = ' '                                            258341
      C                   Z-ADD     OTSPCH        OTDUMA5
      C                   Eval      OTSPCHD = OTSPCH
- 
+
      C                   Eval      @@AmtW = OTSPCHD
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        SSPCD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = OTSPCH
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1574,10 +1576,10 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @SPCH
      C                   Z-ADD     OTSPCHD       @SPCD
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @SPCD
      C                   Z-ADD     *ZEROS        @SPCH
@@ -1585,25 +1587,25 @@
      C**********         MOVE      *BLANKS       SSPCD                                        258341
      C                   Z-ADD     *ZEROS        OTSPCH                                       258341
      C                   ENDIF
- 
+
       ** Miscellaneous
- 
+
      C                   IF        OTMSCH <> 0
      C                             AND SMSCD = ' '                                            258341
      C**********         Z-ADD     OTMSCH        OTDUMA6                                      257122
      C                   Eval      OTMSCHD = OTMSCH
      C                   Eval      OTMSCH = OTDUMA6                                           257122
- 
+
      C                   Eval      @@AmtW = OTMSCH
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        SMSCD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = OTMSCH
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1615,10 +1617,10 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @MSCH
      C                   Z-ADD     OTMSCHD       @MSCD
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @MSCD
      C                   Z-ADD     *ZEROS        @MSCH
@@ -1626,24 +1628,24 @@
      C**********         MOVE      *BLANKS       SMSCD                                        258341
      C                   Z-ADD     *ZEROS        OTMSCH                                       258341
      C                   ENDIF
- 
+
       ** Miscellaneous 1
- 
+
      C                   IF        O2AMC1 <> 0
      C                             AND M1CD = ' '                                             258341
- 
+
      C                   Z-ADD     O2AMC1        @MI1CD
- 
+
      C                   Eval      @@AmtW = O2AMC1
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        M1CD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = O2AMC1
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1655,34 +1657,34 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @M1CH
      C                   Z-ADD     PLev_Charge   O2AMM1
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @MI1CD
      C                   Z-ADD     *ZEROS        @M1CH
      C**********         MOVE      *BLANKS       M1CD                                         258341
      C                   Z-ADD     *ZEROS        O2AMC1                                       258341
      C                   ENDIF
- 
+
       ** Miscellaneous 2
- 
+
      C                   IF        O2AMC2 <> 0
      C                             AND M2CD = ' '                                             258341
- 
+
      C                   Z-ADD     O2AMC2        @MI2CD
- 
+
      C                   Eval      @@AmtW = O2AMC2
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        M2CD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = O2AMC2
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1694,34 +1696,34 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @M2CH
      C                   Z-ADD     @M2CH         O2AMM2
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @MI2CD
      C                   Z-ADD     *ZEROS        @M2CH
      C**********         MOVE      *BLANKS       M2CD                                         258341
      C                   Z-ADD     *ZEROS        O2AMC2                                       258341
      C                   ENDIF
- 
+
       ** Miscellaneous 3
- 
+
      C                   IF        O2AMC3 <> 0
      C                             AND M3CD = ' '                                             258341
- 
+
      C                   Z-ADD     O2AMC3        @MI3CD
- 
+
      C                   Eval      @@AmtW = O2AMC3
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        M3CD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = O2AMC3
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
      C                   PARM      O2AMC3        PCharge_Amt      13 0
@@ -1732,34 +1734,34 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @M3CH
      C                   Z-ADD     @M3CH         O2AMM3
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @MI3CD
      C                   Z-ADD     *ZEROS        @M3CH
      C**********         MOVE      *BLANKS       M3CD                                         258341
      C                   Z-ADD     *ZEROS        O2AMC3                                       258341
      C                   ENDIF
- 
+
       ** Miscellaneous 4
- 
+
      C                   IF        O2AMC4 <> 0
      C                             AND M4CD = ' '                                             258341
- 
+
      C                   Z-ADD     O2AMC4        @MI4CD
- 
+
      C                   Eval      @@AmtW = O2AMC4
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        M4CD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = O2AMC4
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1771,34 +1773,34 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @M4CH
      C                   Z-ADD     @M4CH         O2AMM4
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @MI4CD
      C                   Z-ADD     *ZEROS        @M4CH
      C**********         MOVE      *BLANKS       M4CD                                         258341
      C                   Z-ADD     *ZEROS        O2AMC4                                       258341
      C                   ENDIF
- 
+
       ** Miscellaneous 5
- 
+
      C                   IF        O2AMC5 <> 0
      C                             AND M5CD = ' '                                             258341
- 
+
      C                   Z-ADD     O2AMC5        @MI5CD
- 
+
      C                   Eval      @@AmtW = O2AMC5
      C                   Eval      @@Qecn = ChgCcyDP
      C                   Exsr      FmtAmt
      C                   MOVE      @@AMTD        M5CD
- 
+
      C                   CLEAR                   D#DTA
      C                   EVAL      D#FAMT = O2AMC5
      C                   EVAL      D#TCCY = @RCCY
      C                   EVAL      D#FCCY = O2CCDE
- 
+
       ** use FTCALCLEV
      C                   CALLB     'FTCALCLEV'
      C                   PARM      *BLANKS       PRet_Code        10
@@ -1810,129 +1812,129 @@
      C                   PARM      Rate_to_use   PExch_Rate       13 8
      C                   PARM      *Zeros        PLev_Charge      13 0
      C                   PARM      *Blanks       PLev_Charge_F    16
- 
+
      C                   Z-ADD     PLev_Charge   @M5CH
      C                   Z-ADD     @M5CH         O2AMM5
- 
+
      C                   ELSE
      C                   Z-ADD     *ZEROS        @MI5CD
      C                   Z-ADD     *ZEROS        @M5CH
      C**********         MOVE      *BLANKS       M5CD                                         258341
      C                   Z-ADD     *ZEROS        O2AMC5                                       258341
      C                   ENDIF
- 
+
       * File DAF format (not like real DAF)
- 
+
      C     @CCCY         IFNE      BJCYCD
      C                   Z-ADD     A6NBDP        @FCDP
      C                   ELSE
      C                   Z-ADD     @BCDP         @FCDP
      C                   ENDIF
- 
+
       * Transfer commission
- 
+
      C     @FCDP         ADD       1             W                 1 0
      C     OTTRCM        DIV       FCTR(W)       OTTRCMD
- 
+
       * Telex Charge
- 
+
      C     @FCDP         ADD       1             W
      C     OTTXCH        DIV       FCTR(W)       OTTXCHD
- 
+
       * Cheque Charge
- 
+
      C     @FCDP         ADD       1             W
      C     OTCQCH        DIV       FCTR(W)       OTCQCHD
- 
+
       * Costs abroad
- 
+
      C     @FCDP         ADD       1             W
      C     OTCSTA        DIV       FCTR(W)       OTCSTAD
- 
+
       * SWIFT priority charge
- 
+
      C     @FCDP         ADD       1             W
      C     OTSPCH        DIV       FCTR(W)       OTSPCHD
- 
+
       * Miscellaneous charge
- 
+
      C     @FCDP         ADD       1             W
      C     OTMSCH        DIV       FCTR(W)       OTMSCHD
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * FMTAMT - FORMAT AMOUNT FOR DISPLAY                            *
       *****************************************************************
      C     FMTAMT        BEGSR
- 
+
      C                   CALLB     'ZA0920'
      C                   PARM      *BLANK        @@RETC           10
      C                   PARM                    @@AMTW           13 0
      C                   PARM                    @@QECN            1 0
      C                   PARM      '.'           BNDCSP            1
      C                   PARM      *BLANK        @@AMTD           14
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RETCODEIN
- 
+
       *  Screen fields
      C                   PARM                    TRANINPRIM
      C                   PARM                    TRANINPRMB
      C                   PARM                    NEWPMTSCN4
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FLDNAMXAR
      C                   PARM                    MSGIDXAR
      C                   PARM                    MSGDTAXAR
- 
+
      C                   PARM                    WFLDNMXAR
      C                   PARM                    WMSGIDXAR
      C                   PARM                    WMSGDTAXAR
- 
+
       *  OK Flags
      C                   PARM                    OKFLAGSDS
       * Valid payment layout (DS) from/to caller
      C                   PARM                    VALIDPMNT
      C                   PARM                    VALIDPMTX
- 
+
       *  Validation Work Fields
      C                   PARM                    VAL@FIELDS
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Read SDFTFRPD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      '*DBERR'      @RTCD
      C                   PARM      '*FIRST'      @OPTN
      C     SDFTFR        PARM      SDFTFR        DSFDY
- 
+
       ** Read V.A.T. details if CFT010 switched ON
- 
+
      C                   IF        @CFT010 = 'Y'
      C                   CALL      'AOVATR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C                   PARM                    VATDS
- 
+
      C                   EVAL      @VATR = WVATR
      C                   ENDIF
       *
@@ -1943,7 +1945,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'S01494'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C     *LOCK         In        LDA
@@ -1953,13 +1955,13 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @S01494           1
      C                   Else
      C                   Movel     'N'           @S01494
      C                   End
- 
+
       *                                                                                       CFT120
       ** Access SAR details file to determine if CFT120 is on.                                CFT120
       *                                                                                       CFT120
@@ -1990,9 +1992,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

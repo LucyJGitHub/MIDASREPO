@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD038991           Date 25May16               *
-      *  Prev Amend No. MD037938           Date 25May16               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD038991           Date 25May16               *
+      *                 MD037938           Date 25May16               *
       *                 MD034973           Date 16Jul15               *
       *                 MD032077           Date 26Jan15               *
       *                 MD030906           Date 13Nov14               *
@@ -94,6 +95,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD038991 - Insertion of IPAY: SWIFT Reference prevents user  *
       *             from cancelling the transaction                   *
       *  MD037938 - Unable to exit IPAY maintenance because of wrong  *

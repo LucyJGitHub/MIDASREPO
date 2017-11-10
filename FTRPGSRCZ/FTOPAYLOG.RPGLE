@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -80,12 +82,12 @@
       * Calls:     FTOPAYCVT module                                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,76 +99,76 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------+
- 
+
       **--------------------------------------------------------------+
       **--------------------------------------------------------------+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D OPAYFilFmt    E DS                  EXTNAME(OTPAYDD)
       ** Outgoing Payments in File Format
- 
+
      D OPAYFilFmtx   E DS                  EXTNAME(OTPAYXPD)
       ** Outgoing Payments Extension in File Format
- 
+
      D OPAYScnFmt1   E DS                  EXTNAME(FTOPY1PD)
       ** Outgoing Payments in Screen Format (Level 1 Screen 1)
- 
+
      D OPAYScnFmt1a  E DS                  EXTNAME(FTOPY1APD)
       ** Outgoing Payments in Screen Format (Level 1 Screen 1)
- 
+
      D OPAYScnFmt2   E DS                  EXTNAME(FTOPY2PD)
       ** Outgoing Payments in Screen Format (Level 2 Screen 1)
- 
+
      D OPAYScnFmt3   E DS                  EXTNAME(FTOPY3PD)
       ** Outgoing Payments in Screen Format (Level 2 Screen 1)
- 
+
      D OPAYScnFmt4   E DS                  EXTNAME(FTOPY4PD)
       ** Outgoing Payments in Screen Format (Level 2 Screen 1)
- 
+
      D OPAYScnFmt5   E DS                  EXTNAME(FTOPY5PD)
       ** Outgoing Payments in Screen Format (Level 2 Screen 2)
- 
+
      D OPAYScnFmt6   E DS                  EXTNAME(FTOPY6PD)
       ** Outgoing Payments in Screen Format (Level 2 Screen 3)
- 
+
      D OPAYScnFmt7   E DS                  EXTNAME(FTOPY7PD)
       ** Outgoing Payments in Screen Format (Margin Info)
- 
+
      D ExtDataDS     E DS                  EXTNAME(FTOPEXPD)
       ** IP Extension data
- 
+
      D ValFieldsDS   E DS                  EXTNAME(FTV@OPAYPD)
       ** Outgoing Payments workfields
- 
+
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
       ** Funds Transfer Details
       *                                                                                       CER059
@@ -180,20 +182,20 @@
       ** New DS for Extended Narrative Credit                                                 CER030
       *                                                                                       CER030
      D OPAYScnFmt7B  E DS                  EXTNAME(FTOPY7BPD)                                 CER030
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Transaction details
      D TRANSDTL        S           5800A
- 
+
       ** Additional parameters for CVT
      D PSTATUS         S             24A
      D PMSGR           S              8  0
      D PPART           S              3  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -208,15 +210,15 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Execute detail processing
- 
+
      C                   EXSR      SRPROC
- 
+
       ** Return to *CALLER
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -228,15 +230,15 @@
       * Calls: FTOPAYCVT - Outgoing Payment Convert Module            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPROC        BEGSR
- 
+
       ** Initialise transaction detail field
- 
+
      C                   EVAL      TRANSDTL = *BLANKS
- 
+
       ** Initialise screen fields
- 
+
      C                   EVAL      OPAYScnFmt1 = *BLANK
      C                   EVAL      OPAYScnFmt1a = *BLANK
      C                   EVAL      OPAYScnFmt2 = *BLANK
@@ -249,13 +251,13 @@
      C                   EVAL      OPAYScnFmt7A = *BLANKS                                     CER030
      C                   EVAL      OPAYScnFmt7B = *BLANKS                                     CER030
       *                                                                                       CER030
- 
+
       ** Set action code field
- 
+
      C                   EVAL      SACTION = CHTP
- 
+
       ** Convert OP detail from file to screen format
- 
+
      C                   CALLB     'FTOPAYCVT'
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    OPAYFilFmt
@@ -277,15 +279,15 @@
      C                   PARM                    PSTATUS
      C                   PARM                    PMSGR
      C                   PARM                    PPART
- 
+
       ** No error on conversion, format TRANSDTL field
- 
+
      C                   IF        RetCodeOut = *BLANK
- 
+
       ** Blank out payment reference
- 
+
      C                   EVAL      SPREF = *BLANKS
- 
+
      C                   EVAL      TRANSDTL = OPAYScnFmt1 + OPAYScnFmt1a +
      C                                        OPAYScnFmt2 + OPAYScnFmt3 +
      C                                        OPAYScnFmt4 + OPAYScnFmt5 +
@@ -296,9 +298,9 @@
      C                   ELSE
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -310,9 +312,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    OPAYFilFmt
@@ -320,15 +322,15 @@
      C                   PARM                    SDFTFR
      C                   PARM                    ValFieldsDS
      C                   PARM                    TRANSDTL
- 
+
       **--------------------------------------------------------------+
       ** The following /COPY sets the program, module and procedure
       ** names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------+
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

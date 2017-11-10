@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT120             Date 28Sep12               *
-      *  Prev Amend No. CAP211             Date 28Sep12               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CAP211             Date 28Sep12               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
       *  CAP211 - FT IN_OP APIs - Auto-Authorization of Payment       *
@@ -895,7 +897,7 @@
      C                   Z-ADD     007           DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     PRTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CFT004            1
      C                   ELSE

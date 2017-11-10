@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037529           Date 26Apr16               *
-      *  Prev Amend No. CFT142             Date 20Feb15               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD037529           Date 26Apr16               *
+      *                 CFT142             Date 20Feb15               *
       *                 AR900506           Date 04Nov14               *
       *                 CFT157             Date 29Aug14               *
       *                 AR663078           Date 19Aug14               *
@@ -102,6 +103,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD037529 - Incorrect defaulting of Add/deduct flag           *
       *  CFT142 - OPAY msg validation (LCO044)                        *
       *  AR900506 - Add/Deduct defaulting not occurring through API   *

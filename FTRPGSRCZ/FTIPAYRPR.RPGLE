@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD025111           Date 24Feb14               *
-      *  Prev Amend No. CFT151             Date 21Mar14               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD025111           Date 24Feb14               *
+      *                 CFT151             Date 21Mar14               *
       *                 MD022652           Date 07Oct13               *
       *                 CFT120             Date 28Sep12               *
       *                 CAP211             Date 28Sep12               *
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD025111 - Incoming payment without charges is not allowed   *
       *             if the account is blocked for DR                  *
       *  CFT151 - FT IN/OP Alphanumeric sequence                      *
@@ -1298,53 +1300,53 @@
      C     LIN2OC        ANDNE     *ON
      C     LIN1II        ANDNE     *ON
      C     LIN2II        ANDNE     *ON
- 
+
      C                   MOVE      '*ANY'        FldNameArr(1)
      C                   MOVEL     'FTM2613'     MsgIdArr(1)
- 
+
      C                   ELSE
       *
       ** F4 and F16 are not allowed in Enquiry (and delete) mode
      C     DDACTN        IFEQ      'E'
- 
+
      C                   MOVE      '*ANY'        FldNameArr(1)
      C                   MOVEL     'FTM2619'     MsgIdArr(1)
- 
+
      C                   ELSE
       ** check indicators
       *
       ** In-line prompt or search mode, capture criteria from screen
       *
      C                   IF        PINKD = *ON OR PINKQ = *ON
- 
+
      C     LIN1OI        IFEQ      *ON
      C                   MOVE      DDOBK1        PICRIT
      C                   ENDIF
- 
+
      C     LIN2OI        IFEQ      *ON
      C                   MOVE      DDOBK2        PICRIT
      C                   ENDIF
- 
+
      C     LIN1SC        IFEQ      *ON
      C                   MOVE      DDSNC1        PICRIT
      C                   ENDIF
- 
+
      C     LIN2SC        IFEQ      *ON
      C                   MOVE      DDSNC2        PICRIT
      C                   ENDIF
- 
+
      C     LIN1OC        IFEQ      *ON
      C                   MOVE      DDORC1        PICRIT
      C                   ENDIF
- 
+
      C     LIN2OC        IFEQ      *ON
      C                   MOVE      DDORC2        PICRIT
      C                   ENDIF
- 
+
      C     LIN1II        IFEQ      *ON
      C                   MOVE      DDINB1        PICRIT
      C                   ENDIF
- 
+
      C     LIN2II        IFEQ      *ON
      C                   MOVE      DDINB2        PICRIT
      C                   ENDIF
@@ -1360,7 +1362,7 @@
      C                   IF        PINKQ = *ON
      C                   MOVE      'F'           PIMODE
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Call BIC Plus enquiry program
@@ -1379,7 +1381,7 @@
      C     PRTCD         IFEQ      'F3'
      C                   EXSR      SREndP
      C                   END
- 
+
      C     PRTCD         IFEQ      *BLANKS
       *
       ** If a CHIPS code exists and relevant currency is USD, replace
@@ -1407,13 +1409,13 @@
      C                   MOVE      POADD         WKADD1          210
      C                   MOVEL     WKADD1        POADD
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANKS       WKCOCH           14
      C                   MOVEL     '//CH'        WKCOCH
      C                   MOVE      POCHIP        WKCOCH
      C                   MOVEL     WKCOCH        OADD1
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If command key pressed on 2nd line, remove clearing
@@ -1450,7 +1452,7 @@
      C                   MOVEL     OADD4         DDOBK4
      C                   MOVEL     OADD5         DDOBK5
      C                   ENDIF
- 
+
      C     LIN1SC        IFEQ      *ON
      C                   MOVEL     OADD1         DDSNC1
      C                   MOVEL     OADD2         DDSNC2
@@ -1458,7 +1460,7 @@
      C                   MOVEL     OADD4         DDSNC4
      C                   MOVEL     OADD5         DDSNC5
      C                   ENDIF
- 
+
      C     LIN1OC        IFEQ      *ON
      C                   MOVEL     OADD1         DDORC1
      C                   MOVEL     OADD2         DDORC2
@@ -1467,7 +1469,7 @@
      C***********        MOVEL     OADD5         DDORC5                         CFT014
      C                   EVAL      DDORC5 = OADD5                                             CFT032
      C                   ENDIF
- 
+
      C     LIN1II        IFEQ      *ON
      C                   MOVEL     OADD1         DDINB1
      C                   MOVEL     OADD2         DDINB2
@@ -1475,21 +1477,21 @@
      C                   MOVEL     OADD4         DDINB4
      C                   MOVEL     OADD5         DDINB5
      C                   ENDIF
- 
+
      C     LIN2OI        IFEQ      *ON
      C                   MOVEL     OADD1         DDOBK2
      C                   MOVEL     OADD2         DDOBK3
      C                   MOVEL     OADD3         DDOBK4
      C                   MOVEL     OADD4         DDOBK5
      C                   ENDIF
- 
+
      C     LIN2SC        IFEQ      *ON
      C                   MOVEL     OADD1         DDSNC2
      C                   MOVEL     OADD2         DDSNC3
      C                   MOVEL     OADD3         DDSNC4
      C                   MOVEL     OADD4         DDSNC5
      C                   ENDIF
- 
+
      C     LIN2OC        IFEQ      *ON
      C                   MOVEL     OADD1         DDORC2
      C                   MOVEL     OADD2         DDORC3
@@ -1497,20 +1499,20 @@
      C***********        MOVEL     OADD4         DDORC5                         CFT014
      C                   EVAL      DDORC5 = OADD4                                             CFT032
      C                   ENDIF
- 
+
      C     LIN2II        IFEQ      *ON
      C                   MOVEL     OADD1         DDINB2
      C                   MOVEL     OADD2         DDINB3
      C                   MOVEL     OADD3         DDINB4
      C                   MOVEL     OADD4         DDINB5
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1599,29 +1601,29 @@
      C     LINE2B        ANDNE     *ON
      C     LINE1R        ANDNE     *ON                                          CFT014
      C     LINE2R        ANDNE     *ON                                          CFT014
- 
+
      C                   MOVE      '*ANY'        FldNameArr(1)
      C                   MOVEL     'FTM2625'     MsgIdArr(1)
- 
+
      C                   ELSE
       *
       ** In-line prompt mode, capture search criteria from screen field
       *
      C     PINKD         IFEQ      *ON
      C                   MOVE      'P'           PIMODE
- 
+
      C     LINE1S        IFEQ      *ON
      C                   MOVE      DDSND1        PICRIT
      C                   ENDIF
- 
+
      C     LINE2S        IFEQ      *ON
      C                   MOVE      DDSND2        PICRIT
      C                   ENDIF
- 
+
      C     LINE1B        IFEQ      *ON
      C                   MOVE      DDBNC1        PICRIT
      C                   ENDIF
- 
+
      C     LINE2B        IFEQ      *ON
      C                   MOVE      DDBNC2        PICRIT
      C                   ENDIF
@@ -1633,26 +1635,26 @@
      C     LINE2R        IFEQ      *ON                                          CFT014
      C                   MOVE      DDRCO2        PICRIT                         CFT014
      C                   ENDIF                                                  CFT014
- 
+
      C                   ENDIF
       *
       ** In-line search mode, capture search criteria from screen field
       *
      C     PINKQ         IFEQ      *ON
      C                   MOVE      'F'           PIMODE
- 
+
      C     LINE1S        IFEQ      *ON
      C                   MOVE      DDSND1        PICRIT
      C                   ENDIF
- 
+
      C     LINE2S        IFEQ      *ON
      C                   MOVE      DDSND2        PICRIT
      C                   ENDIF
- 
+
      C     LINE1B        IFEQ      *ON
      C                   MOVE      DDBNC1        PICRIT
      C                   ENDIF
- 
+
      C     LINE2B        IFEQ      *ON
      C                   MOVE      DDBNC2        PICRIT
      C                   ENDIF
@@ -1664,7 +1666,7 @@
      C     LINE2R        IFEQ      *ON                                          CFT014
      C                   MOVE      DDRCO2        PICRIT                         CFT014
      C                   ENDIF                                                  CFT014
- 
+
      C                   ENDIF
       *
       ** Call BIC Plus enquiry program
@@ -1683,7 +1685,7 @@
      C     PRTCD         IFEQ      'F3'
      C                   EXSR      SREndP
      C                   ENDIF
- 
+
      C     PRTCD         IFEQ      *BLANKS
       *
       ** If a CHIPS code exists and relevant currency is USD, replace
@@ -1707,14 +1709,14 @@
      C                   MOVE      POADD         WKADD1          210
      C                   MOVEL     WKADD1        POADD
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANKS       WKCOCH           14
      C                   MOVEL     *BLANKS       OADD1
      C                   MOVEL     '//CH'        WKCOCH
      C                   MOVE      POCHIP        WKCOCH
      C                   MOVEL     WKCOCH        OADD1
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If command key pressed on 2nd line, remove clearing
@@ -1754,7 +1756,7 @@
      C                   MOVEL     OADD4         DDRCO4                         CFT014
      C                   MOVEL     OADD5         DDRCO5                         CFT014
      C                   ENDIF                                                  CFT014
- 
+
      C     LINE1B        IFEQ      *ON
      C                   MOVEL     OADD1         DDBNC1
      C                   MOVEL     OADD2         DDBNC2
@@ -1762,7 +1764,7 @@
      C                   MOVEL     OADD4         DDBNC4
      C                   MOVEL     OADD5         DDBNC5
      C                   ENDIF
- 
+
      C     LINE2S        IFEQ      *ON
      C                   MOVEL     OADD1         DDSND2
      C                   MOVEL     OADD2         DDSND3
@@ -1775,18 +1777,18 @@
      C                   MOVEL     OADD3         DDRCO4                         CFT014
      C                   MOVEL     OADD4         DDRCO5                         CFT014
      C                   ENDIF                                                  CFT014
- 
+
      C     LINE2B        IFEQ      *ON
      C                   MOVEL     OADD1         DDBNC2
      C                   MOVEL     OADD2         DDBNC3
      C                   MOVEL     OADD3         DDBNC4
      C                   MOVEL     OADD4         DDBNC5
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2490,7 +2492,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -3266,7 +3268,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -3486,7 +3488,7 @@
      C                             WRedisplay = 'Y'
      C                   GOTO      EVal_S
      C                   ENDIF
- 
+
      C                   IF        CFT009 = 'N'                                 CFT009
       *
       ** Compute Charges and Commissions, and Total VAT Amounts based on
@@ -3977,7 +3979,7 @@
       *                                                                         CFT014
      C                   GOTO      EScrn_C                                      CFT014
      C                   ENDIF                                                  CFT014
- 
+
      C**********         IF        CFT009 = 'N'                                       CFT009 BUG9311
       **********                                                                      CFT014 BUG9311
       ***Compute*Charges*and*Commissions,*and*Total*VAT*Amounts*based*on              CFT014 BUG9311
@@ -4183,7 +4185,7 @@
       ***Display*Confirmation*screen.**********************************         CFT014
       ***********                                                               CFT014
      C***********        EVAL      WSCRN = 'F'                                  CFT014
- 
+
      C                   IF        CFT009 = 'N'                                 CFT009
       *                                                                         CFT014
       ** Compute Charges and Commissions, and Total VAT Amounts based on        CFT014
@@ -8752,7 +8754,7 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST'      POPTN
      C     SDTRAD        PARM      SDTRAD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBKEY = POPTN
      C                   EVAL      DBFILE = 'SDTRADPD'

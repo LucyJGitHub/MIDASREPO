@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT049             Date 20Feb15               *
-      *  Prev Amend No. AR898165           Date 10Nov14               *
+      *  Last Amend No, CFT162             Date 13Sep17               *
+      *  Prev Amend No. CFT049             Date 20Feb15               *
+      *                 AR898165           Date 10Nov14               *
       *                 MD030940           Date 08Oct14               *
       *                 CFT157             Date 29Aug14               *
       *                 MD029681           Date 12Aug14               *
@@ -118,6 +119,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation                  *
       *  CFT049 - Account with Bank validation if EU/EEA Payment      *
       *  AR898165 - Message unique reference is zeroized on amend     *
       *             (Child: AR898166)                                 *
@@ -262,26 +264,27 @@
       *  CAP031 - Conversion of FT inputs into modular structure to   *
       *           use as APIs.                                        *
       *****************************************************************
- 
+
       * Outgoing payments Detail file
      FOTPAYOVR  UF A E           K DISK
      F                                     COMMIT
- 
+
       * Outgoing payment extension file
      F***OTPAYXL0  UF A E           K DISK    COMMIT                            CFT014
      FOTXL0     UF A E           K DISK    COMMIT                               CFT014
      FOTPAYDQD  O    E             DISK    COMMIT                                             257487
- 
+
       * Outgoing payments Trailer file
      FOTPAYZZ   UF   E             DISK    COMMIT
- 
+
       ** Compliance Watch Hit List file                                                       CSD015
      FSDCWHTL1  IF   E           K DISK    COMMIT                                             CSD015
                                                                                               CSD015
+     FSDM901L0  IF   E           K DISK                                                       CFT162
      F*FTPREFX1**UF*A*E********     DISK    COMMIT                                  BUG4776 BUG4776R
       **********                                                                    BUG4776 BUG4776R
      F/COPY WNCPYSRC,FTOPAYDF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -293,12 +296,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -309,14 +312,14 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
- 
+
+
       * Current Payment in File Format
      D ChkOPAYFmt    E DS                  EXTNAME(OTPAYDD)
       ** Rename fields for Timestamp checking
@@ -333,53 +336,53 @@
                                                                                               CRE020
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       * Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       * Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D FTEOPY1       E DS                  EXTNAME(FTEOPY1PD)
      D FTEOPY2       E DS                  EXTNAME(FTEOPY2PD)
      D FTEOPY3       E DS                  EXTNAME(FTEOPY3PD)
      D FTEOPY4       E DS                  EXTNAME(FTEOPY4PD)                   CFT014
      D FTEOPY5       E DS                  EXTNAME(FTEOPY5PD)                   CFT014
- 
+
       * New Valid Payments layout
      D ValidPmnt     E DS                  EXTNAME(FTVOPAYPD)
      D/COPY WNCPYSRC,FTH00197
      D ValidPmntB    E DS                  EXTNAME(FTVOPY2PD)                   CFT014
- 
+
       * Data structure for payment to be updated
      D NewPmnt       E DS                  EXTNAME(OTPAYDD)
      D NewPmntB      E DS                  EXTNAME(OTPAYXPD)                    CFT014
- 
+
      D/COPY WNCPYSRC,FTOPAYDD03
       ** EXTERNAL DS FOR BANK DETAILS
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       * External DS for Funds Transfer details
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
      D/COPY WNCPYSRC,FTOPAYDD01
       * External data structure for currency codes
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
@@ -395,21 +398,21 @@
                                                                                               CSD015
       ** External DS for Watch List Configuration Data File                                   CSD015
      D SDCWCD        E DS                  EXTNAME(SDCWCDPD)                                  CSD015
- 
+
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       * Like Field Definitions
      D FOTRID          S                   LIKE(OTFRNT)
- 
+
       *  Parameters to be passed for FT IMM update
      D INFT          E DS                  EXTNAME(MEINFTPD)
                                                                                               CSC011
@@ -421,9 +424,9 @@
                                                                                               CSC011
       ** SD Status DataArea Layout                                                            CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
- 
+
      D/COPY QWINDSRC,FTOPAYDTAD
- 
+
      D P@ACCT          DS                                                                   BUG15042
      D  P@CNUM                 2      7                                                     BUG15042
      D  P@CCY                  8     10                                                     BUG15042
@@ -615,7 +618,7 @@
      D  I#PTY2                38     72
      D  I#CCY                 73     75
      D  O#CUST                76     81
- 
+
      D                 DS                                                                     CSD015
       **  Ordering Bank                                                                       CSD015
      D**OrderingBank           1     12                                               CSD015 CSD027C
@@ -680,14 +683,14 @@
       ** Watch List Description Array                                                         CSD015
      D***WLARR***         S             35    DIM(22) CTDATA PERRCD(2)                 CSD015 CSW209
      DWLARR            S             35    DIM(34) CTDATA PERRCD(2)                           CSW209
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
      D C#K101          S              3
      D C#OPTN          S              7
      D C#RTCD          S              7
- 
+
      D Paymnref        S             15
      D Action          S              1
      D BookBrch        S              3
@@ -704,7 +707,7 @@
       ** CFT120 switchable field                                                              CFT120
       *                                                                                       CFT120
      D CFT120          S              1A                                                      CFT120
- 
+
      D CAP205          S              1A                                                      CAP205
      D/COPY WNCPYSRC,FTH00560
                                                                                               CAP205
@@ -731,14 +734,14 @@
                                                                                 CFT014
       **  Data Structure for input/output parameters                            CFT014
      D/COPY FTCPYSRC,FT0010D001                                                 CFT014
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
      C                   EXSR      INSSR                                                     BUG4449
       *  Clear stored values
      C/COPY WNCPYSRC,FTH00472
@@ -746,11 +749,11 @@
      C                   Exsr      SRCLR
      C/COPY WNCPYSRC,FTH00473
      C                   Endif                                                                CFT157
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
- 
+
      C     RetCodeIn     IFNE      *BLANKS
      C                   GOTO      EXIT
      ******************************************************************               241810 241810A
@@ -765,7 +768,7 @@
      C**********         EVAL      OTAUIN = 'Y'                                       241810 241810A
      C**********         ENDIF                                                        241810 241810A
      C                   END
- 
+
       *                                                                                       CFT120
       ** Store the Charges to the DR of Currency and                                          CFT120
       ** Store Receiver's charges Currency from Valid Values for later use                    CFT120
@@ -778,9 +781,9 @@
      C                   ENDIF                                                                CFT120
       *                                                                                       CFT120
      C/COPY WNCPYSRC,FTOPAYDC01
- 
+
       ** INSERT, AMEND, DELETE
- 
+
      C     OTCHTP        CASEQ     'I'           INSERT
      C     OTCHTP        CASEQ     'A'           AMEND
      C     OTCHTP        CASEQ     'D'           AMEND
@@ -799,7 +802,7 @@
      C                   ENDIF                                                                CSC011
      C                   ENDIF                                                                CSC011
      C/COPY WNCPYSRC,FTOPAYDC11
- 
+
      C     #NOUPD        CABEQ     'N'           UPDEND
       *
      C/COPY WNCPYSRC,FTH00476
@@ -820,26 +823,26 @@
      C                   MOVEL     '1'           DBKEY
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   Z-ADD     HRWN          ZZTOTI
      C                   Z-ADD     HRDC          ZZTOTD
      C     OTCHTP        IFEQ      'I'
      C                   ADD       1             NORE1
      C     OTSMAM        DIV       1000          ZZAMT
      C                   END
- 
+
      C     OTCHTP        IFEQ      'A'
      C     OTSMAM        DIV       1000          ZZAMT1           15 3
      C     OSMAM         DIV       -1000         ZZAMT
      C                   ADD       ZZAMT1        ZZAMT
      C                   END
- 
+
      C                   EXSR      GLZADD
      C                   Z-ADD     ZZTOTI        HRWN
      C                   Z-ADD     ZZTOTD        HRDC
      C                   UPDATE    OTPAYZZF
      C                   END
- 
+
       *  Clear stored values
      C     UPDEND        TAG
      C/COPY WNCPYSRC,FTH00478
@@ -878,7 +881,7 @@
      C*                                                                                       196378
       * EXIT FROM PROGRAM
      C     EXIT          TAG
- 
+
      C                   RETURN
      C****************************************************************
       /EJECT
@@ -888,11 +891,11 @@
      C*                                                               *
      C*****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ** Retrieve current FT Outgoing Payment Transaction Details
- 
+
      C                   MOVE      OTPREF        MidasTrNum       15
- 
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
@@ -931,7 +934,7 @@
      C**********         EVAL      FOTRID = *blanks                             193883
      C                   END
      C                   END                                                    193883
- 
+
       * Set level 1/2 flag to '1'
      C                   MOVE      '1'           WLevel
       *                                                                                      BUG9071
@@ -991,19 +994,19 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Trade was fetched by this
       ** program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
- 
+
      C*****@TYPE         IFEQ      '1'                                                        200217
      C     WType         IFEQ      '1'                                                        200217
- 
+
      C     CHTMST        IFNE      OTTMESTMP
      C     OTCHTP        OREQ      'A'                                                        223737
      C     CHAUIN        ANDEQ     'Y'                                                        223737
@@ -1013,14 +1016,14 @@
      C                   ELSE                                                                 262786
      C                   MOVE      'Y'           OKPREF                                       262786
      C                   END
- 
+
       ** Batch mode:
      C                   ELSE
      C     OKACTION      IFEQ      'N'
      C     OKPREF        OREQ      'N'
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   Z-ADD     1             C                 2 0
- 
+
      C     C             DOWLE     ArrayMax
      C     FldNameArr(C) ANDNE     *BLANKS
      C                   MOVEL     *BLANKS       DBError          28
@@ -1032,11 +1035,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   END
- 
+
      C                   END
- 
+
      C                   END
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -1046,14 +1049,15 @@
      C*                                                              *
      C****************************************************************
      C     INSERT        BEGSR
- 
+
       *  If Batch Authorsation update/add record
      C                   If        @CFT003 = 'Y'
      C                             Or (@CFT014 = 'Y')                           CFT014
      C                             Or (@CFT009 = 'Y')                           CFT009
+     C                             Or (@CFT162 = 'Y')                                         CFT162
      C*****OTPREF        CHAIN     OTPAYXL0                           99        CFT014
      C     OTPREF        CHAIN     OTPAYXDF                           99        CFT014
- 
+
      C                   If        *IN99 = *On
                                                                                 CFT014
       ** Set MT103 fields                                                       CFT014
@@ -1100,13 +1104,73 @@
      C                   Eval      MISC05 = *Zero                               204029
      C                   Eval      SWSCHG = *Zero                               204029
      C                   ENDIF                                                  CFT009
- 
+
      C                   Eval      OPRECI = 'D'
      C                   Eval      OPPREF = OTPREF
      C                   Eval      OPBJPR = *Blanks
      C                   Eval      OPAUTO = 'N'
      C/COPY WNCPYSRC,FTH00198
      C                   Move      OTSTMT        OPSETM
+      *                                                                                       CFT162
+     C                   If        @CFT162 = 'Y'                                              CFT162
+      *                                                                                       CFT162
+     C                   Exsr      SRAccntV                                                   CFT162
+      *                                                                                       CFT162
+      ** Check customer/account MT900 defaults                                                CFT162
+      ** Check From Account (Ordering Bank or Ordering Customer)                              CFT162
+      *                                                                                       CFT162
+     C                   Movel     FTFRGL        C#ACCT                                       CFT162
+      *                                                                                       CFT162
+     C     KYM901        Chain     SDM901L0                                                   CFT162
+     C                   If        %Found                                                     CFT162
+     C                   Movel     M9R900        OPR900                                       CFT162
+     C                   Else                                                                 CFT162
+                                                                                              CFT162
+      * If no record found for the account, check if there is a record for the customer       CFT162
+     C                   Move      *Blanks       W#BRC1                                       CFT162
+     C                   Move      *Blanks       W#CCY1                                       CFT162
+     C                   Z-add     0             W#ACO1                                       CFT162
+     C                   Z-Add     0             W#ACS1                                       CFT162
+     C     KYM901        Chain     SDM901L0                                                   CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+     C                   IF        %found(SDM901L0)                                           CFT162
+     C                   Movel     M9R900        OPR900                                       CFT162
+     C                   Else                                                                 CFT162
+     C                   Movel     'N'           OPR900                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+      ** Set MT900 generated flag to 'N'                                                      CFT162
+      *                                                                                       CFT162
+     C                   Movel     'N'           OPG900                                       CFT162
+      *                                                                                       CFT162
+      ** Check customer/account MT910 defaults                                                CFT162
+      ** Check To Account (Senders Correspondent or Destination)                              CFT162
+      *                                                                                       CFT162
+     C                   Movel     FTTOGL        C#ACCT                                       CFT162
+      *                                                                                       CFT162
+     C     KYM901        Chain     SDM901L0                                                   CFT162
+     C                   If        %Found                                                     CFT162
+     C                   Movel     M9R910        OPR910                                       CFT162
+     C                   Else                                                                 CFT162
+      * If no record found for the account, check if there is a record for the customer       CFT162
+     C                   Move      *Blanks       W#BRC1                                       CFT162
+     C                   Move      *Blanks       W#CCY1                                       CFT162
+     C                   Z-Add     0             W#ACO1                                       CFT162
+     C                   Z-Add     0             W#ACS1                                       CFT162
+     C     KYM901        Chain     SDM901L0                                                   CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+     C                   IF        %found(SDM901L0)                                           CFT162
+     C                   Movel     M9R910        OPR910                                       CFT162
+     C                   Else                                                                 CFT162
+     C                   Movel     'N'           OPR910                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+      * Set MT910 generated flag to 'N'                                                       CFT162
+     C                   Movel     'N'           OPG910                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
      C***********        Write     OTPAYXDF                                     CFT014
                                                                                 CFT014
       ** Generate timestamp                                                     CFT014
@@ -1147,7 +1211,7 @@
      C                   Movel     OTPREF        DBKEY                          CFT014
      C                   ExSr      *PSSR                                        CFT014
      C                   EndIf                                                  CFT014
- 
+
      C                   Else
       * If existing extension record, update
      C                   If        @CFT014 <> 'Y'                               CFT014
@@ -1202,19 +1266,19 @@
      C****************** ExSr      *PSSR                                        CFT014        247314
      C                   EndIf                                                  CFT014
      C                   End
- 
+
      C                   End
- 
+
       * Write OTPAY record
      C                   Move      ValidPmnt     NewPmnt
- 
+
       ** Generate timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    Timestamp
- 
+
      C                   Eval      TMST = Timestamp
      C                   Eval      OTTMESTMP = TimeStamp                                    BUG18500
- 
+
       ** If CSC011 is installed, supply a Front Office ID for the                             CSC011
       ** transaction even if it originated from SIN module.                                   CSC011
                                                                                               CSC011
@@ -1252,7 +1316,7 @@
      C                   Endif                                                                CFT049
      C/COPY WNCPYSRC,FTH00430
      C                   Write     OTPAYDDF                             99
- 
+
      C                   If        *IN99 = *ON
      C                   Movel     'FTOPAYUPD'   DBFILE
      C                   Z-add     4             DBASE
@@ -1301,7 +1365,7 @@
      C                   Parm                    @MODLE            2
      C                   Parm                    @TREF            15
      C                   Parm                    @RTINF           80
- 
+
       *  Process shadow post if new addition and not regular payment
       *  Or level incomplete i.e. insert of generated payment
      C                   If        OTPYTP <> 'RP'
@@ -1403,7 +1467,7 @@
      C                   ENDIF                                                                CFT120
      C                   EXSR      SRSCHG                                       185764
      C                   END                                                    185764
- 
+
       * Update Incoming Message FT Transaction Status File record
      C                   If        OTOPMSGR <> 0
       *                                                                                       196813
@@ -1416,10 +1480,10 @@
      C                   Movel     'MIN0030'     W0FLAG            7
      C/COPY WNCPYSRC,FTH00201
      C                   Movel     'MIN0190'     W0LMSG            7
- 
+
      C                   Exsr      SRINFT
      C/COPY WNCPYSRC,FTH00397
- 
+
      C                   End
       *
      C                   ENDSR
@@ -1431,7 +1495,7 @@
      C*                                                              *
      C****************************************************************
      C     AMEND         BEGSR
- 
+
      C                   Move      'N'           WRTVD                                        202150
                                                                                               202150
      C     OTPREF        CHAIN     OTPAYDDF                           99
@@ -1467,7 +1531,7 @@
      C                   EndIf                                                  CFT014
      C                   EndIf                                                  CFT014
      C                   EndIf                                                  CFT014
- 
+
       * If S01508 is installed, check if debit customer has changed
      C     @01508        IFEQ      'Y'
      C     OTCHTP        ANDEQ     'A'
@@ -1482,7 +1546,7 @@
      C*
      C                   CLEAR                   W0DTA
      C                   SELECT
- 
+
      C     @01506        WHENEQ    'Y'
      C                   MOVEL     ORCT          I#PT1
      C                   IF        %SUBST(ORC1:1:1) = '/'                                     CFT032
@@ -1616,19 +1680,19 @@
      C                   MOVEL     OTSNCO        I#PTY2
      C                   ENDIF                                                                221478
      C                   ENDSL
- 
+
      C                   CALL      'FT0035'                             9090
      C                   PARM      *BLANKS       C#RTCD
      C                   PARM                    W0DTA
      C                   PARM                    W0MSG           256
- 
+
      C     *IN90         IFEQ      '1'
      C     C#RTCD        ORNE      *BLANKS
      C                   MOVEL     'FT0035'      DBFILE
      C                   MOVEL     '34'          DBASE
      C                   MOVEL     '*CALL   '    DBKEY
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C     OTODMT        IFNE      *BLANKS                                                    210873
      C     OTADDC        ANDEQ     'A'                                                        210873
@@ -1637,7 +1701,7 @@
      C                   MOVEL     O#CUST        WDCUS2            6
      C                   ENDIF                                                                210873
      C                   END
- 
+
      C** Check if recalculation of charges must take place
      C     @01506        IFEQ      'Y'
      C     SACTION       IFEQ      'I'                                                        227243
@@ -1647,7 +1711,7 @@
      C                   MOVE      'Y'           WRDFTC            1
      C                   END
      C                   ENDIF                                                                227243
- 
+
      C                   ELSE
      C     SACTION       IFEQ      'I'                                                        227243
      C     WDCUS1        IFNE      WDCUS2
@@ -1658,9 +1722,9 @@
      C                   END
      C                   ENDIF                                                                227243
      C                   END
- 
+
      C                   END
- 
+
       *  Process shadow post if new addition and not regular payment
       *  Or level incomplete i.e. insert of generated payment
       *
@@ -1811,19 +1875,19 @@
      C     CDRO          ANDEQ     *BLANKS                                                    CSD027
      C     OTADDC        IFNE      ADDC
      C     SMCY          ANDNE     PCCY
- 
+
      C     OTPCCY        ORNE      PCCY
      C     OTADDC        ANDEQ     'D'
- 
+
      C     OTSMCY        ORNE      SMCY
      C     OTADDC        ANDEQ     'A'
- 
+
      C     WRDFTC        OREQ      'Y'
      C     OTSMAM        ORNE      SMAM
      C                   EXSR      CHARGE
      C                   END
      C                   END
- 
+
       *****/copy*to*move*data*into*the*data*structure*fields*passed********                   189451
       ******as*a*parameter*to*the*window*controller************************                   189451
       *C*P**QWINDSRC*FT0040MOV1********************************************                   189451
@@ -1849,7 +1913,7 @@
      C     STMTE         IFNE      SETT                                                     AR402776
      C                   MOVE      STMTE         PREF                                       BUG24776
      C                   ENDIF                                                              BUG24776
- 
+
      C/COPY WNCPYSRC,FTH00546
      C* IF AMEND CLEAR AUTHORISE PROF 1
      C     OTCHTP        IFEQ      'A'
@@ -1863,14 +1927,14 @@
       ** Front Office ID                                                        CAP013
      C                   EVAL      FRNT=OTFRNT                                  CAP013
      C                   END
- 
+
       ** Generate timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    Timestamp
- 
+
      C                   Eval      TMST = Timestamp
      C                   Eval      OTTMESTMP = TimeStamp                                    BUG18500
- 
+
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
       *                                                                                       CAP211
      C                   IF        PUser = *Blanks                                            CAP211
@@ -2362,7 +2426,7 @@
       *  SRCLR    : Clear all positions in store                      *
       *****************************************************************
      CSR   SRCLR         BEGSR
- 
+
      C                   MOVE      'Y'           #NOUPD            1
       *  Clear arrays in AOSPOSU0
      C                   CLEAR                   C#DTA
@@ -2379,7 +2443,7 @@
      C                   EXSR      *PSSR
      C                   END
      C/COPY WNCPYSRC,FTOPAYDC03
- 
+
      CSR                 ENDSR
      C****************************************************************
      C/EJECT                                                                                  196813
@@ -2425,9 +2489,9 @@
       *             File record                                       *
       *****************************************************************
      CSR   SRINFT        BEGSR
- 
+
      C                   CLEAR                   INFT
- 
+
      C     OTORBT        IFNE      *BLANKS
      C**********         MOVEL     @ORBDS        FTFRWR           18                          CGL029
      C                   MOVEL     @ORBDS        FTFRWR                                       CGL029
@@ -2440,7 +2504,7 @@
      C                   ELSE
      C                   MOVEL     @DSTDS        FTTOWR
      C                   END
- 
+
      C                   Z-ADD     OTOPMSGR      FTMSGR                         Unique Ref.
      C                   Z-ADD     OTOPKPRT      FTKPRT                         Part No.
      C                   MOVEL     OTBRCA        FTBRCA                         Branch Code
@@ -2448,14 +2512,14 @@
      C                   MOVEL     OTPREF        FTOPRF                         Outg. Pay. Ref
      C                   MOVEL     FTFRWR        FTFRGL                         Funds From
      C                   MOVEL     FTTOWR        FTTOGL                         Funds To
- 
+
      C                   MOVEL     W0LMSG        W2LMSG                         Log file Msg ID
      C                   MOVEL     PNWRK         W2NWRK                         Network
      C                   MOVEL     'FTOPAYUPD'   ##PGM            10
- 
+
       *  N.B. Audit Stamp details are determined in called program
       *  Set up data to be passed using the rcd format data structure
- 
+
      C                   CALL      'ME1050'                             90
      C                   PARM      '*FT OUT '    W2ACT             8
      C                   PARM      ##PGM         W2CPGM           10
@@ -2477,11 +2541,38 @@
       *
      CSR                 ENDSR
      C/EJECT
+      *****************************************************************                       CFT162
+      *                                                               *                       CFT162
+      *  SRAccntV - Get account details using values from FTVOPAYPD   *                       CFT162
+      *                                                               *                       CFT162
+      *****************************************************************                       CFT162
+      *                                                                                       CFT162
+     CSR   SRAccntV      BEGSR                                                                CFT162
+      *                                                                                       CFT162
+     C                   CLEAR                   INFT                                         CFT162
+                                                                                              CFT162
+     C     OTORBT        IFNE      *BLANKS                                                    CFT162
+     C                   MOVEL     @ORBDS        FTFRWR                                       CFT162
+     C                   ELSE                                                                 CFT162
+     C                   MOVEL     @ORCDS        FTFRWR                                       CFT162
+     C                   END                                                                  CFT162
+      *                                                                                       CFT162
+     C     OTSNCT        IFNE      *BLANKS                                                    CFT162
+     C                   MOVEL     @SNCDS        FTTOWR                                       CFT162
+     C                   ELSE                                                                 CFT162
+     C                   MOVEL     @DSTDS        FTTOWR                                       CFT162
+     C                   END                                                                  CFT162
+                                                                                              CFT162
+     C                   MOVEL     FTFRWR        FTFRGL                         Funds From    CFT162
+     C                   MOVEL     FTTOWR        FTTOGL                         Funds To      CFT162
+      *                                                                                       CFT162
+     CSR                 ENDSR                                                                CFT162
+     C/EJECT                                                                                  CFT162
       *****************************************************************
       *  SRADD    : Add shadow positions to store                     *
       *****************************************************************
      CSR   SRADD         BEGSR
- 
+
       *  Define settle and pay amounts
      C     *LIKE         DEFINE    SMAM          ##SMAM
      C     *LIKE         DEFINE    PYAM          ##PYAM
@@ -2649,7 +2740,7 @@
      C                   EXSR      *PSSR
      C                   END
      C/COPY WNCPYSRC,FTOPAYDC05
- 
+
      CSR                 ENDSR
       *****************************************************************
      C/EJECT                                                                                  213004
@@ -3728,7 +3819,7 @@
      C                   PARM      *BLANKS       C#RTCD
      C                   PARM      '*UPDATE '    W0ACT             8
      C                   PARM      C#DTA         O#DTA           256
- 
+
      C     *IN90         IFEQ      '1'
      C     C#RTCD        ORNE      *BLANKS
      C                   MOVEL     'AOSPOSU0'    DBKEY
@@ -4724,18 +4815,18 @@
      C     *ENTRY        PLIST
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  OK Flags
      C                   Parm                    FTEOPY1
      C                   Parm                    FTEOPY2
      C                   Parm                    FTEOPY3
      C                   Parm                    FTEOPY4                        CFT014
      C                   Parm                    FTEOPY5                        CFT014
- 
+
       * New Valid payment layout
      C                   PARM                    ValidPmnt
      C                   PARM                    ValidPmntB                     CFT014
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
       *                                                                                       CAP211
@@ -4743,7 +4834,7 @@
      C                   PARM                    PUser            10                          CAP211
       *                                                                                       CAP211
      C/COPY WNCPYSRC,FTOPAYDC12
- 
+
       * ACCESS BANK DETAILS
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       C#RTCD
@@ -4950,7 +5041,7 @@
      C                   ENDIF                                                                CAP211
       *                                                                                       CAP211
      C/COPY WNCPYSRC,FTOPAYDC08
- 
+
      C                   CALLB     'AOSARDR0'                                                 CFT157
      C                   Parm      *BLANKS       @RTCD                                        CFT157
      C                   Parm      '*VERIFY'     @OPTN                                        CFT157
@@ -4984,7 +5075,26 @@
      C     @RTCD         IFEQ      *BLANK                                                     CFT049
      C                   MOVE      'Y'           CFT049                                       CFT049
      C                   ENDIF                                                                CFT049
- 
+      *                                                                                       CFT162
+      ** Check if 'CFT162' is switched 'ON'                                                   CFT162
+      *                                                                                       CFT162
+     C                   MoveL     'N'           @CFT162                                      CFT162
+     C                   CallB     'AOSARDR0'                                                 CFT162
+     C                   Parm      *BLANKS       @RTCD                                        CFT162
+     C                   Parm      '*VERIFY'     @OPTN                                        CFT162
+     C                   Parm      'CFT162'      @SARD                                        CFT162
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CFT162
+      *                                                                                       CFT162
+     C     @RTCD         Ifeq      *BLANKS                                                    CFT162
+     C                   MoveL     'Y'           @CFT162           1                          CFT162
+     C     KYM901        KLIST                                                                CFT162
+     C                   KFLD                    W#CNU1                                       CFT162
+     C                   KFLD                    W#CCY1                                       CFT162
+     C                   KFLD                    W#ACO1                                       CFT162
+     C                   KFLD                    W#ACS1                                       CFT162
+     C                   KFLD                    W#BRC1                                       CFT162
+     C                   Endif                                                                CFT162
+
      C                   ENDSR
       *****************************************************************                       CGL029
      C/EJECT                                                                                 BUG4449

@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD030957           Date 10Oct14               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD030957           Date 10Oct14               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD025674           Date 25Mar14               *
       *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD030957 - Stop Request against already Stopped Transaction  *
       *             is allowed                                        *
       *  CFT157 - Stop FT Transaction after Authorisation             *

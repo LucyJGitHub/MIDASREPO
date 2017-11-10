@@ -19,11 +19,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CSW209  *CREATE    Date 01Apr09               *
+      *  Prev Amend No. CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
       *****************************************************************
@@ -191,7 +193,7 @@
       ** Mode = '*RPR  ' (Repair Function)
       ** Mode = '*SIN  ' (Screen Input Function)
      C                   PARM                    PMode
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -203,7 +205,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
@@ -239,7 +241,7 @@
       ** - screen format
      C                   PARM                    NwIP7ScnFmt
      C                   PARM                    NwIP8ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -251,7 +253,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
@@ -287,7 +289,7 @@
       ** - screen format
      C                   PARM                    NwIP7ScnFmt
      C                   PARM                    NwIP8ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -299,7 +301,7 @@
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr

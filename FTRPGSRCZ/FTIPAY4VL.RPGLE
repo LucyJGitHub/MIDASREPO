@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. MD025111           Date 10May14               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 MD025111           Date 10May14               *
       *                 257125             Date 28Sep12               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  MD025111 - Incoming payment without charges is not allowed   *

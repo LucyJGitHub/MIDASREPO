@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CSF011             Date 12Sep11               *
       *                 CER049             Date 06Dec10               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -69,12 +71,12 @@
       *  CAP084 - Thin Client API Wrappers                            *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -86,47 +88,47 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Current transaction in screen format
      D CurTrIPY1     E DS                  EXTNAME(FTIPY1PD)
      D CurTrIP1A     E DS                  EXTNAME(FTIPY1APD)
@@ -149,7 +151,7 @@
      D CurTrIPY6A    E DS                  EXTNAME(FTIPY6APD)                                 CER030
      D ExtData       E DS                  EXTNAME(FTIPEXPD)
      D OKTrIPY1      E DS                  EXTNAME(FTEIPY1PD)
- 
+
       ** Valid file layout
      D IPAYFilFmt    E DS                  EXTNAME(INPAYDD)
      D IPY2FilFmt    E DS                  EXTNAME(INPAYXPD)
@@ -160,73 +162,73 @@
                                                                                               CER001
      D RegData       E DS                  EXTNAME(FTIPRXPD)                                  CER001
      D                                     PREFIX(CR)                                         CER001
- 
+
       ** DS for Additional Info details
      D PAddInfm        DS           196
- 
+
       ** DS for Default Charge Amounts
      D PCharges        DS           196
- 
+
       ** DS for Default Charge Currencies
      D PChgCcy         DS            48
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Externally described DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Externally described DS for General Ledger ICD details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Externally described DS for Midas Modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Externally described DS for Funds Transfer ICD details
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       ** External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       ** Externally described DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** DS for Access Objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for Access Objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** DS for ZMUSER details
      D ZMUSER          DS            17
      D  PUSRID                 1     10
      D  PDBRN                 11     13
      D  PDPPT                 14     16
- 
+
       ** FT Control Data
      D PCNTRL          DS           256
      D  PGLUI                  4      4
      D  PVATT                  6      6
- 
+
       ** DS for VAT details
      D PVATDS          DS
      D  PVATR                 10     12P 4
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0 INZ(*ZERO)
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(*ZERO)
- 
+
       ** Entry parameters
      D Buffer          S           6000A
      D FwdBck          S              1A
      D DDPREF_In       S             15A
      D APIRetc         S              1A
- 
+
       ** SARs
      D S01494          S              1A
      D S01499          S              1A
@@ -239,7 +241,7 @@
      D CFT010          S              1A
      D CEU006          S              1A
      D CGL009          S              1A
- 
+
       ** Work variables
      D DDACTN_In       S              1A                                                      BG1768
      D PRtCd           S              7A   INZ(*BLANK)
@@ -268,7 +270,7 @@
      D POInCy          S              1A
      D PONbdp          S              1P 0
      D FOTrId          S             20A
- 
+
      D PPrvCDRT        S              1A   INZ(*BLANKS)
      D*PPrvCDRO*       S             12A   INZ(*BLANKS)                                       CGL029
      D PPrvCDRO        S             18A   INZ(*BLANKS)                                       CGL029
@@ -319,7 +321,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -339,28 +341,28 @@
       *                                                                                      BUG7029
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C                   IN        ZMUSER                                                    BUG7029
- 
+
      C                   MOVEL     DDACTN_In     DDACTN                                       BG1768
- 
+
       ** If the action code is blank, set to enquire
      C                   IF        DDACTN = *BLANK
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
- 
+
      C                   SELECT
      C                   WHEN      FwdBck = 'F'
      C                   MOVEL     'Y'           PRdFwd
      C                   MOVEL     'N'           PRdBck
- 
+
      C                   WHEN      FwdBck = 'B'
      C                   MOVEL     'N'           PRdFwd
      C                   MOVEL     'Y'           PRdBck
- 
+
      C                   OTHER
      C                   MOVEL     'N'           PRdFwd
      C                   MOVEL     'N'           PRdBck
      C                   ENDSL
- 
+
       ** Read incoming payment record using payment reference
      C                   IF        PRdFwd = 'Y' OR
      C                             PRdBck = 'Y'
@@ -368,34 +370,34 @@
      C                   ELSE
      C                   MOVEL     DDPREF_In     PPRefSel
      C                   ENDIF
- 
+
       ** Display error message if problems found when reading the
       ** incoming payment
      C                   IF        PErrMS <> *BLANKS
      C                   MOVEL     '0'           APIRetc
      C                   EXSR      SRSndM
      C                   ENDIF
- 
+
       ** Otherwise, if no error message returned then retrieve
       ** and convert record from file to screen format
      C                   IF        PErrMS = *BLANKS AND
      C                             PPRefSel <> *BLANKS
- 
+
      C                   EXSR      RetrieveIPAY
- 
+
      C                   IF        Idx = 0
      C                   EXSR      ConvertIPAY
- 
+
       ** Do defaulting of Charges and Commission details
      C                   IF        CFT009 = 'N'
      C                   EXSR      SRCCVatL1
      C                   EXSR      SRCDefault
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Set up default charges and currencies in CurTrIPY6
      C**********         EVAL      %SUBST(CurTrIPY6:11) = PCharges                            255522
      C                   EVAL      %SUBST(CurTrIPY6:11:196) = PCharges                        255522
@@ -405,7 +407,7 @@
       ** Populate Account Details                                                             CSF011
      C                   EXSR      SrCustActN                                                 CSF011
                                                                                               CSF011
- 
+
       ** Build buffer with required output
      C                   MOVE      TMST          @TimeStamp       26                         BUG4196
      C                   MOVE      *BLANKS       @NewButton        3                          CER049
@@ -421,10 +423,10 @@
      C                                      CurTrIPY9  +                                      CER049
      C                                      RegData    +                                      CER001
      C                                      ExtData
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -435,105 +437,105 @@
       *****************************************************************
       *
      C     SRCCVatL1     BEGSR
- 
+
       ** Set up payment branch
       ** If single branch mode, use single branch code from SDBANKPD
- 
+
      C                   IF        BGMBIN <> 'Y'
      C                   MOVE      BJSBRC        PPYBR
      C                   ELSE
- 
+
       ** Multibrached, take originating branch if used otherwise
       ** take Booking Branch
- 
+
      C                   IF        BKOBRU = 'Y'
      C                   MOVE      DDORBR        PPYBR
      C                   ELSE
      C                   MOVE      DDBRCA        PPYBR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'FTIPAY1CH'
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Incoming Payments Lvl 1 Scrn details from incoming transaction
       ** - screen format
      C                   PARM                    CurTrIPY1
- 
+
       ** Incoming Payments retrieved from file - file format
      C                   PARM                    IPAYFilFmt
- 
+
       ** Incoming Payments (extension) retrieved from file - file fmt
      C                   PARM                    IPY2FilFmt
- 
+
       ** Incoming Payments (extension) for file update - file format
      C                   PARM                    IPY2FilFmt
- 
+
       ** Charges Branch
      C                   PARM                    PPYBR
- 
+
       ** Base Currency No. of Decimal Places
      C                   PARM                    PBCDP
- 
+
       ** Local Currency No. of Decimal Places
      C                   PARM                    PLCDP
- 
+
       ** Local Currency Multiply/Divide Indicator
      C                   PARM                    PLMDIN
- 
+
       ** Local Currency Spot Rate
      C                   PARM                    PLSPOT
- 
+
       ** Entry Point
      C                   PARM                    PParmLevel
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Local Currency Code
      C                   PARM                    BJLCCY
- 
+
       ** SDFTFR - Charges Currency
      C                   PARM                    BTCHCY
- 
+
       ** VAT Rate
      C                   PARM                    PVATR
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** BLI Payment Charges Enhancements
      C                   PARM                    S01506
- 
+
       ** BLI Extended Payment Charges
      C                   PARM                    S01508
- 
+
       ** FT Batch Authorization and Credit Advices
      C                   PARM                    CFT004
- 
+
       ** STP Phase 2 MT103
      C                   PARM                    CFT014
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    IPAYFilFmt
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -541,128 +543,128 @@
       *  SRCDEFAULT - Defaulting of Charges and Commission            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCDefault    BEGSR
- 
+
      C                   CALLB     'FTIPAY3DT'
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Incoming Payments Lvl 1 Scrn details from incoming transaction
       ** - screen format
      C                   PARM                    CurTrIPY1
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 details from incoming transaction
       ** - screen format
      C                   PARM                    CurTrIPY5
- 
+
       ** Incoming Payments (additional info) for file update
       ** - file format
      C                   PARM                    IPY2FilFmt
- 
+
       ** Incoming Payments retrieved from file - file format
      C                   PARM                    IPAYFilFmt
- 
+
       ** Payment Type
      C                   PARM                    PPYTP
- 
+
       ** Charges Branch
      C                   PARM                    PPYBR
- 
+
       ** Mode = '*FRONT' (Front Office Transaction Interface)
       ** Mode = '      ' (Not Front Office Transaction Interface)
       ** Mode = '*RPR  ' (Repair Function)
       ** Mode = '*SIN  ' (Screen Input Function)
      C                   PARM                    PMode
- 
+
       ** Previous values of 'Charges to the Debit of a/c'
      C                   PARM                    PPrvCDRT
      C                   PARM                    PPrvCDRO
      C                   PARM                    PPrvCDBR
      C                   PARM                    PPrvCDRC                                     CFT120
- 
+
       ** Recalcution flag.
      C                   PARM                    PReCalc
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Local Currency Code
      C                   PARM                    BJLCCY
- 
+
       ** SDFTFR - Charges Currency
      C                   PARM                    BTCHCY
- 
+
       ** VAT Default Flag
      C                   PARM                    PVATT
- 
+
       ** VAT Rate
      C                   PARM                    PVATR
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** BLI Payment Charges Enhancements
      C                   PARM                    S01506
- 
+
       ** BLI Extended Payment Charges
      C                   PARM                    S01508
- 
+
       ** FT Batch Authorization and Credit Advices
      C                   PARM                    CFT004
- 
+
       ** MT103 Messages Generation for FT
      C                   PARM                    CFT014
       *                                                                                       CFT120
       ** FT IN/OP - Charges on DR of Account Ccy                                              CFT120
       *                                                                                       CFT120
      C                   PARM                    CFT120                                       CFT120
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Input Charge Currency
      C                   PARM                    PICCY
- 
+
       ** Input Charge Currency In Currency Flag
      C                   PARM                    PIINCY
- 
+
       ** Input Charge Currency No. of Decimal Places
      C                   PARM                    PINBDP
- 
+
       ** Input Charge Currency EMU Transmission Period Start Date
      C                   PARM                    PITPSD
- 
+
       ** Output Charge Currency
      C                   PARM                    POCCY
- 
+
       ** Output Charge Currency In Currency Flag
      C                   PARM                    POINCY
- 
+
       ** Output Charge Currency No. of Decimal Places
      C                   PARM                    PONBDP
- 
+
       ** DS for Default Charge Amounts
      C                   PARM                    PCharges
- 
+
       ** DS for Default Charge Currencies
      C                   PARM                    PChgCcy
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    IPAYFilFmt
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -704,39 +706,39 @@
       *                                                               *
       *****************************************************************
      C     ReadIPAY      BEGSR
- 
+
      C                   CALLB     'FTIPAYRED'
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM      *BLANKS       RetCodeOut
- 
+
       ** Payment Reference (file pointer)
      C                   PARM      DDPREF_In     DDPREF
- 
+
       ** Read backwards
      C                   PARM                    PRdBck
- 
+
       ** Read forwards
      C                   PARM                    PRdFwd
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error message
      C                   PARM                    PErrMs
- 
+
       ** Payment Reference read
      C                   PARM                    PPrefSel
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -747,47 +749,47 @@
       *                                                               *
       *****************************************************************
      C     RetrieveIPAY  BEGSR
- 
+
      C                   CALLB     'FTIPAYRTV'
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM      *BLANKS       RetCodeOut
- 
+
      C                   PARM      *BLANKS       PMode
- 
+
       ** Response Mode (from caller: A=Asynchronous, S=Synchronous)
      C                   PARM                    PResponse
- 
+
       ** Action Code
      C                   PARM                    DDACTN
- 
+
       ** Front Office Transaction Id
      C                   PARM      *BLANKS       FOTrId
- 
+
       ** Payment Reference
      C                   PARM      PPRefSel      DDPREF
- 
+
       ** Booking Branch
      C                   PARM                    DDBRCA
- 
+
       ** SWIFT Reference
      C                   PARM                    DDSWTN
- 
+
       ** Entry Point
      C                   PARM                    PParmLevel
- 
+
       ** Linked Program
      C                   PARM                    PLinkPgm
- 
+
       ** Validate Payment Reference for Insert
      C                   PARM      'Y'           PPrefInsert
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
       *
@@ -796,49 +798,49 @@
       *
       ** ZMUSER - Default Branch
      C                   PARM                    PDBRN
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** FT Batch Auth and Credit Advices
      C                   PARM                    CFT003
- 
+
       ** STP Phase 2 MT103
      C                   PARM                    CFT014
- 
+
       ** Fees & Charges
      C                   PARM                    CFT009
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** OK Action Code
      C                   PARM                    OKACTN
- 
+
       ** OK Payment Reference
      C                   PARM                    OKPREF
- 
+
       ** OK Booking Branch
      C                   PARM                    OKBRCA
- 
+
       ** Incoming Payments retrieved from file - file format
      C                   PARM                    IPAYFilFmt
      C                   PARM                    IPY2FilFmt
- 
+
      C                   IF        ULX043 = 'Y'                                               CER001
      C                   CALLB     'FTIPAY2RV'                                                CER001
      C                   PARM      *BLANKS       PRetCodeIn                                   CER001
@@ -849,7 +851,7 @@
      C                   ENDIF                                                                CER001
                                                                                               CER001
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -858,101 +860,101 @@
       *                screen format                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     ConvertIPAY   BEGSR
- 
+
      C                   CALLB     'FTIPAYCVT'
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM      *BLANKS       RetCodeOut
- 
+
       ** Incoming Payments retrieved from file - file format
      C                   PARM                    IPAYFilFmt
      C                   PARM                    IPY2FilFmt
- 
+
       ** Action Code
      C                   PARM                    DDACTN
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
- 
+
       ** SDBANK - Date Format Indicator
      C                   PARM                    BJDFIN
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Local Currency Code
      C                   PARM                    BJLCCY
- 
+
       ** SDGELR - Profit Centre Used
      C                   PARM                    BKPRCU
- 
+
       ** SDGELR - Originating Branch Used
      C                   PARM                    BKOBRU
- 
+
       ** SDMMOD - Analytical Accounting
      C                   PARM                    BGN0ST
- 
+
       ** SDFTFR - Charges Currency
      C                   PARM                    BTCHCY
- 
+
       ** SDFTFR - Fixed Charge Currency
      C                   PARM                    FCHCCY
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** EMU FT Settlement Currency Conversion
      C                   PARM                    CEU006
- 
+
       ** BLI Funds Transfer Enhancement Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** Electronic Banking Interface IATs and TPPs
      C                   PARM                    CGL009
- 
+
       ** STP Phase 2 MT103
      C                   PARM                    CFT014
- 
+
       ** Fees & Charges
      C                   PARM                    CFT009
      C                   PARM                    CFT010
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Incoming Payments Lvl 1 Scrn details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY1
      C                   PARM                    CurTrIP1A
- 
+
       ** Incoming Payments Lvl 2 Scrn 1/1 details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY2
- 
+
       ** Incoming Payments Lvl 2 Scrn 1/2 details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY3
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY4
      C                   PARM                    CurTrIP4A
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY5
- 
+
       ** Incoming Payments Margin Info details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY6
@@ -969,37 +971,37 @@
       ** - screen format                                                                      CER030
       *                                                                                       CER030
      C                   PARM                    CurTrIPY6A                                   CER030
- 
+
       ** DS for Additional Information details
      C                   PARM                    PAddInfm
- 
+
       ** SWIFT Reference
      C                   PARM                    DDSWTN
- 
+
       ** Sequence No.
      C                   PARM                    DDSEQNO
- 
+
       ** Incoming Payment Status
      C                   PARM                    PStatus
- 
+
       ** Payment Type
      C                   PARM                    PPYTP
- 
+
       ** DS for Default Charge Amounts
      C                   PARM                    PCharges
- 
+
       ** Input Charge Currency
      C                   PARM                    PICcy
- 
+
       ** Output Charge Currency
      C                   PARM                    POCcy
- 
+
       ** Input Charge Currency No. of Decimal Places
      C                   PARM                    PINbdp
- 
+
       ** Output Charge Currency No. of Decimal Places
      C                   PARM                    PONbdp
- 
+
      C                   IF        ULX043 = 'Y'                                               CER001
      C                   CALLB     'FTIPAY2CT'                                                CER001
      C                   PARM      *BLANKS       PRetCodeIn                                   CER001
@@ -1323,70 +1325,70 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUT
       ** =====
- 
+
       ** Read forward/backward indicator
      C                   PARM                    FwdBck
- 
+
       ** Payment Reference
      C                   PARM                    DDPREF_In
                                                                                               BG1768
       ** Action                                                                               BG1768
      C                   PARM                    DDACTN_In                                    BG1768
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Buffer
      C                   PARM                    Buffer
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
- 
+
       ** API Return Code
      C                   PARM                    APIRetc
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'FTUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'MEMSG'
- 
+
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,FTIPAYM01
- 
+
       ** Access Bank details.
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access General Ledger ICD details.
      C**********         CALLB     'AOGELRR0'                                                 CGL029
      C                   CALLB     'AOGELRR1'                                                 CGL029
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
       ** Access Midas Modules details.
      C                   CALLB     'AOMMODR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** Access Funds Transfer ICD details.
      C                   CALL      'AOFTFRR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDFTFR        PARM      SDFTFR        DSFDY
- 
+
       ** Access SAR file to determine if S01494
       ** (BLI FT Enhancements Feature) is installed.
      C                   CALLB     'AOSARDR0'
@@ -1394,13 +1396,13 @@
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'S01494'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           S01494
      C                   ELSE
      C                   MOVEL     'N'           S01494
      C                   ENDIF
- 
+
       ** Access SAR file to determine if S01499 (BLI VAT Processing)
       ** is installed.
      C                   CALLB     'AOSARDR0'
@@ -1408,112 +1410,112 @@
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'S01499'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           S01499
      C                   ELSE
      C                   MOVEL     'N'           S01499
      C                   ENDIF
- 
+
       ** Access SAR file to determine if S01506 (BLI Payment Charges
       ** Enhancements) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'S01506'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           S01506
      C                   ELSE
      C                   MOVEL     'N'           S01506
      C                   ENDIF
- 
+
       ** Access SAR file to determine if S01508 (BLI Extended Payment
       ** Charges) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'S01508'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           S01508
      C                   ELSE
      C                   MOVEL     'N'           S01508
      C                   ENDIF
- 
- 
+
+
       ** Access SAR file to determine if CFT003 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT003'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT003
      C                   ELSE
      C                   MOVEL     'N'           CFT003
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CFT004 (IBAN
       ** numbers) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT004'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT004
      C                   ELSE
      C                   MOVEL     'N'           CFT004
      C                   ENDIF
- 
- 
+
+
       ** Access SAR file to determine if CFT014 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT014'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT014
      C                   ELSE
      C                   MOVEL     'N'           CFT014
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CFT009 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT009'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT009
      C                   ELSE
      C                   MOVEL     'N'           CFT009
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CFT010 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT010'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT010
      C                   ELSE
      C                   MOVEL     'N'           CFT010
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CEU006 (EMU FT Settlement
       ** Currency Conversion) is installed.
      C                   CALLB     'AOSARDR0'
@@ -1521,13 +1523,13 @@
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CEU006'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CEU006
      C                   ELSE
      C                   MOVEL     'N'           CEU006
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CGL009 (Electronic Banking
       ** Interface IATs and TPPs) is installed.
      C                   CALLB     'AOSARDR0'
@@ -1535,13 +1537,13 @@
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CGL009'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CGL009
      C                   ELSE
      C                   MOVEL     'N'           CGL009
      C                   ENDIF
- 
+
       *                                                                                       CER001
       ** Access SAR details file to determine if ULX043 is on.                                CER001
       *                                                                                       CER001
@@ -1570,26 +1572,26 @@
       *                                                                                       CER001
       ** If S01499 is installed, retrieve VAT Rate.
       ** OR if CFT010 is installed
- 
+
      C                   IF        S01499 = 'Y' AND
      C                             CFT009 = 'N' OR
      C                             CFT010 = 'Y'
- 
+
      C                   CALL      'AOVATR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C                   PARM                    PVATDS
- 
+
      C                   ENDIF
- 
+
       ** Access FT Control Data.
- 
+
      C                   CALL      'FT0005'                             9090
      C                   PARM      *BLANKS       PRtCd
      C                   PARM                    PCNTRL
- 
+
       ** Error occurred.
- 
+
      C                   IF        *IN90 OR
      C                             PRtCd <> *BLANKS
      C                   MOVEL     '*CALL'       DBKEY
@@ -1597,33 +1599,33 @@
      C                   Z-ADD     1             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Set up FT Override for GL Balances.
- 
+
      C     PGLUI         IFEQ      'I'
      C                   MOVEL     'Y'           PFTOV
      C                   ELSE
      C                   MOVEL     *BLANK        PFTOV
      C                   ENDIF
- 
+
       ** Access Currency details file for Base Currency details.
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      BJCYCD        PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Z-ADD     A6NBDP        PBCDP
- 
+
       ** Access Currency details file for Local Currency details.
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      BJLCCY        PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Z-ADD     A6NBDP        PLCDp
      C                   IF        A6MDIN = 'M'
      C                   Z-ADD     1             PLMDIn
@@ -1659,28 +1661,28 @@
      C                   ELSE                                                                 CFT120
      C                   EVAL      CFT120 = 'N'                                               CFT120
      C                   ENDIF                                                                CFT120
- 
+
       ** Hook to enable non-core message files to be included
       /COPY WNCPYSRC,FTIPAY02
- 
+
       ** Program, module and procedure names for database error processing
       ** =================================================================
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, excluding a bound call to the DBERRCTL module.
- 
+
       *****************************************************************
      C/COPY ZACPYSRC,PSSR_ILENE
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

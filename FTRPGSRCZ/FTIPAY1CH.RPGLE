@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT120             Date 28Sep12               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *

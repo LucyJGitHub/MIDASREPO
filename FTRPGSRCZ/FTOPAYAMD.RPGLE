@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. AR402776           Date 20Dec12               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 AR402776           Date 20Dec12               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
       *  AR402776 - Settlement method is not amendable.  Ensure that  *
@@ -88,7 +90,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -107,49 +109,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * New Payment in Screen Format
      D NewPmtScn1    E DS                  EXTNAME(FTOPY1PD)
      D NewPmtScn2    E DS                  EXTNAME(FTOPY2PD)
@@ -159,7 +161,7 @@
      D NewPmtScn5    E DS                  EXTNAME(FTOPY5PD)                    CFT014
      D NewPmtScn6    E DS                  EXTNAME(FTOPY6PD)                    CFT014
      D NewPmtScn7    E DS                  EXTNAME(FTOPY7PD)                    CFT014
- 
+
       * (Current) Payment in Screen Format
      D PmtScnFmt1    E DS                  EXTNAME(FTOPY1PD)
      D                                     PREFIX(@)
@@ -177,7 +179,7 @@
      D                                     PREFIX(@)                            CFT014
      D PmtScnFmt7    E DS                  EXTNAME(FTOPY7PD)                    CFT014
      D                                     PREFIX(@)                            CFT014
- 
+
       * (Current) Payment in File Format
      D PmntFilFmt    E DS                  EXTNAME(OTPAYDD)
      D PmntFilFmX    E DS                  EXTNAME(OTPAYXPD)                    CFT014
@@ -188,10 +190,10 @@
      D OKFlag3DS     E DS                  EXTNAME(FTEOPY3PD)                   CFT014
      D OKFlag4DS     E DS                  EXTNAME(FTEOPY4PD)                   CFT014
      D OKFlag5DS     E DS                  EXTNAME(FTEOPY5PD)                   CFT014
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
@@ -199,27 +201,27 @@
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
       **
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ***Flags*to*indicate*whether*transaction*fields*are*valid********         CFT014
      D*OKFlag1DS*      DS                                                       CFT014
       ***Screen*1*flags************************************************         CFT014
@@ -330,16 +332,16 @@
      D**SMSIGOK**                     1A                                        CFT014
       ***Flag(s)*to*indicate*if*combinations*of*transaction*fields*are*valid    CFT014
      D**DDDltStpOK                    1A                                        CFT014
- 
+
       ** Date out
      D DateOut         S              6P 0
- 
+
       ** Transaction Date in Midas Dayno. format
      D TransDate       S              5P 0
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -458,7 +460,7 @@
      C*
      C                   ENDIF
      C*
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -505,9 +507,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -565,7 +567,7 @@
       ** Initialize program name
       *
      C                   MOVEL     'FTOPAYAMD'   DBPGM
- 
+
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'

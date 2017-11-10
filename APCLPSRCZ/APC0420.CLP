@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2004           */
 /*                                                                   */
+/*       Last Amend No. CFT162             Date 25Sep17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. BUG21873           Date 08Jan09              */
+/*       Prev Amend No. BUG21873           Date 08Jan09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG6752            Date 13May05              */
+/*                      BUG6752            Date 13May05              */
 /*                      BUG4451            Date 05Oct04              */
 /*                      BUG2791            Date 19May04              */
 /*                      BUG2692            Date 18May04              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CFT162 - MT900 and MT910 Message Generation                 */
 /*       BUG21873 - Multiple APCONFS on MSGW.                        */
 /*       BUG6752 - &PPARM is not set for calling DLC1921.            */
 /*       BUG4451 - Parameter mismatch when calling LEC0213           */
@@ -33,9 +35,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /*/COPY WNCPYSRC,APC0420INT                                          */
- 
+
              DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(12)
              DCL        VAR(&DTAQ1) TYPE(*CHAR) LEN(12)
              DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10)
@@ -73,18 +75,22 @@
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(*BLANKS)
              DCL        VAR(&OPIN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(7) VALUE(*BLANKS)                   /*BUG2692*/
- 
+             DCL        VAR(&OPTN2) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')                   /*CFT162*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CFT162*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CFT162*/
+             DCL        VAR(&CFT162) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CFT162*/
+
              DCLF       FILE(SDMGMEPD)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2004')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /**********  ALCOBJ     OBJ((APCONF *DTAARA *EXCL))                  */                 /*BUG21873*/
 /**********  MONMSG     MSGID(CPF0000)                               */                 /*BUG21873*/
              ALCOBJ     OBJ((APCONF *DTAARA *EXCLRD)) WAIT(5)                           /*BUG21873*/
@@ -92,59 +98,68 @@
                 GOTO       CMDLBL(END)                                                  /*BUG21873*/
              ENDDO                                                                      /*BUG21873*/
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create LDA */
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' ') TEXT('Midas SD AS400 LOCAL +
                           DATA AREA EQUIVALENT')
              MONMSG     MSGID(CPF0000)
- 
+
 /* Check Midas Modules installed */
- 
+
              RTVJOBA    JOB(&JOB)
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
              RCVF       RCDFMT(SDMGMED0)
- 
+
 /* Check system value for Confirmation Job Cycle Time */
- 
+
              CHGVAR     VAR(&RTCD) VALUE(*BLANKS)
              CHGVAR     VAR(&OPTN) VALUE('ConfmJobCycleTime')
              CHGVAR     VAR(&VAL) VALUE(*BLANKS)
- 
+
              CALL       PGM(AOSVALR0) PARM(&RTCD &OPTN &VAL &OPTN1 &VAL1 +
                           &OPTN1 &VAL1 &OPTN1 &VAL1 &OPTN1 &VAL1 &OPTN1 +
                           &VAL1 &OPTN1 &VAL1 &OPTN1 &VAL1 &OPTN1 &VAL1 +
                           &OPTN1 &VAL1)
- 
+
              IF         COND(&RTCD *NE '       ') THEN(DO)
              DMPCLPGM
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&WAIT) VALUE(&VAL))
- 
+
+                                                                                          /*CFT162*/
+/* Check if enhancement CFT162 in installed */                                            /*CFT162*/
+                                                                                          /*CFT162*/
+             CHGVAR     VAR(&SARD) VALUE('CFT162')                                        /*CFT162*/
+             CALL       PGM(AOSARDR0) PARM(&RETURN &OPTN2 &SARD &FMT)                     /*CFT162*/
+             IF         COND(&RETURN *EQ '       ') THEN(CHGVAR +
+                          VAR(&CFT162) VALUE('Y'))                                        /*CFT162*/
+                                                                                          /*CFT162*/
+
 /* Set up call to QRCVDTAQ */
- 
+
              CHGVAR     VAR(&DTAQ) VALUE('APCONFDTQ   ')
              CHGVAR     VAR(&DTAQLIBL) VALUE('*LIBL')
  START:
- 
+
 /* If cycle time is 0, do not submit any jobs */
- 
+
              IF         COND(&VAL *EQ '0') THEN(DO)
              CHGVAR     VAR(&WAIT) VALUE(99999)
              GOTO       CMDLBL(DLY)
              ENDDO
- 
+
 /* LENDING MODULE */
- 
+
              IF         COND((%SST(&MMOD 28 1) *EQ 'Y') *OR  +
                            (%SST(&MMOD 36 1) *EQ 'Y')) THEN(DO)
- 
+
 /* Receive DTAQ APLECNFDQ if LTRIX file for LE had changed */
- 
+
              CHGVAR     VAR(&DTAQ1) VALUE('APLECNFDQ   ')
              CHGVAR     VAR(&MSGDATA1) VALUE('          ')
              CALL       PGM(QRCVDTAQ) PARM(&DTAQ1 &DTAQLIBL +
@@ -152,55 +167,55 @@
              IF         COND(%SST(&MSGDATA1 1 6) *NE 'LECONF') THEN(DO)
              GOTO       CMDLBL(LEEND)
              ENDDO
- 
+
 /* Clear LE Confirmation job Data Queue */
- 
+
              CALL       PGM(QCLRDTAQ) PARM(&DTAQ1 &DTAQLIBL)
- 
+
 /* Check for Pay/Receive job being active */
- 
+
              RTVDTAARA  DTAARA(LESTAT)  RTNVAR(&LESTAT)
- 
+
              IF         COND(%SST(&LESTAT 7 1) *EQ 'N') THEN(DO)
 /* Submit Confirmations to jobq if OK */
              SNDPGMMSG  MSG('MIDAS LE CONFIRMATION JOB') TOMSGQ(MSTATUS)
- 
+
              ALCOBJ     OBJ((LECONF *DTAARA *EXCL)) WAIT(0)
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(DLY))
              SBMJOB     JOB(LEC0212A) JOBD(MBATCH) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL   LEC0212A') +
                           INLLIBL(*JOBD) MSGQ(*NONE)
- 
+
              SBMJOB     JOB(MIDASRMV) JOBD(MBATCH) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
                           INLLIBL(*JOBD) MSGQ(*NONE)
              DLCOBJ     OBJ((LECONF *DTAARA *EXCL))
              MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
 /* Submit Pay/Receive generation jobs */
              SNDPGMMSG  MSG('MIDAS LE PAY/RECEIVE JOB') TOMSGQ(MSTATUS)
- 
+
              SBMJOB     JOB(LEC0213) JOBD(MBATCH) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL   LEC0213 +
                           (''     '' '' '' ''   '')') INLLIBL(*JOBD) +
                           MSGQ(*NONE)                                                    /*BUG4451*/
 /**********               RTGDTA(*JOBD) RQSDTA('CALL   LEC0213') +
                           INLLIBL(*JOBD) MSGQ(*NONE)                                  */ /*BUG4451*/
- 
+
              SBMJOB     JOB(MIDASRMV) JOBD(MBATCH) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
                           INLLIBL(*JOBD) MSGQ(*NONE)
- 
+
  LEEND:      ENDDO
- 
+
 /* DEALING MODULE */
- 
+
              IF         COND((%SST(&MMOD 25 1) *EQ 'Y') *OR  +
                            (%SST(&MMOD 33 1) *EQ 'Y')) THEN(DO)
- 
+
 /* Receive DTAQ APDLCNFDQ if DTRIXDD file for DL had changed */
- 
+
              CHGVAR     VAR(&DTAQ1) VALUE('APDLCNFDQ   ')
              CHGVAR     VAR(&MSGDATA1) VALUE('          ')
              CALL       PGM(QRCVDTAQ) PARM(&DTAQ1 &DTAQLIBL +
@@ -208,19 +223,19 @@
              IF         COND(%SST(&MSGDATA1 1 6) *NE 'DLCONF') THEN(DO)
              GOTO       CMDLBL(DLEND)
              ENDDO
- 
+
 /* Clear DL Confirmation job Data Queue */
- 
+
              CALL       PGM(QCLRDTAQ) PARM(&DTAQ1 &DTAQLIBL)
- 
+
 /* Check for Pay/Receive job being active */
- 
+
              RTVDTAARA  DTAARA(DLSTAT)  RTNVAR(&DLSTAT)
- 
+
              IF         COND(%SST(&DLSTAT 6 1) *EQ 'N') THEN(DO)
 /* Submit Confirmations to jobq if OK */
              SNDPGMMSG  MSG('MIDAS DL CONFIRMATION JOB') TOMSGQ(MSTATUS)
- 
+
              SBMJOB     JOB(DLC0210A) JOBD(MBATCH) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL   DLC0210A') +
                           INLLIBL(*JOBD) MSGQ(MOPERQ)
@@ -228,23 +243,23 @@
                           RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
                           INLLIBL(*JOBD) MSGQ(MOPERQ)
              ENDDO
- 
+
 /* Submit Pay/Receive generation jobs */
              IF         COND(&ENAPRG *EQ 'Y') THEN(DO)
- 
+
 /* Simulate FCC0202 processing */
- 
+
              SNDPGMMSG  MSG('MIDAS DL PAY/RECEIVE JOB') TOMSGQ(MSTATUS)
              RTVJOBA    JOB(&JOB)
              CHGVAR     VAR(%SST(&PARMSTRING 1 100)) VALUE(&JOB)
              CHGVAR     VAR(%SST(&PARMSTRING 101 1)) VALUE('@')
              RTVDTAARA  DTAARA(REPSEQ) RTNVAR(&NEXSEQ)
- 
+
              CALL       PGM(FC1000) PARM(&PRTCD &NEXSEQ  &PPGMRPG +
                         &PPGMCL &PCSEQ &LEVEL &ENTITY &OPIN)
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))
- 
+
              SBMJOB     CMD(CALL PGM(FCC0200) PARM(&PPGMCL &NEXSEQ +
                           &LEVEL &ENTITY &PARMSTRING &PPGMRPG &PCSEQ)) +
                           JOB(DLC0211) JOBD(MBATCH) USER(*JOBD) +
@@ -253,13 +268,13 @@
                           RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
                           INLLIBL(*JOBD) MSGQ(MOPERQ)
              ENDDO
- 
+
  DLEND:
- 
+
 /* DEALING RATE FIXING */
- 
+
 /* Receive DTAQ APDLRTFDQ if DTRIXDD file for DL had changed */
- 
+
              CHGVAR     VAR(&DTAQ1) VALUE('APDLRTFDQ   ')
              CHGVAR     VAR(&MSGDATA1) VALUE('          ')
              CALL       PGM(QRCVDTAQ) PARM(&DTAQ1 &DTAQLIBL +
@@ -267,32 +282,32 @@
              IF         COND(%SST(&MSGDATA1 1 8) *NE 'DLRTCONF') THEN(DO)
              GOTO       CMDLBL(DLRTEND)
              ENDDO
- 
+
 /* Clear DL Confirmation job Data Queue */
- 
+
              CALL       PGM(QCLRDTAQ) PARM(&DTAQ1 &DTAQLIBL)
- 
+
 /* Submit Pay/Receive for Rate Fixing generation jobs */
              ALCOBJ     OBJ((DLC1921 *PGM *EXCL)) WAIT(1)
              MONMSG     MSGID(CPF1002 CPF1085) EXEC(GOTO CMDLBL(END))
              DLCOBJ     OBJ((DLC1921 *PGM *EXCL))
- 
+
              SNDPGMMSG  MSG('MIDAS DL RATE FIX PAY/RECEIVE JOB') TOMSGQ(MSTATUS)
- 
+
              CHGVAR     VAR(%SST(&PPARM 1 1)) VALUE('0')                                 /*BUG6752*/
              SBMJOB     CMD(CALL PGM(DLC1921) PARM(&PSEQ &PLEV &PENT +
                           &PPARM)) JOB(DLC1921) JOBD(MBATCH) +
                           USER(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD) +
                           MSGQ(MOPERQ) OUTQ(*JOBD)
- 
+
              SBMJOB     JOB(MIDASMRV) JOBD(MBATCH) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
                           INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)
- 
+
  DLRTEND:   ENDDO
- 
+
 /* FUNDS TRANSFER */
- 
+
              IF         COND(%SST(&MMOD 57 1) *EQ 'Y') THEN(DO)                          /*BUG2692*/
                                                                                          /*BUG2692*/
 /* Receive DTAQ APFTCNFDQ if OTPAYDD/CQPACDD/NTRANDD had changed */                      /*BUG2692*/
@@ -330,12 +345,22 @@
              SBMJOB     JOB(MIDASMRV) JOBD(MBATCH) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
                           INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)                        /*BUG2692*/
-             ENDDO                                                                       /*BUG2692*/
+             ENDDO       /*BUG2692*/
                                                                                          /*BUG2692*/
+/**/                                                                                      /*CFT162*/
+             IF         COND(&CFT162 = 'Y') THEN(DO)                                      /*CFT162*/
+                SBMJOB     JOB(FTC162001) JOBD(MBATCH) USER(*JOBD) +
+                             RTGDTA(*JOBD) RQSDTA('CALL +
+                             PGM(FTC162001) PARM('''' '''' '''' )') +
+                             INLLIBL(*JOBD) /*CFT162*/
+             SBMJOB     JOB(MIDASMRV) JOBD(MBATCH) USER(*JOBD) +
+                          RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
+                          INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)                        /*CFT162*/
+             ENDDO       /*CFT162*/
  FTEND:      ENDDO                                                                       /*BUG2692*/
                                                                                          /*BUG2692*/
 /* SECURITIES MODULE */                                                                  /*BUG2791*/
- 
+
              IF         COND(%SST(&MMOD 30 1) *EQ 'Y') THEN(DO)                          /*BUG2791*/
                                                                                          /*BUG2791*/
 /* Receive DTAQ APSECNFDQ if trade and depo movement had changed */                      /*BUG2791*/
@@ -347,13 +372,13 @@
              IF         COND(%SST(&MSGDATA1 1 6) *NE 'SECONF') THEN(DO)                  /*BUG2791*/
              GOTO       CMDLBL(SEEND)                                                    /*BUG2692*/
              ENDDO                                                                       /*BUG2791*/
- 
+
 /* Clear SE Confirmation job Data Queue */                                               /*BUG2791*/
                                                                                          /*BUG2791*/
              CALL       PGM(QCLRDTAQ) PARM(&DTAQ1 &DTAQLIBL)                             /*BUG2791*/
                                                                                          /*BUG2791*/
              RTVDTAARA  DTAARA(SESTAT)  RTNVAR(&SESTAT)                                  /*BUG2791*/
- 
+
              IF         COND(%SST(&SESTAT 73 1) *EQ 'N') THEN(DO)                        /*BUG2791*/
 /* Submit Confirmation generation job */                                                 /*BUG2791*/
                                                                                          /*BUG2791*/
@@ -371,22 +396,22 @@
  SEEND:      ENDDO                                                                       /*BUG2791*/
                                                                                          /*BUG2791*/
  DLY:
- 
+
 /* Receive DTAQ APCONFDTQ delaying for 30 minutes */
- 
+
              CALL       PGM(QRCVDTAQ) PARM(&DTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA &WAIT)
              IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)
              GOTO       CMDLBL(END)
              ENDDO
              GOTO       CMDLBL(START)
- 
+
  ABNOR:
 /*/COPY WNCPYSRC,APC0420ERR                                          */
- 
+
              CHGJOB     SWS(XXXXXX11)
 /* Abnormal termination */
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           APC0420 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
@@ -397,7 +422,7 @@
              MONMSG     MSGID(CPF0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
- 
+
 /*/COPY WNCPYSRC,APC0420END                                          */
- 
+
              ENDPGM

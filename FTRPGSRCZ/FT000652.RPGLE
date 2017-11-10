@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT120             Date 28Sep12               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature (Recompile)                *
@@ -52,13 +54,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Display file
      FFT000652DFCF   E             WORKSTN
- 
+
       * FT Payment Charge Definition
      FFTPCHGL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       *                                                               *
       *                  FUNCTION OF INDICATORS                       *
@@ -74,7 +76,7 @@
       *       98  ROLLUP                                              *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -86,85 +88,85 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **  13-long array element full of text zeros
      D AllZeros        C                   '0000000000000'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Array for loading tiers
      D TierArr         S             98    DIM(11)
- 
+
       **  Charge on each tier
      D TierCharge      S             13    DIM(11)
- 
+
       **  Chargeable Amount on each tier
      D TierAmount      S             13    DIM(11)
- 
+
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Funds Transfer ICD
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Outgoing Payments file/extension file
      D OutPay        E DS                  EXTNAME(OTPAYDD)  PREFIX(O_)
      D OtPayEx       E DS                  EXTNAME(OTPAYXPD) PREFIX(O_)
- 
+
       ** Incoming Payments file/extension file
      D InPay         E DS                  EXTNAME(INPAYDD)  PREFIX(I_)
      D InPayEx       E DS                  EXTNAME(INPAYXPD) PREFIX(I_)
- 
+
       ** Cheques for Collection files
      D CqCoC         E DS                  EXTNAME(CQCOCDD)  PREFIX(A_)
      D CqCoD         E DS                  EXTNAME(CQCODDD)  PREFIX(B_)
- 
+
       ** Cheques to be Paid files
      D CqPaC         E DS                  EXTNAME(CQPACDD)  PREFIX(C_)
      D CqPaD         E DS                  EXTNAME(CQPADDD)  PREFIX(D_)
- 
+
       ** Request for Transfer files
      D FT101H        E DS                  EXTNAME(FT101HPD) PREFIX(H1)
      D FT101D        E DS                  EXTNAME(FT101DPD) PREFIX(D1)
- 
+
       ** Customer Credit Transfer files
      D FT102H        E DS                  EXTNAME(FT102HPD) PREFIX(H2)
      D FT102D        E DS                  EXTNAME(FT102DPD) PREFIX(D2)
@@ -172,7 +174,7 @@
       ** Switchable Features File                                                             CFT120
       *                                                                                       CFT120
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CFT120
- 
+
       **  DS for loading Tier names
      D TierNames       DS
      D  STIER1
@@ -181,7 +183,7 @@
      D  STIER4
      D  STIER5
      D  STIER6
- 
+
       **  Screen fields - Record 1
      D Record1         DS
      D   SSRT01
@@ -191,7 +193,7 @@
      D   SMAX01
      D   SAMT01
      D   SCHG01
- 
+
       **  Screen fields - Record 2
      D Record2         DS
      D   SSRT02
@@ -201,7 +203,7 @@
      D   SMAX02
      D   SAMT02
      D   SCHG02
- 
+
       **  Screen fields - Record 3
      D Record3         DS
      D   SSRT03
@@ -211,7 +213,7 @@
      D   SMAX03
      D   SAMT03
      D   SCHG03
- 
+
       **  Screen fields - Record 4
      D Record4         DS
      D   SSRT04
@@ -221,7 +223,7 @@
      D   SMAX04
      D   SAMT04
      D   SCHG04
- 
+
       **  Screen fields - Record 5
      D Record5         DS
      D   SSRT05
@@ -231,7 +233,7 @@
      D   SMAX05
      D   SAMT05
      D   SCHG05
- 
+
       **  Screen fields - Record 6
      D Record6         DS
      D   SSRT06
@@ -241,7 +243,7 @@
      D   SMAX06
      D   SAMT06
      D   SCHG06
- 
+
       **  Work fields (screen format)
      D X@Fields        DS
      D   X@Start               1     14
@@ -251,7 +253,7 @@
      D   X@Max                57     70
      D   X@Amt                71     84
      D   X@Chg                85     98
- 
+
       ** Work fields used by ZXRATE
      D ZRATE1          S             13P 8
      D ZRATE2          S             13P 8
@@ -259,17 +261,17 @@
      D ZMDI2           S              1A
      D ZRATEX          S             13P 8
      D ZMDIX           S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Transaction being charged - Main details
       **                           - Extension/secondary details
      D P_TransDet      S           3000A
      D P_TransExt      S           3000A
- 
+
       ** Entry parameters
      D P_ChargeCde     S              5A
      D P_ChargeAmt     S             13P 0
@@ -277,18 +279,18 @@
      D P_TransType     S              2A
      D P_ChgDRCcy      S              3A                                                      CFT120
      D SetAmt          S                   Like(O_SMAM)
- 
+
       ** Work fields used by ZEDIT
      D ZFIELD          S             16A
      D ZADEC           S              1P 0
- 
+
       ** Work fields (numeric) for currency conversion
      D W@Start         S                   LIKE(SABC01)
      D W@End           S                   LIKE(EABC01)
      D W@Pro           S                   LIKE(PMBC01)
      D W@Max           S                   LIKE(MXBC01)
      D W@Min           S                   LIKE(MIBC01)
- 
+
       ** Fields from transaction
      D PayAmt          S             13P 0
      D PayCcy          S              3A
@@ -301,22 +303,22 @@
      D TransRate       S                   Like(O_RATE)
      D Levied          S                   Like(ChgCcy)
      D ChgDRCcy        S                   LIKE(P_ChgDRCcy)                                   CFT120
- 
+
      D BaseCcyDP       S                   LIKE(A6NBDP)
      D ProFlag         S              1A
      D x               S              2P 0
- 
+
      D P_SettAmt       S                   Like(O_SMAM)
      D P_ChargesDR     S                   Like(O_CDRO)
      D P_ADDC          S                   Like(O_ADDC)
- 
+
      D StartArr        S             13P 0 DIM(11)
      D EndArr          S             13P 0 DIM(11)
      D RateArr         S             13P 8 DIM(11)
      D ProArr          S             13P 8 DIM(11)
      D MinArr          S             13P 0 DIM(11)
      D MaxArr          S             13P 0 DIM(11)
- 
+
      D SavStart        S                   Like(ZField)
      D SavEnd          S                   Like(ZField)
      D SavRate         S                   Like(ZField)
@@ -334,7 +336,7 @@
      D PRTCD           S              7                                                       CFT120
      D POPTN           S              7                                                       CFT120
      D PSard           S              6                                                       CFT120
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -439,7 +441,7 @@
      C                   Eval      P_SettAmt = O_SMAM
      C                   Eval      SettCcy = O_SMCY
      C                   Eval      TransRate = O_RATE
- 
+
       *
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      InPay   = P_TransDet
@@ -541,9 +543,9 @@
       *
      C                   EVAL      ZADEC = A6NBDP
      C                   Eval      ChgCcyDP = A6NBDP
- 
+
      C                   EVAL      ChgExch = A6SPRT
- 
+
       * Determine LEVIED currency
      C                   Select
      C                   When      P_ChargesDR <> *Zeros
@@ -562,12 +564,12 @@
      C                   When      P_Addc = 'D'
      C                   Eval      Levied = PayCcy
      C                   Endsl
- 
+
       *  If Charges in transaction currency, move in appropriate rate.
      C                   If        CHTRCY  = 'Y'
      C                   Eval      ChgExch = TransRate
      C                   Endif
- 
+
      C                   WRITE     FT000652F0
       *
       ** Extract Tier ranges and calculate charge for each Tier
@@ -646,14 +648,14 @@
      C                   Move (P)  ChgAbleAmt    ZFIELD
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Move      ZField        SCHGABL
- 
+
       *
       * Format Total Charge
      C                   Move (P)  TotInChgCcy   ZFIELD
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Move      ZField        STOTAL
- 
- 
+
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -696,7 +698,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   CallB     'FTCALCRNG'
      C                   PARM                    RetCodeIn
      C                   PARM                    PayAmt
@@ -718,8 +720,8 @@
      C                   PARM                    ProArr
      C                   PARM                    MinArr
      C                   PARM                    MaxArr
- 
- 
+
+
       *
      C                   ENDSR
       *****************************************************************
@@ -728,34 +730,34 @@
       * MovToDsp - Move arrays to display
       *****************************************************************
      C     MovToDsp      Begsr
- 
+
       * Now move data to screen
      C                   DoW       Start <= End
- 
+
       * Move charge ccy DP to ZADEC
      C                   Eval      ZADEC = ChgCcyDP
      C                   Eval      x = Start
- 
+
      C                   Move (P)  StartArr(x)   ZFIELD
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Eval      SavStart    = ZFIELD
- 
+
      C                   Move (P)  EndArr(x)     ZFIELD
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Eval      SavEnd      = ZFIELD
- 
+
      C                   Move (P)  MinArr(x)     ZFIELD
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Eval      SavMin      = ZFIELD
- 
+
      C                   Move (P)  MaxArr(x)     ZFIELD
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Eval      SavMax      = ZFIELD
- 
+
      C                   Move (P)  TierCharge(x) ZFIELD
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Eval      SavTierChg  = ZFIELD
- 
+
      C                   If        TierCharge(x) <> *Zero
      C                   Move (P)  TierAmount(x) ZFIELD
      C                   If        ProArr(x) = 0
@@ -763,31 +765,31 @@
      C                   Else
      C                   Eval      ZADEC = 0
      C                   Endif
- 
+
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Eval      SavTierAmt  = ZFIELD
      C                   Else
      C                   Eval      SavTierAmt = *Blanks
- 
+
      C                   Endif
       * =====================================================
- 
+
      C                   Eval      ZADEC = 8
- 
+
      C                   Move (P)  RateArr(x)    ZFIELD
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Eval      SavRate     = ZFIELD
- 
+
      C                   Move (P)  ProArr(x)     ZFIELD
      C                   CallB     'ZEDIT'       P@ZEDIT
      C                   Eval      SavPro      = ZFIELD
- 
+
      C                   Exsr      MoveToScreen
- 
+
      C                   Eval      Start = Start + 1
- 
+
      C                   Enddo
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -795,10 +797,10 @@
       * MoveToScreen
       *****************************************************************
      C     MoveToScreen  Begsr
- 
+
      C                   Select
      C                   When      x = 1
- 
+
      C                   Move      SavStart      SSRT01
      C                   Move      SavEnd        SEND01
      C                   If        SavRate <> '      0.00000000'
@@ -810,9 +812,9 @@
      C                   Move      SavMax        SMAX01
      C                   Move      SavTierAmt    SAMT01
      C                   Move      SavTierCHG    Schg01
- 
+
      C                   When      x = 2
- 
+
      C                   Move      SavStart      SSRT02
      C                   Move      SavEnd        SEND02
      C                   If        SavRate <> '      0.00000000'
@@ -824,9 +826,9 @@
      C                   Move      SavMax        SMAX02
      C                   Move      SavTierAmt    SAMT02
      C                   Move      SavTierCHG    Schg02
- 
+
      C                   When      x = 3
- 
+
      C                   Move      SavStart      SSRT03
      C                   Move      SavEnd        SEND03
      C                   If        SavRate <> '      0.00000000'
@@ -838,9 +840,9 @@
      C                   Move      SavMax        SMAX03
      C                   Move      SavTierAmt    SAMT03
      C                   Move      SavTierCHG    Schg03
- 
+
      C                   When      x = 4
- 
+
      C                   Move      SavStart      SSRT04
      C                   Move      SavEnd        SEND04
      C                   If        SavRate <> '      0.00000000'
@@ -852,9 +854,9 @@
      C                   Move      SavMax        SMAX04
      C                   Move      SavTierAmt    SAMT04
      C                   Move      SavTierCHG    Schg04
- 
+
      C                   When      x = 5
- 
+
      C                   Move      SavStart      SSRT05
      C                   Move      SavEnd        SEND05
      C                   If        SavRate <> '      0.00000000'
@@ -866,9 +868,9 @@
      C                   Move      SavMax        SMAX05
      C                   Move      SavTierAmt    SAMT05
      C                   Move      SavTierCHG    Schg05
- 
+
      C                   When      x = 6
- 
+
      C                   Move      SavStart      SSRT06
      C                   Move      SavEnd        SEND06
      C                   If        SavRate <> '      0.00000000'
@@ -880,9 +882,9 @@
      C                   Move      SavMax        SMAX06
      C                   Move      SavTierAmt    SAMT06
      C                   Move      SavTierCHG    Schg06
- 
+
      C                   When      x = 7
- 
+
      C                   Move      SavStart      SSRT01
      C                   Move      SavEnd        SEND01
      C                   If        SavRate <> '      0.00000000'
@@ -894,9 +896,9 @@
      C                   Move      SavMax        SMAX01
      C                   Move      SavTierAmt    SAMT01
      C                   Move      SavTierCHG    Schg01
- 
+
      C                   When      x = 8
- 
+
      C                   Move      SavStart      SSRT02
      C                   Move      SavEnd        SEND02
      C                   If        SavRate <> '      0.00000000'
@@ -908,9 +910,9 @@
      C                   Move      SavMax        SMAX02
      C                   Move      SavTierAmt    SAMT02
      C                   Move      SavTierCHG    Schg02
- 
+
      C                   When      x = 9
- 
+
      C                   Move      SavStart      SSRT03
      C                   Move      SavEnd        SEND03
      C                   If        SavRate <> '      0.00000000'
@@ -922,9 +924,9 @@
      C                   Move      SavMax        SMAX03
      C                   Move      SavTierAmt    SAMT03
      C                   Move      SavTierCHG    Schg03
- 
+
      C                   When      x = 10
- 
+
      C                   Move      SavStart      SSRT04
      C                   Move      SavEnd        SEND04
      C                   If        SavRate <> '      0.00000000'
@@ -936,9 +938,9 @@
      C                   Move      SavMax        SMAX04
      C                   Move      SavTierAmt    SAMT04
      C                   Move      SavTierCHG    Schg04
- 
+
      C                   When      x = 11
- 
+
      C                   Move      SavStart      SSRT05
      C                   Move      SavEnd        SEND05
      C                   If        SavRate <> '      0.00000000'
@@ -950,12 +952,12 @@
      C                   Move      SavMax        SMAX05
      C                   Move      SavTierAmt    SAMT05
      C                   Move      SavTierCHG    Schg05
- 
+
      C                   Move      *Blanks       SSRT05
      C                   Move      *Blanks       SEND05
- 
+
      C                   Endsl
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT

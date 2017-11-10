@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT120             Date 28Sep12               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature (Recompile)                *

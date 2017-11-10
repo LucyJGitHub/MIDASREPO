@@ -1,40 +1,26 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2017')
       *****************************************************************
-/*S*D****RPGBASEBNC****************************************************                       CGP017
-/*STD *  RPGBASEMOD                                                   *                       CGP017
-/*EXI *  TEXT('Generated Code')                                       *
+/*STD *  RPGBASEMOD                                                   *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
       *                                                               *
-      *  GOINPAYXPD - Bulk Update of Global File GZINPAYXPD           *
+      *  GOSDM901PD - Bulk Update of Global File GZSDM901PD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Misys International Banking Systems Ltd. 2017            *
       *                                                               *
-      *  Last Amend No. CFT162             Date 11Sep17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *                 CSW209             Date 01Apr09               *
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 BUG10215 *REBUILD  Date 27Sep06               *
-      *                 CGP001  *CREATE    Date 23May03               *
+      *  Last Amend No. CFT162   *Create   Date 05Sep17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
-      *  CGP017 - Global Layer - GOC0100 Task Split                   *
-      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
-      *  BUG10215 - Global replication needs a global interface       *
-      *  CGP001 - Global Processing                                   *
+      *  CFT162 - MT900 and MT910 Message Generation                  *
       *                                                               *
       *****************************************************************
 
-     FINPAYXL0  IP  AE           K DISK    RENAME(INPAYXDF   : FormatZON)
+     FSDM901L0  IP  AE           K DISK    RENAME(SDM901D0   : FormatZON)
      F                                     INFSR(*PSSR)
-     FGZINPAYXL0IS  AE           K DISK    RENAME(INPAYXDF   : FormatGLB)
+     FGZSDM901L0IS  AE           K DISK    RENAME(SDM901D0   : FormatGLB)
      F                                     PREFIX(G_)
      F                                     INFSR(*PSSR)
      FGPSBLOGL0 UF A E           K DISK    INFSR(*PSSR)
@@ -42,8 +28,8 @@
       * Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
 
-     D Z_INPAYXL0    E DS                  EXTNAME(INPAYXPD  )
-     D G_INPAYXL0    E DS                  EXTNAME(GZINPAYXPD)
+     D Z_SDM901L0    E DS                  EXTNAME(SDM901PD  )
+     D G_SDM901L0    E DS                  EXTNAME(GZSDM901PD)
      D                                     PREFIX(G_)
 
      D                 DS
@@ -73,14 +59,22 @@
      D  END_SS                 5      6S 0
 
      IFormatZON     01
-     I                                          INPREF        L1M1
+     I                                          M9CNUM        L1M5
+     I                                          M9CCY         L1M4
+     I                                          M9ACOD        L1M3
+     I                                          M9ACSQ        L1M2
+     I                                          M9BRCD        L1M1
      IFormatGLB     02
-     I                                          G_INPREF      L1M1
+     I                                          G_M9CNUM      L1M5
+     I                                          G_M9CCY       L1M4
+     I                                          G_M9ACOD      L1M3
+     I                                          G_M9ACSQ      L1M2
+     I                                          G_M9BRCD      L1M1
 
      C     *INMR         IFEQ      *OFF
      C     *IN01         IFEQ      *ON
-     C                   MOVEL     Z_INPAYXL0    G_INPAYXL0
-Z    C                   EVAL      G_INZONE      = I_ZONE
+     C                   MOVEL     Z_SDM901L0    G_SDM901L0
+Z    C                   EVAL      G_M9ZONE      = I_ZONE
      C                   EVAL      I#BFAF = 'A'
      C                   EXSR      UPD_GLOBALFILE
      C                   ELSE
@@ -88,15 +82,15 @@ Z    C                   EVAL      G_INZONE      = I_ZONE
      C                   EXSR      UPD_GLOBALFILE
      C                   ENDIF
      C                   ELSE
-     C   02              MOVE      INZONE        G_INZONE                                     CGP017
-     C     Z_INPAYXL0    IFNE      G_INPAYXL0                                                 CGP017
-     C   02              MOVEL     Z_INPAYXL0    G_INPAYXL0
-Z    C   02              EVAL      G_INZONE      = I_ZONE
+     C   02              MOVE      M9ZONE        G_M9ZONE
+     C     Z_SDM901L0    IFNE      G_SDM901L0
+     C   02              MOVEL     Z_SDM901L0    G_SDM901L0
+Z    C   02              EVAL      G_M9ZONE      = I_ZONE
      C   02              EVAL      I#BFAF = 'A'
      C   02              EXSR      UPD_GLOBALFILE
-     C                   ELSE                                                                 CGP017
-     C   02              MOVE      *OFF          *IN02                                        CGP017
-     C                   ENDIF                                                                CGP017
+     C                   ELSE
+     C   02              MOVE      *OFF          *IN02
+     C                   ENDIF
      C                   ENDIF
      C                   EXSR      UPD_SYNTOT
      CLR                 EXSR      WRT_SYNLOG
@@ -107,9 +101,9 @@ Z    C   02              EVAL      G_INZONE      = I_ZONE
      C     UPD_GLOBALFILEBEGSR
      C                   EVAL      I#ZONE = I_ZONE
      C                   EVAL      I#TRAP = 'N'
-     C                   EVAL      I#BIMG = G_INPAYXL0
-     C                   EVAL      I#AIMG = G_INPAYXL0
-     C/COPY GPCPYSRCG,GPINPAYXPD
+     C                   EVAL      I#BIMG = G_SDM901L0
+     C                   EVAL      I#AIMG = G_SDM901L0
+     C/COPY GPCPYSRCG,GPSDM901PD
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -217,12 +211,12 @@ Z    C   02              EVAL      G_INZONE      = I_ZONE
      C                   PARM                    I_ZONE           10
 
      C                   MOVEL     *BLANK        I#ERMS           50
-     C                   CLEAR                   Z_INPAYXL0
-     C                   CLEAR                   G_INPAYXL0
+     C                   CLEAR                   Z_SDM901L0
+     C                   CLEAR                   G_SDM901L0
 
       * Delete existing log records
 
-     C                   EVAL      BSFILE = 'GZINPAYXPD'
+     C                   EVAL      BSFILE = 'GZSDM901PD'
      C                   EVAL      BSZONE = I_ZONE
      C     GPSBLOGK      SETLL     GPSBLOGD0
      C     GPSBLOGK      READE     GPSBLOGD0                              99

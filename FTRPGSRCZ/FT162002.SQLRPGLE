@@ -596,6 +596,7 @@
      C                   MOVE      ABRCA         P2BRCA
      C                   MOVEL     BNC1          IBANBN
      C     BNCT          WHENEQ    'I'
+     C                   MOVE      CBRCA         P2BRCA
      C                   MOVEL     BNC1          IBANBN
      C                   ENDSL
       *

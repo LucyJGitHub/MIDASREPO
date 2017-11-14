@@ -564,6 +564,7 @@
      C                   MOVE      ABRCA         P2BRCA
      C                   MOVEL     INRCO1        IBANRC
      C     INRCRT        WHENEQ    'I'
+     C                   MOVE      CBRCA         P2BRCA
      C                   MOVEL     INRCO1        IBANRC
      C                   ENDSL
       *

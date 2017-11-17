@@ -60,7 +60,7 @@
      C                   CLEAR                   G_SDM901PD
      C                   MOVEL     Z_SDM901PD    G_SDM901PD
       * Fix Data
-     C                   CALLB     'GPFIXGDTA'
+     C                   CALL      'GPFIXGDTA'
      C                   PARM                    I#ZONE
      C                   PARM      'GZSDM901PD'  I#FILE           10
      C                   PARM      G_SDM901PD    IO#BUFFER      4000

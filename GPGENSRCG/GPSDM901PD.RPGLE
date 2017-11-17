@@ -1,7 +1,7 @@
      H DEBUG
      H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2017')
-/*STD ***RPGBASEBNC****************************************************
-      *  RPGBASEMOD                                                   *
+/*S*D****RPGBASEBNC****************************************************
+/*STD *  RPGBASEMOD                                                   *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *

@@ -12,8 +12,10 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD047993           Date 23Sep17               *
-      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *  Last Amend No. MD048609           Date 22Nov17               *
+      *  Prev Amend No. MD046080           Date 21Sep17               *
+      *                 MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
       *                 MD033575           Date 20Jun17               *
       *                 MD045091           Date 10May17               *
       *                 MD039672           Date 12May17               *
@@ -376,6 +378,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048609 - Failing COB Component - LEC0000456 seq 00001	     *
+      *  MD046080 - Gap between CLE031 (Settlement to different       *
+      *             currency) and CLE134 (PDCL processing)            *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
@@ -1382,6 +1387,13 @@
       ** Midas LE Effective Interest Rate Details - Update Index                              CAS009
       *                                                                                       CAS009
      FCLOAMQL0  IF   E           K DISK    INFSR(*PSSR)
+      ** Settlement Allocation by RONS                                                      MD046080
+     FLESTALLG  IF   E           K DISK    INFSR(*PSSR)                                     MD046080
+     F                                     PREFIX(G_)                                       MD046080
+      ** Settlement Allocation by PONS                                                      MD046080
+     FLESTALLH  IF   E           K DISK    INFSR(*PSSR)                                     MD046080
+     F                                     RENAME(LESTALD0:LESTALD1)                        MD046080
+     F                                     PREFIX(H_)                                       MD046080
       ** Midas LE Loan amendments extension file                                              CRE073
      FCLOANZI0  UF   E           K DISK    INFSR(*PSSR)                                       CLE164
      F*                                                                   S01408
@@ -1488,6 +1500,8 @@
      D STAMP           S             26    DIM(1) CTDATA PERRCD(1)
      D***SVAL            S             20    DIM(1) CTDATA PERRCD(1)                        MD027475
      D SVAL            S             20    DIM(2) CTDATA PERRCD(1)                          MD027475
+     D WSET            S             18A                                                    MD046080
+     D WWCCY           S              3A                                                    MD046080
                                                                                               CLE164
       ** CLE164 Enhancement F variables for LE000801                                          CLE164
                                                                                               CLE164
@@ -1710,6 +1724,7 @@
      D LESTAL        E DS                  EXTNAME(LESTALPD)
       ** External data structures for Settlement Allocation File                              CLE034
       *                                                                                       CLE034
+     D  STVDAT       E                     EXTFLD(VDAT)                                     MD048609
      D  STPSTM       E                     EXTFLD(PSTM)
      D  STPONS       E                     EXTFLD(PONS)
      D  STPOBR       E                     EXTFLD(POBR)
@@ -4247,6 +4262,10 @@ L118 I                             P   72   77 7RTSPL
      C                   KFLD                    VDAT                                         263416
      C                   KFLD                    LASN                                         263416
       *                                                                                       263416
+     C     KSTAL         KLIST                                                              MD046080
+     C                   KFLD                    LNRF                                       MD046080
+     C                   KFLD                    WSET                                       MD046080
+      *                                                                                     MD046080
      C     KPDCL         KLIST
      C                   KFLD                    LNRF
      C                   KFLD                    VDAT
@@ -12310,7 +12329,42 @@ L118 I                             P   72   77 7RTSPL
      C**********         MOVE      'Y'           WSEPKY                                263074 CLE164
      C**********         Z-ADD     650           SEPCKM                              AR996719 CLE164
      C**********         Z-ADD     650           SEPCKT                                263074 CLE164
-     C                   Z-ADD     INTA          KEAMT                                        263074
+     C**********         Z-ADD     INTA          KEAMT                               263074 MD046080
+     C     CLE031        IFEQ      'Y'                                                      MD046080
+     C     CLE034        IFEQ      'Y'                                                      MD046080
+     C     STAL          ANDEQ     'Y'                                                      MD046080
+     C                   MOVE      *BLANKS       WSET                                       MD046080
+     C                   MOVE      OSAC          WSET                                       MD046080
+     C     PTYP          IFNE      66                                                       MD046080
+     C     PTYP          ANDNE     67                                                       MD046080
+     C     PTYP          ANDNE     69                                                       MD046080
+     C     PTYP          ANDNE     72                                                       MD046080
+     C     KSTAL         CHAIN     LESTALLG                                                 MD046080
+     C                   MOVE      G_RSCY        XCCY                                       MD046080
+     C                   MOVE      G_REXI        WCYXIN                                     MD046080
+     C                   Z-ADD     G_REXR        WCYEXR                                     MD046080
+     C                   ELSE                                                               MD046080
+     C     KSTAL         CHAIN     LESTALLH                                                 MD046080
+     C                   MOVE      H_PSCY        XCCY                                       MD046080
+     C                   MOVE      H_PEXI        WCYXIN                                     MD046080
+     C                   Z-ADD     H_PEXR        WCYEXR                                     MD046080
+     C                   ENDIF                                                              MD046080
+     C                   MOVE      XCCY          WWCCY                                      MD046080
+     C                   ELSE                                                               MD046080
+     C                   MOVE      WFMDIN        WCYXIN                                     MD046080
+     C                   Z-ADD     WFEXR         WCYEXR                                     MD046080
+     C                   MOVE      CCYL          XCCY                                       MD046080
+     C                   MOVE      CCYL          WWCCY                                      MD046080
+     C                   ENDIF                                                              MD046080
+     C                   EXSR      CCYDSP                                                   MD046080
+     C                   Z-ADD     XDECP         W6NBDP                                     MD046080
+     C                   MOVE      FCCY          XCCY                                       MD046080
+     C                   EXSR      CCYDSP                                                   MD046080
+     C                   Z-ADD     INTA          WKAMT                                      MD046080
+     C                   EXSR      SETAMT                                                   MD046080
+     C                   Z-ADD     STAMT         KEAMT                                      MD046080
+     C                   MOVE      WWCCY         KECCY                                      MD046080
+     C                   ENDIF                                                              MD046080
      C                   Z-ADD     0             KPAMT                                        263074
      C**********         ENDIF                                                         263074 CLE164
       *****************************************************************                263074 CLE164
@@ -12354,7 +12408,42 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      SEVDAT = VDATL                                             CLE164
                                                                                               CLE164
      C                                                                                        CLE164
-     C                   Z-ADD     PRAM          KEAMT                                        263074
+     C**********         Z-ADD     PRAM          KEAMT                               263074 MD046080
+     C     CLE031        IFEQ      'Y'                                                      MD046080
+     C     CLE034        IFEQ      'Y'                                                      MD046080
+     C     STAL          ANDEQ     'Y'                                                      MD046080
+     C                   MOVE      *BLANKS       WSET                                       MD046080
+     C                   MOVE      OSAC          WSET                                       MD046080
+     C     PTYP          IFNE      66                                                       MD046080
+     C     PTYP          ANDNE     67                                                       MD046080
+     C     PTYP          ANDNE     69                                                       MD046080
+     C     PTYP          ANDNE     72                                                       MD046080
+     C     KSTAL         CHAIN     LESTALLG                                                 MD046080
+     C                   MOVE      G_RSCY        XCCY                                       MD046080
+     C                   MOVE      G_REXI        WCYXIN                                     MD046080
+     C                   Z-ADD     G_REXR        WCYEXR                                     MD046080
+     C                   ELSE                                                               MD046080
+     C     KSTAL         CHAIN     LESTALLH                                                 MD046080
+     C                   MOVE      H_PSCY        XCCY                                       MD046080
+     C                   MOVE      H_PEXI        WCYXIN                                     MD046080
+     C                   Z-ADD     H_PEXR        WCYEXR                                     MD046080
+     C                   ENDIF                                                              MD046080
+     C                   MOVE      XCCY          WWCCY                                      MD046080
+     C                   ELSE                                                               MD046080
+     C                   MOVE      WFMDIN        WCYXIN                                     MD046080
+     C                   Z-ADD     WFEXR         WCYEXR                                     MD046080
+     C                   MOVE      CCYL          XCCY                                       MD046080
+     C                   MOVE      CCYL          WWCCY                                      MD046080
+     C                   ENDIF                                                              MD046080
+     C                   EXSR      CCYDSP                                                   MD046080
+     C                   Z-ADD     XDECP         W6NBDP                                     MD046080
+     C                   MOVE      FCCY          XCCY                                       MD046080
+     C                   EXSR      CCYDSP                                                   MD046080
+     C                   Z-ADD     PRAM          WKAMT                                      MD046080
+     C                   EXSR      SETAMT                                                   MD046080
+     C                   Z-ADD     STAMT         KEAMT                                      MD046080
+     C                   MOVE      WWCCY         KECCY                                      MD046080
+     C                   ENDIF                                                              MD046080
      C                   Z-ADD     PRAM          KPAMT                                        263074
      C                   Z-ADD     0             KIAMT                                        263074
                                                                                               CLE164
@@ -12382,6 +12471,9 @@ L118 I                             P   72   77 7RTSPL
      C     *IN30         IFEQ      *OFF                                                       CLE134
 1672 C                   SETON                                        50
      C                   ENDIF                                                                CLE134
+     C     AKY(3)        IFEQ      'S'                                                      MD046080
+     C                   SETOFF                                       50                    MD046080
+     C                   ENDIF                                                              MD046080
       *                                                                                     MD022450
      C                   IF        ACAMNT = *ZEROS                                          MD022450
      C                   SETOFF                                       50                    MD022450

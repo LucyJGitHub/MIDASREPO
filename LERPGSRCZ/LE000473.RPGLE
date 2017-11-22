@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD035433           Date 02Sep15               *
-      *  Prev Amend No. MD033895           Date 15Apr15               *
+      *  Last Amend No. MD046080           Date 17Sep17               *
+      *  Prev Amend No. MD035433           Date 02Sep15               *
+      *                 MD033895           Date 15Apr15               *
       *                 MD031851           Date 25Jan15               *
       *                 MD031225           Date 10Dec14               *
       *                 MD027206           Date 19Aug14               *
@@ -94,6 +95,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046080 - Gap between CLE031 (Settlement to different       *
+      *             currency) and CLE134 (PDCL processing)            *
       *  MD035433 - System generated new PDCL instead of using old    *
       *             one. Evaluate WRECI equals to 'D' for AYSIIN = 'Y'*
       *             to correctly retrieve record of PDCL details.     *
@@ -702,6 +705,7 @@
      DCLE014           S              1
      DCLE023           S              1
      DCLE025           S              1
+     DCLE031           S              1                                                     MD046080
      DWKLNR            S              6
      DWKVDT            S              5  0
      DWKLSN            S              3  0
@@ -3705,6 +3709,16 @@
      C                   MOVE      'Y'           CLE025
      C                   ENDIF
       *
+     C                   MOVE      'N'           CLE031                                     MD046080
+     C                   CALLB     'AOSARDR0'                                               MD046080
+     C                   PARM      *BLANKS       @RTCD                                      MD046080
+     C                   PARM      '*VERIFY'     @OPTN                                      MD046080
+     C                   PARM      'CLE031'      @SARD                                      MD046080
+      *                                                                                     MD046080
+     C     @RTCD         IFEQ      *BLANKS                                                  MD046080
+     C                   MOVE      'Y'           CLE031                                     MD046080
+     C                   ENDIF                                                              MD046080
+      *                                                                                     MD046080
      C                   Z-ADD     0             I
      C                   MOVE      *OFF          *IN99
       *
@@ -5190,7 +5204,48 @@
      C                   EVAL      PFldAttr = *BLANK                                       MD021423E
      C                   EXSR      SRFmtWMsg                                               MD021423E
      C                   ENDSL                                                             MD021423E
-      *
+      *                                                                                     MD046080
+     C                   IF        CLE031 = 'Y'                                             MD046080
+      ** Pay Settlement currency details                                                    MD046080
+     C                   EVAL      PFldTag  = 'DDPSCY'                                      MD046080
+     C                   SELECT                                                             MD046080
+     C                   WHEN      RecordType = Loan                                        MD046080
+     C                   EVAL      PFldData = C_SCCY                                        MD046080
+     C                   WHEN      RecordType = FeeLoan                                     MD046080
+     C                   EVAL      PFldData = E_FESCCY                                      MD046080
+     C                   WHEN      RecordType = FeeFacility                                 MD046080
+     C                   EVAL      PFldData = E_FESCCY                                      MD046080
+     C                   ENDSL                                                              MD046080
+     C                   EVAL      PFldType = *BLANK                                        MD046080
+     C                   EVAL      PFldAttr = *BLANK                                        MD046080
+     C                   EXSR      SRFmtWMsg                                                MD046080
+      *                                                                                     MD046080
+     C                   EVAL      PFldTag  = 'DDPEXR'                                      MD046080
+     C                   SELECT                                                             MD046080
+     C                   WHEN      RecordType = Loan                                        MD046080
+     C                   MOVEL     C_REXR        PFldData                                   MD046080
+     C                   WHEN      RecordType = FeeLoan                                     MD046080
+     C                   MOVEL     E_FEREXR      PFldData                                   MD046080
+     C                   WHEN      RecordType = FeeFacility                                 MD046080
+     C                   MOVEL     E_FEREXR      PFldData                                   MD046080
+     C                   ENDSL                                                              MD046080
+     C                   EVAL      PFldType = *BLANK                                        MD046080
+     C                   EVAL      PFldAttr = *BLANK                                        MD046080
+     C                   EXSR      SRFmtWMsg                                                MD046080
+      *                                                                                     MD046080
+     C                   EVAL      PFldTag  = 'DDPEXI'                                      MD046080
+     C                   SELECT                                                             MD046080
+     C                   WHEN      RecordType = Loan                                        MD046080
+     C                   EVAL      PFldData = C_REXI                                        MD046080
+     C                   WHEN      RecordType = FeeLoan                                     MD046080
+     C                   EVAL      PFldData = E_FEREXI                                      MD046080
+     C                   WHEN      RecordType = FeeFacility                                 MD046080
+     C                   EVAL      PFldData = E_FEREXI                                      MD046080
+     C                   ENDSL                                                              MD046080
+     C                   EVAL      PFldType = *BLANK                                        MD046080
+     C                   EVAL      PFldAttr = *BLANK                                        MD046080
+     C                   EXSR      SRFmtWMsg                                                MD046080
+     C                   ENDIF                                                              MD046080
       ** Pay - ordering customer number
       ** IF PMTX is not 01 07 or 08 value must be blank.                                    MD022640
       *                                                                                     MD022640
@@ -5500,6 +5555,48 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
+      *                                                                                     MD046080
+      ** Pay Settlement currency details                                                    MD046080
+     C                   IF        CLE031 = 'Y'                                             MD046080
+     C                   EVAL      PFldTag  = 'DDRSCY'                                      MD046080
+     C                   SELECT                                                             MD046080
+     C                   WHEN      RecordType = Loan                                        MD046080
+     C                   EVAL      PFldData = C_SCCY                                        MD046080
+     C                   WHEN      RecordType = FeeLoan                                     MD046080
+     C                   EVAL      PFldData = E_FESCCY                                      MD046080
+     C                   WHEN      RecordType = FeeFacility                                 MD046080
+     C                   EVAL      PFldData = E_FESCCY                                      MD046080
+     C                   ENDSL                                                              MD046080
+     C                   EVAL      PFldType = *BLANK                                        MD046080
+     C                   EVAL      PFldAttr = *BLANK                                        MD046080
+     C                   EXSR      SRFmtWMsg                                                MD046080
+      *                                                                                     MD046080
+     C                   EVAL      PFldTag  = 'DDREXR'                                      MD046080
+     C                   SELECT                                                             MD046080
+     C                   WHEN      RecordType = Loan                                        MD046080
+     C                   MOVEL     C_REXR        PFldData                                   MD046080
+     C                   WHEN      RecordType = FeeLoan                                     MD046080
+     C                   MOVEL     E_FEREXR      PFldData                                   MD046080
+     C                   WHEN      RecordType = FeeFacility                                 MD046080
+     C                   MOVEL     E_FEREXR      PFldData                                   MD046080
+     C                   ENDSL                                                              MD046080
+     C                   EVAL      PFldType = *BLANK                                        MD046080
+     C                   EVAL      PFldAttr = *BLANK                                        MD046080
+     C                   EXSR      SRFmtWMsg                                                MD046080
+      *                                                                                     MD046080
+     C                   EVAL      PFldTag  = 'DDREXI'                                      MD046080
+     C                   SELECT                                                             MD046080
+     C                   WHEN      RecordType = Loan                                        MD046080
+     C                   EVAL      PFldData = C_REXI                                        MD046080
+     C                   WHEN      RecordType = FeeLoan                                     MD046080
+     C                   EVAL      PFldData = E_FEREXI                                      MD046080
+     C                   WHEN      RecordType = FeeFacility                                 MD046080
+     C                   EVAL      PFldData = E_FEREXI                                      MD046080
+     C                   ENDSL                                                              MD046080
+     C                   EVAL      PFldType = *BLANK                                        MD046080
+     C                   EVAL      PFldAttr = *BLANK                                        MD046080
+     C                   EXSR      SRFmtWMsg                                                MD046080
+     C                   ENDIF                                                              MD046080
       *
       ** Receipt - intermediary bank number
       ** IF settlement is not 01 07 or 08 value must be blank.                              MD022640

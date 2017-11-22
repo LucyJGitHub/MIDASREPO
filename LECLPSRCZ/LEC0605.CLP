@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
-/*       Last Amend No. MD031676           Date 17Dec14              */
-/*       Prev Amend No. MD023527           Date 18Nov13              */
+/*       Last Amend No. MD048608           Date 20Nov17              */
+/*       Prev Amend No. MD031676           Date 17Dec14              */
+/*                      MD023527           Date 18Nov13              */
 /*                      MD022967           Date 21Oct13              */
 /*                      MD022290           Date 09Sep13              */
 /*                      MD020268           Date 12May13              */
@@ -61,6 +62,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*     MD048608 - Component LEC0609B seq 01001 failed               */
 /*     MD031676 - Component LEC06A 0010 Failed during COB           */
 /*                Removed copy statement for file LEACCNPD which    */
 /*                was made redundant by enhancement F               */
@@ -453,6 +455,16 @@
              OVRDBF     FILE(LESTALL4) TOFILE(LEXSTAL4) MBR(LEXSTAL4)                     /*CLE038*/
              OVRDBF     FILE(LESTALL5) TOFILE(LEXSTAL5) MBR(LEXSTAL5)                     /*CLE038*/
                 ENDDO                                                                     /*CLE038*/
+                IF         COND(&CLE038 *NE 'Y') THEN(DO) /*MD048608*/
+                   IF         COND(&CLE134 *EQ 'Y') THEN(DO) /*MD048608*/
+                   CLRPFM     FILE(XESTALPD) /*MD048608*/
+                                                                                        /*MD048608*/
+                   CPYF       FROMFILE(LESTALPD) TOFILE(XESTALPD) MBROPT(*REPLACE) +
+                                /*MD048608*/
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                                FILE(XESTALPD)) /*MD048608*/
+                   ENDDO      /*MD048608*/
+                ENDDO      /*MD048608*/
                                                                                           /*CAS009*/
                 IF         COND(&CAS009 *EQ 'Y') THEN(DO)                                 /*CAS009*/
                   CPYF       FROMFILE(LEEIRDPD) TOFILE(XLEEIRDPD) +

@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD047993           Date 23Sep17               *
-      *  Prev Amend No. MD035545           Date 11Sep15               *
+      *  Last Amend No. MD046080           Date 17Sep17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
       *                 MD037495           Date 11Feb16               *
       *                 AR1057551          Date 05Jun17               *
       *                 CGL184             Date 07Dec16               *
@@ -246,6 +247,8 @@
 0009 F*                                                               *
 0011 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD046080 - Gap between CLE031 (Settlement to different       *
+      *             currency) and CLE134 (PDCL processing)            *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
@@ -12545,6 +12548,27 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     ENDIF                                          147438
       *                                                                   147438
      C                     ENDSR                                          147438
+      /EJECT                                                                                MD046080
+      *****************************************************************                     MD046080
+      * ZCONVZ  -  Convert amount from one currency to another        *                     MD046080
+      * Called by: SETFLD                                             *                     MD046080
+      * Calls    : NONE                                               *                     MD046080
+      *                                                               *                     MD046080
+      *****************************************************************                     MD046080
+      *                                                                                     MD046080
+     C           ZCONVZ    BEGSR                                                            MD046080
+      *                                                                                     MD046080
+     C                     CALL 'ZCONVZ1'                                                   MD046080
+     C                     PARM           ZAMTCI 150                                        MD046080
+     C                     PARM           ZEXCH  138                                        MD046080
+     C                     PARM           ZMD     1                                         MD046080
+     C                     PARM           ZCCYI   3                                         MD046080
+     C                     PARM           ZCCYO   3                                         MD046080
+     C                     PARM           ZCDPI   10                                        MD046080
+     C                     PARM           ZCDPO   10                                        MD046080
+     C                     PARM           ZAMTCO 150                                        MD046080
+      *                                                                                     MD046080
+     C                     ENDSR                                                            MD046080
       /EJECT                                                              149915
       *****************************************************************   149915
       * CHKIPP  -  Check if internal parts purchased.                 *   149915
@@ -12843,6 +12867,37 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     ENDIF                                                              CLE031
       *                                                                                       CLE031
      C                     ENDSR                                                              CLE031
+      *****************************************************************                     MD046080
+      /EJECT                                                                                MD046080
+      *****************************************************************                     MD046080
+      * SRCURR  - Subroutine to look up the currency and retrieve     *                     MD046080
+      *           currency details                                    *                     MD046080
+      *                                                               *                     MD046080
+      * Called by: SETFLD                                             *                     MD046080
+      * Calls    : NONE                                               *                     MD046080
+      *                                                               *                     MD046080
+      *****************************************************************                     MD046080
+      *                                                                                     MD046080
+     C           SRCURR    BEGSR                                                            MD046080
+      *                                                                                     MD046080
+     C                     CALL 'AOCURRR0'                                                  MD046080
+     C                     PARM '*BLANKS' @RTCD                                             MD046080
+     C                     PARM '*KEY   ' @OPTN                                             MD046080
+     C                     PARM           WCCYA   3                                         MD046080
+     C           SDCURR    PARM SDCURR    DSSDY                                             MD046080
+      *                                                                                     MD046080
+     C           @RTCD     IFNE *BLANKS                                                     MD046080
+     C           *LOCK     IN   LDA                                                         MD046080
+     C                     MOVEL'LE0400  'DBPGM                                             MD046080
+     C                     MOVE 'SDCURRPD'DBFILE           ************                     MD046080
+     C                     MOVE WCCYA     DBKEY            * DBERR 24 *                     MD046080
+     C                     Z-ADD24        DBASE            ************                     MD046080
+     C                     OUT  LDA                                                         MD046080
+     C                     EXSR *PSSR                                                       MD046080
+      *                                                                                     MD046080
+     C                     ENDIF                                                            MD046080
+      *                                                                                     MD046080
+     C                     ENDSR                                                            MD046080
       *****************************************************************                       CLE031
       /EJECT                                                                                  CLE031
       *****************************************************************                       CLE031
@@ -14041,6 +14096,7 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       *                                                                                     AR786878
      C                     EXSR RTRPKY                                                        CLE164
      C                     EXSR RTDTE                                                         CLE164
+     C                     EXSR SRCVTS                                                      MD046080
       *                                                                                       CLE164
      C                     MOVEL'LEREMRPD'SEFILE                                              CLE164
      C                     ADD  1         SETRID                                              CLE164
@@ -14107,6 +14163,7 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       *                                                                                     AR786878
      C                     EXSR RTRPKY                                                        CLE164
      C                     EXSR RTDTE                                                         CLE164
+     C                     EXSR SRCVTS                                                      MD046080
       *                                                                                       CLE164
      C                     MOVEL'LEREMRPD'SEFILE                                              CLE164
      C                     ADD  1         SETRID                                              CLE164
@@ -14117,6 +14174,57 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       *                                                                                     AR786878
      C                     MOVE WIN40     *IN40                                             AR786878
       *                                                                                     AR786878
+     C                     ENDSR                                                            AR786878
+      *****************************************************************                     MD046080
+      *                                                               *                     MD046080
+      *  SRCVTS - Convert Amount to settle currency                   *                     MD046080
+      *                                                               *                     MD046080
+      *  Called by: SRCONS                                            *                     MD046080
+      *  Calls: ZCONVZ, SETCCY                                        *                     MD046080
+      *                                                               *                     MD046080
+      *****************************************************************                     MD046080
+     C           SRCVTS    BEGSR                                                            MD046080
+      *                                                                                     MD046080
+     C           CLE031    IFEQ 'Y'                                                         MD046080
+     C           CLE034    IFEQ 'N'                                                         MD046080
+     C           WSTAL     ORNE 'Y'                                                         MD046080
+      *                                                                                     MD046080
+     C                     MOVE 'E'       WTYPE                                             MD046080
+     C                     EXSR SETCCY                                                      MD046080
+      ** Convert if Settlement currency different from loan currency                        MD046080
+      ** and settlement currency not blanks                                                 MD046080
+     C           WECCY     IFNE WKCCY                                                       MD046080
+     C           WKCCY     ANDNE*BLANKS                                                     MD046080
+     C                     MOVE WECCY     WCCYA                                             MD046080
+     C                     EXSR SRCURR                                                      MD046080
+     C                     MOVE CDP       ZCDPI                                             MD046080
+     C                     MOVE WECCY     ZCCYI                                             MD046080
+      * to Ccy                                                                              MD046080
+     C                     MOVE WKCCY     WCCYA                                             MD046080
+     C                     EXSR SRCURR                                                      MD046080
+     C                     MOVE CDP       ZCDPO                                             MD046080
+     C                     MOVE WKCCY     ZCCYO                                             MD046080
+     C                     Z-ADDWKCYXR    ZEXCH                                             MD046080
+     C                     MOVE WKCYIN    ZMD                                               MD046080
+      ** Convert SEPRAM to settlement currency                                              MD046080
+     C           SEPRAM    IFNE 0                                                           MD046080
+     C                     Z-ADDSEPRAM    ZAMTCI                                            MD046080
+     C                     EXSR ZCONVZ                                                      MD046080
+     C                     Z-ADDZAMTCO    SEPRAM                                            MD046080
+     C                     ENDIF                                                            MD046080
+      ** Convert INTA Amount to settlement currency                                         MD046080
+     C           SEINTA    IFNE 0                                                           MD046080
+     C                     Z-ADDSEINTA    ZAMTCI                                            MD046080
+     C                     EXSR ZCONVZ                                                      MD046080
+     C                     Z-ADDZAMTCO    SEINTA                                            MD046080
+     C                     ENDIF                                                            MD046080
+     C                     Z-ADDSEPRAM    SETAMT                                            MD046080
+     C                     ADD  SEINTA    SETAMT                                            MD046080
+     C                     Z-ADDSETAMT    SEPAMT                                            MD046080
+     C                     ENDIF                                                            MD046080
+     C                     ENDIF                                                            MD046080
+     C                     ENDIF                                                            MD046080
+      *                                                                                     MD046080
      C                     ENDSR                                                            AR786878
       *****************************************************************                     AR786878
       *                                                               *                     AR989420

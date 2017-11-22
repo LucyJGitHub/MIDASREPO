@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD046969           Date 02Sep17               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD048478           Date 21Nov17               *
+      *  Prev Amend No. MD046969           Date 02Sep17               *
+      *                 CLE141             Date 08Feb16               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 MD030621           Date 26Feb15               *
@@ -124,6 +125,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048478 - Cannot input auto settle = pre check order        *
       *  MD046969 - Inserted PDCL X and Y combined via SOAP or Manual *
       *             Input will leave the PDCL Y loan in WIP. Buffer is*
       *             returned without the @DEPI value misaligning the  *
@@ -2165,21 +2167,21 @@
       ** If pre-deal check is defined, Receipt/Pay settlement should be                     AR693137
       ** equal to 01, 05, 08 or 14.                                                         AR693137
       *                                                                                     AR693137
-     C                   IF        VL_CLAUTO = 'C'                                          AR693137
-     C                             AND DDACTN = 'I'                                         AR693137
-     C                             OR VL_CLAUTO = 'C'                                       AR693137
-     C                             AND DDACTN = 'A'                                         AR693137
-     C                   IF        DDRSTM <> '01'                                           AR693137
-     C                             AND DDRSTM <> '05'                                       AR693137
-     C                             AND DDRSTM <> '08'                                       AR693137
-     C                             AND DDRSTM <> '14'                                       AR693137
-     C                   ADD       1             Idx                                        AR693137
-     C                   EVAL      FldNameArr(Idx) = 'DDRSTM'                               AR693137
-     C                   MOVEL     '5045685'     MsgIDArr(Idx)                              AR693137
-     C                   GOTO      INVALID                                                  AR693137
-     C                   ENDIF                                                              AR693137
-      *                                                                                     AR693137
-     C                   ENDIF                                                              AR693137
+     C**********         IF        VL_CLAUTO = 'C'                                 AR693137 MD048478
+     C**********                   AND DDACTN = 'I'                                AR693137 MD048478
+     C**********                   OR VL_CLAUTO = 'C'                              AR693137 MD048478
+     C**********                   AND DDACTN = 'A'                                AR693137 MD048478
+     C**********         IF        DDRSTM <> '01'                                  AR693137 MD048478
+     C**********                   AND DDRSTM <> '05'                              AR693137 MD048478
+     C**********                   AND DDRSTM <> '08'                              AR693137 MD048478
+     C**********                   AND DDRSTM <> '14'                              AR693137 MD048478
+     C**********         ADD       1             Idx                               AR693137 MD048478
+     C**********         EVAL      FldNameArr(Idx) = 'DDRSTM'                      AR693137 MD048478
+     C**********         MOVEL     '5045685'     MsgIDArr(Idx)                     AR693137 MD048478
+     C**********         GOTO      INVALID                                         AR693137 MD048478
+     C**********         ENDIF                                                     AR693137 MD048478
+      *                                                                            AR693137 MD048478
+     C**********         ENDIF                                                     AR693137 MD048478
       *****************************************************************              AR314017 CLE164
      C**********         ENDIF                                                       AR314017 CLE164
       *****************************************************************              AR314017 CLE164

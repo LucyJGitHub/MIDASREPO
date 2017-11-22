@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD046080           Date 21Sep17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CLE164             Date 18Aug14               *
       *                 MD023378           Date 25Apr14               *
       *                 MD021423E          Date 12Sep13               *
       *                 MD021423 *REWRITE  Date 21Aug13               *
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046080 - Gap between CLE031 (Settlement to different       *
+      *             currency) and CLE134 (PDCL processing)            *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -129,6 +132,13 @@
       *
       ** Midas SD Currency Codes
      FSDCURRL1  IF   E           K DISK
+      ** Settlement Allocation by RONS                                                      MD046080
+     FLESTALLG  IF   E           K DISK    INFSR(*PSSR)                                     MD046080
+     F                                     PREFIX(G_)                                       MD046080
+      ** Settlement Allocation by PONS                                                      MD046080
+     FLESTALLH  IF   E           K DISK    INFSR(*PSSR)                                     MD046080
+     F                                     RENAME(LESTALD0:LESTALD1)                        MD046080
+     F                                     PREFIX(H_)                                       MD046080
       *
       ** Past Due Call Loans Account Keys Generated Report
      FLE000456P1O    E             PRINTER INFDS(SPOOL1)
@@ -334,6 +344,26 @@
      D CFC006          S              1A
      D POPTN           S              7A
      D PSARD           S              6A
+                                                                                            MD046080
+     D WINAMT          S             15  0                                                  MD046080
+     D WRATE           S             13  8                                                  MD046080
+     D WSPRT1          S             13  8                                                  MD046080
+     D WSPRT2          S             13  8                                                  MD046080
+     D WMDIN           S              1A                                                    MD046080
+     D WMDIN1          S              1A                                                    MD046080
+     D WMDIN2          S              1A                                                    MD046080
+     D WCCY1           S              3A                                                    MD046080
+     D WCCY2           S              3A                                                    MD046080
+     D WNBDP1          S              1  0                                                  MD046080
+     D WNBDP2          S              1  0                                                  MD046080
+     D WOUTAMT         S             15  0                                                  MD046080
+     D WWWAMT          S             15P 0                                                  MD046080
+     D WIND1           S              1A                                                    MD046080
+     D WSET            S             18A                                                    MD046080
+     D WWCCY           S              3A                                                    MD046080
+     D CLE031          S              1A                                                    MD046080
+     D CLE034          S              1A                                                    MD046080
+     D WZCCY           S              3A                                                    MD046080
  
       ** Cache Work Variables and Storage
  
@@ -784,10 +814,13 @@
      C                   EVAL      w@adjamt = w@adjamt + EAMT
      C                   ENDIF
      C                   EVAL      EAMT = W@Opdam
+     C                   EXSR      SrConvert                                                MD046080
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XP'          Wf10
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt + EAMT
      C                   ELSE
@@ -805,11 +838,14 @@
      C                             AND WIgnoreI <> 'Y'
      C                   EVAL      EAMT = W@OPdInt
      C                   EVAL      EAMT = EAMT * WMult
+     C                   EXSR      SrConvert                                                MD046080
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XI'          Wf10
      C                   MOVEL     Wf10          AKEY
      C                   Z-ADD     0             AAMT
      C                   WRITE     LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ADD       1             W@NewRc
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt + EAMT
@@ -829,10 +865,13 @@
      C                   ENDIF
      C                   IF        W@Opdam <> 0
      C                   EVAL      EAMT = W@Opdam
+     C                   EXSR      SrConvert                                                MD046080
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XP'          Wf10
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ENDIF
       *
       ** Past Due Interest
@@ -852,8 +891,11 @@
      C                   MOVE      'XI'          Wf10
      C                   MOVEL     Wf10          AKEY
      C                   ENDIF
+     C                   EXSR      SrConvert                                                MD046080
       *
      C                   UPDATE    LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ENDIF
       *
      C                   IF        EAMT > 0
@@ -930,11 +972,14 @@
      C                   IF        W@OEAMT < 0
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
+     C                   EXSR      SrConvert                                                MD046080
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XP'          Wf10
      C                   MOVEL     Wf10          AKEY
      C                   Z-ADD     0             AAMT
      C                   WRITE     LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ADD       1             W@NewRc
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt + EAMT
@@ -953,11 +998,14 @@
      C                   IF        W@OEAMT < 0
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
+     C                   EXSR      SrConvert                                                MD046080
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XI'          Wf10
      C                   MOVEL     Wf10          AKEY
      C                   Z-ADD     0             AAMT
      C                   WRITE     LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ADD       1             W@NewRc
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt + EAMT
@@ -1133,9 +1181,12 @@
      C                   IF        W@OEAMT < *ZEROS
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
+     C                   EXSR      SrConvert                                                MD046080
  
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt + EAMT
      C                   ELSE
@@ -1152,9 +1203,12 @@
      C                   IF        W@OEAMT < *ZEROS
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
+     C                   EXSR      SrConvert                                                MD046080
  
      C                   Z-ADD     0             AAMT
      C                   WRITE     LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
  
      C                   ADD       1             W@NewRc
      C                   IF        EAMT > 0
@@ -1208,9 +1262,12 @@
      C                   IF        W@OEAMT < *ZEROS
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
+     C                   EXSR      SrConvert                                                MD046080
  
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ENDIF
  
       ** Interest
@@ -1223,9 +1280,12 @@
      C                   IF        W@OEAMT < *ZEROS
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
+     C                   EXSR      SrConvert                                                MD046080
  
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
+     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ENDIF
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt + EAMT
@@ -1287,6 +1347,116 @@
      C                   EVAL      RECI = K_RECI
       *
      C                   ENDSR
+                                                                                            MD046080
+      *****************************************************************                     MD046080
+      /EJECT                                                                                MD046080
+      *****************************************************************                     MD046080
+      *                                                               *                     MD046080
+      * SrConvert - Convert Currency                                  *                     MD046080
+      *                                                               *                     MD046080
+      *****************************************************************                     MD046080
+                                                                                            MD046080
+     C     SrConvert     BEGSR                                                              MD046080
+                                                                                            MD046080
+     C                   IF        CLE031 = 'Y'                                             MD046080
+     C                   IF        CLE034 = 'Y'                                             MD046080
+     C                             AND STAL = 'Y'                                           MD046080
+     C                   MOVE      *BLANKS       WSET                                       MD046080
+     C                   MOVE      OSAC          WSET                                       MD046080
+     C                   IF        PTYP <> 66                                               MD046080
+     C                             AND PTYP <> 67                                           MD046080
+     C                             AND PTYP <> 69                                           MD046080
+     C                             AND PTYP <> 72                                           MD046080
+     C     KSTAL         CHAIN     LESTALLG                                                 MD046080
+     C                   MOVE      G_RSCY        WCCY1                                      MD046080
+     C                   MOVE      G_REXI        WIND1                                      MD046080
+     C                   Z-ADD     G_REXR        WRATE                                      MD046080
+     C                   ELSE                                                               MD046080
+     C     KSTAL         CHAIN     LESTALLH                                                 MD046080
+     C                   MOVE      H_PSCY        WCCY1                                      MD046080
+     C                   MOVE      H_PEXI        WIND1                                      MD046080
+     C                   Z-ADD     H_PEXR        WRATE                                      MD046080
+     C                   ENDIF                                                              MD046080
+     C                   ELSE                                                               MD046080
+     C                   IF        PTYP <> 66                                               MD046080
+     C                             AND PTYP <> 67                                           MD046080
+     C                             AND PTYP <> 69                                           MD046080
+     C                             AND PTYP <> 72                                           MD046080
+     C                   EVAL      WCCY1 = PSCY                                             MD046080
+     C                   EVAL      WRATE = PEXR                                             MD046080
+     C                   EVAL      WIND1 = PEXI                                             MD046080
+     C                   ELSE                                                               MD046080
+     C                   EVAL      WCCY1 = SCCY                                             MD046080
+     C                   EVAL      WRATE = REXR                                             MD046080
+     C                   EVAL      WIND1 = REXI                                             MD046080
+     C                   ENDIF                                                              MD046080
+     C                   ENDIF                                                              MD046080
+     C                   EVAL      WCCY2 = CCY                                              MD046080
+     C                   EVAL      WWWAMT = EAMT                                            MD046080
+     C                   EVAL      WINAMT = EAMT                                            MD046080
+     C                   IF        WIND1 = 'M'                                              MD046080
+     C                   EVAL      WMDIN = 'D'                                              MD046080
+     C                   ELSE                                                               MD046080
+     C                   EVAL      WMDIN = 'M'                                              MD046080
+     C                   ENDIF                                                              MD046080
+                                                                                            MD046080
+      ** If one of currencies is blank, skip conversion                                     MD046080
+                                                                                            MD046080
+     C                   IF        WCCY1 = *BLANKS or WCCY2 = *BLANKS                       MD046080
+     C                   EVAL      WOUTAMT = WINAMT                                         MD046080
+     C                   ELSE                                                               MD046080
+                                                                                            MD046080
+      ** From currency                                                                      MD046080
+                                                                                            MD046080
+     C                   CALL      'AOCURRR0'                                               MD046080
+     C                   PARM      *Blanks       @RTCD                                      MD046080
+     C                   PARM      '*KEY'        @OPTN                                      MD046080
+     C                   PARM                    WCCY1                                      MD046080
+     C     SDCURR        PARM                    DSSDY                                      MD046080
+                                                                                            MD046080
+      ** Save necessary details                                                             MD046080
+                                                                                            MD046080
+     C                   EVAL      WSPRT1 = A6SPRT                                          MD046080
+     C                   EVAL      WMDIN1 = A6MDIN                                          MD046080
+     C                   EVAL      WNBDP1 = A6NBDP                                          MD046080
+                                                                                            MD046080
+      ** To currency                                                                        MD046080
+                                                                                            MD046080
+     C                   CALL      'AOCURRR0'                                               MD046080
+     C                   PARM      *Blanks       @RTCD                                      MD046080
+     C                   PARM      '*KEY'        @OPTN                                      MD046080
+     C                   PARM                    WCCY2                                      MD046080
+     C     SDCURR        PARM                    DSSDY                                      MD046080
+                                                                                            MD046080
+      ** Save necessary details                                                             MD046080
+                                                                                            MD046080
+     C                   EVAL      WSPRT2 = A6SPRT                                          MD046080
+     C                   EVAL      WMDIN2 = A6MDIN                                          MD046080
+     C                   EVAL      WNBDP2 = A6NBDP                                          MD046080
+                                                                                            MD046080
+      ** Convert amount                                                                     MD046080
+                                                                                            MD046080
+     C                   CALL      'ZCONVZ1'                                                MD046080
+     C                   PARM                    WINAMT                                     MD046080
+     C                   PARM                    WRATE                                      MD046080
+     C                   PARM                    WMDIN                                      MD046080
+     C                   PARM                    WCCY1                                      MD046080
+     C                   PARM                    WCCY2                                      MD046080
+     C                   PARM                    WNBDP1                                     MD046080
+     C                   PARM                    WNBDP2                                     MD046080
+     C                   PARM                    WOUTAMT                                    MD046080
+                                                                                            MD046080
+     C                   ENDIF                                                              MD046080
+     C                   EVAL      EAMT = WOUTAMT                                           MD046080
+     C                   EVAL      WZCCY = ECCY                                             MD046080
+     C                   EVAL      ECCY = CCY                                               MD046080
+     C                   ELSE                                                               MD046080
+     C                   EVAL      WWWAMT = EAMT                                            MD046080
+     C                   EVAL      WZCCY = ECCY                                             MD046080
+     C                   ENDIF                                                              MD046080
+                                                                                            MD046080
+     C                   ENDSR                                                              MD046080
+                                                                                            MD046080
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1727,6 +1897,11 @@
      C     Kcloan        KLIST
      C                   KFLD                    LNNO
      C                   KFLD                    RCDTT
+                                                                                            MD046080
+     C     KSTAL         KLIST                                                              MD046080
+     C                   KFLD                    LNRF                                       MD046080
+     C                   KFLD                    WSET                                       MD046080
+                                                                                            MD046080
      C                   EVAL      RCDTT = 'A'
  
       ** Access General Ledger details
@@ -1770,6 +1945,25 @@
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
  
+                                                                                            MD046080
+     C                   CALL      'AOSARDR0'                                               MD046080
+     C                   PARM      *BLANKS       @RTCD                                      MD046080
+     C                   PARM      '*VERIFY'     @OPTN                                      MD046080
+     C                   PARM      'CLE031'      @SARD                                      MD046080
+                                                                                            MD046080
+     C                   IF        @RTCD       = *BLANKS                                    MD046080
+     C                   EVAL      CLE031      = 'Y'                                        MD046080
+     C                   ENDIF                                                              MD046080
+                                                                                            MD046080
+     C                   CALL      'AOSARDR0'                                               MD046080
+     C                   PARM      *BLANKS       @RTCD                                      MD046080
+     C                   PARM      '*VERIFY'     @OPTN                                      MD046080
+     C                   PARM      'CLE034'      @SARD                                      MD046080
+                                                                                            MD046080
+     C                   IF        @RTCD       = *BLANKS                                    MD046080
+     C                   EVAL      CLE034      = 'Y'                                        MD046080
+     C                   ENDIF                                                              MD046080
+                                                                                            MD046080
       ** Check System Value: Use Original Borrower or Purchased From?
       ** Set up parameter so access object checks LoanCustOriginPurch
  

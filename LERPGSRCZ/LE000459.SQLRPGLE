@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. CLE164             Date 18Aug14               *
-      *  Prev Amend No. AR989420           Date 17Jun13               *
+      *  Last Amend No. MD046080           Date 17Sep17               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 AR989420           Date 17Jun13               *
       *                 AR815697           Date 06Jun13               *
       *                 AR786878           Date 05Jun13               *
       *                 MD020619           Date 24May13               *
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046080 - Gap between CLE031 (Settlement to different       *
+      *             currency) and CLE134 (PDCL processing)            *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  AR989420  - Repayment of PDCLs should use Original Loan      *
       *              Value Date instead of PDCL Value Date. Amend     *
@@ -153,6 +156,7 @@
       ** Nostro details
      D LoanFileFmt   E DS                  EXTNAME(CLOANCL)                                AR1022006
      D                                     PREFIX(k_)                                      AR1022006
+     D SDCURR        E DS                  EXTNAME(SDCURRPD)                                MD046080
  
       ** Additional Field Definitions
      D WSKIP           S              1
@@ -197,6 +201,17 @@
      D R_RPBRCA        S              3                                                       CLE164
      D R_RPACCY        S              3                                                       CLE164
      D R_RPLNRF        S              6                                                       CLE164
+     D WINAMT          S             15  0                                                  MD046080
+     D WRATE           S             13  8                                                  MD046080
+     D WMDIN           S              1A                                                    MD046080
+     D WCCY1           S              3A                                                    MD046080
+     D WCCY2           S              3A                                                    MD046080
+     D WNBDP1          S              1  0                                                  MD046080
+     D WNBDP2          S              1  0                                                  MD046080
+     D WOUTAMT         S             15  0                                                  MD046080
+     D WWWAMT          S             15P 0                                                  MD046080
+     D ORWAMT          S             15P 0                                                  MD046080
+     D CLE031          S              1                                                     MD046080
  
      C/EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -499,16 +514,31 @@
      C                   EVAL      P_SESUTP = K_SUTP
      C                   MOVEL     K_LTYP        P_SELTY1
      C                   EVAL      P_SETAMT = K_CPAM + DSINTDUE
+     C                   EVAL      WINAMT = P_SETAMT                                        MD046080
+     C                   EXSR      SrConvert                                                MD046080
+     C                   EVAL      P_SETAMT = WOUTAMT                                       MD046080
      C                   EVAL      P_SEPRAM = K_CPAM
+     C                   EVAL      WINAMT = P_SEPRAM                                        MD046080
+     C                   EXSR      SrConvert                                                MD046080
+     C                   EVAL      P_SEPRAM = WOUTAMT                                       MD046080
      C                   EVAL      P_SEINTA = DSINTDUE
+     C                   EVAL      WINAMT = P_SEINTA                                        MD046080
+     C                   EXSR      SrConvert                                                MD046080
+     C                   EVAL      P_SEINTA = WOUTAMT                                       MD046080
      C                   EVAL      P_SEIPFL = *BLANKS
      C**********         EVAL      P_SEFILE = 'LT'                                            CLE164
                                                                                             AR786878
      C                   IF        WKTPRAM <> 0 or WKTINTA <> 0                             AR786878
      C                   EVAL      DSIntDue    = DSIntDue - WKTINTA                         AR786878
      C                   EVAL      P_SEINTA    = DSIntDue                                   AR786878
+     C                   EVAL      WINAMT = P_SEINTA                                        MD046080
+     C                   EXSR      SrConvert                                                MD046080
+     C                   EVAL      P_SEINTA = WOUTAMT                                       MD046080
      C                   EVAL      K_CPAM      = K_CPAM - WKTPRAM                           AR786878
      C                   EVAL      P_SEPRAM    = K_CPAM                                     AR786878
+     C                   EVAL      WINAMT = P_SEPRAM                                        MD046080
+     C                   EXSR      SrConvert                                                MD046080
+     C                   EVAL      P_SEPRAM = WOUTAMT                                       MD046080
      C                   ENDIF                                                              AR786878
                                                                                               CLE164
       ** Retrieve Date values for LEACCTPD                                                    CLE164
@@ -518,7 +548,10 @@
       ** Assign a lower priority to Interest Repayment                                      AR217562
  
      C                   IF        DSINTDUE <> 0                                            AR217562
-     C                   EVAL      P_SETAMT = DSINTDUE                                      AR217562
+     C**********         EVAL      P_SETAMT = DSINTDUE                             AR217562 MD046080
+     C                   EVAL      WINAMT = DSINTDUE                                        MD046080
+     C                   EXSR      SrConvert                                                MD046080
+     C                   EVAL      P_SETAMT = WOUTAMT                                       MD046080
      C                   EVAL      P_SEPRAM = 0                                             AR217562
       *****************************************************************              AR217562 CLE164
       ***PDCL*with*type*'Z'*have*priority*200**************************              AR217562 CLE164
@@ -570,8 +603,12 @@
       ** Output LEACCTPD with CPAM if different than zero                                   AR217562
  
      C                   IF        K_CPAM <> 0                                              AR217562
-     C                   EVAL      P_SETAMT = K_CPAM                                        AR217562
-     C                   EVAL      P_SEPRAM = K_CPAM                                        AR217562
+     C**********         EVAL      P_SETAMT = K_CPAM                               AR217562 MD046080
+     C**********         EVAL      P_SEPRAM = K_CPAM                               AR217562 MD046080
+     C                   EVAL      WINAMT = K_CPAM                                          MD046080
+     C                   EXSR      SrConvert                                                MD046080
+     C                   EVAL      P_SETAMT = WOUTAMT                                       MD046080
+     C                   EVAL      P_SEPRAM = WOUTAMT                                       MD046080
      C                   EVAL      P_SEINTA = 0                                             AR217562
  
       ** PDCL*with*type 'Z' have priority 200                                               AR217562
@@ -773,6 +810,82 @@
      C                   PARM                    ZINTR                                        263605
                                                                                               263605
      C                   ENDSR                                                                263605
+                                                                                            MD046080
+      *****************************************************************                     MD046080
+      /EJECT                                                                                MD046080
+      *****************************************************************                     MD046080
+      *                                                               *                     MD046080
+      * SrConvert - Convert Currency                                  *                     MD046080
+      *                                                               *                     MD046080
+      *****************************************************************                     MD046080
+                                                                                            MD046080
+     C     SrConvert     BEGSR                                                              MD046080
+                                                                                            MD046080
+     C                   IF        CLE031 = 'Y'                                             MD046080
+     C                   IF        K_PTYP <> 66                                             MD046080
+     C                             AND K_PTYP <> 67                                         MD046080
+     C                             AND K_PTYP <> 69                                         MD046080
+     C                             AND K_PTYP <> 72                                         MD046080
+     C                   EVAL      WCCY1 = K_PSCY                                           MD046080
+     C                   EVAL      WRATE = K_PEXR                                           MD046080
+     C                   EVAL      WMDIN = K_PEXI                                           MD046080
+     C                   ELSE                                                               MD046080
+     C                   EVAL      WCCY1 = K_SCCY                                           MD046080
+     C                   EVAL      WRATE = K_REXR                                           MD046080
+     C                   EVAL      WMDIN = K_REXI                                           MD046080
+     C                   ENDIF                                                              MD046080
+     C                   EVAL      WCCY2 = K_CCY                                            MD046080
+                                                                                            MD046080
+      ** If one of currencies is blank, skip conversion                                     MD046080
+                                                                                            MD046080
+     C                   IF        WCCY1 = *BLANKS or WCCY2 = *BLANKS                       MD046080
+     C                   EVAL      WOUTAMT = WINAMT                                         MD046080
+     C                   ELSE                                                               MD046080
+                                                                                            MD046080
+      ** From currency                                                                      MD046080
+                                                                                            MD046080
+     C                   CALL      'AOCURRR0'                                               MD046080
+     C                   PARM      *Blanks       @RTCD                                      MD046080
+     C                   PARM      '*KEY'        @OPTN                                      MD046080
+     C                   PARM                    WCCY1                                      MD046080
+     C     SDCURR        PARM                    DSSDY                                      MD046080
+                                                                                            MD046080
+      ** Save necessary details                                                             MD046080
+                                                                                            MD046080
+     C                   EVAL      WNBDP1 = A6NBDP                                          MD046080
+                                                                                            MD046080
+      ** To currency                                                                        MD046080
+                                                                                            MD046080
+     C                   CALL      'AOCURRR0'                                               MD046080
+     C                   PARM      *Blanks       @RTCD                                      MD046080
+     C                   PARM      '*KEY'        @OPTN                                      MD046080
+     C                   PARM                    WCCY2                                      MD046080
+     C     SDCURR        PARM                    DSSDY                                      MD046080
+                                                                                            MD046080
+      ** Save necessary details                                                             MD046080
+                                                                                            MD046080
+     C                   EVAL      WNBDP2 = A6NBDP                                          MD046080
+                                                                                            MD046080
+      ** Convert amount                                                                     MD046080
+                                                                                            MD046080
+     C                   CALL      'ZCONVZ1'                                                MD046080
+     C                   PARM                    WINAMT                                     MD046080
+     C                   PARM                    WRATE                                      MD046080
+     C                   PARM                    WMDIN                                      MD046080
+     C                   PARM                    WCCY1                                      MD046080
+     C                   PARM                    WCCY2                                      MD046080
+     C                   PARM                    WNBDP1                                     MD046080
+     C                   PARM                    WNBDP2                                     MD046080
+     C                   PARM                    WOUTAMT                                    MD046080
+                                                                                            MD046080
+     C                   EVAL      P_SEACCY = WCCY1                                         MD046080
+     C                   ENDIF                                                              MD046080
+     C                   ELSE                                                               MD046080
+     C                   EVAL      WOUTAMT = WINAMT                                         MD046080
+     C                   ENDIF                                                              MD046080
+                                                                                            MD046080
+     C                   ENDSR                                                              MD046080
+                                                                                            MD046080
       *****************************************************************                       263605
       /EJECT
       *****************************************************************                       263605
@@ -791,6 +904,17 @@
      C                   MOVE      'N'           CLE005                                       263605
      C                   ENDIF                                                                263605
                                                                                               263605
+     C                   CALL      'AOSARDR0'                                               MD046080
+     C                   PARM      *BLANK        @RTCD                                      MD046080
+     C                   PARM      '*VERIFY'     @OPTN                                      MD046080
+     C                   PARM      'CLE031'      @SARD                                      MD046080
+                                                                                            MD046080
+     C     @RTCD         IFEQ      *BLANKS                                                  MD046080
+     C                   MOVE      'Y'           CLE031                                     MD046080
+     C                   ELSE                                                               MD046080
+     C                   MOVE      'N'           CLE031                                     MD046080
+     C                   ENDIF                                                              MD046080
+                                                                                            MD046080
      C                   ENDSR                                                                263605
       *****************************************************************                       263605
       /EJECT

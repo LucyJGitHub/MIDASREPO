@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CDL098             Date 06Oct17               *
+      *  Last Amend No. MD048708           Date 01Dec17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CDL098             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -61,6 +62,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048708 - [MIDAS-QA][FB2.1][SP16][MA][Sprint 3][CDL098] -   *
+      *             Error message for cancelled deal only prompted for*
+      *             1st leg deal number if both 1st and 2nd leg deal  *
+      *             numbers are cancelled. Fix is to remove the GOTO  *
+      *             EVALAI so that all validation will be covered.    *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL098 - Cancelled Deal Numbers                              *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -129,7 +135,7 @@
      F                                     RENAME(ABDEALP0:ABDEALX0)                          259924
      F                                     RENAME(FXDEALP0:FXDEALX0)                          259924
      F                                     RENAME(DEALSDGF:DEALSGX0)                          259924
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -141,59 +147,59 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
      D  QQAccd1      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
       *
@@ -202,7 +208,7 @@
       *                                                                                       CSC011
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -212,18 +218,18 @@
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D DealFilFmt    E DS                  EXTNAME(ABDEALPP)
       ** Deal in File Format
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
      D CSC011          S              1A                                                      CSC011
       ** Cancelled Deal Numbers                                                               CDL098
      D  CDL098         S              1    INZ('N')                                           CDL098
@@ -242,7 +248,7 @@
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -420,7 +426,7 @@
       *
      C                   MOVEL     JPFD38        DDL1DN
      C                   Z-ADD     JPFD38        ##FD38            6 0
- 
+
      C                   END
      C     ModeofOp      IFEQ      '*FRONT'                                                  259924A
       *
@@ -627,7 +633,7 @@
      C                   Add       1             Ix                                           CDL098
      C                   MoveL     'DDL1DN'      FldNameArr(Ix)                               CDL098
      C                   MoveL     'FXM7004'     MsgIdArr(Ix)                                 CDL098
-     C                   GOTO      EVALAI                                                     CDL098
+     C**********         GOTO      EVALAI                                            CDL098 MD048708
      C                   Endif                                                                CDL098
      C                   Endif                                                                CDL098
       *
@@ -664,7 +670,7 @@
      C                   Add       1             Ix                                           CDL098
      C                   MoveL     'DDL2DN'      FldNameArr(Ix)                               CDL098
      C                   MoveL     'FXM7004'     MsgIdArr(Ix)                                 CDL098
-     C                   GOTO      EVALAI                                                     CDL098
+     C**********         GOTO      EVALAI                                            CDL098 MD048708
      C                   Endif                                                                CDL098
      C                   Endif                                                                CDL098
       *

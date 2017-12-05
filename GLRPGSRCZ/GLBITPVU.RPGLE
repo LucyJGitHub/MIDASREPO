@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD043023           Date 25Jul17               *      
-      *  Prev Amend No. MD027817           Date 06Apr17               *
+      *  Last Amend No. MD048370           Date 29Nov17               *
+      *  Prev Amend No. MD043023           Date 25Jul17               *
+      *                 MD027817           Date 06Apr17               *
       *                 MD042436           Date 07Nov16               *
       *                 MD033964           Date 07Oct16               *
       *                 MD039859           Date 21Jul16               *
@@ -91,6 +92,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048370 - User encounters an error "batch is already        *
+      *             accepted" when amending/inserting a BITP whose    *
+      *             BITH has BITP inserted via SOAP first then        *
+      *             another BITP via UI.                              *
       *  MD043023 - (1) access header with Front Office Id only if    *
       *             it is non blank.                                  *
       *             (2) if Front Office Id is blank, use batch number *
@@ -100,7 +105,7 @@
       *             autorization set to 'Y', reject batch item if     *
       *             'Hash item no. calculated' equals 'Hash item no.  *
       *             input'.                                           *
-      *           - Applied for MD-46910                              *      
+      *           - Applied for MD-46910                              *
       *  MD027817 - Values of Additional Info and Multicash Narrative *
       *             are lost during amendment. Prevent clearing of    *
       *             the fields during edit.                           *
@@ -511,6 +516,12 @@
       * If the user is connected via a browser, the job user name is QUSER -                 BUG6979
       * their user name is stored in ZMUSER                                                  BUG6979
      C                   IN        ZMUSER                                                    BUG6979
+     C     USRID         IFNE      *BLANKS                                                  MD048370
+     C     USRID         ANDNE     PSUser                                                   MD048370
+     C                   MOVE      'Y'           JAVAUSER          1                        MD048370
+     C                   ELSE                                                               MD048370
+     C                   MOVE      'N'           JAVAUSER                                   MD048370
+     C                   ENDIF                                                              MD048370
       *
       ** Incoming transaction is in a 500A field, so that a common CLP
       ** can be used between this module and the one that read the MQ queue.
@@ -632,6 +643,7 @@
      C     HeaderFound   OREQ      'Y'                                                      MD043023
      C     BRAUTH        ANDEQ     'Y'                                                      MD043023
      C     BRHINC        ANDGE     BRHINI                                                   MD043023
+     C     JAVAUSER      ANDEQ     'N'                                                      MD048370
                                                                                             MD043023
      C                   MOVEL     'DDBTNB'      FldNameArr(1)                              MD043023
      C                   MOVEL     'GLX1005'     MsgIDArr(1)                                MD043023

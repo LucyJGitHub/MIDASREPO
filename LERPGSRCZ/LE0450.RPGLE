@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD048609           Date 22Nov17               *
-      *  Prev Amend No. MD046080           Date 21Sep17               *
+      *  Last Amend No. MD048557           Date 27Nov17               *
+      *  Prev Amend No. MD048609           Date 22Nov17               *
+      *                 MD046080           Date 21Sep17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 MD033575           Date 20Jun17               *
@@ -378,7 +379,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD048609 - Failing COB Component - LEC0000456 seq 00001	     *
+      *  MD048557 - Failing COB Component - LEC000471A                *
+      *  MD048609 - Failing COB Component - LEC0000456 seq 00001	  *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
@@ -1897,6 +1899,8 @@
      D  @SUTP          S              2A                                                      CLE164
      D  @CLAS          S              4A                                                      CLE164
      D  @FTYP          S              3A                                                      CLE164
+     D  WSKEY          S              1A                                                    MD048557
+     D  WACAMT         S             13P 0                                                  MD048557
       *                                                                                       CLE134
      D AMLPRI          C                   CONST('ZAAMLSETLE')
      D SECTN1          C                   CONST('LE0450001')                                 CFC006
@@ -11947,6 +11951,7 @@ L118 I                             P   72   77 7RTSPL
 1657 C**
 1658 C     AKYOUT        BEGSR                                                  ***  AKYOUT ***
      C**                                                                  157669
+     C                   EVAL      WSKEY = ' '                                              MD048557
      C     KMANL         CHAIN     LOMNEWF                            24                      CLE164
      C                   MOVE      AUTOL         WAUTO             1                          CLE134
      C                   MOVE      AUTO2         WAUTO2            1                          CLE164
@@ -12330,6 +12335,7 @@ L118 I                             P   72   77 7RTSPL
      C**********         Z-ADD     650           SEPCKM                              AR996719 CLE164
      C**********         Z-ADD     650           SEPCKT                                263074 CLE164
      C**********         Z-ADD     INTA          KEAMT                               263074 MD046080
+     C                   Z-ADD     INTA          KEAMT                                      MD048557
      C     CLE031        IFEQ      'Y'                                                      MD046080
      C     CLE034        IFEQ      'Y'                                                      MD046080
      C     STAL          ANDEQ     'Y'                                                      MD046080
@@ -12379,6 +12385,18 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      SETRID = SETRID + 1                                        CLE164
      C                   EVAL      SEOVRD = 0                                                 CLE164
      C                   WRITE     LKEYF1DF                                                   CLE134
+     C     KEAMT         IFGT      0                                                        MD048557
+     C                   Z-ADD     KEAMT         WACAMT                                     MD048557
+     C                   ELSE                                                               MD048557
+     C                   Z-SUB     KEAMT         WACAMT                                     MD048557
+     C                   ENDIF                                                              MD048557
+                                                                                            MD048557
+     C     WACAMT        DIV       1000          ZZAMT                  80                  MD048557
+     C                   Z-ADD     L1VLRF        ZZTOTI                                     MD048557
+     C                   Z-ADD     L1VLRL        ZZTOTD                                     MD048557
+     C                   EXSR      GLZADD                                                   MD048557
+     C                   Z-ADD     ZZTOTI        L1VLRF                                     MD048557
+     C                   Z-ADD     ZZTOTD        L1VLRL                                     MD048557
                                                                                               CLE164
       * End of Processing for Interest Repayments                                             CLE164
                                                                                               CLE164
@@ -12409,6 +12427,7 @@ L118 I                             P   72   77 7RTSPL
                                                                                               CLE164
      C                                                                                        CLE164
      C**********         Z-ADD     PRAM          KEAMT                               263074 MD046080
+     C                   Z-ADD     PRAM          KEAMT                                      MD048557
      C     CLE031        IFEQ      'Y'                                                      MD046080
      C     CLE034        IFEQ      'Y'                                                      MD046080
      C     STAL          ANDEQ     'Y'                                                      MD046080
@@ -12454,6 +12473,18 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      SETRID = SETRID + 1                                        CLE164
      C                   EVAL      SEOVRD = 0                                                 CLE164
      C                   WRITE     LKEYF1DF                                                   263074
+     C     KEAMT         IFGT      0                                                        MD048557
+     C                   Z-ADD     KEAMT         WACAMT                                     MD048557
+     C                   ELSE                                                               MD048557
+     C                   Z-SUB     KEAMT         WACAMT                                     MD048557
+     C                   ENDIF                                                              MD048557
+                                                                                            MD048557
+     C     WACAMT        DIV       1000          ZZAMT                  80                  MD048557
+     C                   Z-ADD     L1VLRF        ZZTOTI                                     MD048557
+     C                   Z-ADD     L1VLRL        ZZTOTD                                     MD048557
+     C                   EXSR      GLZADD                                                   MD048557
+     C                   Z-ADD     ZZTOTI        L1VLRF                                     MD048557
+     C                   Z-ADD     ZZTOTD        L1VLRL                                     MD048557
                                                                                               CLE164
       * End of Processing for Principal Repayments                                            CLE164
                                                                                               CLE164
@@ -12471,11 +12502,16 @@ L118 I                             P   72   77 7RTSPL
      C     *IN30         IFEQ      *OFF                                                       CLE134
 1672 C                   SETON                                        50
      C                   ENDIF                                                                CLE134
+     C                   EVAL       WSKEY = ' '                                             MD048557
      C     AKY(3)        IFEQ      'S'                                                      MD046080
+     C     CLE031        ANDEQ     'Y'                                                      MD048557
+     C     CLE134        ANDEQ     'Y'                                                      MD048557
      C                   SETOFF                                       50                    MD046080
+     C                   EVAL       WSKEY = 'Y'                                             MD048557
      C                   ENDIF                                                              MD046080
       *                                                                                     MD022450
      C                   IF        ACAMNT = *ZEROS                                          MD022450
+     C                             OR WSKEY = 'Y'                                           MD048557
      C                   SETOFF                                       50                    MD022450
       * So if record not output ensure trailer is not increased.                            MD022450
      C     NORK          SUB       1             NORK                                       MD022450
@@ -12487,6 +12523,7 @@ L118 I                             P   72   77 7RTSPL
       ** Move Hash Total Processing here.                                                   AR741212
       *                                                                                     AR741212
      C     WNEWF         IFEQ      'N'                                                      AR741212
+     C     WSKEY         ANDEQ     ' '                                                      MD048557
      C     ACAMNT        DIV       1000          ZZAMT                  80                  AR741212
      C   80              Z-SUB     ZZAMT         ZZAMT                                      AR741212
      C                   Z-ADD     TOTIKY        ZZTOTI                                     AR741212
@@ -12495,32 +12532,32 @@ L118 I                             P   72   77 7RTSPL
      C                   Z-ADD     ZZTOTI        TOTIKY           15 0                      AR741212
      C                   Z-ADD     ZZTOTD        TOTDKY            3 0                      AR741212
      C                   ELSE                                                               AR741212
-     C                   Z-ADD     0             WACAMT           13 0                      AR741212
-     C                   Z-ADD     0             ZZAMT                                      AR741212
-     C     WSEPKY        IFEQ      'Y'                                                     AR1095440
-     C     PRAM          IFGT      0                                                        AR741212
-     C                   Z-ADD     PRAM          WACAMT                                     AR741212
-     C                   ELSE                                                               AR741212
-     C                   Z-SUB     PRAM          WACAMT                                     AR741212
-     C                   ENDIF                                                              AR741212
-     C     INTA          IFGT      0                                                        AR741212
-     C                   ADD       INTA          WACAMT                                     AR741212
-     C                   ELSE                                                               AR741212
-     C                   SUB       INTA          WACAMT                                     AR741212
-     C                   ENDIF                                                              AR741212
-     C                   ELSE                                                              AR1095440
-     C     KEAMT         IFGT      0                                                       AR1095440
-     C                   Z-ADD     KEAMT         WACAMT                                    AR1095440
-     C                   ELSE                                                              AR1095440
-     C                   Z-SUB     KEAMT         WACAMT                                    AR1095440
-     C                   ENDIF                                                             AR1095440
-     C                   ENDIF                                                             AR1095440
-     C     WACAMT        DIV       1000          ZZAMT                  80                  AR741212
-     C                   Z-ADD     L1VLRF        ZZTOTI                                     AR741212
-     C                   Z-ADD     L1VLRL        ZZTOTD                                     AR741212
-     C                   EXSR      GLZADD                                                   AR741212
-     C                   Z-ADD     ZZTOTI        L1VLRF                                     AR741212
-     C                   Z-ADD     ZZTOTD        L1VLRL                                     AR741212
+     C**********         Z-ADD     0             WACAMT           13 0             AR741212 MD048557
+     C**********         Z-ADD     0             ZZAMT                             AR741212 MD048557
+     C*****WSEPKY        IFEQ      'Y'                                            AR1095440 MD048557
+     C*****PRAM*         IFGT      0                                               AR741212 MD048557
+     C**********         Z-ADD     PRAM          WACAMT                            AR741212 MD048557
+     C**********         ELSE                                                      AR741212 MD048557
+     C**********         Z-SUB     PRAM          WACAMT                            AR741212 MD048557
+     C**********         ENDIF                                                     AR741212 MD048557
+     C*****INTA*         IFGT      0                                               AR741212 MD048557
+     C**********         ADD       INTA          WACAMT                            AR741212 MD048557
+     C**********         ELSE                                                      AR741212 MD048557
+     C**********         SUB       INTA          WACAMT                            AR741212 MD048557
+     C**********         ENDIF                                                     AR741212 MD048557
+     C**********         ELSE                                                     AR1095440 MD048557
+     C*****KEAMT         IFGT      0                                              AR1095440 MD048557
+     C**********         Z-ADD     KEAMT         WACAMT                           AR1095440 MD048557
+     C**********         ELSE                                                     AR1095440 MD048557
+     C**********         Z-SUB     KEAMT         WACAMT                           AR1095440 MD048557
+     C**********         ENDIF                                                    AR1095440 MD048557
+     C**********         ENDIF                                                    AR1095440 MD048557
+     C*****WACAMT        DIV       1000          ZZAMT                  80         AR741212 MD048557
+     C**********         Z-ADD     L1VLRF        ZZTOTI                            AR741212 MD048557
+     C**********         Z-ADD     L1VLRL        ZZTOTD                            AR741212 MD048557
+     C**********         EXSR      GLZADD                                          AR741212 MD048557
+     C**********         Z-ADD     ZZTOTI        L1VLRF                            AR741212 MD048557
+     C**********         Z-ADD     ZZTOTD        L1VLRL                            AR741212 MD048557
      C                   ENDIF                                                              AR741212
       *                                                                                       CGL020
       ** If Midas Compliance Watch (CGL020) is installed and Repayment,                       CGL020

@@ -14,11 +14,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2017            *
       *                                                               *
-      *  Last Amend No. MD048558           Date 21Nov17               *
-      *  Prev Amend No. MD046080  *CREATE  Date 17Sep17               *
-      *                                                               *
+      *  Last Amend No. MD048557           Date 27Nov17               *
+      *  Prev Amend No. MD048558           Date 21Nov17               *
+      *                 MD046080  *CREATE  Date 17Sep17               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048557 - Failing COB Component - LEC000471A                *
       *  MD048558 - Failing COB Component - LEC000823 00002           *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *
@@ -58,6 +59,9 @@
  
       ** Fee Settl Det by BRCA, CNUM, FACL, LOAN, FSEQ
      FLEFEEDLU  IF   E           K DISK    RENAME(LEFEEDF:LEFEEDFO)
+                                                                                            MD048557
+     FLEPK1ZZ   UF A E             DISK    INFSR(*PSSR)                                     MD048557
+     F                                     RENAME(LKEY1ZZF:LKEYF1ZF)                        MD048557
  
       *****************************************************************
       /EJECT
@@ -184,6 +188,7 @@
      D WOUTAMT         S             15  0
      D WWWAMT          S             15P 0
      D ORWAMT          S             15P 0
+     D WACAMT          S             13P 0                                                  MD048557
      D CLE031          S              1A
      D CLE034          S              1A
      D KRECI           S              1A
@@ -210,6 +215,22 @@
       *****************************************************************
       ** M A I N  P R O C E S S I N G                                 *
       *****************************************************************
+ 
+ 
+      ** store existing trailers amount                                                     MD048557
+                                                                                            MD048557
+     C                   Z-ADD     0             L1VLRF                                     MD048557
+     C                   Z-ADD     0             L1VLRL                                     MD048557
+     C                   Z-ADD     0             L1NORE                                     MD048557
+     C                   Z-ADD     0             WACAMT                                     MD048557
+      *                                                                                     MD048557
+     C     1             SETLL     LEPK1ZZ                                                  MD048557
+     C                   READ      LEPK1ZZ                                88                MD048557
+     C     *IN88         IFEQ      *OFF                                                     MD048557
+     C                   Z-ADD     NORE          L1NORE                                     MD048557
+     C                   Z-ADD     VLRF          L1VLRF                                     MD048557
+     C                   Z-ADD     VLRL          L1VLRL                                     MD048557
+     C                   ENDIF                                                              MD048557
  
       ** Read thru LEPK1DPD
  
@@ -282,6 +303,8 @@
      C                   ENDIF
  
      C                   ENDDO
+                                                                                            MD048557
+     C                   EXSR      STRAIL                                                   MD048557
  
      C                   EVAL      *INLR       = *ON
      C                   RETURN
@@ -446,6 +469,7 @@
      C                   MOVEA     AKY           L1_AKEY
  
      C                   WRITE     LKEY1DPF
+     C                   EXSR      SRHASH                                                   MD048557
  
      C                   MOVEA     L1_AKEY       AKY
      C                   EVAL      KRECI = 'D'
@@ -478,6 +502,7 @@
      C                   EVAL      L1_ECCY = CCY
      C                   MOVEA     AKY           L1_AKEY
      C                   WRITE     LKEY1DPF
+     C                   EXSR      SRHASH                                                   MD048557
  
      C                   MOVEA     L1_AKEY       AKY
      C                   CALL      'AOCURRR0'
@@ -505,6 +530,7 @@
      C                   Z-ADD     BSAMT         L1_EAMT
      C                   MOVEA     AKY           L1_AKEY
      C                   WRITE     LKEY1DPF
+     C                   EXSR      SRHASH                                                   MD048557
  
       ** Format xxsyybcccS key for Base Currency Equivalent of Spot Trade
       ** account in sale currency
@@ -514,6 +540,8 @@
      C                   MOVEA     SCCY          AKY(6)
      C                   MOVEA     AKY           L1_AKEY
      C                   WRITE     LKEY1DPF
+     C                   EXSR      SRHASH                                                   MD048557
+     C                   EVAL      L1NORE = L1NORE + 4                                      MD048557
  
      C                   ENDSR
  
@@ -819,6 +847,242 @@
  
      C                   ENDSR
  
+      *****************************************************************                     MD048557
+      *                                                               *                     MD048557
+      *  STRAIL - Update trailer record on LEPK1ZZ                    *                     MD048557
+      *                                                               *                     MD048557
+      *  Called from MAIN Processing                                  *                     MD048557
+      *                                                               *                     MD048557
+      *****************************************************************                     MD048557
+     C     STRAIL        BEGSR                                                              MD048557
+      *                                                                                     MD048557
+     C     1             SETLL     LEPK1ZZ                                                  MD048557
+     C                   READ      LEPK1ZZ                                88                MD048557
+     C                   Z-ADD     L1NORE        NORE                                       MD048557
+     C                   Z-ADD     L1VLRF        VLRF                                       MD048557
+     C                   Z-ADD     L1VLRL        VLRL                                       MD048557
+     C     *IN88         IFEQ      *ON                                                      MD048557
+     C                   MOVE      'T'           RECI                                       MD048557
+     C                   ADD       2             NORE                                       MD048557
+     C                   WRITE     LKEYF1ZF                                                 MD048557
+     C                   ELSE                                                               MD048557
+     C     NORE          IFEQ      0                                                        MD048557
+     C                   ADD       2             NORE                                       MD048557
+     C                   MOVE      'T'           RECI                                       MD048557
+     C                   END                                                                MD048557
+     C                   UPDATE    LKEYF1ZF                                                 MD048557
+     C                   ENDIF                                                              MD048557
+      *                                                                                     MD048557
+     C                   ENDSR                                                              MD048557
+      *                                                                                     MD048557
+      *****************************************************************                     MD048557
+      *                                                               *                     MD048557
+      *  SRHASH - Add amounts                                         *                     MD048557
+      *                                                               *                     MD048557
+      *  Called from SETTLE1                                          *                     MD048557
+      *                                                               *                     MD048557
+      *****************************************************************                     MD048557
+     C     SRHASH        BEGSR                                                              MD048557
+                                                                                            MD048557
+     C     L1_EAMT       IFGT      0                                                        MD048557
+     C                   Z-ADD     L1_EAMT       WACAMT                                     MD048557
+     C                   ELSE                                                               MD048557
+     C                   Z-SUB     L1_EAMT       WACAMT                                     MD048557
+     C                   ENDIF                                                              MD048557
+                                                                                            MD048557
+     C     WACAMT        DIV       1000          ZZAMT                  80                  MD048557
+     C                   Z-ADD     L1VLRF        ZZTOTI                                     MD048557
+     C                   Z-ADD     L1VLRL        ZZTOTD                                     MD048557
+     C                   EXSR      GLZADD                                                   MD048557
+     C                   Z-ADD     ZZTOTI        L1VLRF                                     MD048557
+     C                   Z-ADD     ZZTOTD        L1VLRL                                     MD048557
+                                                                                            MD048557
+                                                                                            MD048557
+     C                   ENDSR                                                              MD048557
+                                                                                            MD048557
+      *****************************************************************                     MD048557
+      /EJECT                                                                                MD048557
+      *****************************************************************                     MD048557
+      * GLZADD  -  Adds an amount (ZZAMT) to the total (ZZTOTI,ZZTOTD)*                     MD048557
+      *                                                               *                     MD048557
+      * Called by: GLZSUB                                             *                     MD048557
+      *                                                               *                     MD048557
+      * Calls: GLZSUM                                                 *                     MD048557
+      *                                                               *                     MD048557
+      *****************************************************************                     MD048557
+     C     GLZADD        BEGSR                                                              MD048557
+      *                                                                                     MD048557
+     C     ZZAMT         IFNE      *ZERO                                                    MD048557
+      *                                                                                     MD048557
+      ***  Split ZZAMT into integer and decimal fields                                      MD048557
+      *                                                                                     MD048557
+     C                   Z-ADD     ZZAMT         ZZAMTI           15 0                      MD048557
+     C                   MOVE      ZZAMT         ZZAMTD            3 0                      MD048557
+      *                                                                                     MD048557
+      ***  Both ZZAMTI and ZZAMTD contain a 'sign' zone now                                 MD048557
+      *                                                                                     MD048557
+     C                   EXSR      GLZSUM                                                   MD048557
+     C                   ENDIF                                                              MD048557
+      *                                                                                     MD048557
+     C                   ENDSR                                                              MD048557
+      *****************************************************************                     MD048557
+      /EJECT                                                                                MD048557
+      *****************************************************************                     MD048557
+      * GLZSUM  -  Carries out the addition of the amounts            *                     MD048557
+      *                                                               *                     MD048557
+      * Called by: GLZADD                                             *                     MD048557
+      *                                                               *                     MD048557
+      * Calls: *None                                                  *                     MD048557
+      *                                                               *                     MD048557
+      *****************************************************************                     MD048557
+     C     GLZSUM        BEGSR                                                              MD048557
+      *                                                                                     MD048557
+      ***  Save values of indicators to be used in the program                              MD048557
+      *                                                                                     MD048557
+     C                   MOVE      *IN91         WIN91             1                        MD048557
+     C                   MOVE      *IN92         WIN92             1                        MD048557
+     C                   MOVE      *IN93         WIN93             1                        MD048557
+     C                   MOVE      *IN94         WIN94             1                        MD048557
+     C                   MOVE      *IN95         WIN95             1                        MD048557
+     C                   MOVE      *IN96         WIN96             1                        MD048557
+     C                   SETOFF                                       919293                MD048557
+     C                   SETOFF                                       949599                MD048557
+      *                                                                                     MD048557
+      ***  Determine sign of ZZAMTI and ZZAMTD, 92 if neg                                   MD048557
+      *                                                                                     MD048557
+     C     ZZAMTI        COMP      0                                    9293                MD048557
+     C   93ZZAMTD        COMP      0                                    9293                MD048557
+     C   93              GOTO      ZZSEND                                                   MD048557
+      *                                                                                     MD048557
+      ***  Determine sign of ZZTOTI and ZZTOTD, 91 if neg                                   MD048557
+      *                                                                                     MD048557
+     C     ZZTOTI        COMP      0                                    9193                MD048557
+     C   93ZZTOTD        COMP      0                                    9193                MD048557
+      *                                                                                     MD048557
+      ***  If ZZTOTAL is zero, return ZZAMOUNT                                              MD048557
+      *                                                                                     MD048557
+     C   93              Z-ADD     ZZAMTI        ZZTOTI           15 0                      MD048557
+     C   93              Z-ADD     ZZAMTD        ZZTOTD            3 0                      MD048557
+     C   93              GOTO      ZZSEND                                                   MD048557
+      *                                                                                     MD048557
+      ***  If signs differ, bypass overflow checks                                          MD048557
+      *                                                                                     MD048557
+     C   91                                                                                 MD048557
+     CANN92                                                                                 MD048557
+     CORN91                                                                                 MD048557
+     CAN 92              GOTO      ZZOFPS                                                   MD048557
+     C*                                                                                     MD048557
+     C     ZZAMTD        ADD       ZZTOTD        ZZWK2             4 0                      MD048557
+     C     ZZWK2         COMP      999                                93                    MD048557
+     C  N93ZZWK2         COMP      -999                                 93                  MD048557
+     C*                                                                                     MD048557
+     C   93                                                                                 MD048557
+     CANN92ZZAMTI        ADD       1             ZZWK3            15 0                      MD048557
+     C   93                                                                                 MD048557
+     CAN 92ZZAMTI        SUB       1             ZZWK3                                      MD048557
+     C   93ZZTOTI        ADD       ZZWK3         ZZWK3                                      MD048557
+     C  N93ZZTOTI        ADD       ZZAMTI        ZZWK3                                      MD048557
+      *                                                                                     MD048557
+      ***  If the modulus of ZZWK3 is lt mod. ZZTOTI then O/F has occured                   MD048557
+      *                                                                                     MD048557
+     C  N92ZZWK3         COMP      ZZTOTI                               99                  MD048557
+     C   92ZZWK3         COMP      ZZTOTI                             99                    MD048557
+     C  N99              Z-ADD     ZZWK2         ZZTOTD                                     MD048557
+     C  N99              Z-ADD     ZZWK3         ZZTOTI                                     MD048557
+      *                                                                                     MD048557
+      ***  If O/F zeroise ZZAMT, Ind '99' set and ZZTOT fields left intact                  MD048557
+      *                                                                                     MD048557
+     C   99              Z-ADD     0             ZZAMT            15 3                      MD048557
+     C                   GOTO      ZZSEND                                                   MD048557
+      *                                                                                     MD048557
+      ***  The 'signs' are different                                                        MD048557
+      *                                                                                     MD048557
+     C     ZZOFPS        TAG                                                                MD048557
+      *                                                                                     MD048557
+      ***  If ZZAMT was negative, make it pos. to como with ZZTOT                           MD048557
+      *                                                                                     MD048557
+     C   92              Z-SUB     ZZAMTI        ZZAMTI           15 0                      MD048557
+     C   92              Z-SUB     ZZAMTD        ZZAMTD            3 0                      MD048557
+      *                                                                                     MD048557
+      ***  If ZZTOT was negative, make it pos. to comp with ZZAMT.                          MD048557
+      *                                                                                     MD048557
+     C   91              Z-SUB     ZZTOTI        ZZTOTI                                     MD048557
+     C   91              Z-SUB     ZZTOTD        ZZTOTD                                     MD048557
+      *                                                                                     MD048557
+      ***  Both ZZAMT and ZZTOT are now positive                                            MD048557
+      *                                                                                     MD048557
+     C     ZZTOTI        COMP      ZZAMTI                             93  95                MD048557
+     C   95ZZTOTD        COMP      ZZAMTD                             93  95                MD048557
+      *                                                                                     MD048557
+      ***  If ZZTOT eq. ZZAMT return ZERO.                                                  MD048557
+      *                                                                                     MD048557
+     C   95              Z-ADD     0             ZZTOTI                                     MD048557
+     C   95              Z-ADD     0             ZZTOTD                                     MD048557
+     C   95              GOTO      ZZSEND                                                   MD048557
+      *                                                                                     MD048557
+      ***  If ZZTOT gt. ZZAMT.                                                              MD048557
+      *                                                                                     MD048557
+     C   93ZZAMTD        COMP      ZZTOTD                             94                    MD048557
+     C   93                                                                                 MD048557
+     CAN 94ZZTOTI        SUB       1             ZZTOTI                                     MD048557
+     C   93                                                                                 MD048557
+     CAN 94ZZTOTD        ADD       1000          ZZWK2                                      MD048557
+     C   93ZZTOTI        SUB       ZZAMTI        ZZTOTI                                     MD048557
+     C   93                                                                                 MD048557
+     CAN 94ZZWK2         SUB       ZZAMTD        ZZTOTD                                     MD048557
+     C   93                                                                                 MD048557
+     CANN94ZZTOTD        SUB       ZZAMTD        ZZTOTD                                     MD048557
+      *                                                                                     MD048557
+      ***  If ZZAMT gt. ZZTOT.                                                              MD048557
+      *                                                                                     MD048557
+     C  N93ZZTOTD        COMP      ZZAMTD                             94                    MD048557
+     C  N93                                                                                 MD048557
+     CAN 94ZZAMTI        SUB       1             ZZWK3            15 0                      MD048557
+     C  N93                                                                                 MD048557
+     CAN 94ZZAMTD        ADD       1000          ZZWK2                                      MD048557
+     C  N93                                                                                 MD048557
+     CAN 94ZZWK3         SUB       ZZTOTI        ZZTOTI                                     MD048557
+     C  N93                                                                                 MD048557
+     CANN94ZZAMTI        SUB       ZZTOTI        ZZTOTI                                     MD048557
+     C  N93                                                                                 MD048557
+     CAN 94ZZWK2         SUB       ZZTOTD        ZZTOTD                                     MD048557
+     C  N93                                                                                 MD048557
+     CANN94ZZAMTD        SUB       ZZTOTD        ZZTOTD                                     MD048557
+      *                                                                                     MD048557
+      ***  Reverse sign of ZZTOT if larger I/P fields were negative                         MD048557
+      *                                                                                     MD048557
+     C                   SETOFF                                       94                    MD048557
+     C   93                                                                                 MD048557
+     CAN 91                                                                                 MD048557
+     CORN93                                                                                 MD048557
+     CAN 92              SETON                                        94                    MD048557
+     C   94              Z-SUB     ZZTOTI        ZZTOTI                                     MD048557
+     C   94              Z-SUB     ZZTOTD        ZZTOTD                                     MD048557
+      *                                                                                     MD048557
+      ***  Restore sign of ZZAMTI & ZZAMTD if it was reversed                               MD048557
+      *                                                                                     MD048557
+     C   92              Z-SUB     ZZAMTI        ZZAMTI                                     MD048557
+     C   92              Z-SUB     ZZAMTD        ZZAMTD                                     MD048557
+     C     ZZSEND        TAG                                                                MD048557
+      *                                                                                     MD048557
+      ***  If ZZTOTD is zero, and ZZTOTI is neg. set up ZZNEGD.                             MD048557
+      *                                                                                     MD048557
+     C                   SETOFF                                       96                    MD048557
+     C     ZZTOTD        COMP      0                                      91                MD048557
+     C   91ZZTOTI        COMP      0                                    96                  MD048557
+     C   96              MOVE      '.000-'       ZZNEGD            5                        MD048557
+      *                                                                                     MD048557
+      ***  Restore previous indicator values                                                MD048557
+      *                                                                                     MD048557
+     C                   MOVE      WIN91         *IN91                                      MD048557
+     C                   MOVE      WIN92         *IN92                                      MD048557
+     C                   MOVE      WIN93         *IN93                                      MD048557
+     C                   MOVE      WIN94         *IN94                                      MD048557
+     C                   MOVE      WIN95         *IN95                                      MD048557
+     C                   MOVE      WIN96         *IN96                                      MD048557
+      *                                                                                     MD048557
+     C                   ENDSR                                                              MD048557
+                                                                                            MD048557
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -828,6 +1092,10 @@
      C     *INZSR        BEGSR
  
      C                   EVAL      dbPgm       = PSProcPgm
+                                                                                            MD048557
+     C     *LIKE         DEFINE    VLRF          L1VLRF                                     MD048557
+     C     *LIKE         DEFINE    VLRL          L1VLRL                                     MD048557
+     C     *LIKE         DEFINE    NORE          L1NORE                                     MD048557
  
      C     KAllF         KLIST
      C                   KFLD                    L2_LKCNU2

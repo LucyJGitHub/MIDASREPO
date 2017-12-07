@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD046080           Date 21Sep17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD048557           Date 27Nov17               *
+      *  Prev Amend No. MD046080           Date 21Sep17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CLE164             Date 18Aug14               *
       *                 MD023378           Date 25Apr14               *
       *                 MD021423E          Date 12Sep13               *
@@ -50,8 +51,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD046080 - Gap between CLE031 (Settlement to different       *
-      *             currency) and CLE134 (PDCL processing)            *
+      *  MD048557 - Failing COB Component - LEC000471A                *
+      *  MD046080 - Gap between CLE031 and CLE134                     *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -819,7 +820,7 @@
      C                   MOVE      'XP'          Wf10
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt + EAMT
@@ -844,7 +845,7 @@
      C                   MOVEL     Wf10          AKEY
      C                   Z-ADD     0             AAMT
      C                   WRITE     LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ADD       1             W@NewRc
      C                   IF        EAMT > 0
@@ -870,7 +871,7 @@
      C                   MOVE      'XP'          Wf10
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ENDIF
       *
@@ -894,7 +895,7 @@
      C                   EXSR      SrConvert                                                MD046080
       *
      C                   UPDATE    LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ENDIF
       *
@@ -978,7 +979,7 @@
      C                   MOVEL     Wf10          AKEY
      C                   Z-ADD     0             AAMT
      C                   WRITE     LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ADD       1             W@NewRc
      C                   IF        EAMT > 0
@@ -1004,7 +1005,7 @@
      C                   MOVEL     Wf10          AKEY
      C                   Z-ADD     0             AAMT
      C                   WRITE     LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ADD       1             W@NewRc
      C                   IF        EAMT > 0
@@ -1185,7 +1186,7 @@
  
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   IF        EAMT > 0
      C                   EVAL      w@adjamt = w@adjamt + EAMT
@@ -1207,7 +1208,7 @@
  
      C                   Z-ADD     0             AAMT
      C                   WRITE     LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
  
      C                   ADD       1             W@NewRc
@@ -1266,7 +1267,7 @@
  
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ENDIF
  
@@ -1284,7 +1285,7 @@
  
      C                   MOVEL     Wf10          AKEY
      C                   UPDATE    LEPK1DPF
-     C                   EVAL      EAMT = WWWAMT                                            MD046080
+     C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
      C                   EVAL      ECCY = WZCCY                                             MD046080
      C                   ENDIF
      C                   IF        EAMT > 0

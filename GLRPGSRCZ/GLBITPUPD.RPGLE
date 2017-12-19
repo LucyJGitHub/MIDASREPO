@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD048370           Date 29Nov17               *
-      *  Prev Amend No. MD046060           Date 21Jun17               *
-      *                 CGL182             Date 11May17               *
+      *  Last Amend No. MD046060           Date 21Jun17               *
+      *  Prev Amend No. CGL182             Date 11May17               *
       *                 MD043023           Date 25Jul17               *
       *                 MD042040           Date 10Oct16               *
       *                 MD033964           Date 07Oct16               *
@@ -86,10 +85,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD048370 - User encounters an error "batch is already        *
-      *             accepted" when amending/inserting a BITP whose    *
-      *             BITH has BITP inserted via SOAP first then        *
-      *             another BITP via UI.                              *
       *  MD046060 - GLBTNOPD is not defined with COMMIT               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *  MD043023 - If batch is sent through interface with Auto      *
@@ -1478,9 +1473,7 @@ E1   C                   ENDIF                                                  
       *
       ** Increment Hash Item No. calculated by 1.
       *
-     C     PActnCde      IFEQ      'I'                                                      MD048370
      C                   ADD       1             BRHINC
-     C                   ENDIF                                                              MD048370
       *                                                                                       CAP084
       ** If it is an update then delete the original amount from the calculated               CAP084
       ** amount as the new amount has now been added to it.                                   CAP084

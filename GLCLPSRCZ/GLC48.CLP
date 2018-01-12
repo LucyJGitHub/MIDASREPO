@@ -9,20 +9,22 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. MD047322A          Date 12Jan18              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CTI005             Date 12Apr04              */
+/*       Prev Amend No. CTI005             Date 12Apr04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BHF798             Date 25Apr91              */
+/*                      BHF798             Date 25Apr91              */
 /*                      S01194             Date 16Mar89              */
 /*       PREV AMEND.NO. S01117             DATE  02/03/89           */
 /*                      E11873             DATE  11/05/88           */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD047322A - ACCNTL16 is missing one data member.           */
 /*       CTI005 - Midas Plus-TI Integration Enhancements             */
 /*                Automatic Account Opening                          */
 /*       BHF798  -  FIX TO CLOF INCASE OF MULTIPLE CALL             */
@@ -58,6 +60,11 @@
 /**/
              CHGJOB     SWS(00000000)
 /**/
+             RMVM       FILE(ACCNTL16) MBR(*ALL)                                       /*MD047322A*/
+             MONMSG     MSGID(CPF0000)                                                 /*MD047322A*/
+             ADDLFM     FILE(ACCNTL16) MBR(ACCNTL16)                                   /*MD047322A*/
+             MONMSG     MSGID(CPF0000)                                                 /*MD047322A*/
+                                                                                       /*MD047322A*/
 /*********** OVRDBF     FILE(TABLE) TOFILE(TABGL)*/                   /*S01194*/
 /*********** OVRDBF     FILE(TABLED) TOFILE(TABGL) SHARE(*NO)*/       /*S01194*/
 /**********  CALL       PGM(GL0480)                               *//* S01117 */
@@ -91,7 +98,7 @@
 /*           ELSE       CMD(DO)                         */   /*E11873*/
 /**/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)     /*E11873*/
- 
+
 /*********** RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM) /*E11873*/  /*S01194*/
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)             /*S01194*/
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +

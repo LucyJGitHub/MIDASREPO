@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD046080           Date 17Sep17               *
-      *  Prev Amend No. MD035433           Date 02Sep15               *
+      *  Last Amend No. MD049078           Date 12Jan18               *
+      *  Prev Amend No. MD046080           Date 17Sep17               *
+      *                 MD035433           Date 02Sep15               *
       *                 MD033895           Date 15Apr15               *
       *                 MD031851           Date 25Jan15               *
       *                 MD031225           Date 10Dec14               *
@@ -95,6 +96,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049078 - Wrong postings of MR and RE of PDCL loan          *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *
       *  MD035433 - System generated new PDCL instead of using old    *
@@ -2366,7 +2368,8 @@
      C                   EXSR      SRFmtWMsg
       *
      C                   EVAL      PFldTag  = 'DDSTAL'
-     C                   EVAL      PFldData = *BLANK
+     C**********         EVAL      PFldData = *BLANK                                        MD049078
+     C                   EVAL      PFldData = C_STAL                                        MD049078
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
@@ -3199,6 +3202,12 @@
      C                   EVAL      PFldAttr = *BLANK                                       MD021423E
      C                   EXSR      SRFmtWMsg                                               MD021423E
      C                   EVAL      MQCLAS  = C_CLAS                                        MD021423E
+                                                                                            MD049078
+     C                   EVAL      PFldTag  = 'DDSTAL'                                      MD049078
+     C                   EVAL      PFldData = C_STAL                                        MD049078
+     C                   EVAL      PFldType = *BLANK                                        MD049078
+     C                   EVAL      PFldAttr = *BLANK                                        MD049078
+     C                   EXSR      SRFmtWMsg                                                MD049078
                                                                                            MD021423E
      C                   EVAL      PFldTag  = 'AUTH'                                       MD021423E
      C                   EVAL      PFldData = 'Y'                                          MD021423E
@@ -4319,6 +4328,12 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
+                                                                                            MD049078
+     C                   EVAL      PFldTag  = 'DDSTAL'                                      MD049078
+     C                   EVAL      PFldData = C_STAL                                        MD049078
+     C                   EVAL      PFldType = *BLANK                                        MD049078
+     C                   EVAL      PFldAttr = *BLANK                                        MD049078
+     C                   EXSR      SRFmtWMsg                                                MD049078
       *
       ** Linked to Syndicate
      C                   EVAL      PFldTag  = 'DDLNKS'

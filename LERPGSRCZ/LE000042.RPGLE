@@ -16,14 +16,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD034451C          Date 02Mar16               *      
-      *  Prev Amend No. MD030959           Date 17Jun15               *
+      *  Last Amend No. MD049078           Date 12Jan18               *
+      *  Prev Amend No. MD034451C          Date 02Mar16               *
+      *                 MD030959           Date 17Jun15               *
       *                 CLE164             Date 18Aug14               *
       *                 AR1021979 *CREATE  Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD034451C - Recompiled due to changed PF/HELDIHB.            *      
+      *  MD049078 - Wrong postings of MR and RE of PDCL loan          *
+      *  MD034451C - Recompiled due to changed PF/HELDIHB.            *
       *  MD030959 - Recompiled due to changed PF/HELDIHC.             *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  AR1021979 - PDP/CLE134 Enhancements                          *
@@ -238,10 +240,10 @@
       ** Initialize variables
       *
      C                   EVAL      WHELDS = *BLANK
-     C                   EVAL      WBAVS = 0
+     C**********         EVAL      WBAVS = 0                                                MD049078
      C                   EVAL      WHITS = 0
      C                   EVAL      WCBCS = 0
-     C                   EVAL      WACBS = 0
+     C**********         EVAL      WACBS = 0                                                MD049078
       *
       ** Check if Blocked Collateral Exists
       *

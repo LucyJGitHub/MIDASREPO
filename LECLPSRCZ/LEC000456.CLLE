@@ -12,8 +12,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2013           */
 /*                                                                   */
-/*       Last Amend No. MD025590A          Date 23Feb15              */
-/*       Prev Amend No. MD022807I          Date 24Apr14              */
+/*       Last Amend No. MD049078           Date 12Jan18              */
+/*       Prev Amend No. MD025590A          Date 23Feb15              */
+/*                      MD022807I          Date 24Apr14              */
 /*                      MD022807E          Date 17Oct13              */
 /*                      MD021423 *REWRITE  Date 21Aug13              */
 /*                      MD020534           Date 23May13              */
@@ -31,6 +32,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049078 - Wrong postings of MR and RE of PDCL loan         */
 /*       MD025590A - Wait for 'X' Transactions to be changed to 'E'  */
 /*                   by JAVA before generating report details.       */
 /*       MD022807I- Process 'R'-esent then 'H'-eld transactions      */
@@ -59,22 +61,27 @@
 /*       CLE134 - Past Due Call Loan Processing                      */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM        PARM(&CNAM &CSEQ &APOS)
- 
+
 /** Declare the variables for rerun checking */
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&APOS) TYPE(*CHAR) LEN(1)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                   /*MD049078*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                   /*MD049078*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                  /*MD049078*/
+             DCL        VAR(&CLE038) TYPE(*CHAR) LEN(1)                                 /*MD049078*/
+             DCL        VAR(&CLE134) TYPE(*CHAR) LEN(1)                                 /*MD049078*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1) VALUE('Y')
              DCL        VAR(&ENDF) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                            Misys International Banking Systems Ltd. +
                            2013')
- 
+
              DCL        VAR(&RECCONT) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&PRVCONT) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&ACTIME) TYPE(*CHAR) LEN(20)
@@ -82,23 +89,39 @@
              DCL        VAR(&RECCNT2) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&RECCNT3) TYPE(*DEC) LEN(10 0)                             /*MD022807E*/
              DCL        VAR(&COUNTER) TYPE(*DEC) LEN(10 0)                             /*MD022807E*/
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
- 
+
              RTVDTAARA  DTAARA(LEPDPC (3 1)) RTNVAR(&ENDF)
- 
+
 /** Reset Indicators */
              CHGJOB     SWS(00000000)
                                                                                        /*MD022807E*/
              CHGVAR     VAR(&COUNTER) VALUE(1)                                         /*MD022807E*/
- 
+/**/                                                                                    /*MD049078*/
+/* Check if CLE038 is installed */                                                      /*MD049078*/
+/**/                                                                                    /*MD049078*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD049078*/
+             CHGVAR     VAR(&SARD) VALUE('CLE038')                                      /*MD049078*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                      /*MD049078*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CLE038) +
+                          VALUE('Y'))                                                   /*MD049078*/
+/**/                                                                                    /*MD049078*/
+/* Check if CLE134 is installed */                                                      /*MD049078*/
+/**/                                                                                    /*MD049078*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD049078*/
+             CHGVAR     VAR(&SARD) VALUE('CLE134')                                      /*MD049078*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                      /*MD049078*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CLE134) +
+                          VALUE('Y'))                                                   /*MD049078*/
+
 /** Ensure that the listeners are started */
              CALL       PGM(LEC000129) PARM('CBSTART')
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                GOTO       CMDLBL(DBERR)
              ENDDO
- 
+
 /** Ensure that the MQ manager and channel is running */
              CALL       PGM(LEC000130)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -109,17 +132,17 @@
                            CMTSCOPE(*JOB)
              MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&FLAG) +
                            VALUE('N'))
- 
+
 /** If input parameter is blanks, default 1 */
              IF         COND(&APOS *EQ ' ') THEN(CHGVAR +
                            VAR(&APOS) VALUE('1'))
- 
+
              SNDPGMMSG  MSG('PDCL Loans Account Keys +
                            update/create') TOMSGQ(MRUNQ)
- 
+
 /** Check the current status of this component */
              CALL PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /** Restart Process */
 /** If restart component and value of LEMQLGL6 is not zero  */
              RTVMBRD    FILE(LEMQLGL6) NBRCURRCD(&RECCONT)
@@ -129,23 +152,23 @@
              IF         COND(&RECCONT *NE 0) THEN(GOTO PROC)
              GOTO       CMDLBL(CHECKER)
              ENDDO
- 
+
 PROC:
 /** Set Cob Flag */
              CHGVAR     VAR(&STAT) VALUE('Y')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
              IF         COND(&APOS *EQ '5') THEN(DO)
                   OVRDBF    FILE(ACPO1) TOFILE(ACPO5)
              ENDDO
- 
+
              CALL       PGM(LE000456) PARM(&APOS &CNAM &RTCD)
- 
+
              IF         COND(&APOS *EQ '5') THEN(DO)
                   DLTOVR    FILE(ACPO1)
                   MONMSG    MSGID(CPF0000)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                SNDPGMMSG  MSG('Job terminated, database in error.') +
                              TOMSGQ(MOPERQ MRUNQ)
@@ -153,7 +176,7 @@ PROC:
                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                GOTO       CMDLBL(DBERR)
              ENDDO
- 
+
              IF         COND(&RTCD *NE '       ') THEN(DO)
                SNDPGMMSG  MSG('Job terminated, database in error.') +
                              TOMSGQ(MOPERQ MRUNQ)
@@ -161,12 +184,12 @@ PROC:
                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                GOTO       CMDLBL(DBERR)
              ENDDO
- 
+
 /** Reset Cob Flag = ' '  */
              CHGVAR     VAR(&STAT) VALUE('N')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
              COMMIT
- 
+
 /** Statement below will call RTVMBRD command to retrieve the current */
 /** record count of LEMQLGL6 which is selected as LGSTAT = 'S'.       */
 /** This will continously loop until  record count is equal to zero   */
@@ -189,15 +212,15 @@ WAIT:
                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                GOTO       CMDLBL(DBERR)
              ENDDO
- 
+
              DLYJOB     DLY(3)
              RTVMBRD    FILE(LEMQLGL6) NBRCURRCD(&RECCONT)
- 
+
              IF         COND(&RECCONT *NE &PRVCONT) THEN(DO)
                CHGVAR     VAR(&PRVCONT) VALUE(&RECCONT)
                CALL       PGM(LE000501) PARM(&AETIME)
              ENDDO
- 
+
              IF         COND(&RECCONT = 0) THEN(DO)
                                                                                        /*MD022807I*/
 /** Process 'R'esent Tansactions */                                                    /*MD022807I*/
@@ -213,18 +236,18 @@ WAIT:
                    CALL    PGM(LE000504) PARM('LEC000456' 'Update')                    /*MD022807I*/
                 ENDDO                                                                  /*MD022807I*/
              ENDDO                                                                     /*MD022807I*/
- 
+
 /** Process 'H'eld transactions */
              RTVMBRD    FILE(LEMQLGLA) NBRCURRCD(&RECCNT2)
              IF         COND(&RECCNT2 *GT 0) THEN(DO)
                OVRDBF     FILE(LEMQHELD) TOFILE(LEMQLGLA)
                OVRDBF     FILE(LEPDUFL7) SHARE(*NO)
                OVRDBF     FILE(LEPDUEL7) SHARE(*NO)
- 
+
                CALL       PGM(LE000502)
                DLTOVR     FILE(*ALL)
                MONMSG     MSGID(CPF0000)
- 
+
                GOTO       CMDLBL(CHECKER)
              ENDDO
                                                                                        /*MD025590A*/
@@ -248,26 +271,62 @@ WAIT:
 /**********        CALL    PGM(LE000504) PARM('LEC000456' 'Update')          /*MD022807E MD022807I*/
 /**********     ENDDO                                                        /*MD022807E MD022807I*/
 /**********  ENDDO                                                           /*MD022807E MD022807I*/
- 
+
 /** Reset Cob Flag = ' '  */
                OVRPRTF    FILE(LE000452P1) USRDTA(PROCESSED)
                CALL       PGM(LE000452) PARM('LEC000456' 'P')
                OVRPRTF    FILE(LE000452P1) USRDTA(REPAIR) +
                           SPLFNAME(LE000452P2)
                CALL       PGM(LE000452) PARM('LEC000456' 'E')
+               IF         COND(&CLE038 *EQ 'Y') THEN(DO)                                /*MD049078*/
+                  CLRPFM     FILE(XESTALPD)                                             /*MD049078*/
+                                                                                        /*MD049078*/
+/*  Take Temporary copy of LESTALPD for update by LE000456                              /*MD049078*/
+                  CPYF       FROMFILE(LESTALPD) TOFILE(XESTALPD) MBROPT(*REPLACE) +
+                                                                                        /*MD049078*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                               FILE(XESTALPD))                                          /*MD049078*/
+               ENDDO                                                                    /*MD049078*/
+               IF         COND(&CLE134 *EQ 'Y') THEN(DO)                                /*MD049078*/
+                  CLRPFM     FILE(XESTALPD)                                             /*MD049078*/
+                                                                                        /*MD049078*/
+/*  Take Temporary copy of LESTALPD for update by LE000456                              /*MD049078*/
+                  CPYF       FROMFILE(LESTALPD) TOFILE(XESTALPD) MBROPT(*REPLACE) +
+                                                                                        /*MD049078*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                               FILE(XESTALPD))                                          /*MD049078*/
+               ENDDO                                                                    /*MD049078*/
                GOTO       CMDLBL(END)
              ENDDO
              IF         COND(&ENDF = 'Y') THEN(DO)
+                IF         COND(&CLE038 *EQ 'Y') THEN(DO)                               /*MD049078*/
+                   CLRPFM     FILE(XESTALPD)                                            /*MD049078*/
+                                                                                        /*MD049078*/
+/*  Take Temporary copy of LESTALPD for update by LE000456                              /*MD049078*/
+                   CPYF       FROMFILE(LESTALPD) TOFILE(XESTALPD) MBROPT(*REPLACE) +
+                                                                                        /*MD049078*/
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                                FILE(XESTALPD))                                         /*MD049078*/
+                ENDDO                                                                   /*MD049078*/
+                IF         COND(&CLE134 *EQ 'Y') THEN(DO)                               /*MD049078*/
+                   CLRPFM     FILE(XESTALPD)                                            /*MD049078*/
+                                                                                        /*MD049078*/
+/*  Take Temporary copy of LESTALPD for update by LE000456                              /*MD049078*/
+                   CPYF       FROMFILE(LESTALPD) TOFILE(XESTALPD) MBROPT(*REPLACE) +
+                                                                                        /*MD049078*/
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                                FILE(XESTALPD))                                         /*MD049078*/
+                ENDDO                                                                   /*MD049078*/
                GOTO       CMDLBL(END)
              ENDDO
              GOTO       CMDLBL(WAIT)
- 
+
 /** Skip to End */
              GOTO       CMDLBL(END)
- 
+
 DBERR:       SNDPGMMSG  MSG('Job Terminated, Database in Error') +
                            TOMSGQ(MOPERQ MRUNQ)
- 
+
              CHGJOB     SWS(XXXXXX11)
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +

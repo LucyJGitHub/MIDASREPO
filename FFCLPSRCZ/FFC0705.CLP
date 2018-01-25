@@ -9,21 +9,24 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*   Last Amend No. MD039256           Date 11Dec17                  */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*   Last Amend No. CCB009             Date 01Jun00                  */
+/*   Prev Amend No. CCB009             Date 01Jun00                  */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   Prev Amend No. 082461             Date 08Mar95                  */
+/*                  082461             Date 08Mar95                  */
 /*                  079666             Date 01Dec94                  */
 /*                  E23409             DATE 31AUG90                  */
 /*                  S01117             DATE 22MAR90                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*  MD039256 - Error in COB                                          */
+/*             Applied for MD048787                                  */
 /*  CCB009 - Journal files throughout close of business              */
 /*  082461 - If journalling fails because pgm cannot allocate file,  */
 /*           retry before failing.                                   */
@@ -115,13 +118,13 @@ BYPASS:                                                               /*082461*/
 /**/
 /*  OVERRIDE LF/RCHG2                                               */
 /**/
-             OVRDBF     FILE(RCHG2) SHARE(*YES)
+/**********  OVRDBF     FILE(RCHG2) SHARE(*YES) */                                      /*MD039256*/
 /**/
 /* OPNQRYF Selects types 2 and 3 Detail records  */
 /**/
-             OPNQRYF    FILE((RCHG2)) OPTION(*INP *UPD) FORMAT(*FILE) +
+/**********  OPNQRYF    FILE((RCHG2)) OPTION(*INP *UPD) FORMAT(*FILE) +
                           QRYSLT(' %SST(ZZ006 1 1) *NE ''1''') +
-                          KEYFLD(*FILE)
+                          KEYFLD(*FILE) */                                              /*MD039256*/
 /**/
              CHGJOB     SWS(XXXXXX00)
 /**/
@@ -129,7 +132,7 @@ BYPASS:                                                               /*082461*/
 /**/
              CALL FF0670
 /**/
-             CLOF OPNID(RCHG2)
+/**********  CLOF OPNID(RCHG2) */                                                       /*MD039256*/
 /**/
 /* FOR DATABASE ERRORS RECOVER DATA FROM LOCAL DATA AREA, SEND      */
 /* MESSAGE TO MOPERQ AND MRUNQ.                                     */
@@ -143,8 +146,8 @@ BYPASS:                                                               /*082461*/
 /**/
 /*      DELETE ALL OVERRIDES                                        */
 /**/
-             DLTOVR     FILE(RCHG2)
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**********  DLTOVR     FILE(RCHG2) */                                                  /*MD039256*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                               /*MD039256*/
 /**/
 /*  CALL FINAL JOURNAL PROCESSING FOR SUB-COMPONENT                 */
 /**/

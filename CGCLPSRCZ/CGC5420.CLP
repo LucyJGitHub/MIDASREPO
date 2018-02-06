@@ -7,13 +7,14 @@
 /*                                                                   */
 /*       CGC5420 - Setup Selection String for OPNQRYF                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BUG14209           Date 25Jul07              */
+/*       Prev Amend No. BUG14209           Date 25Jul07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Prev Amend No. 245055             Date 08Nov06              */
+/*                      245055             Date 08Nov06              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      241824             Date 06Oct06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG14209 - CGC5410 Failed during COB.                       */
 /*       245055 - Review 241824.                                     */
 /*       241824 - Allow print process request by Module Id           */
@@ -47,7 +49,7 @@
  
 /* Copyright Statement                                               */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
  
@@ -107,7 +109,7 @@
  
 /* Copyright Statement                                               */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* Set-off Data Base Error Switches. */
              CHGJOB     SWS(XXXXXX00)
@@ -425,7 +427,7 @@ ABNORMAL:
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
              ENDPGM

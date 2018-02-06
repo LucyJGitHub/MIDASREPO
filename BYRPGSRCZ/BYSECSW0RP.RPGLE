@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Bank of England Extra Securities Data Repair')   *
@@ -12,15 +12,17 @@
       *  Function:  This module  allows the repair of any invalid     *
       *             fields input via the APIs for the extension file. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. LLN020             Date 15Jul02               *
-      *  Prev Amend No. 201981             Date 17Jan02               *
+      *  Prev Amend No. LLN020             Date 15Jul02               *
+      *                 201981             Date 17Jan02               *
       *  Prev Amend No. LLN018  *CREATE    Date 17Apr01               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN020 - Upgrade BOE to Midas Release 4.                     *
       *           Rename fields to avoid conflict with CARS.          *
       *  201981 - Ensure database errors do not occur if no record and*
@@ -775,4 +777,4 @@
       /EJECT
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       CBC0513 - COB STREAMS ACTIVITY CONTROL                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CCB012             Date 20May02              */
+/*       Prev Amend No. CCB012             Date 20May02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. 199151             Date 11Oct01              */
+/*                      199151             Date 11Oct01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408             Date 07AUG95              */
 /*                      S01420 *Create     DATE 15MAR95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB012 - Use 70 job streams.  Change to data areas CBRECV,  */
 /*                CBTRAN and CBCTRL.                                 */
 /*       199151 - Incorrect parameter in call to QUSRJOBI results in */
@@ -68,7 +70,7 @@
 /*********** DCL        VAR(&Z) TYPE(*DEC) LEN(2 0) */                                    /*CCB012*/
              DCL        VAR(&Z) TYPE(*DEC) LEN(4 0)                                       /*CCB012*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global error message trap */
@@ -153,7 +155,7 @@ ABNOR:
              CHGVAR     VAR(&ERROR) VALUE('E')
  
 ENDP:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,CBC0513END                                          */
  
              ENDPGM

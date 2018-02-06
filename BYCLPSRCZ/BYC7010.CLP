@@ -6,13 +6,15 @@
 /*                                                                   */
 /*     BYC7010 - End Meridian Server                                 */
 /*                                                                   */
-/*     (c) Misys International Banking Systems Ltd 2003              */
+/*     (c) Finastra International Limited 2003                       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last Amend No. LLN021           Date: 24Nov03                 */
+/*       Prev Amend No. LLN021             Date : 24nOV0             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     LLN021 - BoE Profit and Loss return                           */
 /*                                                                   */
 /*********************************************************************/
@@ -21,7 +23,7 @@
              DCL        VAR(&SYS) TYPE(*CHAR) LEN(2)     /* System Prefix */
              DCL        VAR(&MERIDSVR) TYPE(*CHAR) LEN(10)  /* Meridian Server*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
 /*  Global Monitor Message  */
              MONMSG     MSGID(RPG0000 CPF0000 CPD0000) EXEC(GOTO +
@@ -57,6 +59,6 @@
              MONMSG     MSGID(CPF0000 CPD0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  EXIT:       ENDPGM

@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       CGC3604 - Custom Defined Data Extract                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC022             Date 24Feb04              */
+/*       Prev Amend No. CSC022             Date 24Feb04              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CCG015  *CREATE    Date 27Jun01              */
+/*                      CCG015  *CREATE    Date 27Jun01              */
 /*                      Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
 /*       CCG015 - Correspondence Manager                             */
 /*                                                                   */
@@ -36,7 +38,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
                                                                                           /*CSC022*/
              DCL        VAR(&JBNM) TYPE(*CHAR) LEN(10)                                    /*CSC022*/
@@ -230,7 +232,7 @@
              CALL       PGM(CGC3605) PARM(&ACTION)
  
  END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,mmCnnnnEND                                          */
  

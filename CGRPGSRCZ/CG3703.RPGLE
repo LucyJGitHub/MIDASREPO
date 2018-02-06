@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXS *  RPGCVTOPT2                                                   *                       CSD053
@@ -14,12 +14,13 @@
       *             CGUDCLPD and CGXDCLPD for Items sent              *
       *             to FormsMaster currently awaiting feedback.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 248399A            Date 03Jul07               *
-      *  Prev Amend No. 248399             Date 11Jun07               *
+      *  Prev Amend No. 248399A            Date 03Jul07               *
+      *                 248399             Date 11Jun07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD053             Date 07Jul06               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  248399A - Change file names fr CGUDCRL#1 to CGUDCRL9;        *
       *            CGXDCRL#1 to CGXDCRL9.                             *
       *  248399 - Warning with wrong number of Items awaiting         *

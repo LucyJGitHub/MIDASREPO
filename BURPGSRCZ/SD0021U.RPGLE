@@ -8,14 +8,15 @@
      F*
      F*     Background update of old currency codes files
      F*
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGL029             Date 01Sep03               *
-      *  Prev Amend No. CAP084             Date 26Aug03               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *                 CAP084             Date 26Aug03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 S01251             Date 03Feb90               *
@@ -27,6 +28,7 @@
      F*
      F********************************************************************
      F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL029 - Increase Account Code to 10 digits                  *
      F*     CAP084  - Wrapper project - convert to ILE                   *
      F*     S01251  -  SYNON FIELD NAME CHANGES                          *S01229
@@ -581,4 +583,4 @@
      C*
      CSR   MOVEND        ENDSR
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

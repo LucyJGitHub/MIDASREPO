@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       CGC7410 - CG Tax Advice Extract (COB processing)            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG24188           Date 09Jun09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG24188           Date 09Jun09              */
 /*                      BUG23135A          Date 18Mar09              */
 /*                      BUG22564A          Date 13Jan09              */
 /*                      BUG22564           Date 30Jan09              */
@@ -18,6 +19,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG24188 - No Single Tax advices produced (Recompile)       */
 /*       BUG23135A - DL Single Tax Advice missing in COB extract     */
@@ -30,8 +32,8 @@
                           &COMMIT_OPT)
 /*                                                                   */
              DCL        VAR(&ACTCPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking +
-                          Systems Ltd. 2008')
+                          Finastra International Limited +
+                          2008')
 /*                                                                   */
 /** Declare variables                                                */
 /*                                                                   */
@@ -229,9 +231,9 @@ ABNORMAL:
 /*                                                                   */
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-             CHGVAR     VAR(&ACTCPY) VALUE('(c) Copyright Misys +
-                          International Banking +
-                          Systems Ltd. 2008')
+             CHGVAR     VAR(&ACTCPY) VALUE('(c) Copyright Finastra +
+                          International Limited +
+                          2008')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /*                                                                   */
              ENDPGM

@@ -7,14 +7,16 @@
 /*                                                                   */
 /*       CGC7400 - CG Audit Letter Reminder Housekeeping (COB)       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG24239           Date 08Jun09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG24239           Date 08Jun09              */
 /*                      CER041  *CREATE    Date 19May08              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG24239 - Component CGC7400 00001 failed.                  */
 /*       CER041 - Audit Letters Correspondence                       */
@@ -31,8 +33,8 @@
 /**********  DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)                 */                 /*BUG24239*/
              DCL        VAR(&DATA)       TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking +
-                          Systems Ltd. 2008')
+                          Finastra International Limited +
+                          2008')
  
 /*-------------------------------------------------------------------*/
 /* Global Monitor Message                                            */
@@ -75,8 +77,8 @@ ABNORMAL:
  
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           CGC7400 ended abnormally') MSGTYPE(*ESCAPE)
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2008')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2008')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /*  Logical end of the program                                       */
  END:
@@ -84,8 +86,8 @@ ABNORMAL:
 /* Normal termination                                             */
  
              CHGVAR  VAR(&CPYFLD) +
-                VALUE('Copyright Misys International Banking +
-                      Systems Ltd. 2008')
+                VALUE('Copyright Finastra International Limited +
+                      2008')
              MONMSG (CPF0000 MCH0000 RPG0000)
  
  

@@ -1,6 +1,6 @@
      H DEBUG
      H NOMAIN
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas BF Permission Data Upload Common')
@@ -13,12 +13,14 @@
       *  Function:  This program writes permission data into the      *
       *              BankFusion layer                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD019885  *CREATE  Date 04Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD019885  *CREATE  Date 04Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD019885 - Permission upload interface                       *
       *           - Applied for MD026157                              *
       *                                                               *
@@ -61,10 +63,10 @@
       /EJECT
       *
       /free
- 
+
        IdPk = 'MI' + MenuIndex + ActionCode;
        // Create Record
- 
+
         Exec SQL
             insert into BFTB_RESOURCE
             ( BFIDPK
@@ -96,17 +98,17 @@
             , TIMESTAMP ('1970-01-01-08.00.00.000000')
             , :VersionNum
             );
- 
+
         RetCode = 0;
         If SQLCODE <> 0;
            RetCode = 1;
         EndIf;
- 
+
        // End Procedure
- 
+
                *INLR = '1';
                return RetCode;
- 
+
       /end-free
      P                 E
       *****************************************************************
@@ -133,14 +135,14 @@
       /EJECT
       *
       /free
- 
+
        // Prepare Data
- 
+
        IdPk = 'MI' + MenuIndex + ActionCode;
        PermName = 'MI_' + %trim(PermType) + '_' + MenuIndex + '_' + ActionCode;
- 
+
        // Create Record
- 
+
        Exec SQL
             insert into BFTB_PERMISSION
             ( BFIDPK
@@ -168,17 +170,17 @@
             , 1
             , :VersionNum
             );
- 
+
         RetCode = 0;
         If SQLCODE <> 0;
            RetCode = 1;
         EndIf;
- 
+
        //  End Procedure
- 
+
                *INLR = '1';
                return RetCode;
- 
+
       /end-free
      P                 E
       *****************************************************************
@@ -202,10 +204,10 @@
       /EJECT
       *
       /free
- 
+
        IdPk = 'MIRP' + MenuIndex + ActionCode;
        PermId = 'MI' + MenuIndex + ActionCode;
- 
+
        Exec SQL
             insert into BFTB_RESOURCEPERM
             ( BFIDPK
@@ -225,17 +227,17 @@
             , now()
             , :VersionNum
             );
- 
+
         RetCode = 0;
         If SQLCODE <> 0;
            RetCode = 1;
         EndIf;
- 
+
        //  End Procedure
- 
+
                *INLR = '1';
                return RetCode;
- 
+
       /end-free
      P                 E
       *****************************************************************
@@ -257,7 +259,7 @@
       /EJECT
       *
       /free
- 
+
          Exec SQL
               Delete from BFTB_GROUPPERMMAP
                where BFPERMISSIONID in
@@ -265,7 +267,7 @@
                    from BFTB_RESOURCEPERM
                   where
                         BFRESOURCEID = :ArtefactName);
- 
+
          Exec SQL
               Delete from BFTB_PERMISSION
                where BFIDPK in
@@ -273,23 +275,23 @@
                    from BFTB_RESOURCEPERM
                   where
                         BFRESOURCEID = :ArtefactName);
- 
+
          Exec SQL
               Delete from BFTB_RESOURCEPERM
                where
                      BFRESOURCEID = :ArtefactName;
- 
+
          Exec SQL
               Delete from BFTB_RESOURCE
                where
                      BFARTEFACTID = :ArtefactName;
- 
+
        //  End Procedure
- 
+
                RetCode = 1;
                *INLR = '1';
                return RetCode;
- 
+
       /end-free
      P                 E
       *****************************************************************

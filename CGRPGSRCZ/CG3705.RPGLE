@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas CG Extract CTL File Name')
@@ -12,18 +12,20 @@
       *  Function:  This module retrieves all .CTL files from log     *
       *             generated from last FTP LIST (LS) processing.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 221287             Date 07Jul05               *
+      *  Prev Amend No. 221287             Date 07Jul05               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CCG015  *CREATE    Date 21Feb02               *
+      *                 CCG015  *CREATE    Date 21Feb02               *
       *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  221287 - Increase wcount                                     *
       *  CCG015 - Correspondence Manager (Phase 1)                    *
       *                                                               *

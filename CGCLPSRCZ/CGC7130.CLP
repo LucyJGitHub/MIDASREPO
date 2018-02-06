@@ -6,13 +6,15 @@
 /*                                                                   */
 /*       CGC7130 - CG Audit Letter Reminder (COB processing)         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. CER041  *CREATE    Date 19May08              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      CER041  *CREATE    Date 19May08              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       CER041 - Audit Letters Correspondence                       */
 /*                (Upgrade of FGE132 and FGE171)                     */
@@ -23,8 +25,8 @@
                           &COMMIT_OPT)
 /*                                                                   */
              DCL        VAR(&ACTCPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking +
-                          Systems Ltd. 2008')
+                          Finastra International Limited +
+                          2008')
 /*-------------------------------------------------------------------*/
 /* Declare variables                                                 */
 /*-------------------------------------------------------------------*/
@@ -162,8 +164,8 @@ ABNORMAL:
 /*-------------------------------------------------------------------*/
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-             CHGVAR     VAR(&ACTCPY) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2008')
+             CHGVAR     VAR(&ACTCPY) VALUE('(c) Finastra International +
+                          Limited 2008')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /*                                                                   */
              ENDPGM

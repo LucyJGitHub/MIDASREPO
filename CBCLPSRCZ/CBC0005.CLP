@@ -10,18 +10,20 @@
 /*       Function: This program submits 2 jobs : SCD_COB and SCD_WMSG*/
 /*                                                                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG10848R          Date 02May06              */
-/*       Prev Amend No. BUG10848           Date 15Mar06              */
+/*       Prev Amend No. BUG10848R          Date 02May06              */
+/*                      BUG10848           Date 15Mar06              */
 /*                      CCB014  *Create    Date 25Apr05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG10848R - Retrieved the UserId who runs the schedule      */
 /*                   batch for COB.                                  */
 /*                 - Additional code for Schedule not functioning    */
@@ -55,7 +57,7 @@
              DCL        VAR(&IUSER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /** Global monitor message */
@@ -229,5 +231,5 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  ENDPGM:     ENDPGM

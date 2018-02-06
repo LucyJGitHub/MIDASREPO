@@ -6,16 +6,18 @@
 /*                                                                   */
 /*     BYC2055 - Security extract and validation                     */
 /*                                                                   */
-/*     (c) Misys International Banking Systems Ltd. 1999             */
+/*     (c) Finastra International Limited 1999                       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last Amend No. LLN021           Date: 23Nov03                 */
-/*     Prev Amend no. LLN012           Date  26Apr99                 */
+/*       Prev Amend No. LLN021             Date : 23nOV0             */
+/*                      LLN012             Date 26Apr99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
 /*     Amendment Details:                                            */
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     LLN021 - BoE PL Reports                                       */
 /*     LLN012    CREATE                                              */
 /*                                                                   */
@@ -32,7 +34,7 @@
              DCL        VAR(&LMBIN) TYPE(*CHAR) LEN(1)      /* Multi-branch */
              DCL        VAR(&LFILE) TYPE(*CHAR) LEN(10)     /* Extract file */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
  
 /*  Global Monitor Message  */
@@ -98,6 +100,6 @@
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

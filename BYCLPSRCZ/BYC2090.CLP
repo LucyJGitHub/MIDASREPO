@@ -6,13 +6,15 @@
 /*                                                                   */
 /*     BYC2090 - Produce LR Cashflow and Maturity Data Reports       */
 /*                                                                   */
-/*     (c) Misys International Banking Systems Ltd. 1999             */
+/*     (c) Finastra International Limited 1999                       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last Amend No. LLN012   *CREATE   Date  22APR99               */
+/*       Prev Amend No. LLN012  *CREATE    Date 22Apr99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     LLN012 - Financial Services Authority - Liquidity Report      */
 /*                                                                   */
 /********************************************************************/
@@ -25,7 +27,7 @@
              DCL        VAR(&LMSG1) TYPE(*CHAR) LEN(100)    /* Message */
              DCL        VAR(&LRTCD) TYPE(*CHAR) LEN(7)      /* Return code*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
  
 /*  Global Monitor Message  */
@@ -65,6 +67,6 @@
              MONMSG     MSGID(CPF0000 CPD0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

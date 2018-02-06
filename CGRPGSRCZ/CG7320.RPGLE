@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*DMY)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CG Interest Scale Clear Down Pages File')        *
@@ -11,13 +11,15 @@
       *                                                               *
       *  Called By: CGC7320                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. CER042 *Create     Date 11May11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CER042 *C *CREATE  Date 11May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CER042 - Interest Scale Report Correspondence                *
       *           (Upgrade of FGE178/179)                             *

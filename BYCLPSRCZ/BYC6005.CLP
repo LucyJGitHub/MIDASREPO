@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       BYC6005 - Daily Reconciliation - SECURITIES module          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Last Amend No. LLN021             Data 26Nov03              */
-/*       Prev Amend No. CMX001  *CREATE    Data 18Nov03              */
+/*       Prev Amend No. LLN021             Data 26Nov03              */
+/*                      CMX001  *CREATE    Data 18Nov03              */
 /*                                                                   */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       LLN021 - Should only report up until the end of the month   */
 /*       CMX001 - Meridian Export                                    */
 /*                                                                   */
@@ -28,7 +30,7 @@
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN( 7)
              DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CUREOM) TYPE(*CHAR) LEN(5)                                   /*LLN021*/
  
@@ -138,7 +140,7 @@
  
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,BYC6005END                                          */
  

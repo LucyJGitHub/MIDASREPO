@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       CGADDMSG - Add Multi-Language Posting Narratives Message    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL029             Date 01Sep03              */
+/*       Prev Amend No. CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*       Prev Amend No. 184382             Date 29Sep90              */
+/*                      184382             Date 29Sep90              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01522             Date 24Feb95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*       184382 - Missing info on message utility                    */
 /*       S01522 - User Defined Correspondence                        */
@@ -33,7 +35,7 @@
    DCL        VAR(&MGNUM)  TYPE(*CHAR) LEN(5)
    DCL        VAR(&MSGTXT) TYPE(*CHAR) LEN(132)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /**ADDMSGD*   MSGID(&LGID *TCAT &MGNUM) MSGF(CGPNARMSG) MSG(&MSGTXT) +
@@ -57,6 +59,6 @@
              CHGVAR     VAR(&MSGTXT) VALUE(' ')
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

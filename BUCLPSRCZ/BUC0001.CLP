@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       BUC0001 -  UPDATE FROM SDCURRPD TO TBCCY (LEO)              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 084197             DATE 12MAY95              */
-/*       PREV AMEND NO. S01467             DATE 27MAY94              */
+/*       PREV AMEND NO. 084197             DATE 12MAY95              */
+/*                      S01467             DATE 27MAY94              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       084197  -  Validate data integrity before update of LEO's   */
 /*                  database. ie. pass parameters 'dec.place' & 'M/D */
 /*                  ind.' when calling CATUXR.                       */
@@ -33,7 +35,7 @@
 /** Declare the parameters and variables */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CURR) TYPE(*CHAR) LEN(3)
@@ -79,6 +81,6 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       CBRUN - CLOSE OF BUSINESS CONTROLLING COMPONENT             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD023005           Date 23Oct13              */
-/*       Prev Amend No. MD022112           Date 05Sep13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD023005           Date 23Oct13              */
+/*                      MD022112           Date 05Sep13              */
 /*                      CCB021             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CGL030             Date 18Dec09              */
@@ -53,6 +54,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD023005 - Change of LF access path during reopen IC proc   */
 /*       MD022112 - SCC1711 performance improvement                  */
 /*       CCB021 - COB Restructure - Non Working Day COB              */
@@ -198,7 +200,7 @@
              DCL        VAR(&CONT) TYPE(*DEC) LEN(1 0) VALUE(0)       /*S01420*/
              DCL        VAR(&LOG) TYPE(*CHAR) LEN(10)                 /*078087*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,CBRUN001                                          */ /*S01408*/
@@ -213,7 +215,7 @@
                           CMDLBL(ABNORMAL))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,CBRUN031                                            */
 /*                                                                                        /*CCB014*/
 /** Check to see if automatic scheduling is on                       */                   /*CCB014*/

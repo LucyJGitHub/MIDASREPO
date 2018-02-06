@@ -6,13 +6,15 @@
 /*                                                                   */
 /*     BYC2025 - FRA/IRS Deals Extract/Validation                    */
 /*                                                                   */
-/*     (c) Misys International Banking Systems Ltd. 1999             */
+/*     (c) Finastra International Limited 1999                       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last amend no. LLN012           Date  23APR99                 */
+/*       Prev Amend No. LLN012             Date 23Apr99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     LLN012 - Financial Services Authority - Liquidity Report      */
 /*                                                                   */
 /********************************************************************/

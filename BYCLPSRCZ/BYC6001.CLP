@@ -7,14 +7,16 @@
 /*                                                                   */
 /*       BYC6001 - Daily Events Extract - FUTURES and OPTIONS module */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Last Amend No. E15903             Data 09Dec03              */
-/*       Prev Amend No. LLN021   *CREATE   Data 01Dec03              */
+/*       Prev Amend No. E15903             Data 09Dec03              */
+/*                      LLN021   *CREATE   Data 01Dec03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       E15903 - Program clearing and copying wrong files           */
 /*       LLN021 - BoE PL Reports                                     */
 /*                                                                   */
@@ -29,7 +31,7 @@
              DCL        &A            TYPE(*DEC)   LEN(2 0) VALUE(1)                      /*LLN021*/
              DCL        &MKT          TYPE(*CHAR)  LEN(2)                                 /*LLN021*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -131,7 +133,7 @@ NEXT:
  
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)

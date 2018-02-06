@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: CG7290                                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. MD027781           Date 30Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 MD027781           Date 30Jun14               *
       *                 CLE148             Date 23Jul12               *
       *                 AR822371           Date 02Sep11               *
       *                 AR849385           Date 16Oct11               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  MD027781 - Interest Scale Reports were not generated after   *
       *             Close of business due to Array Index Error        *
@@ -1918,4 +1920,4 @@ SC-FTR0003 ZINS_NETI  AmountL
 SC-FTR0004 ZINS_PTDT  Date                                                                  AR849385
 SC-FTR0005 ZINS_TYPE
 **CTDATA ##CPY
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

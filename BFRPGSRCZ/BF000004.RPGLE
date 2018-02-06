@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
      H NOMAIN
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -12,15 +12,17 @@
       *  Function:  This program provides functionality to access     *
       *             Web services                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD027566           Date 13Jun14               *
-      *  Prev Amend No. MD023747           Date 23Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027566           Date 13Jun14               *
+      *                 MD023747           Date 23Nov13               *
       *                 AR884111A          Date 25Jan12               *
       *                 CBF006             Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027566 - Webservice time-out error.                        *
       *  MD023747 - HTTP call failure (Recompile due to CGL135        *
       *             changes)                                          *

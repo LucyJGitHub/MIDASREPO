@@ -8,20 +8,22 @@
 /*       CFC0040 - DEALING CONFIRMATIONS STATUS ENQUIRY CONTROL      */
 /*                 (CALLED FROM MITEMDD, CALLS CF0040)               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01310            DATE 03JUN91               */
-/*       PREV AMEND NO. S01259            DATE 28JAN91               */
+/*       Prev Amend No. S01310             Date 03Jun91              */
+/*                      S01259             Date 28Jan91              */
 /*                      S01184            DATE 15DEC89               */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01310 - SWIFT RATIONALIZATION                              */
 /*       S01259 - SWIFT II ON CALL CF0189 ELSE CF0040                */
 /*       S01184 - CREATED FOR CONFIRMATION MATCHING                  */
@@ -30,7 +32,7 @@
      PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&ERRDTA) TYPE(*CHAR) LEN(50)
@@ -73,5 +75,5 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  END:        ENDPGM

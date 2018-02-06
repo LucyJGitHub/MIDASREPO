@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       CGC3605  -  Extract File Instance Management                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. CPK030             Date 11Apr14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CPK030             Date 11Apr14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BUG17817A          Date 15Apr08              */
+/*                      BUG17817A          Date 15Apr08              */
 /*                      BUG17817           Date 09Apr08              */
 /*                      248342             Date 11Jun07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK030 - Clean up of deliverable data library.              */
 /*       BUG17817A - Add parameter OPTION(*NOSRC) in CRTLF command   */
 /*       BUG17817 - Reverse fix for BUG6604. MOVOBJ command should   */
@@ -42,7 +44,7 @@
              PGM        PARM(&ACTION)
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
 /* */
 /* Declare variables */
@@ -334,6 +336,6 @@ ABNORMAL:
 /***** ENDCLPGM:   RCLRSC     LVL(*CALLER)  *******/                                     /*BUG6604*/
 /*******     MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                   /*BUG6604*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

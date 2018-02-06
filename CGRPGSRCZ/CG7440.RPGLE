@@ -13,10 +13,11 @@
       *                                                               *
       *  Called By: CG7430 Via CGC7430                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CER070             Date 25Nov14               *
       *                 CDL096             Date 22Sep14               *
       *                 CER069             Date 03Jul14               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -3019,4 +3021,4 @@ ACOF  0005 ACOF_TELX                     Account Officer Telephone Ext.
 0100000
 1000000
 ** ##CPY  **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

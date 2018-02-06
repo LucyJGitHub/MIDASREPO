@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       BYC4030 - Update Deals positions control program            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 1998           */
+/*       (c) Finastra International Limited 1998                     */
 /*-------------------------------------------------------------------*/
 /*    CoB program, calls BY4030 - Update Deals Max DR/CR positions.  */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Last Amend No. 121832             Date 14AUG97              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. 121832             Date 14Aug97              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       121832 - Message being sent TOMSGQ(MRUNQ/MOPERQ) in error.  */
 /*                                                                   */
 /*********************************************************************/
@@ -26,7 +28,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&ERR) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                      Misys International Banking Systems Ltd. 1997')
+                      Finastra International Limited 1997')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -130,6 +132,6 @@
              ENDDO
  
  END:        CHGVAR     VAR(&CPYFLD) +
-                     VALUE('Misys International Banking Systems Ltd.')
+                     VALUE('Finastra International Limited')
  
              ENDPGM

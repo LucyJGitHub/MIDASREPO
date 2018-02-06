@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2017')
+     H COPYRIGHT('(c) Finastra International Limited 2017')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas BF Purge Soft-Deleted Entries in BFP Tables')    *
@@ -12,12 +12,14 @@
       *  Function:  This program invokes the BF Batch Process Purge   *
       *             Service by accessing the Web services             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. CBF023    *CREATE  Date 04Jan17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CBF023  *CREATE    Date 04Jan17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *                                                               *
       *****************************************************************
@@ -70,33 +72,33 @@
        // *********************************************************
        //  Initiate BF web service
        // *********************************************************
-
+ 
                exsr FmtDetails;
-
+ 
                wRc = BF004020(isURL
                               : isSpEnvAdd
                               : isSpXMLBody
                               : isSpAction
                               : isPPath
                               );
-
+ 
             // HTTP Error returned?
                  if wRc <> 1;
                       if bfcrash = 'Y';
-
+ 
                            exsr *PSSR;
                       endif;
                  endif;
-
+ 
        // *********************************************************
        //  End Program
        // *********************************************************
-
+ 
                *INLR = '1';
                Return;
-
+ 
       /end-free
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -108,9 +110,9 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
-
+ 
      C     FmtDetails    BEGSR
-
+ 
      C                   EVAL      isURL = '/bfweb/services/BatchProcess' +
      C                             'PurgingWS'
      C                   EVAL      isSpEnvAdd = 'xmlns:att="http://' +
@@ -123,9 +125,9 @@
      C                             'PortType/BatchProcessPurging' +
      C                             'MFRequest'
      C                   EVAL      isPPath = ' '
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *********************************************************************
@@ -139,9 +141,9 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
-
+ 
      C     *PSSR         BEGSR
      C                   DUMP
      C                   ENDSR
-
+ 
       *****************************************************************

@@ -6,12 +6,14 @@
 /*                                                                   */
 /*       CGC0523  - Submit CG PrtGen job Retail Teller               */
 /*                                                                   */
-/*  (C) COPYRIGHT MKI INTERNATIONAL LIMITED 1997.                    */
+/*  (C) COPYRIGHT FINASTRA INTERNATIONAL LIMITED 1997.               */
 /*                                                                   */
-/*       Last Amend No. CCG016 *CREATE     Date 21FEB97              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCG016 *CREATE     Date 21FEB97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCG016 - Correspondence Manager for Retail Teller System    */
 /*                                                                   */
 /*********************************************************************/
@@ -20,8 +22,8 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          COPYRIGHT MKI +
-                          INTERNATIONAL LTD. 1997')
+                          COPYRIGHT FINASTRA +
+                          INTERNATIONAL LIMITED 1997')
 /* */
 /* Declare variables */
 /* */
@@ -47,8 +49,8 @@
 /**/
 /*           Copyright statement definition - at runtime             */
 /**/
-             CHGVAR     VAR(&MKICPY) VALUE('COPYRIGHT MKI +
-                          International Ltd. 1997.')
+             CHGVAR     VAR(&MKICPY) VALUE('COPYRIGHT FINASTRA +
+                          INTERNATIONAL LIMITED 1997.')
 /* */
 /* Send Message to MRUNQ */
 /* */

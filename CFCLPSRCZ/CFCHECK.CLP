@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       CFCHECK - CONTROL PGM FOR TESTING CFC0180 ACTIVITY          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E35594            DATE 06FEB92               */
-/*       PREV AMEND NO. S01304            DATE 20SEP90               */
+/*       Prev Amend No. E35594             Date 06Feb92              */
+/*                      S01304             Date 20Sep90              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       E35594 - PROGRAM RE-DELIVERED TO COLLECTIONS AFTER          */
 /*                REINSTATEMENT.                                     */
 /*       S01304 - PROGRAM CREATED FOR CONFIRMATION MATCHING          */
@@ -29,7 +31,7 @@
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SBS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              MONMSG     MSGID(CPF0000)
@@ -56,6 +58,6 @@
              CALL      CFTEST
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

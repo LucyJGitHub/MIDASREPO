@@ -8,19 +8,21 @@
 /*       CBC0056 - CONCATENATE PARAMETERS FOR REPORT AND COMPONENT   */
 /*                 FOR CLOSE OF BUSINESS REPORTS                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 088495             DATE 27JUN95              */
-/*       PREV AMEND NO. 081912             DATE 18JAN95              */
+/*       Prev Amend No. 088495             Date 27Jun95              */
+/*                      081912             Date 18Jan95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       088495 - Fix 081912 incomplete, if a non blank PARM         */
 /*                received before the SEQ, no '' setup for non       */
 /*                blank LVL.                                         */
@@ -39,10 +41,10 @@
              DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
              DCL        VAR(&ASP) TYPE(*CHAR) LEN(1) VALUE('''')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* IF &TPARM IS BLANK, SEQUENCE NUMBER SHOULD BE CONCATENATED WITH  */
 /* IT WITH NO LEADING BLANKS. IF SEQUENCE NUMBER IS BLANK IT SHOULD */
 /* BE REPLACED WITH A BLANK IN A SET OF SINGLE QUOTES. */

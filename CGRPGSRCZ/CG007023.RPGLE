@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Load DL/LE Interest Scale Qualifying Acct Codes')      *
@@ -11,12 +11,14 @@
       *             Qualifying Account Codes via DL/LE                *
       *             Types/Sub-Types tables                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR815785*CREATE    Date 17Aug11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR815785 *CREATE   Date 17Aug11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR815785 - Interest Scale DL/LE Load Account Codes maint ;   *
       *             replaced CG7180 program to revise the DL/LE       *
       *             loading functionality                             *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CB Restart of failed components')
@@ -9,14 +9,15 @@
      F*                                                               *
      F*  CB0065 - RESTART FAILED COMPONENTS                           *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK025             Date 23Nov06               *
-      *  Prev Amend No. CGP002             Date 31Jul03               *
+      *  Prev Amend No. CPK025             Date 23Nov06               *
+      *                 CGP002             Date 31Jul03               *
       *                 CAAA02             Date 16Jul03               *
       *  Converted to ILE and code-stripped                           *
       * Midas Release 4.01.02 ----------------------------------------*
@@ -34,6 +35,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - Revert fix CAAA02                                   *
       *  CGP002 - Add call to GOC000100 to submit an update to the    *
       *           global dashboard.                                   *

@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       CBC0532 - COB WORK WITH COB USERS                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. S01408             Date 07AUG95              */
-/*       Prev Amend No. S01420 *Create     DATE 15MAR95              */
+/*       Prev Amend No. S01408             Date 07Aug95              */
+/*                      S01420 *C *CREATE  Date 15Mar95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - Hooks moved to WNCPYSRC from CBCPYSRC:             */
 /*                - CBC0532INT                                       */
 /*                - CBC0532MPS                                       */
@@ -35,7 +37,7 @@
  
              DCL        VAR(&CODE)   TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global error message trap */
@@ -55,7 +57,7 @@ ABNOR:
 /*/COPY WNCPYSRC,CBC0532ERR                                          */
  
 ENDP:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,CBC0532END                                          */
  
              ENDPGM

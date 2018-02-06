@@ -6,14 +6,16 @@
 /*                                                                   */
 /*     BYC6090 - Consolidated PL Extract Report                      */
 /*                                                                   */
-/*     (c) Misys International Banking Systems Ltd. 1998             */
+/*     (c) Finastra International Limited 1998                       */
 /*                                                                   */
+/*     Last Amend No. MD046248         Date 27Oct17                  */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last Amend No. LLN021 *create   Date: 01DEC03                 */
-/*     Prev amend no. xxxxxx           Date  xxxxxxx                 */
+/*     Prev Amend No. LLN021 *create   Date: 01DEC03                 */
+/*                    xxxxxx           Date  xxxxxxx                 */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*     MD046248 - Finastra Rebranding                                */
 /*     LLN021 - Profit and loss return                               */
 /*                                                                   */
 /********************************************************************/
@@ -32,7 +34,7 @@
              DCL        VAR(&LFLAG3) TYPE(*CHAR) LEN(1)     /* Flags */
              DCL        VAR(&LPHAS) TYPE(*CHAR) LEN(1)      /* Midas phase */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
 /*  Global Monitor Message  */
              MONMSG     MSGID(RPG0000 CPF0000 CPD0000) EXEC(GOTO +
@@ -98,6 +100,6 @@
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  EXIT:       ENDPGM

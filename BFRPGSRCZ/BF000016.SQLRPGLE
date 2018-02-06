@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*S*D****RPGBASEMOD****************************************************                   AR1026104A
 /*STD *  RPGSQLMOD                                                    *                   AR1026104A
@@ -13,14 +13,16 @@
       *  Function:  This program invokes the BF Update Business Date  *
       *             Service by accessing the Web services             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD044342           Date 01Mar17               *
-      *  Prev Amend No. AR1026104A         Date 13Sep12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD044342           Date 01Mar17               *
+      *                 AR1026104A         Date 13Sep12               *
       *                 AR884111A *CREATE  Date 25Jan12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD044342 - Business date in BF is not being updated.         *
       *  AR1026104A - Rundates in BFMidas is not insynch with BFTC    *
       *  AR884111A - Update Business Date in BF                       *

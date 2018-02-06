@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*DMY)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CG Interest Scale Extract LE Int movements')     *
@@ -16,15 +16,17 @@
       *                                                               *
       *  Called By: CGC7250 - CG Interest Scale Extract Lending Movemt*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR847818           Date 26Apr13               *
-      *  Prev Amend No. AR996895           Date 06Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR847818           Date 26Apr13               *
+      *                 AR996895           Date 06Jul12               *
       *                 CLE148             Date 23Jul12               *
       *                 CER042  *CREATE    Date 11May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR847818 - Remove zero interest amount (Child:AR847819)      *
       *  AR996895 - Incorrect accrual interest calculation            *
       *             (Child: AR996897) (Recompile)                     *

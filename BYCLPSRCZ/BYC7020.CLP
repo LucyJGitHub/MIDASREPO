@@ -6,13 +6,15 @@
 /*                                                                   */
 /*     BYC7020 - Manual File Download Request                        */
 /*                                                                   */
-/*     (c) Misys International Banking Systems Ltd 2003              */
+/*     (c) Finastra International Limited 2003                       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last Amend No. LLN021           Date: 24Nov03                 */
+/*       Prev Amend No. LLN021             Date : 24nOV0             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     LLN021 - BoE Profit and Loss return                           */
 /*                                                                   */
 /*********************************************************************/
@@ -26,7 +28,7 @@
              DCL        VAR(&LRTCD) TYPE(*CHAR) LEN(7)      /* Return code*/
              DCL        VAR(&LMSG1) TYPE(*CHAR) LEN(100)    /* Message */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
 /*  Global Monitor Message  */
              MONMSG     MSGID(RPG0000 CPF0000 CPD0000) EXEC(GOTO +
@@ -87,6 +89,6 @@
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  EXIT:       ENDPGM

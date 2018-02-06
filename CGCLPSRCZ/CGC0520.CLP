@@ -13,12 +13,14 @@
 /*                  The program runs continuously as a background    */
 /*                  batch job.                                       */
 /*                                                                   */
-/*  (c) COPYRIGHT MKI INTERNATIONAL LIMITED 1997.                    */
+/*  (c) COPYRIGHT FINASTRA INTERNATIONAL LIMITED 1997.               */
 /*                                                                   */
-/*       Last Amend No. CCG016 *CREATE     Date 21FEB97              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCG016 *CREATE     Date 21FEB97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCG016 - Correspondence Manager for Retail Teller System    */
 /*                                                                   */
 /*********************************************************************/
@@ -27,8 +29,8 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          COPYRIGHT MKI +
-                          INTERNATIONAL LTD. 1997')
+                          COPYRIGHT FINASTRA +
+                          INTERNATIONAL LIMITED 1997')
 /* */
 /* Declare variables */
 /* */
@@ -54,8 +56,8 @@
 /**/
 /*           Copyright statement definition - at runtime             */
 /**/
-             CHGVAR     VAR(&MKICPY) VALUE('COPYRIGHT MKI +
-                          International Ltd. 1997.')
+             CHGVAR     VAR(&MKICPY) VALUE('COPYRIGHT FINASTRA +
+                          INTERNATIONAL LIMITED 1997.')
 /* */
 /* CHGJOB switches */
 /* */
@@ -137,11 +139,11 @@ ABNORMAL:
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           CGC0520 ended abnormally') MSGTYPE(*ESCAPE)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-
+ 
 /**/
  ENDCLPGM:
-             CHGVAR     VAR(&MKICPY) VALUE('(c) Copyright MKI +
-                          International Ltd. 1997.')
+             CHGVAR     VAR(&MKICPY) VALUE('(c) Copyright Finastra +
+                          International Limited 1997.')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /* */
              ENDPGM

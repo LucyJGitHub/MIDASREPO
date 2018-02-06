@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas BoE extra customer data validation')             *
@@ -12,12 +12,13 @@
       *  Function:  This module validates extra Customer Bank of      *
       *             England Data.                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd . 2001           *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR684053           Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR684053           Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. BUG8497            Date 14Sep05               *
+      *                 BUG8497            Date 14Sep05               *
       *                 LLN022             Date 24Jan05               *
       *                 203458             Date 02Oct02               *
       *                 204195             Date 05Apr02               *
@@ -27,6 +28,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR684053 - Cannot enter a new customer. Applied AR665308.    *
       *  AR665308 - Error message BYM0071 being incorrectly issued.   *
       *  BUG8497 - SDVCUSDX0 renamed to SDVCUSDPE.                    *
@@ -609,4 +611,4 @@
       /EJECT
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

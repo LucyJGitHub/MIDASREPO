@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXS *  RPGCVTOPT2                                                   *                       CSD053
@@ -17,10 +17,11 @@
       *            b) *WRITE - write CGUXMLPD data into stream file.  *
       *            c) *CLOSE - do nothing                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD027486           Date 23Jun15               *
-      *  Prev Amend No. CSD053A            Date 14Dec12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027486           Date 23Jun15               *
+      *                 CSD053A            Date 14Dec12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027486 - Tag contains '£CDATA£' rather than '[CDATA[       *
       *             Use character '[' instead of '£' in formatting    *
       *             the Tag value field                               *

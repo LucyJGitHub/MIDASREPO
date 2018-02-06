@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CB Close of business halt Menu')
@@ -9,14 +9,15 @@
      F*                                                               *
      F*  CB0020 - CLOSE OF BUSINESS HALT MENU                         *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK025             Date 23Nov06               *
-      *  Prev Amend No. CAAA02             Date 16Jul03               *
+      *  Prev Amend No. CPK025             Date 23Nov06               *
+      *                 CAAA02             Date 16Jul03               *
       *  Converted to ILE and code-stripped                           *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -25,6 +26,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - Revert back fix of CAAA02                           *
       *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
       *           to process screens.                                 *

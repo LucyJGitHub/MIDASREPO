@@ -7,17 +7,18 @@
 /*                                                                   */
 /*       CGC8110  - Reset Work Areas and Data Queues                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. CPK015             Date 18Apr02              */
+/*       Prev Amend No. CPK015             Date 18Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 134481             Date 01May98              */
+/*                      134481             Date 01May98              */
 /*                      117894             Date 05Feb98              */
 /*                      089168             Date 23May95              */
 /*                      089167             Date 23May95              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK015 - 4.01 packaging.  Use DPLIB instead of DILIB.       */
 /*       134481 - Delete of the UDC folder is before the folder name */
 /*                is set up, where the value on CGDTA is blank. Fix  */
@@ -41,7 +43,7 @@
              PGM        PARM(&COMP_NAME &COMP_SEQ)
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -266,7 +268,7 @@ ABNORMAL:
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /* */
              ENDPGM

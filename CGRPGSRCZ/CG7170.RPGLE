@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas Retail Inter Scale Qualifying Acc code Maint')   *
@@ -12,13 +12,15 @@
       *                                                               *
       *  Called By: CGC7170                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR813994           Date 11Aug11               *
-      *  Prev Amend No. CER042  *CREATE    Date 11May11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR813994           Date 11Aug11               *
+      *                 CER042  *CREATE    Date 11May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR813994 - Retail Account Codes should be mandatory listed in*
       *             Retail Qualifying Account Codes maintenance in    *
       *             order to flag Retail Account in AMAD with Interest*
@@ -974,4 +976,4 @@
      C                   ENDSR
       ********************************************************************
 ** CPY
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

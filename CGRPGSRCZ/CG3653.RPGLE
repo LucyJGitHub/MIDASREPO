@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas CG Create XML line for RDE')                     *
@@ -12,25 +12,27 @@
       *  Function:  This module writes XML lines for a set of UDC     *
       *  paths.                                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CCG016  *CREATE    Date 13Sep16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCG016  *CREATE    Date 13Sep16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CCG016 - Correspondence Manager for Retail Teller System     *
       *                                                               *
       *****************************************************************
       /EJECT
      FCGUXMRPD  O    E           K DISK    USROPN
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
@@ -41,10 +43,10 @@
       ** Named constants
      DPATH             C                   CONST('PATH')
      DREFERENCE        C                   CONST('REFR')
-
+ 
       ** Data structures
      DRDEcvt         E DS                  EXTNAME(CGRDECPD)
-
+ 
       ** Working Variables
      DSchemaName       S                   LIKE(DESHNM)
      DReferName        S             21
@@ -57,12 +59,12 @@
      DNewName          PR                  LIKE(CGNWFD)
      D p1                                  VALUE LIKE(CGTYPE)
      D p2                                  VALUE LIKE(CGARGT)
-
+ 
      C                   OPEN      CGUXMRPD
      C                   EVAL      ReturnCode = *BLANK
      C                   EVAL      DEITEM = Item
      C                   EVAL      DEINCR = increment
-
+ 
       ** If the Schema Name has been already retrieved for the
       ** Reference do not convert the Reference again.
       ** If no Schema Name has been defined the program aborts as
@@ -80,7 +82,7 @@
      C                   EVAL      OldRefer = ReferName
      C                   ENDIF
      C                   EVAL      DESHNM = SchemaName
-
+ 
       ** Retrieve the converted values of the paths (Group set + RDEs).
       ** Write each Element name details in the new Extraction file.
      C                   EVAL      i = 1
@@ -89,7 +91,7 @@
      C                             AND ##RN(i) <> *BLANK
       ** Converts path structure into an tag value
      C                   EVAL      DENWRD = NewName(PATH:##RN(i))
-
+ 
      C                   IF        DENWRD = '*ERROR'
      C                   EVAL      ReturnCode = '*ERROR'
      C                   EVAL      DBFILE = 'NewName'
@@ -97,7 +99,7 @@
      C                   EVAL      DBKEY = ##RN(i)
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   IF        DENWRD <> *BLANK
       *
      C                   EVAL      WPOS = %SCAN('/IACC/D':##DN(i))
@@ -120,7 +122,7 @@
      C                   ENDIF
      C                   EVAL      i = i + 1
      C                   ENDDO
-
+ 
      C                   CLOSE     CGUXMRPD
      C                   RETURN
       **********************************************************************
@@ -128,7 +130,7 @@
       **********************************************************************
      C     *INZSR        BEGSR
      C     *LIKE         DEFINE    DEINCR        Increment
-
+ 
      C     *ENTRY        PLIST
       ** Extraction identification number
      C                   PARM                    Item              8 0
@@ -148,7 +150,7 @@
       ** Commitment (not used)
       ** YES : commitment control
      C                   PARM                    W0CMT             3
-
+ 
      C                   ENDSR
       ********************************************************************
       ** Program, module and procedure names for database error processing.
@@ -165,9 +167,9 @@
      DNewName          PI                  LIKE(CGNWFD)
      D  TypeOfCnv                          VALUE LIKE(CGTYPE)
      D  Argument                           VALUE LIKE(CGARGT)
-
+ 
      DNewFld           S                   LIKE(CGNWFD)
-
+ 
      C                   IF        Argument <> *BLANK
      C                             AND TypeOfCnv <> *BLANK
      C                   CALLB     'CG3602'
@@ -178,6 +180,6 @@
      C                   ELSE
      C                   EVAL      NewFld = '*ERROR'
      C                   ENDIF
-
+ 
      C                   RETURN    NewFld
      P                 E

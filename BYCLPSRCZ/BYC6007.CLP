@@ -7,15 +7,17 @@
 /*                                                                   */
 /*       BYC6007 - Daily Reconciliation - FUTURES & OPTIONS          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Last Amend No. LLN021             Data 21Nov03              */
-/*       Prev Amend No. CMX001  *CREATE    Data 21Nov03              */
+/*       Prev Amend No. LLN021             Data 21Nov03              */
+/*                      CMX001  *CREATE    Data 21Nov03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*     MD046248 - Finastra Rebranding                                */
 /*     LLN021 - BoE Profit and Loss return                           */
 /*     CMX001 - Meridian Export                                      */
 /*                                                                   */
@@ -27,7 +29,7 @@
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN( 7)
              DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -115,7 +117,7 @@
  
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,BYC6007END                                          */
  

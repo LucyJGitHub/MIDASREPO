@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*DMY)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CG Interest Scale Extract')                      *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: CGC7260 - CG Interest Scale Retail extract        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD028899           Date 09Dec16               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD028899           Date 09Dec16               *
+      *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
       *                 CLE148             Date 23Jul12               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD028899 - Skip closed accounts.                             *
       *           - Applied for MD043097.
       *  CRE095 - Rate fixing for RE Accounts (Recompile)             *

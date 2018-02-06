@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       CGC3607  -  FTP Transfer                                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG7700            Date 24Jun05              */
+/*       Prev Amend No. BUG7700            Date 24Jun05              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CCG015  *CREATE    Date 10Mar02              */
+/*                      CCG015  *CREATE    Date 10Mar02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG7700- Send message with msgid to MOPERQ so that          */
 /*                Tivoli monitoring can detect it.                   */
 /*       CCG015 - Correspondence Manager Phase 1                     */
@@ -27,7 +29,7 @@
              PGM        PARM(&PARM1 &PARM2 &PARM3 &PARM4 &PARM5)
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
 /* */
 /* Declare variables */
@@ -214,6 +216,6 @@ ABNORMAL:
              CALL       PGM(CGC3703) PARM(&ACTION &RETURN)
 /* Return Code not trapped here in order to avoid looping */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

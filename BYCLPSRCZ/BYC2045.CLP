@@ -6,14 +6,16 @@
 /*                                                                   */
 /*     BYC2045 - Futures & Options Extract/Validation                */
 /*                                                                   */
-/*     (c) Misys International Banking Systems Ltd. 1999             */
+/*     (c) Finastra International Limited 1999                       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last amend no. 168557           Date  04OCT99                 */
-/*     Prev amend no. LLN012           Date  23APR99                 */
+/*       Prev Amend No. 168557             Date 04Oct99              */
+/*                      LLN012             Date 23Apr99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     168557 - Member BYEXFFM should be cleared instead of member   */
 /*              BYEXFRM prior to call of BY2045.                     */
 /*     LLN012 - Financial Services Authority - Liquidity Report      */
@@ -30,7 +32,7 @@
              DCL        VAR(&LLN012) TYPE(*CHAR) LEN(1)     /* LLN012 flag */
              DCL        VAR(&LPHAS) TYPE(*CHAR) LEN(1)      /* Midas phase */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
  
 /*  Global Monitor Message  */
@@ -101,6 +103,6 @@
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

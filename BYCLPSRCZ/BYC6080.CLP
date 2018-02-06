@@ -6,16 +6,18 @@
 /*                                                                   */
 /*     BYC6080 - Create Profit & Loss Download                       */
 /*                                                                   */
-/*     (c) Misys International Banking Systems 2003.                 */
+/*     (c) Finastra International Limited 2003                       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last amend No. LLN012           Date  23APR99                 */
-/*     Prev Amend No. LLN021 *CREATE   Date: 20Nov03                 */
+/*       Prev Amend No. LLN012             Date 23Apr99              */
+/*                      LLN021 *C *CREATE  Date : 20nOV0             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
 /*     Amendment Details:                                            */
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     LLN012 - Financial Services Authority - Liquidity Report      */
 /*     LLN021 - Create Profit and Loss Download File                 */
 /*                                                                   */
@@ -31,7 +33,7 @@
              DCL        VAR(&LPHAS) TYPE(*CHAR) LEN(1)      /* Midas phase */
              DCL        VAR(&LLN021) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
  
 /*  Global Monitor Message  */
@@ -116,6 +118,6 @@ END:         RCLRSC
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

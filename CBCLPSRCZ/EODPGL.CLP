@@ -7,8 +7,9 @@
 /*                                                                   */
 /*       EODPGL - GLSTAT PROMPTS                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,8 +17,8 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 097827             DATE 27JUN96              */
-/*       PREV AMEND NO. 036796             DATE 10JAN94              */
+/*       Prev Amend No. 097827             Date 27Jun96              */
+/*                      036796             Date 10Jan94              */
 /*                      S01421             DATE 24JUN93              */
 /*                      S10736             DATE 29OCT92              */
 /*                      E31647             DATE 02OCT92              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     097827 - COB REPORTING PARAMETERS PROMPT IS DIFFERENT WHEN    */
 /*              CALLED FROM INPUT CYCLE AND FROM IC TERM.            */
 /*              CALL PROGRAM EODCHK RATHER THAN RETRIEVE FROM CBSTAT */
@@ -82,7 +84,7 @@
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)                 /*S01421*/
              DCL        VAR(&EXIT) TYPE(*LGL) LEN(1)                  /*S01421*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,EODPGL003                                           */
 /**/
@@ -95,7 +97,7 @@
              RTVDTAARA  DTAARA(RUNDAT) RTNVAR(&RUNDAT)
              CHGVAR     VAR(&RUNA) VALUE(%SUBSTRING(&RUNDAT 1 7))
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGVAR     VAR(&PERM) VALUE('Y')
 /**/
              RTVJOBA    JOB(&JOB)

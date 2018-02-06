@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       CGC5202  - CG PrtGen Extraction Control - Batch process     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR859678           Date 07Nov11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR859678           Date 07Nov11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 229779             Date 27Sep04              */
+/*                      229779             Date 27Sep04              */
 /*                      CSC022             Date 24Feb04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CPK015             Date 29May02              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR859678 - Avoid LCKW in SCKOBJLCOB (Child:AR859680)        */
 /*       229779 - Avoid lock on DTAQ when CPGN option is taken.      */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
@@ -38,7 +40,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -108,7 +110,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  /**/                                                                                     /*CSC022*/
  /** Call AO Switchable features  */                                                      /*CSC022*/
  /**/                                                                                     /*CSC022*/

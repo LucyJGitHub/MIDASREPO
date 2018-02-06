@@ -13,12 +13,14 @@
       *                                                               *
       *             Source converted to RPGLE from OPM program CB0004.*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD038993 *CREATE   Date 21Nov16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038993 *CREATE   Date 21Nov16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD038993 - Missing code functionality on CCB014.             *
       *             Define 10 jobs. COB will not run if one of the    *
       *             job is active.                                    *
@@ -116,14 +118,14 @@
      D WIDX4           S              3  0
      D PFRST           S              1
      D PJOBA           S              1
-
+ 
      D                 DS
      D ACTJOB          C                   CONST('CBC000109')
       *
       ** File Job Structure
       *
      D DSJOBF        E DS                  EXTNAME(CBJOBLPD)
-
+ 
      D DSJOBP          DS
      D  PJOBN                        10
      D  PJOBT                         1
@@ -191,7 +193,7 @@
       *
      D DSJOBA1         DS
      D JOBSTAT                        1    DIM(10)
-
+ 
       /EJECT
       *****************************************************************
       *                   Index to subroutines                        *
@@ -530,10 +532,10 @@
      C                   DO        10            WRRN
       *
      C     WRRN          CHAIN     CBJOBLPD                           95
-
+ 
      C                   IF        %FOUND(CBJOBLPD)
      C                   EVAL      %SUBST(DSJOBS:WIDX:12) = DSJOBF
-
+ 
      C     CBJOBA        IFEQ      'R'
      C                   EVAL      %SUBST(DSJOBA:WIDX2:10) = 'Running'
      C                   ELSE
@@ -743,15 +745,15 @@
      C                   ENDIF
       *
      C                   ENDIF
-
+ 
      C                   EVAL      WIDX = 1
      C                   EVAL      WIDX3 = 11
      C                   EVAL      WIDX4 = 12
      C                   EVAL      DSJINT = '0000000000'
      C                   EVAL      DSJINS = '0000000000'
-
+ 
      C                   DO        10            WRRN
-
+ 
      C                   IF        %SUBST(DSJOBS:WIDX:10) <> *BLANKS
       *
       ** Validate Job Type, valid values are B or I
@@ -778,13 +780,13 @@
       *
      C                   MOVEA     DSJINT        *IN(41)
      C                   MOVEA     DSJINS        *IN(51)
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      WIDX = WIDX + 12
      C                   EVAL      WIDX3 = WIDX3 + 12
      C                   EVAL      WIDX4 = WIDX4 + 12
-
+ 
      C                   ENDDO
       *
      C                   ENDSR
@@ -815,13 +817,13 @@
      C                   DO        10            WRRN
       *
      C     WRRN          CHAIN     CBJOBLPD                           95
-
+ 
      C                   IF        %FOUND(CBJOBLPD)
      C                   EVAL      DSJOBF = %SUBST(DSJOBS:WIDX:12)
      C                   EVAL      CBJOBA = JOBSTAT(WRRN)
      C                   UPDATE    CBJOBLD0
      C                   ENDIF
-
+ 
      C                   EVAL      WIDX = WIDX + 12
      C                   ENDDO
       *
@@ -892,7 +894,7 @@
      C                   EVAL      WIDX = WIDX + 12
      C                   EVAL      WIDX3 = WIDX3 + 12
      C                   EVAL      WIDX4 = WIDX4 + 12
-
+ 
      C                   ENDDO
       *
      C                   ENDSR
@@ -919,7 +921,7 @@
      C                   EVAL      DSJOBP = %SUBST(DSJOBS:WIDX:12)
      C                   EXSR      #JOBST
      C                   EVAL      JOBSTAT(WRRN) = PJOBA
-
+ 
      C     PJOBA         IFEQ      'R'
      C                   EVAL      %SUBST(DSJOBA:WIDX2:10) = 'Running'
      C                   ELSE
@@ -927,7 +929,7 @@
      C                   EVAL      %SUBST(DSJOBA:WIDX2:10) = 'Finished'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   EVAL      WIDX = WIDX + 12
      C                   EVAL      WIDX2 = WIDX2 + 10
       *
@@ -1019,7 +1021,7 @@
       *
      C                   ENDSR
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2016
+(c) Finastra International Limited 2016
 ** TEXT
 COB already scheduled
 Actual status is OK

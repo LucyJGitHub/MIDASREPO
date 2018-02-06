@@ -6,14 +6,16 @@
 /*                                                                   */
 /*   BYC6000 - On-Request PL Extract/Validation                      */
 /*                                                                   */
-/*   (c) Misys International Banking Systems Ltd., 2003              */
+/*   (c) Finastra International Limited 2003                         */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*   Last Amend No. LLN021/026   Date  03Mar04                       */
-/*   Prev Amend No. LLN021       Date: 22Oct03                       */
+/*       Prev Amend No. LLN021/02          Date 03Mar04              */
+/*                      LLN021             Date : 22oCT0             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   LLN021/026 - Also need to call BYC6075                          */
 /*   LLN021 - Bank of England Profit & Loss Return                   */
 /*                                                                   */
@@ -29,7 +31,7 @@
              DCL        VAR(&LPHAS) TYPE(*CHAR) LEN(1)      /* Midas Phase  */
              DCL        VAR(&LEOM) TYPE(*CHAR) LEN(1)  /* End of Month      */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
 /*  Global Monitor Message  */
              MONMSG     MSGID(CPF0000 RPG0000 CPD0000) EXEC(GOTO +
@@ -182,6 +184,6 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

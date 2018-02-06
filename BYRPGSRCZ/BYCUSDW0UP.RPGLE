@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas BoE extra customer data update')                 *
@@ -12,15 +12,17 @@
       *  Function:  This module updates the data to the required      *
       *             extension file.                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. BUG8497            Date 14Sep05               *
-      *  Prev Amend No. 204195             Date 05Apr02               *
+      *  Prev Amend No. BUG8497            Date 14Sep05               *
+      *                 204195             Date 05Apr02               *
       *                 LLN018  *CREATE    Date 17Apr01               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG8497 - SDVCUSDX0 renamed to SDVCUSDPE.                    *
       *  204195 - Default fields before validation if data coming     *
       *           from APIs.                                          *
@@ -344,4 +346,4 @@
       /EJECT
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

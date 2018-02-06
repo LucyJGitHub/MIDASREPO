@@ -8,18 +8,20 @@
 /*       CBC0051 - STANDARD COMPONENT FOR CALLING                    */
 /*                 CLOSE OF BUSINESS COMPONENTS                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 081912             DATE 18JAN95              */
-/*       PREV AMEND NO. BHF053             DATE 10MAY90              */
+/*       Prev Amend No. 081912             Date 18Jan95              */
+/*                      BHF053             Date 10May90              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       081912 - Allow string to be 256 for parameters              */
 /*       BHF053 - CHANGED PROGRAM TO DUMP IF ERROR.                  */
 /*                                                                   */
@@ -36,7 +38,7 @@
 /************DCL        VAR(&CMD) TYPE(*CHAR) LEN(122)                 *081912*/
              DCL        VAR(&CMD) TYPE(*CHAR) LEN(278)                /*081912*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* GLOBAL MONITOR MESSAGE */
@@ -44,7 +46,7 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* CALL PROGRAM WITH PARAMETERS USING QCMDEXC (IF ANY) */
 /**/
              CHGVAR     VAR(&CMD) VALUE('CALL ' *CAT &CCOT +

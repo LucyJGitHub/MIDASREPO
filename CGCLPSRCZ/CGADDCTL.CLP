@@ -7,8 +7,9 @@
 /*                                                                   */
 /*       CGADDCTL - Control set up of Posting Narrative Messages     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,8 +17,8 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 109175             DATE 16Feb98              */
-/*       Prev Amend No. 101582             DATE 06Jan98              */
+/*       Prev Amend No. 109175             Date 16Feb98              */
+/*                      101582             Date 06Jan98              */
 /*                      101709             DATE 29APR97              */
 /*                      089745             DATE 27JUN95              */
 /*                      084057             DATE 01MAR95              */
@@ -28,6 +29,7 @@
 /*         any changes required in CLP/CGTSTCTL as well.             */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       109175 - Add 00880/881/890/900/910/920/930/940/950/960      */
 /*       101582 - Change GB00070                                     */
 /*       101709 - Incorrect message id for Retail a/c posting        */
@@ -43,7 +45,7 @@
    DCL        VAR(&MGNUM)  TYPE(*CHAR) LEN(5)
    DCL        VAR(&MSGTXT) TYPE(*CHAR) LEN(132)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              CALL       PGM(CGADDMSG) PARM(&LGID '00000' +
@@ -555,6 +557,6 @@
              CALL       PGM(CGADDMSG) PARM(&LGID 'F9001' '&18 &19')
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

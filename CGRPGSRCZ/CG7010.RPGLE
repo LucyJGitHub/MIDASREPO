@@ -15,12 +15,14 @@
       *  Called By: CGC2050-00030 (COB-component)                     *
       *             -> CGC7010 -> CG7010 driver--> CG7020 extract     *
       *                                                               *
-      *  (C) COPYRIGHT Misys International Banking Systems Ltd.       *
+      *  (C) COPYRIGHT Finastra International Limited                 *
       *                                                               *
-      *  Last Amend No. CER039 *CREATE     Date 03May11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER039 *CREATE     Date 03May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER039 - Retail Interest Summary Correspondence              *
       *           (Upgrade of German Features FGE092)                 *
       *                                                               *
@@ -396,4 +398,4 @@
      C/COPY CGCPYSRC,SRERRCLE
      O/SPACE 5
 **CTDATA ##CPY
-(c) COPYRIGHT Misys International Banking Systems Ltd 2011
+(c) COPYRIGHT Finastra International Limited 2011

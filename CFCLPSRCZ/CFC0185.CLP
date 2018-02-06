@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       CFC0185 -  MIDAS/TRAM INTERFACE CONTROL TRANSFER PROGRAM    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
-/*       Prev Amend No. AR796078           Date 28Jun11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*                      AR796078           Date 28Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      245314A            Date 29Jun07              */
@@ -43,6 +44,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       AR796078 - Applied GEMS 263114.                             */
 /*       263114 - CFC0181 failed in COB due to incomplete            */
@@ -109,7 +111,7 @@
              PGM        PARM(&TRAMID &O350 &T350 &MPHAS &GCHAS &RTNVAR)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&LOOP) TYPE(*DEC) LEN(1 0) VALUE(1)      /*065979*/
@@ -529,7 +531,7 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
              CHGJOB     SWS(XXXXXX11)                         /*E33221*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  END:        ENDPGM
 /*                                                  Start of S01408 */

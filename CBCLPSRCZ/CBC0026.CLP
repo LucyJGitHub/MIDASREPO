@@ -8,15 +8,16 @@
 /*       CBC0026 - CLOSE OF BUSINESS MONITOR CALLING                 */
 /*                 COMPONENT AND ERROR CHECK COMPONENT               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO.                    DATE 00/00/00             */
+/*       PREV AMEND NO.                    DATE 00/00/00             */
 /*                                                                   */
 /*********************************************************************/
 /**/
@@ -25,7 +26,7 @@
              DCL        VAR(&PROG) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* GLOBAL MONITOR MESSAGE */
@@ -33,7 +34,7 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* RESET ERROR FIELD TO 'N' AND SET OFF JOB SWITCHES */
 /**/
              CHGVAR     VAR(&ERROR) VALUE('N')

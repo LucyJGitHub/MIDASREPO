@@ -1,6 +1,6 @@
      H DEBUG
      H NOMAIN
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2017')
+     H COPYRIGHT('(c) Finastra International Limited 2017')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas BF Invoke BF Web Service Common')                *
@@ -13,12 +13,14 @@
       *  Function:  This program invokes the BankFusion Web Service   *
       *             Calls by accessing the Web services               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. CBF023    *CREATE  Date 04Jan17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CBF023  *CREATE    Date 04Jan17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *                                                               *
       *****************************************************************
@@ -211,21 +213,21 @@
       /EJECT
       *
       /free
-
+ 
                in BFWBCONF;
-
+ 
        // *********************************************************
        //  Turn debugging info *ON
        // *********************************************************
-
+ 
                if bfdebug = 'Y';
                     http_debug(*ON);
                endif;
-
+ 
        // *********************************************************
        //  Get the user, password, zone prefix
        // *********************************************************
-
+ 
                     GPAOSVALR0(SysValRet
                          :'BankFusionIPAddress'
                          :wIpAddrSVal
@@ -248,7 +250,7 @@
                          :' '
                          :' '
                          );
-
+ 
                     AOSVALR0(SysValRet
                          :'BrgMidasSystemPrefix'
                          :wZPrefSVal
@@ -271,19 +273,19 @@
                          :' '
                          :' '
                          );
-
+ 
                  wZonePrefix = wZPrefSVal;
-
+ 
        //Assumes that Ip Address is no  longer than 64 char
        // and Username is no longer than 30 char
-
+ 
                  wIpAddress = %subst(wIpAddrSVal:1:64);
                  wUserName =  %subst(wUserNmSVal:1:30);
                  wValLstLoc = %subst(wGPrefSVal:1:2) + 'GMLIB';
                  wUserNmVlDl = wUserName;
-
+ 
        //Retrieve password from validation list
-
+ 
                      UT000033(wReturnCode
                             : 'F'
                             : 'GPLDAPVL'
@@ -293,32 +295,32 @@
                             : ' '
                             : wDescr
                             );
-
+ 
                   wPassword = wPass1;
-
+ 
           wSoapAction = %trim(setSpAction);
-
+ 
        // *********************************************************
        //  Build the URL
        // *********************************************************
-
+ 
                wUrl = 'http://' + %trim(wIpAddress) +
                       %trim(setURL);
-
+ 
        // *********************************************************
        //  Set the Request parameters for the call to
        //  BankFusion Batch Service (BatchService)
        // *********************************************************
-
+ 
                requestDS1.userName = wUserName;
                requestDS1.password = wPassword;
                requestDS1.soapAction = wSoapAction;
                requestDS1.zonePrefix = wZonePrefix;
-
+ 
        // *********************************************************
        //  Build the SOAP Message
        // *********************************************************
-
+ 
           // Start Tag - SOAP Envelope
                wSoapXML =
                '<soapenv:Envelope ' +
@@ -327,7 +329,7 @@
                  'xmlns:web="http://webservices' +
                           '.bankfusion.trapedza.com" ' +
                  %trim(setSpEnvAdd) + '>';
-
+ 
           // SOAP Header
                wSoapXML = %trim(wSoapXML) + '<soapenv:Header>'
                    + '<web:bfgenericsoapheader>'
@@ -348,27 +350,27 @@
                    + '</BFHeader>'
                    + '</web:bfgenericsoapheader>'
                    + '</soapenv:Header>';
-
+ 
           // SOAP Body - Concatenate given soap body from caller program
-
+ 
                wSoapXML = %trim(wSoapXML) + %trim(setSpXMLBody);
-
+ 
           // End Tag - SOAP Envelope
                wSoapXML = %trim(wSoapXML) + '</soapenv:Envelope>';
-
+ 
                wSoap = wSoapXML;
-
+ 
        // *********************************************************
        //  Call the Web Service
        // *********************************************************
-
+ 
                wRc = WebServiceXML(wUrl
                                  : wSoap
                                  : %trim(RequestDS1.soapAction)
                                  : %paddr(srStrOfElement)
                                  : %paddr(srEndOfElement)
                                  );
-
+ 
           // If HTTP Error returned, retrieve the last error that occured
                if wRc <> 1;
                     responseDS1.errorMessage = http_error;
@@ -376,17 +378,17 @@
                     responseDS1.RespXML = wSoap;
                     responseDS1.RetCode = '1';
                endif;
-
+ 
        // *********************************************************
        //  End Program
        // *********************************************************
-
+ 
                *INLR = '1';
                return wRc;
-
+ 
       /end-free
      P                 E
-
+ 
       *****************************************************************
       /EJECT
       ************************************************************************

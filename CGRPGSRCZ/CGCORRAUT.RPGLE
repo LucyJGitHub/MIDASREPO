@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXS *  RPGCVTOPT2                                                   *                       CSD053
@@ -13,18 +13,20 @@
       *  Function:  This program performs the update processes that   *
       *             are to be carrired out on the unauthorised record *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD053             Date 01Jun06               *
-      *  Prev Amend No. CGL029             Date 03Sep01               *
+      *  Prev Amend No. CSD053             Date 01Jun06               *
+      *                 CGL029             Date 03Sep01               *
       *                 CSD012  *CREATE    Date 14Nov02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
       *         - (Recompile)                                         *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -491,4 +493,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

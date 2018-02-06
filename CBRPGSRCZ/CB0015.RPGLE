@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CB Close of business monitor menu')              *
@@ -9,10 +9,11 @@
      F*                                                               *
      F*  CB0015 - CLOSE OF BUSINESS MONITOR MENU                      *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1015594          Date 20Nov12               *
-      *  Prev Amend No. CCB021             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1015594          Date 20Nov12               *
+      *                 CCB021             Date 06Aug12               *
       *                 CCB020             Date 06Aug12               *
       *                 CSC054             Date 23Feb12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -43,6 +44,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1015594 - Disable option 2 in COB menu when PEA option 5   *
       *              is already available                             *
       *  CCB021 - COB Restructure - Non Working Day COB (Recompile)   *

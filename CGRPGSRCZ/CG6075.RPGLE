@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas CG LE rollover rate fixed advices extract')      *
@@ -21,10 +21,11 @@
       *                                                               *
       *  Called By: CG6070 - LE Rollover Rate Fixed Advices Driver    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. AR933763           Date 27Nov12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 AR933763           Date 27Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR822053           Date 29Aug11               *
@@ -58,6 +59,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  AR933763 - Rollover confirmation (Rate Change) does not have *
@@ -137,86 +139,86 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FLELOANL0  IF   E           K DISK    INFSR(*PSSR) PREFIX(L0)
      F                                     RENAME(CLOANCLF:LELOANF0)
       ** Live Loans details
-
+ 
      FLELOANL2  IF   E           K DISK    INFSR(*PSSR) PREFIX(L2)
       ** Live Rollover details
-
+ 
      FCLOANB    UF   E           K DISK    INFSR(*PSSR) COMMIT
       ** Loans by Branch/Customer
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
      D WCPrtItmTyp     C                   CONST('LOAN ROLLO')
       ** Print Item Type
-
+ 
      D WCPrtItmSubTyp  C                   CONST('RATE FIX  ')
       ** Print Item Sub-Type
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Data structure for access objects, first DS
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Data structure for access objects, second DS
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Data structure for Bank details
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** Data structure Customer details
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Data structure Currency details
-
+ 
      D PEDsCGUDCRPD  E DS                  EXTNAME(CGUDCRPD)
       ** Data structure for UDC data reference file
-
+ 
      D PEDsCGUDTAPD  E DS                  EXTNAME(CGUDTAPD)
       ** Data structure for UDC extracted data file
-
+ 
      D WEDs1CLOANCL  E DS                  EXTNAME(CLOANCL) PREFIX(L0)
       ** Live Loans details DS1, used to capture record read from LELOANL0
       ** into a data structure
-
+ 
      D WEDs2CLOANCL  E DS                  EXTNAME(CLOANCL) PREFIX(CL)
       ** Live Loans details DS2, loan referred to by P0LoanRef
                                                                                               CCG015
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CCG015
       ** Data structure for SAR data                                                          CCG015
-
+ 
      D WMDsPath        DS                  OCCURS(20)
       ** Multi-occurence data structure to store path starting from l13RO
      D  WMDsPathGrp            1      6
-
+ 
      D WDs##S          DS          5120
       ** Data structure to capture content of ##S array after packing
       ** RDE's and their data
-
+ 
      D                 DS
       ** General data structure to define fields that need to share data
      D WGrp10                  1     10
@@ -225,7 +227,7 @@
      D  WAr20                 21     40    DIM(20)
      D  WNum20                21     40  0
      D  WAr29                 51     79    DIM(29)
-
+ 
      D P0RtnCode       S              6A
       ** Entry parameter return code
      D P0DsParm        DS           256
@@ -237,17 +239,17 @@
      D  P0Brch                13     15A
      D  P0OrigBrch            16     18A
      D  P0Commit              19     21A
-
+ 
      D*WArr20X1********S              1A   DIM(20)                                            235843
      D WArr20X1        S             20A                                                      235843
       ** 20-element alpha runtime-array used as an output by SR/SRFmtNum
-
+ 
       ** Compile-time array to contain RDE definitions
      D*WTbGrp***       S             10    DIM(27) CTDATA PERRCD(1)                           CLE143
      D*WTbRDE***       S             22    DIM(27) ALT(WTbGrp)                                CLE143
      D WTbGrp          S             10    DIM(30) CTDATA PERRCD(1)                           CLE143
      D WTbRDE          S             22    DIM(30) ALT(WTbGrp)                                CLE143
-
+ 
      D                 DS                                                                     CSD027
       ** General data structure to handle OLNO field now that is alpha.                       CSD027
      D OLNOAlpha               1      6                                                       CSD027
@@ -256,25 +258,25 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D WCoCustNumA     S              6A
       ** Customer number
-
+ 
      D WPathStr        S            256A
       ** String that contains the concatenated path
-
+ 
      D WPx             S              3P 0
       ** Index for WMDsPath only
-
+ 
      D WOutSeq         S              9P 0
       ** Output Sequence counter
-
+ 
      D WConfCode       S             10A
       ** Confirmation Text code
                                                                                               CCG015
      D ##ITEM          S              8  0                                                    CCG015
       ** Confirmation Text code                                                               CCG015
-
+ 
       ** General purpose variables
      D WFound          S              1A
      D WProduce        S              1A
@@ -282,7 +284,7 @@
      D Wx2             S              3P 0
      D Wx3             S              3P 0
      D CLE143          S              1A                                                      CLE143
-
+ 
       ** Parameter fields
      D PAction8        S              8A
      D PCommit         S              3A
@@ -307,25 +309,25 @@
      D PMode           S             10A
      D PTitle          S              7A
      D PTitleUL        S              7A
-
+ 
      D/COPY CGCPYSRC,CGPACKDLE
       ** Data pack arrays and data structures
-
+ 
      D/COPY CGCPYSRC,SRERRDLE
       ** Fields, data structures, arrays definition for
       ** CG error processing
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
       *
       ** Set up subroutine stack name
       *
@@ -349,7 +351,7 @@
       *
      C                   MOVE      *ON           *INLR
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************

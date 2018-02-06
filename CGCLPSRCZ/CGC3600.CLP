@@ -8,10 +8,11 @@
 /*       CGC3600 - Retrieve a data base according to its remote      */
 /*                 location                                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD024871           Date 11Feb14              */
-/*       Prev Amend No. AR659584           Date 06Dec10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD024871           Date 11Feb14              */
+/*                      AR659584           Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD024871 - CM Custom-Defined Data Extract terminated        */
 /*                  abnormally due to graphic field &DBXRDBT2        */
 /*                  in file QADBXRDBD.                               */
@@ -39,7 +41,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                /*AR659584*/
 /*/COPY GPCPYSRCG,GPSVALDCL                                          */                 /*AR659584*/
@@ -116,7 +118,7 @@ RTVRDBDIR:
  
  
  END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,mmCnnnnEND                                          */
  

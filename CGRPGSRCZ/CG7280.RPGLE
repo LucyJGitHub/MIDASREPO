@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*DMY)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CG Interest Scale extract retail movements')     *
@@ -9,10 +9,11 @@
       *                                                               *
       *  CG7280 - CG Interest Scale extract extract retail movements  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR869511A          Date 24Nov11               *
-      *  Prev Amend No. AR869511           Date 23Nov11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR869511A          Date 24Nov11               *
+      *                 AR869511           Date 23Nov11               *
       *                 AR847818           Date 26Apr13               *
       *                 CLE148             Date 23Jul12               *
       *                 AR865055           Date 17Nov11               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR869511A- Wrong details extracted for some accounts         *
       *             (Child:AR869512)                                  *
       *  AR869511 - Wrong details extracted for some                  *

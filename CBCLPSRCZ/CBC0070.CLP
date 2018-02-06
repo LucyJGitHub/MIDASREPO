@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       CBC0070  RESTART COB AFTER HALT & SIGNOFF HASN'T OCCURED    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CPK014             Date 07Nov11              */
+/*       Prev Amend No. CPK014             Date 07Nov11              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             Date 18Apr95              */
+/*                      S01408             Date 18Apr95              */
 /*                      S01420             DATE 30MAR95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK014 - Release 4 packaging.  Data queues moved from XLIB  */
 /*                to DPLIB.                                          */
 /*       S01408 - Core hook added CBC0070MP1                         */
@@ -51,13 +53,13 @@
              DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)                  /*S01420*/
              DCL        VAR(&MES) TYPE(*CHAR) LEN(40)                 /*S01420*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/                                                                  /*S01420*/
 /* Determine if SAR S01420 (CoB Enh.) is switched ON */               /*S01420*/
 /**/                                                                  /*S01420*/

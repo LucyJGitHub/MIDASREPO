@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Retail Advice for FT - Extract')                       *
@@ -16,10 +16,11 @@
       *                                                               *
       *  Called By: CG003860 - Retail Advice for FT - Driver          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CER055             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CER055             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23445A          Date 19Apr09               *
       *                 BUG23445           Date 17Mar09               *
@@ -42,6 +43,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
       *  CER059 - German Feature Upgrade to Delhi                     *

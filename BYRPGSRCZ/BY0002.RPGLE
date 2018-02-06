@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas BoE Update ISO Codes and Country Codes')         *
@@ -15,13 +15,15 @@
       *                                                               *
       *  Called By: BY0001                                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. BUG7336 *CREATE    Date 07Jun05               *
+      *  Prev Amend No. BUG7336 *CREATE    Date 07Jun05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
 /*    *  BUG7336- BYCNTYPP not migrated to MidasPlus BOE              *
       *                                                               *
       *****************************************************************

@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       EODPSE - SESTAT PROMPTS                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01502             DATE 08JUL94              */
-/*       PREV AMEND NO. E31647             DATE 06OCT92              */
+/*       Prev Amend No. S01502             Date 08Jul94              */
+/*                      E31647             Date 06Oct92              */
 /*                      17737              DATE 05/04/89             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01502 - BLI Telekurs Processing.  Recompiled due to        */
 /*                change in length of SESTAT, 133 long.              */
 /*       E31647 - EOD prompt screen bypassed when ENTER key is       */
@@ -40,13 +42,13 @@
 /************DCL        VAR(&SESTAT) TYPE(*CHAR) LEN(128)*/           /*S01502*/
              DCL        VAR(&SESTAT) TYPE(*CHAR) LEN(133)             /*S01502*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCLF       FILE(EODPSEDT) RCDFMT(EODPSE)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGVAR     VAR(&PERM) VALUE('Y')
 /**/
              RTVJOBA    JOB(&JOB)

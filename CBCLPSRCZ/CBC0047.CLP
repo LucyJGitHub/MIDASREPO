@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       CBC0047 - Close of Business Halt for Modules Maintenance.   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 108076 *CREATE     DATE 18SEP96              */
+/*       PREV AMEND NO. 108076 *CREATE     DATE 18SEP96              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       108076 - New program for this fix.                          */
 /*                                                                   */
 /*********************************************************************/
@@ -31,7 +33,7 @@
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(5)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -60,6 +62,6 @@
 /*/COPY WNCPYSRC,CBC0047END                                          */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

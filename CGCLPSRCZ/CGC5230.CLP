@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       CGC5230  - Print Process Extract Control                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Last Amend No. 245055             Date 15Jan07              */
+/*       Prev Amend No. 245055             Date 15Jan07              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 241824             Date 06Oct06              */
+/*                      241824             Date 06Oct06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CPK009             Date 09Jul99              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       245055 - Reverse 241824.                                    */
 /*       241824 - Allow print process request by Module Id and       */
 /*                by Extract Date.                                   */
@@ -42,7 +44,7 @@
  
 /* Copyright Statement                                               */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
  
@@ -82,7 +84,7 @@
  
 /* Copyright Statement                                               */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* Send message to MRUNQ */
              SNDPGMMSG  MSG('CGC5230 - Print Process Extract') +
@@ -230,7 +232,7 @@ ABNORMAL:
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /* */
              ENDPGM

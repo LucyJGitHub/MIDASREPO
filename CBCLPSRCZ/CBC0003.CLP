@@ -10,17 +10,19 @@
 /*       Function: This program run the first step of ICT in batch   */
 /*                 mode if scheduling requested                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD038993           Date 21Nov16              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD038993           Date 21Nov16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CCB014  *Create    Date 25Apr05              */
+/*                      CCB014  *CREATE    Date 25Apr05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD038993 - Missing code functionality on CCB014.            */
 /*                  Define 10 jobs. COB will not run if one of the   */
 /*                  job is active.                                   */
@@ -47,38 +49,38 @@
              DCL        VAR(&JOBST) TYPE(*CHAR) LEN(1)                                  /*MD038993*/
              DCL        VAR(&JOBNM) TYPE(*CHAR) LEN(10)                                 /*MD038993*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
-
+ 
 /* Global monitor message */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
-
+ 
+ 
 /* Create the Midas Information Screen data area */
-
+ 
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ') TEXT('Midas SC Midas +
                           information screen data')
              MONMSG     MSGID(CPF1023)
-
+ 
 /* Create local data area */
-
+ 
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           TEXT('Midas SD Local data area')
              MONMSG     MSGID(CPF1023)
-
+ 
              RTVJOBA    TYPE(&TYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
-
+ 
 /* Check to see if Automatic Scheduling is ON                     */
-
+ 
              RTVDTAARA  DTAARA(DLYCOB (2 1)) RTNVAR(&AUTSCH)
-
+ 
 /* Check to see if the delay COB Feature is set ON (CCB014)       */
-
+ 
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SAR) VALUE('CCB014')
@@ -160,18 +162,18 @@ CHKJOB:      CHGVAR      VAR(&JOBST) VALUE(' ')                                 
              ENDDO
              GOTO       CMDLBL(ENDPGM)
              ENDDO
-
+ 
 ABNOR:
-
+ 
              CHGJOB     SWS(XXXXXX11)
-
+ 
 /* Abnormal termination - batch job */
-
+ 
              IF         COND(&TYPE = '0') THEN(DO)
                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                             CBC0003 ended abnormally - see job log') +
                             TOMSGQ(MOPERQ)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
-
+ 
  ENDPGM:     ENDPGM

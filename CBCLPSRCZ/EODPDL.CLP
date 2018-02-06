@@ -7,15 +7,16 @@
 /*                                                                  */
 /*  EODPDL - DLSTAT PROMPTS                                         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAAA03             Date 23Mar04              */
+/*       Prev Amend No. CAAA03             Date 23Mar04              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CAS001             Date 23Nov01              */
+/*                      CAS001             Date 23Nov01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      054545             Date 24Feb94              */
@@ -25,6 +26,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAAA03 - Webfacing changes.  Re-compiled.                   */
 /*       CAS001 - Net Present Value (NPV) Accounting                */
 /*  054545  -  Forward Revals Posted should be pos.23 of DLSTAT     */
@@ -63,7 +65,7 @@
 /*/COPY WNCPYSRC,EODPDL001                                           */
              DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                                           /*CAS001*/
 /* Declare variables used for CAS001 */                                                   /*CAS001*/
@@ -77,7 +79,7 @@
              DCLF       FILE(EODPDLDT) RCDFMT(EODPDL)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGVAR     VAR(&PERM) VALUE('Y')
                                                                                           /*CAS001*/
 /* Initialise variables for AOSARDR0 */                                                   /*CAS001*/

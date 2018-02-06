@@ -1,6 +1,6 @@
      H OPTION(*NODEBUGIO:*SRCSTMT)
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2017')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas Purge BF Teller Journal Extension')
@@ -16,12 +16,14 @@
       *  Called By: BFC004610 - Purge BF Teller Journal Extension     *
       *                         Records Control                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CRE071  *CREATE    Date 05Oct10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE071  *CREATE    Date 05Oct10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE071 - BankFusion Midas Teller CBS related changes         *
       *                                                               *
       *****************************************************************
@@ -42,7 +44,7 @@
       *  *PSSR      - Error handling subroutine                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -50,7 +52,7 @@
      FBF004610P1O    E             PRINTER USROPN
      F                                     INFSR(*PSSR)
      F                                     INFDS(SPOOL1)
- 
+
      FBF004610AUO    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOLU)
       *****************************************************************
@@ -60,7 +62,7 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
@@ -73,52 +75,52 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Short DS for Access Objects
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** File information DS for BF004610P1
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
       ** File information DS for SD009823AU
      D SPOOLU          DS
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
       ** DS for SQL cursor C1
      D dsC1            DS
      D TellerTransRef          1     22
      D FrontOfficeID          23     44
      D APIName                45     50
      D Stage                  51     53
- 
+
       ** DS for SQL cursor C2
      D dsC2            DS
      D WCTR                    1      5  0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for ZSFILE
      D PSENTY          S              3
      D PSFILE          S             10
      D PZSNUM          S              6  0
      D PZSERR          S              1
      D PSEQ            S              5A
- 
+
       ** Parameters for AOSVALR0
      D PSysVal         S             20    DIM(10)
      D PCurSet         S            200    DIM(10)
- 
+
      D RetCode         S              7A
      D Option          S              7A
      D WRun            S              1A
@@ -129,32 +131,32 @@
      D SCHEMA1         S             10A
      D SCHEMA2         S             10A
      D WDelCtr         S              5  0 INZ(*ZEROS)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   EXSR      SrSQLStm1
- 
+
      C                   DOW       SQLCODE = *ZEROS
- 
+
      C                   EXSR      SQLFetch
- 
+
      C                   IF        SQLCODE = *ZEROS
      C                   EVAL      WDelCtr = WDelCtr + 1
      C                   EXSR      SrFormat
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   EXSR      SQLClose
      C                   EXSR      SrWP1End
      C                   EXSR      SrSqlStm2
      C                   EXSR      SrSqlStm3
      C                   EXSR      SrAudit
- 
+
      C                   EVAL      *INLR = *ON
       *****************************************************************
       /EJECT
@@ -169,7 +171,7 @@
       *                                                               *
       *****************************************************************
      C     SrSQLStm1     BEGSR
- 
+
      C                   EVAL      SqlStm1 = 'SELECT MITTRE, MIFOID, ' +
      C                             'MIAPI, MISTAG FROM ' +
      C                             %TRIM(SCHEMA1) + '/' + 'MITB_JRNEX' +
@@ -178,21 +180,21 @@
      C                             'BTTB_EJHEADER' + ' WHERE ' +
      C                             'BTTB_EJHEADER.BTTXNREF = ' +
      C                             'MITB_JRNEX.MITTRE)'
- 
+
      C/EXEC SQL
      C+ PREPARE STATEMENT1
      C+   FROM :SqlStm1
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ DECLARE C1 CURSOR
      C+   FOR STATEMENT1
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+  OPEN C1
      C/END-EXEC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -207,39 +209,39 @@
       *                                                               *
       *****************************************************************
      C     SrSQLStm2     BEGSR
- 
+
       ** Select all records from MITB_JRNEX
- 
+
      C                   EVAL      SqlStm2 = 'SELECT COUNT(*) AS ' +
      C                             'WCtr FROM ' + %TRIM(SCHEMA1) +
      C                             '/' + 'MITB_JRNEX'
- 
+
      C/EXEC SQL
      C+ PREPARE STATEMENT2
      C+   FROM :SqlStm2
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ DECLARE C2 CURSOR
      C+   FOR STATEMENT2
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+  OPEN C2
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ EXECUTE STATEMENT2
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+  FETCH NEXT FROM C2 INTO :dsC2
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+  CLOSE C2
      C/END-EXEC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -254,7 +256,7 @@
       *                                                               *
       *****************************************************************
      C     SrSQLStm3     BEGSR
- 
+
      C                   EVAL      SqlStm3 =
      C                             'DELETE FROM' + ' ' +
      C                             %TRIM(SCHEMA1) + '/' + 'MITB_JRNEX' +
@@ -262,20 +264,20 @@
      C                             %TRIM(SCHEMA2) + '/' + 'BTTB_EJHEADER' +
      C                             ' WHERE BTTB_EJHEADER.BTTXNREF = ' +
      C                             'MITB_JRNEX.MITTRE)'
- 
+
      C/EXEC SQL
      C+ PREPARE STATEMENT3
      C+   FROM :SqlStm3
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ EXECUTE STATEMENT3
      C/END-EXEC
- 
+
      C                   IF        SQLCODE < *ZEROS
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -289,11 +291,11 @@
       *                                                               *
       *****************************************************************
      C     SQLFetch      BEGSR
- 
+
      C/EXEC SQL
      C+  FETCH NEXT FROM C1 INTO :dsC1
      C/END-EXEC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -308,26 +310,26 @@
       *                                                               *
       *****************************************************************
      C     SrFormat      BEGSR
- 
+
       ** Open and register P1 report via RCF
- 
+
      C                   IF        NOT %OPEN(BF004610P1)
      C                   OPEN      BF004610P1
      C                   EXSR      SrRCFP1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   EVAL      RTTRE   =  TellerTransRef
      C                   EVAL      RFOID   =  FrontOfficeID
      C                   EVAL      RAPI    =  APIName
      C                   EVAL      RSTAGE  =  Stage
- 
+
      C                   IF        OFLLN1 <= PRTLN1 + 4
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   WRITE     DETAIL1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -341,11 +343,11 @@
       *                                                               *
       *****************************************************************
      C     SQLClose      BEGSR
- 
+
      C/EXEC SQL
      C+  CLOSE C1
      C/END-EXEC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -359,23 +361,23 @@
       *                                                               *
       *****************************************************************
      C     SrRCFP1       BEGSR
- 
+
      C                   Z-ADD     SFNUM1        PZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM      PSEQ          PSEQ
      C                   PARM      *BLANKS       PSENTY
      C                   PARM      SFILE1        PSFILE
      C                   PARM                    PZSNUM
      C                   PARM      *BLANK        PZSERR
- 
+
      C                   IF        PZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -389,18 +391,18 @@
       *                                                               *
       *****************************************************************
      C     SrWP1End      BEGSR
- 
+
      C                   IF        %OPEN(BF004610P1)
- 
+
      C                   IF        OFLLN1 <= PRTLN1 + 3
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   WRITE     TRAILP1
      C                   CLOSE     BF004610P1
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -414,23 +416,23 @@
       *                                                               *
       *****************************************************************
      C     SrRCFAU       BEGSR
- 
+
      C                   Z-ADD     SFNUMU        PZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM      *BLANKS       PSEQ
      C                   PARM      *BLANKS       PSENTY
      C                   PARM      SFILEU        PSFILE
      C                   PARM                    PZSNUM
      C                   PARM      *BLANK        PZSERR
- 
+
      C                   IF        PZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -444,11 +446,11 @@
       *                                                               *
       *****************************************************************
      C     SrAudit       BEGSR
- 
+
      C                   EXSR      SrRCFAU
- 
+
      C                   WRITE     HEADAU
- 
+
      C                   IF        (WDelCtr = 0) AND (*INU7 = *OFF)
      C                   WRITE     NODTLS
      C                   ELSE
@@ -456,11 +458,11 @@
      C                   EVAL      RBFDEL = WDelCtr
      C                   WRITE     CONTROL
      C                   ENDIF
- 
+
      C                   IF        (*INU7)
      C                   WRITE     DBERROR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -473,23 +475,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
- 
+
+
       ** Initialize program name
- 
+
      C                   EVAL      DBPGM = 'BF004610'
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       RetCode
      C                   PARM      '*FIRST '     Option
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        RetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE  = 1
@@ -498,10 +500,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      PSysVal(1) = 'HostIntLayerSchema'
      C                   EVAL      PSysVal(2) = 'BranchTellerSchema'
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       RetCode
      C                   PARM                    PSysVal(1)
@@ -524,13 +526,13 @@
      C                   PARM                    PCurSet(9)
      C                   PARM                    PSysVal(10)
      C                   PARM                    PCurSet(10)
- 
+
      C                   FOR       WCount = 1 to 2
- 
+
      C                   IF        PCurSet(WCount) = '*NRF' OR
      C                             RetCode <> *BLANKS  AND
      C                             RetCode <> '*NRF'
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY   = PSysVal(WCount)
      C                   EVAL      DBFILE  = 'SDSVALPD'
@@ -538,14 +540,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDFOR
- 
+
      C                   EVAL      SCHEMA1 = %TRIM(PCurSet(1))
      C                   EVAL      SCHEMA2 = %TRIM(PCurSet(2))
- 
+
      c                   ENDSR
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -560,21 +562,21 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

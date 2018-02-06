@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas DL/LE Inter Scale Qualifying Acct Code Maint')   *
@@ -12,14 +12,16 @@
       *                                                               *
       *  Called By: CGC7160                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR814080           Date 17Aug11               *
-      *  Prev Amend No. AR814062           Date 16Aug11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR814080           Date 17Aug11               *
+      *                 AR814062           Date 16Aug11               *
       *                 CER042  *CREATE    Date 11May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR814080 - Validation rule should be added in Interest Scale *
       *             Dealing/Lending Qualifying Account Codes that     *
       *             entry in account code field should be linked to an*
@@ -1526,4 +1528,4 @@
      C                   ENDSR
       ********************************************************************
 ** CPY
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

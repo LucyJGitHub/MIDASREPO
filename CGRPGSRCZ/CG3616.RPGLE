@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas CG Merge XML lines')
@@ -13,20 +13,22 @@
       *  - CGUXMGPD : group set tags                                  *
       *  - CGUXMRPD : RDE tags                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG8303            Date 31Aug05               *
-      *  Prev Amend No. CSC022             Date 24Feb04               *
+      *  Prev Amend No. BUG8303            Date 31Aug05               *
+      *                 CSC022             Date 24Feb04               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CCG015  *CREATE    Date 20Jun01               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG8303 - OCBC 80284  DLC0210B in MSGW status                *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
       *  CCG015 - Correspondence Manager                              *

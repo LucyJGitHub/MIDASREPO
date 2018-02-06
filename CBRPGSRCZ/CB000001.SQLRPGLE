@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas CB Select components to be run today')
@@ -9,12 +9,14 @@
       *                                                               *
       *  CB000001 - Midas CB Select components to be run today        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CCB021   *CREATE   Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB021   *CREATE   Date 06Aug12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CCB021 -  COB Restructure - Non Working Day COB              *
       *                                                               *
       *****************************************************************
@@ -66,11 +68,11 @@
      D COMSJ0DS      E DS                  Occurs(COMSRows) Inz
      D                                     Qualified
      D                                     EXTNAME(CBCOMSJ0)
- 
+
      D CBMDCNDS      E DS                  Occurs(DCL1Rows) Inz
      D                                     Qualified
      D                                     EXTNAME(CBMDCNL1)
- 
+
      D CBCOMSDS      E DS                  EXTNAME(CBCOMSL0) Inz
      D                                     Qualified
       *
@@ -82,7 +84,7 @@
       *
      D SMOD            S              1    DIM(128) FROMFILE(SDMMODPD)
      D                                     PERRCD(128)
- 
+
       *
       ** Any changes to these fields are reflected to MOD/MOO
       *
@@ -98,7 +100,7 @@
      D  DJMD09                             Like(CBMDCNDS.DJMD09)
      D  DJMD10                             Like(CBMDCNDS.DJMD10)
      D MOD                            2A   Dim(10) Overlay(MODID)
- 
+
      D MODON           DS                  Inz
      D  DJMP01                             Like(CBMDCNDS.DJMP01)
      D  DJMP02                             Like(CBMDCNDS.DJMP02)
@@ -111,7 +113,7 @@
      D  DJMP09                             Like(CBMDCNDS.DJMP09)
      D  DJMP10                             Like(CBMDCNDS.DJMP10)
      D MOO                            1A   Dim(10) Overlay(MODON)
- 
+
       *
       ** Local Data Area
       *
@@ -128,7 +130,7 @@
       *
      D PEAIND          S             15A   Inz('PEAIndicator')
      D PEACOM          C                   Const('SCC000121')
- 
+
       *
       *****************************************************************
       /EJECT
@@ -159,7 +161,7 @@
      C/EXEC SQL
      C+ open COMSCur
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ get diagnostics :MLoopRow = DB2_NUMBER_ROWS
      C/END-EXEC
@@ -214,13 +216,13 @@
      C                   EVAL      DBASE = 2
      C                   EXSR      DBERR
      C                   ENDIF
- 
+
      C                   EVAL      ULRows = DCL1Rows
       *
       ** Do While there are records in COMSJ0DS
       *
      C                   EVAL      COMSIdx = 1
- 
+
      C                   DOW       COMSIdx <= COMSReturned
      C                   EVAL      %Occur(COMSJ0DS) = COMSIdx
       *
@@ -291,7 +293,7 @@
      C+ close DCL1Cur
      C/END-EXEC
       *
- 
+
      C                   EVAL      CBMDIndex = 1
       *
       ** Read all records on CBMDCNL1 datastructure
@@ -309,7 +311,7 @@
       *
      C                   DOW       MODIndex <= 10
      C                             And Match
- 
+
      C                   EVAL-CORR MODID = CBMDCNDS
      C                   EVAL-CORR MODON = CBMDCNDS
       *
@@ -329,7 +331,7 @@
      C                             or
      C                             MOD(MODIndex) = 'SD' and
      C                             MOO(MODIndex) = 'N'
- 
+
      C                   EVAL      MOIIndex = %LookUp(
      C                             MOD(MODIndex):MODPOS:MOIIndex)
       *
@@ -586,7 +588,7 @@
       ********************************************************************
       /EJECT
 **CTDATA MODPOS
- 
+
       MT#A#B#C  #E#FGL
 DL  EMFMSTLEREMSSERC#G
 FDCMFXMMABFTCAFF  #I#J
@@ -596,5 +598,5 @@ FDCMFXMMABFTCAFF  #I#J
           CP  OD
           HFMC      ED
 AACGPLTIPB
- 
- 
+
+

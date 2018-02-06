@@ -6,12 +6,14 @@
 /*                                                                   */
 /*       CGC0524  - Send Prompt to CG PrtGen Job                     */
 /*                                                                   */
-/*  (C) COPYRIGHT MKI INTERNATIONAL LIMITED 1997.                    */
+/*  (C) COPYRIGHT FINASTRA INTERNATIONAL LIMITED 1997.               */
 /*                                                                   */
-/*       LAST Amend No. CCG016 *CREATE     Date 21FEB97              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCG016 *CREATE     Date 21FEB97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCG016 - Correspondence Manager for Retail Teller System    */
 /*                                                                   */
 /*********************************************************************/
@@ -20,8 +22,8 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          COPYRIGHT MKI +
-                          INTERNATIONAL LTD. 1997')
+                          COPYRIGHT FINASTRA +
+                          INTERNATIONAL LIMITED 1997')
 /* */
 /* Declare variables */
 /* */
@@ -48,8 +50,8 @@ DCL &ERR *CHAR 8    X'0000000000000000'
 /**/
 /*           Copyright statement definition - at runtime             */
 /**/
-             CHGVAR     VAR(&MKICPY) VALUE('COPYRIGHT MKI +
-                          International Ltd. 1997.')
+             CHGVAR     VAR(&MKICPY) VALUE('COPYRIGHT FINASTRA +
+                          INTERNATIONAL LIMITED 1997.')
 /* */
 /* Send Message to MRUNQ */
 /* */
@@ -110,7 +112,7 @@ IF (&OUTQ *EQ '*SYSVAL') THEN(DO)
 RTVSYSVAL  SYSVAL(QPRTDEV) RTNVAR(&OUTQ)
 CHGVAR     VAR(&OUTQLIB) VALUE('*LIBL     ')
 ENDDO
-
+ 
              ENDDO
              IF (&OUTQ *EQ '*DEV') THEN(DO)
              CHGVAR     VAR(&OUTQ) VALUE('MPRINT')

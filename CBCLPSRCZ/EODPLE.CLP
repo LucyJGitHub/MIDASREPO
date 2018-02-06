@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       EODPLE - LESTAT PROMPTS                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAAA03             Date 23Mar04              */
+/*       Prev Amend No. CAAA03             Date 23Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. E31647             Date 01Oct92              */
+/*                      E31647             Date 01Oct92              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAAA03 - Webfacing changes.  Re-compiled.                   */
 /*       E31647 - EOD Prompt Screen bypassed when enter key is       */
 /*                pressed by accident. -  Processing for return      */
@@ -36,13 +38,13 @@
              DCL        VAR(&IN12) TYPE(*LGL) LEN(1)                 /*E31647*/
              DCL        VAR(&LESTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCLF       FILE(EODPLEDT) RCDFMT(EODPLE)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGVAR     VAR(&PERM) VALUE('Y')
 /**/
              RTVJOBA    JOB(&JOB)

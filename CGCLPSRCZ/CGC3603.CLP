@@ -8,24 +8,26 @@
 /*       CGC3603  -  Job Status Retrieval for Correspondence         */
 /*                   Manager FTP                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. CCG015  *CREATE    DATE 08Nov01              */
+/*       Prev Amend No. CCG015  *CREATE    Date 08Nov01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCG015 - Correspondence Manager Phase 1                     */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RTNCODE)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
 /**/
 /* Declare variables */
@@ -78,6 +80,6 @@ ABNORMAL:
 /**/
  ENDCLPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */
              ENDPGM

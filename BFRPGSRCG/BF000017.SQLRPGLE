@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas BF Permissions Upload')
@@ -12,12 +12,14 @@
       *  Function:  This program writes permission data into the      *
       *              BankFusion layer                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD019885  *CREATE  Date 04Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD019885  *CREATE  Date 04Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD019885 - Permission upload interface                       *
       *           - Applied for MD026157                              *
       *                                                               *
@@ -55,7 +57,7 @@
      C                   PARM                    ArtfDesc
      C                   PARM                    Module
       /free
- 
+
              Ret = GenArtefact( Index
                               : Action
                               : ArtfName
@@ -75,7 +77,7 @@
                               : ArtfName
                               );
              EndIf;
- 
+
              If Ret = 0;
              Ret = MapArtfPerm( Index
                               : Action
@@ -87,9 +89,9 @@
                               : ArtfName
                               );
              EndIf;
- 
+
              *INLR = '1';
- 
+
       /end-free
       *****************************************************************
       /EJECT

@@ -8,14 +8,15 @@
 /*       CBC0055 - STANDARD COMPONENT FOR CALLING                    */
 /*                 CLOSE OF BUSINESS REPORTS                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD035310           Date 25May16              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD035310           Date 25May16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC023             Date 29Jan04              */
+/*                      CSC023             Date 29Jan04              */
 /*                      CGP002             Date 04Jul03              */
 /*                      107700             Date 04Sep96              */
 /*                      CCB012             Date 26Mar02              */
@@ -44,6 +45,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD035310 - GL0761P1 report is showing previous run day as   */
 /*                  period date on header during COB.                */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
@@ -96,7 +98,7 @@
 /****************************&TIMESL &COMPTX)         */              /*056287*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&POOLNO) TYPE(*CHAR) LEN(8)
              DCL        VAR(&COMPNM) TYPE(*CHAR) LEN(10)
@@ -180,7 +182,7 @@
 /*/COPY WNCPYSRC,CBC0055006                                           /*S01408*/
 /*                                                                    /*S01408*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/                                                       /*RT0019*/ /*099150*/
 /**SETUP*AND*APPLY*MULTILANGUAGE*OVERRIDES**/              /*RT0019*/ /*099150*/
 /**/                                                       /*RT0019*/ /*099150*/

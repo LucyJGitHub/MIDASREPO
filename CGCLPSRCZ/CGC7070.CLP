@@ -6,16 +6,18 @@
 /*                                                                   */
 /*       CGC7070 - Audit Letter Processing (COB processing)          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. AR737553           Date 06Apr11              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR737553           Date 06Apr11              */
+/*                      CER059             Date 19Jul10              */
 /*                      BUG26660           Date 09Nov09              */
 /*                      BUG26178           Date 29Sep09              */
 /*                      CER041  *CREATE    Date 19May08              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR737553 - CGC7070 00001 (Child: AR737554)                  */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG26660 - "Next Processing Date" or Audit Date's           */
@@ -40,8 +42,8 @@
  
       DCL    VAR(&DATA)       TYPE(*CHAR) LEN(50)
       DCL    VAR(&ACTCPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                 Misys International Banking +
-                          Systems Ltd. 2008.')
+                 Finastra International Limited +
+                          2008.')
  
       DCL    VAR(&SRTCD) TYPE(*CHAR) LEN(7)
       DCL    VAR(&SOPTN) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')

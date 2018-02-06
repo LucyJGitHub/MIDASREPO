@@ -9,20 +9,22 @@
       *                                                               *
       *  TABLETK - BACKGROUND UPDATE OF TABLETK FILE                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAP084        Date 27Feb03                    *
+      *  Prev Amend No. CAP084             Date 27Feb03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. E19243        Date 19Jun90                    *
+      *                 E19243             Date 19Jun90               *
       *                 S01251        Date 03Feb90                    *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP084 - Wrapper project - convert to ILE                    *
       *  E19243 - SET ON RCIN FOR NEW RATES.                          *
       *  S01251 - SYNON FIELD NAME CHANGES                            *

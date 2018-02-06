@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas COB Extraction of Teller Transactions')
@@ -15,12 +15,14 @@
       *  Called By: BFC004609 - COB Extraction of Teller Transaction  *
       *                         Records Control                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CRE072  *CREATE    Date 30Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE072  *CREATE    Date 30Jun11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE072 - BankFusion Midas Teller Related Changes             *
       *                                                               *
       *****************************************************************
@@ -59,27 +61,27 @@
       *  *PSSR     - Error handling subroutine                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas COB Extraction of Teller Transactions
- 
+
      FBF004609P1O    E             PRINTER USROPN
      F                                     INFSR(*PSSR)
      F                                     INFDS(SPOOL1)
      F
- 
+
       ** Midas COB Extraction of Teller Transactions Audit
- 
+
      FBF004609AUO    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOLU)
      F
- 
+
       ** Midas COB Extraction of Teller Transactions File
- 
+
      FBFCBEXPD  O    E           K DISK    INFSR(*PSSR)
       *****************************************************************
       /EJECT
@@ -88,7 +90,7 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
@@ -865,4 +867,4 @@
      C                   ENDSR
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

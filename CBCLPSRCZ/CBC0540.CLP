@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       CBC0540 - COB PRINT REPORTS                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1095768          Date 05Oct16              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1095768          Date 05Oct16              */
+/*                      CCB020             Date 06Aug12              */
 /*                      AR868386           Date 27Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1095768 - File CBCOBRPD should be clear every day.        */
 /*                 - Applied for MD041858                            */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
@@ -64,7 +66,7 @@
              DCL        VAR(&INU7) TYPE(*LGL) LEN(1)
              DCL        VAR(&INU8) TYPE(*LGL) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,CBH00013                                            */
  
@@ -147,7 +149,7 @@ ABNOR:
              MONMSG     MSGID(CPF0000)
  
 ENDP:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,CBC0540END                                          */
  
              ENDPGM

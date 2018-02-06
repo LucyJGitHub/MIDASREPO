@@ -6,13 +6,15 @@
 /*                                                                   */
 /*   BYC9010 - Extension Files Housekeeping Program                  */
 /*                                                                   */
-/*   (c) Misys International Banking Systems Ltd. 1997               */
+/*   (c) Finastra International Limited 1997                         */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*   Last Amend No. 121611       Date: 14AUG97                       */
+/*       Prev Amend No. 121611             Date : 14aUG9             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   121611 - Parameters passed incorrectly to AOSARDR0 and component*/
 /*            not showing as failed.                                 */
 /*                                                                   */
@@ -21,7 +23,7 @@
  
              DCL        VAR(&LRTCD) TYPE(*CHAR) LEN(7)  /* Return code 1     */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
 /* Global Monitor Message */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -72,6 +74,6 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  ENDPGM:     ENDPGM

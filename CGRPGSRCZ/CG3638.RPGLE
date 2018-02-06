@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXS *  RPGCVTOPT2                                                   *                       CSD053
@@ -19,20 +19,22 @@
       *                                                               *
       *  Called By: *NONE                                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Last Amend No. CSD053             Date 07Jul06               *
-      *  Prev Amend No. CCG015  *CREATE    Date 09Apr02               *
+      *  Prev Amend No. CSD053             Date 07Jul06               *
+      *                 CCG015  *CREATE    Date 09Apr02               *
       *  Prev Amend No.                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade.       *
       *         - Recompile due to SDCORMPD.                          *
       *  CCG015 - Correspondence Manager                              *

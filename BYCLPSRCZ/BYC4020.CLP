@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       BYC4020 - Update Accounts Max Dr/Cr Controlling Program     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 1998           */
+/*       (c) Finastra International Limited 1998                     */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*    CoB program, calls BY4020 to update PF/BYACNTPP.               */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Last Amend No. 121832             Date 14AUG97              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. 121832             Date 14Aug97              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       121832 - Message being sent TOMSGQ(MRUNQ/MOPERQ) in error.  */
 /*                                                                   */
 /*********************************************************************/
@@ -26,7 +28,7 @@
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                      Misys International Banking Systems Ltd. 1997')
+                      Finastra International Limited 1997')
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7)
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
@@ -125,6 +127,6 @@
                MONMSG     MSGID(CPF0000 MCH0000)
  
  END:        CHGVAR     VAR(&CPYFLD) +
-                     VALUE('Misys International Banking Systems Ltd.')
+                     VALUE('Finastra International Limited')
  
              ENDPGM

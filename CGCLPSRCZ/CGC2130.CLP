@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       CGC2130  - Statements                                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 227781             Date 16Jun04              */
-/*       Prev Amend No. 216937             Date 28Apr03              */
+/*       Prev Amend No. 227781             Date 16Jun04              */
+/*                      216937             Date 28Apr03              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CCG015             Date 25Jun01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       227781 - Add OVRDBF to avoid DBASE004 in CG3615.            */
 /*       216937- Include source of posting if GA posting             */
 /*       CCG015 - Correspondence Manager Phase 1                     */
@@ -35,7 +37,7 @@
                           &COMMIT_OPT)
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -168,7 +170,7 @@ ABNORMAL:
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /* */
              ENDPGM

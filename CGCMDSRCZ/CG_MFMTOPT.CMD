@@ -8,19 +8,21 @@
 /*                                                                   */
 /*  CG_MFMTOPT - Create Multi-Language Format Options                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  LAST AMEND NO. 096647             DATE 30NOV95                   */
-/*  PREV AMEND NO. CCG009             DATE 01JUN95                   */
+/*       Prev Amend No. 096647             Date 30Nov95              */
+/*                      CCG009             Date 01Jun95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       096647 - Add new paramters                                  */
 /*       CCG009 - Private Banking UDC                                */
 /*                                                                   */

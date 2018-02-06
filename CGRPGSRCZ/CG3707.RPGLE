@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXS *  RPGCVTOPT2                                                   *                       CSD053
@@ -17,14 +17,15 @@
       *            indicate that processing is complete for all       *
       *            Correspondence in the .LOG file.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR792338           Date 23Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR792338           Date 23Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD053             Date 07Jul06               *
+      *                 CSD053             Date 07Jul06               *
       *                 231966             Date 07Feb05               *
       *                 229939             Date 04Sep04               *
       *                 226271             Date 24Mar03               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR792338 - CM_FEED DB Error ; string operation index error   *
       *             when processing very long PDF title names         *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade.       *

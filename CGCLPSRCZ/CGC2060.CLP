@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       CGC2060  - Create New Temporary Bulk Extract Files          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 086129             DATE 15MAR95              */
-/*       PREV AMEND NO. 083768             DATE 09FEB95              */
+/*       Prev Amend No. 086129             Date 15Mar95              */
+/*                      083768             Date 09Feb95              */
 /*                      S01522             DATE 21NOV94              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       086129 - Do receovery irrespective of failure               */
 /*       083768 - Clear CGCOBLPD irrespective of restart             */
 /*       S01522 - User Defined Correspondence                        */
@@ -29,7 +31,7 @@
              PGM        PARM(&COMP_NAME &COMP_SEQ)
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -177,7 +179,7 @@ ABNORMAL:
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /* */
              ENDPGM

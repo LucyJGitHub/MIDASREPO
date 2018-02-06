@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Monthly Evts Acc. - Fut/Opt Bk Pos')          *
@@ -15,16 +15,18 @@
       *  Function:  This module accumulates today's daily events      *
       *             into the monthly events file.                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. LLN021             Date 16Dec03               *
+      *  Prev Amend No. LLN021             Date 16Dec03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CMX003  *CREATE    Date 05Nov00               *
+      *                 CMX003  *CREATE    Date 05Nov00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN021 - BoE PL Reporting                                    *
       *  CMX003 - Meridian Export Enhancements - Phase 2              *
       *                                                               *
@@ -253,4 +255,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

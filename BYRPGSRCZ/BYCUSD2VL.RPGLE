@@ -9,14 +9,16 @@
       *  BYCUSD2VL  - Additional validation of main customer details  *
       *               for the Bank of England extract                 *
       *                                                               *
-      *  (C) Copyright Misys International Banking System Ltd, 2002   *
+      *  (C) Copyright Finastra International Limited 2002            *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. LLN022             Date 24Jan05               *
-      *  Prev Amend No. 203458  *CREATE    Date 06May02               *
+      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 203458  *CREATE    Date 06May02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus.                           *
       *  203458 - Apply BOE validation rules to main customer details *
       *                                                               *
@@ -251,4 +253,4 @@
  
       ********************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd, 2002
+(C) Copyright Finastra International Limited 2002

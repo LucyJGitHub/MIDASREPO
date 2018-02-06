@@ -6,14 +6,16 @@
 /*                                                                   */
 /*     BYC9020 - Clear Bank of England Extract Files                 */
 /*                                                                   */
-/*     (c) Misys International Banking Systems Ltd. 1997             */
+/*     (c) Finastra International Limited 1997                       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last amend no. 183612           Date  26Sep00                 */
-/*     Prev amend no. LLN016           Date  17MAY00                 */
+/*       Prev Amend No. 183612             Date 26Sep00              */
+/*                      LLN016             Date 17May00              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     183612 - Do not clear files if the extract is not running     */
 /*              today.                                               */
 /*     LLN016 - Upgrade BoE to DBAR3.                                */
@@ -31,7 +33,7 @@
              DCL        VAR(&LFLAG3) TYPE(*CHAR) LEN(1)     /* Flags */
              DCL        VAR(&LPHAS) TYPE(*CHAR) LEN(1)      /* Midas phase */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
              DCLF       FILE(BYBRCHY1)
  
  
@@ -134,6 +136,6 @@ END:         RCLRSC
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

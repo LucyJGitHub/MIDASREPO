@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       BYC4040 - Month End Update Controlling Program              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 1998           */
+/*       (c) Finastra International Limited 1998                     */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*    CoB program, run at month end only. Calls BY4040 - Month End   */
 /*    Update.                                                        */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Last Amend No. 121832             Date 14AUG97              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. 121832             Date 14Aug97              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       121832 - Message being sent TOMSGQ(MRUNQ/MOPERQ) in error.  */
 /*                                                                   */
 /*********************************************************************/
@@ -27,7 +29,7 @@
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                      Misys International Banking Systems Ltd. 1997')
+                      Finastra International Limited 1997')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&LRTCD) TYPE(*CHAR) LEN(7)

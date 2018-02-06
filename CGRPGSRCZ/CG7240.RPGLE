@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*DMY)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CG Interest scale find the LE int from-date')    *
@@ -12,13 +12,15 @@
       *                                                               *
       *  Called By: CGC7240 - CG Interest Scale Lending Extract Intres*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. CER042  *CREATE    Date 11May11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CER042  *CREATE    Date 11May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  CER042 - Interest Scale Report Correspondence                *
       *           (Upgrade of FGE178/179)                             *
@@ -216,4 +218,4 @@
  
      C                   ENDSR
 ** CPY
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas CG Select SQL Requests')
@@ -12,14 +12,15 @@
       *  Function:  This module selects authorised SQL requests and   *
       *  executes them.                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CCG016             Date 13Sep16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCG016             Date 13Sep16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 230890             Date 25Nov04               *
+      *                 230890             Date 25Nov04               *
       *                 CSC022             Date 24Feb04               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CCG015  *CREATE    Date 05Jul01               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CCG016 - Correspondence Manager for Retail Teller System     *
       *  230890 - Save SchemaName                                     *
       *  CSC022 - Commitment Control Changes for MidasPlus            *

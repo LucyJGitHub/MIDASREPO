@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Daily events extract - Futures/Options')      *
@@ -11,11 +11,12 @@
       *                                                               *
       *  Function:  This module extracts futs/options Daily Events    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. LLN021             Date 29Dec03               *
-      *  Prev Amend No. LLN021             Date 01Dec03               *
+      *  Prev Amend No. LLN021             Date 29Dec03               *
+      *                 LLN021             Date 01Dec03               *
       *                 LLN003             Date 01Dec03               *
       *                 CMX003             Date 01Dec03               *
       *                 CMX006             Date 01Dec03               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN021 - Undefined a/c keys being output                     *
       *  LLN021 - Program uses incorrect name for access to file      *
       *  LLN003 - BoE - facility expiry date for loan maturity        *
@@ -865,4 +867,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

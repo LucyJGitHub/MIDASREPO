@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       CBC0205  PRODUCE DEPENDENCY TABLE REPORT IN BATCH           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886            Date 02Jun08              */
+/*       Prev Amend No. BG18886            Date 02Jun08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC023             Date 29Jan04              */
+/*                      CSC023             Date 29Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      110242             Date 07Nov96              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*------------------------------------------------------------------ */
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
@@ -38,13 +40,13 @@
              DCL        VAR(&MODID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RQSDTA) TYPE(*CHAR) LEN(44)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**********  CHGVAR     VAR(&RQSDTA) VALUE('CALL CBC0210 ('''****&NUM +
                           ***''' '''****&COMPNM****''' '''****&COMPSQ +
                           ***''' '''****&MODID****''')')            */ /*BG18886*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas BoE extra customer screen input')                *
@@ -12,11 +12,12 @@
       *  Function:  This module  allows the maintenance of fields     *
       *             required for the BoE Customer details window      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. BUG8497            Date 14Sep05               *
-      *  Prev Amend No. LLN020             Date 14May02               *
+      *  Prev Amend No. BUG8497            Date 14Sep05               *
+      *                 LLN020             Date 14May02               *
       *                 201981             Date 17Jan02               *
       *                 197523             Date 15Jan02               *
       *                 LLN018  *CREATE    Date 17Apr01               *
@@ -24,6 +25,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG8497 - SDVCUSDX0 renamed to SDVCUSDPE.                    *
       *          - SDECUSDX0 renamed to SDECUSDPE.                    *
       *  LLN020 - Upgrade BoE to Midas Release 4                      *
@@ -828,4 +830,4 @@
       /EJECT
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

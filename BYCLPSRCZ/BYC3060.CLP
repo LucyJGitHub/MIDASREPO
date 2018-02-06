@@ -6,13 +6,15 @@
 /*                                                                   */
 /*   BYC3060 - Composite Currencies Details Report                   */
 /*                                                                   */
-/*   (c) Misys International Banking Systems Ltd. 1998               */
+/*   (c) Finastra International Limited 1998                         */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Last Amend No. LLN022  *CREATE    Date 24Jan05              */
+/*       Prev Amend No. LLN022  *CREATE    Date 24Jan05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       LLN022 - BOE upgrade to MidasPlus                           */
 /*                                                                   */
 /*********************************************************************/
@@ -25,7 +27,7 @@
              DCL        VAR(&LMPHAS) TYPE(*CHAR) LEN(1) /* MIDAS cycle point */
              DCL        VAR(&LRTCD) TYPE(*CHAR) LEN(7)  /* Return code       */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
 /*  Global Monitor Message  */
              MONMSG     MSGID(CPF0000 RPG0000 CPD0000) EXEC(GOTO +
@@ -80,6 +82,6 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
  END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

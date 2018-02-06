@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
      H NOMAIN
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -12,14 +12,16 @@
       *  Function:  This program provides functionality for call to   *
       *             Midas Plus Coarse-grained APIs                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD023747           Date 23Nov13               *
-      *  Prev Amend No. CBF006             Date 04Jul11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023747           Date 23Nov13               *
+      *                 CBF006             Date 04Jul11               *
       *                 XXXXXX             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023747 - HTTP call failure (Recompile due to CGL135        *
       *             changes)                                          *
       *  CBF006 - BF Infrastructure: Initiating BankFusion Services   *

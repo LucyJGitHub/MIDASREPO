@@ -6,13 +6,15 @@
 /*                                                                   */
 /*     BYC9090 - Create/Delete Abacus Extract File For Branch        */
 /*                                                                   */
-/*     (c) Misys International Banking Systems Ltd. 1997             */
+/*     (c) Finastra International Limited 1997                       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*     Last amend no. LLN012           Date  23Apr99                 */
+/*       Prev Amend No. LLN012             Date 23Apr99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  LLN012 - Financial Services Authority - Liquidity Report         */
 /*                                                                   */
 /********************************************************************/
@@ -27,7 +29,7 @@
              DCL        VAR(&LBYAB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LBYLR) TYPE(*CHAR) LEN(10)                                 /* LLN012 */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
  
 /*  Global Monitor Message  */
@@ -98,6 +100,6 @@
              MONMSG     MSGID(CPF0000 CPD0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

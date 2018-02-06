@@ -8,13 +8,14 @@
      F*
      F*     Background update of Limit rates on old currency codes files
      F*
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*
+      *     Last Amend No. MD046248           Date 27Oct17            *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *     Last Amend No. CAP084             Date 26Aug03            *
+      *     Prev Amend No. CAP084             Date 26Aug03            *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
      F*     Prev Amend No. E20297             DATE 18APR90
@@ -23,6 +24,7 @@
      F*
      F********************************************************************
      F*                                                                  *
+      *     MD046248 - Finastra Rebranding                               *
      F*     CAP084  - Wrapper project - convert to ILE                   *
      F*     E20297  -  ADD RETURN CODE TO PARAMETER LIST                 *E20297
      F*     S01230  - STANDARDISE ACCESS PROGRAMS                        *S01230
@@ -110,4 +112,4 @@
      C                   SETON                                        LR        Close Files
      C                   RETURN                                                 Exit
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

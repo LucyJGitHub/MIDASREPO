@@ -10,16 +10,18 @@
 /*       Function: This program checks the Status of the actual COB  */
 /*                 Scheduled job.                                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CCB014  *Create    Date 25Apr05              */
+/*       Prev Amend No. CCB014  *CREATE    Date 25Apr05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB014 - Pre-Scheduled Batch Close Of Business              */
 /*                                                                   */
 /*********************************************************************/
@@ -38,7 +40,7 @@
                           &JOBSTSQ)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
              DCL        VAR(&JOBD) TYPE(*CHAR) LEN(188)
@@ -68,7 +70,7 @@
              CHGVAR     VAR(&JOBSTSQ) VALUE(%SST(&JOBD 163 10))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
  ENDPGM:     ENDPGM

@@ -7,10 +7,11 @@
 /*                                                                   */
 /*  CBCMON - CLOSE OF BUSINESS MONITOR CL                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB021             Date 06Aug12              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB021             Date 06Aug12              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -49,6 +50,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB021 - COB Restructure - Non Working Day COB              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       146520 - RCF MONITOR Not working all the time. This fix     */
@@ -147,7 +149,7 @@
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*S01491*/
              DCL        VAR(&S01491) TYPE(*CHAR) LEN(1) VALUE('N')    /*S01491*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&DOMNAS) TYPE(*DEC) LEN(2)          /*LN0001*/
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(1 0)         /*078097*/
@@ -633,5 +635,5 @@ ABNOR:           SNDPGMMSG  MSG('CBCMON - COB MONITOR +
  END:        DLCOBJ     OBJ((MONCHK *DTAARA *EXCL))                  /*055744*/
              MONMSG     MSGID(CPF0000)                               /*055744*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

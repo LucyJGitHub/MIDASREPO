@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       CBC0028 - REOPEN INPUT CYCLE FROM CLOSE OF BUSINESS MONITOR */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1074036          Date 30Dec12              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1074036          Date 30Dec12              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1074036 - COB reopen does not restore DBIC                */
 /*                   completely / correctly                          */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
@@ -51,7 +53,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**********  DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)             */              /*S01420 CCB020*/
 /**********  DCL        VAR(&SRTCD) TYPE(*CHAR) LEN(7)             */              /*S01420 CCB020*/
@@ -73,7 +75,7 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                                           /*CSC011*/
 /***Check*if*CSC011*is*installed**/                                                /*CSC011 CCB020*/
                                                                                           /*CSC011*/

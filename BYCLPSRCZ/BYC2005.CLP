@@ -6,15 +6,17 @@
 /*                                                                   */
 /*   BYC2005 - Prompt Program for I/C Extract/Vaildation Requests    */
 /*                                                                   */
-/*   (c) Misys International Banking Systems Ltd. 1997               */
+/*   (c) Finastra International Limited 1997                         */
 /*                                                                   */
+/*   Last Amend No. MD046248     Date 27Oct17                        */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*   Last Amend No. LLN009       Date: 15APR98                       */
+/*   Prev Amend No. LLN009       Date: 15APR98                       */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
 /*   Amendment Details:                                              */
 /*                                                                   */
+/*   MD046248 - Finastra Rebranding                                  */
 /*   LLN009   DBA2 Upgrade                                           */
 /*                                                                   */
 /*********************************************************************/
@@ -35,7 +37,7 @@
              DCL        VAR(&LRACT) TYPE(*CHAR) LEN(1)    /* Action           */
              DCL        VAR(&LRCMD) TYPE(*CHAR) LEN(1)    /* Command          */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                        Misys International Banking Systems Ltd. 2006')
+                        Finastra International Limited 2006')
  
  
 /*  Global Monitor Message  */
@@ -154,6 +156,6 @@ SNDMSG:      CHGDTAARA  DTAARA(MIDASMSG) VALUE(' ')
              MONMSG     MSGID(CPF0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -6,14 +6,15 @@
 /*                                                                   */
 /*       CGTSTMSG - Test Messages for CGPNARMSG                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886            Date 02Jun08              */
+/*       Prev Amend No. BG18886            Date 02Jun08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGL029             Date 01Sep03              */
+/*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /*                      184382             Date 29Sep90              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*       184382 - Missing info on message utility                    */
@@ -33,7 +35,7 @@
              PGM        PARM(&MSGID &MSGDTA)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL      VAR(&CGMSGF) TYPE(*CHAR) LEN(10) VALUE('QCPFMSG')
@@ -71,7 +73,7 @@
              ENDDO
  
 ENDCLPGM:    CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
              ENDPGM

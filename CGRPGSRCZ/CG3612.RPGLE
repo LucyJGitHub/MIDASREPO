@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXS *  RPGCVTOPT2                                                   *                       CSD053
@@ -13,19 +13,21 @@
       *  Function:  This module will retrieve parameters for the FTP  *
       *             command generator                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CCG016             Date 13Sep06               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCG016             Date 13Sep06               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSD053             Date 07Jul06               *
+      *                 CSD053             Date 07Jul06               *
       *                 CCG015  *CREATE    Date 18Mar02               *
       *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CCG016 - Correspondence Manager for Retail Teller System     *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade.       *
       *         - Recompile due to SDCORMPD.                          *
@@ -50,8 +52,8 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
-
+ 
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -76,24 +78,24 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
       * PUT FTP command
      D Put             C                   'PUT'
-
+ 
       * ASCII FTP command
      D Ascii           C                   'ASCII'
-
+ 
       * BINARY FTP command
      D Binary          C                   'BINARY'
-
+ 
       * NAME 1 FTP command (Change file system to HFS)
      D Name1           C                   'NAME 1'
      D TellerP         C                   '/CorrespondenceManagerTeller'                     CCG016
@@ -101,10 +103,10 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       **  Correspondence Manager ICD
      D Sdcorm        E DS                  EXTNAME(SDCORMPD)
-
+ 
       * Data Structure (long) used by Access Programs
      D Dsldy         E DS                  EXTNAME(DSLDY)
                                                                                               CCG016
@@ -112,14 +114,14 @@
      D WWRTRN          DS           187                                                       CCG016
      D  WWJOB                117    126                                                       CCG016
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CCG016
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D @RUN            S              1
-
+ 
       * Entry Parameters
      D RtnCode         S             10
      D StreamFile      S             20
@@ -130,7 +132,7 @@
      D User            S             20
      D Password        S             20
      D Host            S             30
-
+ 
       * Parameters for AOCORMR0
      D Rtcd            S              7
      D Optn            S              7
@@ -139,7 +141,7 @@
      D WWINPT          S              8A                                                      CCG016
      D WWQUAL          S             26A                                                      CCG016
      D WWINTR          S             16A                                                      CCG016
-
+ 
       * Procedures interfaces
      D FullPathName    PR           100
      D StreamF                       20    VALUE
@@ -154,11 +156,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
-
+ 
       * Initialise variables  and retrieve ICD
      C                   EXSR      INIT
       * Format Source directory
@@ -181,10 +183,10 @@
      C                   EVAL      Password = CMFPWD
       * Host (IP Address)
      C                   EVAL      Host = CMPSIP
-
+ 
      C                   SETON                                        LR
-
-
+ 
+ 
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -196,11 +198,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     INIT          BEGSR
-
+ 
       * Initialise variables
-
+ 
      C                   EVAL      SourceDir = *BLANKS
      C                   EVAL      DestDir = *BLANKS
      C                   EVAL      Action = *BLANKS
@@ -208,14 +210,14 @@
      C                   EVAL      User = *BLANKS
      C                   EVAL      Password = *BLANKS
      C                   EVAL      Host = *BLANKS
-
+ 
       * Retrieve Correspondence Manager ICD
-
+ 
      C                   CALLB(E)  'AOCORMR0'
      C                   PARM      *BLANKS       Rtcd
      C                   PARM      '*FIRST '     Optn
      C     Sdcorm        PARM      *BLANKS       Dsldy
-
+ 
      C                   IF        %ERROR OR Rtcd <> *BLANK
      C                   EVAL      RtnCode = '*ERROR'
      C                   EVAL      DBFILE =  'SDCORMPD'
@@ -224,7 +226,7 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   EVAL      WWRTRN = *BLANKS                                           CCG016
      C                   Z-ADD     187           WWLENG                                       CCG016
      C                   EVAL      WWINPT = 'JOBI0300'                                        CCG016
@@ -250,9 +252,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *entry        PLIST
      C                   PARM                    RtnCode
      C                   PARM                    StreamFile
@@ -263,11 +265,11 @@
      C                   PARM                    User
      C                   PARM                    Password
      C                   PARM                    Host
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
-
+ 
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -282,25 +284,25 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
-
+ 
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
-
+ 
      C                   CALLB     'DBERRCTL'
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C                   ENDSR
-
+ 
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -309,29 +311,29 @@
       *                                                               *
       *****************************************************************
      PFullPathName     B
-
+ 
      D FullPathName    PI           100
      D  StreamF                      20    VALUE
      D  Directory                    75    VALUE
-
+ 
       * Full Path
      D Path            S            100
-
+ 
       * Unix style directory
      D Unix            C                   '/'
-
+ 
       * Windows style directory
      D Windows         C                   '\'
-
+ 
       * Position of '/' in directory
      D Pos             S              5U 0
-
+ 
       * Check whether it's a Windows or Unix Directory
      C                   EVAL      Pos = %SCAN(Unix:Directory)
-
+ 
       * Format as a Windows directory path
      C                   IF        Pos = 0
-
+ 
       * If it is the root directory, just append the stream file name
       * to the end of the directory, else, append '\' before the stream
       * file name before appending it to the end of the directory
@@ -340,10 +342,10 @@
      C                   ELSE
      C                   EVAL      Path=%TRIM(Directory)+Windows+%TRIM(StreamF)
      C                   ENDIF
-
+ 
       * Format as a Unix directory path
      C                   ELSE
-
+ 
       * If it is the root directory, just append the stream file name
       * to the end of the directory, else, append '/' before the stream
       * file name before appending it to the end of the directory
@@ -353,6 +355,6 @@
      C                   EVAL      Path = %TRIM(Directory)+Unix+%TRIM(StreamF)
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   RETURN    Path
      P                 E

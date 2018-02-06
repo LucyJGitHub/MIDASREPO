@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
      H NOMAIN
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -12,13 +12,15 @@
       *  Function:  This program provides functionality that are      *
       *             commonly required by other programs               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CBF006             Date 04Jul11               *
-      *  Prev Amend No. XXXXXX             Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CBF006             Date 04Jul11               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CBF006 - BF Infrastructure: Initiating BankFusion Services   *
       *                                                               *
       *****************************************************************

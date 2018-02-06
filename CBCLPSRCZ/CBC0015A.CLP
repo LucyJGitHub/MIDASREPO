@@ -8,20 +8,22 @@
 /*       CBC0015A - CALL CLOSE OF BUSINESS MONITOR MENU              */
 /*                  FROM MAIN MONITOR MENU                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. 196795             Date 13Aug01              */
+/*       Prev Amend No. 196795             Date 13Aug01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev AMEND NO. 095122             DATE 26OCT95              */
+/*                      095122             Date 26Oct95              */
 /*                      S01420             DATE 11APR95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       196795 - Use DTAARA CBRECV instead of DTAQ MAINDTQ to avoid */
 /*                object lock at V5R1M0.                             */
 /*       095122 - In some circumstances the attention key stops      */
@@ -36,7 +38,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*S01420*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                 /*S01420*/
@@ -57,7 +59,7 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /**/                                                                  /*S01420*/
 /* Determine if SAR S01420 (CoB Enh.) is switched ON */               /*S01420*/

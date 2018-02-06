@@ -14,14 +14,16 @@
       *                                                               *
       *  Called By: CGC7290                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. AR822166           Date 30Aug11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR822166           Date 30Aug11               *
       *                 CER042 *CREATE     Date 13May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  AR822166 - Component CGC2050 00031 failed in error but the   *
       *             status is Completed (Child: AR822167)             *
@@ -138,4 +140,4 @@
       *  Compile time array data
       *
 ** ##CPY  **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

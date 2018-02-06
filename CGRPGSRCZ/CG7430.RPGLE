@@ -13,12 +13,14 @@
       *                                                               *
       *  Called By: CGC7430 - CG NAHO Tax Advice (COB)                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR784693 *CREATE   Date 17Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR784693 *CREATE   Date 17Jun11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR784693 - No tax advice was generated for primary acccount  *
       *             defined as NAH                                    *
       *                                                               *
@@ -393,4 +395,4 @@
      C/COPY CGCPYSRC,SRERRPSSRL
      C/COPY CGCPYSRC,SRERRCLE
 **CTDATA ##CPY
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

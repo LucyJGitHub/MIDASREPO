@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       CBC0010  COB SCHEDULER CONTROLLING CL                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No.  CGP002            Date 04Jul03              */
-/*       Prev Amend No.  CCB012            Date 31May03              */
+/*       Prev Amend No. CGP002             Date 04Jul03              */
+/*                      CCB012             Date 31May03              */
 /*                       CPK016            Date 04Jun03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -44,6 +45,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     CGP002 - Add call to GOC000100 to update the global           */
 /*              dashboard.                                           */
 /*     CCB012 - Journaling options for high availability.  Make      */
@@ -105,7 +107,7 @@
              DCL        VAR(&CBSTAT)  TYPE(*CHAR) LEN(50)
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**********  DCL        VAR(&Y2MGFLA8) TYPE(*CHAR) LEN(8)  /*S01314*/ /*099150*/
 /**********  DCL        VAR(&MIMGFLA8) TYPE(*CHAR) LEN(8)  /*S01314*/ /*099150*/
@@ -178,7 +180,7 @@
 /**********  ENDDO                                         /*S01314*/ /*099150*/
 /**********                                                /*S01314*/ /*099150*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                       /*S01314*/
 /**CREATE*THE*MULTILANGUAGE*OBJECT*NAMES**/                /*S01314*/ /*099150*/
 /**********                                                /*S01314*/ /*099150*/

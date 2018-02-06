@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       CBC0071 - Save/Restore COB Data for BOB Save Restore.       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CSC012             Date 18Oct01              */
+/*       Prev Amend No. CSC012             Date 18Oct01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*       Last Amend No. 102672             Date 21MAY96              */
-/*       Prev Amend No. 102353             Date 21MAY96              */
+/*                      102353             Date 21May96              */
 /*                      102354             Date 15MAY96              */
 /*                      097895  *CREATE    Date 02JAN96              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC012 - Movement of files from DTALIB.  Release 4 change.  */
 /*       102672 - Only run pgm SDC1775 to rebuild access paths if    */
 /*                pgm is run in 'Restore' mode.                      */
@@ -58,7 +60,7 @@
                           name */
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7) /* Message ID */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -192,7 +194,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,CBC0071END                                          */
  

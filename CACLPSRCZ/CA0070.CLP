@@ -7,14 +7,15 @@
  /*                                                                  */
  /*         CA0070 - DEAL NUMBER REGENERATION - AT END OF DAY.       */
  /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886            Date 02Jun08              */
+/*       Prev Amend No. BG18886            Date 02Jun08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 228542             Date 05Aug04              */
+/*                      228542             Date 05Aug04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*********************************************************************/
@@ -30,7 +32,7 @@
              DCL        VAR(&DEALC) TYPE(*CHAR) LEN(5)
              DCL        VAR(&DEALS) TYPE(*DEC) LEN(6 0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  /**/
  /** DECLARE VARIABLE TO HOLD TERMINATION PARAMETER                  */
@@ -106,5 +108,5 @@ ERROR:
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 RPG0000 CPA0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDCLPGM: ENDPGM

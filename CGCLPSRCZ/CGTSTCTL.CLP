@@ -6,16 +6,17 @@
 /*                                                                   */
 /*       CGTSTCTL - Control of Test Messages for CGPNARMSG           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL029             Date 01Sep03              */
+/*       Prev Amend No. CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*       Prev Amend No. 184382             Date 29Sep90              */
+/*                      184382             Date 29Sep90              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      109175             Date 16Feb98              */
 /*                      101582             DATE 06Jan98              */
@@ -28,6 +29,7 @@
 /*         any changes required in CLP/CGADDCTL as well.             */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*       184382 - Missing info on message utility                    */
 /*       109175 - Add 00880/881/890/900/910/920/930/940/950/960      */
@@ -41,7 +43,7 @@
              PGM        PARM(&MNCUST &MNBRCA)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&MNTRNO) TYPE(*CHAR) LEN(16) +
@@ -340,7 +342,7 @@
              CALL       PGM(CGTSTMSG) PARM('GBF9001' &MSGDTA )
  
 ENDCLPGM:    CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DSPMSG     MSGQ(QTEMP/CGMSG)                             /*101582*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*101582*/

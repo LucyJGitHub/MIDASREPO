@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AP End the API database updaters')               *
@@ -9,10 +9,11 @@
       *                                                               *
       *  APENDDBU - End the API Database Updaters                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD092             Date 01May13               *
-      *  Prev Amend No. CSD093             Date 01Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD092             Date 01May13               *
+      *                 CSD093             Date 01Apr13               *
       *                 AR787620           Date 10Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 CER034A            Date 19May08               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD092 - Account Review                                      *
       *  CSD093 - Document Management                                 *
       *  AR787620 - Hooks Incorporation                               *

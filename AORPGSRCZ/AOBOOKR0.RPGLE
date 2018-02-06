@@ -9,17 +9,18 @@
      F*                                                                  *
      F*     AOBOOKR0 - READ ACCESS TO BOOK DETAILS FILE                  *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
-     F*     Last Amend No. CSE006             DATE 23APR99               *
+      *  Prev Amend No. CSE006             Date 23Apr99               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *     Prev Amend No. CAP002             Date 01May98            *
+      *                 CAP002             Date 01May98               *
      F*                    CPM004             DATE 07FEB96               *
      F*                    S01230             DATE 04/01/90              *S01229
      F*                    S01229             DATE 04/01/90              *S01229
@@ -30,6 +31,7 @@
      F*                                                                  *
      F********************************************************************
      F*                                                               *  *
+      *  MD046248 - Finastra Rebranding                               *
      F*     CSE006 - Recompilation of file for REPOS enhancement      *
       *  CAP002 - Member converted from an OPM program to an ILE      *
       *           module and an ILE *PGM member of the same name has  *
@@ -264,4 +266,4 @@
 **CTDATA @MG
 SDBOOKPD  AOBOOKR0  Book Codes                                            E01168
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

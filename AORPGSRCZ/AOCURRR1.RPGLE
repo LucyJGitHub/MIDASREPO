@@ -21,13 +21,15 @@
       *                     use of this module as replacement for the *
       *                     old access object.                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL165  *Create    Date 23Feb15               *
-      *  Prev Amend No.                    Date DDMMMYY               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165  *CREATE    Date 23Feb15               *
+      *                                    Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
      F*                                                                  *
      F********************************************************************
@@ -254,4 +256,4 @@
 **CTDATA @MG
 SDCURRPD  AOCURRR0  Currency Codes
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015

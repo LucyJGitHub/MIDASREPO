@@ -8,12 +8,14 @@
       *                                                               *
       *  AOBKLBR2 - Update Backup Schemas/Libraries File - Restore    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CBF002  *CREATE    Date 04Jul11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CBF002  *CREATE    Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CBF002 - BF Infrastructure: Backup and Recovery              *
       *                                                               *
       *****************************************************************
@@ -158,4 +160,4 @@
 **CTDATA @MG
 SCBKLBPD  AOBKLBR2  Backup Schemas/Libraries
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

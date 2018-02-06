@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Background update of PRONO')                  *
@@ -9,14 +9,16 @@
       *                                                               *
       *  AOPRONU1 - Update Prono file                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD031382           Date 11Dec14               *
-      *  Prev Amend No. MD026169  *REWRITE Date 09Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031382           Date 11Dec14               *
+      *                 MD026169           Date 09Apr14               *
       *                 MD025679B          Date 26Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031382  - Amount is reflected on the Projected Mov. Column *
       *              (Recompile)                                      *
       *  MD026169 - GO_ONL_OLP background job is processing           *
@@ -269,4 +271,4 @@
      O                       PNB
       ************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

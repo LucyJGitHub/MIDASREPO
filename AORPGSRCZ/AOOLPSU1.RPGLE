@@ -1,6 +1,6 @@
      H DEBUG
      H OPTION(*NOUNREF)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Background update of OLPOS')                  *
@@ -10,15 +10,17 @@
       *                                                               *
       *     AOOPLSU1 - Background update of OLPOS                     *
       *                                                               *
-      *  (c) Misys Banking Systems Ltd. 2014                          *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD026169  *REWRITE Date 09Apr14               *
-      *  Prev Amend No. MD025679B          Date 26Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026169           Date 09Apr14               *
+      *                 MD025679B          Date 26Mar14               *
       *                 MD025679A          Date 21Mar14               *
       *                 MD025679  *CREATE  Date 15Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026169 - GO_ONL_OLP background job is processing           *
       *             full receiver chain                               *
       *  MD025679B - API - PRONO Locking Issue                        *
@@ -261,6 +263,6 @@
      O                       OFI
      O                       OFO
 ** CPY@
-(c) Misys Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014
 ** CTDATA CMD@
 OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

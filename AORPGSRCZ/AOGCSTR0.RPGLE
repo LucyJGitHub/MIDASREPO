@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Global Customer Details access object')
@@ -12,17 +12,19 @@
       *  Function:  This program will access the LF/GPCUSTL0 using    *
       *             the given global customer id.                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CGP001   *CREATE   Date 23May03               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGP001  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CGP001 - Global Processing                                   *
       *                                                               *
@@ -370,4 +372,4 @@
      C                   ENDSR
  
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

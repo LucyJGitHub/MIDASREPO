@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       ACC0009 - ACSTAT data area maintenance program.             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 098705             DATE 05FEB96              */
-/*       PREV AMEND NO. S01491 *CREATE     DATE 01OCT94              */
+/*       Prev Amend No. 098705             Date 05Feb96              */
+/*                      S01491 *C *CREATE  Date 01Oct94              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       098705 - Amend setup program to set up primary and          */
 /*                secondary devices.                                 */
 /*              - Remove redundant fields ACUSER and ACJOBN          */
@@ -29,7 +31,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&ACSTAT) TYPE(*CHAR) LEN(100)
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE(' ')     /*098705*/
@@ -123,5 +125,5 @@ DISPLAY:                                                              /*098705*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  ENDPGM:     DLCOBJ     OBJ((ACSTAT *DTAARA *EXCL))
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

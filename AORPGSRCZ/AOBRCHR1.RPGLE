@@ -9,14 +9,15 @@
       *                                                               *
       *  AOBRCHR1 - Branch Codes File                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL061A            Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL061A            Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL013             Date 20Feb02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -30,6 +31,7 @@
       *                 XXXXXX             DATE DDMMMYY               *
       *                                                               *
       *****************************************************************
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL061A - Statements Task Split Processing                   *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -268,4 +270,4 @@
 **CTDATA @MG
 AOBRCHPD  AOBRCHR1  Branch Code
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

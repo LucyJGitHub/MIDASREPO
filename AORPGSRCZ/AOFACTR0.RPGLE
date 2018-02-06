@@ -9,10 +9,11 @@
      F*                                                                  *
      F*     AOFACTR0 - READ ACCESS TO FACILITY TYPES FILE                *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. CLE164             Date 18Aug14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
      F*                                                                  *
      F********************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -274,4 +276,4 @@
 **CTDATA @MG
 AOFACTPD  AOFACTR0  Facility Types
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

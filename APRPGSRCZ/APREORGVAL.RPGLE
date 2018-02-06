@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AP Reorganization of Valid API files')           *
@@ -12,13 +12,15 @@
       *  Function:  This module reorganize valid files every each     *
       *             COB followed by non-working day.                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR739558           Date 22Nov12               *
-      *  Prev Amend No. AR574025 *CREATE   Date 22Nov12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR739558           Date 22Nov12               *
+      *                 AR574025 *CREATE   Date 22Nov12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR739558 - Additional fix for AR574025 to include the 3      *
       *             extension valid files to be also reorganized by   *
       *             this component during COB: GLVAMBXPD, GLVAMCOPD   *
@@ -297,4 +299,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

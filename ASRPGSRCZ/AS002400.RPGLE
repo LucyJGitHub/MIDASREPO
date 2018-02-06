@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Average Spot Rates Daily Update')                *
@@ -15,10 +15,11 @@
       *  Component of: ASC002400 - Midas Average Spot Rates Daily     *
       *                            Processing                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CER043             Date 19May08               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                 CAS014  *CREATE    Date 10Aug05               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
       *  CAS014 - IAS21 The Effects of Changes in Foreign Exchange    *
@@ -1138,7 +1140,7 @@
       *****************************************************************
       /EJECT
 ** CPY@  ** Copyright
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005
 ** aPrdFreq ** Period Frequency
 M CQCXCYFQFXFY
 ** aMthEnd - Monthe End Day no.

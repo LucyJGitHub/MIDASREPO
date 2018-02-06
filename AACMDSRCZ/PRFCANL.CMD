@@ -8,18 +8,20 @@
 /*                                                                   */
 /*       PRFCANL - Analysis of Account Postings Profit Centre        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAC001 *CREATE     Date 01FEB96              */
+/*       Prev Amend No. CAC001 *CREATE     Date 01FEB96              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAC001 - Profit Centre Accounting Development:              */
 /*                New CMD.                                           */
 /*                                                                   */

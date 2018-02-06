@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       APC0430   - Start Confirmations job                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. AR1080280           Date 21Jan13             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1080280          Date 21Jan13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG2381  *CREATE    Date 13May04             */
+/*                      BUG2381  *CREATE   Date 13May04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1080280 - System has been reopened with error             */
 /*       BUG2381 - Batch submit of confirmations programs            */
 /*                                                                   */
@@ -27,7 +29,7 @@
 /*/COPY WNCPYSRC,APC0430INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /* Global monitor message */
@@ -69,7 +71,7 @@
                 MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,APC0430END                                          */
  

@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AO Customer Exchange adoption program')          *
@@ -8,11 +8,12 @@
       *                                                               *
       *  AO000012 - Customer Exchange adoption program               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. AR1061148          Date 08Feb13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1061148          Date 08Feb13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG27210           Date 15Mar10               *
+      *                 BUG27210           Date 15Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 247922             Date 05Jun07               *
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1061148 - Account Transfer transaction not reflected on    *
       *              Customer's Account                               *
       *  BUG27210 - Transaction Reference is truncated                *
@@ -318,4 +320,4 @@
      C                   ENDSR
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

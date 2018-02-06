@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AP Process ENDJOB for APISERVFL Job')            *
@@ -12,10 +12,11 @@
       *  Function:  This program will write a record to APITRANSPD    *
       *             which informs the APISERVFL job to End.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSW213             Date 03Jun13               *
-      *  Prev Amend No. CFT039             Date 28Sep12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW213             Date 03Jun13               *
+      *                 CFT039             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013                                  *
       *  CFT039 - SWIFT Mapping of Field Ordering Bank                *
       *           Amendment done to accommodate longer data           *
@@ -117,4 +119,4 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

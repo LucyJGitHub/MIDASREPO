@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Midas system values access object')
@@ -9,19 +9,21 @@
       *                                                               *
       *  AOSVALR0 - Midas System Values Access Object                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01.03 ----------------------------------------*
-      *  Last Amend No. 213557             Date 23Jul02               *
+      *  Prev Amend No. 213557             Date 23Jul02               *
       * Midas Release 4.01.02 ----------------------------------------*
-      *  Prev Amend No. CSD013 *CREATE     Date 23Jul02               *
+      *                 CSD013 *C *CREATE  Date 23Jul02               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  213557 - Change driving file to one that shows all records   *
       *           regardless of whether the module or associated      *
       *           feature is present in the system.                   *

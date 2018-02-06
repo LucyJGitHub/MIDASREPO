@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')                         CAP084
+     H COPYRIGHT('(c) Finastra International Limited 2002')                                   CAP084
      F*****************************************************************
 /*S*D****RPGBASE*******************************************************                       CAP084
 /*STD *  RPGBASEMOD                                                   *                       CAP084
@@ -10,10 +10,11 @@
      F*                                                               *
      F*     AB0230    - Update MIDAS Database                         *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *     
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CDL094             Date 01Sep14               *
       *                 MD027531           Date 30Jun14               *
       *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
@@ -51,6 +52,7 @@
      F*                                                              *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *     
       *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompiled)                                        *
@@ -1594,4 +1596,4 @@
 ******* @CMD - Submit deal confirmations.                                 AB0065
 ******* SBMJOB DLC0210A MBATCH *JOBD RQSDTA('CALL DLC0210A') MSGQ(MOPERQ) AB0065
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

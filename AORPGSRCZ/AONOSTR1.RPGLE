@@ -19,11 +19,13 @@
       *                  Nostro Details should use this module as a   *
       *                  replacement for the old access object.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CDL094  *CREATE    Date 30May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL094  *CREATE    Date 30May14               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *                                                               *
       *****************************************************************
@@ -349,4 +351,4 @@
 **CTDATA @MG
 SDNOSTPD  AONOSTR1  Nostro Details
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

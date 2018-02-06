@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       ACC0150 - Initiate ECS Link                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC023             Date 28Jan04              */
+/*       Prev Amend No. CSC023             Date 28Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CPK014             Date 14Nov01              */
+/*                      CPK014             Date 14Nov01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      110242             Date 07Nov96              */
 /*                      101930             DATE 08JUL96              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
 /*       CPK014 - Submit jobs with user *JOBD                        */
@@ -45,7 +47,7 @@
 /** Initial processing                                             */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&LINSTAT) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&LINSTAS) TYPE(*DEC) LEN(5 0)
@@ -210,5 +212,5 @@ VARY_ON:                                                              /*098705*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

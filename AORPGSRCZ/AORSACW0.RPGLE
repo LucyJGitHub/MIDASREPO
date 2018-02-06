@@ -9,10 +9,11 @@
      F*                                                               *
      F*     AORSACW0 - Write RSACMTPD record                          *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. AR868380           Date 10Jun13               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR868380           Date 10Jun13               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP205             Date 19Feb10               *
       *                 CAP204             Date 15Feb10               *
@@ -36,6 +37,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
       *             calling program if file locking occurred on       *
       *             online position files. (Child: AR868381)          *
@@ -583,7 +585,7 @@
      C/COPY WNCPYSRC,AOH00025
      C/EJECT
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA PGM@
 AORSACW0      Real-time positions additions
 AOSPOSU0      Control Update of On-line positions

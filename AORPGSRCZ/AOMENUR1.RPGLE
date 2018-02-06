@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO API menu group/item access object')
@@ -9,17 +9,19 @@
       *                                                               *
       *     AOMENUR1 - API menu group/item access object              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG2287            Date 28Apr04               *
-      *  Prev Amend No. CAP084     *CREATE Date 09Jul03               *
+      *  Prev Amend No. BUG2287            Date 28Apr04               *
+      *                 CAP084     *CREATE Date 09Jul03               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG2287- Show consolidated global view (Recompile)           *
       *  CAP084 - API wrapper project                                 *
       *                                                               *
@@ -225,4 +227,4 @@
 **
 SFMENUL1  AOMENUR1  MENU ITEMS DETAILS
 ** CPY@     : Copyright notice for inclusion in all programs
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

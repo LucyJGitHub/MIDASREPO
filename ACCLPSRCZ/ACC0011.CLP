@@ -13,16 +13,17 @@
 /*       ob - but if this fails for any other reason, then this is   */
 /*       an error.                                                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK024             Date 12Apr06              */
+/*       Prev Amend No. CPK024             Date 12Apr06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No  101930             Date 08Jul96              */
+/*                      101930             Date 08Jul96              */
 /*                      098705             Date 12Feb96              */
 /*                      092291             DATE 09FEB96              */
 /*                      098705             DATE 02FEB96              */
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK024 - Packaging of MPlus 1.2.1. Copy sources needed by   */
 /*                UTC0012.                                           */
 /*       101930 - Remove 098705 as it is wrong.                      */
@@ -45,7 +47,7 @@
 /*/COPY WNCPYSRC,ACC0011INT                                          */                   /*CPK024*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -88,6 +90,6 @@
 /*/COPY WNCPYSRC,ACC0011END                                          */                   /*CPK024*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

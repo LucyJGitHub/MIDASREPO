@@ -14,16 +14,17 @@
      F*                                                               *
      F*  Calls:                                                       *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Last Amend No. CAP002             Date 01May98               *
-     F*  Prev Amend No. CPM005             Date 29Jul96               *
+      *  Prev Amend No. CAP002             Date 01May98               *
+      *                 CPM005             Date 29Jul96               *
      F*                 CPM004             Date 07Feb96               *
      F*                 S01486             Date 11Aug94               *
      F*                 PM0027             DATE 16AUG94               *
@@ -31,6 +32,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP002 - Member converted from an OPM program to an ILE      *
       *           module and an ILE *PGM member of the same name has  *
       *           been created (in AOPGMSRC).                         *
@@ -264,4 +266,4 @@
 **CTDATA @MG
 SDPORTL0  AOPORTR0  Portfolio Management Installation Control Details
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -9,15 +9,16 @@
      F*                                                                  *
      F*     AOFAISR0 - READ ACCESS TO FWD RATE AGMT/INT RATE SW          *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Last Amend No. CAP056             Date 13Mar02               *
-      *  Prev Amend No. CIR008             Date 13Mar02               *
+      *  Prev Amend No. CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CSW097             Date 20May99               *
@@ -29,6 +30,7 @@
      F*                    S01230             DATE 06/11/89              *S01230
      F*                                                                  *
      F********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP056 - Automatic Authorisation of Interface deals          *
       *           (Recompile)                                         *
       *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
@@ -187,4 +189,4 @@
 **CTDATA @MG
 SDFAISD0  AOFAISR0  FRA/IRS details
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

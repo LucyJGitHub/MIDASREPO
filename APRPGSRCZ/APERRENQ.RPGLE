@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AP API errors enquiry')                          *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Function:  This function displays API errors                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL133             Date 01May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL133             Date 01May13               *
       *                 CGL132             Date 01May13               *
       *                 CSD092             Date 01May13               *
       *                 CSD093             Date 01Apr13               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL133 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Enquiry Only                       *
@@ -173,7 +175,7 @@
       ** +--------------------------------------+
      FAPERRENQDFCF   E             WORKSTN
      F                                     SFILE(APERRENQS1:@@RRN)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -185,64 +187,64 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULE DETAILS
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP038
       ** EXTERNAL DS FOR SAR DETAILS                                            CAP038
                                                                                 CAP038
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
       ** Array of output lines
      D LIN             S             18A   DIM(100) ASCEND
-
+ 
       ** Data structure for output line
      D LINEDS          DS            18
      D  MSGDNB                 1      7
      D  NO_RECS                8     17S 0
      D  HIGHLITE              18     18
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -263,7 +265,7 @@
      D CSD092          S              1A   INZ('N')                                           CSD092
      D CGL132          S              1A                                                      CGL132
      D CGL133          S              1A                                                      CGL133
-
+ 
       ** Non-currency OTC Flag                                                                CAP166
      D CAP166          S              1A                                                      CAP166
      D/COPY WNCPYSRC,APH00005
@@ -272,7 +274,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3015,7 +3017,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
-
+ 
      C                   CALLB     'AOSARDR0'                                                 CAP060
      C                   PARM      *BLANKS       @RTCD                                        CAP038
      C                   PARM      '*VERIFY'     @OPTN                                        CAP038
@@ -3026,7 +3028,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP038
      C                   MOVEL     'N'           CAP038F                                      CAP038
      C                   END                                                                  CAP038
-
+ 
      C                   CALLB     'AOSARDR0'                                                 CAP057
      C                   PARM      *BLANKS       @RTCD                                        CAP057
      C                   PARM      '*VERIFY'     @OPTN                                        CAP057
@@ -3037,7 +3039,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP057
      C                   MOVEL     'N'           CAP057F                                      CAP057
      C                   END                                                                  CAP057
-
+ 
      C                   CALLB     'AOSARDR0'                                                 CAP058
      C                   PARM      *BLANKS       @RTCD                                        CAP058
      C                   PARM      '*VERIFY'     @OPTN                                        CAP058
@@ -3048,7 +3050,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP058
      C                   MOVEL     'N'           CAP058F                                      CAP058
      C                   END                                                                  CAP058
-
+ 
      C                   CALLB     'AOSARDR0'                                                 CAP059
      C                   PARM      *BLANKS       @RTCD                                        CAP059
      C                   PARM      '*VERIFY'     @OPTN                                        CAP059
@@ -3059,7 +3061,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP059
      C                   MOVEL     'N'           CAP059F                                      CAP059
      C                   END                                                                  CAP059
-
+ 
      C                   CALLB     'AOSARDR0'                                                 CAP060
      C                   PARM      *BLANKS       @RTCD                                        CAP060
      C                   PARM      '*VERIFY'     @OPTN                                        CAP060
@@ -3290,7 +3292,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP190
      C                   MOVEL     'N'           CAP190                                       CAP190
      C                   ENDIF                                                                CAP190
-
+ 
       ** Check if APIs for Document Management is installed                                   CSD093
       *                                                                                       CSD093
      C                   CALLB     'AOSARDR0'                                                 CSD093
@@ -3357,4 +3359,4 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

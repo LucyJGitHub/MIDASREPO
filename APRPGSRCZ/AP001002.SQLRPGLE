@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SD Transaction Transferred to PEA')
@@ -9,16 +9,18 @@
       *                                                               *
       *  AP001002 - Midas SD Transactions Transferred to PEA          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1007705          Date 20Nov12               *
-      *  Prev Amend No. AR1002981          Date 09Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1007705          Date 20Nov12               *
+      *                 AR1002981          Date 09Jul12               *
       *                 AR1001649          Date 09Jul12               *
       *                 AR1001631          Date 08Jul12               *
       *                 CSC054  *CREATE    Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1007705 - Accrued interest report field should have 2      *
       *              decimal places                                   *
       *  AR1002981 - Corrected header title for OTCO transactions.    *
@@ -114,7 +116,7 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
@@ -224,7 +226,7 @@
       *
      D POption         S              7A
      D PRetCode        S              7A
- 
+
      D PErms           S             50A
      D PFchk           S              1A
      D PZone           S             10A
@@ -575,7 +577,7 @@
      C                   EVAL      RDETAIL=%Trim(RDETAIL)
      C                             + %Subst(TransParm:FldValBeg:FldValEnd)
      C
- 
+
      C                   IF        RDETAIL <> *BLANKS
      C                   SELECT
      C     WRCAPGM       WHENEQ    'GLINTC'
@@ -1416,7 +1418,7 @@
       ** Amended TabMod/TabDes: change TabMod from SEBS to BUYS                            AR1001631
       ** Amended TabMod/TabDes: correction on TabDes description for OTCO                  AR1002981
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012
 ** TabMod/TabDes
 AMADACCOUNT MAINTENANCE
 BITHCORRECTIVE BATCH ITEMS

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO DST Access Object')
@@ -11,15 +11,17 @@
       *                                                               *
       *  Function:  This program access details from SDDSTCPD         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG21289           Date 13Oct08               *
-      *  Prev Amend No. CSW208  *CREATE    Date 15Apr08               *
+      *  Prev Amend No. BUG21289           Date 13Oct08               *
+      *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG21289 - Various Timezone and DST errors. Applied fix 21068*
       *  BUG21068 - Time zone error message wrong - it should say     *
       *             that DST code not exist for current year          *
@@ -389,4 +391,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

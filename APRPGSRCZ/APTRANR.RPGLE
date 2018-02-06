@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AP Transaction Retrieve')                        *
@@ -11,10 +11,11 @@
       *  Function: This module is used to retrieve transaction        *
       *            details from the Midas database.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039986           Date 10Aug16               *
-      *  Prev Amend No. AR1090283          Date 10Aug16               *      
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039986           Date 10Aug16               *
+      *                 AR1090283          Date 10Aug16               *
       *                 AR701789           Date 26Sep16               *
       *                 AR702532           Date 13Jan15               *
       *                 CAP212             Date 15Sep14               *
@@ -76,10 +77,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
-      *            - Applied for MD-39986.                            *      
+      *            - Applied for MD-39986.                            *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -1857,4 +1859,4 @@
      C                   ENDSR
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

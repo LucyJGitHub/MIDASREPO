@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO FT validate account identifier')              *
@@ -10,10 +10,11 @@
       *                                                               *
       *  AOACCTV1 - Validate Account ID                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD030906           Date 13Nov14               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030906           Date 13Nov14               *
+      *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260426A            Date 01Jun09               *
       *                 260426             Date 25May09               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD030906 - Counterparty Nostro not defaulted.                *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  260426A- Patterned from fix 259769.                          *
@@ -545,6 +547,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  CMD@
 OVRDBF ACCRETL ACCNTL1 SHARE(*NO) OVRSCOPE(*JOB)

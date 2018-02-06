@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')           CAP084
+     H COPYRIGHT('(c) Finastra International Limited 2002')                     CAP084
       *****************************************************************
 /*XBIA*  OVRDBF MMDDUMLL MMFWUDLL                                     *
 /*XBIB*  OVRDBF MMHDUMLL MMFWUHLL                                     *
@@ -22,14 +22,15 @@
      F*                                                               *
      F*     Calls    : none                                           *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 13Jan06               *
-      *  Prev Amend No. CDL038             Date 10May05               *
+      *  Prev Amend No. CSD027             Date 13Jan06               *
+      *                 CDL038             Date 10May05               *
       *                 CAP084             Date 06Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -51,6 +52,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Recompiled due to PF changes.                       *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
       *  CAP084 - Convert to ILE.                                     *
@@ -1485,7 +1487,7 @@
      C*****************************************************************
       /EJECT
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA @CMD
 OVRDBF    MMDDUMLL    MMFWUDLL
 OVRDBF    MMHDUMLL    MMFWUHLL

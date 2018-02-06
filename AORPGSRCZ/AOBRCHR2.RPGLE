@@ -8,7 +8,7 @@
       *                                                               *
       *  AOBRCHR2 - Branch Codes File                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
       *  Last Amend No. CER049 *CREATE     Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -238,4 +238,4 @@
 **CTDATA @MG
 AOBRCHEXPDAOBRCHR2  Branch Code
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

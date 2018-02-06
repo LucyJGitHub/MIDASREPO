@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO IBAN calculate/validate check digit')         *
@@ -9,13 +9,15 @@
       *                                                               *
       *  AOIBANR9 - Midas AO IBAN calculate/validate check digit      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR940312           Date 24Mar12               *
-      *  Prev Amend No. CFT044  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR940312           Date 24Mar12               *
+      *                 CFT044  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR940312 - Serious Midas error occurred in AMAD              *
       *  CFT044 - Portuguese IBAN                                     *
       *                                                               *

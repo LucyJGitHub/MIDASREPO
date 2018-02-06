@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AP Edit Messages')                               *
@@ -13,10 +13,11 @@
       *            issued by the APIs and converts them into a        *
       *            single long string.                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. LLN022             Date 03Jun15               *
-      *  Prev Amend No. MD024980           Date 26Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. LLN022             Date 03Jun15               *
+      *                 MD024980           Date 26Mar14               *
       *                 AR218328           Date 23Mar10               *
       *                 MD020915           Date 27Jun13               *
       *                 MD000091           Date 03May13               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - Increase message file array due to merge of BoE     *
       *           changes.                                            *
       *  MD024980 - Incomplete error description for Blocked and      *

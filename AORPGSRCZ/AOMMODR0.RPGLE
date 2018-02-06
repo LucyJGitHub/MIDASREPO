@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /***D ***RPG***********************************************************   CAP002
 /*STD *  RPGBASEMOD                                                   *
@@ -10,22 +10,24 @@
       *                                                               *
       *     AOMMODR0 - READ ACCESS TO MIDAS MODULE FLAG FILE          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *     Last Amend No. CAP084             Date 04Mar04            *
+      *  Prev Amend No. CAP084             Date 04Mar04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *     Prev Amend No. CAP002             Date 01May98            *
+      *                 CAP002             Date 01May98               *
       *                     087931            DATE 22MAY95            *
       *                     LN0104            DATE 01JUN90            *
       *                     S01230            DATE 25/OCT/89          *
       *                     E01168            DATE 21/MAR/89          *
       *                                                               *
       *****************************************************************
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP084 - API wrapper project - set *LOVAL in case this       *
       *           file has been opened elsewhere and a RCLRSC has     *
       *           been performed (this resets *IN01)                  *

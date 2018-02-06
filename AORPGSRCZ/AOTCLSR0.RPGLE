@@ -7,17 +7,19 @@
      F*                                                                  *
      F*     AOTCLSR0 - Transaction Classes                               *
      F*                                                                  *
-     F*  (c) Misys International Banking Systems Ltd. 2001               *
+     F*  (c) Finastra International Limited 2001                         *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-     F*  Last Amend No. CDL038  *CREATE    Date 10May05                  *
+      *  Prev Amend No. CDL038  *CREATE    Date 10May05               *
      F* Midas Release 4 --------------- Base -------------------------*  *
      F*                                                                  *
      F********************************************************************
      F*                                                                  *
+     F*  MD046248 - Finastra Rebranding                                  *
      F*  CDL038 - Extended Deal Sub Type                                 *
      F*                                                                  *
      F********************************************************************
@@ -236,4 +238,4 @@
 **CTDATA @MG
 SDTCLSL1  AOTCLSR0  Transaction Classes
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

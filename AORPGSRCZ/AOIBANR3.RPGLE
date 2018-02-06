@@ -10,20 +10,22 @@
       *                                                               *
       *  Called By:                                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CRE083BA           Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE083BA           Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
-      *  Prev Amend No. CFT004  *CREATE    Date 15Jul99               *
+      *                 CFT004  *CREATE    Date 15Jul99               *
       *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE083BA -  COB Restructure - RE COB Optimisation Phase 1    *
       *  CFT004 - International Bank Account Number                   *
       *                                                               *
@@ -134,4 +136,4 @@
       /EJECT
       ********************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

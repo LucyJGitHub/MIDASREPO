@@ -9,20 +9,22 @@
      F*                                                               *
      F*  AOPRFCR0 - READ ACCESS TO PROFIT CENTRES FILE                *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *     Last Amend No. CAP002             Date 01May98            *
-     F*     Prev Amend NO. CAC001             DATE 05DEC95            *
+      *  Prev Amend No. CAP002             Date 01May98               *
+      *                 CAC001             Date 05Dec95               *
      F*                    S01505             DATE 18JUL94            *
      F*                                                               *
      F*****************************************************************
      F*                                                               *   S01230
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP002 - Member converted from an OPM program to an ILE      *
       *           module and an ILE *PGM member of the same name has  *
       *           been created (in AOPGMSRC).                         *
@@ -259,4 +261,4 @@
 **CTDATA @MG
 SDPRFCPD  AOPRFCR0  Profit Centre Codes
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

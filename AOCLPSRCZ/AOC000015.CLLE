@@ -7,15 +7,17 @@
 /*                                                                   */
 /*       AOC000015 - Midas AO Account Transfer Shadow Posting        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. AR1000542          Date 26Apr16              */
-/*       Prev Amend No. BUG27966           Date 04Aug10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1000542          Date 26Apr16              */
+/*                      BUG27966           Date 04Aug10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27424 *CREATE   Date 09Apr10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1000542 - Retail advice for account transfer transactions */
 /*                   are not generated. Submit job REC000881 here    */
 /*                   after shadow posting.                           */
@@ -27,14 +29,14 @@
 /**********  PGM        PARM(&RETRNMSG &PACTION &INPDS &RESERVID &SBS)*/               /*AR1000542*/
              PGM        PARM(&RETRNMSG &PACTION &INPDS &RESERVID +
                           &SBS &STAT)                                                  /*AR1000542*/
-
+ 
              DCL        VAR(&RETRNMSG) TYPE(*CHAR) LEN(256)
              DCL        VAR(&PACTION)  TYPE(*CHAR) LEN(8)
              DCL        VAR(&INPDS)    TYPE(*CHAR) LEN(267)
              DCL        VAR(&RESERVID) TYPE(*CHAR) LEN(15)
              DCL        VAR(&SBS) TYPE(*CHAR) LEN(2)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)                                  /*AR1000542*/
-
+ 
              DCL        VAR(&CMD) TYPE(*CHAR) LEN(2764)
              DCL        VAR(&INLLIBL) TYPE(*CHAR) LEN(2750)
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(6)
@@ -57,14 +59,14 @@
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1)                                /*AR1000542*/
              DCL        VAR(&PCMD) TYPE(*CHAR) LEN(50)                                 /*AR1000542*/
              DCL        VAR(&SBMUSER) TYPE(*CHAR) LEN(50)                              /*AR1000542*/
-
-             COPYRIGHT  TEXT('(c) Misys International Banking +
-                          Systems Ltd. 2010')
-
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2010')
+ 
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                         CMDLBL(ABNOR))
-
+ 
              CHGVAR     VAR(&PRTCD) VALUE('       ')                                   /*AR1000542*/
              CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                   /*AR1000542*/
              CHGVAR     VAR(&PSARD) VALUE('CRE020')                                    /*AR1000542*/
@@ -84,22 +86,22 @@
              ENDDO                                                                     /*AR1000542*/
                                                                                        /*AR1000542*/
              CHGVAR     VAR(&LIB) VALUE(&SBS *CAT 'XLIB')
-
+ 
              CHKOBJ     OBJ(&LIB/MIDASIC) OBJTYPE(*JOBD)
              MONMSG     MSGID(CPF9801 CPF9802 CPF9810 CPF9820 +
                           CPF9830 CPF9899) EXEC(GOTO CMDLBL(ABNOR))
-
-
+ 
+ 
 /* Set up parameters for call to IBM API. */
              CHGVAR     VAR(&JOBDNAME) VALUE('MIDASIC')
              CHGVAR     VAR(&JOBD) VALUE(&JOBDNAME *CAT &LIB)
              CHGVAR     VAR(%BIN(&LEN 1 4)) VALUE(3193)
              CHGVAR     VAR(%BIN(&ERRCDE 1 4)) VALUE(0)
-
+ 
 /* Use API to access the job description library list. */
              CALL       PGM(QWDRJOBD) PARM(&PARM &LEN JOBD0100 &JOBD +
                           &ERRCDE)
-
+ 
  INLLIBL:    CHGVAR     &OFFSET %BIN(&PARM 361 4)
              CHGVAR     VAR(&OFFSET) VALUE(&OFFSET + 1)
              CHGVAR     VAR(&LIBCNT) VALUE(%BIN(&PARM 365 4))
@@ -107,22 +109,22 @@
              CHGVAR     VAR(&INLLIBL) VALUE(%SST(&PARM &OFFSET +
                           &OFFLEN))
              MONMSG     MSGID(MCH3601)
-
+ 
              CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
                              &INLLIBL *CAT ')')
-
+ 
              CALL       PGM(QCMDEXC) PARM(&CMD 2764)
-
+ 
 /* Check if the reservation ID dataarea exists, if not create it.  This will hold the */
 /* reservation ID parameter                                                           */
-
+ 
              CHKOBJ     OBJ(QTEMP/GPRESERVID) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
                           DTAARA(QTEMP/GPRESERVID) TYPE(*CHAR) LEN(15))
              CHGDTAARA  DTAARA(QTEMP/GPRESERVID) VALUE(&RESERVID)
-
+ 
 /* Call shadow posting program  */
-
+ 
              CHGVAR     VAR(&PACTION) VALUE('*CLEAR  ')                                 /*BUG27966*/
              CHGVAR     VAR(&TPINPDS) VALUE(&INPDS)                                     /*BUG27966*/
              CHGVAR     VAR(&INPDS)   VALUE(' ')                                        /*BUG27966*/
@@ -142,7 +144,7 @@
                   ENDDO                                                                 /*BUG27966*/
              ENDDO                                                                      /*BUG27966*/
              ELSE       CMD(GOTO CMDLBL(ABNOR))                                         /*BUG27966*/
-
+ 
              IF         COND(&CRE020 *EQ 'Y' *AND &STAT *EQ 'C') +
                           THEN(DO)                                                     /*AR1000542*/
              CHGVAR     VAR(&PCMD) VALUE('CALL PGM(REC000881) PARM(' +
@@ -153,19 +155,19 @@
              ENDDO                                                                     /*AR1000542*/
                                                                                        /*AR1000542*/
 /* Database error processing */
-
+ 
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
-
+ 
              GOTO       CMDLBL(END)
-
+ 
  ABNOR:
-
+ 
  /** Send error message */
-
+ 
              SNDPGMMSG  MSG('Program AOC000015 ended abnormally - see joblog') +
                           TOMSGQ(MOPERQ)
-
+ 
 END:
              ENDPGM

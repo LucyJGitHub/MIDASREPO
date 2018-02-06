@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas Calling GAR49R   Help Access Object')
@@ -15,15 +15,17 @@
       *                                                               *
       *  Called By: SCHELPR - Help Processing                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14435           Date 06Aug07               *
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *  Prev Amend No. BUG14435           Date 06Aug07               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG14435 - The system displayed details on Maintain          *
       *             Sundry Items instead of the functionality         *
       *             of Inward Clearing Cheque                         *

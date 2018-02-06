@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AP Clear all volatile files')
@@ -13,14 +13,15 @@
       *             APIs which require it; the clearing is restriced  *
       *             by an ICD flag.                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 248587             Date 19Jun07               *
+      *  Prev Amend No. 248587             Date 19Jun07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 228542             Date 11Aug04               *
+      *                 228542             Date 11Aug04               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CAP068             DATE 25JUN02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  248587 - Component APCLEARALL failed. Applied fix 217490.    *
       *  217490 - APCLEARALL fails to due missing ABVEFUNDPD.  Func-  *
       *           code FUND shares invalid file MMVELDNIPD.  This     *
@@ -488,4 +490,4 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

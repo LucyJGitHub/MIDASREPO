@@ -10,10 +10,11 @@
 /*       Function   - This module ends the various background jobs   */
 /*                    required by the APIs.                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSD092             Date 01May13              */
-/*       Prev Amend No. CSD093             Date 01Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSD092             Date 01May13              */
+/*                      CSD093             Date 01Apr13              */
 /*                      MD021155           Date 04Jul13              */
 /*                      AR1089839          Date 19Feb13              */
 /*                      CCB023             Date 06Aug12              */
@@ -73,6 +74,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSD092 - Account Review                                     */
 /*       CSD093 - Document Management                                */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
@@ -211,7 +213,7 @@
              DCL        VAR(&SRTCD) TYPE(*CHAR) LEN(7)                                    /*CSD092*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -1100,6 +1102,6 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

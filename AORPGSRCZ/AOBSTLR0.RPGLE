@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Before Image of Settlement Allocations AO')   *
@@ -13,20 +13,22 @@
       *  Function:  This program will access the 'Before' image of    *
       *             the Settlement Allocations for Amendment/Reversal *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG8924            Date 26Sep05               *
+      *                 BUG8924            Date 26Sep05               *
       *                 CLE038             Date 13May04               *
       *                 CSD027             Date 09Dec05               *
       *                 219608  *CREATE    Date 14Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  BUG8924- Incorrect postings for Settlement Allocation when   *
       *           amount is used. Use very long Dummy DS.             *
@@ -437,4 +439,4 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

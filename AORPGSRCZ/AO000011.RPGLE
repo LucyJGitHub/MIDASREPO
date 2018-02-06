@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AO AOSPOSU0 trace file from Java')
@@ -14,11 +14,12 @@
       *                                                               *
       *  Called By: AOC000010 - Midas AO AOSPOSU0 wrapper for Retail  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CAP205             Date 19Feb10               *
-      *  Prev Amend No. CAP204             Date 09Feb10               *
+      *  Prev Amend No. CAP205             Date 19Feb10               *
+      *                 CAP204             Date 09Feb10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 247922             Date 05Jun07               *
       *                 BUG13193           Date 13Feb07               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP205 - Teller Related APIs - Account Balance Check         *
       *  CAP204 - Teller Related APIs - Account Transfer              *
       *  247922 - Applied core fix 239164.                            *

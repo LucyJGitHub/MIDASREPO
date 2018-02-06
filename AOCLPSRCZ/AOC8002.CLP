@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       RTVJOBST - RETRIEVE JOB STATUS                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*      Last Amend No. BUG2686  *CREATE    Date 31May04              */
+/*       Prev Amend No. BUG2686  *CREATE   Date 31May04              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG2686 - Retrieve job status.                              */
 /*                                                                   */
 /********************************************************************/
@@ -26,7 +28,7 @@
 /* Declare PGM Variables */
  
              DCL        VAR(&CpyFld)     TYPE(*CHAR) LEN(64) VALUE('(c) +
-                               Misys International Banking Systems Ltd. +
+                               Finastra International Limited +
                                2004')
  
              DCL        VAR(&JOB) TYPE(*CHAR) LEN(26)
@@ -50,7 +52,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */
 /*       Check job status.                                           */
 /* */
@@ -88,7 +90,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM
              ENDPGM

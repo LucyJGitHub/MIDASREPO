@@ -9,14 +9,15 @@
      F*                                                                  *
      F*     AOCNTLR0 - Access Object Control Information                 *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 240690             Date 29Jun06               *
+      *                 240690             Date 29Jun06               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CAP002             Date 01May98               *
@@ -25,6 +26,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  240690 - Applied fix 232494.                                 *
       *  232494 - Database error in AOSPOSU0 when using IPN1 and FTMG *
@@ -272,7 +274,7 @@
      CSR                 ENDSR
      C/EJECT
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA ERR@
 See dump for further information
 File access error occurred - see dump for full details - see key for opcode

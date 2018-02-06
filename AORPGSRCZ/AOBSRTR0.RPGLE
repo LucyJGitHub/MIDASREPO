@@ -9,16 +9,17 @@
      F*                                                                  *
      F*     AOBSRTR0 - READ ACCESS TO BASE RATE CODES                    *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *     Last Amend No. CSD006             Date 17May01              *
-      *     Prev Amend No. CAP038             Date 17Mar00            *
+      *  Prev Amend No. CSD006             Date 17May01               *
+      *                 CAP038             Date 17Mar00               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                    CSW097             Date 20May99            *
      F*                    CAP002             Date 01May98            *  *
@@ -31,6 +32,7 @@
      F*                    S01230             DATE 06/11/00              *S01230
      F*                                                                  *
      F********************************************************************S01230
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD006 - Use long DS with SDBSRTPD.                             *
       *  CAP038 - Conversion of SD inputs into modular structure         *
       *           to use as APIs.                                        *
@@ -324,4 +326,4 @@
 **CTDATA @MG
 SDBSRTPD  AOBSRTR0  Base Rate Codes
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

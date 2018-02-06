@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AB Invalid internal funding deals browse')       *
@@ -14,14 +14,15 @@
       *              Deals for selection                              *
       *            - picks off the selection made                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 261516             Date 15Aug09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 261516             Date 15Aug09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CDL038             Date 10May05               *
+      *                 CDL038             Date 10May05               *
       *                 CSC022             Date 24Feb04               *
       *                 CDL020             Date 03Feb04               *
       *                 CDL019             Date 03Feb04               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  261516 - Front office Transaction ID and Associated Front    *
       *           Office Transaction ID is getting swapped when       *
       *           repairing in Invalid ABFUND deals. To retrieve the  *
@@ -985,4 +987,4 @@
       ********************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

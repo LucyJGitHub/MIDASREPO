@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       AOCLENO0 - (Next loan number locking prevention CL)         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD021780           Date 08Aug13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021780           Date 08Aug13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 257968             Date 28Nov08              */
+/*                      257968             Date 28Nov08              */
 /*                      257126             Date 10Oct08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021780 - AOLENOU0 Performance Issue                       */
 /*       257968 - Fix commitment control, U7 U8 logic error, and     */
 /*                remove banned characters. Reverse fix 257126.      */
@@ -37,7 +39,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
              DCL        VAR(&INOUT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RETCODE) TYPE(*CHAR) LEN(5)
@@ -225,7 +227,7 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,AOCLENOEND                                          */
  

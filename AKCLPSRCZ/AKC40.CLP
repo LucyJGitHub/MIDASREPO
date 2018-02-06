@@ -7,16 +7,17 @@
 /*                                                                   */
 /*      AKC40  - Lending Account Keys Generation Menu                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Last Amend No. 237299             Date 04Dec06              */
+/*       Prev Amend No. 237299             Date 04Dec06              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 131108             Date 06Oct98              */
+/*                      131108             Date 06Oct98              */
 /*                      CLE007             Date 11Sep97              */
 /*                      092374             Date 07Jan97              */
 /*                  S01408             Date 04MAY95                  */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*   MD046248 - Finastra Rebranding                                  */
 /*   237299 - Not all keys in the work file were transferred in the  */
 /*            Live file.                                             */
 /*   131108 - Screen not redisplayed after output of U5 message      */
@@ -54,7 +56,7 @@
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)             /*CLE007*/
              DCL        VAR(&CLE007) TYPE(*CHAR) LEN(1) VALUE(' ')    /*CLE007*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                   */
 /* Create LDA if it does not already exist.                          */
@@ -73,7 +75,7 @@
 /*  Set up Copyright                                                 */
 /*                                                                   */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              OVRDBF     FILE(ZACKEYAL) SEQONLY(*NO)
 /*                                                                   */
 /* Set up DM library with correct prefix.                            */

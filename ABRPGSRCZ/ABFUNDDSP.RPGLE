@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AB Internal Funding Deals Display')
@@ -15,14 +15,15 @@
       *  Component of: ABFUNDSIN - Internal Funding Deals Maintenance *
       *                ABFUNDRPR - Internal Funding Deals Repair      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CDL038             Date 10May05               *
-      *  Prev Amend No. CDL020             Date 03Feb04               *
+      *  Prev Amend No. CDL038             Date 10May05               *
+      *                 CDL020             Date 03Feb04               *
       *                 CDL019             Date 03Feb04               *
       *                 CAS005             Date 16Dec02               *
       *                 CAS004             Date 26Jun02               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL038 - Extended Deal Sub Type                              *
       *  CDL020 - Apply Base Rate at Value Date                       *
       *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
@@ -633,6 +635,6 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** WInzIndArr
 000000000000000000000000000000000000000000000000000000000000

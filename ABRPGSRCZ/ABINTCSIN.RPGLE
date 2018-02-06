@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001)
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AB Internal contract input')                     *
@@ -12,14 +12,15 @@
       *  Function:  This is the main screen input function            *
       *             for internal contracts.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 261962             Date 23Sep09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 261962             Date 23Sep09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 13JAN06               *
+      *                 CSD027             Date 13Jan06               *
       *                 CDL038             Date 10May05               *
       *                 CSC022             Date 24Feb04               *
       *                 CAP084             Date 02Feb04               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  261962 - Amended so that system can get the associated front *
       *           office ID from Java for INTC.                       *
       *  CSD027 - Recompiled due to PF changes.                       *
@@ -1640,4 +1642,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

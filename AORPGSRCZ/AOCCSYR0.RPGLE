@@ -9,16 +9,17 @@
      F*                                                                  *
      F*     AOCCSYR0 - READ ACCESS TO CURRENCY CLEARING SYTEM FILE       *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-     F*     Last Amend No. CAP003             DATE 06AUG98               *S01230
-     F*     Prev Amend No. CSW098             DATE 24MAR98               *S01230
+      *  Prev Amend No. CAP003             Date 06Aug98               *
+      *                 CSW098             Date 24Mar98               *
      F*                    CSW096             DATE 07JUN96               *S01230
      F*                    LN0115             DATE 21MAY90               *S01230
      F*                    S01230             DATE 08/01/90              *S01230
@@ -27,6 +28,7 @@
      F*                    E01168             DATE 22/02/89              *S01230
      F*                                                                  *
      F********************************************************************
+     F*     MD046248 - Finastra Rebranding                               *
      F*     CAP003 - Member converted from an OPM program to an ILE      *
      F*              module and an ILE *PGM member of the same name has  *
      F*              been created (in AOPGMSRC).                         *
@@ -316,4 +318,4 @@
 **CTDATA @MG
 SDCCSYPD  AOCCSYR0  Currency Clearing System
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

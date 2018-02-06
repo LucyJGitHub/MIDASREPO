@@ -9,14 +9,15 @@
      F*                                                                  *
      F*     AOMEMSU0 - Update Memos file                                 *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. AR868380           Date 10Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR868380           Date 10Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 157989             Date 25Apr05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -31,6 +32,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
       *             calling program if file locking occurred on       *
       *             online position files. (Child: AR868381)          *
@@ -655,7 +657,7 @@
      O                       LDBLN                                              CCB002
      O                       CLBLN                                              CCB002
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA PGM@
 AOMEMSU0      Memos Update
 AOSPOSU0      Control Update of On-line positions

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Global Average Spot Rates Take On Processing')
@@ -15,17 +15,19 @@
       *                                                               *
       *  Component of: AS002401                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAS014  *Create    Date 10Aug05               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CAS014  *CREATE    Date 10Aug05               *
+      *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAS014 - IAS21 The Effects of Changes in Foreign Exchange    *
       *           Rates                                               *
       *                                                               *

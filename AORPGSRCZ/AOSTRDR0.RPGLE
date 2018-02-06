@@ -9,14 +9,15 @@
      F*                                                                  *
      F*     AOSTRDR0 - READ ACCESS TO SECURITIES TRADING DATA            *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*  (c) Finastra International Limited 2001                         *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. CAS006             Date 21Jan03               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAS006             Date 21Jan03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
      F*                 CSE006             Date 17Jun99               *
@@ -33,7 +34,8 @@
      F*                                                                  *
      F********************************************************************
      F*                                                                  *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  MD046248 - Finastra Rebranding                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha                 *
       *  CAS006 - Hedge Accounting Phase B (Recompile)                   *
      F*  CSE006 - Recompile only                                         *
      F*  137886 - Corporate Actions: Add the possibility to allocate     *
@@ -202,4 +204,4 @@
 **CTDATA @MG
 AOSTRDPD  AOSTRDR0  Securities Trading Data
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -11,12 +11,13 @@
      F*     AOALTNR0 - READ ACCESS TO ALTERNATIVE                        *
      F*                NAMES AND ADDRESSES CODE FILES                    *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD043685           Date 23Jan17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD043685           Date 23Jan17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD053             Date 01Jun06               *
       *                 CSD031             Date 10Apr06               *
@@ -45,6 +46,7 @@
      F*                                                                  *
      F*****************************************************************   S01230
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD043685 - If CCG024 is on, alternate address must be        *
       *             retrieved from SDALTNPD.                          *
       *  CRE026 - Consumer Banking (Recompile)                        *
@@ -567,4 +569,4 @@
 **CTDATA @MG
 SDALTNPD  AOALTNR0  Alternative names & address
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

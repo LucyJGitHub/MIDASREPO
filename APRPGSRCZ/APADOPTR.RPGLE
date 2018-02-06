@@ -1,5 +1,5 @@
      H DEBUG                                                                                  244122
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AP Transaction Retrieve adoption program')       *
@@ -9,10 +9,11 @@
       *                                                               *
       *  APADOPTR  - Transaction retrieve adoption program            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD022060           Date 27Aug13               *
-      *  Prev Amend No. AR1096230          Date 11Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022060           Date 27Aug13               *
+      *                 AR1096230          Date 11Apr13               *
       *                 AR1060863          Date 06Apr13               *
       *                 AR971184           Date 28May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022060 - Reverse fix BUG12784 in APADOPTVU. It limits the  *
       *             system to retrieve a length beyond 4800 for       *
       *             buffer 2 and 3.                                   *
@@ -310,4 +312,4 @@
      C                   ENDSR
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       APFTTRIG  - FT Trigger Pgm for OTPAYDD/CQPACDD/NTRANDD      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG2692  *CREATE    Date 18May2004           */
+/*       Prev Amend No. BUG2692  *CREATE   Date 18May200             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG2692 - Batch submit of confirmations programs            */
 /*                                                                   */
 /*********************************************************************/
@@ -29,7 +31,7 @@
              DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(10)
              DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /* Global monitor message */
@@ -56,6 +58,6 @@
                 MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

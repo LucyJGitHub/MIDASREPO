@@ -9,16 +9,17 @@
      F*                                                                  *
      F*     AODLSTR0 - DEAL SUB-TYPES                                    *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *     Last Amend No. CSD031             Date 10Apr06            *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *     Prev Amend No. CAP002             Date 01May98            *
+      *                 CAP002             Date 01May98               *
      F*                    S01461             DATE 11FEB94               *
      F*                    S01392             DATE 20JUL92               *
      F*                    S01230             DATE 09/01/90              *S01230
@@ -27,6 +28,7 @@
      F*                    E01168             DATE 14/02/89              *E01168
      F*                                                                  *
      F********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data                    *
       *  CAP002 - Member converted from an OPM program to an ILE      *
       *           module and an ILE *PGM member of the same name has  *
@@ -319,4 +321,4 @@
 **CTDATA @MG
 SDDLSTL1  AODLSTR0  Deal sub-type codes
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

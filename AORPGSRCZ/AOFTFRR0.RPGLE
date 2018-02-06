@@ -8,17 +8,18 @@
       *                                                               *
       *     AOFTFRR0 - READ ACCESS TO FUNDS TRANSFER DETAILS          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Last Amend No. CFT017             Date 12Nov01               *
+      *  Prev Amend No. CFT017             Date 12Nov01               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CFT009             Date 19Jun00               *
+      *                 CFT009             Date 19Jun00               *
       * Midas DBA 3.03 -----------------------------------------------*
       *                 CFT006             Date 06Sep99               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT017 - Multilateral Inter-bank Exchange Fee.(Recompile)    *
       *     CFT009 - Funds Transfer Fees and Charges                  *
       *              - Converted to ILE.                              *
@@ -183,4 +185,4 @@
 **CTDATA @MG
 SDFTFRPD  AOFTFRR0  Funds Transfer Details                                E01168
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

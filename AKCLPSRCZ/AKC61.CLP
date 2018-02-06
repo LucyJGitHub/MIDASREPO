@@ -8,14 +8,15 @@
 /*   AKC61 - SE A/C Key Generation - Select Logical View of         */
 /*                                   Generated Keys.                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG9343            Date 11Dec05              */
-/*       Prev Amend No. CAS006             Date 21Jan03              */
+/*       Prev Amend No. BUG9343            Date 11Dec05              */
+/*                      CAS006             Date 21Jan03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      159026             Date 20Apr99              */
@@ -27,6 +28,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*   MD046248 - Finastra Rebranding                                 */
 /*   BUG9343- HG amount code  should not show if CAS007 is off.     */
 /*   CAS006 - Hedge Accounting Phase B                              */
 /*   159026 - Corporate Actions. Problems with Account Keys         */
@@ -60,7 +62,7 @@
 /**/
                                                              /*S01315*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                              /*S01315*/
              DCL        VAR(&OVRD) TYPE(*CHAR) LEN(10)
@@ -199,7 +201,7 @@
              RTVJOBA    JOB(&JOB) USER(&USRID)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGVAR     VAR(&INPUT1) VALUE(' ')
              CHGVAR     VAR(&INPUT2) VALUE('  ')
              CHGVAR     VAR(&IN03) VALUE('0')

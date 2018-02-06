@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AA Initialise profit centres for lending')       *
@@ -20,10 +20,11 @@
       *                                                               *
       *  Called By: AAC0023 - AA Lending PRFC Update                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -115,9 +117,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FCLOANCL   UF   E             DISK
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -139,10 +141,10 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
-
+ 
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -151,44 +153,44 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D AADTA         E DS                  EXTNAME(AADTA)
       **  AA Data Area
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** External DS for Midas modules details
-
+ 
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
       **  Profit Centre Details
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **  Profit Centre Details
-
+ 
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
       ** PCA ICD
-
+ 
      D DSFDY         E DS
       **  Short Data Structure for Access Programs
-
+ 
      D DSSDY         E DS
       **  Short Data Structure for Access Programs
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D @RUN            S              1
      D PCDMBookC       S              2
      D PCDMTranType    S              5
@@ -204,7 +206,7 @@
      D RtnCode         S              7
      D WProfitC        S              4
      D Option          S              7
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -215,7 +217,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -233,16 +235,16 @@
      C                   IF        AGDFF = 'M'
      C                   EVAL      *IN98 = *ON
      C                   END
-
+ 
       *
       *IF Lending  is switched ON EXSR to populate PRFC
      C                   IF        BGCSLN = 'Y'
      C                   EXSR      LENDING
      C                   ENDIF
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -254,9 +256,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     LENDING       BEGSR
-
+ 
       * If the value on the AADTA is not blank then process the FX deals
      C                   IF        AALEPC <> *BLANKS
      C                   READ      CLOANCL                                40
@@ -292,9 +294,9 @@
      C                   READ      CLOANCL                                40
      C                   ENDDO
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -306,9 +308,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
-
+ 
      C     PCDM          BEGSR
-
+ 
       *Call Profit Centre Default Matrix
      C                   CALL      'AOPRFMR0'
      C                   PARM      *BLANKS       RetCode1A
@@ -349,9 +351,9 @@
      C                   MOVEL     DSPCCD        WProfitC
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -363,9 +365,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
       *
       ** GET MODULE DETAILS
       *
@@ -391,7 +393,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
-
+ 
       *
       ** GET PCA ICD
       *
@@ -417,9 +419,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
-
+ 
      C                   ENDSR
-
+ 
       *
       /EJECT
       *****************************************************************

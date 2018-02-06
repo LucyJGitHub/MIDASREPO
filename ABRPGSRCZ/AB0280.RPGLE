@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')           CAP084
+     H COPYRIGHT('(c) Finastra International Limited 2002')                     CAP084
       *****************************************************************
 /*XBIA*  OVRDBF MMEDUMLL MMEPOULL                                     *
 /*XBIB*  OVRDBF MMFDUMLL MMFNRULL                                     *
@@ -22,14 +22,15 @@
      F*                                                               *
      F*     Calls    : ZA0270  - Convert date to Midas day number.    *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 240334             Date 17Jan07               *
+      *  Prev Amend No. 240334             Date 17Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG12923           Date 18Dec06               *
+      *                 BUG12923           Date 18Dec06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
@@ -55,6 +56,7 @@
      F*                                                              *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  240334 - Recompile over changes in ZACCHLE.                  *
       *  BUG12923 - SCC0411 looping issue                             *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -2355,7 +2357,7 @@
       *                                                                         CAP084
       /COPY ZSRSRC,ZCHKHLE                                                      CAP084
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA @YD
 00366007310109601461
 **CTDATA @MD

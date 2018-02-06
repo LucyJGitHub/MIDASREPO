@@ -7,18 +7,20 @@
 /*                                                                   */
 /*   AKC0062 - SE A/C Key Generation - Amend Template Keys.          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*   Last Amend No. MD046248           Date 27Oct17                  */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   LAST AMEND NO. 081881 *CREATE     DATE  18JAN95                 */
+/*   PREV AMEND NO. 081881 *CREATE     DATE  18JAN95                 */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*   MD046248 - Finastra Rebranding                                  */
 /*   081881 - Program created (previously AKC62T).                   */
 /*                                                                   */
 /*********************************************************************/
@@ -27,7 +29,7 @@
              DCL        VAR(&FKEY3) TYPE(*CHAR) LEN(1) VALUE('0')
              DCL        VAR(&FKEY4) TYPE(*CHAR) LEN(1) VALUE('0')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -64,5 +66,5 @@ ENDPGM:
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

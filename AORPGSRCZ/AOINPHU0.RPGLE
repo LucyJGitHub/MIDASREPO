@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('AO Interest Payment History')                          *
@@ -17,16 +17,18 @@
       *     ANY CHANGES DONE TO THIS PROGRAM MUST BE REFLECTED        *                    BUG24630A
       *        ON AOINPHU1                                            *                    BUG24630A
       *                                                               *                    BUG24630A
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG26873           Date 13Jan09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26873           Date 13Jan09               *
       *                 BUG24630A          Date 02Jul09               *
       *                 BUG24051           Date 26May09               *
       *                 BUG23732*CREATE    Date 23Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26873 - Threshold limit utilization not posted to the     *
       *             member account (partly posted to the main joint   *
@@ -369,4 +371,4 @@
       /EJECT
       *****************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

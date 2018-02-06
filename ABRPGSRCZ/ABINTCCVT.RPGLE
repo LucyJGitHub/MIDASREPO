@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AB Int contract cnv file to screen format')      *
@@ -12,10 +12,11 @@
       *  Function: This module converts the fields of an Int. Contract*
       *            from their format as on file to a screen format.   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR941922           Date 28Mar12               *
-      *  Prev Amend No. 261962             Date 23Sep09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR941922           Date 28Mar12               *
+      *                 261962             Date 23Sep09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR941922 - Status of Authorised INTC deals not shown during  *
       *             Enquiry via Internal Contracts menu               *
       *  261962 - Amended so that system can get the associated front *
@@ -592,7 +594,7 @@
       ********************************************************************
       ** ADDED AUTHORISED IN DEAL STATUS                                                    AR941922
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** TEXT FOR DEAL STATUS
 MATURED
 DELETED

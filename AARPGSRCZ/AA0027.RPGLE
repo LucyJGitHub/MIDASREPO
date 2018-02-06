@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AA Initialise profit centres for securities')
@@ -17,14 +17,15 @@
       *                                                               *
       *  Called By: AAC0027 - Position Settlements PRFC Update        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD045894           Date 23Jun17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD045894           Date 23Jun17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 BUG3122            Date 17Jul04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD045894 - PCAM utility override value of RECI               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG3122 - Recompiled due to changes in SDSECSPD.             *

@@ -8,19 +8,21 @@
 /*       AAC0009 - Call SE Book Prf Centre Combination Determination */
 /*                 For Switchable Feature Initialisation.            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAC005  *Create    Date 13Apr99              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. CAC005  *CREATE    Date 13Apr99              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAC005 - Profit Centre Accounting - SE Enhancement.         */
 /*                - CAC005 initialisation control program.           */
 /*                                                                   */
@@ -32,7 +34,7 @@
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -96,7 +98,7 @@
                           TOMSGQ(MOPERQ)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,AAC0009END                                          */
  

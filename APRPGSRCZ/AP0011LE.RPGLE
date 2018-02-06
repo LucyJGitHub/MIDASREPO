@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: APC0001 - List of Todays Transactions Component   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD039105           Date 06Jun16               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039105           Date 06Jun16               *
+      *                 CER059             Date 19Jul10               *
       *                 CAP190             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27041           Date 01Mar10               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039105 - Data truncation encountered when trying to insert *
       *             CUSD MQ and SOAP transaction with UDF fields      *
       *           - Applied for MD-39420.                             *
@@ -631,4 +633,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@ - Object copyright
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')           CAP084
+     H COPYRIGHT('(c) Finastra International Limited 2002')                     CAP084
       *****************************************************************
 /*S******RPGBASE*******************************************************         CAP084
 /*STD *  RPGBASEMOD                                                   *         CAP084
@@ -10,10 +10,11 @@
      F*                                                               *
      F*     AB0240    - Update MIDAS Deals                            *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *     
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -46,6 +47,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *     
       *  CDL099 - Split Value Date                                    *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompiled)                                        *
@@ -1682,4 +1684,4 @@
       *****************************************************************
       *
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

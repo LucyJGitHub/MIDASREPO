@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Time Zone Access Object')
@@ -11,14 +11,16 @@
       *                                                               *
       *  Function:  This program access details from SDTIZOPD         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CSW208  *CREATE    Date 15Apr08               *
+      *  Prev Amend No. CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW208 - SWIFT 2008 Changes                                  *
       *                                                               *
       *****************************************************************
@@ -329,6 +331,6 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008
 ** @MG
 SDTXBSPD  AOTIZOR0  Time Zone

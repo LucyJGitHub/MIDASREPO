@@ -8,15 +8,17 @@
       *                                                               *
       *  AOATSTR0 - Read Access to Account Transfer Type/Subtype      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG27394           Date 26Apr10               *
-      *  Prev Amend No. CAP204A            Date 10Mar10               *
+      *  Prev Amend No. BUG27394           Date 26Apr10               *
+      *                 CAP204A            Date 10Mar10               *
       *                 CAP204  *CREATE    Date 20Jan10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27394 - Add new field Record ID to allow logical deletion *
       *             of this file (Recompile)                          *
       *  CAP204A - Teller Related APIs - Account Transfer: Change     *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO API ICD access object')
@@ -9,22 +9,24 @@
       *                                                               *
       *  AOAPIR0  - Read access to API ICD
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
-      *  Last Amend No. CAP032             Date 26Apr99               *
-      *  Prev Amend No. CAP011             Date 07Sep99               *
+      *  Prev Amend No. CAP032             Date 26Apr99               *
+      *                 CAP011             Date 07Sep99               *
       * Midas DBA 3.00 -----------------Base--------------------------*
       *                 CAP006             Date 11Feb99               *
       *                 CAP002  *CREATE    Date 01May98               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP032 - Conversion of Journal Batch Entry inputs into       *
       *           modular structure to use as APIs. Recompiled        *
       *           due to changes in physical file SDAPIPD.            *
@@ -145,4 +147,4 @@
 **CTDATA @MG
 SDAPIPD   AOAPIR0   API ICD
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -7,19 +7,21 @@
 /*                                                                   */
 /*   AKC10A   - Account Keys Generation Set-up (File Allocation)     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*   Last Amend No. MD046248           Date 27Oct17                  */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   LAST AMEND NO. 103747 *CREATE     Date  10APR97                 */
-/*   PREV AMEND NO. XXXXXX             Date  DDMMMYY                 */
+/*   PREV AMEND NO. 103747 *CREATE     Date  10APR97                 */
+/*                  XXXXXX             Date  DDMMMYY                 */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*    MD046248 - Finastra Rebranding                                 */
 /*    103747 - Created for GEMS 103747 to allow the allocation and   */
 /*             deallocation of the account keys files inside the     */
 /*             program AK0010.                                       */
@@ -32,13 +34,13 @@
              DCL        VAR(&OPT) TYPE(*DEC) LEN(1 0)
              DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /** Initial processing                                               */
 /**/
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(END))
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /** Option 1 : Allocate the files ACKEYAL and ACKEYAK                */
 /**/

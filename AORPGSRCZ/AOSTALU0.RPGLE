@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBI *  OVRDBF FILE(LESTAL5X) TOFILE(LESTALL5) SHARE(*NO)            *                       221427
 /*STD *  RPGBASEMOD                                                   *
@@ -14,10 +14,11 @@
       *             Allocation Transaction files LF/LESTALL0,         *
       *             LF/LESTALL2, and LESTALL5.                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CCB020             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  CLE038 - Lending Enhancement for Nordea: Allocation by Amount*
@@ -612,4 +614,4 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Hedging ICD Access Object')
@@ -12,14 +12,15 @@
       *  Function:  This program will access the Hedging ICD Details  *
       *             LF/SDHEDGL1                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 233545             Date 18May05               *
-      *  Prev Amend No. 232348             Date 21Feb05               *
+      *  Prev Amend No. 233545             Date 18May05               *
+      *                 232348             Date 21Feb05               *
       *                 CAS009             Date 16May05               *
       *                 228948             Date 27Sep04               *
       *                 229418             Date 02Sep04               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  233545 - Cut-off Date (Recompile)                            *
       *  232348 - Introduce cut-off date for non-linear amortisation  *
       *           (Recompile)                                         *
@@ -301,4 +303,4 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

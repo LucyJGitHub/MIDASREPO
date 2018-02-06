@@ -10,8 +10,9 @@
      F*     AOBANKR0 - READ ACCESS TO BANK DETAILS                    *
      F*                I.C.D ACCESS OBJECT                            *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -19,8 +20,8 @@
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       * Midas DBA 3.01 -----------------------------------------------*
-      *     Last Amend No. CAP002             Date 01May98            *
-     F*     Prev Amend No. 099942             DATE 23FEB96            *
+      *  Prev Amend No. CAP002             Date 01May98               *
+      *                 099942             Date 23Feb96               *
      F*                    078049             DATE 27OCT94            *
      F*                    S01314             DATE 06DEC90            *
      F*                    LN0104             DATE 01JUN90            *
@@ -31,6 +32,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP002 - Member converted from an OPM program to an ILE      *
       *           module and an ILE *PGM member of the same name has  *
       *           been created (in AOPGMSRC).                         *
@@ -198,4 +200,4 @@
 **CTDATA @MG
 SDBANKPD  AOBANKR0  Bank Details
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

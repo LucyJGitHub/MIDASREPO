@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AO Loan types/sub-types')                        *
@@ -9,13 +9,15 @@
      F*                                                               *
      F*     AOLOANR1 - READ ACCESS TO LOAN TYPES/SUB-TYPES FILE       *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
      F*                                                               *
-      *  Last Amend No. CLE164             Date 18Aug14               *
-      *  Prev Amend No. MD019830A *CREATE  Date 15Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 MD019830A *CREATE  Date 15Apr13               *
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
       *  MD019830A - Unable to amend authorised Loan (Reopened)       *
@@ -286,4 +288,4 @@
 **CTDATA @MG
 SDLOANPD  AOLOANR1  Loan Types / Sub-Types
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

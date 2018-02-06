@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AA Initialise retail & nostro a/cs prft cent')   *
@@ -20,10 +20,11 @@
       *                                                               *
       *  Called By: AAC0020 - Nostro/Retail accounts PRFC default     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046874           Date 31Jul17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046874           Date 31Jul17               *
+      *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046874 - Incorrectly update the Retail's account type      *
       *             causing database error in REC62N component        *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *

@@ -9,16 +9,17 @@
      F*                                                                  *
      F*     AOBROKR0 - READ ACCESS TO BROKER CODES FILE                  *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *     Last Amend No. 125375             Date 17Jun98            *
-      *     Prev Amend No. CAP002             Date 01May98            *
+      *  Prev Amend No. 125375             Date 17Jun98               *
+      *                 CAP002             Date 01May98               *
      F*                    S01461             DATE 11FEB94               *
      F*                    LN0359             DATE 12JUN90               *LN0212
      F*                    LN0213             DATE 22/05/90              *LN0212
@@ -28,6 +29,7 @@
      F*                                                                  *
      F********************************************************************
      F*                                                                  *LN0212
+      *  MD046248 - Finastra Rebranding                               *
      F*  125375 - If the broker only uses electronic dealing then     *
      F*           specify ELEC in field 24D and do not specify broker *
      F*           details in field 88. (Recompile only).              *
@@ -287,4 +289,4 @@
 **CTDATA @MG
 SDBROKPD  AOBROKR0  Broker Codes
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

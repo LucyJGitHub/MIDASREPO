@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       APC0002 - List of Transactions awaiting repair component    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSD092             Date 01May13              */
-/*       Prev Amend No. CSD093             Date 01Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSD092             Date 01May13              */
+/*                      CSD093             Date 01Apr13              */
 /*                      CER059             Date 19Jul10              */
 /*                      CER034A            Date 19May08              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -55,6 +56,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSD092 - Account Review                                     */
 /*       CSD093 - Document Management                                */
 /*       CER059 - German Feature Upgrade to Delhi                    */
@@ -110,7 +112,7 @@
              DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
@@ -289,6 +291,6 @@
  END:        DLTDTAARA  DTAARA(&TOLIB/APC0002)
              MONMSG     MSGID(CPF0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

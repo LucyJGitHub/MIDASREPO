@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /***D ***RPG***********************************************************   CAP035
 /*STD *  RPGBASEMOD                                                   *   CAP035
@@ -10,14 +10,15 @@
      F*                                                               *
      F*     AOACODR0 - ACCOUNT CODES                                  *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CPB004             Date 11Jul02               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CPB004             Date 11Jul02               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
@@ -38,6 +39,7 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CPB004 - Account closing. Recompiled over changed SDACODPD.  *
       *  CGL029 - Increase Account Code to 10 digits                  *

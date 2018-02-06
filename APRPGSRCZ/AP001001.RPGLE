@@ -8,13 +8,15 @@
       *                                                               *
       *  AP001001 - Midas AP Initialisation program for CAP201        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG27041*CREATE    Date 03Mar10               *
+      *  Prev Amend No. BUG27041 *CREATE   Date 03Mar10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27041 - Incorrect mapping for MQ STCQ                     *
       *                                                               *
       *****************************************************************
@@ -102,4 +104,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

@@ -11,20 +11,22 @@
      F*     AOSARDR0 - READ/ACCESS TO SWITCHABLE FEATURES FILE        *
      F******AOSARDR0 - READ/ACCESS TO SAR DESCRIPTIIONS FILE          *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *   Last Amend No. MD024398         Date 03Feb14                *
+      *   Last Amend No. MD046248         Date 27Oct17                *
+      *   Prev Amend No. MD024398         Date 03Feb14                *
       * Midas Plus 1.4 ----------- Base ------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *   Prev Amend No. CSC007           Date 08May98                *
+      *                  CSC007           Date 08May98                *
       *                  CAP002             Date 01May98              *
       *                  S01407           DATE 11MAR93                *
       *                  041840           DATE 02JUL92                *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024398 - API performance enhancements.                     *
       *           Cache valid features, and do not set on LR.         *
       *  CSC007 - Switchable Features Enhancements phase 2.           *
@@ -363,4 +365,4 @@
 **CTDATA @MG
 SCSARDPD  AOSARDR0  Switchable features
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

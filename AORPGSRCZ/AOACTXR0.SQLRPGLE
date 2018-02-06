@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas AO Customer Details by Country of Tax')
@@ -9,12 +9,14 @@
       *                                                               *
       *  AOACTXR0 - Customer Details by Country of Tax                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CER069  *CREATE    Date 03Jul14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER069  *CREATE    Date 03Jul14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER069 - German Tax Enhancement                              *
       *                                                               *
       *****************************************************************
@@ -35,21 +37,21 @@
      D WLCCD           S              3
      D WCTAX           S              2
      D WRun            S              1
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRtcd
      C                   PARM                    POptn
      C                   PARM                    PCust
      C                   PARM                    PBrca
      C                   PARM                    SDACTX
- 
+
      C                   IF        POptn = '*FREE  '
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   IF        POptn = '*KEY   '
- 
+
       ** Retrieve Branch Location Code
      C/EXEC SQL
      C+ Select  A8LCCD
@@ -57,7 +59,7 @@
      C+  from   SDBRCHPD
      C+  where  A8BRCD = :PBrca
      C/END-EXEC
- 
+
       ** Retrieve Country Code
      C/EXEC SQL
      C+ Select  DVCNCD
@@ -65,7 +67,7 @@
      C+  from   SDLOCNPD
      C+  where  DVLCCD = :WLCCD
      C/END-EXEC
- 
+
       ** Retrieve Customer by Country of Tax
      C/EXEC SQL
      C+ Select  *
@@ -74,14 +76,14 @@
      C+  where  AXCUST = :PCust and
      C+         AXCTTX = :WCTAX
      C/END-EXEC
- 
+
       ** No record found
      C                   IF        SQLCODE <> 0
      C                   EVAL      PRtcd = '*NRF   '
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
       *****************************************************************
       *                                                               *
@@ -92,17 +94,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

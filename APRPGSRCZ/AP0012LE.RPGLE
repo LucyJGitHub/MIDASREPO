@@ -16,10 +16,11 @@
       *  Called By: APC0002 - List of Transactions Awaiting Repair/   *
       *                       Completion component                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CAP190             Date 19May08               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CAP190             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27041           Date 01Mar10               *
       *                 BUG26909           Date 21Jan10               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CAP190 - Customer Exchange MQ enabling.  (Recompile)         *
       *  BUG27041 - Incorrect mapping for MQ STCQ                     *
@@ -647,4 +649,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@ - Object copyright
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

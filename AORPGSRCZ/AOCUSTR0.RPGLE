@@ -9,14 +9,15 @@
       *                                                               *
       *  AOCUSTR0 - READ ACCESS TO CLIENTS CODES FILE                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG17927           Date 23Apr08               *
+      *  Prev Amend No. BUG17927           Date 23Apr08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 237337             Date 03Oct06               *
+      *                 237337             Date 03Oct06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 17Mar06               *
       *                 CSW037A            Date 02May05               *
@@ -52,6 +53,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG17927 - Add new RTCD passed, if record found but customer *
       *             closed.                                           *
       *  237337 - Add new RTCD passed, if record found but customer   *
@@ -499,4 +501,4 @@
 **CTDATA @MG
 SDCUSTPD  AOCUSTR0  Customer Details
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Update OLPOS file')                           *
@@ -9,10 +9,11 @@
       *                                                               *
       *     AOOPLSU0 - Update Olpos file                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD026169  *REWRITE Date 09Apr14               *
-      *  Prev Amend No. MD025679B          Date 26Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026169           Date 09Apr14               *
+      *                 MD025679B          Date 26Mar14               *
       *                 MD025679A          Date 21Mar14               *
       *                 MD025679           Date 13Mar14               *
       *                 AR868380           Date 10Jun13               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026169 - GO_ONL_OLP background job is processing           *
       *             full receiver chain                               *
       *  MD025679B - API - PRONO Locking Issue. Renamed GLOLPSTD      *
@@ -146,4 +148,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       /EJECT
 **  CPY@
-(c) Misys Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

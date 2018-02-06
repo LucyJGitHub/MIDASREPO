@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Collateral & Credit Ctl ICD access object')
@@ -12,17 +12,19 @@
       *  Function:  This program will access the Collateral and       *
       *             Credit Control Details                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG3644            Date 12Jul04               *
-      *  Prev Amend No. CLE025  *CREATE    Date 20Oct03               *
+      *  Prev Amend No. BUG3644            Date 12Jul04               *
+      *                 CLE025  *CREATE    Date 20Oct03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
       *  CLE025 - Credit Lines                                        *
       *                                                               *
@@ -278,4 +280,4 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

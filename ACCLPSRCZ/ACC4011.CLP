@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       ACC4011 - Check for ending of ECS line                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*       Note: This program must be recompiled in library            */
 /*             AUTOLIB on the office machine.                        */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 101930             Date 08JUL96              */
+/*       Prev Amend No. 101930             Date 08Jul96              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       101930 - New program created for Autocall.                  */
 /*                Program is called from RPG/AC4010 to end the ECS   */
 /*                link by checking content of data area ECSRMTxx.    */
@@ -36,7 +38,7 @@
              DCL        VAR(&ECSRMT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ECSRMTXX) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -66,5 +68,5 @@
                           MSGTYPE(*ESCAPE)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -9,14 +9,15 @@
       *  AOTOFR0 - Read Access to Private Banking Details             *
       *            I.C.D Access Object                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 207288             Date 10Jun03               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 207288             Date 10Jun03               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CSD011             Date 04Mar02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  207288 - Recompile over changes in SDTOFPD                   *
       *           Applied for AR999664 (Child: AR999668)              *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -177,4 +179,4 @@
 **CTDATA @MG
 SDTOFPD   AOTOFR0 Private Banking Details
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -11,19 +11,21 @@
       *  Function:  This module allows users to access data in        *
       *             AOISOCR0                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
-      *  Last Amend No. CTI099  *CREATE    Date 06Aug99               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CTI099  *CREATE    Date 06Aug99               *
+      *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CTI099 - ISO Codes Module                                    *
       *                                                               *
       *****************************************************************
@@ -245,4 +247,4 @@
 **CTDATA @MG
 SDISOCPD  AOISOCR0  Currency Codes
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

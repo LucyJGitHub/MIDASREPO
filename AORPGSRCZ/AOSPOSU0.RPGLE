@@ -9,10 +9,11 @@
       *                                                               *
       *     AOSPOSU0 - Control Update On-line Positions File          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD034505           Date 26May15               *
-      *  Prev Amend No. AR868380           Date 10Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034505           Date 26May15               *
+      *                 AR868380           Date 10Jun13               *
       *                 CLE134             Date 01Aug12               *
       *                 BUG27966A          Date 05Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -73,6 +74,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034505 - Database error encountered when Ordering Customer    *
       *             is a Customer Number or Accountline                  *
       *           - Partially applied BUG19263                           *
@@ -2409,7 +2411,7 @@
       *****************************************************************                       CRE020
      C/EJECT                                                                                  CRE020
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA PGM@
 AOSPOSU0      Control Update of On-line positions
 FT0261        Shadow Balance control program

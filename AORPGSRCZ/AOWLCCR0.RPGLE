@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Watch List Check Configuration Access Obj')
@@ -12,16 +12,18 @@
       *  Function:  This program will access the LF/SDWLCCL0 using    *
       *             the given Function Code.                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD015  *CREATE    Date 14Oct02               *
+      *  Prev Amend No. CSD015  *CREATE    Date 14Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD015 - Midas Compliance Watch - Watch List Checking        *
       *                                                               *
       *****************************************************************
@@ -342,4 +344,4 @@
      C                   ENDSR
  
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

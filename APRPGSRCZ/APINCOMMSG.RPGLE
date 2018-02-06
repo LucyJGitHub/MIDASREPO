@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*S*D****RPGBASEMOD****************************************************                     MD039105
 /*STD *  RPGSQLMOD                                                    *                     MD039105
@@ -22,10 +22,11 @@
       *                                                               *
       *  Calls - APPARSMSG - Set up Transaction and Settlement Data   *                       CAP083
       *                                                               *                       CAP083
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039105           Date 06Jun16               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039105           Date 06Jun16               *
+      *                 CSW216             Date 14Mar16               *
       *                 CPK030             Date 11Apr14               *
       *                 CSW214             Date 25Nov14               *
       *                 CDL094             Date 11Jun14               *
@@ -129,6 +130,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039105 - Data truncation encountered when trying to insert *
       *             CUSD MQ and SOAP transaction with UDF fields      *
       *           - Applied for MD-39420.                             *
@@ -3698,7 +3700,7 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  CHG@                                                                                      CDL010
 CHGDTAARA DTAARA(QTEMP/ZMUSER (1 10)) VALUE('                                                 CDL010
 **  CJOB@                                                                                   AR401481

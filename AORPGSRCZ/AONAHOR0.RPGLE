@@ -8,10 +8,11 @@
       *                                                               *
       *  AONAHOR0  - Read Access to Non-account Holder File           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL132             Date 01May13               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL132             Date 01May13               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24029           Date 19May09               *
       *                 CER054             Date 07Apr09               *
       *                 BUG22580           Date 02Feb09               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master (Recompile)                 *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -265,6 +267,6 @@
  
       *****************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 **
 SDNAHOPD  AONAHOR0  Non-Account Holder

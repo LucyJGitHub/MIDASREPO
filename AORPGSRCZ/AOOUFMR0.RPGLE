@@ -22,11 +22,12 @@
       *  To call the record with *FORMAT (the first call) use option  *                       250600
       *  *KEY or *VERIFY, for subsequent, use *NEXTEQ                 *                       250600
       *                                                               *                       250600
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CSW213             Date 03Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW213             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSW209             Date 01Apr09               *
+      *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG15045           Date 19Oct07               *
       *                 250804A            Date 10Oct07               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
       *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
       *  BUG15045 - System does not accept an External account input  *
@@ -1329,4 +1331,4 @@
  
       /EJECT
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

@@ -9,21 +9,23 @@
      F*                                                                  *
      F*     AOHOLS0 - READ ACCESS TO HOLIDAYS FILE (NON-STANDARD AO)     *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. 139277             Date 21Jul98               *
+      *                 139277             Date 21Jul98               *
       *                 CAP002             Date 01May98               *
      F*                    S01230             Date 23/11/89              *S01230
      F*                    S01230             DATE 06/11/89              *S01230
      F*                                                                  *
      F********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  139277 - Decimal data error problem:                         *
       *           prevent access to file with incorrect data.         *
@@ -364,4 +366,4 @@
 **CTDATA @MG
 SDHOLL2   AOHOLS0   Holidays file
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

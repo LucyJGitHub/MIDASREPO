@@ -8,10 +8,11 @@
       *                                                               *
       *  AOCSSWR0  - Read Access to Customer Extensions SWIFT Details *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. AR924563           Date 05Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 AR924563           Date 05Nov14               *
       *                 CSW214             Date 25Nov14               *
       *                 CSW213             Date 03Jun13               *
       *                 CFT050             Date 03Jun13               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  AR924563 - Allow deleted/closed customers (Child: AR924564)  *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
@@ -414,4 +416,4 @@
 ** CTDATA @MG
 SDCSSWPD  AOCSSWR0  Cust Ext SWIFT Details
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2007
+(c) Finastra International Limited 2007

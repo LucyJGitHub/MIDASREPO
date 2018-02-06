@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       APC0410 - Submit *_DBU Jobs from a Batch Job                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK016             Date 09Jul03              */
+/*       Prev Amend No. CPK016             Date 09Jul03              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*       Last Amend No. CPK015  *CREATE    Date 10MAY02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK016 - End successful run with *NOLIST.                   */
 /*       CPK015 - New program to sped up user signon.                */
 /*                                                                   */
@@ -34,7 +36,7 @@
              DCL        VAR(&PARM5) TYPE(*CHAR) LEN(200)
              DCL        VAR(&ABNORFLAG) TYPE(*CHAR) LEN(1)                                /*CPK016*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global monitor message */
@@ -66,7 +68,7 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              IF         COND(&ABNORFLAG *EQ ' ') THEN(DO)                                 /*CPK016*/
                 CHGJOB     LOG(*SAME *SAME *NOLIST)                                       /*CPK016*/

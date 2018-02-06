@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Zonal Midas menu items')
@@ -9,17 +9,19 @@
       *                                                               *
       *  AOMENUR0 - Zonal Menu Items                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG2287            Date 28Apr04               *
-      *  Prev Amend No. CSF002  *CREATE    Date 06Sep03               *
+      *  Prev Amend No. BUG2287            Date 28Apr04               *
+      *                 CSF002  *CREATE    Date 06Sep03               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG2287- Show consolidated global view  (Recompile)          *
       *  CSF002 - Midas Plus Menu                                     *
       *                                                               *

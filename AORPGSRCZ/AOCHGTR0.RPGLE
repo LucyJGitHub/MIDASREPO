@@ -9,16 +9,17 @@
      F*                                                                  *
      F*     AOCHGTR0 - CHARGE TYPES                                      *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
-     F*  Last Amend No. CSE029             DATE 26Jul01               *
+      *  Prev Amend No. CSE029             Date 26Jul01               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
-     F*  Prev Amend No. CAP003             DATE 06AUG98               *
+      *                 CAP003             Date 06Aug98               *
      F*                 CAC002             Date 15Sep96               *
      F*                 S01446             Date 08/10/93              *
      F*                 S01230             Date 08/01/90              *
@@ -26,6 +27,7 @@
      F*          AMEND NO.S01230              DATE 06/11/89              *S01230
      F*                                                                  *
      F********************************************************************
+     F*     MD046248 - Finastra Rebranding                               *
      F*     CSE029 - ISO15022 message generation                         *
      F*              Recompiled due to changes in SECGTD.                *
      F*     CAP003 - Member converted from an OPM program to an ILE      *
@@ -273,4 +275,4 @@
 **CTDATA @MG
 SECGTDD0  AOCHGTR0  Charge Types
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

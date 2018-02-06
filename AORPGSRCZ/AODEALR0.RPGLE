@@ -10,15 +10,16 @@
      F*     AODEALR0 - READ ACCESS TO DEALING DATA CODES FILE         *
      F*                I.C.D. RECORD - ONLY ONE RECORD IN FILE        *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAS005             Date 16Dec02               *
+      *  Prev Amend No. CAS005             Date 16Dec02               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CAS001             Date 23Nov01               *
+      *                 CAS001             Date 23Nov01               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.01 -----------------------------------------------*
       *                 CDL006             Date 26Apr99               *
@@ -36,6 +37,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
       *           (Recompile)                                         *
       *  CAS001 - Net Present Value (NPV) Accounting                  *
@@ -206,4 +208,4 @@
 **CTDATA @MG
 SDDEALPD  AODEALR0  Dealing Data Codes
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

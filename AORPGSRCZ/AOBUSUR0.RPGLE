@@ -9,14 +9,16 @@
       *  AOBUSUR0  - Access Object for Business Classification        *
       *              Sub-Class                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG25880           Date 03Sep09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG25880           Date 03Sep09               *
       *                 CER045  *CREATE    Date 20Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG25880 - Disallow entry of non-numeric values in Business  *
       *             Classification Sub-Class field.                   *
@@ -268,6 +270,6 @@
       *
       *****************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009
 **
 SDBUSUPD  AOBUSUR0  Business Classification Sub-Class

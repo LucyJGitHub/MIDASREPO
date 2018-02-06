@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       AKC70  - Forecast Transtions Account Keys Generation Menu   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAS006  *CREATE    Date 21Jan03              */
+/*       Prev Amend No. CAS006  *CREATE    Date 21Jan03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAS006 - Hedge Accounting Phase B                           */
 /*                                                                   */
 /*********************************************************************/
@@ -32,7 +34,7 @@
              DCL        VAR(&RUNA) TYPE(*CHAR) LEN(7)
              DCL        VAR(&WRN) TYPE(*LGL) LEN(1) VALUE('0')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCLF       FILE(*LIBL/AKC70DF)
@@ -245,6 +247,6 @@
              DLTF       FILE(QTEMP/CHECKAK)
              CLRPFM     FILE(*LIBL/ZACKEYAL)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RETURN
              ENDPGM

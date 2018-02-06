@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AO PEA System Status access object')             *
@@ -9,12 +9,14 @@
       *                                                               *
       *  AOPEASR0  - Access Object for PEA System Status              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CSC054  *CREATE    Date 23Feb12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSC054  *CREATE    Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC054 - Period End Adjustments                              *
       *                                                               *
       *---------------------------------------------------------------*

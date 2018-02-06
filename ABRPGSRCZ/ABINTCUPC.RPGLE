@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AB Internal contracts d/b update controller')
@@ -9,14 +9,15 @@
       *                                                               *
       *  ABINTCUPC - INTERNAL CONTRACTS DATABASE UPDATE CONTROLLER    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CDL038             Date 10May05               *
-      *  Prev Amend No. 222727             Date 05Nov03               *
+      *  Prev Amend No. CDL038             Date 10May05               *
+      *                 222727             Date 05Nov03               *
       * Midas Release 4.01 -------------------------------------------*
       *                 201589             Date 03Jan02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
       *  222727 - Release 5.0 errors  (Recompile)                     *
       *  201589 - Change to check a new locking dataarea ABINTCLCK    *
@@ -336,4 +338,4 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -8,13 +8,15 @@
       *                                                               *
       *  AOFATCR0  - Access Object for FATCA Classification Code      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CGL154             Date 13Oct14               *
-      *  Prev Amend No. CGL132   *CREATE   Date 01May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Phase 2 - FATCA Reporting                     *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -287,6 +289,6 @@
  
       *****************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 **
 SDFATCPD  AOFATCR0  FATCA Classification Code

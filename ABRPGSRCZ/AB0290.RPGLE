@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBI *  OVRDBF MMFDUMLL MMFLQULL                                     *
 /*STD *  RPGBASEMOD                                                   *
@@ -21,14 +21,15 @@
      F*                                                               *
      F*     Calls    : ZA0270  - Convert date to Midas day number.    *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 240334             Date 17Jan07               *
+      *  Prev Amend No. 240334             Date 17Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CAP084             Date 06Sep03               *
@@ -47,6 +48,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  240334 - Recompile over changes in ZACCHLE.                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -1636,7 +1638,7 @@
       *
       /COPY ZSRSRC,ZCHKHLE                                                S01195
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA @YD
 00366007310109601461
 **CTDATA @MD

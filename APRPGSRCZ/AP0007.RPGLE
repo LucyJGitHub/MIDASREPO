@@ -13,19 +13,21 @@
       *                                                               *
       *  Called By: APC0007 - List of JE Valid Errors                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
-      *  Prev Amend No. 186206   *CREATE   Date 26Oct00               *
+      *                 186206  *CREATE    Date 26Oct00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  186206 - Journal Entry API fixes. Produce only one dump      *
       *           per JE batch. Generate JE Valid errors report.      *
@@ -712,4 +714,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@ - Object copyright
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

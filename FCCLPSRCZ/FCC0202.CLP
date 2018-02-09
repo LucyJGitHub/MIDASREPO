@@ -7,15 +7,16 @@
 /*                                                                   */
 /*  FCC0202 - I/C REPORT REQUESTS WITHOUT MODULE SPECIFIC PROMPT     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*   Last Amend No. CAAA02             Date 01Dec03                  */
+/*       Prev Amend No. CAAA02             Date 01Dec03              */
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*   Prev Amend No. 190072             Date 09Apr02                  */
+/*                      190072             Date 09Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                  CPK014             Date 14Nov01                  */
 /* Midas DBA 3.05 ---------------------------------------------------*/
@@ -36,6 +37,7 @@
 /*                                                               */
 /*****************************************************************/
 /*                                                               */
+/*       MD046248 - Finastra Rebranding                              */
 /*   CAAA02 - Webfacing. Change the submit of MIDASRMV to use    */
 /*            the *JOBD output queue.                            */
 /*   190072 - Re-insert calling of FC0030 to get prompt pgm,     */
@@ -123,7 +125,7 @@
              DCL        VAR(&PHASE) TYPE(*CHAR) LEN(1)
 /************DCL        VAR(&ASP) TYPE(*CHAR) LEN(1) VALUE('''') */   /*RT0032*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL        VAR(&Y2MGFLA8) TYPE(*CHAR) LEN(8)  /*S01314*/ /*RT0032*/
 /************DCL        VAR(&MIMGFLA8) TYPE(*CHAR) LEN(8)  /*S01314*/ /*RT0032*/
@@ -242,7 +244,7 @@
 /************ENDDO                                         /*S01314*/ /*RT0032*/
                                                                       /*S01314*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**CREATE*THE*MULTILANGUAGE*OBJECT*NAMES**/                /*S01314*/ /*RT0032*/
                                                                       /*S01314*/
 /*CHGVAR***VAR(&ZZMSGF) VALUE('ZZ' *CAT &MULT *CAT 'MSGF') /*S01314*/ /*RT0032*/

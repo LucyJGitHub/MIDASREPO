@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Convert Industry Codes to uppercase')
@@ -12,17 +12,19 @@
       *  Function:  This module will convert global industry codes    *
       *             from lower case to upper case.                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK022             Date 29Jul05               *
-      *  Prev Amend No. BUG03923 CREATE    Date 06Aug04               *
+      *  Prev Amend No. CPK022             Date 29Jul05               *
+      *                 BUG03923           Date 06Aug04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK022 - Should not use zone /COPYs.                         *
       *  BUG3923 - Convert global industry codes from lower case to   *
       *            upper case.                                        *

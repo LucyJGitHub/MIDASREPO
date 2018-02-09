@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       GOC0103 - On-Line Synchronisation of Global Layer           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. AR1064975          Date 05Dec12              */
-/*       Prev Amend No. AR1004827          Date 30Jul12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1064975          Date 05Dec12              */
+/*                      AR1004827          Date 30Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BUG16177A          Date 08Apr08              */
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1064975 -  Issue on GO_ONL_SYN                            */
 /*       AR1004827 - Global updater stops immediately/fails when     */
 /*                   receiver changes (BUG16177A incomplete)         */
@@ -36,7 +38,7 @@
              DCL        VAR(&JRCVR) TYPE(*CHAR) LEN(10)                                /*BUG16177A*/
              DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCL        VAR(&JSEQN2) TYPE(*DEC) LEN(10)                                /*AR1004827*/
              DCL        VAR(&JSEQA2) TYPE(*CHAR) LEN(20)                               /*AR1004827*/
@@ -183,7 +185,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  
              DLCOBJ     OBJ((GOOSJSPD *FILE *EXCLRD))

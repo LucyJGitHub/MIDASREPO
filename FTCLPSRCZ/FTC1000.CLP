@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       FTC1000    FUNDS TRANSFER - DAILY REORGANISATION            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. BUG25207           Date 28Jul09              */
+/*       Prev Amend No. BUG25207           Date 28Jul09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. CFT008             Date 04Jan00              */
+/*                      CFT008             Date 04Jan00              */
 /*                      CFT006             Date 15Jul99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408             Date 10Nov95              */
@@ -29,6 +30,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG25207 - FTC0100 00001 failed                             */
 /*       CFT008 - Funds Transfer/Swift Messages MT102                */
 /*       CFT006 - Funds Transfer/Swift Messages MT101                */
@@ -52,7 +54,7 @@
 /*       PGM                                                       */ /*S01189*/
          PGM     PARM(&CNAM &CSEQ)                                    /*S01189*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
          DCL     VAR(&PRE)  TYPE(*CHAR) LEN(2)
          DCL     VAR(&DLIB) TYPE(*CHAR) LEN(10)
@@ -447,5 +449,5 @@
 /*THEEND:ENDPGM                                                       /*S01117*/
 THEEND:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01117*/

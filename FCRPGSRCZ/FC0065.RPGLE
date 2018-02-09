@@ -8,13 +8,14 @@
       *                                                                  *
       *      FC0065 - SPOOL FILE ENQUIRY                                 *
       *                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001               *
+      *  (c) Finastra International Limited 2001                         *
       *                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CRE026             Date 24May06               *
+      *  Prev Amend No. CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. TDA035             Date 02Apr04               *
+      *                 TDA035             Date 02Apr04               *
       *                 CAAA02             Date 02Dec03               *
       * Midas Release 4 --------------- Base ----------------------------*
       * Midas DBA 3.03 --------------------------------------------------*
@@ -35,6 +36,7 @@
       *                                                                  *
       ********************************************************************
       *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
       *  CAAA02 - Modified for MidasPlus so that output can connect to   *
@@ -2009,7 +2011,7 @@
       /EJECT
       ********************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** INS - Instructions used by format:FC0065F2
                                                                                               CAAA02
 3=Copy                                                                                        CAAA02

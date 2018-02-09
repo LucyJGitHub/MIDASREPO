@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Generated Code')                                       *
@@ -9,32 +9,34 @@
       *                                                               *
       *  GPLELEMRPD - On-Line Update of Global File GZLELEMRPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD041012           Date 09Sep16               *
-      *  Prev Amend No. CLE068   *CREATE   Date 03Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD041012           Date 09Sep16               *
+      *                 CLE068  *CREATE    Date 03Aug16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD041012 - Component GOC0100 00244 failed during COB due to  *
       *             The match field for file GZLELEMRL0 is out of seq.*
       *           - Recompile only due to changes in GZLELEMRL1       *
       *  CLE068 - Loan Event Modeller                                 *
       *                                                               *
       *****************************************************************
-
+ 
 O    FGZLELEMRL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZLELEMRPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     RENAME(LELEMRWF    :W_LELEMRWF     )
 O    F                                     USROPN
 O
-
+ 
 O    D Z_LELEMRWPD   E DS                  EXTNAME(GZLELEMRPD)
 O    D G_LELEMRWPD   E DS                  EXTNAME(GZLELEMRPD) PREFIX(G_)
-
+ 
       * ENTRY PARAMETERS
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -78,9 +80,9 @@ O    C                   ELSE
 O    C                   WRITE     W_LELEMRWF
 O    C                   ENDIF
 O    C                   ENDIF
-
+ 
      C                   RETURN
-
+ 
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -101,7 +103,7 @@ O    C                   KFLD                    BRCA
 O    C                   KFLD                    LNRF
 O    C                   KFLD                    VDAT
 O    C                   KFLD                    LASN
-
+ 
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -109,15 +111,15 @@ O    C                   KFLD                    LASN
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
-
+ 
      C     W#RUN         IFEQ      *BLANKS
-
+ 
      C                   MOVE      'Y'           W#RUN             1
-
+ 
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
-
+ 
      C                   DUMP
       *
       * If no identified cause of error
@@ -132,10 +134,10 @@ O    C                   KFLD                    LASN
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
-
+ 
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       *********************************************************************

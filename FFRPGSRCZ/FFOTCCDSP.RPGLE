@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Exchange-traded display')
@@ -13,15 +13,16 @@
       *             of the over-the-counter currency options display  *
       *             function.                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BG9185             Date 08Nov05               *
+      *  Prev Amend No. BG9185             Date 08Nov05               *
       * Midas Release 4 --------------- Base -------------------------*
-      *  Prev Amend No. CFF007             Date 13Feb01               *
+      *                 CFF007             Date 13Feb01               *
       * Midas DBA 3.02 -----------------------------------------------*
       *                 CPB001             Date 06Sep99               *
       *                 CAP033             Date 26Apr99               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG9185 - Correction to CGL029 (Recompile)                    *
       *  CFF007 - Futures and Options Enhancement for Private Banking *
       *  CPB001 - 'Private Banking' Module                            *
@@ -525,7 +527,7 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 000000000000000000000000000000000000000000000000000000000000
 ** @NAR

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Format Posting Details')                      *
@@ -12,10 +12,11 @@
       *  Function:  This program formats posting details for TAG 61   *
       *             and 86.  It is based on the program GL1300.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CGL152             Date 02Dec13               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -93,7 +95,7 @@
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
       *****************************************************************
- 
+
      F/COPY WNCPYSRC,GLH00413
      FCLOAN     IF   E           K DISK                   INFSR(*PSSR)
       ** Midas LE Loans File
@@ -107,7 +109,7 @@
      F/COPY WNCPYSRC,GLH00180
      FSDNTTIL0  IF   E           K DISK                      INFSR(*PSSR)                     CGL152
       ** Midas SD Network Transaction Identifier.                                             CGL152
- 
+
       *****************************************************************
       *                                                               *
       * Use of Indicators                                             *
@@ -125,10 +127,10 @@
       * 99 - Multi-purpose                                            *
       *                                                               *
       *****************************************************************
- 
+
       ** Automatically included D-specs
       ** ==============================
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -138,32 +140,32 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
- 
+
       ** Named constants
       ** ---------------
- 
+
       ** Arrays and Data Structures
       ** --------------------------
                                                                                               CRE008
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SS)                       CRE008
       **  Data Structure for Switchable features descriptions.                                CRE008
- 
+
      D GLposting     E DS                  EXTNAME(GLPOSTPD) PREFIX(GL)
       **  Data Structure for Posting detail in General Ledger format.
- 
+
      D MGposting     E DS                  EXTNAME(MGX940PD)
       **  Data Structure for Posting detail in Message Genration Format.
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **  Data Structure for Customer record format.
                                                                                             BUG26832
@@ -172,13 +174,13 @@
                                                                                               CRE008
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CRE008
       **  Second DS for access programs, short data structure.                                CRE008
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  First DS for access programs, long data structure.
                                                                                             BUG26832
      D DSLDY         E DS                  EXTNAME(DSLDY)                                   BUG26832
- 
- 
+
+
      D W1DATA          DS           256
       **  Define FT0325 parameter data structure
      D  W1PREF                 1     15                                         Payment Reference
@@ -189,7 +191,7 @@
      D  W1DRCR                87     88                                         Debit/Credit
      D  W1CQSQ                89     90                                         Cheque sequence
      D/COPY WNCPYSRC,GLH00414
- 
+
      D                 DS
       **  Arrays to retrieve Module Transaction according Deal Type.
      D TransType                     40    DIM(41) CTDATA PERRCD(1)
@@ -199,16 +201,16 @@
      D      TrFiller2                 1    OVERLAY(TransType:*NEXT)
      D    TrDescrip                  34    OVERLAY(TransType:*NEXT)             Description
      D/COPY WNCPYSRC,GLH00415
- 
+
       ** Declared variables
       ** ------------------
- 
+
      D W0RTN           S              7A                                        Return Code
      D W0ACT           S              8A                                        Transaction Type
- 
+
      D KeyLNRF         S                   LIKE(CLLNRF)                         Loan reference
      D KeyRCDT         S                   LIKE(CLRCDT) INZ('A')                Record Type
- 
+
      D P@RTCD          S              7A                                        Return code
      D P@OPTN          S              7A                                        Option
      D P@SARD          S              6                                         Sar           CRE008
@@ -217,14 +219,14 @@
      D PRtcd           S             10A                                                    BUG26832
      D POptn           S              7A                                                    BUG26832
      D PNwrk           S              6A                                                    BUG26832
- 
+
      D ZAMNT           S             13  0                                      Original Amount
      D ZCCY            S              3A                                        Original Currency
      D ZSAMNT          S             17A                                        SWIFT Amount
      D ZSCCY           S              3A                                        SWIFT Currency
      D ZERR            S              1A                                        Error flag
      D ZSWDPC          S              1A
- 
+
      D WkModuleID      S              2A                                        Module ID
      D WkDealType      S              2A                                        Deal Type
      D WkERI           S              1A                                        ERI Info. Exist
@@ -241,28 +243,28 @@
      D  WBatchNb               1      3A                                                    BUG25147
      D  WItemNb                4      6S 0                                                  BUG25147
      D/COPY WNCPYSRC,GLH00181
- 
+
       ** Input Specs
       ** -----------
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode                     Return Code
      C                   PARM                    GLPosting                      GL Posting Detail
      C                   PARM                    MGPosting                      MG Posting Detail
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
      C/COPY WNCPYSRC,GLH00417
      C                   EVAL      ReturnCode = *BLANKS
- 
+
      C                   EVAL      MGNWRK = GLMGNWRK                            Network
      C                   EVAL      MGBRCA = GLBRCA                              Branch Code - Alpha
      C                   EVAL      MGCNUM = GLCNUM                              Customer number
@@ -273,7 +275,7 @@
      C                   EVAL      MGDSTN = GLMGDSTN                            Destination
      C                   EVAL      MGVALD = GLVALD                              Value date
      C                   EVAL      MGPSTD = GLPSTD                              Posting date
- 
+
      C                   EVAL      MGPSTA = GLPSTA                              Posting Amount
      C/COPY WNCPYSRC,GLH00183
                                                                                             BUG26832
@@ -295,10 +297,10 @@
      C                   OUT       LDA                                                      BUG26832
      C                   EXSR      *PSSR                                                    BUG26832
      C                   ENDIF                                                              BUG26832
- 
+
      C                   IF        EDMCNW <> 'Y'                                            BUG26832
                                                                                             BUG26832
- 
+
      C                   SELECT
      C                   WHEN      GLRECI = 'P' AND GLDRCR = 0
      C                   EVAL      MGDRCR = 'D '                                Debit/Credit Ind.
@@ -319,111 +321,111 @@
      C                   EVAL      MGDRCR = 'C '                                            BUG26832
      C                   ENDIF                                                              BUG26832
      C                   ENDIF                                                              BUG26832
- 
+
      C                   EVAL      MGSFD6 = *BLANKS                             Sub field 6
      C                   EVAL      MGSFD7 = *BLANKS                             Sub field 7 - Ref to
      C                   EVAL      MGSFD8 = *BLANKS                             Sub field 8 - A/c Se
      C                   EVAL      MGSFD9 = *BLANKS                             Sub field 9 - Supple
- 
+
      C                   EVAL      MGADI1 = *BLANKS                             Additional Informati
      C                   EVAL      MGADI2 = *BLANKS                             Additional Informati
      C                   EVAL      MGADI3 = *BLANKS                             Additional Informati
      C                   EVAL      MGADI4 = *BLANKS                             Additional Informati
      C                   EVAL      MGADI5 = *BLANKS                             Additional Informati
      C                   EVAL      MGADI6 = *BLANKS                             Additional Informati
- 
+
       ** Retrieve Details
- 
+
      C                   EXSR      $RtvDtl
- 
+
       ** Format MT950 subfields
- 
+
      C                   IF        WkModuleID = 'FT'                            Fund Transfer
      C                   EXSR      $FT0325
      C                   ENDIF
- 
+
       ** Format Field 61 / Sub field 6
- 
+
      C                   EXSR      $SubFld6
- 
+
       ** Format Field 61 / Sub field 7 - Ref to the A/c Owner
- 
+
      C                   EXSR      $SubFld7
- 
+
       ** Format Field 61 / Sub field 8 - A/c Servicing Institution Ref
- 
+
      C                   EXSR      $SubFld8
- 
+
       ** Format Field 61 / Sub field 9 - Supplementary Details
- 
+
      C                   EXSR      $SubFld9
- 
+
       ** Format Field 86 - Information to Account Owner
- 
+
      C                   EXSR      $Field86
- 
+
      C                   RETURN
- 
+
       *========================================================================*
       * $RtVMod: Retrieve Details.                                            *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvDtl       BEGSR
       *    -------       -----
- 
+
      C                   EVAL      WkModuleID = *BLANKS                         Module ID
      C                   EVAL      WkDealType = %SUBST(GLOTTP:1:2)              Deal Type
- 
+
      C                   SELECT
- 
+
       ** Lending
- 
+
      C                   WHEN      GLSPOS = '  GE-LE'
      C                   EVAL      WkModuleID = 'LE'                            Module ID
- 
+
       ** Dealing
- 
+
      C                   WHEN      GLSPOS = '  GE-DL'
- 
+
      C                   EVAL      X = 1
      C     WkDealType    LOOKUP    TrDealType(X)                          99
      C                   IF        *IN99
      C                   EVAL      WkModuleID = TrModuleID(X)                   Module ID
      C                   ENDIF
- 
+
       ** Fund Transfer
- 
+
      C                   WHEN      GLSPOS = '  GE-FT'
      C                   EVAL      WkModuleID = 'FT'                            Module ID
- 
+
       ** General Ledger
- 
+
      C                   WHEN      GLSPOS = '  GE-XF'
      C                             OR GLSPOS = '  GE-XB'
      C                   EVAL      WkModuleID = 'GL'                            Module ID
- 
+
       ** Securities Trading module.
- 
+
      C                   WHEN      GLSPOS = '  GE-ST'
      C                   EVAL      WkModuleID = 'SE'                            Module ID
- 
+
       ** Customer Exchange transactions.
- 
+
      C                   WHEN      GLSPOS = '  GE-CE'
      C                   EVAL      WkModuleID = 'RE'                            Module ID
- 
+
       **  Standing Order
- 
+
      C                   WHEN      GLSPOS = '  GE-SO'
      C                   EVAL      WkModuleID = 'SO'                            Module ID
- 
+
      C                   WHEN      GLSPOS = '  GE-TX'                                         CAP204
      C                   EVAL      WkModuleID = 'RE'                                          CAP204
                                                                                               CAP204
      C                   ENDSL
- 
+
       **  Retail Transaction Type
- 
+
      C                   IF        %SUBST(GLOTRF:1:2) = '91'                    Retail Transact Type
      C                   EVAL      WkField6 = %SUBST(GLOTRF:1:6)                Orig. Transact. Ref
      C     '0123456789'  CHECK     WkField6      X
@@ -431,38 +433,38 @@
      C                   EVAL      WkModuleID = 'RE'                            Module ID
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Batch Transaction
- 
+
      C/COPY WNCPYSRC,GLH00418
      C     '0123456789'  CHECK     GLSPOS        X
- 
+
       ** If Source of Posting contains 6 numeric digits (batch number + batch item)
- 
+
      C                   IF        X = 7
      C/COPY WNCPYSRC,GLH00419
      C                   EVAL      WkModuleID = 'BA'                            Module ID
      C/COPY WNCPYSRC,GLH00420
      C                   ENDIF
- 
+
       *    -------       -----
      C     @RtvDtl       ENDSR
- 
+
       *========================================================================*
       * $FT0325: Format MT950 subfields                                        *
       *------------------------------------------------------------------------*
- 
+
      C     $FT0325       BEGSR
       *    -------       -----
- 
+
       ** Set up parameters
- 
+
      C/COPY WNCPYSRC,GLH00421
      C                   EVAL      W0ACT  = GLOTTP                              Transaction type
      C/COPY WNCPYSRC,GLH00422
- 
+
      C                   CLEAR                   W1DATA
- 
+
      C                   EVAL      W1PREF = GLPREF                              Payment Reference
      C                   EVAL      W1CQSQ = %SUBST(GLPNAR:16:2)                 Cheque Sequence
      C                   IF        GLDRCR = 1
@@ -471,9 +473,9 @@
      C                   EVAL      W1DRCR = 'DR'
      C                   ENDIF
      C/COPY WNCPYSRC,GLH00423
- 
+
       ** Format Sub Fields
- 
+
      C                   CALL      'FT0325'                             99
      C                   PARM      *BLANKS       W0RTN
      C                   PARM                    W0ACT
@@ -483,23 +485,23 @@
      C                             OR W0RTN <> *BLANKS
      C                   CLEAR                   W1DATA
      C                   ENDIF
- 
+
       *    -------       -----
      C     @FT0325       ENDSR
- 
+
       *========================================================================*
       * $SubFld6  : Format Sub field 6                                         *
       *------------------------------------------------------------------------*
- 
+
      C     $SubFld6      BEGSR
       *    --------      -----
- 
+
       **  Default
- 
+
      C                   EVAL      MGSFD6 = 'FMSC'                              Miscellaneous
- 
+
      C                   SELECT
- 
+
       **  Cash Management Zero Balancing entry                                                CRE008
                                                                                               CRE008
      C                   WHEN      GLSPOS = '  GE-CX'  And                                    CRE008
@@ -507,9 +509,9 @@
      C                   Eval      MGSFD6 = GLMGZ616                                          CRE008
                                                                                               CRE008
       **  Fund Transfer
- 
+
      C                   WHEN      WkModuleID = 'FT'                            Fund Transfer
- 
+
      C                   SELECT
      C                   WHEN      W1SBF6 <> *BLANKS
      C                   EVAL      MGSFD6 = W1SBF6                              From FT0325
@@ -520,63 +522,63 @@
      C                   OTHER
      C                   EVAL      %SUBST(MGSFD6:2:3) = 'COL'                   Collections
      C                   ENDSL
- 
+
       **  xxxxxxxxxxxxx
- 
+
      C                   WHEN      WkModuleID = 'GL'
      C                   EVAL      %SUBST(MGSFD6:2:3) = 'FEX'
- 
+
       **  Forex deal
- 
+
      C                   WHEN      WkModuleID = 'FX'
      C                   EVAL      %SUBST(MGSFD6:2:3) = 'FEX'
- 
+
       **  Standing Order
- 
+
      C                   WHEN      WkModuleID = 'SO'
      C                   EVAL      %SUBST(MGSFD6:2:3) = 'STO'                   Standing Order
- 
+
       **  Retail Interest
- 
+
      C                   WHEN      GLSPOS = '  GE-IC'
      C                   EVAL      %SUBST(MGSFD6:2:3) = 'INT'                   Interest
      C/COPY WNCPYSRC,GLH00424
- 
+
      C                   ENDSL
       ** Override MGSFD6 if found to exist in SDNTTIPD                                        CGL152
      C                   EXSR      $CGL152SFld6                                               CGL152
      C/COPY WNCPYSRC,GLH00203
- 
+
       *    --------      -----
      C     @SubFld6      ENDSR
- 
+
       *========================================================================*
       * $SubFld7  : Format Sub field 7 - Ref to the A/c Owner                  *
       *------------------------------------------------------------------------*
- 
+
      C     $SubFld7      BEGSR
       *    --------      -----
- 
+
       **  Default
- 
+
       **  SWIFT Common Reference
- 
+
      C                   IF        GLSWCR <> *BLANKS
      C                             AND GLSWCR <> GLDLREF
      C                   EVAL      MGSFD7 = GLSWCR                              Swift Common Ref.
- 
+
      C                   ELSE
      C/COPY WNCPYSRC,GLH00425
- 
+
       **  First 16 characters of posting narrative
- 
+
      C                   EVAL      MGSFD7 = %SUBST(GLPNAR:1:16)                 Posting Narrative
      C/COPY WNCPYSRC,GLH00426
- 
+
      C                   ENDIF
- 
+
      C                   SELECT
- 
+
       **  Cash Management Zero Balancing entry                                                CRE008
                                                                                               CRE008
      C                   WHEN      GLSPOS = '  GE-CX'  And                                    CRE008
@@ -584,40 +586,40 @@
      C                   Eval      MGSFD7 = GLMGZ617                                          CRE008
                                                                                               CRE008
       **  Fund Transfer
- 
+
      C                   WHEN      WkModuleID = 'FT'                            Fund Transfer
      C                             AND W1SBF7 <> *BLANKS
      C                   EVAL      MGSFD7 = W1SBF7                              From FT0325
- 
+
       **  xxxxxxxxxxxxx
- 
+
      C                   WHEN      GLSPOS = '  GE-CM'
- 
+
      C                   SELECT
- 
+
      C                   WHEN      GLDRCR = 0
      C                             AND GLSWCR = *BLANKS
      C                   EVAL      MGSFD7 = %SUBST(GLSPOS:3:5)
- 
+
      C                   WHEN      GLDRCR = 1
      C                   EVAL      MGSFD7 = %SUBST(GLSPOS:3:5)
      C                   ENDSL
      C/COPY WNCPYSRC,GLH00630
- 
+
      C                   ENDSL
- 
+
       *    --------      -----
      C     @SubFld7      ENDSR
- 
+
       *========================================================================*
       * $SubFld8  : Format Sub field 8 - A/c Servicing Institution Ref         *
       *------------------------------------------------------------------------*
- 
+
      C     $SubFld8      BEGSR
       *    --------      -----
- 
+
      C                   SELECT
- 
+
       **  Cash Management Zero Balancing entry                                                CRE008
                                                                                               CRE008
      C                   WHEN      GLSPOS = '  GE-CX'  And                                    CRE008
@@ -627,23 +629,23 @@
                                                                                               CRE008
      C                   WHEN      WkModuleID = 'BA'                            Batch Input
      C                   EVAL      MGSFD8 = '//' + 'G' + GLSPOS
- 
+
      C                   WHEN      WkModuleID = 'GL'                            General Ledger
      C                   EVAL      MGSFD8 = '//' + 'G' +  %SUBST(GLSPOS:3:5)
- 
+
      C                   WHEN      GLSPOS = '  GE-CM'
      C                   IF        GLDRCR = 0
      C                             AND GLSWCR <> *BLANKS
      C                   EVAL      MGSFD8 = '//' + %SUBST(GLSPOS:3:5)           Source of Posting
      C                   ENDIF
- 
+
      C                   WHEN      WkModuleID = 'FT'                            Fund transfer
      C                             AND W1SBF8 <> *BLANKS
      C                   EVAL      MGSFD8 = '//' + W1SBF8
- 
+
      C                   WHEN      GLDLREF <> *BLANKS                           Deal/Loan Reference
      C                   EVAL      MGSFD8 = '//' + GLDLREF
- 
+
      C                   WHEN      WkModuleID = 'FX'                            Forex Deal
      C                             OR WkModuleID = 'IR'                         Interest Rate
      C                             OR WkModuleID = 'FR'                         Future Rate Agreem.
@@ -652,22 +654,22 @@
      C                   EVAL      MGSFD8 = '//' + %SUBST(WkModuleID:1:1) +
      C                             GLOTRF
      C/COPY WNCPYSRC,GLH00631
- 
+
      C                   ENDSL
- 
+
       *    --------      -----
      C     @SubFld8      ENDSR
      C/COPY WNCPYSRC,GLH00428
- 
+
       *========================================================================*
       * $SubFld9  : Format Sub field 9 - Supplementary Details                 *
       *------------------------------------------------------------------------*
- 
+
      C     $SubFld9      BEGSR
       *    --------      -----
- 
+
      C                   SELECT
- 
+
       **  Cash Management Zero Balancing entry                                                CRE008
                                                                                               CRE008
      C                   WHEN      GLSPOS = '  GE-CX'  And                                    CRE008
@@ -676,29 +678,29 @@
                                                                                               CRE008
      C/COPY WNCPYSRC,GLH00632
       **  Batch Input
- 
+
      C                   WHEN      WkModuleID = 'BA'                            Batch Input
      C                   EVAL      MGSFD9 = GLPNAR
- 
+
       **  Fund transfer
- 
+
      C                   WHEN      WkModuleID = 'FT'                            Fund transfer
      C                             AND W1SBF9 <> *BLANKS
      C                   EVAL      MGSFD9 = W1SBF9
- 
+
       **  If posting relating to a deal
- 
+
      C                   WHEN      GLDLREF <> *BLANKS                           Deal/Loan Reference
- 
+
       **  Retrieve the transaction customer
- 
+
      C                   MOVEL(P)  GLCNUM        P@KEY1                         Default Accnt Cust.
- 
+
      C**********         IF        GLDBCNUM <> *ZEROS                    Dealt/Borrower Cust. CSD027
      C                   IF        GLDBCNUM <> *BLANKS                          Dealt/Borrowe CSD027
      C                   MOVEL(P)  GLDBCNUM      P@KEY1
      C                   ENDIF
- 
+
      C                   IF        WkModuleID = 'LE'                            Lending
      C                   EVAL      WkField6 =  %SUBST(GLDLREF:2:6)
      C                   MOVE      WkField6      KeyLNRF
@@ -724,31 +726,31 @@
      C                   ENDIF                                                              BUG24690
       *                                                                                     BUG24690
      C                   ENDIF
- 
+
       **  Retrieve the Customer Report Name and Town.
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      '*MSG   '     P@RTCD
      C                   PARM      '*KEY   '     P@OPTN
      C                   PARM                    P@KEY1
      C                   PARM                    P@KYST
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   IF        P@RTCD = *BLANKS
      C     BBCRNM        CAT(P)    BBCRTN:1      MGSFD9
      C                   ENDIF
- 
+
      C                   OTHER
- 
+
       **  Otherwise, retrieve the posting narrative and suppress the leading ' ', '-' or ':',
       **  According the common SWIFT reference, the program extracts details from 1 or 17 position
- 
+
      C                   IF        GLSWCR <> *BLANKS                            Swift common referen
      C                   EVAL      X = 1
      C                   ELSE
      C                   EVAL      X = 17
      C                   ENDIF
- 
+
      C                   EVAL      WkField30 = %TRIM(%SUBST(GLPNAR:X:30-X+1))
      C     1             DO        30            X
      C                   IF        %SUBST(WkField30:X:1) <> ':'
@@ -759,16 +761,16 @@
      C                   ENDIF
      C                   ENDDO
      C                   EVAL      MGSFD9 = %TRIM(WkField30)
- 
+
      C                   ENDSL
- 
+
       *    --------      -----
      C     @SubFld9      ENDSR
- 
+
       *========================================================================*
       * $Field86  : Format Field 86 - Information to Account Owner             *
       *------------------------------------------------------------------------*
- 
+
      C     $Field86      BEGSR
       *    --------      -----
      C/COPY WNCPYSRC,GLH00204
@@ -809,11 +811,11 @@
      C                   EVAL      MG8632 = BAEX22                                          BUG25147
      C                   EVAL      MG8635 = 'Y'                                             BUG25311
      C                   ELSE                                                               BUG25147
- 
+
       ** Retrieve ERI information
- 
+
      C                   EVAL      WkERI = 'N'                                  ERI Info. Exist
- 
+
      C                   IF        GLOCCY <> *BLANKS                            Original Currency
      C                             AND GLOAMT <> *ZEROS                         Original Amount
      C                   CALL      'ZM0040'
@@ -827,16 +829,16 @@
      C                   EVAL      WkERI = 'Y'                                  ERI Info. Exist
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Default 'Information to Account Owner' with 'Additional Information'.
- 
+
      C                   EVAL      MGADI1 = GLMGADI1                            Add. Information 1
      C                   EVAL      MGADI2 = GLMGADI2                            Add. Information 2
      C                   EVAL      MGADI3 = GLMGADI3                            Add. Information 3
      C                   EVAL      MGADI4 = GLMGADI4                            Add. Information 4
      C                   EVAL      MGADI5 = GLMGADI5                            Add. Information 5
      C                   EVAL      MGADI6 = GLMGADI6                            Add. Information 6
- 
+
      C                   SELECT
                                                                                               CRE008
       **  Cash Management Zero Balancing entry                                                CRE008
@@ -862,9 +864,9 @@
      C                   EVAL      MGADI6 = *blank                                            216937
      C                   EVAL      MGADI1 = GLMGSRCA                                          216937
      C/COPY WNCPYSRC,GLH00206
- 
+
       ** If ERI Indicator = ' ' and ERI Information exists, it should be in first line.
- 
+
      C                   WHEN      GLMGAERI = ' '                               ERI Indicator
      C                             AND WkERI = 'Y'                              ERI Info. Exist
      C                   EVAL      MGADI1 = '/OCMT/' + ZSCCY + ZSAMNT           Add. Information 1
@@ -874,9 +876,9 @@
      C                   EVAL      MGADI4 = GLMGADI3                            Add. Information 4
      C                   EVAL      MGADI5 = GLMGADI4                            Add. Information 5
      C                   EVAL      MGADI6 = GLMGADI5                            Add. Information 6
- 
+
       ** If ERI Indicator = '1', the ERI information should be in the fist line.
- 
+
      C                   WHEN      GLMGAERI = '1'                               ERI Indicator
      C                             AND WkERI = 'Y'                              ERI Info. Exist
      C                   EVAL      MGADI1 = '/OCMT/' + ZSCCY + ZSAMNT           Add. Information 1
@@ -886,9 +888,9 @@
      C                   EVAL      MGADI4 = GLMGADI3                            Add. Information 4
      C                   EVAL      MGADI5 = GLMGADI4                            Add. Information 5
      C                   EVAL      MGADI6 = GLMGADI5                            Add. Information 6
- 
+
       ** If ERI Indicator = 'A', the ERI information should be in the fist available line.
- 
+
      C                   WHEN      GLMGAERI = 'A'                               ERI Indicator
      C                             AND WkERI = 'Y'                              ERI Info. Exist
      C                   SELECT
@@ -911,28 +913,28 @@
      C                   EVAL      MGADI6 = '/OCMT/' + ZSCCY + ZSAMNT           Add. Information 6
      C                   CAT       '/':0         MGADI6                         Add. Information 6
      C                   ENDSL
- 
+
       ** If ERI Indicator = 'M', the ERI information should be manually inputted in the
       ** Additional Information. The processing does not consider the ERI Information
       ** held in the GLPOSTPD.
       ** The default processing has loaded correctly the fields.
- 
+
      C********           WHEN      GLMGAERI = 'M'                               ERI Indicator
- 
+
       ** If ERI Indicator = 'N', the ERI information should not be used for this posting.
       ** The default processing has loaded correctly the fields.
- 
+
      C********           WHEN      GLMGAERI = 'N'                               ERI Indicator
- 
+
      C                   ENDSL
      C/COPY WNCPYSRC,GLH00429
       *                                                                                     BUG25147
      C                   ENDIF                                                              BUG25147
      C/COPY WNCPYSRC,GLH00207
- 
+
       *    --------      -----
      C     @Field86      ENDSR
- 
+
       *========================================================================*              CGL152
       * $CGL152Fld6 : Format Sub field 6 w/ SDNTTIL0.NINTTI when CGL152 is On  *              CGL152
       *------------------------------------------------------------------------*              CGL152
@@ -958,18 +960,18 @@
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *------------------------------------------------------------------------*
- 
+
      C     *INZSR        BEGSR
       *    ------        -----
- 
+
       ** Initialise Copyright Array
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Initialise LDA
      C     *LOCK         IN        LDA
      C                   MOVEL     PSProcPgm     DBpgm
      C                   OUT       LDA
- 
+
       ** Key list for CHAIN to CLOAN
      C     KeyCLOAN      KLIST
      C                   KFLD                    KeyLNRF                        Loan reference
@@ -1009,37 +1011,37 @@
      C                   EVAL      CGL152 = 'Y'                                               CGL152
      C                   ENDIF                                                                CGL152
      C/COPY WNCPYSRC,GLH00430
- 
+
      C/COPY WNCPYSRC,GLH00208
       *    ------        -----
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
- 
+
      C     *PSSR         BEGSR
       *    -----         ------
- 
+
      C                   IF        ReturnCode = *BLANKS
      C                   EVAL      ReturnCode = 'PSSR_Error'
      C                   ENDIF
- 
+
      C                   DUMP
      C                   ROLBK
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
- 
+
      C                   RETURN
- 
+
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 **CTDATA TransType
 FP FX Foreign Exch. Purch.
 FS FX Foreign Exch. Sold

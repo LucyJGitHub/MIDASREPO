@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Account master details validation')           *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GLAMAD1VL -  Account Master Details Validation               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL184             Date 07Dec16               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *                 CGL165             Date 23Feb15               *
       *                 CER069             Date 03Jul14               *
       *                 MD024336A          Date 19Aug14               *
       *                 MD024398           Date 11May14               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL184 - New Frequencies for Account Statements              *
       *  CGL165 - Dual Withholding Tax                                *
       *  CER069 - German Tax Enhancement                              *
@@ -2790,4 +2792,4 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

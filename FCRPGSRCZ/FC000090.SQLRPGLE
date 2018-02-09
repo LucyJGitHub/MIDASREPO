@@ -9,12 +9,14 @@
       *                                                               *
       *  FC000090 - CFC006 Initialisation Program                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
-      *                                                               *
-      *  Last Amend No. MD020563 *CREATE   Date 22May13               *
+      *  (c) Finastra International Limited 2013                      *                             
+      *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020563 *CREATE   Date 22May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020563 - CFC006 issues                                     *
       *                                                               *
       *****************************************************************
@@ -30,19 +32,19 @@
       *  *PSSR  - Program exception error routine                     *
       *                                                               *
       *****************************************************************
- 
+
       ** Section Name List
- 
+
      D SCList          S             10    DIM(100) CTDATA PERRCD(1)
- 
+
       ** Declared Variable
- 
+
      D Ctr             S              5  0
      D SCName          S             10
      D WRun            S              1
- 
+
       ** Main Process
- 
+
      C                   Z-ADD     1             Ctr
      C                   EVAL      SCName = *BLANKS
      C                   EVAL      SCName = SCList(Ctr)
@@ -52,7 +54,7 @@
      C                   EVAL      SCName = *BLANKS
      C                   EVAL      SCName = SCList(Ctr)
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -62,17 +64,17 @@
       *                                                               *
       *****************************************************************
      C     UPDATE        BEGSR
- 
+
      C/EXEC SQL
      C+ update SCCOMXTD set FMDEL = 'N' where (FMUNIQ) in
      C+ (select FMUNIQ from SCCOMMTD where FMTYPE = 'X' and
      C+ FMMODE = 'C' and FMMBR = :SCName)
      C/END-EXEC
- 
+
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -85,17 +87,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

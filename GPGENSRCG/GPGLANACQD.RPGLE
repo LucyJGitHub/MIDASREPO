@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2017')
+     H COPYRIGHT('(c) Finastra International Limited 2017')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Generated Code')                                       *
@@ -9,13 +9,15 @@
       *                                                               *
       *  GPGLANACQD - On-Line Update of Global File GZGLANACQD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. CER073A            Date 05Sep17               *
-      *  Prev Amend No. CER073  *CREATE    Date 10Jul17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER073A            Date 05Sep17               *
+      *                 CER073  *CREATE    Date 10Jul17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
       *  CER073 - AnaCredit Reporting                                 *
       *                                                               *

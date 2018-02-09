@@ -8,14 +8,16 @@
 /*       GOCAC005  - Midas GO Global Update Accounts Task Split -    */
 /*                   End Task Split                                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. AR1097467B         Date 17Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467          Date 17Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CGP013  *Create    Date 19Feb09              */
+/*                      CGP013  *CREATE    Date 19Feb09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1097467B - Expected 15% COB run optimization not met      */
 /*       CGP013 - Task split component COB Global Update Accounts    */
 /*                - End Task Split                                   */
@@ -37,7 +39,7 @@
              DCL        VAR(&JOURNAL) TYPE(*CHAR) LEN(10)
 /**********  DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)             */               /*AR1097467B*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global monitor message */
@@ -105,6 +107,6 @@ ABNOR:       SNDPGMMSG  MSG('Program GOCAC005 ended abnormally') +
              CHGJOB     SWS(XXXXXX11)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

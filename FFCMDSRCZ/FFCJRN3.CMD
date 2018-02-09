@@ -8,19 +8,21 @@
 /*                                                                  */
 /*         FFCJRN3 - FINAL JOURNAL PROCESSING FOR SUB-COMPONENT     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*         LAST AMEND NO. E21869          DATE  06MAY90             */
-/*         PREV AMEND NO. E20430          DATE  29NOV89             */
+/*       Prev Amend No. E21869             Date 06May90              */
+/*                      E20430             Date 29Nov89              */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*    E21869 - FURTHER FIX TO FIX E20430.                           */
 /*    E20430 - CREATION PARAMETERS REARRANGED/AMENDED TO ENABLE     */
 /*             THE CMD TO BE CREATED USING CRTOBJ.                  */

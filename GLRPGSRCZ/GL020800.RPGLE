@@ -16,14 +16,16 @@
       *                                                               *
       *  Called By: GL003600                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Ament No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CSW212             Date 03May12               *
       *                 BUG28033 *CREATE   Date 12Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
       *  BUG28033 - Add missing files in ATU                          *
@@ -62,18 +64,18 @@
      FGLAUTFPD  O    E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
      FGLSLACL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       /EJECT
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
      D WKZERO          C                   CONST('0000000000  ')
- 
+
       ** Array containing Copyright statement
- 
+
       /SPACE 3
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
      D NOSTD         E DS             8    EXTNAME(NOSTD)
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
@@ -82,35 +84,35 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D DSFRAC          DS
      D  DSFCNU                 1      6
      D  DSFCCY                 7      9
      D  DSFACO                10     19
      D  DSFACS                20     21
      D  DSFBRC                22     24
- 
+
      D DSTOAC          DS
      D  DSTCNU                 1      6
      D  DSTCCY                 7      9
      D  DSTACO                10     19
      D  DSTACS                20     21
      D  DSTBRC                22     24
- 
+
      D DSKITE          DS            90
      D  KDLIN                  1     18
      D  KCCY                  19     21
      D  KBRCA                 22     24
- 
+
      D DSKIT2          DS            90
      D  KDLIN2                 1     18
      D  KCCY2                 19     21
      D  KBRCA2                22     24
- 
+
      D DSKIT3          DS            90
      D  KSFCNU                 1      6
      D  KSFCCY                 7      9
@@ -118,23 +120,23 @@
      D  KSFACS                20     21
      D  KSFBRC                22     24
      D  KSRFNO                25     34
- 
+
      D WNOST           DS
       ** External Data Area for Nostro Details
      D  WWCCY                  1      3
      D  WWNOSN                 4      5
      D  WWBRCH                 6      8
- 
+
       ** Data Area giving Installation Control Details
- 
+
      D PSDS           SDS
- 
+
       ** Program Status Data Structure
- 
+
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
      D @RUN            S              1A
      D WKCCYY          S              4S 0
      D WKDFMT          S              9A
@@ -151,40 +153,40 @@
      D WNOST2          S              5A
      D WKDLNO          S              6A
      D WKDDAT          S              5A
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    P@PRCD
      C                   PARM                    P@RFNO
      C     DSFRAC        PARM                    P@FRAC
      C     DSTOAC        PARM                    P@TOAC
      C                   PARM                    P@RTCD
- 
+
      C                   EXSR      SRINIT
- 
+
      C                   IF        P@PRCD = '*LR '
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   EXSR      XSIV01
      C                   EXSR      XMDEAL
- 
+
      C                   IF        DSTBRC <> DSFBRC  AND
      C                             KDLIN2 <> *BLANKS AND
      C                             KDLIN2 <> WKZERO
      C                   EXSR      XMDEA2
      C                   ENDIF
- 
+
      C                   IF        WNOST <> *BLANKS
      C                   EXSR      XMDEA3
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -196,12 +198,12 @@
       *  Calls:     XSAUDT                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     XMDEAL        BEGSR
- 
+
      C     KDEAL         SETLL     DLBHISF2
      C     KDEAL         READE     DLBHISF2
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL2'
@@ -210,12 +212,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL2)
      C                   DELETE    DLBHISF2
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL2'
@@ -224,13 +226,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      OPCA = WKDLIN
      C                   EVAL      ROBR = DSTBRC
      C                   EVAL      PUCY = DSTCCY
- 
+
      C                   WRITE     DLBHISF2
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL2'
@@ -239,13 +241,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL2'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL         READE     DLBHISF2
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL2'
@@ -255,10 +257,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C     KDEAL         SETLL     DLBHISF3
      C     KDEAL         READE     DLBHISF3
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL3'
@@ -267,12 +269,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL3)
      C                   DELETE    DLBHISF3
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL3'
@@ -281,13 +283,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      RONS = WKDLIN
      C                   EVAL      PUCY = DSTCCY
      C                   EVAL      ROBR = DSTBRC
- 
+
      C                   WRITE     DLBHISF3
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL3'
@@ -296,13 +298,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL3'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL         READE     DLBHISF3
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL3'
@@ -312,10 +314,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C     KDEAL         SETLL     DLBHISF4
      C     KDEAL         READE     DLBHISF4
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL4'
@@ -324,12 +326,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL4)
      C                   DELETE    DLBHISF4
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL4'
@@ -338,13 +340,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      OSCA = WKDLIN
      C                   EVAL      SLCY = DSTCCY
      C                   EVAL      POBR = DSTBRC
- 
+
      C                   WRITE     DLBHISF4
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL4'
@@ -353,13 +355,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL4'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL         READE     DLBHISF4
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL4'
@@ -369,10 +371,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C     KDEAL         SETLL     DLBHISF5
      C     KDEAL         READE     DLBHISF5
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL5'
@@ -381,12 +383,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL5)
      C                   DELETE    DLBHISF5
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL5'
@@ -395,13 +397,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      PONS = WKDLIN
      C                   EVAL      SLCY = DSTCCY
      C                   EVAL      POBR = DSTBRC
- 
+
      C                   WRITE     DLBHISF5
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL5'
@@ -410,13 +412,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL5'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL         READE     DLBHISF5
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL5'
@@ -426,7 +428,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -441,10 +443,10 @@
       *****************************************************************
       *
      C     XMDEA2        BEGSR
- 
+
      C     KDEAL2        SETLL     DLBHISF2
      C     KDEAL2        READE     DLBHISF2
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL2'
@@ -453,12 +455,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL2)
      C                   DELETE    DLBHISF2
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL2'
@@ -467,11 +469,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      ROBR = DSTBRC
- 
+
      C                   WRITE     DLBHISF2
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL2'
@@ -480,13 +482,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL2'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL2        READE     DLBHISF2
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL2'
@@ -496,10 +498,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C     KDEAL2        SETLL     DLBHISF3
      C     KDEAL2        READE     DLBHISF3
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL3'
@@ -508,12 +510,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL3)
      C                   DELETE    DLBHISF3
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL3'
@@ -522,11 +524,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      ROBR = DSTBRC
- 
+
      C                   WRITE     DLBHISF3
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL3'
@@ -535,13 +537,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL3'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL2        READE     DLBHISF3
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL3'
@@ -551,10 +553,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C     KDEAL2        SETLL     DLBHISF4
      C     KDEAL2        READE     DLBHISF4
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL4'
@@ -563,12 +565,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL4)
      C                   DELETE    DLBHISF4
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL4'
@@ -577,11 +579,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      POBR = DSTBRC
- 
+
      C                   WRITE     DLBHISF4
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL4'
@@ -590,13 +592,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL4'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL2        READE     DLBHISF4
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL4'
@@ -606,10 +608,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C     KDEAL2        SETLL     DLBHISF5
      C     KDEAL2        READE     DLBHISF5
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL5'
@@ -618,12 +620,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL5)
      C                   DELETE    DLBHISF5
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL5'
@@ -632,11 +634,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      POBR = DSTBRC
- 
+
      C                   WRITE     DLBHISF5
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL5'
@@ -645,13 +647,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL5'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL2        READE     DLBHISF5
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL5'
@@ -661,7 +663,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -679,10 +681,10 @@
       *
      C                   EVAL      KDLIN3 = WWNOSN
      C                   EVAL      WNOST2 = WNOST
- 
+
      C     KDEAL3        SETLL     DLBHISF6
      C     KDEAL3        READE     DLBHISF6
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL6'
@@ -691,15 +693,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL6)
- 
+
      C                   EVAL      ROBR = WWBRCH
- 
+
      C                   UPDATE    DLBHISF6
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL6'
@@ -708,13 +710,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL6'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL3        READE     DLBHISF6
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL6'
@@ -724,10 +726,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C     KDEAL3        SETLL     DLBHISF7
      C     KDEAL3        READE     DLBHISF7
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL7'
@@ -736,15 +738,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL7)
- 
+
      C                   EVAL      ROBR = WWBRCH
- 
+
      C                   UPDATE    DLBHISF7
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL7'
@@ -753,13 +755,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL7'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL3        READE     DLBHISF7
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL7'
@@ -769,10 +771,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C     KDEAL3        SETLL     DLBHISF8
      C     KDEAL3        READE     DLBHISF8
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL8'
@@ -781,15 +783,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL8)
- 
+
      C                   EVAL      POBR = WWBRCH
- 
+
      C                   UPDATE    DLBHISF8
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL8'
@@ -798,13 +800,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL8'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL3        READE     DLBHISF8
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL8'
@@ -814,10 +816,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C     KDEAL3        SETLL     DLBHISF9
      C     KDEAL3        READE     DLBHISF9
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL9'
@@ -826,15 +828,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(DLBHISL9)
- 
+
      C                   EVAL      POBR = WWBRCH
- 
+
      C                   UPDATE    DLBHISF9
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL9'
@@ -843,13 +845,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'DLBHISL9'
      C                   EXSR      XSAUDT
- 
+
      C     KDEAL3        READE     DLBHISF9
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'DLBHISL9'
@@ -859,7 +861,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -872,9 +874,9 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     XSAUDT        BEGSR
- 
+
      C                   EVAL      AURFNO = P@RFNO
      C                   EVAL      AUFILE = 'DLBHISPD'
      C                   EVAL      AUFBRC = DSFBRC
@@ -890,7 +892,7 @@
      C     WKDLNO        CAT       WKDDAT:1      AUTEXT
      C                   EVAL      AUCRTD = WKDFMT
      C                   WRITE     GLAUTFD0
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GLAUTFPD'
@@ -899,7 +901,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -957,33 +959,33 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRINIT        BEGSR
- 
+
       ** Set up copyright parameter
- 
+
      C                   MOVEA     CPY@          CPY2@            80
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *DTAARA       DEFINE                  NOSTD
- 
+
       ** Check nostro account changes
- 
+
      C                   EVAL      WNOST = *BLANKS
      C     *LOCK         IN        NOSTD
      C                   MOVE      DANOST        WNOST
      C                   OUT       NOSTD
- 
+
       ** Retrieve Run Date.
- 
+
      C                   CALL      'AOBANKR0'                           9090
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** If return with an error (LR seton in called program) then
       ** process for database error.
- 
+
      C                   IF        *IN90 = '1' OR
      C                             @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
@@ -993,34 +995,34 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      WKDFMT = BJMRDT
      C                   MOVE      BJMRDT        WKYEAR
- 
+
      C                   IF        WKYEAR < 72
      C                   EVAL      WKCCYY = WKYEAR + 2000
      C                   ELSE
      C                   EVAL      WKCCYY = WKYEAR + 1900
      C                   ENDIF
- 
+
      C                   MOVE      WKCCYY        WKDFMT
      C                   EVAL      KDLIN = *BLANKS
      C                   EVAL      WKDLIN = *BLANKS
- 
+
      C     KDEAL         KLIST
      C                   KFLD                    KDLIN
      C                   KFLD                    KCCY
      C                   KFLD                    KBRCA
- 
+
      C     KDEAL2        KLIST
      C                   KFLD                    KDLIN2
      C                   KFLD                    KCCY2
      C                   KFLD                    KBRCA2
- 
+
      C     KDEAL3        KLIST
      C                   KFLD                    KDLIN3
      C                   KFLD                    WWCCY
- 
+
      C     KSLAC         KLIST
      C                   KFLD                    KSFBRC
      C                   KFLD                    KSFCNU
@@ -1028,9 +1030,9 @@
      C                   KFLD                    KSFACO
      C                   KFLD                    KSFACS
      C                   KFLD                    KSRFNO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1045,20 +1047,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      P@RTCD = 'F'
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   SETON                                        U7U8LR
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

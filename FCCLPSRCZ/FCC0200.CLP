@@ -7,11 +7,12 @@
 /*                                                                   */
 /*      FCC0200 - APPLY OVERRIDES FOR I/C REPORTS.                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR316373           Date 03Jun15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR316373           Date 03Jun15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 256873             Date 26Sep08              */
+/*                      256873             Date 26Sep08              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -43,6 +44,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR316373 - Recompile due to change in /COPY MLCOVRDCL and   */
 /*                  MLCOVROVR.                                       */
 /*       256873 - Recompiled to resolve the authority problem.       */
@@ -165,7 +167,7 @@
 /*  COPYRIGHT STATEMENT VARIABLE  */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*  GLOBAL MONITOR MESSAGE  */
@@ -370,7 +372,7 @@
 /*  END OF PROGRAM PROCESSING  */
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLRSC
  
              ENDPGM

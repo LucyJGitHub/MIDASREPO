@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Invalid outgoing payments repair')            *
@@ -13,10 +13,11 @@
       *             be 'repaired' and applied to the Midas database.  *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1090283          Date 10Aug16               *
-      *  Prev Amend No. CFT151             Date 21Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *                 CFT151             Date 21Mar14               *
       *                 MD022652           Date 07Oct13               *
       *                 258944             Date 23Jan13               *
       *                 CFT148             Date 23Jan13               *
@@ -100,6 +101,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
       *            - Applied for MD-39986.                            *
@@ -6019,4 +6021,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

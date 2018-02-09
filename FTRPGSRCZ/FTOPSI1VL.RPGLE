@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       **********************************************************************
 /*STD *  RPGBASEMOD                                                        *
 /*EXI *  TEXT('Midas FT Outgoing Payments SSI Screen 1 Validation')   *
@@ -13,10 +13,11 @@
       *  Function:  Primary detail screen validation for Outgoing          *
       *             Payments Standard Settlement Instructions              *
       *                                                                    *
-      *  (c) Misys International Banking Systems Ltd. 2002                 *
+      *  (c) Finastra International Limited 2002                           *
       *                                                                    *
-      *  Last Amend No. MD035360           Date 06Aug15               *
-      *  Prev Amend No. MD035030           Date 14Jul15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035360           Date 06Aug15               *
+      *                 MD035030           Date 14Jul15               *
       *                 CFT148             Date 23Jan13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -43,6 +44,7 @@
       *                                                                    *
       **********************************************************************
       *                                                                    *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035360 - Database error encountered due to parameter error *
       *             in FTVODCS                                        *
       *  MD035030 - Fields in error are not highlighted               *
@@ -1119,4 +1121,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

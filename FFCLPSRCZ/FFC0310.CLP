@@ -7,21 +7,23 @@
 /*                                                                   */
 /*   FFC0310  -  MARKET CENTRES LIST                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   LAST AMEND NO. RT0121             DATE 23MAY91                  */
-/*   PREV AMEND NO. FO0073             DATE 15APR91                  */
+/*   PREV AMEND NO. RT0121             DATE 23MAY91                  */
+/*                  FO0073             DATE 15APR91                  */
 /*                  FO0066             DATE 09APR91                  */
 /*                  S01117             DATE 20FEB90                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*   MD046248 - Finastra Rebranding                                  */
 /*   RT0121  -  Monitor the creation of LDA to trap error            */
 /*           -  lda already exists.                                  */
 /*   FO0073  -  U7 + U8 SHOULD BE SET ON IN ABNOR PROCESSING, AND    */
@@ -45,7 +47,7 @@
              DCL        &RLEV         TYPE(*CHAR)  LEN(1)             /*S01117*/
              DCL        &RENT         TYPE(*CHAR)  LEN(3)             /*S01117*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
@@ -83,6 +85,6 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)                                 /*FO0073*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
  END:        ENDPGM

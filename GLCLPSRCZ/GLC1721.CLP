@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       GLC1721 - Generic Posting Interface Control                 */
 /*                                                                   */
-/*       (c) Misys Banking Systems Ltd. 2006                         */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. CGL160             Date 11Nov14              */
-/*       Prev Amend No. AR868514           Date 24Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL160             Date 11Nov14              */
+/*                      AR868514           Date 24Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      242958             Date 11Oct06              */
 /*                      242956             Date 11Oct06              */
@@ -19,6 +20,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL160 - Cheque Details Upload via Generic Posting Interface*/
 /*       AR868514 - Issue in 246313 and 242958.                      */
 /*                  If GPFAIL <> 'Y' program should not end.         */
@@ -31,7 +33,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys Banking Systems Ltd. 2006')
+                          Finastra International Limited 2006')
              DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
@@ -332,6 +334,6 @@ CHK_LOOP:     CHKOBJ    OBJ(&FROMLIB/&FROMFILE) OBJTYPE(*FILE)                  
  ABNOR:      CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000)
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys Banking +
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
                           Systems Ltd.')
              ENDPGM

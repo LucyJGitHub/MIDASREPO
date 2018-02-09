@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                       CGP017
 /*STD *  RPGBASEMOD                                                   *                       CGP017
@@ -10,10 +10,11 @@
       *                                                               *
       *  GOCUSEXCE  - Bulk Update of Global File GZCUSEXCE            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGP017             Date 06Aug12               *
-      *  Prev Amend No. CRE041             Date 28Sep12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *                 CRE041             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG15716           Date 18Feb08               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CRE041 - Enhancements to Customer Exchanges                  *
       *  BUG15716 - Increase array size to handle up to 999 branches  *

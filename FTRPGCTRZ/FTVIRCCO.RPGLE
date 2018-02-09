@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate IP receivers correspondent')         *
@@ -13,7 +13,7 @@
       *                FTIPAYCTL                                      *
       *                FTIPAYRPR                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel.                     *
@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD000091           Date 06May13               *
-      *  Prev Amend No. AR1083047          Date 30Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 06May13               *
+      *                 AR1083047          Date 30Jan13               *
       *                 CFT120             Date 28Sep12               *
       *                 AR572681           Date 11Oct12               *
       *                 262711             Date 02Oct12               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR1083047 - Response with '&' causes exception error in      *
       *              Benchmarking                                     *
@@ -1532,4 +1534,4 @@
       /EJECT                                                                    CFT014
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

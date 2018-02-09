@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate ordering institution - header')      *
@@ -9,7 +9,7 @@
       *                                                               *
       *  FTVORIS01  - Validate Ordering Institution Header            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034390           Date 14May15               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034390           Date 14May15               *
+      *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24710           Date 06Jul09               *
       *                 CSW209             Date 01Apr09               *
@@ -54,10 +55,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034390 - CCTD and RFTD do not validate input for fields    *
       *             generating 52a, 56a, 57a when Clearing codes is   *
       *             supplied in transaction screen does affecting the *
-      *             reports output                                    *      
+      *             reports output                                    *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG24710 - "/" followed by valid retail account is rejected  *
       *             by the system                                     *
@@ -644,4 +646,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

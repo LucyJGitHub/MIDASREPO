@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate IBAN field')                         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GLVIBAC   - Validate International Bank Account Number       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD037025           Date 10Feb16               *
-      *  Prev Amend No. MD029037           Date 25Jul14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD037025           Date 10Feb16               *
+      *                 MD029037           Date 25Jul14               *
       *                 AR816838           Date 17Jul14               *
       *                 MD000091           Date 07May13               *
       *                 AR740293           Date 31Mar11               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD037025 - Recompiled due to changes in INPAYIB              *
       *  MD029037 - Unable to close acount due to IBAN error          *
       *             Partially applied MD023875/AR467536               *
@@ -723,4 +725,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GL Daily Journal Split Copy Data')               *
@@ -15,14 +15,16 @@
       *                                                               *
       *  Called By: GLC0340T2                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD042411           Date 18Nov16               *
-      *  Prev Amend No. AR1097218          Date 05Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042411           Date 18Nov16               *
+      *                 AR1097218          Date 05Apr13               *
       *                 CGL120   *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042411 - BRCA/CCY/ACOD totals can be more than 15 digits   *
       *            (Recompile)                                        *
       *  AR1097218 - GLC0720 seq 10001 failed Out of Balance          *

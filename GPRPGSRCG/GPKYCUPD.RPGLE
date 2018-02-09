@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Update KYC Items')
@@ -9,17 +9,19 @@
       *                                                               *
       *  GPKYCUPD - Midas GP Update KYC Items                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CSC043             Date 18Jun10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSC043             Date 18Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG10603 *CREATE   Date 02Mar06               *
+      *                 BUG10603 *CREATE   Date 02Mar06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC043 - MidasPlus IASP Enablement                           *
       *  BUG10603 - (Reopen) Compliance Alert Changes for KYC         *
       *                                                               *
@@ -254,7 +256,7 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006
 ** LOGMSG
 UPC0014 completed. Library list set.
 UPC0014 failed. Library list not set.

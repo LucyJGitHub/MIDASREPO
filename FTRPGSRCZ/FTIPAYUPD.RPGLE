@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(OTPAYOVR) TOFILE(OTPAY) SHARE(*NO)               *                       CAP211
 /*XBIB*  OVRDBF FILE(OTXL0) TOFILE(OTPAYXL0) SHARE(*NO)               *                       CAP211
@@ -17,10 +17,11 @@
       *                FTIPAYRPR                                      *
       *                FTIPAYUPP                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD037804           Date 25May16               *
-      *  Prev Amend No. AR924677           Date 03Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD037804           Date 25May16               *
+      *                 AR924677           Date 03Nov14               *
       *                 MD030940           Date 08Oct14               *
       *                 CFT157             Date 29Aug14               *
       *                 MD029681           Date 12Aug14               *
@@ -90,6 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD037804 - Unnecessary DUMP produced by FTIPAYUPD module     *
       *  AR924677 - Amend of an authorized payment should return it   *
       *             to an unauthorized state. (Child: AR924679)       *
@@ -701,7 +703,7 @@
       ** CFT151 switchable field                                                              CFT151
       *                                                                                       CFT151
      D CFT151          S              1A                                                      CFT151
-
+ 
      D/COPY WNCPYSRC,FTH00165
       *
       ** +--------------------------------------+
@@ -3638,7 +3640,7 @@ e1   C                   ENDIF                                                  
      C                   KFLD                    KIDEN                                        CSD015
      C                   KFLD                    BRCA                                         CSD015
                                                                                               CSD015
-
+ 
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
@@ -5386,7 +5388,7 @@ e1   C                   ENDIF                                                  
       *****************************************************************                       CSD015
       *                                                                                       CSD015
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** WLARR - Watch List Fields                                                                  CSD015
 <Sender>                                                                                      CSD015
 </Sender>                                                                                     CSD015

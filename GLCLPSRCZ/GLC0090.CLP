@@ -7,13 +7,14 @@
 /*                                                                   */
 /*       GLC0090 - Account Postings Enquiry Control                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. 249971             Date 11Sep07              */
+/*       Prev Amend No. 249971             Date 11Sep07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Prev Amend No. 241168                  19Dec06              */
+/*                                         Date                      */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       249971 - Include QVRDBF for file MUSER to avoid error       */
 /*                wrong allocation of file.                          */
 /*       241168 - Applied fix 239795 to avoid database error on      */
@@ -42,7 +44,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /**/
@@ -111,7 +113,7 @@
 /**/
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              DLTOVR     FILE(MUSER)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)

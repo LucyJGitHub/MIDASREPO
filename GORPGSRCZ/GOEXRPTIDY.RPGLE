@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI * ALWNULL(*USRCTL)                                              *
@@ -10,17 +10,19 @@
       *                                                               *
       *  GOEXRPTIDY - Housekeeping for T_GPEXRPH & T_GPEXRPD.         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BG4444             Date 04Oct04              *
-      *  Prev Amend No. CGP008  *CREATE    Date 15Sep04               *
+      *  Prev Amend No. BG4444             Date 04Oct04               *
+      *                 CGP008  *CREATE    Date 15Sep04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG4444 - COB failure - Negative Retention date.              *
       *  CGP008 - Exception Reporting                                 *
       *                                                               *

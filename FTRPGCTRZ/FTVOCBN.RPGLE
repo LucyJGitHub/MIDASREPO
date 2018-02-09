@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate Beneficiary Customer (Cover)')       *
@@ -9,10 +9,11 @@
       *                                                               *
       *  FTVOCBN  - Validate OP Beneficiary Customer (Cover)          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *                 MD000091           Date 06May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24663           Date 29Jun09               *
       *                 BUG24496           Date 22Jun09               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  MD000091 - Event Codes Substitution                          *
       *  BUG24663 - Second line should be entered even if input is    *
@@ -729,7 +731,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009
 **  Alpha - Array of alphabetic characters
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 **  Numeric - Array of numeric characters

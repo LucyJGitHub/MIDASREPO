@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       GOC0302 - Journal Entry Extraction Monitor                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG2941            Date 01Jun04              */
-/*       Prev Amend No. BG1928             Date 15Apr03              */
+/*       Prev Amend No. BUG2941            Date 01Jun04              */
+/*                      BG1928             Date 15Apr03              */
 /*                      CGP004  *CREATE    Date 23May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG2941 - Parameter mismatch error.  Need to redeliver      */
 /*                 BUG1928 (sources GOC0302 and GOC0303 only).       */
 /*       BG1928 - Audit deliverable data missing                     */
@@ -29,7 +31,7 @@
  
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCLF       FILE(GOICDTPD)
  
@@ -106,7 +108,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              DLCOBJ     OBJ((GOAUMTDQ *DTAQ *EXCLRD))
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)

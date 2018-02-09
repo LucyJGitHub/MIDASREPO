@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE item database update')                     *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GLBITPUPD - Journal Batch Entry Item Database Update         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046060           Date 21Jun17               *
-      *  Prev Amend No. CGL182             Date 11May17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046060           Date 21Jun17               *
+      *                 CGL182             Date 11May17               *
       *                 MD043023           Date 25Jul17               *
       *                 MD042040           Date 10Oct16               *
       *                 MD033964           Date 07Oct16               *
@@ -85,6 +86,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046060 - GLBTNOPD is not defined with COMMIT               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *  MD043023 - If batch is sent through interface with Auto      *
@@ -811,7 +813,7 @@
      C                   ENDIF                                                                246418
       *                                                                                       246418
      C/COPY WNCPYSRC,GLBITPDC10
-
+ 
      C                   IF        CER030 = 'Y'                                             BUG23742
       *                                                                                     BUG23742
      C                   EVAL      KPTDT = B2PTDT                                           BUG23742
@@ -2404,7 +2406,7 @@ E1   C                   ENDIF                                                  
       **If*the*user*is*connected*via*a*browser,*the*job*user*name*is*QUSER*-          CAP084 BUG6979
       **their*user*name*is*stored*in*ZMUSER                                           CAP084 BUG6979
      C**********         IN        ZMUSER                                             CAP084 BUG6979
-
+ 
      C*****USRID         IFNE      *BLANKS                                            CAP084 BUG6979
      C*****USRID         ANDNE     PSUser                                             CAP084 BUG6979
      C**********         MOVE      'Y'           JAVAUSER          1                  CAP084 BUG6979
@@ -3042,7 +3044,7 @@ E1   C                   ENDIF                                                  
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  @ARRTXT                                                                                   257489
 DLTOVR     FILE(TTRANL7)                                                                      257489
 OVRDBF     FILE(TTRANL7) MBR(XXXX) SECURE(*YES) SHARE(*NO)  SEQONLY(*NO)                      257489

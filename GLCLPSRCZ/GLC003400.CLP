@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       GLC003400 - Midas GL ATU Reverse Selected Accounts          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CGL114  *CREATE    Date 04Jan10              */
+/*       Prev Amend No. CGL114  *CREATE    Date 04Jan10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL114 - Account Transfer Utility                           */
 /*                                                                   */
 /*********************************************************************/
@@ -22,7 +24,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2010')
              DCL        VAR(&REFERENCE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RTCD)      TYPE(*CHAR) LEN(2)
@@ -62,7 +64,7 @@ ABNOR:       CHGJOB     SWS(XXXXXX11)
                MONMSG     MSGID(CPF0000 MCH0000)
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              CLOF       OPNID(GLSLACPD)
              MONMSG     MSGID(CPF0000)

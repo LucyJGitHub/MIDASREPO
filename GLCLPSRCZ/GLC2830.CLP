@@ -7,25 +7,27 @@
 /*                                                                  */
 /*   GLC2830    Reset IAT/TPP data areas ready for next day         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*   Last Amendment No. CGL009 *CREATE   Date 18May99               */
+/*   Prev Amendment No. CGL009 *CREATE   Date 18May99               */
 /*                                                                  */
 /*********************************************************************/
 /*                                                                  */
+/*   MD046248 - Finastra Rebranding                                 */
 /*   CGL009 - Midas-Fontis IAT/TPP Interface                        */
 /*                                                                  */
 /*********************************************************************/
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SYST) TYPE(*CHAR) LEN(2)
@@ -75,7 +77,7 @@ ABNOR:
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM
  

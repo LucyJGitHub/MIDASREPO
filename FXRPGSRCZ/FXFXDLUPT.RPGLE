@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Deals TM database update')                    *
@@ -9,10 +9,11 @@
       *                                                               *
       *  FXFXDLUPT - FX DEALS TM DATABASE UPDATE                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -61,7 +63,7 @@
       *  136434 - Treasury Management updates were missing from FX    *
       *                                                               *
       *****************************************************************
- 
+
      FFDCCYPLL  IF   E           K DISK
      FFXREVHLL  IF   E           K DISK
      FFXEPOULL  UF A E           K DISK
@@ -74,7 +76,7 @@
      FFXEPOCLL  UF A E           K DISK
      F                                     RENAME(FXEPOSP0:FXEPOCL1)
      F                                     COMMIT
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -93,54 +95,54 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
      D @DP             S              7  3 DIM(7) CTDATA PERRCD(7)
      D @YD             S              5  0 DIM(4) CTDATA PERRCD(4) ASCEND
      D @MD             S              5  0 DIM(13) CTDATA PERRCD(13) ASCEND
      D TAB1            S              4    DIM(12) CTDATA PERRCD(1)
      D TAB2            S              2    DIM(12) ALT(TAB1)
      D @FK             S             13    DIM(14) ASCEND
- 
- 
+
+
      D DATE1           DS
      D  @DATE1                 1      8
      D  @D1YY                  1      4
      D  @D1MM                  5      6
      D  @D1DD                  7      8
- 
+
      D RUNS1           DS
      D  RUNA                   1      7
      D  @RUND                  1      2
      D  @RUNM                  3      5
      D  @RUNY                  6      7
- 
+
      D FXVFXDL       E DS                  EXTNAME(FXVFXDLPD)
      D X_RSCY        E                     EXTFLD(F3RSCY)
- 
+
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
- 
+
      D                 DS
      D  @@DTIN                 1      8  0
      D  @@YYYY                 1      4  0
@@ -148,35 +150,35 @@
      D  @@CC                   1      2  0
      D  @@MTH                  5      6  0
      D  @@DAY                  7      8  0
- 
+
      D                 DS
      D  @@Z71Y                 1      4  0
      D  @@SSY1                 1      1  0
      D  @@SSY2                 2      2  0
      D  @@SSY3                 3      3  0
      D  @@SSY4                 4      4  0
- 
+
      D                 DS
      D  @@VDT                  1      8  0
      D  @@YR                   1      4  0
      D  @@Z71M                 5      6  0
      D  @@Z71D                 7      8  0
- 
+
      D @PRLOS          DS                  OCCURS(2)
      D  @PCCY                  1      3
      D  @SPLO                  4     18  0
      D  @FPLO                 19     33  0
      D  @ADJAD                34     34
- 
+
      D @FBKE           DS            13
      D  @FBCY                  1      3
      D  @FBDT                  4     11
      D  @FBSQ                 12     13
- 
- 
- 
+
+
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
      D SDTRMA        E DS                  EXTNAME(SDTRMAPD)
@@ -189,7 +191,7 @@
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -738,12 +740,12 @@
      C                   MOVE      @ACDR5        @RACT
      C                   EXSR      UPDFBO
      C                   END
- 
+
      C     UPDFB_TAG     TAG
- 
+
      C                   ADD       1             @X
      C                   END
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1793,7 +1795,7 @@
      C     F3LACT        IFEQ      'D'
      C                   EXSR      UPEPTR
      C                   END
- 
+
      C                   ELSE
       *
       ** PROCESS CALCULATE ADJUSTMENTS FOR SEL CCY
@@ -2115,7 +2117,7 @@
      C                   MOVEL     '200'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   MOVE      @RCCY         FOCCY
       *
       ** IF ACTION DATE LT RUN DATE
@@ -2179,7 +2181,7 @@
      C                   MOVEL     '201'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   MOVE      @RCCY         FOCCY
       *
       ** IF ACTION DATE LT RUN DATE
@@ -2553,9 +2555,9 @@
      C                   Z-ADD     @@AMT         @@AMT            15 0
      C**   OBTAIN MARKET OUTRIGHT RATE
      C                   EXSR      ZA0640
- 
+
       **   CHECK MULTIPLY/DIVIDE INDICATOR
- 
+
      C     XRMD          IFEQ      'M'
      C**   CALCULATE THE RETURN BASE CURRENCY EQUIVALENT, AND ALSO
      C**   STORE THE RESULTING DECIMAL PLACES.
@@ -2930,9 +2932,9 @@
       ** AND SET THE 'RELATED DEAL' FIELDS
       *
      C     Z#WSTS        IFNE      *BLANK
- 
+
      C                   MOVEL     Z#WSTS        FXVFXDL
- 
+
      C                   MOVE      F3BCDE        @RDELB
      C                   MOVE      F3DSBE        @RDSPB
      C                   Z-ADD     F3DBUY        F3RBAT
@@ -2973,9 +2975,9 @@
       ** AND SET THE 'BEFORE UPDATE' FIELDS
       *
      C     @@LACT        IFNE      'I'
- 
+
      C                   MOVEL     Z#BSTS        FXVFXDL
- 
+
      C                   MOVE      F3BCDE        @DEALB           15 0
      C                   MOVE      F3DSBE        @SPOTB           15 0
      C                   MOVE      F3DAM1        @AMT1B           15 0
@@ -3105,7 +3107,7 @@
      C     @EPKEY        KLIST
      C                   KFLD                    @EECCY            3
      C                   KFLD                    @EPCCY            3
- 
+
      C                   MOVEL     'FXFXDLUPT'   DBPGM
       *
       ** ACCESS BANK DETAILS VIA ACCESS PROGRAM TO GET RUN DATES
@@ -3137,7 +3139,7 @@
      C                   MOVEL     '902'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C     KEY1          KLIST
      C                   KFLD                    XPCCY
      C                   KFLD                    XPTPRD
@@ -3219,10 +3221,10 @@
      C                   MOVEL     '906'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C     *LIKE         DEFINE    A6NBDP        @@NDPB
      C                   Z-ADD     A6NBDP        @@NDPB
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3247,7 +3249,7 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @DP USED BY SR. ZA0680 - DECIMAL PLACES CORRECTION ARRAY
 1000000010000000100000001000000010000000100000001
 ** @YD  USED BY SR. ZA0680 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN

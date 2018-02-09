@@ -1,5 +1,5 @@
      H DEBUG ALWNULL(*USRCTL)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Work in Progress Housekeeping')               *
@@ -18,14 +18,16 @@
       *  Called By: GOC000110 - Midas GO Work In Progress             *
       *                         Housekeeping Control                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD038887           Date 05Jul16               *
-      *  Prev Amend No. AR1005609          Date 25Nov12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038887           Date 05Jul16               *
+      *                 AR1005609          Date 25Nov12               *
       *                 CSF011  *CREATE    Date 12Sep11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD038887 - GOC000110 failed due to the RecordCount field     *
       *  AR1005609- GOC000110 failed in EOM June run                  *
       *             (Child: AR1005610)                                *

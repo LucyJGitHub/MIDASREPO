@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GO Download data control - Accounts')            *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GO000113 - Global Processing data dowload, Account Codes     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD027189           Date 29May14               *
-      *  Prev Amend No. MD025737           Date 20May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027189           Date 29May14               *
+      *                 MD025737           Date 20May14               *
       *                 MD020167           Date 23Apr13               *
       *                 CCB020A            Date 06Aug12               *
       *                 CCB023             Date 06Aug12               *
@@ -23,6 +24,7 @@
       *                 245889  *CREATE    Date 15Mar07               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027189 - Dashboard does not reflect the unauthorised       *
       *             Closed NOSTRO items in WIP                        *
       *  MD025737 - Amend of an account; waiting authorisation inside *

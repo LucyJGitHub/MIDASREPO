@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       GOC210000 - Global House-keeping                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD023876           Date 30Apr14              */
-/*       Prev Amend No. CCB023B            Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD023876           Date 30Apr14              */
+/*                      CCB023B            Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 02Jun08              */
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD023876 - GOC210000 Performance Issues                     */
 /*       CCB023B - COB Restructure - Input Cycle Termination         */
 /*                 Restructuring                                     */
@@ -42,7 +44,7 @@
              DCL        VAR(&PROC)  TYPE(*CHAR) LEN(1)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /**********  DCLF       FILE(SDBANKPD)  */                                               /*CCB023B*/
@@ -129,5 +131,5 @@
               CHGJOB     SWS(XXXXXX11)
  
  END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                           Misys International Banking Systems Ltd.')
+                           Finastra International Limited')
               ENDPGM

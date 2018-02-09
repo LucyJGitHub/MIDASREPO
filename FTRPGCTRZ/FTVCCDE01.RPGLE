@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate CCT Ordering Customer-Detail')       *
@@ -9,7 +9,7 @@
       *                                                               *
       *  FTVCCDE01 - Validate Ordering Customer                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,9 +17,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG25973           Date 17Sep09               *
+      *                 BUG25973           Date 17Sep09               *
       *                 BUG25997           Date 14Sep09               *
       *                 BUG25927           Date 09Sep09               *
       *                 BUG24555           Date 26Jun09               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG25973 - When Ordering Customer L1 is equal to valid IBAN  *
       *             without slash followed by 1/, 6/, 6/ the system   *
@@ -1515,7 +1517,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  ALPH                                                                                    BUG24639
 ABCDEFGHIJKLMNOPQRSTUVWXYZ                                                                  BUG24639
 **  NUMC                                                                                    BUG24639

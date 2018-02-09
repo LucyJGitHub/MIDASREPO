@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       FTC0620 - CHEQUE  CLEARING MAINTENANCE                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01194         DATE    7JUN90                */
+/*       Prev Amend No. S01194             Date 7JUn90               */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01194 - STANDING DATA CHANGES                              */
 /*       S01117 - RELEASE 10 MULTIBRANCHING CHANGES                  */
 /*********************************************************************/
@@ -28,7 +30,7 @@ START:  PGM        /* CL Program for running Cheque Clearing +
 /**     DCL        VAR(&DATA) TYPE(*CHAR) LEN(44)                    /*S01194*/
         DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)                    /*S01194*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
         CHGJOB     SWS(XXXXXX00)
 /**/
@@ -59,7 +61,7 @@ START:  PGM        /* CL Program for running Cheque Clearing +
         ENDDO
 /**/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                      /*S01117*/
              ENDPGM                                                  /*S01117*/
 /** END:    ENDPGM                                                   /*S01117*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                       CGP017
 /*STD *  RPGBASEMOD                                                   *                       CGP017
@@ -10,10 +10,11 @@
       *                                                               *
       *  GPLEAGFMVD - Update of Global File GZFCLTLVPD from LEAGFMPD  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD034004           Date 13Jul15               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034004           Date 13Jul15               *
+      *                 CGP017             Date 06Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 AR819939A          Date 02Sep11               *
       *                 AR869238           Date 23Nov11               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034004 - Aggregate facilities not shown in list view if    *
       *             customer branch is not equal to the aggregate     *
       *             facility branch.                                  *
@@ -49,7 +51,7 @@
      F                                     USROPN
      F***GZSDCUSTL1IF   E           K DISK    INFSR(*PSSR)                         AR869238 MD034004
      FGZSDCUSTL0IF   E           K DISK    INFSR(*PSSR)                                     MD034004
-
+ 
       ** Data structure for *ISO date                                                      AR819939A
      D                 DS                                                                  AR819939A
      D  ZDATE8                 1      8  0                                                 AR819939A

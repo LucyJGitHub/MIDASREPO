@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE retrieve')                                 *
@@ -14,10 +14,11 @@
       *             the database. As it does so, it validates the     *
       *             action code and Transaction number.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD027587           Date 19Jun14               *
-      *  Prev Amend No. CGL135A            Date 10Jul13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027587           Date 19Jun14               *
+      *                 CGL135A            Date 10Jul13               *
       *                 MD000091           Date 07May13               *
       *                 CGL130             Date 28Sep12               *
       *                 CAP207             Date 10Feb11               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027587 - Unable to use the C for Copy and T for Template   *
       *             (Recompile)                                       *
       *  CGL135A - Accounting Rules Process                           *

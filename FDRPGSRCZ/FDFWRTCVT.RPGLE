@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FD Forward Rates Details Convert Module')
@@ -13,14 +13,15 @@
       *  Function:  This module converts the fields of a Forward Rates*
       *             Transaction Detail from file to screen format     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 240491             Date 13Sep06               *
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. 240491             Date 13Sep06               *
+      *                 CSD031             Date 10Apr06               *
       *                 235720             Date 18Nov03               *
       * Midas Release 4.01 -------------------------------------------*
       *                 196570             Date 24Jul01               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  240491 - First forward rate must show updated spot rate.     *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  235720 - JPY is not allowed to have 8 decimal places. Decimal*
@@ -1518,4 +1520,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

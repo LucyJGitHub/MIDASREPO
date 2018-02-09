@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Deal range authorization')                    *
@@ -12,10 +12,11 @@
       *  Function:  This input function allows range authorization    *
       *             of all FX deals.                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CSW212             Date 03May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *
@@ -85,9 +87,9 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FFXDEALRDF CF   E             WORKSTN INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -106,53 +108,53 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the error arrays
      D ArrayMax        C                   CONST(75)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** data structure for data to output 'authorized' message
      D @ADAT           DS            45
      D  @ADAT1                 1      6
      D  @ADAT2                 7     12
      D  @ADAT3                13     18
- 
+
       ** data structure for data to output 'failed' message
      D @FDTA           DS            45
      D  @FDT1                  1      6
@@ -171,17 +173,17 @@
      D  WDD                    1      2                                         CDL008
      D  WMM                    3      4                                         CDL008
      D  WYY                    5      6                                         CDL008
- 
- 
+
+
       ** Array of Fields in error.
      D FldNameArr      S             10A   DIM(ArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDArr        S                   DIM(ArrayMax) LIKE(#MsgID)
- 
+
       ** Array of error message data.
      D MsgDtaArr       S                   DIM(ArrayMax) LIKE(#MsgData)
- 
+
       ** Array of fields in with warning                                                      CAS004
      D WFldNamArr      S             10A   DIM(ArrayMax)                                      CAS004
                                                                                               CAS004
@@ -190,10 +192,10 @@
                                                                                               CAS004
       ** Array of warning error message data                                                  CAS004
      D WMsgDtaArr      S                   DIM(ArrayMax) LIKE(#MsgData)                       CAS004
- 
+
      D DEALFilFmt    E DS                  EXTNAME(FXDEALPP)
- 
- 
+
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
       *                                                                         CDL008
@@ -228,7 +230,7 @@
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
       ** SD data area                                                                         CSC011
      D/COPY WNCPYSRC,FXDEALGD01
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -247,7 +249,7 @@
      D PBrCd           S              3A                                        CDL008
      D FWDNB           S              5P 0                                      CDL008
      D PEffDat         S              2  0                                      CDL008
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
@@ -255,7 +257,7 @@
      D CSC011          S              1A   INZ('N')                                           CSC011
      D WProcDate       S                   LIKE(BJRDNB)                                       CSC011
      D PSARD           S              6A                                                      CSC011
- 
+
      D WIdx            S              3P 0                                                    CAS004
                                                                                               CAS004
      D/COPY WNCPYSRC,FXDEALGD02
@@ -273,16 +275,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** If authorizations are not required
- 
+
      C     BNFXAU        IFEQ      'N'
      C                   EXSR      NOINPUT
      C                   END
- 
+
       **  Main processing
       **  Loop until CK/3 taken
- 
+
      C     *INKC         DOWEQ     '0'
      C                   EXSR      MAIN
      C                   END
@@ -290,45 +292,45 @@
       * TERMINATE PROGRAM
       *
      C                   MOVE      '1'           *INLR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * MAIN - MAIN PROCESSING
       *****************************************************************
      C     MAIN          BEGSR
- 
+
       ** Selection screen
- 
+
      C                   TIME                    DDTIME
      C                   WRITE     FXDEALS0
      C                   WRITE     FXDEALD1
      C                   WRITE     FXDEALF1
      C                   READ      FXDEALD1                               99
- 
+
       ** If CK/3 taken, bypass
- 
+
      C     *INKC         CABEQ     '1'           EMAIN
- 
+
       ** Validate screen input
- 
+
      C                   EXSR      VALSIN
- 
+
       ** If validation not OK, bypass
- 
+
      C     *IN50         CABEQ     '1'           EMAIN
- 
+
       ** Initialize count of authorizattions and failed authorizations
- 
+
      C                   Z-ADD     0             @CNTAU            6 0
      C                   Z-ADD     0             @CNTFL            6 0
- 
+
       ** Authorize all unauthorized FX deals
- 
+
      C                   EXSR      AUTHFXDL
- 
+
       ** Output authorized count message
- 
+
      C                   MOVEL     'MMM0265'     @MSGID
      C                   MOVE      @CNTAU        @ADAT1
      C                   MOVE      @FSTDLNO      @ADAT2
@@ -336,9 +338,9 @@
      C                   CALL      'ZA0440'
      C                   PARM                    @MSGID
      C                   PARM                    @ADAT
- 
+
       ** Output failure count message
- 
+
      C     @CNTFL        IFNE      0
      C                   MOVEL     'MMM1047'     @MSGID
      C                   MOVE      @CNTFL        @FDT1
@@ -356,22 +358,22 @@
       * AUTHFXDL - Authorize all unauthorized FX deals
       *****************************************************************
      C     AUTHFXDL      BEGSR
- 
+
       * Read FX deals
- 
+
      C                   MOVEL     @F_1DLNO      DDDLNO
      C                   EXSR      READFXDL
- 
+
       ** Do while not EOF
- 
+
      C     @ERRMS        DOWEQ     *BLANK
- 
+
       ** If deal is not deleted
- 
+
      C     FHDDLT        IFNE      'D'
- 
+
       ** Error in retrieve
- 
+
      C     Idx           IFNE      *ZERO
      C                   ADD       1             @CNTFL
      C                   ELSE
@@ -394,16 +396,16 @@
      C                   EXSR      UPDTFXDL                                     CDL008
      C                   ENDIF                                                  CDL008
      C                   ELSE                                                   CDL008
- 
+
       ** Update Fx deal
- 
+
      C                   EXSR      UPDTFXDL
      C                   ENDIF                                                  CDL008
      C                   END
      C                   END
- 
+
       * Read FX Deals
- 
+
      C                   EXSR      READFXDL
      C                   END
       *
@@ -838,17 +840,17 @@
      C                   MOVEL     'MMM0159'     @MSGID           10
      C                   CALL      'ZA0240'
      C                   PARM                    @MSGID
- 
+
      C                   MOVE      '1'           *IN13
      C                   TIME                    DDTIME
      C                   WRITE     FXDEALS0
      C                   WRITE     FXDEALD1
      C                   WRITE     FXDEALF1
      C                   READ      FXDEALD1                               99
- 
+
      C                   SETON                                        LR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -966,7 +968,7 @@
      C                   EVAL      WProcDate = BJRDNB                                         CSC011
      C                   ENDIF                                                                CSC011
      C/COPY WNCPYSRC,FXDEALGC03
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -979,4 +981,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

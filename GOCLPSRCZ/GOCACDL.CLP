@@ -11,13 +11,15 @@
 /*                 from GL3320 only.                                 */
 /*                 Also, see GOCACTS                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CGP013  *CREATE    Date 20Feb09              */
+/*       Prev Amend No. CGP013  *CREATE    Date 20Feb09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGP013 - Task Split for Accounts Global Update              */
 /*                                                                   */
 /*********************************************************************/
@@ -36,7 +38,7 @@
              DCL        VAR(&GPF) TYPE(*CHAR) LEN(10) VALUE(GZACCNTAB)
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global monitor message */
@@ -108,7 +110,7 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

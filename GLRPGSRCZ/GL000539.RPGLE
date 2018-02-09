@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Update Midas Events with Equatin Events')
@@ -14,17 +14,19 @@
       *                                                               *
       *  Called By: GLC000539 - Transfer Events                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14163           Date 21Jun07               *
-      *  Prev Amend No. BUG13737           Date 03May07               *
+      *  Prev Amend No. BUG14163           Date 21Jun07               *
+      *                 BUG13737           Date 03May07               *
       *                 BUG12221           Date 20Oct06               *
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG14163 - Receiver value too small to hold result.          *
       *  BUG13737 - Equation passed an amount (15,0) to a Midas       *
       *             field (13,0)                                      *

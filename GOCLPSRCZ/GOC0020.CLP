@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       GOC0020 - Universal Transactions Update - COB               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CGP014             Date 27Feb09              */
+/*                      CGP014             Date 27Feb09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BUG18886           Date 30May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CGP014 - Task split of Extract Controller, Customer Loans   */
 /*       BUG18886 - Non-standard codes exist in Midas Plus core      */
@@ -69,7 +71,7 @@
  
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /* Global monitor message */
@@ -185,7 +187,7 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              DLCOBJ     OBJ((GOWEVNTPD *FILE *EXCL))                                     /*BUG7395*/
              MONMSG     MSGID(CPF0000 MCH0000)                                           /*BUG7395*/
              RCLRSC

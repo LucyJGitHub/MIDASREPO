@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*OVRF*: OVRDBF FILE(ACCNTLXX) TOFILE(ACCBR) SHARE(*NO)             : *
 /*OVRF*: OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)              : *
@@ -11,10 +11,11 @@
       *                                                               *
       *  GLVRLAC - Validate GL & Retail Account Number                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD042377           Date 01Dec16               *
-      *  Prev Amend No. MD034451C          Date 02Mar16               *      
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042377           Date 01Dec16               *
+      *                 MD034451C          Date 02Mar16               *
       *                 MD041157           Date 09Aug16               *
       *                 MD030959           Date 17Jun15               *
       *                 AR648606           Date 30Oct14               *
@@ -58,10 +59,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042377 - Error RE71053 should only be validated against a  *
       *             retail account since GL account does not have a   *
       *             record in REIACD.                                 *
-      *  MD034451C - Recompiled due to changed PF/HELDIHB             *      
+      *  MD034451C - Recompiled due to changed PF/HELDIHB             *
       *  MD041157 - Failure to close an account.  Check correct       *
       *             network files during account closure.             *
       *  MD030959 - Recompiled due to changed PF/HELDIHC.             *
@@ -1266,7 +1268,7 @@
       *                                                                                     MD041157
      C     @RTCD         IFEQ      *BLANKS                                                  MD041157
      C                   MOVE      'Y'           CGL013                                     MD041157
-     C                   ENDIF                                                              MD041157                                                                                        
+     C                   ENDIF                                                              MD041157
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT
@@ -1274,6 +1276,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** NUM
 0123456789

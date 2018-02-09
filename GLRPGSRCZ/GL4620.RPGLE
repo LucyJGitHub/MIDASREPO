@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Certificate of Balances')                     *
@@ -15,10 +15,11 @@
       *                                                               *
       *  Component of: GL4620 - Certificate of Balances               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR787886           Date 15Jun11               *
-      *  Prev Amend No. AR790145A          Date 04Jul11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR787886           Date 15Jun11               *
+      *                 AR790145A          Date 04Jul11               *
       *                 AR790145           Date 22Jun11
       *                 AR798241           Date 13Jul11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR787886 - Account description is taken from ANAM (defined   *
       *             as 20A) of ACCNTAB, but GL4620P1 uses RANAM which *
       *             has a length of 19A. Recompile over changes in    *

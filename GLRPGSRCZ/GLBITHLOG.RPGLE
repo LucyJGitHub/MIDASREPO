@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE Header Support Log Setup Module')
@@ -13,12 +13,13 @@
       *             Journal Entry Header file into screen format      *
       *             to be used in writing records to the log file.    *
       *                                                               *
-      *  (c) Misys International Banking System, Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260029             Date 29Apr09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 260029             Date 29Apr09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 BUG15754           Date 30Jan08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  260029 - Applied core fix 251260.                            *
       *  251260 - Journal entry hash item no. do not match. Increase  *
       *           length of field DDHINC from 2A to 3A (Recompile).   *
@@ -266,4 +268,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking systems, Ltd. 2001
+(c) Finastra International Limited 2001

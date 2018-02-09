@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Deal post settlement validation')             *
@@ -12,10 +12,11 @@
       *  Function: This Program Processes Post Settlement Detail      *
       *            FXDL date validation                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSW212             Date 03May12               *
       *                 207288             Date 10Jun03               *
       *                 CSF011A            Date 28Nov11               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *            (Recompile)                                        *
@@ -85,12 +87,12 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FFXCDAFLL  IF   E             DISK    INFSR(*PSSR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FXFXDVP001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -109,75 +111,75 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @SF             S             10  0 DIM(10) CTDATA PERRCD(1)
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
      D RelDealDts      DS
       ** Related Deal Details (when deal is option takedown or swap.
       ** Thus related deal will be other leg of swap or option).
@@ -202,105 +204,105 @@
      D  RelMGBS               87     87                                         opt date - day
      D  RelDXRT               88    100  8                                      opt date - day
      D  RelOSRT              101    113  8                                                    248269
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
      D SDDEALACCD    E                     EXTFLD(QQACCD)
       ** EXTERNAL DS FOR DEALING DETAILS
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D SDTRADACCD    E                     EXTFLD(QQACCD)
       ** EXTERNAL DS FOR Trading Data
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDTRMA        E DS                  EXTNAME(SDTRMAPD)
       ** EXTERNAL DS FOR Treasury Management DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** EXTERNAL DS FOR Portfolio Management DETAILS
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D  SDRETLACCD   E                     EXTFLD(QQACCD)
       ** EXTERNAL DS FOR RETAIL DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
       * THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE
- 
+
      D ValidDeal     E DS                  EXTNAME(FXVFXDLPD)
       * Valid Deals layout
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status data area
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      D ZMUSER          DS            17
      D  ZUSER                  1     10
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D TranIn        E DS                  EXTNAME(FXFXDLPD)
       * Incoming Transaction
- 
+
      D InfData       E DS                  EXTNAME(FXFXIFPD)
      D                                     PREFIX(IF_)
       * FX (FXDL) Extra Data - File (D/B) format
- 
+
      D ExtData       E DS                  EXTNAME(FXFXEXPD)
       * FX Extra Data - File (D/B) format
- 
+
       **  Front Office (2 First characters determine System Front Office)
      D FrontOffice     DS            20
      D  W_System               1      2
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** DEFINE FIELDS FOR ZDATE9
      D @DAYN           S              5P 0
      D @YMD            S              8S 0
      D @RETN           S              1A
- 
- 
+
+
       **   First scaling exponent
      D     @@SXP1      S              1S 0
       **   Second scaling exponent
      D     @@SXP2      S                   LIKE(@@SXP1)
       **   Base currency scaling exponent
      D     @@BCSP      S                   LIKE(@@SXP1)
- 
- 
+
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
      D  DDActnOK                      1A
@@ -343,8 +345,8 @@
      D  DDOylcOK                      1A
      D  DDTylcOK                      1A
      D  DDClasOK                      1A                                                      CDL038
- 
- 
+
+
       ** Receive / Pay Settlement Currency, Method & Nostro
      D RecSetCcy       S              3A
      D RecSetMeth      S              2S 0
@@ -354,43 +356,43 @@
      D PaySetMeth      S              2S 0
      D PayNostro       S             18A                                                      CDL038
      D*PayNostro*******S             12A                                                      CDL038
- 
- 
+
+
       ** A code to indicate the calling function to the lower level modules
      D FXDL            S              4A   INZ('FXDL')
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
       ** Define fields used in CAS001
      D CAS001          S              1A
      D PYCFN           S              6A
      D PERTP           S              1A
      D PFwRv           S              1A
      D PFwYC           S              5A
- 
+
       ** Fields defined for Enhancement CSC011
      D CSC011          S              1A
      D PRtCd           S              7A
      D POptn           S              7A
      D PSard           S              6A
      D WRunDay         S                   LIKE(BJRDNB)
- 
+
       ** Fields defined for Enhancement CDL010
      D CDL010          S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,FXFXDVP002
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -404,39 +406,39 @@
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG5517
      C                   IN        ZMUSER                                                    BUG5517
      C                   UNLOCK    ZMUSER                                                    BUG5517
- 
+
       * Call Validation Modules in Sequence
       *                                                                                      BUG4787
       ** Validate Swap/Option Deal Number                                                    BUG4787
       *                                                                                      BUG4787
      C                   EXSR      VSODLNO                                                   BUG4787
- 
+
       ** Validate Deal Date, Value Date, Option To Date
       *
       /COPY WNCPYSRC,FXFXDVP003
- 
+
      C                   EXSR      VDATES
       *
       /COPY WNCPYSRC,FXFXDVP004
- 
+
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
       /COPY WNCPYSRC,FXFXDVP005
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
       *
       /COPY WNCPYSRC,FXFXDVP006
- 
+
       * RETURN
       *
      C                   RETURN
       *****************************************************************
      C/EJECT
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,FXFXDVP007
       *****************************************************************                      BUG4787
@@ -489,9 +491,9 @@
       ** VDATES - Validate Deal Date, Value Date, Option To Date
       *****************************************************************
      C     VDATES        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Deal Date, Value Date, Option To Date
@@ -568,9 +570,9 @@
      C                   PARM                    F3DDDN            5 0          deal date
      C                   PARM                    F3VDDN            5 0          deal date
      C                   PARM                    F3OTDN            5 0          deal date
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -582,14 +584,14 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * Other F3xxxx fields are set up during the individual date
       *  validation, such as the ones where the input & database formats
       *  are different, e.g. dates, amounts.
       * This SR sets up the fields with the same (or compatible) attributes
- 
+
      C                   MOVE      DDSDNO        F3DADN
      C                   MOVE      DDBRSN        F3MBCA
      C                   MOVE      DDDLTP        F3TYPE
@@ -610,9 +612,9 @@
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -899,10 +901,10 @@
      C                   ELSE
      C                   MOVEL     'N'           CDL008
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CAS001 is on.
       ** (Net Present Value Accounting)
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
@@ -926,17 +928,17 @@
      C                   EVAL      CAS001 = 'N'
      C                   ENDIF
      C/COPY WNCPYSRC,FXH00242
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   EVAL      WRunDay = BJRDNB
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *Blanks
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
@@ -944,7 +946,7 @@
      C                   IF        LIBR = S1SUPP
      C                   EVAL      WRunDay = S1DATE
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      CSC011 = 'N'
      C                   IF        (PRtCd <> '*NRF') and
@@ -956,12 +958,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CDL010 is on.
       ** (Dealing Transaction Authorisation)
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
@@ -988,15 +990,15 @@
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,FXFXDVP010
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1004,9 +1006,9 @@
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1016,7 +1018,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1024,7 +1026,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)
@@ -1105,7 +1107,7 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** Scaling factors array - @SF
 0000000001
 0000000010

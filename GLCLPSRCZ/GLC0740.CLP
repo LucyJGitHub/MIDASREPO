@@ -8,16 +8,17 @@
 /*       GLC0740 Call GL Balances components which run GL0740,      */
 /*               ie. in a single ccy (Base,HO or Local), indiv.     */
 /*                   a/c level                                      */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CEU011             Date 11Mar98              */
-/*       Prev Amend No. S01408             Date 04Aug95              */
+/*       Prev Amend No. CEU011             Date 11Mar98              */
+/*                      S01408             Date 04Aug95              */
 /*                      E42846             Date 16Jul92              */
 /*                      E40440         DATE  22MAY92                */
 /*                      S01369         DATE  06APR92                */
@@ -25,6 +26,7 @@
 /*                      LN0529         DATE  10AUG90                */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CEU011 - EMU Position/Risk Reporting                        */
 /*       S01408 - Core hook added, GLC0740INT                       */
 /*                Core hook added, GLC0750001                       */
@@ -46,7 +48,7 @@
 /*                                                                   */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&RUNTYPE) TYPE(*CHAR) LEN(1)    /*E42846*/
@@ -205,6 +207,6 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 END:                                                                  /*CEU011*/
              ENDPGM

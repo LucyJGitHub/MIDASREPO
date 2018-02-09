@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate IP beneficiary customer')            *
@@ -13,7 +13,7 @@
       *                FTIPAYCTL                                      *
       *                FTIPAYRPR                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel.                     *
@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034709           Date 16Jun15               *
-      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034709           Date 16Jun15               *
+      *                 CSW215             Date 06Apr15               *
       *                 MD033530           Date 09Jun15               *
       *                 AR920574           Date 10Nov14               *
       *                 AR901277           Date 04Nov14               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034709 - A serious Midas error has occurred is encountered *
       *             upon hitting the Complete button in IPAY          *
       *  CSW215 - SWIFT Changes 2015                                  *
@@ -1654,7 +1656,7 @@
       ** ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 1234567890/-?:().,'+     BUG24378
       *                                                                                     BUG24378
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA SWCH
 ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890/-?:().,'+abcdefghijklmnopqrstuvwxyz                     255286
 **CTDATA ALPH

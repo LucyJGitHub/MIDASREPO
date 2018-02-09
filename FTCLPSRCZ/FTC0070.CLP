@@ -8,9 +8,10 @@
 /*       FTC0070  - CL COMPONENT TO CONTROL FT0070                  */
 /*                  CHEQUES TO BE COLLECTED MAINTENANCE.            */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CER049            Date  06Dec10             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER049             Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -18,11 +19,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 048377            DATE  22DEC92             */
+/*                      048377             Date 22Dec92              */
 /*                      S01117            DATE  13MAY91             */
 /*                      S01194            DATE  18OCT90             */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER049 - Stamp Tax                                         */
 /*       048377  -  RECORD LOCKING PROBLEM IN FT PGMS               */
 /*                  (REFER TO ERROR 042167 & 044093)                */
@@ -31,7 +33,7 @@
 /********************************************************************/
              PGM        PARM(&SORT &PREF &RTCD)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /******DCL        VAR(&DATA) TYPE(*CHAR) LEN(44)                     /*S01194*/
        DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)                     /*S01194*/
@@ -77,7 +79,7 @@
        ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */                                                                 /*048377*/
 /* CALL AOC8000 to release locks */                                   /*048377*/
 /* */                                                                 /*048377*/

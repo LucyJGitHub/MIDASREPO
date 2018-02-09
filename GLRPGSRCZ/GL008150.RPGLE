@@ -12,14 +12,16 @@
       *            write or update the records on the Stamp Tax       *
       *            Historic Principal Movements file.                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd 2010             *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. AR878013           Date 16Dec11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR878013           Date 16Dec11               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR878013 - Wrong computation on average balance with         *
       *             movements                                         *
@@ -552,4 +554,4 @@ VARCICRAMA
 **CTDATA ID@
 IIIDD
 **CTDATA CPY@
-(C) Copyright Misys International Banking Systems Ltd., 2010
+(C) Copyright Finastra International Limited 2010

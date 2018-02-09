@@ -8,10 +8,11 @@
 /*       GLC003700 - Midas GL Account Transfer Utility               */
 /*                   Conversion Utility - Control 2                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. CGL165             Date 17Feb15              */
-/*       Prev Amend No. AR719317           Date 19Jul11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL165             Date 17Feb15              */
+/*                      AR719317           Date 19Jul11              */
 /*                      BUG28073           Date 26Aug10              */
 /*                      BUG28066           Date 24Aug10              */
 /*                      BUG28033           Date 12Aug10              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL165 - Dual Withholding Tax (Recompile)                   */
 /*       AR719317 - Include T_GZAMADEX in ATU processing             */
 /*       BUG28073 - Add missing files in ATU                         */
@@ -41,7 +43,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2010')
              DCL        VAR(&GLDA10)    TYPE(*CHAR) LEN(1)
              DCL        VAR(&ENDCMTCTL) TYPE(*CHAR) LEN(1) VALUE('Y')
@@ -467,6 +469,6 @@
              RETURN
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

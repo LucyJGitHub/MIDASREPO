@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate RFT Credit Detail screen 1')
@@ -12,14 +12,15 @@
       *  Function: This Program Validates screen 1 of the RFT Credit  *
       *            transaction maintenance function (FTM1011DP).      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG10602           Date 16Feb06               *
-      *  Prev Amend No. 221761             Date 01Apr04               *
+      *  Prev Amend No. BUG10602           Date 16Feb06               *
+      *                 221761             Date 01Apr04               *
       *                 CAP084             Date 15Jul03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG10602 - MidasPlus Error occurred  (Recompiled)            *
       *  221761 - Recompiled due to change made in PF/FT101HPD.       *
       *  CAP084 - Creation of wrappers for use with front end.        *
@@ -529,4 +531,4 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

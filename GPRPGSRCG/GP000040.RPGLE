@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Selected Accnt Temp File Update')             *
@@ -10,12 +10,14 @@
       *  GP000040 - Selected Account Temporary File Update and        *
       *             Housekeeping                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR719317*CREATE  Date 19Jul11                 *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR719317 *CREATE   Date 19Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR719317 - Include T_GZAMADEX in ATU processing              *
       *                                                               *
       *****************************************************************

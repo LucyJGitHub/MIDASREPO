@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*: OVRDBF FILE(CLOANCLXX) TOFILE(CLOAN) SHARE(*NO)              *
 /*XBIB*: OVRDBF FILE(CLOANCLYY) TOFILE(CLOAN) SHARE(*NO)              *
@@ -11,10 +11,11 @@
       *                                                               *
       *  GOWTTLOAM - Write to TRAP - Loan Amendments                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -198,7 +200,7 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 ** ##OV1
 OVRDBF FILE(CLOANCLXX) TOFILE(CLOAN) SHARE(*NO)
 ** ##OV2

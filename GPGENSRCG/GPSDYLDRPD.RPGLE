@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                       CGP017
 /*STD *  RPGBASEMOD                                                   *                       CGP017
@@ -10,14 +10,15 @@
       *                                                               *
       *  GPSDYLDRPD - On-Line Update of Global File GZSDYLDRPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPK024             Date 03Feb06               *
+      *                 CPK024             Date 03Feb06               *
       *                 BUG10215 *REBUILD  Date 27Sep06               *
       *                 CLE024             Date 20Oct03               *
       *                 BG1364             Date 04Mar04               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CPK024   - Release Package for MP1.2.1                       *
       *  BUG10215 - Global replication needs a global interface       *

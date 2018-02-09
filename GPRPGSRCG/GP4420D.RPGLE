@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*YMD)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Display weighting code')
@@ -12,20 +12,22 @@
       *  Function:  This sub-file program allows the user to enquire  *
       *             from a list of Weighting Code details             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. CGP001             Date 08Sep03               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGP001             Date 08Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
       *                 CPB001   *CREATE   Date 11Oct99               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGP001 - Global Processing.                                  *
       *           - SD442* programs renamed to GP442* series.         *

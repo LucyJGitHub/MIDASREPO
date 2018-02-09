@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Account Transfer Housekeeping')               *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: GLC003000 - Account Transfer Housekeeping         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR1075388          Date 21Nov13               *
-      *  Prev Amend No. CGL127             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1075388          Date 21Nov13               *
+      *                 CGL127             Date 06Aug12               *
       *                 AR845655           Date 06Oct11               *
       *                 CRE067             Date 05Oct10               *
       *                 BUG27831A          Date 05Aug10               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1075388 - Account transfer fees - net (Child:AR1075389)    *
       *              Applied for MD-23536 (Recompile)                 *
       *  CGL127 - COB Restructuring - GL COB Optimisation Phase 1     *

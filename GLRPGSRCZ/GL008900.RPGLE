@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Corrective Batch Additional Posting Gen')     *
@@ -16,10 +16,11 @@
       *  Called By: GLC008900 - Midas GL Corrective Batch Additional  *
       *                         Posting Generation                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CGL182             Date 11May17               *
-      *  Prev Amend No. AR1093704          Date 05Mar13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL182             Date 11May17               *
+      *                 AR1093704          Date 05Mar13               *
       *                 AR1054387          Date 09Nov12               *
       *                 AR1005162          Date 16Jul12               *
       *                 AR985003           Date 06Jun12               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *           (Recompile)                                         *
       *  AR1093704 - Error in trailer computation                     *

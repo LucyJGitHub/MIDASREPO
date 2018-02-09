@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL MT940 File Extract')                          *
@@ -12,10 +12,11 @@
       *  Function: This program extracts data from Posting file to    *
       *            MGx940PD                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR549926           Date 19Aug14               *
-      *  Prev Amend No. MD026137           Date 04Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR549926           Date 19Aug14               *
+      *                 MD026137           Date 04Apr14               *
       *                 MD025973           Date 25Mar14               *
       *                 MD025766           Date 13Mar14               *
       *                 MD024415           Date 20Jan14               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR549926 - GLPOSTPD and MGX950PD tables have a total size    *
       *             of about 1.4GB. These tables hold  records printed*
       *             on the MT9xx SWIFT messages. Amended program to   *
@@ -1253,4 +1255,4 @@
  
       *========================================================================*
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

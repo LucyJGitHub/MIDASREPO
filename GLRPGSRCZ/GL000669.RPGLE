@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL XML Stream File Generator program')           *
@@ -12,21 +12,23 @@
       *  Function: This module creates a stream file (type *STMF)     *
       *  and writes compressed XML data (from PF/GLRMDTPD) to it.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CGL154  *CREATE    Date 13Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting                                     *
       *                                                               *
       *****************************************************************
       /EJECT
-
+ 
      FGLUXMLPD  IF   E             DISK
       ** Midas GL FATCA XML Schema
      FGLFXMLL2  IF   E           K DISK
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -39,7 +41,7 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       ** Data structures
       ** Informations about RDE s values
      DRdeInfo          DS
@@ -47,7 +49,7 @@
      D XMDATA
      D XMDAT2
      D XMFLDA
-
+ 
       ** Working variable
      DPTagName         S                   LIKE(XMTAGN)
      DPTagValue        S                   LIKE(XMDATA)
@@ -62,26 +64,26 @@
      D TagName         S                   LIKE(XMTAGN)
      D KLevel          S                   LIKE(XMLEVL)
      D KElemNm         S                   LIKE(XMTAGN)
-
+ 
       ** Formats tag
      DFormatTag        PR                  LIKE(XMTAGN)
      D  p1                                 VALUE LIKE(XMTAGN)
      D  p2                            1  0 VALUE
      D  p3                                 VALUE LIKE(XMNMSP)
-
+ 
       ** Formats tag value
      DFmtTagVal        PR                  LIKE(XMDATA)
      DpRDEInfo                         *   VALUE
-
+ 
       **  Get currency number of decimal position
      DGetDecPos        PR             1  0
      D  Currency                      3    VALUE
-
+ 
       ** Format the amount depending the number of decimal positions
      DFmtAmt           PR            16
      D  DecPos                        1  0 VALUE
      D  Amount                       15    VALUE
-
+ 
       ** Adjust characters to the right
      DRightAdjust      PR            15
      D  NumberAlph                   15    VALUE
@@ -89,25 +91,25 @@
       * +------------------------------------------------------------------+
       * ¦ Main Routine                                                     ¦
       * +------------------------------------------------------------------+
-
+ 
       ** Create/Open the Streamfile
      C                   EXSR      CreateSTMF
-
+ 
       ** Write the Streamfile from array element
      C                   EXSR      WriteSTMF
-
+ 
       ** Close the Streamfile .DAT
      C                   EXSR      CloseSTMF
      C
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
       * +-------------------------------------------------------------+
       * ¦ Subr/CreateSTMF - Create streamfile (type *STMF) in         ¦
       * ¦                   exclusive mode.                           ¦
       * +-------------------------------------------------------------+
      C     CreateSTMF    BEGSR
-
+ 
      C                   CALL      'GL000670'
      C                   PARM      '*CREATE'     ActCode
      C                   PARM      *BLANKS       PTagName
@@ -116,12 +118,12 @@
      C                   PARM      *BLANKS       PTagEnd
      C                   PARM      *BLANKS       PFormat
      C                   PARM      *BLANKS       RtnCode
-
+ 
      C                   IF        RtnCode <> *BLANKS
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       /EJECT
       * +-------------------------------------------------------------+
@@ -129,33 +131,33 @@
       * ¦                  into the stream file.                      ¦
       * +-------------------------------------------------------------+
      C     WriteSTMF     BEGSR
-
+ 
      C     1             SETLL     GLUXMLPD
      C                   READ      GLUXMLPD
      C                   DOW       NOT %EOF(GLUXMLPD)
-
+ 
      C                   EVAL      PTagName = *BLANKS
      C                   EVAL      PTagValue = *BLANKS
      C                   EVAL      PTagEnd = *BLANKS
      C
      C                   EXSR      GetNmSpace
-
+ 
      C                   IF        XMTAGN  = *BLANKS
-
+ 
      C                   EVAL      PTagValue = XMDATA
      C                   IF        %SUBST(XMGRPN:1:1) = '/'
      C                   EVAL      PTagName = %SUBST(XMGRPN:2)
-
+ 
      C                   EVAL      PTagName = FormatTag(PTagName:1:PNamSpace)
      C                   ELSE
      C                   EVAL      PTagName = XMGRPN
-
+ 
      C                   EVAL      PTagName
      C                             =FormatTag(%SUBST(PTagName:1:40):0:PNamSpace)
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
      C                   EVAL      PTagValue = FmtTagVal(%ADDR(RdeInfo))
      C                   IF        PTagValue = '*ERROR'
      C                   EVAL      ReturnCode =  '*ERROR'
@@ -165,13 +167,13 @@
      C                   EXSR      *PSSR
      C                   ELSE
      C                   EVAL      TagName = XMTAGN
-
+ 
      C                   EVAL      PTagName = FormatTag(TagName:0:PNamSpace)
      C                   EVAL      PTagEnd  = FormatTag(TagName:1:PNamSpace)
      C                   EVAL      PTagValue2 = XMDAT2
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   CALL      'GL000670'
      C                   PARM      '*WRITE'      ActCode
      C                   PARM                    PTagName
@@ -180,17 +182,17 @@
      C                   PARM                    PTagEnd
      C                   PARM      XMFLDA        PFormat
      C                   PARM      *BLANKS       RtnCode
-
+ 
      C                   READ      GLUXMLPD
      C                   ENDDO
-
+ 
      C                   ENDSR
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/GetNmSpace - Get Name Space                            ¦
       * +-------------------------------------------------------------+
      C     GetNmSpace    BEGSR
-
+ 
      C                   IF        XMTAGN  <> *BLANKS
      C                   EVAL      KElemNm = XMTAGN
      C                   ELSE
@@ -199,7 +201,7 @@
      C                   EVAL      KElemNm = %SUBST(XMGRPN:2:39)
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   EVAL      KLevel  = XMLEVL
      C     KGrpLevel     CHAIN     GLFXMLL2
      C                   IF        %FOUND(GLFXMLL2)
@@ -207,7 +209,7 @@
      C                   ELSE
      C                   EVAL      PNamSpace = *BLANKS
      C                   ENDIF
-
+ 
      C                   ENDSR
       /EJECT
       * +-------------------------------------------------------------+
@@ -215,7 +217,7 @@
       * ¦                  CLOSE()function.                           ¦
       * +-------------------------------------------------------------+
      C     CloseSTMF     BEGSR
-
+ 
      C                   CALL      'GL000670'
      C                   PARM      '*CLOSE'      ActCode
      C                   PARM      *BLANKS       PTagName
@@ -224,14 +226,14 @@
      C                   PARM      *BLANKS       PTagEnd
      C                   PARM      *BLANKS       PFormat
      C                   PARM      *BLANKS       RtnCode
-
+ 
      C                   IF        RtnCode <> *BLANKS
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       /EJECT
       **********************************************************************
       * INITIALISATION SUBROUTINE
@@ -239,11 +241,11 @@
      C     *INZSR        BEGSR
      C     *ENTRY        PLIST
      C                   PARM                    RtnCode
-
+ 
      C     KGrpLevel     KLIST
      C                   KFLD                    KLevel
      C                   KFLD                    KElemNm
-
+ 
      C                   ENDSR
       **********************************************************************
      C/COPY ZACPYSRC,PSSR_ILE
@@ -261,11 +263,11 @@
      DTag              S                   LIKE(PTagName)
       *
      C                   IF        EndTag = 1
-
+ 
      C                   EVAL      Tag = '</' + %TRIM(NameSpace)
      C                                        + %TRIM(TagName) + '>'
      C                   ELSE
-
+ 
      C                   EVAL      Tag = '<' + %TRIM(NameSpace)
      C                                       + %TRIM(TagName) + '>'
      C                   ENDIF
@@ -294,9 +296,9 @@
      D  RdeFmtQul                          LIKE(XMFLDA)
       *
      C                   EVAL      RdeInfo = %STR(pRdeINfo)
-
+ 
      C                   SELECT
-
+ 
      C                   WHEN      RdeFmtQul = 'AMT'
      C                             and RdeValue  <> *BLANKS
      C                   EVAL      AmtSign   = *BLANKS
@@ -317,7 +319,7 @@
      C                   ELSE
      C                   EVAL      TagValue = '*ERROR'
      C                   ENDIF
-
+ 
      C                   WHEN      RdeFmtQul = 'YMD'
      C                   IF        RdeValue <> *BLANKS
      C                   EVAL      TagValue = %SUBST(RdeValue:1:4) + '-' +
@@ -326,12 +328,12 @@
      C                   ELSE
      C                   EVAL      TagValue = *BLANKS
      C                   ENDIF
-
+ 
      C                   OTHER
      C                   EVAL      TagValue = RdeValue
-
+ 
      C                   ENDSL
-
+ 
      C                   RETURN    TagValue
      P                 E
       **********************************************************************

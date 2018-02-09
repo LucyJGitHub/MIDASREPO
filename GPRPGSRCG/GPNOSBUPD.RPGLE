@@ -1,6 +1,6 @@
      H DEBUG
      H DATEDIT(*DMYH)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GP Nostro Balance Update')                       *
@@ -10,10 +10,11 @@
       *                                                               *
       *  GPNOSBUPD - Nostro Balance Update                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR987769           Date 22Jun22               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR987769           Date 22Jun22               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR987769 - Discrepancies on the Projected Nostro Balances    *
       *             enquiry. Updated projections for 6th & 7th day in *
       *             GPNOSBPD based from RSACMTPD.                     *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FD MM Interest Rates Screen Input Module')
@@ -12,14 +12,15 @@
       *  Function:  This is the main screen input function            *
       *             for Interest Rates Details.                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG1625            Date 19May04               *
-      *  Prev Amend No. 213558             Date 22Jan03               *
+      *  Prev Amend No. BUG1625            Date 19May04               *
+      *                 213558             Date 22Jan03               *
       *                 213561             Date 10Jan03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG1625 - Commitment Control Changes for MidasPlus           *
       *  213558 - MDF Rate Maintenance Time/Date Stamp amendable      *
       *  213561 - Error when reach begin/end of file using F7 and F8  *
@@ -1308,4 +1310,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

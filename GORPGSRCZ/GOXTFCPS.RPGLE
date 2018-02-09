@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Extract of F&O Cust Positions')               *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GOXTFCPS - Extract of F&O Customer Positions                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD032884           Date 09Jun15               *
-      *  Prev Amend No. CAP208             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032884           Date 09Jun15               *
+      *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032884 - Performance enhancement for GOCXCLTS. Recompiled  *
       *             due to change in GOPOSNPD.                        *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
@@ -226,4 +228,4 @@
       /COPY GOCPYSRC,GOPSSR
       *********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

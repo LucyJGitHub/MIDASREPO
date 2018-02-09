@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Account Transfer Criteria Maintenance')       *
@@ -13,10 +13,11 @@
       *             Transfer Criteria which are used to generate      *
       *             accounts for transfer details.                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD040242A          Date 02Sep16               *
-      *  Prev Amend No. MD040242           Date 09Sep16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD040242A          Date 02Sep16               *
+      *                 MD040242           Date 09Sep16               *
       *                 CRE075             Date 06Dec10               *
       *                 BUG27769           Date 09Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD040242A - Send error message when no account exists for    *
       *              entered selection criteria.                      *
       *            - Applied for MD040318A.                           *

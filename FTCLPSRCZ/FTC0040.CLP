@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       FTC0040    OUTGOING PAYMENTS - LEVEL ONE                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC022             Date 24Feb04              */
+/*       Prev Amend No. CSC022             Date 24Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 042167            DATE  15APR93             */
+/*                      042167             Date 15Apr93              */
 /*                      E23411            DATE  06SEP90             */
 /*                      S01194            DATE  16AUG90             */
 /*                      E29834            DATE  16AUG90             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
 /*    042167 - CL PROGRAM FOR RECORD LOCKING                         */
 /*    E23411 - MMOD WAS CHECKED IN POSITION 3 TO SEE IF RETAIL 1     */
@@ -39,7 +41,7 @@
              PGM        PARM(&SORT &PREF &RTCD)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&SORT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(15) /* Payment +
@@ -227,7 +229,7 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /************FINISH: ENDPGM******************************************* *042167*/
 FINISH:                                                               /*042167*/
 /*/COPY WNCPYSRC,FTC0040004                                          */

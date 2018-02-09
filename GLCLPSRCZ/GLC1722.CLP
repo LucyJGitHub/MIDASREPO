@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       GLC1722 - Posting Interface Key Creation                    */
 /*                                                                   */
-/*       (c) Misys Banking Systems Ltd. 2006                         */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD021155           Date 08Jul13              */
-/*       Prev Amend No. CGL127AF           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021155           Date 08Jul13              */
+/*                      CGL127AF           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CGL047 *Create     Date 27Jun06              */
 /*                                                                   */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - End processing is open to looping                */
 /*                - RGZPFM not moved                                 */
@@ -27,7 +29,7 @@
              PGM        PARM(&CNAM &CSEQ)
  
              DCL        VAR(&MISYS) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys Banking Systems Ltd. 2006')
+                          Finastra International Limited 2006')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
              DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
@@ -172,6 +174,6 @@
 /**********  SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) + */                   /*MD021155*/
 /**********               FLAG('E') TEXT(&STEXT)                   */          /*CGL127AF MD021155*/
 /**********                                                        */          /*CGL127AF MD021155*/
-             CHGVAR     VAR(&MISYS) VALUE('(c) Misys Banking +
-                          Systems Ltd. 2006')
+             CHGVAR     VAR(&MISYS) VALUE('(c) Finastra International +
+                          Limited 2006')
              ENDPGM

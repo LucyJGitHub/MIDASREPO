@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT CCT controlling module')
@@ -15,14 +15,15 @@
       *             the insertion, maintenance and display of customer*
       *             credit transfer details.                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
       *                                                               *
-      *  Last Amend No. MD034397           Date 13May15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034397           Date 13May15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG24998           Date 17Jul09               *
+      *                 BUG24998           Date 17Jul09               *
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -52,8 +53,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034397 - Error messages are not reset when shifting from   *
-      *             Incoming to Outgoing transfer                     *      
+      *             Incoming to Outgoing transfer                     *
       *  BUG24998 - Bank operation code is missing (Recompile)        *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -2229,6 +2231,6 @@ DB+  C                   Parm                    OKFlag1                        
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @IndOff
 000000000000000000000000000000

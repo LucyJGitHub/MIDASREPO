@@ -11,16 +11,18 @@
       *  Function:  This sub-file program allows the user to select   *
       *             from a list of country codes                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BG12458 *CREATE    Date 07Nov06               *
+      *  Prev Amend No. BG12458 *CREATE    Date 07Nov06               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG12458 - COB component DLC0607 00001 failed producing a     *
       *            database error in DL0400AU report                  *
       *                                                               *
@@ -654,4 +656,4 @@
      C     ZZEXIT        ENDSR
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

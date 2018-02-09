@@ -9,14 +9,16 @@
 /*                                                                   */
 /*       Called by: GL003000                                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD040242A          Date 02Sep16              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD040242A          Date 02Sep16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CGL114  *CREATE    Date 04Jan10              */
+/*                      CGL114  *CREATE    Date 04Jan10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD040242A - Send error message when no account exists for   */
 /*                   entered selection criteria.                     */
 /*                 - Applied for MD040318A.                          */
@@ -26,7 +28,7 @@
              PGM        PARM(&REFERENCE &RTCD)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2010')
  
              DCL        VAR(&MEM)       TYPE(*CHAR) LEN(50)
@@ -83,7 +85,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
  END:        CHGVAR     VAR(&CPYFLD) +
-                     VALUE('(c) Misys International Banking Systems Ltd')
+                     VALUE('(c) Finastra International Limited')
  
              CLOF       OPNID(GLACCSJ0)
              MONMSG     MSGID(CPF0000)

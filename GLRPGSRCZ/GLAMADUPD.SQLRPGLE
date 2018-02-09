@@ -9,10 +9,11 @@
       *                                                               *
       *  GLAMADUPD - Accounts Database Update                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD034366           Date 09Sep15               *
-      *  Prev Amend No. MD042832           Date 23Nov16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034366           Date 09Sep15               *
+      *                 MD042832           Date 23Nov16               *
       *                 MD034725           Date 27Jul16               *
       *                 MD035554           Date 25May16               *
       *                 MD033852           Date 20Aug15               *
@@ -127,6 +128,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034366 - CRE005 failuers in COB. Added timestamp field to  *
       *             ensure that latest rate change record is used.    *
       *  MD042832 - Serious Midas Error upon authorization due to     *
@@ -7268,7 +7270,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       /EJECT                                                                                  CSD015
       *****************************************************************                       CSD015
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001            
 ** CMD1
 OVRDBF FILE(GLACSHL0) TOFILE(GLACSHL0) SHARE(*NO)
 ** CMD2

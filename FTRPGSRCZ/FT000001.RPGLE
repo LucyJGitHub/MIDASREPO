@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Recalculate Payment Charge in Base CCY')      *
@@ -10,16 +10,18 @@
       *  FT000001 - Recalculate Payment Charge Definitions in Base    *
       *             Currency.                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Function : This program processes charges defined in file    *
       *             FTPCHGPD defined in Other currencies and          *
       *             recalculates the amount due in Base Currency      *
       *                                                               *
-      * Last Amend No.  CFT154  *CREATE    Date 26Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT154  *CREATE    Date 26Aug14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT154 - Charges Daily Conversion                            *
       *                                                               *
       *****************************************************************
@@ -1784,4 +1786,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

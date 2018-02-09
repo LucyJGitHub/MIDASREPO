@@ -7,14 +7,15 @@
 /*                                                                   */
 /*   FFC0231  -  POSITION CLOSE OUT CANCELLATION                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 261143             Date 16Jul09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 261143             Date 16Jul09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC023             Date 29Jan04              */
+/*                      CSC023             Date 29Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
 /*                      CGL007             Date 26Mar99              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       261143 - Convert Customer Code (CUSC) and Broker Code       */
 /*                (BOCO) to alphanumeric.                            */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
@@ -66,7 +68,7 @@
              DCL        VAR(&ACTN) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CLON) TYPE(*DEC) LEN(6 0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,FFC0231001                                          */
              DCL       VAR(&RTCD) TYPE(*CHAR) LEN(7)                  /*CGL007*/
@@ -239,7 +241,7 @@ U1LOOP:
              IF         COND(%SWITCH(0XXXXX00)) THEN(GOTO U1LOOP)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*END:*******ENDPGM                                                */ /*E44676*/
 /**/                                                                  /*E44676*/
 END:                                                                  /*E44676*/

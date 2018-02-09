@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate pay date')                           *
@@ -15,12 +15,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD031985           Date 27Jul15               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031985           Date 27Jul15               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR702741           Date 02Feb11               *
       *                 CRE067             Date 05Oct10               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031985-The default pay value date equal to the settl date  *
       *           Pattern GEMS 229613                                 *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -310,7 +312,7 @@
      C**********         END                                                          BUG4039 237436
      C**********         Eval      ZFREQ = 'D'                                               BUG4039
      C**********         Eval      ZFREQ = 'D'                                        237436MD031985
-
+ 
      C**********         If        @NOWRK = 'N'                                              BUG4039
      C**********         Eval      ZCCY = SPCCY                                              BUG4039
      C**********         Else                                                                BUG4039
@@ -321,7 +323,7 @@
      C**********         Else                                                         237436MD031985
      C**********         Eval      ZCCY = BJLCCY                                      237436MD031985
      C**********         End                                                          237436MD031985
-
+ 
      C**********         Eval      ZDAYNO = BJRDNB                                           BUG4039
      C**********         Eval      ZLOC = @PLOC                                              BUG4039
      C**********         Eval      ZDAYNO = BJRDNB                                    237436MD031985
@@ -344,7 +346,7 @@
      C**********         Parm                    ZMDAY                                237436MD031985
      C**********         Parm                    BJDFIN                               237436MD031985
      C*****SDGELR        Parm                    SDGELR                               237436MD031985
-
+ 
      C**********         If        ZERR <> *Blanks                                           BUG4039
      C**********         Move      'FTVPYDT'     DBPGM                                       BUG4039
      C**********         Move      'ZFREQB'      DBFILE                                      BUG4039
@@ -359,7 +361,7 @@
      C**********         Movel     ZCCY          DBKEY                                237436MD031985
      C**********         Exsr      *PSSR                                              237436MD031985
      C**********         End                                                          237436MD031985
-
+ 
       * If not base currency find run date plus 2
      C**********         If        SPCCY <> BJCYCD                                           BUG4039
      C**********         If        SPCCY <> BJCYCD                                    237436MD031985
@@ -381,10 +383,10 @@
      C**********         Parm                    ZMDAY                                237436MD031985
      C**********         Parm                    BJDFIN                               237436MD031985
      C*****SDGELR        Parm                    SDGELR                               237436MD031985
-
+ 
      C**********         End                                                                 BUG4039
      C**********         End                                                          237436MD031985
-
+ 
      C                   Else
      C                   Eval      ZERR = 'N'
       * Check date is numeric
@@ -731,4 +733,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

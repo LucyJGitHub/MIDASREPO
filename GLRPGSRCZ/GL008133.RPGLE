@@ -8,12 +8,14 @@
       *                                                               *
       *  GL008133 - Stamp Tax - Reset accounts being closed           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd 2010             *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CER049  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER049 - Stamp Tax                                           *
       *                                                               *
       *****************************************************************
@@ -65,4 +67,4 @@
      C                   RETURN
       *****************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd., 2010
+(C) Copyright Finastra International Limited 2010

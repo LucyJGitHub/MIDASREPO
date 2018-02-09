@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Customer Activities Collection')              *
@@ -12,10 +12,11 @@
       *  Note: Account keys format are based on the account key       *
       *        manual for each module                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. MD043943           Date 03Feb17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD043943           Date 03Feb17               *
       *                 MD043793           Date 30Jan17               *
       *                 MD043652           Date 18Jan17               *
       *                 MD042828           Date 15Dec16               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD043943 - Forward foreign exchange deals that are matured   *
       *             before FATCA EOY shouldn't be captured            *
@@ -37,72 +39,72 @@
       *  CGL154 - FATCA Reporting.                                    *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas LE Loan Events 1
      FLKEY1DP   IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(L1_)
- 
+
       ** Midas LE Loan Events 3
      FLKEY3DP   IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LKEY1DPF:LKEY3DPF)
      F                                     PREFIX(L2_)
- 
+
       ** Midas SE Securities Events
      FSEKEYD    IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(S_)
- 
+
       ** Midas DL Deal Events
      FDKEYSDP   IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(D_)
- 
+
       ** Midas FF Generated account keys
      FFOKEYD    IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(F_)
- 
+
       ** Midas GL Customer Activities and Payment Amounts - Delete
      FGLCAPAL1  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLCAPAD0:GLCAPAD1)
      F                                     PREFIX(C_)
- 
+
       ** Midas GL Customer Activities and Payment Amounts - Delete
      FGLCAPAL3  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLCAPAD0:GLCAPAD2)
      F                                     PREFIX(B_)
- 
+
       ** Midas DL Deals File
      FDLDLBBL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(W_)
      FSDJACCL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas DL Deals
      FDEALALL   IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DEALSDBF:DEALSDBF1)
      F                                     PREFIX(E_)
- 
+
       ** Midas LE Loans
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(L_)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
- 
+
       ** Midas GL Customer Activities and Payment Amounts
      FGLCAPAPD  O    E             DISK    INFSR(*PSSR)
                                                                                             MD042828
       ** Midas GL GL FATCA Closed Accounts Balances Detail                                  MD042828
      FGLFCABPD  O    E             DISK    INFSR(*PSSR)                                     MD042828
      F                                     PREFIX(CA)                                       MD042828
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
       ** +--------------------------------------+
- 
+
       ** Local data area for database error details
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
- 
+
       ** The following fields are defined in the external file:
       **                                    134 141 DBFile
       **                                    142 170 DBKey
@@ -110,35 +112,35 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** Externally described DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Externally described DS for account details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
- 
+
       ** Externally described DS for Securities Customers
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
- 
+
       ** Externally described DS for Nostro Details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D SNACCD        E                     EXTFLD(QQACCD)
- 
+
       ** Externally described DS for Loan type/subtype
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
- 
+
       ** Externally described DS for customer details
      D SDCUSD        E DS                  EXTNAME(SDCUSTPD)
                                                                                             MD043793
       ** Midas Book Codes File                                                              MD043793
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)                                MD043793
- 
+
       ** First DS for access programs, short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** First DS for access programs, long data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Parameters for access object programs
      D Prtcd           S              7A
      D Poptn           S              7A
@@ -157,7 +159,7 @@
      D PKySt           S              7
      D PCust           S             10A
      D PLNCL           S              4A
- 
+
       ** Other fields used
      D Wrevi           S              1S 0
      D Wrun            S              1A
@@ -194,41 +196,41 @@
      D KRcdt           S              1
      D Wtrade          S              1
      D PPFTC           S              2                                                     MD043793
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       *                                                               *
       * MAIN - Main processing                                        *
       *                                                               *
       *****************************************************************
- 
+
      C                   IF        Pmodule = 'DL'
      C                   EXSR      SrDeals
      C                   ENDIF
- 
+
      C                   IF        Pmodule = 'FF'
      C                   EXSR      SrFutOpt
      C                   ENDIF
- 
+
      C                   IF        Pmodule = 'LE'
      C                   EXSR      SrLoans
      C                   ENDIF
- 
+
      C                   IF        Pmodule = 'L2'
      C                   EXSR      SrLoan2
      C                   ENDIF
- 
+
      C                   IF        Pmodule = 'SE'
      C                   EXSR      SrSecurities
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -241,20 +243,20 @@
       * Calls: SrUpdate, SrExtCust                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SrFutOpt      BEGSR
- 
+
      C                   READ      FOKEYD
- 
+
       ** Read until a record is not found
- 
+
      C                   DOW       NOT %EOF(FOKEYD)
- 
+
       ** Future and Options
       ** F_Xbbmmiii_C_L (Exercise loss, profit payable to customer, Trade sale)
       ***F_XbbmmiiiS__P*(Exercise*profit*for*customer,*trade*purchase)*                     MD042828
       ** F_Xbb_ _ _ _ _ _C_L ()Exercise loss, payable to customer OTC trade sale)
- 
+
      C                   IF        F_EDAT <= BJRDNB
      C                             AND F_RECI = 'D'
      C                   IF        %SUBST(F_FFKY:1:3) = 'F X'
@@ -268,14 +270,14 @@
      C                   EXSR      SrExtCust
      C                   IF        Wcust <> *BLANKS
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = F_BRCA
- 
+
      C                   EVAL      CPACNO = 'FF' + Wdlno
      C                   EVAL      CPCCY = F_CCY
      C                   EVAL      CPPSTA = F_EAMT
      C                   EVAL      CPVDAT = F_EDAT
- 
+
      C**********         EVAL      CPTYPE = 'FXOPT'                                         MD042828
      C                   EVAL      CPTYPE = 'OPEXC'                                         MD042828
      C                   EVAL      CPPAYT = 'G'
@@ -285,9 +287,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Future and Options
- 
+
       ** F-R--mmiii-C-P (Realised profit for customer)
       ** F-Pbb-----SC-D (Premium full amount, trade sale/trade type 4 (no broker involved))
       ** F-Pbb-----SC-F (Premium full amount due at end, trade sale/trade type 6)
@@ -296,10 +298,10 @@
       ** F-Pbb-----S--C (Premium receivable by customer, trade sale, trade type 8, premium upfront
       **                only)
       ** F_PbbmmiiiS__S (full premium amount receivable by customer, trade type 8)
- 
+
      C                   IF        F_EDAT <= BJRDNB
      C                             AND F_RECI = 'D'
- 
+
      C                   IF        %SUBST(F_FFKY:1:1) = 'F'
      C                             AND %SUBST(F_FFKY:3:3) = 'R  '
      C                             AND %SUBST(F_FFKY:11:4) = ' C P'
@@ -316,7 +318,7 @@
      C                             OR %SUBST(F_FFKY:14:1) = 'E'
      C                             OR %SUBST(F_FFKY:14:1) = 'G'
      C                             OR %SUBST(F_FFKY:14:1) = 'F')
- 
+
      C                             OR  %SUBST(F_FFKY:1:1)  = 'F'
      C                             AND %SUBST(F_FFKY:3:1)  = 'P'
      C                             AND %SUBST(F_FFKY:11:3) = 'S  '
@@ -337,14 +339,14 @@
      C                   EXSR      SrExtCust
      C                   IF        Wcust <> *BLANKS
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = F_BRCA
- 
+
      C                   EVAL      CPACNO = 'FF' + Wdlno
      C                   EVAL      CPCCY = F_CCY
      C                   EVAL      CPPSTA = F_EAMT
      C                   EVAL      CPVDAT = F_EDAT
- 
+
      C                   IF        %SUBST(F_FFKY:1:1) = 'F'
      C                             AND %SUBST(F_FFKY:3:3) = 'R  '
      C                             AND %SUBST(F_FFKY:11:4) = ' C P'
@@ -360,14 +362,14 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      FOKEYD
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -380,20 +382,20 @@
       * Calls: SrUpdate, SrExtCust                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SrDeals       BEGSR
- 
+
      C                   READ      DKEYSDP
- 
+
       ** Read until a record is not found
- 
+
      C                   DOW       NOT %EOF(DKEYSDP)
- 
+
       ** xxIyybbbbI (Interim Interest Due)
       ** xxVyybbbbI (up front interest amount at value date)
       ** xxMyybbbbi (interest due at maturity)
       ** where xx is CD, CI, IT, TD, DT, FT, LT
- 
+
      C                   IF        D_EDAT <= BJRDNB
      C                             AND D_RECI = 'D'
      C                   IF        %SUBST(D_AKEY:1:2) = 'CD'
@@ -416,20 +418,20 @@
      C                   MOVE      D_OSAC        Wsacc
      C                   EVAL      Wcurr = D_ECCY
      C                   EVAL      Wrevi = D_REVI
- 
+
      C                   EXSR      SrDealCust
      C                   EXSR      SrExtCust
      C                   IF        Wcust <> *BLANKS
      C                             OR Wrevi = 1
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = D_BRCA
- 
+
      C                   EVAL      CPACNO = 'DL' + Wdlno
      C                   EVAL      CPCCY = D_ECCY
      C                   EVAL      CPPSTA = D_EAMT
      C                   EVAL      CPVDAT = D_EDAT
- 
+
      C                   EVAL      CPTYPE = 'DLINT'
      C                   EVAL      CPPAYT = 'I'
      C                   EVAL      Wrevi = D_REVI
@@ -438,14 +440,14 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Deal types FR, RF, RP, RR
- 
+
       ** FRVyybbbUL
       ** RFIyybbbPI
       ** RPIyybbbPI
       ** RRIyybbbPI
- 
+
      C                   IF        D_EDAT <= BJRDNB
      C                             AND D_RECI = 'D'
      C                   IF        %SUBST(D_AKEY:1:2) = 'FR'
@@ -455,7 +457,7 @@
      C                   IF        (%SUBST(D_AKEY:3:1) = 'V'
      C                             OR %SUBST(D_AKEY:3:1) = 'I')
      C                             AND %SUBST(D_AKEY:9:2) = 'PI'
- 
+
      C                   EVAL      Wdtyp = %SUBST(D_AKEY:1:2)
      C                   EVAL      Wdlst = %SUBST(D_AKEY:4:2)
      C                   MOVE      D_DLNO        Wdlno
@@ -463,7 +465,7 @@
      C                   MOVE      D_OSAC        Wsacc
      C                   EVAL      Wcurr = D_ECCY
      C                   EVAL      Wrevi = D_REVI
- 
+
      C                   EXSR      SrDealCust
      C                   EXSR      SrExtCust
                                                                                             MD043793
@@ -483,14 +485,14 @@
      C                   IF        Wcust <> *BLANKS
      C                             OR Wrevi = 1
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = D_BRCA
- 
+
      C                   EVAL      CPACNO = 'DL' + Wdlno
      C                   EVAL      CPCCY = D_ECCY
      C                   EVAL      CPPSTA = D_EAMT
      C                   EVAL      CPVDAT = D_EDAT
- 
+
      C                   EVAL      CPTYPE = 'FRAIN'
      C                   EVAL      CPPAYT = 'O'
      C                   EVAL      Wrevi = D_REVI
@@ -499,7 +501,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ***xxDyybbbBC*(Sale*amount*-*Base*ccy)***************************                     MD042828
       ***xxDyybbbFC*(Sale*amount*-*Foreign*ccy)************************                     MD042828
       ***where*xx*is*deal*types*CX,*FP,*FS,*OP,*OT,*PI,*PS,*SI,*SW*****                     MD042828
@@ -608,7 +610,7 @@
      C**********         ENDIF                                                              MD043943
      C**********         ENDIF                                                              MD043943
      C**********         ENDIF                                                              MD043943
- 
+
       ** Deal types RX
       ** RXVyybbbTA (Their principal amount - foreign currency at value date)
       ** RXVyybbBTA (Their principal amount - base currency at value date)
@@ -622,7 +624,7 @@
       ** RXMyybBDOA (Our Principal Decrease Amount - base currency)
       ** RXMyybbbOA (Our Principal Amount - foreign currency)
       ** RXMyybbBOA (Our Principal Amount - base currency)
- 
+
      C**********         IF        D_EDAT <= BJRDNB                                         MD042828
      C**********                   AND D_RECI = 'D'                                         MD042828
      C**********         IF        %SUBST(D_AKEY:1:2) = 'RX'                                MD042828
@@ -679,13 +681,13 @@
      C**********         ENDIF                                                              MD042828
      C**********         ENDIF                                                              MD042828
      C**********         ENDIF                                                              MD042828
- 
+
       ** Deal types RS, RX
       ** xxVyybbbPB (Buy-Out Amount Payable)
       ** xxVyybbbPF (Fee/Premium Amount Payable)
       ** xxIyybbbPI (Gross total interest to pay)
       ** xxIyybbbPC (Total interest to pay when capitalisation)
- 
+
      C                   IF        D_EDAT <= BJRDNB
      C                             AND D_RECI = 'D'
      C                   IF        %SUBST(D_AKEY:1:2) = 'RS'
@@ -707,20 +709,20 @@
      C                   MOVE      D_OSAC        Wsacc
      C                   EVAL      Wcurr = D_ECCY
      C                   EVAL      Wrevi = D_REVI
- 
+
      C                   EXSR      SrDealCust
      C                   EXSR      SrExtCust
      C                   IF        Wcust <> *BLANKS
      C                             OR Wrevi = 1
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = D_BRCA
- 
+
      C                   EVAL      CPACNO = 'DL' + Wdlno
      C                   EVAL      CPCCY = D_ECCY
      C                   EVAL      CPPSTA = D_EAMT
      C                   EVAL      CPVDAT = D_EDAT
- 
+
      C                   IF        %SUBST(D_AKEY:9:2) = 'PI'
      C                             OR %SUBST(D_AKEY:9:2) = 'PC'
      C                   IF        %SUBST(D_AKEY:1:2) = 'RS'
@@ -854,13 +856,13 @@
      C                   ENDIF                                                              MD042828
      C                   ENDIF                                                              MD042828
      C                   ENDIF                                                              MD042828
- 
+
      C                   READ      DKEYSDP
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -873,20 +875,20 @@
       * Calls: SrUpdate, SrExtCust, AOLOANR0                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SrLoans       BEGSR
- 
+
      C                   READ      LKEY1DP
- 
+
       ** Read until a record is not found
- 
+
      C                   DOW       NOT %EOF(LKEY1DP)
- 
+
       ** Loans
       ** xxRyybrsbI where xx and yy (loan type and sub type) has
       ** processing type 66, 69, or 72
       ** xxVyybrsbD - discount loan (processing type 67)
- 
+
      C                   IF        L1_EDAT <= BJRDNB
      C                             AND L1_RECI = 'D'
      C                   IF        %SUBST(L1_AKEY:3:1) = 'R'
@@ -898,11 +900,11 @@
      C                   EVAL      Wdtyp  = %SUBST(L1_AKEY:1:2)
      C                   EVAL      Wdtyp2 = %SUBST(L1_AKEY:1:2)
      C                   EVAL      Wdstp = %SUBST(L1_AKEY:4:2)
- 
+
      C                   EVAL      KLoan = L1_LNNO
      C                   EVAL      KRcdt = 'A'
      C     KLoank        CHAIN     CLOAN
- 
+
      C**********         IF        L_PTYP = 66                                              MD042828
      C**********                   OR L_PTYP = 67                                           MD042828
      C**********                   OR L_PTYP = 69                                           MD042828
@@ -923,20 +925,20 @@
      C                   MOVE      L1_OSAC       Wsacc
      C                   EVAL      Wcurr = L1_ECCY
      C                   EVAL      Wrevi = L1_REVI
- 
+
      C                   EXSR      SrLoanCust
      C                   EXSR      SrExtCust
      C                   IF        Wcust <> *BLANKS
      C                             OR Wrevi = 1
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = L1_BRCA
- 
+
      C                   EVAL      CPACNO = 'LE' + Wdlno
      C                   EVAL      CPCCY = L1_ECCY
      C                   EVAL      CPPSTA = L1_EAMT
      C                   EVAL      CPVDAT = L1_EDAT
- 
+
      C                   EVAL      CPTYPE = 'LEINT'
      C                   IF        L_PTYP = 67                                              MD042828
      C                   EVAL      CPTYPE = 'LEMAT'                                         MD042828
@@ -948,7 +950,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Loan maturity                                                                      MD042828
                                                                                             MD042828
      C                   IF        L1_EDAT <= BJRDNB                                        MD042828
@@ -1018,13 +1020,13 @@
      C                   ENDIF                                                              MD042828
      C                   ENDIF                                                              MD042828
      C                   ENDIF                                                              MD042828
- 
+
      C                   READ      LKEY1DP
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1037,21 +1039,21 @@
       * Calls: SrUpdate, SrExtCust, AOLOANR0                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SrLoan2       BEGSR
- 
+
       ** Loan events 3
- 
+
      C                   READ      LKEY3DP
- 
+
       ** Read until a record is not found
- 
+
      C                   DOW       NOT %EOF(LKEY3DP)
- 
+
       ** Loans
       ** xxRyybrsbI where xx and yy (loan type and sub type) has
       ** processing type 66, 67, 69, or 72
- 
+
      C                   IF        L2_EDAT <= BJRDNB
      C                             AND L2_RECI = 'D'
      C                             AND %SUBST(L2_AKEY:3:1) = 'R'
@@ -1060,11 +1062,11 @@
      C                             AND %SUBST(L2_AKEY:10:1) = 'A'                           MD042828
      C                   EVAL      Wdtyp = %SUBST(L2_AKEY:1:2)
      C                   EVAL      Wdstp = %SUBST(L2_AKEY:4:2)
- 
+
      C                   EVAL      KLoan = L2_LNNO
      C                   EVAL      KRcdt = 'A'
      C     KLoank        CHAIN     CLOAN
- 
+
      C**********         IF        L_PTYP = 66                                              MD042828
      C**********                   OR L_PTYP = 67                                           MD042828
      C**********                   OR L_PTYP = 69                                           MD042828
@@ -1075,27 +1077,27 @@
      C                             AND %SUBST(L2_AKEY:10:1) = 'I')                          MD042828
      C                             OR (L_PTYP = 67                                          MD042828
      C                             AND %SUBST(L2_AKEY:10:1) = 'A')                          MD042828
- 
+
      C                   MOVE      L_PTYP        Wlnpt
      C                   MOVE      L2_LNNO       Wdlno
      C                   MOVE      L2_SETP       Wstyp
      C                   MOVE      L2_OSAC       Wsacc
      C                   EVAL      Wcurr = L2_ECCY
      C                   EVAL      Wrevi = L2_REVI
- 
+
      C                   EXSR      SrLoanCust
      C                   EXSR      SrExtCust
      C                   IF        Wcust <> *BLANKS
      C                             OR Wrevi = 1
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = L2_BRCA
- 
+
      C                   EVAL      CPACNO = 'LE' + Wdlno
      C                   EVAL      CPCCY = L2_ECCY
      C                   EVAL      CPPSTA = L2_EAMT
      C                   EVAL      CPVDAT = L2_EDAT
- 
+
      C                   EVAL      CPTYPE = 'LEINT'
      C                   IF        L_PTYP = 67                                              MD042828
      C                   EVAL      CPTYPE = 'LEMAT'                                         MD042828
@@ -1106,8 +1108,8 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
- 
+
+
       ** Loan maturity                                                                      MD042828
                                                                                             MD042828
      C                   IF        L2_EDAT <= BJRDNB                                        MD042828
@@ -1179,12 +1181,12 @@
      C                   ENDIF                                                              MD042828
                                                                                             MD042828
      C                   READ      LKEY3DP
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
- 
+
+
       *****************************************************************
       *                                                               *
       * SrSecurities - Subroutine to process Securities generated     *
@@ -1195,18 +1197,18 @@
       * Calls: SrUpdate, SrExtCust                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSecurities  BEGSR
- 
+
      C                   READ      SEKEYD
- 
+
       ** Read until a record is not found
- 
+
      C                   DOW       NOT %EOF(SEKEYD)
- 
+
       ** Dividend and coupon
       ** iiiS-D--yy--mvn---DI or iiiS-S--yy--mvn---DI
- 
+
      C                   IF        S_EVDT <= BJRDNB
      C                             AND S_RECI = 'D'
      C                   IF        %SUBST(S_ACKY:4:2) = 'S '
@@ -1222,7 +1224,7 @@
      C                   EXSR      SrExtCust
      C                   IF        Wcust <> *BLANKS
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = S_BRHA
      C                   MOVE      S_TRFR        Wtrfr
      C**********         IF        WTRFR = '000000'                                         MD043943
@@ -1233,7 +1235,7 @@
      C                   EVAL      CPCCY = S_EVCY
      C                   EVAL      CPPSTA = S_EVAM
      C                   EVAL      CPVDAT = S_EVDT
- 
+
      C                   EVAL      CPTYPE = 'SEPOS'
      C                   EVAL      CPPAYT = 'D'
      C                   MOVE      S_RVRS        Wrevi
@@ -1242,10 +1244,10 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Trades
       ** iiiSPDbbyy--mvn---CV or iiiSPSbbyy--mvn---CV
- 
+
      C                   IF        S_EVDT <= BJRDNB
      C                             AND S_RECI = 'D'
      C                   IF        (%SUBST(S_ACKY:4:3) = 'SPD'
@@ -1261,7 +1263,7 @@
      C                   EXSR      SrExtCust
      C                   IF        Wcust <> *BLANKS
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = S_BRHA
      C                   MOVE      S_TRFR        Wtrfr
      C**********         IF        WTRFR = '000000'                                         MD043943
@@ -1272,7 +1274,7 @@
      C                   EVAL      CPCCY = S_EVCY
      C                   EVAL      CPPSTA = S_EVAM
      C                   EVAL      CPVDAT = S_EVDT
- 
+
      C                   EVAL      CPTYPE = 'SESAL'
      C                   EVAL      CPPAYT = 'G'
      C                   MOVE      S_RVRS        Wrevi
@@ -1281,11 +1283,11 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Securities maturity
       ** iiiS-D--yy--mvn---CV or iiiS-S--yy--mvn---CV
       ** iiiStDbbyy--mvn---CV or iiiStSbbyy--mvn---CV
- 
+
      C                   IF        S_EVDT <= BJRDNB
      C                             AND S_RECI = 'D'
      C                   IF        %SUBST(S_ACKY:4:2) = 'S '
@@ -1305,7 +1307,7 @@
      C                   EXSR      SrExtCust
      C                   IF        Wcust <> *BLANKS
      C                   EVAL      CPCUSD = Wcust
- 
+
      C                   EVAL      CPBRCH = S_BRHA
      C                   MOVE      S_TRFR        Wtrfr
      C**********         IF        WTRFR = '000000'                                         MD043943
@@ -1316,7 +1318,7 @@
      C                   EVAL      CPCCY = S_EVCY
      C                   EVAL      CPPSTA = S_EVAM
      C                   EVAL      CPVDAT = S_EVDT
- 
+
      C                   EVAL      CPTYPE = 'SEMAT'
      C                   EVAL      CPPAYT = 'G'
      C                   MOVE      S_RVRS        Wrevi
@@ -1325,7 +1327,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** iiiL-dbb----mvn---FV                                                               MD042828
                                                                                             MD042828
      C                   IF        S_EVDT <= BJRDNB                                         MD042828
@@ -1382,11 +1384,11 @@
      C                   ENDIF                                                              MD042828
                                                                                             MD042828
      C                   READ      SEKEYD
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1399,16 +1401,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrUpdate      BEGSR
- 
+
       ** Delete record if reversal indicator is 1
- 
+
      C                   IF        Wrevi = 1
      C                   EVAL      Kpcusd = CPCUSD
      C                   EVAL      Kpacno = CPACNO
      C                   EVAL      Kpccy  = CPCCY
- 
+
      C                   IF        Wtrade = ' '
      C     Kpacno        SETLL     GLCAPAL1
      C     Kpacno        READE     GLCAPAL1
@@ -1429,22 +1431,22 @@
      C     Kcapa         READE     GLCAPAL3
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** Write record
- 
+
      C                   EVAL      CPJANO = *BLANKS
      C                   EVAL      CPACHL = CPCUSD
      C                   EVAL      CPACTY = 'CUST'
      C                   EVAL      CPJATP = ' '
      C
      C                   WRITE     GLCAPAD0
- 
+
      C                   EVAL      JCJANO = CPCUSD
      C     JCJANO        SETLL     SDJACCL0
      C     JCJANO        READE     SDJACCL0
- 
+
      C                   DOW       NOT %EOF(SDJACCL0)
      C                   EVAL      CPJANO = JCJANO
      C                   EVAL      CPCUSD = JCCUST
@@ -1457,15 +1459,15 @@
      C                   ENDIF
      C                   EVAL      CPJATP = 'M'
      C                   WRITE     GLCAPAD0
- 
- 
+
+
      C     JCJANO        READE     SDJACCL0
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Initialize fields
- 
+
      C                   EVAL      CPCUSD = *BLANKS
      C                   EVAL      CPBRCH = *BLANKS
      C                   EVAL      CPACNO = *BLANKS
@@ -1474,9 +1476,9 @@
      C                   EVAL      CPVDAT = *ZEROS
      C                   EVAL      CPTYPE = *BLANKS
      C                   EVAL      CPPAYT = *BLANKS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1489,9 +1491,9 @@
       * Calls: AOACCTR0, AONOSTR0                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SrExtCust     BEGSR
- 
+
      C                   EVAL      Wbrch = *BLANKS
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRTCD
@@ -1504,9 +1506,9 @@
      C                   ELSE
      C                   EVAL      Wbrch = BBBRCD
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1519,9 +1521,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrDealCust    BEGSR
- 
+
      C     D_DLNO        CHAIN     DEALALL
      C                   EVAL      Wcust = *Blanks
      C                   IF        %FOUND(DEALALL)
@@ -1531,9 +1533,9 @@
      C                   MOVE      E_CHNA        Wcust
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1546,16 +1548,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrLoanCust    BEGSR
- 
+
      C                   EVAL      Wcust = *Blanks
      C                   IF        %FOUND(CLOAN)
      C                   MOVE      L_CNUM        Wcust
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1567,26 +1569,26 @@
       * Calls: Main Processing, AOBANKR0                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    Pmodule
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'GL000611'
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY =  *BLANKS
      C                   EVAL      DBASE = 0
      C                   OUT       LDA
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       Prtcd
      C                   PARM      '*FIRST  '    Poptn
      C     SDBANK        PARM      SDBANK        Dsfdy
- 
+
       ** Database Error
- 
+
      C                   IF        Prtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY  = POPTN
@@ -1595,9 +1597,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialize fields
- 
+
      C                   EVAL      CPCUSD = *BLANKS
      C                   EVAL      CPBRCH = *BLANKS
      C                   EVAL      CPACNO = *BLANKS
@@ -1606,16 +1608,16 @@
      C                   EVAL      CPVDAT = *ZEROS
      C                   EVAL      CPTYPE = *BLANKS
      C                   EVAL      CPPAYT = *BLANKS
- 
+
      C     KLoank        KLIST
      C                   KFLD                    KLoan
      C                   KFLD                    KRcdt
      C     Kcapa         KLIST
      C                   KFLD                    Kpacno
      C                   KFLD                    Kppsta
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1623,21 +1625,21 @@
       *  *PSSR   -  Error Handling Subroutine                         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        Wrun = *BLANK
      C                   EVAL      Wrun = 'Y'
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

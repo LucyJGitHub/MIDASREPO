@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GP Global Customer Details Generation')          *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GPGLCSGEN - Global Customer Details Generation               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGP017             Date 06Aug12               *
-      *  Prev Amend No. CSF011             Date 12Sep11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *                 CSF011             Date 12Sep11               *
       *                 CRE073             Date 06Dec10               *
       *                 CER055             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CSF011 - Customer Name on Inputs                             *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *

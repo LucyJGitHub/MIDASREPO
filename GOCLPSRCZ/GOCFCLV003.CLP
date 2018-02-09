@@ -8,13 +8,15 @@
 /*       GOCFCLV003 - Midas GO Bulk update of Facilities Listview    */
 /*                    End Process                                    */
 /*                                                                   */
-/*       (c) Misys Banking Systems Ltd. 2009                         */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CGP015  *CREATE    Date 06Mar09              */
+/*       Prev Amend No. CGP015  *CREATE    Date 06Mar09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGP015 - Task Split of Bulk update of Facilities listview   */
 /*                                                                   */
 /*********************************************************************/
@@ -34,7 +36,7 @@
                           VALUE('GOFCLVSRV')
              DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global monitor message */
@@ -92,6 +94,6 @@
              CHGJOB     SWS(XXXXXX11)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

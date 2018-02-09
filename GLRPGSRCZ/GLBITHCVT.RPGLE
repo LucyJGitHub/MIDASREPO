@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE file to screen format')                    *
@@ -13,10 +13,11 @@
       *  Function:  This module converts the fields of a Batch Header *
       *             from file to screen format                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MDA00267           Date 25May16               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MDA00267           Date 25May16               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24567           Date 14Jul09               *
       *                 260029             Date 29Apr09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MDA00267 - Incorrect value is shown in the Total Amount in   *
       *             Batch Entry. Padded Zeros to the left of the      *
       *             amount being converted.                           *
@@ -54,8 +56,8 @@
       *  CAP084 - MidasPlus Changes                                   *
       *                                                               *
       *****************************************************************
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -66,107 +68,107 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
-
+ 
       **-----------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
-
+ 
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D BITHFilFmt    E DS                  EXTNAME(GLJENHPD)
       ** Batch Header Transaction Details in File Format
-
+ 
      D BITHDets      E DS                  EXTNAME(GLBITHPD)
       ** Batch Header Transaction Details in Screen Format
-
-
+ 
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       **************************************************************
       /EJECT
       **************************************************************
-
+ 
       ** Initialisation
-
+ 
      C                   EXSR      INIT
-
+ 
       ** Set screen fields
-
+ 
      C                   EXSR      SCREEN
-
+ 
       ** Return
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SCREEN - SET SCREEN FIELDS
       *****************************************************************
      C     SCREEN        BEGSR
-
+ 
       * Branch Code
      C                   EVAL      DDBCDA = BRBCDA
-
+ 
       * Department Code
      C                   EVAL      DDDPCD = BRDPCD
-
+ 
       * Multiple Branch Batch Indicator
      C                   EVAL      DDMBRB = BRMBRB
-
+ 
       * Batch Description
      C                   EVAL      DDBDES = BRBDES
-
+ 
       * Batch Total Input
      C     BRHIIN        IFEQ      *ZERO
      C     BRHDIN        ANDEQ     *ZERO                                                     BUG3749
@@ -186,7 +188,7 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        DDFMAM
      C                   ENDIF
-
+ 
       * Number of Items
      C     BRHINI        IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DDNOIS
@@ -199,10 +201,10 @@
      C                   ENDIF
       * Batch Status
      C                   EVAL      DDBHAI = BRBHAI
-
+ 
       * Batch Number
      C                   EVAL      DDBTNB = BRBTNB
-
+ 
       ** Month End Adjustment Batch                                                           CSC024
                                                                                               CSC024
      C                   EVAL      DDMEAB = BRMEAB                                            CSC024
@@ -238,7 +240,7 @@
      C                   ENDIF                                                                249471
       *                                                                                       249471
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -247,13 +249,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
-
+ 
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -263,12 +265,12 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
-
+ 
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C**********         PARM      0             ZADEC             1 0                       BUG3749
      C                   PARM                    ZADEC             1 0                       BUG3749
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -276,11 +278,11 @@
       * INIT - INITIALISATION
       *****************************************************************
      C     INIT          BEGSR
-
+ 
       ** Blank outputs
-
+ 
      C                   MOVEL     *BLANK        BITHDets
-
+ 
       *
      C                   ENDSR
       *****************************************************************
@@ -302,17 +304,17 @@
       * Batch Header Details File Format
      C                   PARM                    BITHFilFmt
       *
-
+ 
       * Output Parameters
-
+ 
       * Batch Header Details Screen Format
      C                   PARM                    BITHDets
-
-
+ 
+ 
       ** Initialise program name
-
+ 
      C                   EVAL      DBPGM = 'GLBITHCVT'
-
+ 
       ** Access Bank Details
       *
      C                   CALL      'AOBANKR0'
@@ -328,7 +330,7 @@
      C                   EVAL      DBASE = 900
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -10,10 +10,11 @@
 0004 F*                                                               *
 0005 F*  GL0400  -  Account Postings Merge                            *
 0006 F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
 0010 F*                                                               *
-      *  Last Amend No. MD034502           Date 25May15               *
-      *  Prev Amend No. CGL049             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034502           Date 25May15               *
+      *                 CGL049             Date 17Feb15               *
       *                 MD022412           Date 16Sep13               *
       *                 CGL120             Date 06Aug12               *
       *                 260201A            Date 20Dec12               *
@@ -65,6 +66,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034502 - FB Midas 2.1 SP8 Drop3 COB issues                 *
       *  CGL049   - Separate Out Processing of Spot Reval and FX Tfr  *
       *  MD022412 - Record locking in trailer file EODPOZZ            *
@@ -1909,7 +1911,7 @@ DLTOVR FILE(GEDLPD)                                                             
 OVRDBF FILE(RCHGRA) TOFILE(                                                                   CGL120
 DLTOVR FILE(RCHGRA)                                                                           CGL120
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA NARR
 DAILY ACCOUNT POST
 SPOT REVALUATIONS

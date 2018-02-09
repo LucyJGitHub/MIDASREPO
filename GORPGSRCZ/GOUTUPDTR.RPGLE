@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Universal Transactions Updater')              *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GOUTUPDTR - Universal Transactions Updater                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD032884           Date 09Jun15               *
-      *  Prev Amend No. AR1082904A         Date 09Feb14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032884           Date 09Jun15               *
+      *                 AR1082904          Date 09Feb14               *
       *                 AR1082904          Date 09Feb14               *
       *                 AR1031820          Date 24Feb15               *
       *                 AR1092236          Date 30Sep13               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032884 - Performance enhancement for GOCXCLTS. Recompiled  *
       *             due to change in GOCASHPD and GOPOSNPD.           *
       *  AR1082904 - Credit Lines - Performance Issues - Critical     *
@@ -75,20 +77,20 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
-
+ 
      FGPUTCIL1  UF   E           K DISK    INFSR(*PSSR) COMMIT
-
+ 
      FGPWTRAPL1 IF   E           K DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(GOTRAPD0:GPWTRAPD0)
-
+ 
      FGOPOSNL0  IF   E           K DISK    INFSR(*PSSR) USROPN
      FGOCASHL0  IF   E           K DISK    INFSR(*PSSR) USROPN
-
+ 
      FGPUTXFL1  UF   E           K DISK    INFSR(*PSSR) COMMIT
      FGPUTXGL1  UF   E           K DISK    INFSR(*PSSR) COMMIT
      FGPUTXSL1  UF   E           K DISK    INFSR(*PSSR) COMMIT
      FGPUTXTL1  UF   E           K DISK    INFSR(*PSSR) COMMIT
-
+ 
      FGPTRAPL0  UF   E           K DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(GOTRAPD0:GPTRAPD0)
      FGPPOSNL0  UF A E           K DISK    INFSR(*PSSR) COMMIT
@@ -98,17 +100,17 @@
      FGPPOSTL2  UF A E           K DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(GOPOSTD0:GPPOSTD0)
      FGOLSTUL0  UF   E           K DISK    INFSR(*PSSR)                                    AR1082904
-
+ 
      FGPULOGPD  O  A E             DISK    INFSR(*PSSR)
-
+ 
      F*GPTRAPL1* IF   E           K DISK    INFSR(*PSSR) COMMIT                       CLE024 BUG3391
      F**********                            RENAME(GOTRAPD0:GPTRAPD1)                 CLE024 BUG3391
                                                                                               CLE024
      FGPZONEL0  IF   E           K DISK    INFSR(*PSSR)                                       CLE024
-
+ 
      D/COPY ZACPYSRC,PSDS
-
-
+ 
+ 
      D ML_MSG          S              1    DIM(344) CTDATA PERRCD(86)
      D XMLArray        S             70    DIM(5)  CTDATA PERRCD(1)                           CLE024
                                                                                               CLE024
@@ -140,60 +142,60 @@
      D    WEventType           1     20                                                       CAP205
       ** Event Detail                                                                         CAP205
      D    WDetail             22     31                                                       CAP205
-
-
+ 
+ 
      C     *ENTRY        PLIST
      C                   PARM                    I#ZONE           10
      C                   PARM                    I#DTAQ           10
-
-
+ 
+ 
       * Infinite loop
       * (Program ends when asked to 'stop')
-
+ 
      C     *INLR         DOUEQ     *ON
-
-
+ 
+ 
       * Read the next commitment id
-
+ 
      C     GPUTCIK       SETLL     GPUTCID0
      C     GPUTCIK       READE     GPUTCID0                               99
      C     *IN99         DOWEQ     *OFF
-
+ 
      C                   MOVE      'N'           COB_Generated     1
-
+ 
       * Read all TRAP records with the commitment id just accessed
-
+ 
      C     CICCID        SETLL     GPWTRAPD0
      C     CICCID        READE     GPWTRAPD0                              99
      C     *IN99         DOWEQ     *OFF
-
+ 
      C     T_GCOB        IFEQ      'Y'
      C                   MOVE      'Y'           COB_Generated
      C                   ENDIF
-
+ 
       * If action is delete, delete the TRAP record
-
+ 
      C     T_ACTN        IFEQ      'D'
      C                   EXSR      DELETE_TRAP
      C                   ENDIF
                                                                                 BUG3368
      C     T_MOD         IFNE      'MT'                                         BUG3368
      C     T_ACTN        OREQ      'D'                                          BUG3368
-
+ 
       * Delete positions, cashflows and postings
-
+ 
      C                   EXSR      DELETE_POSN
      C                   EXSR      DELETE_CASH
      C     T_MOD         IFEQ      'GL'
      C                   EXSR      DELETE_POST
      C                   ENDIF
      C                   ENDIF                                                  BUG3368
-
+ 
       * If TRAP record generated in COB
       *    Recover positions and cashflows (open files beforehand)
       * Else
       *    Extract positions, cashflows and postings
-
+ 
      C     T_ACTN        IFNE      'D'
      C*****T_MOD         ANDNE     'MT'                                             BUG3368  BUG3391
      C     T_MOD         IFEQ      'MT'                                                      BUG3391
@@ -212,14 +214,14 @@
      C                   ENDIF
      C                   ENDIF                                                               BUG3391
      C                   ENDIF
-
+ 
      C     CICCID        READE     GPWTRAPD0                              99
      C                   ENDDO
-
+ 
       * If not COB generated
       *  Update management limits indicator to 'ready to update'
       *  Send message to Management Limits
-
+ 
      C     COB_Generated IFNE      'Y'
      C     CGP003        ANDEQ     'Y'                                                        254264
      C                   MOVEL     'R'           CIEXML
@@ -229,7 +231,7 @@
      C                   EXSR      SND_MSG_ML
      C                   ENDIF                                                             AR1082904
      C                   ENDIF
-
+ 
      C                   MOVEL     'N'           CIUUNV
                                                                                               CLE024
       ** Set up Update Exposure for Collateralised Lending if installed.                      CLE024
@@ -238,9 +240,9 @@
      C                             AND  COB_Generated <> 'Y'                               AR1082904
      C                   EVAL      CIUEXC = 'Y'                                               CLE024
      C                   ENDIF                                                                CLE024
-
+ 
      C                   EXCEPT
-
+ 
      C**********         COMMIT                                                            AR1082904
                                                                                               CLE024
       ** Generate xml data and send to data queue if Collateralised                           CLE024
@@ -279,48 +281,48 @@
      C                   IF        FirstCycle = 'Y'                                        AR1082904
      C                   EVAL      FirstCycle = 'N'                                        AR1082904
      C                   ENDIF                                                             AR1082904
-
+ 
      C     GPUTCIK       READE     GPUTCID0                               99
      C                   ENDDO
-
+ 
       * Wait for a message
-
+ 
      C                   CALL      'QRCVDTAQ'
      C                   PARM      I#DTAQ        DtqNam           10
      C                   PARM      '*LIBL     '  DtqLib           10
      C                   PARM      10            DtqLen            5 0
      C                   PARM      *BLANK        DtqDta           10
      C                   PARM      -1            DtqWait           5 0
-
+ 
      C                   SELECT
-
+ 
       * If 'OPENZ' received, then open zone files
-
+ 
      C     DtqDta        WHENEQ    'OPENZ'
      C     ZFiles_Open   IFEQ      'N'
      C                   EXSR      OPENZFILES
      C                   ENDIF
-
+ 
       * If 'CLOSZ' received, then close zone files
-
+ 
      C     DtqDta        WHENEQ    'CLOSZ'
      C     ZFiles_Open   IFEQ      'Y'
      C                   EXSR      CLOSZFILES
      C                   ENDIF
-
+ 
       * If 'STOP' received, then end
-
+ 
      C     DtqDta        WHENEQ    'STOP'
-
+ 
       * Write to the log file
      C                   EVAL      UTMSG = 'Updater ' + JobNameSuffix
      C                                   + ' has ENDED'
      C                   EXSR      WRITE_LOG
      C                   SETON                                        LR
      C                   RETURN
-
+ 
      C                   ENDSL
-
+ 
      C                   ENDDO
       ********************************************************************                    CLE024
       /SPACE 5                                                                                CLE024
@@ -371,12 +373,12 @@
       * Delete TRAP record
       ********************************************************************
      C     DELETE_TRAP   BEGSR
-
+ 
      C     GPTRAPK       CHAIN     GPTRAPD0                           99
      C     *IN99         IFEQ      *OFF
      C                   DELETE    GPTRAPD0
      C                   ENDIF
-
+ 
      C                   SELECT
      C     T_MOD         WHENEQ    'FF'
      C     GPUTXFK       CHAIN     GPUTXFD0                           99
@@ -392,7 +394,7 @@
      C     GPUTXTK       CHAIN     GPUTXTD0                           99
      C  N99              DELETE    GPUTXTD0
      C                   ENDSL
-
+ 
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -400,13 +402,13 @@
       * Delete positions
       ********************************************************************
      C     DELETE_POSN   BEGSR
-
+ 
      C     GPTRAPK       CHAIN     GPPOSND0                           99
      C     *IN99         DOWEQ     *OFF
      C                   DELETE    GPPOSND0
      C     GPTRAPK       READE     GPPOSND0                               99
      C                   ENDDO
-
+ 
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -414,13 +416,13 @@
       * Delete cashflows
       ********************************************************************
      C     DELETE_CASH   BEGSR
-
+ 
      C     GPTRAPK       CHAIN     GPCASHD0                           99
      C     *IN99         DOWEQ     *OFF
      C                   DELETE    GPCASHD0
      C     GPTRAPK       READE     GPCASHD0                               99
      C                   ENDDO
-
+ 
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -428,27 +430,27 @@
       * Delete postings
       ********************************************************************
      C     DELETE_POST   BEGSR
-
+ 
       * Delete ALL postings
-
+ 
      C     T_ACTN        IFEQ      'D'
-
+ 
      C     GPPOSTK       CHAIN     GPPOSTD0                           99
      C     *IN99         DOWEQ     *OFF
      C                   DELETE    GPPOSTD0
      C     GPPOSTK       READE     GPPOSTD0                               99
      C                   ENDDO
-
+ 
      C                   ELSE
-
+ 
       * Delete postings since account movement start date
-
+ 
      C     T_GCOB        IFEQ      'Y'
-
+ 
      C     GPUTXGK       CHAIN     GPUTXGD0                           99
      C  N99              Z-ADD     0             XGPRRN
      C  N99              UPDATE    GPUTXGD0
-
+ 
      C     GPPOSTK       CHAIN     GPPOSTD0                           99
      C  N99GPPOSTKD      SETLL     GPPOSTD0
      C  N99GPPOSTK       READE     GPPOSTD0                               99
@@ -456,10 +458,10 @@
      C                   DELETE    GPPOSTD0
      C     GPPOSTK       READE     GPPOSTD0                               99
      C                   ENDDO
-
+ 
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -467,13 +469,13 @@
       * Update TRAP record (commitment id)
       ********************************************************************
      C     UPDATE_TRAP   BEGSR
-
+ 
      C     GPTRAPK       CHAIN     GPTRAPD0                           99
      C     *IN99         IFEQ      *OFF
      C                   Z-ADD     CICCID        T_CCID
      C                   UPDATE    GPTRAPD0
      C                   ENDIF
-
+ 
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -481,14 +483,14 @@
       * Recover positions (This data was written in the previous zone COB)
       ********************************************************************
      C     RECOVER_POSN  BEGSR
-
+ 
      C     GPTRAPK       SETLL     GOPOSND0
      C     GPTRAPK       READE     GOPOSND0                               99
      C     *IN99         DOWEQ     *OFF
      C                   WRITE     GPPOSND0
      C     GPTRAPK       READE     GOPOSND0                               99
      C                   ENDDO
-
+ 
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -496,14 +498,14 @@
       * Recover cashflows (This data was written in the previous zone COB)
       ********************************************************************
      C     RECOVER_CASH  BEGSR
-
+ 
      C     GPTRAPK       SETLL     GOCASHD0
      C     GPTRAPK       READE     GOCASHD0                               99
      C     *IN99         DOWEQ     *OFF
      C                   WRITE     GPCASHD0
      C     GPTRAPK       READE     GOCASHD0                               99
      C                   ENDDO
-
+ 
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -511,12 +513,12 @@
       * Extract positions, cashflows and postings
       ********************************************************************
      C     EXTRACT_PCP   BEGSR
-
+ 
      C                   MOVEL     'GLOB'        I#LOC
      C                   Z-ADD     CICCID        I#CCID
-
+ 
      C                   MOVEL     '   '         I#EXTT
-
+ 
      C**********         Z-ADD     T_CNUM        I#CNUM                                       CSD027
      C                   EVAL      I#CNUM = T_CNUM                                            CSD027
      C                   MOVEL     T_PTFR        I#PTFR
@@ -533,11 +535,11 @@
      C                   MOVEL     T_PCAL        I#PCAL
      C                   Z-ADD     T_STRP        I#STRP
      C                   MOVEL     T_TREF        I#TREF
-
+ 
      C                   SELECT
-
+ 
       * Accounts
-
+ 
      C     T_SMOD        WHENEQ    'ACCT'
      C                   CALL      'GOXCACCT'
       /COPY GOCPYSRC,GOXCEPARM
@@ -545,9 +547,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCACCT'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * FX Deals
-
+ 
      C     T_SMOD        WHENEQ    'FXDL'
      C                   CALL      'GOXCFXDL'
       /COPY GOCPYSRC,GOXCEPARM
@@ -555,7 +557,7 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCFXDL'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * Loans/Deposits
      C     T_SMOD        WHENEQ    'LDNI'
      C                   CALL      'GOXCLDNI'
@@ -564,9 +566,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCLDNI'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * NAs Purchased
-
+ 
      C     T_SMOD        WHENEQ    'NASP'
      C                   CALL      'GOXCNASP'
       /COPY GOCPYSRC,GOXCEPARM
@@ -574,9 +576,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCNASP'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * FRAs
-
+ 
      C     T_SMOD        WHENEQ    'FRAS'
      C                   CALL      'GOXCFRAS'
       /COPY GOCPYSRC,GOXCEPARM
@@ -584,9 +586,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCFRAS'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * Single Ccy Int. Rate Swaps
-
+ 
      C     T_SMOD        WHENEQ    'SIRS'
      C                   CALL      'GOXCSIRS'
       /COPY GOCPYSRC,GOXCEPARM
@@ -594,9 +596,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCSIRS'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * Cross Ccy Int. Rate Swaps
-
+ 
      C     T_SMOD        WHENEQ    'CIRS'
      C                   CALL      'GOXCCIRS'
       /COPY GOCPYSRC,GOXCEPARM
@@ -604,9 +606,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCCIRS'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * Cap/Floor/Collars
-
+ 
      C     T_SMOD        WHENEQ    'CFCO'
      C                   CALL      'GOXCCFCO'
       /COPY GOCPYSRC,GOXCEPARM
@@ -614,9 +616,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCCFCO'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * Customer Loans
-
+ 
      C     T_SMOD        WHENEQ    'LOAN'
      C                   CALL      'GOXCLOAN'
       /COPY GOCPYSRC,GOXCEPARM
@@ -624,9 +626,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCLOAN'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * SE Book Positions
-
+ 
      C     T_SMOD        WHENEQ    'SBPS'
      C                   CALL      'GOXCSBPS'
       /COPY GOCPYSRC,GOXCEPARM
@@ -634,9 +636,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCSBPS'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * SE Cust Positions
-
+ 
      C     T_SMOD        WHENEQ    'SCPS'
      C                   CALL      'GOXCSCPS'
       /COPY GOCPYSRC,GOXCEPARM
@@ -654,9 +656,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCSTRD'                       BG3512
      C                   EXSR      *PSSR                                                      BG3512
      C                   END                                                                  BG3512
-
+ 
       * FF Book Positions
-
+ 
      C     T_SMOD        WHENEQ    'FBPS'
      C                   CALL      'GOXCFBPS'
       /COPY GOCPYSRC,GOXCEPARM
@@ -664,9 +666,9 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCFBPS'
      C                   EXSR      *PSSR
      C                   END
-
+ 
       * FF Cust Positions
-
+ 
      C     T_SMOD        WHENEQ    'FCPS'
      C                   CALL      'GOXCFCPS'
       /COPY GOCPYSRC,GOXCEPARM
@@ -674,15 +676,15 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOXCFCPS'
      C                   EXSR      *PSSR
      C                   END
-
+ 
      C                   OTHER
-
+ 
      C                   EVAL      I#ERMS = 'BAD SUB-MODULE IN GOUTUPDTR'
      C                   EXSR      *PSSR
-
+ 
      C                   ENDSL
-
-
+ 
+ 
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -759,7 +761,7 @@
       * Send message to Management Limits
       *********************************************************************
      C     SND_MSG_ML    BEGSR
-
+ 
      C                   MOVEL     CICCID        CommitID         10
      C                   MOVEA     CommitID      ML_MSG(271)
      C                   MOVEA     ML_MSG        MLDtqDta
@@ -802,9 +804,9 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
-
+ 
       * Get Extract control information
-
+ 
       /COPY GOCPYSRC,GOGETEXCT
                                                                                               CLE024
       ** Determine if CLE024 is switched on                                                   CLE024
@@ -860,23 +862,23 @@
      C                   ELSE                                                              AR1031820
      C                   MOVE      'N'           CLE025                                    AR1031820
      C                   ENDIF                                                             AR1031820
-
+ 
       * job attributes
      C                   EVAL      UTSRC  = 'U'
      C                   EVAL      UTJOB  = PSJobName
      C                   EVAL      UTUSER = PSUser
      C                   MOVEL     PSJobNo       PSJobNoA          6
      C                   EVAL      UTJOBN = PSJobNoA
-
+ 
       * No zone files open initially
-
+ 
      C                   MOVEL     'N'           ZFiles_Open       1
-
+ 
       * Identify the job number and job name suffix
-
+ 
      C                   MOVE      I#DTAQ        JobNumber         1 0
      C                   MOVE      I#DTAQ        JobNameSuffix     5
-
+ 
       ** Check next message to process in DTAQ, if equal to 'STOP' do                      AR1092236
       ** not clear. Remove *NO parameter is specified to avoid message                     AR1092236
       ** from being removed off the DTAQ during this QRCVDTAQ call                         AR1092236
@@ -899,7 +901,7 @@
      C                   IF        DtqDta <> 'STOP'                                        AR1092236
                                                                                            AR1092236
       * Clear the DTAQ
-
+ 
      C     DtqDta        DOUEQ     *BLANK
      C                   CALL      'QRCVDTAQ'
      C                   PARM      I#DTAQ        DtqNam           10
@@ -910,7 +912,7 @@
      C                   ENDDO
                                                                                            AR1092236
      C                   ENDIF                                                             AR1092236
-
+ 
      C                   EVAL      FirstCycle = 'Y'                                        AR1082904
       ** Get CCID of last successful message sent to ML data queue                         AR1082904
      C                   EVAL      Key_LSTU  = Key_LSTU_ML                                 AR1082904
@@ -935,9 +937,9 @@
      C                   EVAL      UTMSG = 'Updater ' + JobNameSuffix
      C                                   + ' has STARTED'
      C                   EXSR      WRITE_LOG
-
+ 
       * Key lists
-
+ 
      C     GPUTCIK       KLIST
      C                   KFLD                    I#ZONE
      C                   KFLD                    JobNumber
@@ -980,7 +982,7 @@
      C                   KFLD                    T_MOD
      C                   KFLD                    T_SMOD
      C                   KFLD                    T_TREF
-
+ 
      C                   ENDSR
       *******************************************************************
       /SPACE 5

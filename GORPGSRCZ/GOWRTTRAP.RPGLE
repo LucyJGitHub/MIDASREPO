@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Write Transactions, Accounts and Position')   *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GOWRTTRAP - Write Transactions, Accounts and Positions       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD032884           Date 09Jun15               *
-      *  Prev Amend No. MD021097           Date 30Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032884           Date 09Jun15               *
+      *                 MD021097           Date 30Sep13               *
       *                 AR802337           Date 22Aug13               *
       *                 CLE148             Date 23Jul12               *
       *                 CAP207             Date 10Feb11               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032884 - Performance enhancement for GOCXCLTS. Recompiled  *
       *             due to change in GOTRAPPD.                        *
       *  MD021097 - ABC - FT OPAY Reservations not being reversed.    *
@@ -385,4 +387,4 @@ O    C                   PARM                    D_COM             1
       *********************************************************************
       /SPACE 5
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

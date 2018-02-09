@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas AO Weighting code description')
@@ -11,14 +11,15 @@
       ***AOWEIGR0*-*Read*Access*to*Weighting*Code*Description**********                       CGP001
       *  GPAOWEIGR0 - Read Access to Weighting Code Description       *                       CGP001
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 247772             Date 12Jun07               *
+      *  Prev Amend No. 247772             Date 12Jun07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGP001  *RENAMED   Date 12Oct03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  247772 - Change LF/GPWEIGL1 by new LF/GPWEIGL2               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGP001 -  Renamed from AOWEIGR0 to GPAOWEIGR0.               *

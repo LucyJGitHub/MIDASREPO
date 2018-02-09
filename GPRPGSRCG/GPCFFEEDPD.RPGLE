@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Update Global Confirmation Matching File')
@@ -9,17 +9,19 @@
       *                                                               *
       *  GPCFFEEDPD - On-Line Update of Global File GPCFFEEDPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG4562A           Date 25Aug06               *
-      *  Prev Amend No. BUG4562 *CREATE    Date 27Sep05               *
+      *  Prev Amend No. BUG4562A           Date 25Aug06               *
+      *                 BUG4562 *CREATE    Date 27Sep05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG4562A- Change code where DS Z_CFFEEDPD references         *
       *           CFFEEDPD to now use internal DS.                    *
       *  BUG4562- Global Processing for CFFEEDPD                      *

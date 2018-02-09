@@ -6,12 +6,14 @@
 /*                                                                   */
 /*       GLC0580C - PUT ITEM IN CLEARING INTO PROJECTED CLEAR BAL    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*       (c) Finastra International Limited 2015                     */
 /*                                                                   */
-/*       Last Amend No. MD032907  *CREATE  Date 27Apr15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD032907 *CREATE   Date 27Apr15              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  MD032907 - Local component to update PRONO based on CLBL         */
 /*             instead of LDBL - SEE GL0575.                         */
 /*             This program call GL0580C which will create a record  */
@@ -29,7 +31,7 @@
              PGM        PARM(&PARM &RSEQ &RLEV &RENT)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2015')
 /** RCF sequence number */
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
@@ -99,5 +101,5 @@
 ABNOR:
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate IP ordering customer')               *
@@ -13,7 +13,7 @@
       *                FTIPAYCTL                                      *
       *                FTIPAYRPR                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel.                     *
@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD041643           Date 27Sep16               *      
-      *  Prev Amend No. MD036567           Date 26Apr16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD041643           Date 27Sep16               *
+      *                 MD036567           Date 26Apr16               *
       *                 MD036189           Date 08Oct15               *
       *                 MD033105           Date 07Aug15               *
       *                 AR924684           Date 10Nov14               *
@@ -87,8 +88,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD041643 - Array index error because error array is used     *
-      *             instead of warning array.                         *      
+      *             instead of warning array.                         *
       *  MD036567 - Error in incoming payment authorisation (PAUT).   *
       *             Ordering Customer type was left without a value   *
       *             when saving Ordering Customer details.            *
@@ -1405,7 +1407,7 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  Alpha - Array of alphabetic characters                                                    CFT032
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 **  Numeric - Array of numeric characters                                                     CFT032

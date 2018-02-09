@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(ACCNTL1) TOFILE(ACCNTL0) SHARE(*NO)              *
 /*XBIB*  OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)                *
@@ -19,10 +19,11 @@
       *             the database. As it does so, it validates the     *
       *             action code and Account Reference.                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046635           Date 10Aug17               *
-      *  Prev Amend No. MD037025           Date 10Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046635           Date 10Aug17               *
+      *                 MD037025           Date 10Feb16               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
       *                 226364             Date 19Aug14               *
@@ -2282,4 +2283,4 @@
      C/COPY ZACPYSRC,PSSR_ILEB                                                                CRE101
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finasstra International Limited 2001

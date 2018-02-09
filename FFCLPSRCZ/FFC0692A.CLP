@@ -7,8 +7,9 @@
 /*                                                                   */
 /*   FFC0692A -  Customer Confirmations (COB) Phase 1                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,12 +17,13 @@
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*   Last Amend No. CCB009             Date 01Jun00                  */
+/*   Prev Amend No. CCB009             Date 01Jun00                  */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   Prev Amend No. S01522             Date 15Mar95                  */
+/*                  S01522             Date 15Mar95                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*   MD046248 - Finastra Rebranding                                  */
 /*   CCB009  -  Journal files throughout close of business           */
 /*   S01522  -  User Defined Correspondence                          */
 /*              Split FFC0692 into three components                  */
@@ -34,7 +36,7 @@
              PGM
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -162,6 +164,6 @@ ABNORMAL:
 /**/
              FFCJRN3    FILES(TSCCYD POCHGCC POCHGRC POCHGTC POSTNCD)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */
              ENDPGM

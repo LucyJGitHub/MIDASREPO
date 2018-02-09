@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
      F*****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Stamp Tax Posting Summary')                   *
@@ -9,13 +9,15 @@
      F*                                                               *
      F*  GL008111 - Posting Summary Processing                        *
      F*                                                               *
-     F*  (c) Misys International Banking Systems Ltd 2010             *
+     F*  (c) Finastra International Limited 2010                      *
      F*                                                               *
-      *  Last Amend No. AR821972           Date 07Sep11               *
-     F*  Prev Amend No. CER049  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR821972           Date 07Sep11               *
+      *                 CER049  *CREATE    Date 06Dec10               *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
 /*    *  AR821972 - Stamp tax on debit interest did not generate      *
 /*    *             amount in GLVCLSIN (Recompile)                    *
      F*  CER049 - Stamp Tax                                           *
@@ -533,4 +535,4 @@
 ** RRPNAR
 Stamp Tax Posting Summary
 ** CPY@   **      OBJECT COPYRIGHT
-(C) Copyright Misys International Banking Systems Ltd. 2010
+(C) Copyright Finastra International Limited 2010

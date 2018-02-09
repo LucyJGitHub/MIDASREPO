@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF SR/FFTVCL as a mod: calc total trans val')
@@ -25,22 +25,24 @@
       *  the old /COPY member, reconverting it using CVTRPGSRC, and   *
       *  copying it into this member, replacing the existing section. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 241147             Date 26Oct06               *
+      *  Prev Amend No. 241147             Date 26Oct06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CFF006             Date 28Nov00               *
+      *                 CFF006             Date 28Nov00               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 147775             Date 16Nov98               *
       *                 CAP004  *CREATE    Date 01Jun98               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  241147 - Correct computation of p/l.                         *
       *  CFF006 - Fractional Ticks Enhancement.                       *
       *  147775 - General FF API fixes - (Pre-release unnanotated)    *
@@ -257,4 +259,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

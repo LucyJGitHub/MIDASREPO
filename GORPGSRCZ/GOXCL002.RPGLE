@@ -1,5 +1,5 @@
      h debug
-     h copyright('(c) Misys International Banking Systems Ltd. 2009')
+     h copyright('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Universal transactions upd, cloan - write to drvr')    *
@@ -10,10 +10,11 @@
       *  GOXCL002   - Universal transactions update, Customer Loans   *
       *               Task Split - write records to driver.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. AR1056838          Date 15Nov12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1056838          Date 15Nov12               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CGO001AC           Date 06Aug12               *
       *                 CRE073             Date 06Dec10               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1056838 - Task Split's driver file use 6numeric for LNRF.  *
       *              Change LNRF from 6S0 to 6A to comply w/ Alpha    *
       *              Loan Reference Enhancement (Recompile)           *

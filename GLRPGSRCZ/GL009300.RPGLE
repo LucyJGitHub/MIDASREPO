@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Account Transfer Submit Processing in COB')
@@ -10,16 +10,18 @@
       *  GL009300  -  Midas GL Account Transfer Submit Job for        *
       *               Processing in COB                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG27670           Date 13May10               *
-      *  Prev Amend No. CGL114A            Date 12Mar10               *
+      *  Prev Amend No. BUG27670           Date 13May10               *
+      *                 CGL114A            Date 12Mar10               *
       *                 BUG27219           Date 16Mar10               *
       *                 CGL114  *CREATE    Date 04Jan10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27670 - Do not allow to run ATU during end of year COB    *
       *  CGL114A - CCR Interest Capitalisation                        *
       *  BUG27219- Format for message IDs in GBGLUSRMSG are for       *

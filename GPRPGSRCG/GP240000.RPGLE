@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GP Retail Acct Balance Extract Housekeep')       *
@@ -9,15 +9,17 @@
       *                                                               *
       *  GP240000 - Retail Acct Balance Extract Housekeep             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR1067119          Date 11Dec12               *
-      *  Prev Amend No. BUG27878           Date 06Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1067119          Date 11Dec12               *
+      *                 BUG27878           Date 06Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27288 *CREATE   Date 07Apr10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1067119 - REC240000 Component in MSGW status               *
       *  BUG27878 - Projected Available Balance Enquiry(recompile)    *
       *  BUG27288 - A serios Midas error has occured message comes    *

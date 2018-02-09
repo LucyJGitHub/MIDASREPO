@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate ordering institution - detail')      *
@@ -9,7 +9,7 @@
       *                                                               *
       *  FTVODIS01 - Validate Detail Ordering Institution             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034726           Date 18Jun15               * 
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034726           Date 18Jun15               *
+      *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG25884           Date 08Sep09               *
       *                 CSW209             Date 01Apr09               *
@@ -49,8 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034726 - Incorrect field highlighted for Ordering          *
-      *             Institution 1 error                               *      
+      *             Institution 1 error                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG25884 - When a valid IBAN is entered in Ordering Customer *
       *             header, Ordering Institution should not be        *
@@ -757,4 +759,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

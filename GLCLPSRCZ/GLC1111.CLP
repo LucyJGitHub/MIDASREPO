@@ -8,18 +8,20 @@
 /*       CL/GLC1111 - Setup Existing Amount Accruals for CGL003      */
 /*                    Switchable Feature Controlling Component       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. CGL003   *CREATE   DATE 27FEB97              */
+/*       Prev Amend No. CGL003  *CREATE    Date 27Feb97              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL003 - Accrual Frequency on Amount Accruals               */
 /*                                                                   */
 /*********************************************************************/
@@ -29,7 +31,7 @@
              PGM        PARM(&RTNCDE &IPMODE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
@@ -67,6 +69,6 @@
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

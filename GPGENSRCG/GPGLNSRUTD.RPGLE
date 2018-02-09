@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Generated Code')                                       *
@@ -9,14 +9,16 @@
       *                                                               *
       *  GPGLNSRUTD - On-Line Update of Global File GZGLNSRUTD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD033486           Date 27Feb15               *
-      *  Prev Amend No. MD031974           Date 16Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033486           Date 27Feb15               *
+      *                 MD031974           Date 16Jan15               *
       *                 CGL158   *Create   Date 22Aug14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033486 - Add new Beneficiary Account field (Recompile)     *
       *  MD031974 - Failed COB Component GOC0100 seq 002234 due to    *
       *             field mismatch. (Recompile)                       *

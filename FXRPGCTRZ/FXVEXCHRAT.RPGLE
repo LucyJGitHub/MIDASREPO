@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Validate exchange rate, fwd points & sign')   *
@@ -9,7 +9,7 @@
       *                                                               *
       *  FXVEXCHRAT - Validate Exchange Rate, Fwd Points & Sign       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD039203           Date 14Jun16               *
-      *  Prev Amend No. MD038850           Date 16May16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039203           Date 14Jun16               *
+      *                 MD038850           Date 16May16               *
       *                 AR720772           Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23050A          Date 11Mar09               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039203 - When creating an FX Deal, the value of Forward    *
       *             points and sign were not save upon completion of  *
       *             the transaction                                   *
@@ -71,7 +73,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -90,59 +92,59 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
                                                                                               154453
      D @@ALPH          DS                                                                     154453
      D  WPos14                 3      3                                                       154453
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
       ** Array of Fields with warnings.                                                       CER043
      D WFldNmXAr       S             10A   DIM(XArrayMax)                                     CER043
                                                                                               CER043
@@ -151,7 +153,7 @@
                                                                                               CER043
       ** Array of warning message data.                                                       CER043
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)                      CER043
-
+ 
       ** Scaling factors
      D @SF             S             10  0 DIM(10) CTDATA PERRCD(1)
                                                                                               CER043
@@ -166,17 +168,17 @@
                                                                                               CER043
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CER043
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                                    CER043
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       **   First scaling exponent
      D     @@SXP1      S              1S 0
       **   Second scaling exponent
@@ -184,8 +186,8 @@
       *****Ensure*OT*dela*rate*is*unpacked*for*passing*from*FXFXDLVAL**             BUG5578 AR720772
      D*****RelDXRT     S             13S 8                                          BUG5578 AR720772
      D     RelOSRT     S             13S 8                                                    248269
-
-
+ 
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                               CER043
@@ -226,11 +228,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Initialization
-
+ 
      C                   MOVE      *BLANK        RetCodeIn
-
+ 
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -241,7 +243,7 @@
      C                   EVAL      WMsgDtXAr = *BLANKS                                        CER043
      C                   EVAL      WIdx = *ZEROS                                              CER043
      C                   EVAL      WRetp = *ZEROS                                             CER043
-
+ 
       *
       * RATEV  - RATE VALIDATION
       *
@@ -612,7 +614,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -703,9 +705,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT
@@ -713,7 +715,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @SF - Scaling Factors
 0000000001
 0000000010

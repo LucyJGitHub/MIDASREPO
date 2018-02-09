@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       GOC0201 - Nostro Balance Generation                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BUG18886           Date 30May08              */
+/*       Prev Amend No. BUG18886           Date 30May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGP001  *CREATE    Date 23May03              */
+/*                      CGP001  *CREATE    Date 23May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG18886 - Non-standard codes exist in Midas Plus core      */
 /*                  sources                                          */
 /*       CGP001 - Global Processing                                  */
@@ -39,7 +41,7 @@
  
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /* Global monitor message */
@@ -98,5 +100,5 @@ CALLPGM:     CALL       PGM(GPNOSBGEN) PARM(&RTCD &ERMS &ZOZONE)
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

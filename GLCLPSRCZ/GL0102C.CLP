@@ -7,18 +7,20 @@
 /*                                                                  */
 /*       GL0102C - GL REPORTS (HISTORY)                             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*    LAST AMEND NO. xxxxxx             DATE 00xxx00                */
+/*       Prev Amend No. XXXXXX             Date 00Xxx00              */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*    XXXXXX - XXXXXXXXXXXXXXXXXXXXXXXXXX                           */
 /*                                                                  */
 /********************************************************************/
@@ -36,7 +38,7 @@
              DCL  VAR(&BEDT)   TYPE(*DEC)   LEN(5)
              DCL  VAR(&BTNB)   TYPE(*CHAR)  LEN(3)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                  */
 /* Create LDA if it doesn't already exist                           */
@@ -69,6 +71,6 @@
              ENDDO
 /*                                                                   */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*                                                                   */
              ENDPGM

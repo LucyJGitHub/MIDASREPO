@@ -7,15 +7,17 @@
 /*                                                                   */
 /*       FTC0234 - Request for Transfer / Customer Credit Transfer   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Release 4.04 -----------------------------------------------*/
-/*       Last Amend No. 226942             Date 27May04              */
-/*       Prev Amend No. 221652  *CREATE    Date 20Jan04              */
+/*       Prev Amend No. 226942             Date 27May04              */
+/*                      221652  *CREATE    Date 20Jan04              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       226942 - Make RFT/CCT Authorised/Unauthorised reports       */
 /*                available in the system.                           */
 /*       221652 - Make Request for Transfer report available         */
@@ -24,7 +26,7 @@
 /*********************************************************************/
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM &ACTN &CMD)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
@@ -61,5 +63,5 @@ ABNOR:
                            ERROR') TOPGMQ(*EXT) TOMSGQ(MOPERQ)
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

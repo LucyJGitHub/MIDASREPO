@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       GLC0064 - Statement of Account Extract Control Program      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. AR1049762          Date 29Oct12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1049762          Date 29Oct12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG4844            Date 01Nov04              */
+/*                      BUG4844            Date 01Nov04              */
 /*                      BUG2387            Date 06May04              */
 /*                      BUG1989            Date 28Apr04              */
 /*                      CGL025  *CREATE    Date 18Aug03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1049762 - Avoid I/O operation was applied to closed file. */
 /*                   (Child:AR1049763)                               */
 /*       BUG4844 - Errors in on-line statements                      */
@@ -38,7 +40,7 @@
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCL        VAR(&FMT)  TYPE(*CHAR) LEN(200)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
@@ -170,5 +172,5 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

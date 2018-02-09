@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Header and trailer record for REOUTLPA/PT')   *
@@ -9,13 +9,15 @@
       *                                                               *
       *  GL06006 - Header and Trailer record for REOUTLPA/PT          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD031057           Date 24Feb15               *
-      *  Prev Amend No. CGL142  *CREATE    Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031057           Date 24Feb15               *
+      *                 CGL142  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031057 - REC002008 00001 failed due to FOOB                *
       *  CGL142 - Tactical COB changes GL                             *
       *                                                               *

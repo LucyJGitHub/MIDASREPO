@@ -7,9 +7,10 @@
 /*                                                                   */
 /*  GLC3572 - ACCOUNT DETAILS REPORT                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*  Last Amend No. CCB020                  Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,10 +18,11 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  Prev Amend No. S01413 *CREATE          DATE 13APR93              */
+/*                      S01413 *C *CREATE  Date 13Apr93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  CCB020 - COB Restructure - Secondary COB Infrastructure          */
 /*  S01413 - Retail 3 Incorporation                                  */
 /*                                                                   */
@@ -32,7 +34,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ)  TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV)  TYPE(*CHAR) LEN(1)
@@ -130,5 +132,5 @@
              SNDPGMMSG  MSG('JOB TERMINATED - DATABASE IN ERROR -+
                         GL3572') TOMSGQ(MOPERQ)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 END:         ENDPGM

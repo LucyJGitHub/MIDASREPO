@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Trades database updater')                     *
@@ -16,10 +16,11 @@
       *             trade.  Both formats are identical, though not    *
       *             all the fields apply to both.                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CAP208             Date 06Dec10               *
-      *  Prev Amend No. CSD083             Date 27May10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP208             Date 06Dec10               *
+      *                 CSD083             Date 27May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG26920           Date 21Jan10
       *                 BUG26902           Date 20Jan10               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
       *  CSD083 - Watch List Compliance Upgrade                       *
       *  BUG26920 - A serious Midas error has occurred" encountered   *
@@ -5198,7 +5200,7 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** XOT - Array for watch list fields' Opening XML Tags                                        CSD015
 <Broker Settlement Account>                                                                   CSD015
 <Broker For Account of>                                                                       CSD015

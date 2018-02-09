@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Additional Information Maintenance')          *
@@ -15,10 +15,11 @@
       *             posting details input and allow the maintenance   *
       *             of the additional information.                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039326           Date 15Jun16               *
-      *  Prev Amend No. AR877000           Date 08Dec11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039326           Date 15Jun16               *
+      *                 AR877000           Date 08Dec11               *
       *                 AR872671           Date 29Nov11               *
       *                 AR853053           Date 24Oct11               *
       *                 CLE134             Date 01Aug12               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039326 - Serious MIdas Error occurred when inserting via   *
       *             Intellimatch. %SCAN on a position greater than    *
       *             actual string length. Add preventive fix.         *
@@ -110,24 +112,24 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      F*****GL000185DFCF***E             WORKSTN INFSR(*PSSR)                                  246418
      FGL000185DFCF   E             WORKSTN INFSR(*PSSR) USROPN                                246418
       ** Additional Information Maintenance Display File
-
+ 
      FGLJENXL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLJENXD0:@LJENXD0)
       ** RTV: Midas GL Journal Entry File - Additional Information
-
+ 
      FGLJENXL4  UF A E           K DISK    INFSR(*PSSR) COMMIT
       ** UPD: Midas GL Journal Entry File - Additional Information
-
+ 
      FSDCURRLD  IF   E           K DISK
       ** Midas SD Currencies field by SWIFT currency code
-
+ 
      FSDCODEL1  IT   F   20        DISK
       ** Midas SD SWIFT codewords retrieval
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -166,7 +168,7 @@
       *                                                                                       246418
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -181,12 +183,12 @@
       ** of the arrays.                                                                       246418
       *                                                                                       246418
       /COPY ZACPYSRC,ERR_XARRYS                                                               246418
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** Valid Swift Characters
      D SwiftXSet       C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ-
      D                                     abcdefghijklmnopqrstuvwxyz-
@@ -195,37 +197,37 @@
      D**********                           äÄöÖüÜß'                                  263253 AR872671
      D                                     0123456789 /-?:().,''+-                          AR872671
      D                                     äÄöÖüÜß&*$%'                                     AR872671
-
+ 
       ** Upper Case Letter
      D Up              C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
+ 
       ** Lower Case Letter
      D Lo              C                   'abcdefghijklmnopqrstuvwxyz'
-
+ 
       ** Numeric character
       *
      D Numeric         C                   '0123456789'
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** External data structures for Switchable Features Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
-
+ 
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** Data Structure for Screen Fields
      D #1DBRC          DS           400
-
+ 
       ** Additional Information Data Structure
      D @1DBRC        E DS                  EXTNAME(GLJENXL4)
-
+ 
       ** Valid JE Item Additional Information (DS)                                            246418
      D PVBITPX       E DS                  EXTNAME(GLVBIPXPD)                                 246418
                                                                                               246418
@@ -250,15 +252,15 @@
      D  #0CQNB               101    108
      D  WACode               109    118                                                       CGL029
      D  PEdit                119    119                                                     BUG23742
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Valid SWIFT Keywords
      D Keywords        S             20    DIM(999) FROMFILE(SDCODEL1) PERRCD(1)
-
+ 
       ** Input/Output Parameters
      D PRetCodeIn      S              7
      D PAdditional     S              1
@@ -272,7 +274,7 @@
      D PDate           S              6
      D PDateFormat     S              1
      D PError          S              1
-
+ 
       ** Work Fields
      D WRun            S              1
      D WError          S              1
@@ -287,14 +289,14 @@
      D WERIInf         S              1
      D WAllow          S              1                                                     BUG25438
      D WDetails        S           1000                                                     BUG25438
-
+ 
      D PosOCMT         S              5U 0
      D EndOCMT         S              5U 0
      D PosCHGS         S              5U 0
      D EndCHGS         S              5U 0
-
+ 
      D CSW020          S              1    INZ('N')                             SWIFT Decimal Places
-
+ 
      D X               S              5U 0
      D Y               S              5U 0
      D WrkField20      S             20
@@ -360,18 +362,18 @@
      D PCancel         S              1A                                                    BUG23742
                                                                                             MD039326
      D WStrLen         S              3S 0                                                  MD039326
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
      C                   IF        ApiMode = 'Y'                                              246418
      C                   EXSR      SRFilScr                                                   246418
      C                   ELSE                                                                 246418
@@ -379,15 +381,15 @@
      C                   ENDIF                                                                246418
                                                                                               246418
      C                   SELECT
-
+ 
       ** Validate only
-
+ 
      C                   WHEN      PMode = 'V'
      C                   IF        ApiMode <> 'Y'                                             246418
      C                   EXSR      SRMove
      C                   ENDIF                                                                246418
      C                   EXSR      SRValidate
-
+ 
      C                   WHEN      PMode = 'U'                                                246418
      C                   EXSR      SRValidate                                                 246418
      C                   IF        (WError = 'N' and #0ADI1 <> *BLANKS) or                    246418
@@ -400,9 +402,9 @@
      C                   EXSR      SRDelete                                                   246418
      C                   ENDIF                                                                246418
       ** Otherwise, execute maintenance display file
-
+ 
      C                   OTHER
-
+ 
      C                   IF        PMode = 'E'
      C                   EVAL      *IN28 = *ON
      C                   ELSE
@@ -421,14 +423,14 @@
      C                   EXSR      SRSndErr                                                 BUG23742
      C                   ENDIF                                                              BUG25438
      C                   ENDIF                                                              BUG23742
-
+ 
      C                   EXSR      SRFormat
      C**********         EXSR      SRMove                                                   BUG25438
-
+ 
      C                   DOU       *INKL = *ON or WError = 'N'
      C                   EVAL      WError = 'N'
      C                   EVAL      WERIErr = 'N'
-
+ 
      C                   IF        PEDIT = 'N'                                              BUG25438
      C                   EXSR      SRValidate                                               BUG25438
      C                   IF        WDetails <> *BLANKS                                      BUG25438
@@ -439,24 +441,24 @@
                                                                                             BUG25438
      C                   WRITE     GL000185C0
      C                   EXFMT     GL000185F0
-
+ 
      C                   CALL      'ZA0250'
      C                   MOVEA     '0000000'     *IN(31)
-
+ 
      C                   IF        PMode = 'M' and *INKL = *OFF
      C                   EXSR      SRValidate
-
+ 
      C                   IF        (WError = 'N' and #0ADI1 <> *BLANKS) or
      C                             (WError = 'N' and #0ADI1 = *BLANKS and
      C                             #0AERI <> 'N')
      C                   EXSR      SRUpdate
      C                   ENDIF
-
+ 
      C                   IF        WError = 'N' and #0ADI1 = *BLANKS
      C                             and #0AERI = 'N'
      C                   EXSR      SRDelete
      C                   ENDIF
-
+ 
      C                   ENDIF
       *                                                                                     BUG23742
       ** If Cancel or Exit requested                                                        BUG23742
@@ -475,13 +477,13 @@
      C                   IF        *INKC = *ON                                              BUG23742
      C                   EVAL      PExit = '1'                                              BUG23742
      C                   ENDIF                                                              BUG23742
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDSL
-
+ 
      C                   EVAL      *INLR = *ON
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -493,14 +495,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRMove        BEGSR
-
+ 
      C                   EVAL      KABTNB = #0BTNB
      C                   MOVEL     #0BINB        KABINB
      C                   EVAL      WAllow = 'N'                                             BUG25438
      C                   MOVE      WValDate      WValDateP         5 0                      AR877000
-
+ 
      C     KJENX         CHAIN     GLJENXL2
      C                   IF        %FOUND(GLJENXL2)
      C                             AND BAPTDT = WValDateP                                   AR877000
@@ -528,11 +530,11 @@
      C                   EVAL      #0AERI = 'N'
      C                   ENDIF                                                             BUG24339A
      C                   ENDIF
-
+ 
      C                   EVAL      #1DBRC = @1DBRC
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -544,16 +546,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRFormat      BEGSR
-
+ 
       ** Format Account Number
-
+ 
      C                   EVAL      #0ACCN = WBranch + WCNum + WCurr +
      C                                      WACode + WASeq
-
+ 
       ** Format Value Date to DDMMMYY
-
+ 
      C                   MOVE      WValDate      PDate
      C                   CALLB     'ZDATE1'
      C                   PARM                    PDate
@@ -566,11 +568,11 @@
      C                   PARM                    PDateFormat
      C                   PARM      *ZEROS        PNInput
      C                   PARM      *BLANKS       PAInput
-
+ 
      C                   EVAL      #0VLDT = PAInput
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -582,15 +584,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRValidate    BEGSR
-
+ 
      C                   EVAL      WDetails = #0ADI1 + #0ADI2 + #0ADI3+                     BUG25438
      C                             #0ADI4 + #0ADI5 + #0ADI6                                 BUG25438
       *                                                                                     BUG25438
       ** Additional Information 1
       ** Cannot be blank if subsequent lines are not blank
-
+ 
      C                   IF        #0ADI1 = *Blanks AND
      C                             (#0ADI2 <> *Blanks OR #0ADI3 <> *Blanks OR
      C                              #0ADI4 <> *Blanks OR #0ADI5 <> *Blanks OR
@@ -607,9 +609,9 @@
      C                   GOTO      ENDVALD
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** The field can only contain characters allowed by SWIFT
-
+ 
      C                   IF        #0ADI1 <> *Blanks
      C     SwiftXSet     CHECK     #0ADI1                                 29
      C                   IF        *IN29 = *ON
@@ -630,9 +632,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   EXSR      SRERIIndi
-
+ 
       ** Additional Information 2
-
+ 
      C                   IF        #0ADI2 = *Blanks AND
      C                             (#0ADI3 <> *Blanks OR #0ADI4 <> *Blanks OR
      C                              #0ADI5 <> *Blanks OR #0ADI6 <> *Blanks)
@@ -648,9 +650,9 @@
      C                   GOTO      ENDVALD
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** The field can only contain characters allowed by SWIFT
-
+ 
      C                   IF        #0ADI2 <> *Blanks
      C     SwiftXSet     CHECK     #0ADI2                                 29
      C                   IF        *IN29 = *ON
@@ -671,9 +673,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   EXSR      SRERIIndi
-
+ 
       ** Additional Information 3
-
+ 
      C                   IF        #0ADI3 = *Blanks AND
      C                             (#0ADI4 <> *Blanks OR #0ADI5 <> *Blanks OR
      C                              #0ADI6 <> *Blanks)
@@ -689,9 +691,9 @@
      C                   GOTO      ENDVALD
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** The field can only contain characters allowed by SWIFT
-
+ 
      C                   IF        #0ADI3 <> *Blanks
      C     SwiftXSet     CHECK     #0ADI3                                 29
      C                   IF        *IN29 = *ON
@@ -712,9 +714,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   EXSR      SRERIIndi
-
+ 
       ** Additional Information 4
-
+ 
      C                   IF        #0ADI4 = *Blanks AND
      C                             (#0ADI5 <> *Blanks OR #0ADI6 <> *Blanks)
      C                   IF        PMode <> 'V'
@@ -729,9 +731,9 @@
      C                   GOTO      ENDVALD
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** The field can only contain characters allowed by SWIFT
-
+ 
      C                   IF        #0ADI4 <> *Blanks
      C     SwiftXSet     CHECK     #0ADI4                                 29
      C                   IF        *IN29 = *ON
@@ -752,9 +754,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   EXSR      SRERIIndi
-
+ 
       ** Additional Information 5
-
+ 
      C                   IF        #0ADI5 = *Blanks AND #0ADI6 <> *Blanks
      C                   IF        PMode <> 'V'
      C                             or ApiMode = 'Y'                                           246418
@@ -768,9 +770,9 @@
      C                   GOTO      ENDVALD
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** The field can only contain characters allowed by SWIFT
-
+ 
      C                   IF        #0ADI5 <> *Blanks
      C     SwiftXSet     CHECK     #0ADI5                                 29
      C                   IF        *IN29 = *ON
@@ -791,11 +793,11 @@
      C                   ENDIF
      C                   ENDIF
      C                   EXSR      SRERIIndi
-
+ 
       ** Additional Information 6
-
+ 
       ** The field can only contain characters allowed by SWIFT
-
+ 
      C                   IF        #0ADI6 <> *Blanks
      C     SwiftXSet     CHECK     #0ADI6                                 29
      C                   IF        *IN29 = *ON
@@ -950,11 +952,11 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
-
+ 
      C                   ENDIF                                                              BUG22527
                                                                                             BUG22527
      C     ENDVALD       ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -966,19 +968,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRERIIndi     BEGSR
-
+ 
       ** Validate ERI Information Indicator
-
+ 
       ** If blank, set the default
-
+ 
      C                   IF        #0AERI = *BLANKS
      C                   EVAL      #0AERI = 'N'
      C                   ENDIF
-
+ 
       ** Valid ERI Information Indicator values are '1','A','M','N'
-
+ 
      C                   IF        #0AERI <> 'N' and #0AERI <> '1' and
      C                             #0AERI <> 'A' and #0AERI <> 'M'
      C                   IF        PMode <> 'V'
@@ -993,9 +995,9 @@
      C                   GOTO      ENDERI
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** If Additional Information fields are blank, and ERI is 'M'
-
+ 
      C                   IF        #0ADI1 = *BLANKS and #0AERI = 'M'
      C                   IF        PMode <> 'V'
      C                             or ApiMode = 'Y'                                           246418
@@ -1009,11 +1011,11 @@
      C                   GOTO      ENDERI
      C                   ENDIF
      C                   ENDIF
-
-
+ 
+ 
       ** If ERI Indicator is 'A' or 'N', ERI Information may not be
       ** entered in the Additional Information field
-
+ 
      C                   IF        (#0AERI = 'N' and WERIErr = 'N' and
      C                             WERIInf = 'Y') or
      C                             (#0AERI = 'A' and WERIErr = 'N' and
@@ -1032,10 +1034,10 @@
      C                   GOTO      ENDERI
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** If ERI Indicator is 'M', Additional Information field may
       ** only contain ERI Information
-
+ 
      C                   IF        #0AERI = 'M' and WERIErr = 'Y'
      C                   IF        PMode <> 'V'
      C                             or ApiMode = 'Y'                                           246418
@@ -1049,9 +1051,9 @@
      C                   GOTO      ENDERI
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     ENDERI        ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1063,32 +1065,32 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRERIInfo     BEGSR
-
+ 
       ** Retrieve the ERI Keywords
-
+ 
      C                   EVAL      PosOCMT = %SCAN('OCMT':WkAddInf  :1)
      C                   EVAL      EndOCMT = 0
      C                   EVAL      PosCHGS = %SCAN('CHGS':WkAddInf  :1)
      C                   EVAL      EndCHGS = 0
-
+ 
       ** The keyword OCMT must be present if #0AERI = 'M'
-
+ 
      C                   IF        #0AERI = 'M'
      C                   IF        PosOCMT = 0
      C                   EVAL      WERIErr = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        PosOCMT = 0 and PosCHGS = 0
      C                   EVAL      WERIInf = 'N'
      C                   ELSE
      C                   EVAL      WERIInf = 'Y'
      C                   ENDIF
-
+ 
       ** The keyword OCMT & CHGS should be between '/'
-
+ 
      C                   IF        PosOCMT > 0
      C                   IF        PosOCMT = 1
      C                             OR PosOCMT = 62 OR
@@ -1097,7 +1099,7 @@
      C                   EVAL      WERIErr = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        PosCHGS > 0
      C                   IF        PosCHGS = 1
      C                             OR PosCHGS = 62
@@ -1106,26 +1108,26 @@
      C                   EVAL      WERIErr = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** The keyword /CHGS/ is valid only if /OCMT/ is present and prior.
-
+ 
      C                   IF        PosOCMT = 0 AND PosCHGS > 0
      C                             OR PosCHGS <> 0 AND PosCHGS < PosOCMT
      C                   EVAL      WERIErr = 'Y'
      C                   ENDIF
-
+ 
       ** Validate the currency for keyword /OCMT/
-
+ 
      C                   If        PosOCMT > 0
-
+ 
      C                   EVAL      WCurrency = *BLANKS
-
+ 
      C                   EVAL      WStrLen = %LEN(%TRIMR(WkAddInf))                         MD039326
                                                                                             MD039326
      C                   IF        (PosOCMT+5) <= WStrLen                                   MD039326
                                                                                             MD039326
       ** Retrieve the currency
-
+ 
      C                   EVAL      EndOCMT = %SCAN('/':WkAddInf  :PosOCMT+5)
      C                   IF        EndOCMT > 0
      C                   EVAL      WCurrency = %SUBST(WkAddInf  :PosOCMT+5:
@@ -1133,24 +1135,24 @@
      C                   ENDIF
                                                                                             MD039326
      C                   ENDIF                                                              MD039326
-
+ 
       ** Validate the currency
-
+ 
      C                   EXSR      SRCurrency
      C                   ENDIF
-
+ 
       ** Validate the currency keyword /CHGS/
-
+ 
      C                   If        PosCHGS > 0
-
+ 
      C                   EVAL      WCurrency = *BLANKS
-
+ 
      C                   EVAL      WStrLen = %LEN(%TRIMR(WkAddInf))                         MD039326
                                                                                             MD039326
      C                   IF        (PosCHGS+5) <= WStrLen                                   MD039326
                                                                                             MD039326
       ** Retrtieve the currency and the amount
-
+ 
      C                   EVAL      EndCHGS = %SCAN('/':WkAddInf  :PosCHGS+5)
      C                   IF        EndCHGS > 0
      C                   EVAL      WCurrency = %SUBST(WkAddInf  :PosCHGS+5:
@@ -1158,73 +1160,73 @@
      C                   ENDIF
                                                                                             MD039326
      C                   ENDIF                                                              MD039326
-
+ 
       ** Validate the currency
-
+ 
      C                   EXSR      SRCurrency
      C                   ENDIF
-
+ 
       ** The first '/' of /CHGS/ keyword could not be the last '/' of /OCMT/ detail
       ** Example: /OCMT/EUR100,/CHGS/EUR10,/ => ERROR
       **          /OCMT/EUR100,//CHGS/EUR10,/ => OK
-
+ 
      C                   IF        PosCHGS > 0
      C                             AND EndOCMT = (PosCHGS-1)
      C                   EVAL      WERIErr = 'Y'
      C                   ENDIF
-
+ 
       ** Only one keyword /OCMT/ or /CHGS/ is allowed by line.
-
+ 
      C                   IF        (PosOCMT+5+4)<%len(WkAddInf)
      C                             AND %SCAN('OCMT':WkAddInf:PosOCMT+5) > 0
      C                   EVAL      WERIErr = 'Y'
      C                   ENDIF
-
+ 
      C                   IF        (PosCHGS+5+4)<%len(WkAddInf)
      C                             AND %SCAN('CHGS':WkAddInf:PosCHGS+5) > 0
      C                   EVAL      WERIErr = 'Y'
      C                   ENDIF
-
+ 
       ** The keywords /OCMT/ or /CHGS/ should be in upper case letter.
-
+ 
      C                   IF        %SCAN('ocmt':WkAddInf:1) > 0
      C                             OR %SCAN('chgs':WkAddInf:1) > 0
      C                   EVAL      WERIErr = 'Y'
      C                   ENDIF
-
+ 
       ** Only keywords /OCMT/ or /CHGS/ are allowed.
-
+ 
      C                   EVAL      X = 1
-
+ 
       ** For each existing SWIFT Keywords
-
+ 
      C                   DOW       X <= 999
      C                             AND Keywords(X) <> *BLANKS
-
+ 
       ** Exclude keywords /OCMT/ and /CHGS/
-
+ 
      C                   IF        Keywords(X) <> '/OCMT/'
      C                             AND Keywords(X) <> '/CHGS/'
-
+ 
       ** Convert keywords in lower case
-
+ 
      C     Up:Lo         XLATE     Keywords(X)   WrkField20
-
+ 
       ** Check if the SWIFT keyword has been inserted.
-
+ 
      C                   IF        %SCAN(%TRIM(Keywords(X)):WkAddInf:1) > 0
      C                             OR %SCAN(%TRIM(WrkField20):WkAddInf:1) > 0
      C                   EVAL      WERIErr = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Next SWIFT Keywords
-
+ 
      C                   EVAL      X = X+1
      C                   ENDDO
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1236,40 +1238,40 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRCurrency    BEGSR
-
+ 
       ** The currency should be a valid SWIFT currency code.
-
+ 
      C                   EVAL      WSwiftCCY = %SUBST(WCurrency:1:3)
      C     WSwiftCCY     CHAIN     SDCURRLD
      C                   IF        NOT %FOUND(SDCURRLD)
      C                   EVAL      WERIErr = 'Y'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** Amount
-
+ 
       ** -- The amount can only contains numeric value till the comma.
-
+ 
      C     Numeric       CHECK     WCurrency:4   X
      C                   IF        %SUBST(WCurrency:X:1) <> ','
      C                   EVAL      WERIErr = 'Y'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** -- The decimal part of amount can only contains numeric value till the slash.
-
+ 
      C                   EVAL      X = X + 1
      C     Numeric       CHECK     WCurrency:X   Y
      C                   IF        %SUBST(WCurrency:Y:1) <> '/'
      C                   EVAL      WERIErr = 'Y'
      C                   LEAVESR
      C                   ENDIF
-
+ 
       ** -- The number of decimal digit should be less or equal to the number of decimal
       **    places of the currency.
-
+ 
      C                   IF        CSW020 = 'N'
      C                             And (Y - X) > A6NBDP
      C                             OR CSW020 = 'Y'
@@ -1278,9 +1280,9 @@
      C                   ENDIF
       *
       ** End Amount
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1292,17 +1294,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRUpdate      BEGSR
-
+ 
      C                   EVAL      KABTNB = #0BTNB
      C                   MOVEL     #0BINB        KABINB
-
+ 
      C     KJENX         CHAIN     GLJENXL4
      C                   IF        %FOUND(GLJENXL4)
-
+ 
       ** Update File
-
+ 
      C**********         IF        #1DBRC <> @1DBRC                                           246418
      C**********         EVAL      WError = 'Y'                                               246418
      C**********         EVAL      PMsgId = 'GLM0249'                                         246418
@@ -1320,9 +1322,9 @@
      C                   EVAL      PAdditional = 'Y'
      C                   EVAL      #1DBRC = @1DBRC
      C**********         ENDIF                                                                246418
-
+ 
       ** Write New Record
-
+ 
      C                   ELSE
      C                   IF        #0ADI1 <> *BLANKS
      C                             OR #0AERI <> *BLANKS
@@ -1340,9 +1342,9 @@
      C                   EVAL      PAdditional = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1355,23 +1357,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRDelete      BEGSR
-
+ 
      C                   EVAL      KABTNB = #0BTNB
      C                   MOVEL     #0BINB        KABINB
-
+ 
      C     KJENX         CHAIN     GLJENXL4
      C                   IF        %FOUND(GLJENXL4)
-
+ 
       ** Delete File
-
+ 
      C                   DELETE    GLJENXD0
      C                   EVAL      PAdditional = 'N'
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1383,9 +1385,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRSndErr      BEGSR
-
+ 
      C                   IF        ApiMode <> 'Y'                                             246418
                                                                                               246418
      C                   CALL      'ZA0340'
@@ -1399,9 +1401,9 @@
      C                   MOVEL     ScnField      FldNamXAr(Idx)                               246418
                                                                                               246418
      C                   ENDIF                                                                246418
-
+ 
      C                   ENDSR
-
+ 
       **********************************************************************                  246418
       /EJECT                                                                                  246418
       *****************************************************************                       246418
@@ -1440,9 +1442,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PRetCodeIn
      C                   PARM                    PPostDetails
@@ -1455,21 +1457,21 @@
      C                   PARM                    FldNamXAr                                    246418
      C                   PARM                    MsgIDXAr                                     246418
      C                   PARM                    MsgDtaXAr                                    246418
-
+ 
       ** The following /COPY sets the program, module and procedure
       ** names for database error processing.
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
       ** Access bank details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** Database error
-
+ 
      C     PRtCd         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 1
@@ -1478,9 +1480,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Check if feature CSW020 'SWIFT Decimal Places' is present.
-
+ 
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POption
@@ -1490,28 +1492,28 @@
      C     PRtCd         IFEQ      *BLANKS
      C                   MOVE      'Y'           CSW020
      C                   ENDIF
-
+ 
       ** Move Workstation ID to screen field
-
+ 
      C                   EVAL      #0RUNA = BJMRDT
      C                   EVAL      #0USER = PSUser
      C                   EVAL      #0WSID = PSJobName
      C                   EVAL      #0PGMQ = PSProcMod
-
+ 
       ** Initialise Work Fields
-
+ 
      C                   EVAL      PDateFormat = BJDFIN
      C**********         EVAL      WError = 'Y'                                               246418
      C                   EVAL      WError = 'N'                                               246418
-
+ 
       ** KLIST for GLJENXL2
-
+ 
      C     KJENX         KLIST
      C                   KFLD                    KABTNB
      C                   KFLD                    KABINB
-
+ 
       ** Protect Input Fields if Enquiry Mode
-
+ 
       *                                                                                       CER030
       ** Check the switchable feature CER030                                                  CER030
       *                                                                                       CER030
@@ -1581,9 +1583,9 @@
      C                   EXSR      *PSSR                                                      CER030
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
-
+ 
      C                   ENDSR
-
+ 
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -1598,23 +1600,23 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
-
+ 
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
-
+ 
      C                   CALLB     'DBERRCTL'
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C                   ENDSR
-
+ 
       ********************************************************************

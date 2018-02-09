@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT FTM101UPPsitions file')                       *
@@ -12,13 +12,14 @@
       * This routine can be called interactively or from FT0300       *
       * to confirm and write details of the CCT transaction.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034834           Date 30Jun15               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034834           Date 30Jun15               *
+      *                 CLE134             Date 01Aug12               *
       *                 CRE075             Date 06Dec10               *
       *                 AR750695           Date 26Apr11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034834 - Serious Midas error on Amend of Incoming RFTD     *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -1227,4 +1229,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

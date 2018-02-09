@@ -7,21 +7,23 @@
 /*                                                                  */
 /*       GLC100 - CHECK FOR END OF YEAR PROCESSING                  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 103067  URGENT FIX      DATE  06MAR98       */
-/*       PREV AMEND NO. S01408                  DATE  20JUN96       */
+/*       PREV AMEND NO. 103067  URGENT FIX      DATE  06MAR98       */
+/*                      S01408                  DATE  20JUN96       */
 /*                      091582                  DATE  27MAR96       */
 /*                      S01194                  DATE  16/03/89      */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       103067 - Urgent fix.  091582 is not appropriate for R10.6  */
 /*                PTF7 and above. Remove fix before Year End.       */
 /*       S01408 - Core hook GLC100001 added.                        */
@@ -34,7 +36,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*/COPY WNCPYSRC,GLC100002                                           */
@@ -97,5 +99,5 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

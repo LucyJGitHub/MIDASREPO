@@ -8,9 +8,10 @@
 /*       FTC0080  - CL COMPONENT TO CONTROL FT0080                  */
 /*                  CHEQUES TO BE PAID MAINTENANCE.                 */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CER049             Date 06Dec10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER049             Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -18,11 +19,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. E42167(PSS206)    DATE  29JUL92             */
+/*                      E42167(PS          Date 29Jul92              */
 /*                      S01117            DATE  16OCT90             */
 /*                      S01194            DATE  16OCT90             */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER049 - Stamp Tax                                         */
 /*       E42167 - CL PROGRAM FOR RECORD LOCKING                     */
 /*       S01117 - MULTIBRANCHING INCORPORATION                      */
@@ -31,7 +33,7 @@
              PGM        PARM(&SORT &PREF &RTCD &LINK)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*           DCL        VAR(&DATA) TYPE(*CHAR) LEN(44)       */      /*S01194*/
@@ -75,7 +77,7 @@
                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
    ENDDO
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */                                                                 /*042167*/
 /* CALL AOC8000 to release locks */                                   /*042167*/
 /* */                                                                 /*042167*/

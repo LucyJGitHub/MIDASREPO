@@ -16,14 +16,16 @@
       *                                                               *
       *  Called By: GL003600                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. BUG27417B          Date 13Aug10               *
-      *  Prev Amend No. BUG27769           Date 09Jun10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27417B          Date 13Aug10               *
+      *                 BUG27769           Date 09Jun10               *
       *                 BUG27724*CREATE    Date 03Jun10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27417B - GLC30 00001 FOOB                                 *
       *  BUG27769 - Incorrect error code                              *
       *  BUG27724 - Include RESWEPPD file in ATU                      *
@@ -426,4 +428,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

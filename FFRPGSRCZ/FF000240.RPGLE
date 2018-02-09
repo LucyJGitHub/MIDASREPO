@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Closing Trades Input')
@@ -11,19 +11,21 @@
       *                                                               *
       *  Component of: FFC000240 - Closing Trades Input               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAAA03             Date 28Apr04               *
-      *  Prev Amend No. CAAA02             Date 16Jul03               *
+      *  Prev Amend No. CAAA03             Date 28Apr04               *
+      *                 CAAA02             Date 16Jul03               *
       * Midas Release 4 --------------- Base -------------------------*
       *                 CFF007  *CREATE    Date 13Feb01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAAA03 - Webfacing Changes. (recompile)                      *
       *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
       *           to process screens. Recompile only.                 *

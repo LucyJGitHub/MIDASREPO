@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                       CGP017
 /*STD *  RPGBASEMOD                                                   *                       CGP017
@@ -10,10 +10,11 @@
       *                                                               *
       *  GOHELDIHB  - Bulk Update of Global File GZHELDIHB            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD034451C          Date 02Mar16               *
-      *  Prev Amend No. MD030959           Date 18Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034451C          Date 02Mar16               *
+      *                 MD030959           Date 18Nov14               *
       *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27532           Date 26Apr10               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034451C - Recompiled due to changed PF/HELDIHB.            *
       *  MD030959 - Recompiled due to changed PF/HELDIHC.             *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *

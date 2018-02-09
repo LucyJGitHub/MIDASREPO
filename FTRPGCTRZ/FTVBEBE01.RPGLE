@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate beneficiary')                        *
@@ -9,7 +9,7 @@
       *                                                               *
       *  FTVBEBE01 - Validate Beneficiary                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034749           Date 19Jun15               *
-      *  Prev Amend No. MD034728           Date 18Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034749           Date 19Jun15               *
+      *                 MD034728           Date 18Jun15               *
       *                 229251             Date 18Jun15               *
       *                 CSW215             Date 06Apr15               *
       *                 CRE075             Date 06Dec10               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034749 - Entry of number code '1/' should not be allowed   *
       *             in Beneficiary Line 1                             *
       *  MD034728 - Beneficiary Customer entry of beginnign '/' was   *
@@ -1325,7 +1327,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  ALPH
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 **  NUMC

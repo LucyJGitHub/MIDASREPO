@@ -7,20 +7,22 @@
 /*                                                                   */
 /*   FFC1092  -  REORGANIZE FILES AFTER EOC RECOVERY                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG7286            Date 23May05              */
-/*       Prev Amend No. 228542             Date 05Aug04              */
+/*       Prev Amend No. BUG7286            Date 23May05              */
+/*                      228542             Date 05Aug04              */
 /*                      CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*     CHANGE DESCRIPTIONS                                           */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG7286 - Error in SCRTVJEVT command                        */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
@@ -42,7 +44,7 @@
 /**/
              DCLF       FILE(JRNEFD)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        &STRRCV  TYPE(*CHAR)  LEN(10)                                     /*CSC020*/
              DCL        VAR(&STRSEQ) TYPE(*DEC) LEN(10 0)                                /*BUG7286*/
@@ -127,5 +129,5 @@ END:         CLRPFM     JRNEFD MBR(&MKT)
              DLTOVR     FILE(JRNEFD)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

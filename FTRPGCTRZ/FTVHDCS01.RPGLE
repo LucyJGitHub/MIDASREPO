@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
  
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate RFT Header Ordering Customer')       *
@@ -8,7 +8,7 @@
  
       *  FTVHDCS01  - Validate RFT Header Ordering Customer           *
  
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
  
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -16,8 +16,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
  
-      *  Last Amend No. MD034505           Date 26May15               * 
-      *  Prev Amend No. MD027284           Date 25Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034505           Date 26May15               *
+      *                 MD027284           Date 25Nov14               *
       *                 MD000091           Date 07May13               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -80,6 +81,7 @@
  
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034505 - Database error encountered when Ordering Customer *
       *             is a Customer Number or Accountline               *
       *           - Partially applied BUG19263                        *
@@ -1778,7 +1780,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  ALPH                                                                                    BUG25858
 ABCDEFGHIJKLMNOPQRSTUVWXYZ                                                                  BUG25858
 **  NUMC                                                                                    BUG25858

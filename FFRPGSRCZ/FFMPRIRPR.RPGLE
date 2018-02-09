@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Invalid Market Prices Repair')                *
@@ -14,19 +14,21 @@
       *             details to be 'repaired' and  applied  to  the    *
       *             Midas database.                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CAP208             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 245144             Date 24Jan07               *
+      *                 245144             Date 24Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027A            Date 03May06               *
       *                 CAP183  *Create    Date 05Jan06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
       *  245144 - Parameter mismatch when calling FFMPRICVT.          *
       *  CSD027A - Conversion of customer number to alpha (post       *
@@ -1715,4 +1717,4 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

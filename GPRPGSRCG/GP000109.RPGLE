@@ -1,5 +1,5 @@
      H DEBUG ALWNULL(*USRCTL)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Repair Queue Housekeeping')
@@ -17,13 +17,15 @@
       *  Called By: GOC000109 - Midas GO Repair Queue Housekeeping    *
       *                         Control                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CAP204  *CREATE    Date 15Mar10               *
+      *  Prev Amend No. CAP204  *CREATE    Date 15Mar10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP204 - Teller Related APIs - Account Transfer              *
       *                                                               *
       *****************************************************************

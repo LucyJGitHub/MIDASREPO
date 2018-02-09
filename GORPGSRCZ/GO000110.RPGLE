@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*S*D****RPGBASEBND****************************************************                       CCB023
 /*STD *  RPGBASEBND                                                   *                     MD024491
@@ -10,10 +10,11 @@
       *                                                               *
       *  GO000110 - Global Processing data dowload, Funds Transfer    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CAP212             Date 15Sep14               *
-      *  Prev Amend No. MD024491*REINSTATE Date 03Feb14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP212             Date 15Sep14               *
+      *                 MD024491           Date 03Feb14               *
       *                 CCB023  *REDUNDANT Date 06Aug12               *
       *                 AR701209           Date 28Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API (Recompile)                  *
       *  MD022491 - Outgoing payment not authorized are not shown in  *
       *             the BFM Dashboard                                 *

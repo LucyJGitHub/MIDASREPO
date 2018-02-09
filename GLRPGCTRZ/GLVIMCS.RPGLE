@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate JE Item Associated Customer')        *
@@ -10,7 +10,7 @@
       *  GLVIMCS - Validate Journal Batch Entry Item                  *
       *            Associated Customer                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel.                     *
@@ -18,11 +18,12 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 243965             Date 23Nov06               *
+      *                 243965             Date 23Nov06               *
       *                 242224             Date 28Oct06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CGL064             Date 19Jun06               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  243965 - Do not compare associated customer number with      *
       *           customer number if System Val GLJRNECmpAssCust = 'N'*
@@ -357,6 +359,6 @@
       *****************************************************************
       *
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** WMsgArr
 XXXXXX Ass. Cust. cant be eq to Account Cust.

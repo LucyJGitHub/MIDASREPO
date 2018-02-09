@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Clear GPDWNLPD for single Midas system')      *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GP000105 - Clear down GPDWNLPD for single Midas system       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD031770           Date 25Feb15               *
-      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031770           Date 25Feb15               *
+      *                 MD020167           Date 23Apr13               *
       *                 CCB023             Date 06Aug12               *
       *                 AR995318           Date 26Jun12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -23,6 +24,7 @@
       *                 xxxxxx             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031770 - Trade Finance business day. Do not delete data of *
       *             TIPlusInputActive.                                *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*

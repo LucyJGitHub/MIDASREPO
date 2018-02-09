@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       GOC0102 - On-Line Synchronisation of Global Layer MESSAGE   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD021155           Date 09Jul13              */
-/*       Prev Amend No. CCB023             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021155           Date 09Jul13              */
+/*                      CCB023             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 02Jun08              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Incorrect annotation                             */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
@@ -57,7 +59,7 @@
 /**********  DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(10)*/            /*CRE026 CCB023*/
 /**********  DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(10) VALUE('END')*/           /*CRE026 CCB023*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /**********  DCL        VAR(&JRNA)   TYPE(*CHAR) LEN(6)            */              /*CRE026 CCB023*/
@@ -211,5 +213,5 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM

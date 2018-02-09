@@ -8,22 +8,24 @@
 /*       FTC0240  - CL Component to control FT0240                   */
 /*                - Outgoing Payment Summary By Destination          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 074791             DATE  19JUL94             */
-/*       PREV AMEND NO. S01494             DATE  25MAY94             */
+/*       Prev Amend No. 074791             Date 19Jul94              */
+/*                      S01494             Date 25May94              */
 /*                      051416             DATE  26FEB93             */
 /*                      E25340             DATE  31MAY91             */
 /*                      S01194             DATE  20SEP90             */
 /*                      S01117             DATE  11SEP90             */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       074791 - Override spool file name if in regular payments    */
 /*                mode. Fixed during development of S01494.          */
 /*       S01494 - BLI Funds Transfer Enhancements                    */
@@ -49,7 +51,7 @@
         DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)                     /*S01117*/
         DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)                  /*S01117*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
         DCL        VAR(&RNTP) TYPE(*CHAR) LEN(7)                     /*S01494*/
 /**/
@@ -200,7 +202,7 @@ END:
         ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*E25340*/
 /* CLEAR EXTRACT FILE OTPAYEX */
              CLRPFM     FILE(OTPAYEX)

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Setup Cap/Floor/Collar TRAP')
@@ -9,14 +9,15 @@
       *                                                               *
       *  GOSETCFCO - Setup Cap/Floor/Collar TRAP record               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG11830           Date 11Aug06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. BUG11830           Date 11Aug06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CDL028             Date 07Feb05               *
       *                 BUG3860            Date 11Aug04               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG11830- branch of settlement account not defaulted         *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
@@ -180,4 +182,4 @@
       /COPY GOCPYSRC,GOPSSR
       *********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

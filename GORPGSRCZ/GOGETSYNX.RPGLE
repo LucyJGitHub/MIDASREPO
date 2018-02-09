@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Get synchronisation executables')             *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GOGETSYNX - Get Synchronisation Executables                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR1079991          Date 29Jan13               *
-      *  Prev Amend No. AR1064845          Date 05Dec12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1079991          Date 29Jan13               *
+      *                 AR1064845          Date 05Dec12               *
       *                 262126             Date 12Oct09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1079991 - Deleted zonal journal entry records were not     *
       *              removed from the global file                     *
       *  AR1064845 - OPNQRYF QRYSLT exceeds 5000 characters           *
@@ -254,7 +256,7 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 ** ZLFOVR
 OVRDBF     FILE(          ) SEQONLY(*YES 4000)                                                CLE041
 ** GLFOVR

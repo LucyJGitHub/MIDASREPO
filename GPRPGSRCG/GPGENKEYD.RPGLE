@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*  DSPFD FILE(GPZONEPD) TYPE(*ACCPTH)                           *
 /*XBIA*  OUTPUT(*OUTFILE) OUTFILE(QTEMP/GPFDA)                        *
@@ -12,10 +12,11 @@
       *                                                               *
       *  GPGENKEYD - Generate Key Data                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR863597           Date 09Dec11               *
-      *  Prev Amend No. AR807623           Date 03Aug11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR863597           Date 09Dec11               *
+      *                 AR807623           Date 03Aug11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR863597 - Duplicate record created when the branch was      *
       *             amended                                           *
       *  AR807623 - OPEN was issued to opened file GPKEYDPD           *

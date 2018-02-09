@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GO Download data control - CoB')                 *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GO000102 - Global Processing data dowload, CoB               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD020167           Date 23Apr13               *
-      *  Prev Amend No. AR1096739          Date 20Mar13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *                 AR1096739          Date 20Mar13               *
       *                 CCB023             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  AR1096739 - Secondary COB dashboard issues                   *
       *  CCB023 - COB Restructure - Input Cycle Termination           *

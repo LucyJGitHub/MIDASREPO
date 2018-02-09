@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP Artefacts Permission Audit Report')
@@ -13,10 +13,11 @@
       *                                                               *
       *  Called By: GOC004015 - Artefacts Permission Audit Report     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. CBF023             Date 04Jan17               *
-      *  Prev Amend No. MD020339A          Date 26Feb14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CBF023             Date 04Jan17               *
+      *                 MD020339A          Date 26Feb14               *
       *                 AR1097353          Date 26Mar13               *
       *                 AR1036892          Date 27Sep12               *
       *                 AR1036172          Date 24Sep12               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *  MD020339A - Amended Artefact Permission via BFTC is not      *
       *              reflected in the Auditability                    *

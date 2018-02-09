@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Generated Code - GLFRBLTD replication')                *
@@ -9,14 +9,16 @@
       *                                                               *
       *  GOGLFRBLTD - Bulk Update of Global File GZGLFRBLTD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD027375           Date 05Jun14               *
-      *  Prev Amend No. MD027208           Date 28May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027375           Date 05Jun14               *
+      *                 MD027208           Date 28May14               *
       *                 CGL155   *Create   Date 26Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027375 - Group limit details not reflected for all         *
       *             accounts included in the group (Recompile)        *
       *  MD027208 - RT postings not included in Nostro Group totals   *

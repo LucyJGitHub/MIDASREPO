@@ -8,20 +8,22 @@
 /*       FCC0220 - REPORT REQUESTS CONTROL PROGRAM OVERRIDE IBM      */
 /*                VERSION 2 FILES                                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 076789           DATE 03OCT94                */
-/*       PREV AMEND NO. 049424           DATE 11JAN93                */
+/*       Prev Amend No. 076789             Date 03Oct94              */
+/*                      049424             Date 11Jan93              */
 /*                      044847           DATE 23SEP92                */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*        076789 - Overrides moved to MLC0000                        */
 /*        049424 - IBM HAVE RENAMED THE OFFICE FILES AGAIN AT        */
 /*                 V2R2. THE PROGRAM HAS BEEN AMENDED TO CALL A      */
@@ -44,7 +46,7 @@
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL        VAR(&OLDNAME) TYPE(*CHAR) LEN(10)      /*049424*076789*/
 /************DCL        VAR(&IBMLVL) TYPE(*CHAR) LEN(6)        /*049424*076789*/
@@ -158,5 +160,5 @@
 /*  END OF PROGRAM PROCESSING  */
 /**/
 THEEND:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

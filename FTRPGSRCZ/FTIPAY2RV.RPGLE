@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Incoming Payments Retrieve - Ext')
@@ -12,17 +12,19 @@
       *  Function:  This module retrieve the details of extension     *
       *             file FTIPX1L0.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CFT032             Date 11Sep06               *
-      *  Prev Amend No. CER001  *CREATE    Date 25Apr05               *
+      *  Prev Amend No. CFT032             Date 11Sep06               *
+      *                 CER001  *CREATE    Date 25Apr05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT032 - Account Line in Field 50X in MT103 (Recompile)      *
       *  CER001 - LUX Upgrade to MidasPlus                            *
       *                                                               *
@@ -174,4 +176,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

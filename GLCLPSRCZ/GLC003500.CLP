@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       GLC003500 - Midas GL ATU Delete Selected Accounts           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CGL114  *CREATE    Date 04Jan10              */
+/*       Prev Amend No. CGL114  *CREATE    Date 04Jan10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL114 - Account Transfer Utility                           */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&REFERENCE &RTCD)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                      Misys International Banking Systems Ltd. 2010')
+                      Finastra International Limited 2010')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
  
              DCL        VAR(&REFERENCE) TYPE(*CHAR) LEN(10)
@@ -62,7 +64,7 @@
                MONMSG     MSGID(CPF0000 MCH0000)
  
  END:        CHGVAR     VAR(&CPYFLD) +
-                     VALUE('Copyright Midas-Kapiti International Ltd.')
+                     VALUE('Copyright Finastra International Limited')
  
              CLOF       OPNID(GLSLACPD)
              MONMSG     MSGID(CPF0000)

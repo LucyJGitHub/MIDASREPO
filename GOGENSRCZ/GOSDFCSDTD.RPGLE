@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Forecast Static Data')                        *
@@ -9,13 +9,15 @@
       *                                                               *
       *  GOSDFCSDTD - Bulk Update of Global File GZSDFCSDTD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD024037           Date 18Dec13               *
-      *  Prev Amend No. CGL145A  *CREATE   Date 08Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024037           Date 18Dec13               *
+      *                 CGL145A *CREATE    Date 08Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024037 - Facility availability Enquiry did not display a   *
       *             future datead charge to CL Balance (Recompile)    *
       *  CGL145A - Subsidiaries Daily Sweeping Forecast (Drop 2).     *

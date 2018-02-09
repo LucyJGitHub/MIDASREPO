@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GL Populate ZACCNTAB with postings only')        *
@@ -14,13 +14,15 @@
       *                                                               *
       *  Called By: GLC0600006                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1097218          Date 05Apr13               *
-      *  Prev Amend No. CGL142  *CREATE    Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1097218          Date 05Apr13               *
+      *                 CGL142  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1097218 - GLC0720 seq 10001 failed Out of Balance          *
       *  CGL142 - Tactical COB changes GL                             *
       *                                                               *

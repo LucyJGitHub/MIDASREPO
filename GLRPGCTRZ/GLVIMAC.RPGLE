@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate JE Item Account')                    *
@@ -10,7 +10,7 @@
       *  GLVIMAC - Validate Journal Batch Entry Item                  *
       *            Account                                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel.                     *
@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD031707           Date 02Jul15               *
-      *  Prev Amend No. MD024136           Date 08Jan14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031707           Date 02Jul15               *
+      *                 MD024136           Date 08Jan14               *
       *                 CGL135A            Date 20Sep13               *
       *                 MD000091           Date 07May13               *
       *                 AR782538           Date 03Jun11               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031707 - Review account validation type as Customer Number *
       *             may not be numeric anymore.                       *
       *  MD024136 - Accounting Rules program to default 01 to the     *
@@ -1560,7 +1562,7 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** WMsgArr
 Invalid Currency entered.
 Invalid Account Code entered.

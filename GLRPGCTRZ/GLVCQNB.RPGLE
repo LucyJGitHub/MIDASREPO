@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate JE Item Cheque Number')              *
@@ -9,7 +9,7 @@
       *                                                               *
       *  GLVCQNB    - Validate Journal Batch Entry Item Cheque No.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel.                     *
@@ -18,11 +18,12 @@
       *    applied to this source.                                    *
       *                                                               *
  
-      *  Last Amend No. AR784719           Date 13Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR784719           Date 13Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 239466             Date 19Apr06               *
+      *                 239466             Date 19Apr06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG3036            Date 02Jul04               *
       *                 BUG3037            Date 18Jun04               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR784719 - 6-digit cheque no. is not accepted. Patterned fix *
       *             with cheque maintenance validation process.       *
       *             (Child: AR784720)                                 *
@@ -505,4 +507,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

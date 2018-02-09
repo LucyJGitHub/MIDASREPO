@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate Margin Interest and Override')
@@ -10,19 +10,21 @@
       *  GLVXRMG    - Validate Margin Interest and                    *
       *                Interest Margin Override                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 225231             Date 24Feb04               *
-      *  Prev Amend No. 208221             Date 11Dec02               *
+      *  Prev Amend No. 225231             Date 24Feb04               *
+      *                 208221             Date 11Dec02               *
       * Midas Release 4 --------------- Base -------------------------*
       *                 CDE002  *CREATE    Date 01Feb00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  225231 - Allow zero rate as MidasPlus defaults it.           *
       *  208221 - Default Margin from Rate/Spread changes             *
       *  CDE002 - CCRM Revenue Analysis                               *
@@ -385,4 +387,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

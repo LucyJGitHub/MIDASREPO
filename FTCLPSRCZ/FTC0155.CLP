@@ -8,20 +8,22 @@
 /*                                                                   */
 /*       FTC0155    INCOMING PAYMENTS SELECTION                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO.  042167           DATE     21JUL92           */
-/*       PREV AMEND NO.  S01194           DATE     31AUG90           */
+/*       PREV AMEND NO.  042167           DATE     21JUL92           */
+/*                       S01194           DATE     31AUG90           */
 /*                       XXXXXX           DATE     DDMMMYY           */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       042167  -  Include CL Program for record locking            */
 /*       S01194  -  NEW DATABASE HANDLING                            */
 /*                                                                   */
@@ -31,7 +33,7 @@
 /************DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)                 /*S01194*/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*S01194*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
                                                                       /*042167*/
@@ -66,7 +68,7 @@
 /*END:*******ENDPGM                                                   /*S01194*/
 END:                                                                  /*S01194*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* CALL AOC8000 to release locks */                                   /*042167*/
 /**/                                                                  /*042167*/
              CHGVAR     VAR(&MODULE) VALUE('FT')                      /*042167*/

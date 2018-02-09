@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(CLOANX) TOFILE(CLOAN) SHARE(*NO)                 *
 /*XBIB*  OVRDBF FILE(CLOANS) TOFILE(CLOAN) SHARE(*NO)                 *
@@ -12,10 +12,11 @@
       *  GOXCLOAN - Extract Controller for Customer                   *
       *             Lending Loans                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR1056838          Date 15Nov12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1056838          Date 15Nov12               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CGO001AC           Date 06Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1056838 - Task Split's driver file use 6numeric for LNRF.  *
       *              Change LNRF from 6S0 to 6A to comply w/ Alpha    *
       *              Loan Reference Enhancement                       *
@@ -328,4 +330,4 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

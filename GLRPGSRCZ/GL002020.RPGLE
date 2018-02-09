@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Available Balance Enquiry')                   *
@@ -9,18 +9,20 @@
       *                                                               *
       *  GL002020 - Available Balance Enquiry                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. 248653             Date 17Feb12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 248653             Date 17Feb12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027A            Date 09May06               *
+      *                 CSD027A            Date 09May06               *
       *                 BUG5334 *CREATE    Date 10Sep04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  248653  - Format Overdraft Line to display the correct value *
       *            on the screen (Applied for AR914562)               *
       *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *

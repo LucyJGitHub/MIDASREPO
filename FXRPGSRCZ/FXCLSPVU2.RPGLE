@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX CLS Pay-in Schedule Validate & Update Dtl')
@@ -31,14 +31,15 @@
       *            the call to the message handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG8433            Date 20Jul05               *
-      *  Prev Amend No. CAP086             Date 08Jun05               *
+      *  Prev Amend No. BUG8433            Date 20Jul05               *
+      *                 CAP086             Date 08Jun05               *
       *                 BUG5671            Date 31Jan05               *
       *                 BUG5287            Date 26Jan05               *
       *                 BUG3018            Date 21Jan05               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG8433- Not to validate sequence no. if second pass         *
       *           (confirm complete) in FXCLSPRTV.                    *
       *  CAP086 - Introduce Auto Authorisation to the API's           *
@@ -950,4 +952,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

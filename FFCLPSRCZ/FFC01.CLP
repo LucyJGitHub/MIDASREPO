@@ -7,10 +7,11 @@
 /*                                                                   */
 /*   FFC01  -  INPUT CYCLE INITIATION FILE REORGANIZATION            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. LLN022A            Date 03Jun15              */
-/*       Prev Amend No. BUG28060           Date 23Aug10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. LLN022A            Date 03Jun15              */
+/*                      BUG28060           Date 23Aug10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -41,6 +42,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       LLN022A - BOE Upgrade to MidasPlus - incorporate            */
 /*                 hook FFC01008                                     */
 /*   BUG28060 - File TRANSA not reorganize                           */
@@ -122,7 +124,7 @@
              DCL        VAR(&MRKTCHK) TYPE(*CHAR) LEN(10)                                 /*228542*/
 /***********                                                                  */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /***********                                                                  */
              DCLF       FILE(MARKTD)
@@ -1066,7 +1068,7 @@ END1:        ENDDO                                                    /*S01456*/
 /************DLTF       FILE(QTEMP/TRSETD2)                    /*E21756*FO0013*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/                                                                  /*E28693*/
              RCLRSC                                                   /*E28693*/
 /**/                                                                  /*E28693*/

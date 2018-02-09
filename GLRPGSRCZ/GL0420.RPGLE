@@ -11,11 +11,12 @@
 0004 F*                                                               *
 0005 F*  GL0420 - BALANCE STATEMENTS (A/C FORMATS)                    *
 0006 F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CGL184             Date 07Dec16               *
-      *  Prev Amend No. MD037536           Date 26Apr16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *                 MD037536           Date 26Apr16               *
       *                 MD033999           Date 29Jun15               *
       *                 AR1014455          Date 23Jan14               *
       *                 MD020563           Date 21May13               *
@@ -156,6 +157,7 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL184 - New Frequencies for Account Statements              *
       *  MD037536 - GLC43 components failed with �Record in file      *
       *             GL0420P4 truncated at end of line�.               *
@@ -7994,7 +7996,7 @@
       *                                                                   S01408
      O/COPY WNCPYSRC,GL0420OP27                                           S01408
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA TYPE
 GRDNC
 **CTDATA ZFMD

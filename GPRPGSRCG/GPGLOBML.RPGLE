@@ -1,6 +1,6 @@
      H DEBUG
      H EXTBININT(*NO)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GP Global updates - ML')                         *
@@ -10,13 +10,14 @@
       *                                                               *
       *  GPGLOBML - Global Updates - ML                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *  If file T_MLMTRAN is changed, this will need to be changed   *
       *  as well                                                      *
       *                                                               *
-      *  Last Amend No. AR466512           Date 19Aug14               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR466512           Date 19Aug14               *
+      *                 CLE148             Date 23Jul12               *
       *                 AR733372           Date 05Apr11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR466512 - Global system value 'UseCtryCitizenship' is not   *
       *             considered in Manual Transactions updates.        *
       *  CLE148 - Alpha Loan Reference                                *
@@ -643,7 +645,7 @@
       /COPY GPCPYSRCG,GPPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** POWER                                                                                     BUG3368
 000000001                                                                                    BUG3368
 000000010                                                                                    BUG3368

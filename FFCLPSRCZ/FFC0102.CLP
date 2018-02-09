@@ -7,18 +7,20 @@
 /*                                                                   */
 /*   FFC0102 - INPUT CYCLE INIT. MARKET CENTER AUTOMATIC OPEN        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   LAST AMEND NO. 092954 *CREATE     DATE 13SEP95                  */
+/*   PREV AMEND NO. 092954 *CREATE     DATE 13SEP95                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*  MD046248 - Finastra Rebranding                                   */
 /*  092954 - Automatically open a market centre whose EOC was run    */
 /*           as part of close of business processing.                */
 /*                                                                   */
@@ -39,7 +41,7 @@
              DCL        VAR(&FFEOC) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -83,5 +85,5 @@ ABNOR:
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

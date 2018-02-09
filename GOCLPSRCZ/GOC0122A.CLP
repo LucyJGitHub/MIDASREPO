@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       GOC0122A - MIDAS GO RESET COB DQ MESSAGES STATUS DATA AREA  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG9647 *CREATE    Date 19Dec05              */
-/*       Prev Amend No. XXXXXX             Date ddmmmyy              */
+/*       Prev Amend No. BUG9647 *CREATE    Date 19Dec05              */
+/*                      XXXXXX             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG9647- Syndications Manager Correspondence does not       */
 /*                generate any correspondence during COB             */
 /*                                                                   */
@@ -25,7 +27,7 @@
              PGM        PARM(&EVENTTYPE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
              DCL        VAR(&EVENTTYPE) TYPE(*CHAR) LEN(24)
  
@@ -49,8 +51,8 @@
                           *CAT ' ended abnormally - see job log') +
                           TOMSGQ(MOPERQ MRUNQ)
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

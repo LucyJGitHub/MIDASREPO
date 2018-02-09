@@ -7,10 +7,11 @@
 /*                                                                   */
 /*   FFC0230  -  MANUAL POSITION CLOSE OUT INPUT                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 261122             Date 15Jul09              */
-/*       Prev Amend No. 261052             Date 09Jul09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 261122             Date 15Jul09              */
+/*                      261052             Date 09Jul09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -30,6 +31,7 @@
 /*-------------------------------------------------------------------*/
 /*     CHANGE DESCRIPTIONS                                           */
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       261122 - Futures and Options - Close-out Function Errors.   */
 /*                There are no transactions listed for position      */
 /*                close-out.                                         */
@@ -109,7 +111,7 @@
              DCL        VAR(&SLCT10) TYPE(*CHAR) LEN(17) +
                         VALUE('(PTFR *EQ "    ")')                    /*S71062*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   CALL MANUAL CLOSURE PROMPT SCREEN FOR INPUT PARAMETERS         */
@@ -397,7 +399,7 @@ U1LOOP:
              IF         COND(%SWITCH(0XXXXX00)) THEN(GOTO U1LOOP)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*END:********ENDPGM                                               */ /*E44676*/
 /**/                                                                  /*E44676*/
 END:                                                                  /*E44676*/

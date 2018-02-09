@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       GPMNTTRIG - Maintain Triggers                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. CCB022             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB022             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CUP099             Date 10Jun05              */
+/*                      CUP099             Date 10Jun05              */
 /*                      BG5090R1           Date 18Feb05              */
 /*                      BG5090R            Date 14Jan04              */
 /*                      BG5090             Date 13Aug04              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB022 - COB Restructure - COB File Manager                 */
 /*       CUP099 - Error handling can lead to looping.                */
 /*       BG5090R1 - Now it adds two triggers... Remove sequence      */
@@ -87,7 +89,7 @@
  
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /* Global monitor message */
@@ -470,7 +472,7 @@ CHECK:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)

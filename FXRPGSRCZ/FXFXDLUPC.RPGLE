@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Deals database update controller')            *
@@ -9,10 +9,11 @@
       *                                                               *
       *  FXFXDLUPC - FX DEALS DATABASE UPDATE CONTROLLER              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -91,10 +93,10 @@
      F                                     IGNORE(DLDLDCD0)                                   244036
      F                                     IGNORE(DLDLDGD0)                                   244036
      F                                     USROPN                                             257309
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FXFXDLU010
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -113,19 +115,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006--------------
       ** The following /COPY line includes the definitions for fields           CAP006
       ** used in checking whether there are messages on the data queue.         CAP006
@@ -137,14 +139,14 @@
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in FX API update')
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID FX DEAL
      D FXVFXD        E DS                  EXTNAME(FXVFXDLPD)
- 
+
      D FXFXDLUPC       DS             1
- 
+
      D Object          S             10A   INZ('FXFXDLUPC')
      D LockObj         S             10A   INZ('FXFXDLLCK')                                   201589
      D Lib             S             10A   INZ('*LIBL')
@@ -158,34 +160,34 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,FXFXDLU011
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
       /COPY WNCPYSRC,FXFXDLU001
- 
+
       ** Set up the name of the server/database updater data queue.             CAP006
      C                   EVAL      DtaQName = 'APFXDLDTQ'                       CAP006
                                                                                 CAP006
@@ -223,36 +225,36 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       /COPY WNCPYSRC,FXFXDLU002
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     FXVFXDLPD
- 
+
       ** READ VALID FX DEAL
      C                   READ      FXVFXDLD0                              99    *
      C     *IN99         DOWEQ     '0'
- 
+
       /COPY WNCPYSRC,FXFXDLU003
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lowere level modules
       **  will include the key information
      C                   EVAL      ARFOTranID = F3FRNT
      C                   EVAL      ARFOAsocID = F3AFRT
      C                   EVAL      ARRprLocn  = F3REPA
- 
+
       /COPY WNCPYSRC,FXFXDLU004
- 
+
       ** FX DATABASE UPDATE
      C                   CALLB     'FXFXDLUPF'
      C**********         PARM                    @@RTCD            7            CAP006
      C                   PARM      *BLANKS       @@RTCD            7            CAP006
      C                   PARM                    FXVFXD
- 
+
       /COPY WNCPYSRC,FXFXDLU005
- 
+
       ** DL DATABASE UPDATE IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C                   ROLBK
@@ -267,9 +269,9 @@
      C     F3CHTP        IFEQ      'I'
      C     F3CHTP        OREQ      'A'
      C     F3CHTP        OREQ      'R'
- 
+
       /COPY WNCPYSRC,FXFXDLU006
- 
+
      C                   CALLB     'FXFXDLUPD'
      C                   PARM                    @@RTCD            7
      C                   PARM                    FXVFXD
@@ -287,24 +289,24 @@
      C                   END
      C                   END                                                    CAP006
      C                   END
- 
+
       /COPY WNCPYSRC,FXFXDLU007
- 
+
       * COMIT UPDATES IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'                                    CAP006
      C                   ROLBK
      C                   ELSE
      C                   DELETE    FXVFXDLD0
- 
+
       /COPY WNCPYSRC,FXFXDLU014
- 
+
      C                   COMMIT
      C/COPY WNCPYSRC,FXFXDLUC01
      C                   END
- 
+
       /COPY WNCPYSRC,FXFXDLU008
- 
+
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
@@ -315,9 +317,9 @@
      ** Write details of record to error file (same format as FXVFXDLPD)
      C                   WRITE     FXVFXDLERR
      C                   DELETE    FXVFXDLD1
- 
+
       /COPY WNCPYSRC,FXFXDLU015
- 
+
      ** Send message to system operator
      C                   MOVEL     DBerrUpd      DBError          28
      C                   CALLB     'ZAMSGTOOPR'
@@ -325,9 +327,9 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID FX DEAL
      C                   READ      FXVFXDLD0                              99    *
      C                   END
@@ -342,15 +344,15 @@
      C                   END
       ** End loop for data queue prompt
      C                   END
- 
+
       /COPY WNCPYSRC,FXFXDLU009
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,FXFXDLU012
- 
+
       *****************************************************************                       244036
       /EJECT                                                                                  244036
       *****************************************************************                       244036
@@ -391,14 +393,14 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       *  Define data area used to check if DB update running
      C     *DTAARA       DEFINE                  FXFXDLUPC
       *  Define key list for FXVFXDLL1
      C     @KFXDL1       KLIST
      C                   KFLD                    @Dealno           6 0
      C                   KFLD                    @Timestamp
- 
+
       *  Check if an existing DBU_FXDL job is active in the subsystem.                        201589
                                                                                               201589
      C                   CALL      'SCC0520'                                                  201589
@@ -411,24 +413,24 @@
      C                   PARM                    Return2                                      201589
                                                                                               201589
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -438,14 +440,14 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,FXFXDLU013
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -458,4 +460,4 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -9,77 +9,79 @@
       *                                                               *
       *  GL000020 - Midas GL Extension Table Delete Handler           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. 263384  *Create    Date 22Jan10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 263384  *Create    Date 22Jan10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  263384 - Batch Input Error. Applied fix 249259 and 251718:   *
       *           Create a GL Extension Table Delete handler for      *
       *           Journal Entry                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named Constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       *
       ** Local Data Area Data Structure
       *
      D LDA           E DS                  EXTNAME(LDA) DTAARA(LDA)
- 
+
       *
       ** Copyright Statement Array
       *
      D CPY@            S             80A   DIM(1) CTDATA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       *
       ** Entry Parameters
       *
      D PRetCode        S              7A
- 
+
       *
       ** Key Fields
       *
- 
+
       *
       ** Delete Counter to prevent failing SQL Delete statement
       *
      D DelCTR          S              9s 0
- 
+
       ** +---------------- Start of Main Processing ------------------+
       ** ¦                                                            ¦
       ** ¦  *INZSR is automatically executed at program activation.   ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *
       ** Make sure that record exist in the file before deletion
       *
@@ -133,17 +135,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      PRetCode = '*ERROR '
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   DUMP
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -153,12 +155,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRetCode
- 
+
      C                   EXSR      SRZONE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -171,9 +173,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZONE        BEGSR
- 
+
      C                   MOVEL     *BLANK        I#RTCD            7
      C                   MOVEL     *BLANK        I#ERMS           50
       *
@@ -209,9 +211,9 @@
      C                   EVAL      I#ERMS = 'NO ZONE PRESENT'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

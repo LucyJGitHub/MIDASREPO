@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       GOC0040 - Update Global TRAP                                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
 /*   WARNING - THIS PROGRAM IS RUNNING IN TASK SPLIT MODE.           */               /*AR1097467A*/
 /*             DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT   */               /*AR1097467A*/
 /*             ABLE TO RUN IN TASK SPLIT.                            */               /*AR1097467A*/
 /*                                                                   */               /*AR1097467A*/
-/*       Last Amend No. AR1097467A         Date 11Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467          Date 11Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGP001  *CREATE    Date 23May03              */
+/*                      CGP001  *CREATE    Date 23May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1097467A - Expected 15% COB run optimization not met      */
 /*       CGP001 - Global Processing                                  */
 /*                                                                   */
@@ -53,7 +55,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /* Global monitor message */
@@ -245,7 +247,7 @@ RESTART:                                                                        
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                                       /*AR1097467A*/
              ENDCMTCTL                                                                /*AR1097467A*/
              MONMSG     MSGID(CPF0000)                                                /*AR1097467A*/

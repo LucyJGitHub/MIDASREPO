@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Retrieve Postings by Network Account')        *
@@ -12,10 +12,11 @@
       *  Function:  This program retrieves the End of Day postings    *
       *             by Network/Account/Message/Type/Destination.      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD026965           Date 16May14               *
-      *  Prev Amend No. CGL135A            Date 10Jul13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026965           Date 16May14               *
+      *                 CGL135A            Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22979A          Date 12Mar09               *
       *                 CER030             Date 09Jul08               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026965 - MT940 COB Extract Issue                           *
       *             Amended hook: CGL135_019                          *
       *  CGL135A - Accounting Rules Process                           *
@@ -738,4 +740,4 @@
  
       *========================================================================*
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

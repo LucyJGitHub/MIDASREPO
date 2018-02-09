@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate Incoming Validation Flag')
@@ -9,14 +9,16 @@
       *                                                               *
       *  FTVOMTP  - Validate OP Incoming Validation Flag              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG24396           Date 26Jun09               *
-      *  Prev Amend No. CSW209  *CREATE    Date 01Apr09               *
+      *  Prev Amend No. BUG24396           Date 26Jun09               *
+      *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG24396 - Error on FTVOCBN                                  *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
@@ -281,4 +283,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

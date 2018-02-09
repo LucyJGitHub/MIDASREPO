@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Validate risk factor')
@@ -12,17 +12,19 @@
       *  Function:  This module will validate the Risk Factor         *
       *             value entered.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 245143             Date 24Jan07               *
+      *  Prev Amend No. 245143             Date 24Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAP183  *Create    Date 05Jan06               *
+      *                 CAP183  *CREATE    Date 05Jan06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  245143 - Perform correct validation of risk factor.          *
       *  CAP183 - Conversion of Market Prices Input into modular      *
       *           structure to use APIs.                              *
@@ -220,4 +222,4 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

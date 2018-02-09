@@ -7,15 +7,16 @@
     /*                                                               */
     /*  FCC0301 - TODAY'S REPORTING AUDIT LIST                       */
     /*                                                               */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
     /*                                                               */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-    /*       LAST AMEND.NO. 090740           DATE 11AUG95            */
+/*       Prev Amend No. 090740             Date 11Aug95              */
     /*                                                               */
     /*****************************************************************/
     /*                                                               */
@@ -23,6 +24,7 @@
     /*                                                               */
     /*****************************************************************/
     /*                                                               */
+/*       MD046248 - Finastra Rebranding                              */
     /*  090740 - Program may loop in muli-branched systems because   */
     /*           both FC0600 and the access object program AOBRCHR0  */
     /*           (called from FC0600) use SDBRCHL1 and both use the  */
@@ -42,14 +44,14 @@
              DCL        VAR(&LVL) TYPE(*CHAR) LEN(1)
              DCL        VAR(&ETTY) TYPE(*CHAR) LEN(3)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGJOB     SWS(XXXXXX00)
  
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)

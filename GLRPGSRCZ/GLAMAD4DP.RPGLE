@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL A/c maintenance display - 4th detl scrn')     *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GLAMAD4DP -  Account Maintenance Display - Fourth Detail Scrn*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CER049             Date 06Dec10               *
       *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165  - Dual Withholding Tax (Recompile)                   *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -72,13 +74,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FGLAMADDDF CF   E             WORKSTN IGNORE(GLAMADD1:GLAMADD2:
      F                                            GLAMADD3:GLAMADD5)
-
+ 
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       *                                                               *
       *  ID F  C  H  L    FUNCTION OF INDICATORS                      *
@@ -107,25 +109,25 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -133,28 +135,28 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **---------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -170,57 +172,57 @@
      D ACSQN                 160    161  0                                                    222549
      D BRANCH                162    164                                                       222549
      D AREF15                141    161                                                       222549
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D*@Z0******       S              1    DIM(8) CTDATA PERRCD(8)              CDE002
      D @Z0             S              1    DIM(12) CTDATA PERRCD(12)            CDE002
-
+ 
      D*@EI******       S              1    DIM(8)                               CDE002
      D @EI             S              1    DIM(12)                              CDE002
-
+ 
      D ZMUSER          DS            17
       ** ZMUSER data layout
      D  DBRN                  11     13
-
+ 
      D RUNDAT          DS            13
       ** Rundate data area
      D  AGMBIN                13     13
-
+ 
      D NewAcPrim     E DS                  EXTNAME(GLAMADPD)
      D NewAcComm     E DS                  EXTNAME(GLAMCOPD)
      D OKAcComm      E DS                  EXTNAME(GLEAMCOPD)
      D NwAcFilFmt    E DS                  EXTNAME(GLVAMADPD)
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
-
+ 
      D RETABLE       E DS                  EXTNAME(TABTBRE)
       ** EXTERNAL DS FOR RETAIL TABLE FILE
-
+ 
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
       ** External DS for Retail Details
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** External DS for Midas Modules Details
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
-
+ 
      D/COPY WNCPYSRC,GLAMA4XD01
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -308,13 +310,13 @@
      C                   MOVE      *IN49         @IN49
       *
      C                   ENDSR
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **---------------------------------------------------------------
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -591,6 +593,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 00000000

@@ -7,16 +7,17 @@
 /*                                                                  */
 /*   GLC2817    Fontis Background Process Startup/Shutdown          */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC023             Date 29Jan04              */
+/*       Prev Amend No. CSC023             Date 29Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*       Prev Amend No. 175255             Date 21Feb00              */
+/*                      175255             Date 21Feb00              */
 /*                      171915             Date 07Dec99              */
 /* Midas DBA 3.01 ---------------------------------------------------*/
 /*                      169571           Date 21Oct99               */
@@ -25,6 +26,7 @@
 /*                                                                  */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
 /*   175255 - Do not submit new job if current one is on queue.     */
@@ -36,7 +38,7 @@
              PGM        PARM(&CNAM &CSEQ &OPER &MODE &RTCD)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM)   TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ)   TYPE(*DEC)  LEN(5 0)
@@ -214,6 +216,6 @@
 /**/
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

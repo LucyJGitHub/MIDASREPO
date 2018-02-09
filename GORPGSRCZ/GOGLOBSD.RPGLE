@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Global updates - SD')                         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GOGLOBSD - Global Updates - SD                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER073A            Date 05Sep17               *
-      *  Prev Amend No. CER073             Date 10Jul17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER073A            Date 05Sep17               *
+      *                 CER073             Date 10Jul17               *
       *                 CGL052             Date 02Dec15               *
       *                 CGL165             Date 23Feb15               *
       *                 CLE164             Date 18Aug14               *
@@ -77,6 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
       *  CER073 - AnaCredit Reporting                                 *
       *  CGL052 - Amend Washout Processing                            *
@@ -1316,7 +1318,7 @@ O    C                   KFLD                    SBBCUST                        
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 **  CMDSTR                                                                                   BUG7825
 OVRDBF FILE(SDBRCHL0) SHARE(*NO)                                                             BUG7825
 DLTOVR FILE(SDBRCHL0)                                                                        BUG7825

@@ -7,15 +7,16 @@
 /*                                                                   */
 /*   FFC0840  -  MARGIN CALCULATION (EOC IN COB)                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Last Amend No. 175554             Date 18Oct02              */
-/*       Prev Amend No. 154837             Date 18Oct02              */
+/*       Prev Amend No. 175554             Date 18Oct02              */
+/*                      154837             Date 18Oct02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CCB009             Date 01Jun00              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*  MD046248 - Finastra Rebranding                                   */
 /*  175554   Amendment to fix 161028 - need to check that market     */
 /*           status is not 'S' (Setup) before processing, as the     */
 /*           file setup for new markets is done in ICI so the file   */
@@ -51,7 +53,7 @@
 /**********  DCL        VAR(&FFEOC) TYPE(*CHAR) LEN(62)                                   /*154837*/
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(1)                 /*082461*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                      CCB009*/
 /* Declare variable CCB009 - flag for switchable feature                CCB009*/
@@ -179,5 +181,5 @@ ABNOR:                                                                /*079666*/
                                                                       /*079666*/
 ENDPGM:                                                               /*079666*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

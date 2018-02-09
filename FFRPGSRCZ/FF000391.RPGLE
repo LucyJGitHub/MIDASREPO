@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Transactions update phase II')
@@ -15,14 +15,15 @@
       *  Component of: FFC1009 - Transaction Update Phase 2 (EOC)     *
       *                FFC0790 - Transaction Update Phase 2 (COB)     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 223424             Date 26May06               *
-      *  Prev Amend No. 222971             Date 26May06               *
+      *  Prev Amend No. 223424             Date 26May06               *
+      *                 222971             Date 26May06               *
       *                 219682             Date 26May06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL020             Date 12Dec02               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  223424 - Generate reversal of premium when deal is reversed. *
       *  222971 - Amended program in such a way that any deletion of  *
       *           Trade done within the day will produce a reversal of*

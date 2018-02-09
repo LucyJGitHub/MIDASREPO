@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FD MM interest rates repair browse')
@@ -16,15 +16,16 @@
       *            - picks off the interest rate that the user        *
       *              has selected.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG1625            Date 19May04               *
+      *  Prev Amend No. BUG1625            Date 19May04               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSC011             Date 18Sep01               *
+      *                 CSC011             Date 18Sep01               *
       *                 196570             Date 20Jul01               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG1625 - Commitment Control Changes for MidasPlus           *
       *  CSC011 - 24X7 Midas Availability                             *
       *  196570 - Patch for Market Data Feed (recompile)              *
@@ -784,6 +786,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  Array of error messages - ErrorText
 The last transaction was not applied to the database

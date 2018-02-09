@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Setup Equation Consumer Account TRAP Records')
@@ -9,16 +9,18 @@
       *                                                               *
       *  GOSETCBCA - Setup Equation Consumer Account TRAP Records     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14101A          Date 29Jun07               *
-      *  Prev Amend No. BUG14101           Date 19Jun07               *
+      *  Prev Amend No. BUG14101A          Date 29Jun07               *
+      *                 BUG14101           Date 19Jun07               *
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG14101A - Recompile due to LIBL                            *
       *  BUG14101 - Background job EQ_ONL_SYN is generated errors     *
       *             and looping                                       *
@@ -269,4 +271,4 @@
       /COPY GOCPYSRC,GOPSSR
       *********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

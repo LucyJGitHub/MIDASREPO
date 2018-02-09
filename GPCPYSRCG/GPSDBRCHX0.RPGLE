@@ -4,14 +4,16 @@
       *                                                               *
       *  GPSDBRCHX0 - On-Line Update of Global File GZSDBRCHX0        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL052             Date 02Dec15               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL052             Date 02Dec15               *
+      *                 CGP017             Date 06Aug12               *
       *                 BUG10215 *REBUILD  Date 27Sep06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL052 - Amend Washout Processing                            *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *

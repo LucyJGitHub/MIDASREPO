@@ -8,18 +8,19 @@
 /*       FTC0050  - CL COMPONENT TO CONTROL FT0050                  */
 /*                  INCOMING PAYMENTS MAINTENANCE.                  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC022             Date 24Feb04              */
+/*       Prev Amend No. CSC022             Date 24Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01435            DATE  22JUL93             */
+/*                      S01435             Date 22Jul93              */
 /*                      S01428            DATE  27JUN93             */
 /*                      042167            DATE  15APR93             */
 /*                      S01259            DATE  11NOV91             */
@@ -27,6 +28,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
 /*       S01435  -  Incoming Message Management.                    */
 /*       S01428  -  Remove any unprocessed Reserved Electronic      */
@@ -39,7 +41,7 @@
              PGM        PARM(&SORT &PREF &RTCD &WLINK)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL        VAR(&DATA) TYPE(*CHAR) LEN(44)               /*S01194*/
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)               /*S01194*/
@@ -217,7 +219,7 @@
              DLTOVR     FILE(MSMSI2L9)                               /*S01259*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*END:*********ENDPGM**********                                       /*042167*/
 END:                                                                  /*042167*/
 /* */                                                                 /*042167*/

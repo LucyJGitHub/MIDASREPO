@@ -9,10 +9,11 @@
      F*                                                               *
      F*    GL4114 - Daily Journal Summary Extract                     *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD024065           Date 11Dec13               *
-      *  Prev Amend No. CGL127AQ           Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024065           Date 11Dec13               *
+      *                 CGL127AQ           Date 06Aug12               *
       *                 CGL120             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP204             Date 03Mar10               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024065 - Series of logs with decimal data error were       *
       *             produced by GLC4114 component                     *
       *  CGL127AQ - COB Restructure - GL COB Optimisation Phase 1     *
@@ -481,4 +483,4 @@
      C********************************************************************
      C**
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

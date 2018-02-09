@@ -7,15 +7,16 @@
 /*                                                                   */
 /*   FFC0680  -  CLIENT COB UPDATES (COB)                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CAP067             Date 21Feb02              */
+/*                      CAP067             Date 21Feb02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CCB009             Date 01Jun00              */
@@ -29,6 +30,7 @@
 /*                  E20352             DATE 04JAN90                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER0001 - LUX Upgrade to MidasPlus                          */
 /*   CAP067 - Make PF/FFDEALS and LF/FFDLS1 permanent files.         */
 /*   CCB009 - Journal files throughout close of business             */
@@ -56,7 +58,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*S01117*/
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(1)                 /*082461*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                      CCB009*/
 /* Declare variable CCB009 - flag for switchable feature                CCB009*/
@@ -207,6 +209,6 @@ END:                                                                  /*082461*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*082461*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM
 /**/

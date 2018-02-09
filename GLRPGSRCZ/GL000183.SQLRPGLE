@@ -14,12 +14,14 @@
       *                                                               *
       *  Called By: GLC000183 - User Access Audit File Purge          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CGL183    *Create  Date 09Dec16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL183    *Create  Date 09Dec16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL183 - User Access Audit of Account Enquiry functions      *
       *                                                               *
       *****************************************************************

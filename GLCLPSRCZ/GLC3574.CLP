@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       GLC3574 - Account Details Authorisation - Detail Rpt        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSD012  *CREATE    Date 15Oct02              */
+/*                      CSD012  *CREATE    Date 15Oct02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       CSD012 - Standing Data Authorisation                        */
 /*                                                                   */
@@ -25,7 +27,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
              DCL        VAR(&RSEQ)  TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV)  TYPE(*CHAR) LEN(1)
@@ -121,7 +123,7 @@
                           -GL3574') TOMSGQ(MRUNQ)
              SNDPGMMSG  MSG('JOB TERMINATED - DATABASE IN ERROR +
                           -GL3574') TOMSGQ(MOPERQ)
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
                           Banking Systems Ltd.')
 END:
              ENDPGM

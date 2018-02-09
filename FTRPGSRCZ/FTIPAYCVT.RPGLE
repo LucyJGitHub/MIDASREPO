@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Incoming paymnts convert file to scrn fmt')   *
@@ -18,11 +18,12 @@
       *                FTIPAYCTL                                      *
       *                FTIPAYRPR                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039986           Date 10Aug16               *
-      *  Prev Amend No. MD024011           Date 10Aug16               *
-      *                 AR1090283          Date 10Aug16               *      
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039986           Date 10Aug16               *
+      *                 MD024011           Date 10Aug16               *
+      *                 AR1090283          Date 10Aug16               *
       *                 CFT157             Date 29Aug14               *
       *                 AR1079259          Date 21Jan13               *
       *                 CFT120             Date 28Sep12               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
       *  MD024011 - Pb when job name is QZDASSINIT                    *
       *           - Applied for MD-39986.                             *
@@ -1204,7 +1206,7 @@
      C                   Z-ADD     4             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   IF        CFT009 = 'Y'                                 CFT009
      C                   EVAL      PINBDP = A6NBDP                              CFT009
      C                   ENDIF                                                  CFT009
@@ -1299,7 +1301,7 @@
      C                   ENDIF
       *
      C                   ENDIF
-
+ 
      C                   IF        CFT010 = 'Y'                                 CFT009
      C                   EVAL      VAT9 = VTMIC1                                CFT009
      C                   EVAL      VAT10 = VTMIC2                               CFT009
@@ -2408,4 +2410,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

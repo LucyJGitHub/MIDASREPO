@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Incoming payments interface controller')      *
@@ -33,10 +33,11 @@
       *                                                               *
       *  Component of: FTIPAYCTL                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1090283          Date 10Aug16               *
-      *  Prev Amend No. MD025111           Date 24Feb14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *                 MD025111           Date 24Feb14               *
       *                 CFT151             Date 21Mar14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSC054             Date 23Feb12               *
@@ -82,6 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
       *            - Applied for MD-39986.                            *
@@ -4245,7 +4247,7 @@
      C                   Z-ADD     016           DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     PRTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CGL009            1
      C                   ELSE
@@ -4271,7 +4273,7 @@
      C                   Z-ADD     017           DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     PRTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CFT004            1
      C                   ELSE
@@ -4824,4 +4826,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

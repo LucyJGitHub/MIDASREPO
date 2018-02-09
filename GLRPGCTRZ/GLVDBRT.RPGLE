@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate Debit Rate/Spread & Sign')
@@ -9,20 +9,22 @@
       *                                                               *
       *  GLVDBRT    - Validate Debit Rate/Spread and Sign             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG5525            Date 26Jan05               *
-      *  Prev Amend No. BUG4859            Date 15Nov04               *
+      *  Prev Amend No. BUG5525            Date 26Jan05               *
+      *                 BUG4859            Date 15Nov04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
       *                 CAP035  *Create    Date 19Mar99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG5525 - Validation of DR interest calculation type/subtype *
       *            is incorrect.  If spread rate has been inserted,   *
       *            DR interest calculation type/subtype should not be *
@@ -287,4 +289,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Send Message to MQ Queue')                    *
@@ -9,13 +9,15 @@
       *                                                               *
       *  FT000988 - Midas FT Send message to MQ Queue                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD031644           Date 09Jan15               *
-      *  Prev Amend No. CFT158  *CREATE    Date 14Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031644           Date 09Jan15               *
+      *                 CFT158  *CREATE    Date 14Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031644 - SP7 Build issue (Rework of CFT158 Return          *
       *             Status of Interfaced FT Payments). Unable         *
       *             to compile GP002900 due to zonal access.          *
@@ -307,7 +309,7 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012
 **  STATMSG
 FTM7126Payment awaits authorisation.
 FTM7123Payment deleted after a pending approval.

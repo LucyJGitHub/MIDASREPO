@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Stamp Tax Details Screen')                    *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Function:  This program controls screen GL008102DF           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd 2010             *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. AR888911           Date 26Jan12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR888911           Date 26Jan12               *
       *                 AR879983           Date 21Dec11               *
       *                 AR853257           Date 04Nov11               *
       *                 AR824348           Date 02Sep11               *
@@ -23,6 +24,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR888911 - In reversing a deal, REV column in Stamp Tax      *
       *             Movements Enquiry is not changing from N to Y     *

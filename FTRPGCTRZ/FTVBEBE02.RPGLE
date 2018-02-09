@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate beneficiary - detail')               *
@@ -9,7 +9,7 @@
       *                                                               *
       *  FTVBEBE02 - Validate Beneficiary - Detail                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG25235           Date 29Jul09               *
       *                 CSW209             Date 01Apr09               *
@@ -48,7 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSW215 - SWIFT Changes 2015                                  *      
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW215 - SWIFT Changes 2015                                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG25235 - Beneficiary must not be a valid account if        *
       *             Generate OP Flag is set to 'Y'                    *
@@ -1060,7 +1062,7 @@
      C                   ENDIF                                                  CSW200
       ** Check if SWIFT 2015enhancement is installed                                          CSW215
       *                                                                                       CSW215
-     C                   CALL      'SWIF2015'                                                 CSW215 
+     C                   CALL      'SWIF2015'                                                 CSW215
      C                   PARM      *BLANKS       PRTCD                                        CSW215
                                                                                               CSW215
      C                   IF        PRTCD = 'CSW2015'                                          CSW215
@@ -1086,6 +1088,6 @@
                                                                                 CSW200
       ** /CSW200 change/ Compile-time array ArrDig added                        CSW200
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  CTDATA ArrDig
 0123456789

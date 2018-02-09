@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       **********************************************************************
 /*STD *  RPGBASEMOD                                                        *
 /*EXI *  TEXT('Midas FT RFT credit display 3')
@@ -12,21 +12,23 @@
       *  Function:  This module display a detail of a Request For          *
       *  Transfert                                                         *
       *                                                                    *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                                    *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG10602           Date 16Feb06               *
+      *  Prev Amend No. BUG10602           Date 16Feb06               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. 188649             Date 09Feb01                    *
+      *                 188649             Date 09Feb01               *
       * Midas DBA 3.03 ----------------------------------------------------*
       *                 CFT006  *CREATE    Date 08Oct99                    *
       *                                                                    *
       *--------------------------------------------------------------------*
       *                                                                    *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG10602 - MidasPlus Error occurred  (Recompiled)            *
       *  188649 - Include authorised text on screen                        *
       *  CFT006 - Swift messages MT101/MT102                               *
@@ -769,4 +771,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       **********************************************************************
 ** Ctdata CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

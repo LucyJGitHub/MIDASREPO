@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate transfer commission tariff')         *
@@ -9,12 +9,13 @@
       *                                                               *
       *  FTVTFTA  - Validate Transfer Commission Tariff               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD034973           Date 16Jul15               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034973           Date 16Jul15               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034973 - FT Payment Charges defaulting error               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -295,11 +297,11 @@
       * VOVRRDE - END OF OVERRIDE FLAG VALIDATION                     *
       *****************************************************************
       *****************************************************************                     MD034973
-      ** GetChargeCust- Get Customer to Default Charges                                     MD034973 
+      ** GetChargeCust- Get Customer to Default Charges                                     MD034973
       **                                                                                    MD034973
       *****************************************************************                     MD034973
      C     GetChargeCust BEGSR                                                              MD034973
-                                                                                            MD034973 
+                                                                                            MD034973
       *                                                                                     MD034973
       ** Get Customer                                                                       MD034973
       *                                                                                     MD034973
@@ -386,7 +388,7 @@
      C                   Parm                    Val@Fields
       * Valid Deals layout (DS) from/to caller                                              MD034973
      C                   PARM                    ValidPmnt                                  MD034973
-    
+ 
      C     PPYKEY        KLIST                                                              MD034973
      C                   KFLD                    @PYBR                                      MD034973
      C                   KFLD                    PCNUM                                      MD034973
@@ -407,4 +409,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

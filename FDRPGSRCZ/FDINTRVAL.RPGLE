@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FD MM Int. Rates Validation')                    *
@@ -12,10 +12,11 @@
       *  Function: This Program Validates MM Interest Rates for       *
       *            input into the Midas database.                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR851109           Date 11Mar15               *
-      *  Prev Amend No. MD030904           Date 08Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR851109           Date 11Mar15               *
+      *                 MD030904           Date 08Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR851109 - Cannot enter -ve rates. Applied for MD033488.     *
       *  MD030904 - Serious midas error encountered when all fields   *
       *             were inputted with invalid data. Stop validation  *
@@ -1356,4 +1358,4 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

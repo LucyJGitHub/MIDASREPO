@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate JE Item Error Overrides')            *
@@ -10,7 +10,7 @@
       *  GLVIMER    - Validate Journal Batch Entry Item Error         *
       *               Overrides                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel.                     *
@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD024980           Date 26Mar14               *
-      *  Prev Amend No. MD000091           Date 08May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024980           Date 26Mar14               *
+      *                 MD000091           Date 08May13               *
       *                 MD020266           Date 07May13               *
       *                 AR802562           Date 27Aug11               *
       *                 AR913756           Date 16Feb12               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024980 - Incomplete error description for Blocked and      *
       *             Refer DR and CR, Inactive, Bad debt, Bankrupt     *
       *  MD000091 - Event Codes Substitution                          *
@@ -558,7 +560,7 @@
       *
       ** Amended WMsgArr to use '-' instead of ':'                                          AR913756
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** WMsgArr
 XXXXXXXX- RE error override not allowed.                                                    MD024980
 XXXXXXXX- GL error override not allowed.

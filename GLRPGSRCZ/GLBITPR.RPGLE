@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE retrieve a record')                        *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Function:  This module retrieves a record from the file      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL135A            Date 10Jul13               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL135A            Date 10Jul13               *
+      *                 MD000091           Date 07May13               *
       *                 AR1005162          Date 16Jul12               *
       *                 CSC054             Date 23Feb12               *
       *                 CSF011A            Date 28Nov11               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL135A - Accounting Rules Process                           *
       *            Added hooks: CGL135_051, CGL135_052, CGL135_053    *
       *                         CGL135_079                            *
@@ -805,4 +807,4 @@
       *****************************************************************
      C/COPY WNCPYSRC,GLH00658
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

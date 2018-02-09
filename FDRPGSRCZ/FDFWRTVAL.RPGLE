@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FD Forward rates validation')
@@ -12,13 +12,14 @@
       *  Function: This Program Validates Forward Rates for Input     *
       *            into the Midas database.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 257192             Date 14Oct08               *
+      *  Prev Amend No. 257192             Date 14Oct08               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 245294             Date 28Feb07               *
+      *                 245294             Date 28Feb07               *
       *                 241919             Date 22Dec06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 235720             Date 20Sep05               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  257192 - If not a valid rate, do not reset to zero.          *
       *  245294 - Issue correct error message when problem with       *
       *           decimal places on the first record                  *
@@ -2097,7 +2099,7 @@ E01  C*******            ENDIF                                                  
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  NQD - Divisor Table for Decimal Places                                                    CAP059
 000000001                                                                                     CAP059
 000000010                                                                                     CAP059

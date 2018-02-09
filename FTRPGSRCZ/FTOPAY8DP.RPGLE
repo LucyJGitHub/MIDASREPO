@@ -11,10 +11,11 @@
       *  Function:  This function displays the Extended Details       *
       *             screen of the Outgoing payments                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD035776           Date 10Sep15               *
-      *  Prev Amend No. MD027047           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035776           Date 10Sep15               *
+      *                 MD027047           Date 19Aug14               *
       *                 CFT120             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035776 - User need to press twice on input screen          *
       *           - Remove unsupported keywords of HATS from dspf     *
       *             (Recompile)                                       *
@@ -353,4 +355,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Copyright Misys International Banking Systems Ltd. 2005
+(c) Copyright Finastra International Limited 2005

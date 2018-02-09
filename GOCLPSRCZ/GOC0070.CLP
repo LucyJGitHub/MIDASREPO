@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       GOC0070 - Exception Report Generator.                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BG4543             Date 13Oct04              */
-/*       Prev Amend No. CGP008  *CREATE    Date 24Sep04              */
+/*       Prev Amend No. BG4543             Date 13Oct04              */
+/*                      CGP008  *CREATE    Date 24Sep04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG4543 - Pass correct parameters for ZSFILE.                */
 /*       CGP008 - Exception Reporting                                */
 /*                Print Report Listing all Exceptions processed today*/
@@ -29,7 +31,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                                   /* BG4543 */
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)                                   /* BG4543 */
@@ -99,7 +101,7 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

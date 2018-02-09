@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GP User to Menu Config Trigger Program')         *
@@ -10,18 +10,20 @@
       *  GPT_USRMEN - On-Line Update of Global File T_SECDATA         *
       *             - Trigger program for T_USERMENU                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CBF005             Date 16Nov11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CBF005             Date 16Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BG7390             Date 31May05               *
+      *                 BG7390             Date 31May05               *
       *                 BUG4241 *CREATE    Date 24Nov04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CBF005 - BF Infrastructure: Single Security User Maintenance *
       *           Profile (Recompile)                                 *
       *  BG7390 - Rename T_SECDATL1                                   *

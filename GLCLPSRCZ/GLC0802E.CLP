@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       DLC0802E - CREATE ON LINE POSITIONS FILE                   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CGL187             Date 06Oct17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL187             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             Date 21Feb96              */
+/*                      S01408             Date 21Feb96              */
 /*                      E20962             Date 04Oct90              */
 /*                      E22608            DATE  04SEP90             */
 /*                      E21893            DATE  07AUG90             */
@@ -28,6 +29,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       CGL187 - Amendment to Net Trading Position Report          */
 /*       S01408 - ADDITION OF CORE HOOK GLC0802E01.                 */
 /*       E20962 - OLPOS IS BEING UPDATED TWICE - (FT & DL)          */
@@ -56,7 +58,7 @@
              PGM        PARM(&PARM &RSEQ &RLEV &RENT)                 /*S01117*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)        /*S01117*/
@@ -136,5 +138,5 @@
                           THEN(SNDMSG MSG(&MSG2) TOMSGQ(MOPERQ))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

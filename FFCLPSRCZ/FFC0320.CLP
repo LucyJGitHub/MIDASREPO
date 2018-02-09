@@ -7,8 +7,9 @@
 /*                                                                   */
 /*   FFC0320  -  PRICES LIST (INTERIM)                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,9 +17,9 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 Patch D -------------------------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*   LAST AMEND NO. 163444             DATE 30SEP99                  */
+/*   PREV AMEND NO. 163444             DATE 30SEP99                  */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   PREV AMEND NO. E37350             DATE 27MAY92                  */
+/*                  E37350             DATE 27MAY92                  */
 /*                  RT0121             DATE 23MAY91                  */
 /*                  FO0073             DATE 15APR91                  */
 /*                  FO0066             DATE 09APR91                  */
@@ -26,6 +27,7 @@
 /*                  S01117             DATE 19APR90                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+/*   MD046248 - Finastra Rebranding                                  */
 /*   163444  -  Y2K Sort Order amd file allocation.                  */
 /*   E37350  -  Dummy value('##') used for OTC Market Centre to      */
 /*              trigger an OTC report.                               */
@@ -56,7 +58,7 @@
              DCL        &RENT         TYPE(*CHAR)  LEN(3)             /*S01117*/
              DCL        &RPARM        TYPE(*CHAR)  LEN(100)           /*FO0045*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
@@ -174,6 +176,6 @@ END:         DLTOVR FILE(*ALL)
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*FO0045*/
 /**EXIT:******ENDPGM***                                                *FO0045*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GO Populate Subsystem Data File')                *
@@ -21,13 +21,15 @@
       *            If Mode = '*OUTF', list all active jobs on the     *
       *            subsystem to PF/GOSBSDPD.                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD020696A          Date 01Jul13               *
-      *  Prev Amend No. MD020696 *CREATE   Date 03Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020696A          Date 01Jul13               *
+      *                 MD020696 *CREATE   Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020696A - Insert parameter 'MODE' such that program will   *
       *              only get subsystem details depending on this     *
       *              parameter.                                       *

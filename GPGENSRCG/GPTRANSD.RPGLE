@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Generated Code')                                       *
@@ -9,13 +9,15 @@
       *                                                               *
       *  GPTRANSD   - On-Line Update of Global File GZTRANSD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD025452           Date 03Mar14               *
-      *  Prev Amend No. MD022168  *CREATE  Date 12Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025452           Date 03Mar14               *
+      *                 MD022168 *CREATE   Date 12Sep13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025452 - Missing program for module GOTRANSD introduced by *
       *             SWIFT 2013 at BF Midas 2.1 SP2 Patch K            *
       *  MD022168 - GZMEBIB3PD Replication                            *

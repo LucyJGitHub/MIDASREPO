@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP Role Audit Report')
@@ -13,10 +13,11 @@
       *                                                               *
       *  Called By: GOC004013 - Role Audit Report                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. CBF023             Date 04Jan17               *
-      *  Prev Amend No. AR1096973          Date 23Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CBF023             Date 04Jan17               *
+      *                 AR1096973          Date 23Apr13               *
       *                 AR1097353          Date 26Mar13               *
       *                 AR1036892          Date 27Sep12               *
       *                 AR1028208          Date 05Sep12               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *  AR1096973 - There is a value in the Parent Role ID field in  *
       *              the Report but none in BFTC.                     *

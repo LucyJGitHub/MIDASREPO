@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       FTC0232    NON-AUTHORISED PAYMENTS                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. 226942             Date 21May04              */
-/*       Prev Amend No. 221652             Date 22Jan04              */
+/*       Prev Amend No. 226942             Date 21May04              */
+/*                      221652             Date 22Jan04              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       226942 - Make RFT/CCT Authorised/Unauthorised reports       */
 /*                available in the system.                           */
 /*       221652 - Make report request available in the system.       */
@@ -41,7 +43,7 @@
         DCL   VAR(&RLEV)  TYPE(*CHAR)   LEN(1)
         DCL   VAR(&RENT)  TYPE(*CHAR)   LEN(3)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
         DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) +
                      VALUE('CFT006')
@@ -110,7 +112,7 @@
                           &PMENU &RNTP &RSEQ &RLEV &RENT)                                 /*226942*/
              ENDDO
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 ENDPGM:
         ENDPGM

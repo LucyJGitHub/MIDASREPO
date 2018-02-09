@@ -8,19 +8,21 @@
 /*  GLC0280 - BATCH POSTINGS DIVERTED TO COMPUTER SUSPENSE ACCOUNT   */
 /*            REPORT.                                                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CEU013  *CREATE    Date 29APR98              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. CEU013  *CREATE    Date 29Apr98              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  CEU013 - EMU Account Postings Narrative                          */
 /*                                                                   */
 /*********************************************************************/
@@ -31,7 +33,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7)
              DCL        VAR(&RSEQ)  TYPE(*CHAR) LEN(5)
@@ -95,6 +97,6 @@
              CHGJOB     SWS(XXXXXX11)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 END:         ENDPGM

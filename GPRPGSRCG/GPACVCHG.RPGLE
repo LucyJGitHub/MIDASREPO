@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GP Action to be Done on Valuation Change')
@@ -9,14 +9,15 @@
       *                                                               *
       *  GPACVCHG - Midas GP Action to be Done on Valuation Change    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. BG3906 (reopen)    Date 02Nov04               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BG3906 (R          Date 02Nov04               *
       *                 BUG3860            Date 11Aug04               *
       *                 BG3906             DATE 28Jun04               *
       *                 CLE024             Date 20Oct03               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BG3906 - (reopen) If T_UNUM is 9, set to 0 not 10.           *
       *  BUG3860 - (recompile)                                        *
@@ -386,6 +388,6 @@
       /COPY GPCPYSRCG,GPPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 **  WQCMD
 CALL GPCMTCTL ('S' '          ')

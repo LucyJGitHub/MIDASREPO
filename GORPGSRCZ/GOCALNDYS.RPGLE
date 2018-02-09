@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Calculate number of days in a period')        *
@@ -12,10 +12,11 @@
       *  Function:  This module calculates the number of days in an   *
       *             interest period.                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 261324             Date 24Apr13               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 261324             Date 24Apr13               *
+      *                 CER059             Date 19Jul10               *
       *                 CER016             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  261324 - GOC0020 ended in error during COB. Add missing day  *
       *           basis and divisor basis combinations.               *
       *         - Applied for AR1063996 (Child: AR1063998).           *
@@ -480,7 +482,7 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 **   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
 0006001521029820444305904073650882610287117481320914670161311759219053
 2051421975234362489726358278192928030741322023366335124365853804639507

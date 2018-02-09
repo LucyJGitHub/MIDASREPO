@@ -7,21 +7,23 @@
 /*                                                                   */
 /*   FFC0220  -  MARKET CENTRE PRICES MAINTENANCE                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC023             Date 29Jan04              */
+/*       Prev Amend No. CSC023             Date 29Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 122228             Date 18Feb98              */
+/*                      122228             Date 18Feb98              */
 /*                      S01117             Date 05Jul90              */
 /*                      E20718             Date 16Jan90              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
 /*   122228  -  FIELD &SBJOB INCORRECTLY SETTED UP.                  */
@@ -37,7 +39,7 @@
              DCL        VAR(&PHEAD)   TYPE(*CHAR)  LEN(30)
              DCL        VAR(&SBJOB)   TYPE(*CHAR)  LEN(30)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   CALL PROMPT PROGRAM                                            */
@@ -122,5 +124,5 @@
                           CMDLBL(MARKETSLT))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 EXIT:        ENDPGM

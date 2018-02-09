@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate and calculate currencies')           *
@@ -41,10 +41,11 @@
       *  an entered amount.                                           *
       *  (phase(s)) I/C                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD045094           Date 10May17               *
-      *  Prev Amend No. MD030406           Date 27Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD045094           Date 10May17               *
+      *                 MD030406           Date 27Oct14               *
       *                 258369             Date 06Jun13               *
       *                 AR787421           Date 27Sep12               *
       *                 AR737259           Date 27Sep12               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD045094 - Credit and Debit amount are incorrect             *
       *  MD030406 - Cross Currency Outgoing Payment, pay amount not   *
       *             automatically calculated & show 0 in confirmation *
@@ -2051,7 +2053,7 @@
       /COPY ZSRSRC,ZCCYXR_ILE
       ** +--- The converted ZCCYXR ends here ------------------------------+
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
 0000001
 0000010

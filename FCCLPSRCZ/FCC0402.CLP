@@ -7,16 +7,17 @@
 /*                                                                   */
 /*  FCC0402 - WRITE SPOOL FILE TO DISK.                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*        LAST AMEND NO. 078085           DATE 23OCT94               */
-/*        PREV AMEND NO. E26738           DATE 10SEP91               */
+/*       Prev Amend No. 078085             Date 23Oct94              */
+/*                      E26738             Date 10Sep91              */
 /*                       LN1051           DATE 06DEC90               */
 /*                       LN1065           DATE 05DEC90               */
 /*                       LN1006           DATE 26NOV90               */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       078085 - SOME SPOOL FILES IN MIDAS MAY BE OPENED EVEN       */
 /*                THOUGH THESE IS NO DATA TO OUTPUT. THESE ARE       */
 /*                PROCESSED BY THE SYSTEM AS 'NO LONGER IN THE       */
@@ -72,7 +74,7 @@
              DCL        VAR(&L9) TYPE(*CHAR) LEN(4)
              DCL        VAR(&REC) TYPE(*DEC) LEN(9 0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(100)                /*LN0736*/
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)                /*LN0736*/
@@ -84,7 +86,7 @@
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))                              /*LN0736*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
     /* DISPLAY FILE DESCRIPTION OF PF/MAAWRKPD FOR CURRENT NUMBER    */
     /* OF RECORDS.                                                   */
     /*                                                               */

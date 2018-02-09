@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Alpha Sequence Code Number')                  *
@@ -9,12 +9,14 @@
       *                                                               *
       *  FT000328 - Build Alphanumeric Sequence Code for FT Payments  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT151 *Create     Date 21Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT151 *Create     Date 21Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT151 - FT IN/OP Alphanumeric sequence                      *
       *                                                               *
       *****************************************************************
@@ -379,6 +381,6 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  CHRSA
 ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP MQ Series Input/Output')                      *
@@ -12,14 +12,16 @@
       *  Function:  This program gets messages from                   *
       *             and puts messages to an MQSeries queue.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR1020531          Date 09Jan13               *
-      *  Prev Amend No. BUG27831B          Date 09Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1020531          Date 09Jan13               *
+      *                 BUG27831B          Date 09Aug10               *
       *                 BUG27831A *CREATE  Date 03Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1020531 - Component GLC004604 is failed during COB due to  *
       *              ADDLIBLE QMQM command. Did not follow original   *
       *              fix as it may pose problem if QMQM is not in the *

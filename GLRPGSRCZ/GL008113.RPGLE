@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Stamp Tax Merge Postings into GLGEST')        *
@@ -12,13 +12,15 @@
       *                                                               *
       *  GL008113 - Merge Postings into GLGEST                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR821972           Date 07Sep11               *
-      *  Prev Amend No. CER049  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR821972           Date 07Sep11               *
+      *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
 /*    *  AR821972 - Stamp tax on debit interest did not generate      *
 /*    *             amount in GLVCLSIN (Recompile)                    *
       *  CER049 - Stamp Tax                                           *
@@ -311,4 +313,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Extract controller for NAs purchased')        *
@@ -10,10 +10,11 @@
       *  GOXCNASP - Extract Controller for Money Market               *
       *             Negotiable Assets Purchased                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 AR644662           Date 19Aug14               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -53,22 +55,22 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FMMDEALLL  IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(MMDENBP0)
      FDEALS     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(DEALSDDF)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D MMDENB        E DS                  EXTNAME(MMDENBPP)
      D DEALDD        E DS                  EXTNAME(DEALSDD)
      D  DEALRONS     E                     EXTFLD(RONSQQ)                                     CGL029
      D  DEALPONS     E                     EXTFLD(PONSQQ)                                     CGL029
- 
- 
+
+
      C     *ENTRY        PLIST
       /COPY GOCPYSRC,GOXCEPARM
       *
@@ -161,16 +163,16 @@
       * INPUTS
      C                   PARM      I#LOC         W#LOC             4
      C                   PARM      I#CCID        W#CCID           10 0
- 
+
      C                   PARM      I#RDNB        W#RDNB            5 0
      C                   PARM      I#DNWD        W#DNWD            5 0
      C                   PARM      I#PCOD        W#PCOD            5 0
      C                   PARM      Trade_Value   W#TVDI            1
      C                   PARM                    MMDENB
      C                   PARM                    DEALDD
- 
+
       * If data error encountered, log error
- 
+
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = 'NASP' + I#EXTT + I#TREF
@@ -191,7 +193,7 @@
       *
      C                   CLEAR                   DEALDD
      C     HLDN38        CHAIN     DEALSDDF                           99        *
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -199,11 +201,11 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Extract control information
- 
+
       /COPY GOCPYSRC,GOGETEXCT
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -212,4 +214,4 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate JEDCIx Debit/credit Ind.')
@@ -18,17 +18,19 @@
       ***Component*of:**SP122CTYLX*-*Core*Luxembourg*service*program***                       CER001
       *  Component of:  SP6GL0004  - Core service program             *                       CER001
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CER001             Date 25Apr05               *
-      *  Prev Amend No. ULX607  *CREATE    Date 13Sep00               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX607  *CREATE    Date 13Sep00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER001 - LUX Upgrade to MidasPlus                            *
       *  ULX607 - API Luxembourg - Function GLBITP                    *
       *                                                               *
@@ -195,4 +197,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

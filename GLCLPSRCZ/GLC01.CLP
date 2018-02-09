@@ -7,10 +7,11 @@
 /*                                                                  */
 /*       GLC01 - NEXT DAY SETUP                                     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD031966           Date 27Jul15              */
-/*       Prev Amend No. MD026439           Date 24Apr14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD031966           Date 27Jul15              */
+/*                      MD026439           Date 24Apr14              */
 /*                      AR1096788          Date 18Mar13              */
 /*                      AR1005423          Date 09Aug12              */
 /*                      AR1018468          Date 20Oct12              */
@@ -46,6 +47,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD031966 - BFM GL3572P1 issue                              */
 /*       MD026439 - Field tag 61 Posting Date of the generated      */
 /*                  MT940 for Subsidiary Account is incorrect       */
@@ -100,7 +102,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&INCREASE) TYPE(*DEC)  LEN(5)
 /*/COPY WNCPYSRC,GLC01004                                            */
@@ -119,7 +121,7 @@
              DCL        VAR(&REPNAM) TYPE(*CHAR) LEN(10) VALUE('''GL3572''') +
                           /*MD031966*/
              DCL        VAR(&REPPER) TYPE(*CHAR) LEN(3) VALUE('''N''')                  /*MD031966*/
-
+ 
 /**/                                                                                      /*CER001*/
 /** Check if Automatic Batches acceptance is installed. */                                /*CER001*/
 /**/                                                                                      /*CER001*/
@@ -351,6 +353,6 @@
              ENDDO                                                    /*CGL009*/
 /**/                                                                  /*CGL009*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*           ENDPGM          */                                       /*S01340*/
 END:         ENDPGM                                                   /*S01340*/

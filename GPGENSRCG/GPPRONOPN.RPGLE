@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                       CGP017
 /*STD *  RPGBASEMOD                                                   *                       CGP017
@@ -10,10 +10,11 @@
       *                                                               *
       *  GPPRONOPN  - On-Line Update of Global File GZPRONOPN         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR876427           Date 26Jan17               *
-      *  Prev Amend No. MD041785           Date 29Sep16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR876427           Date 26Jan17               *
+      *                 MD041785           Date 29Sep16               *
       *                 MD034693           Date 11Aug15               *
       *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR876427 - Perform /COPY GPCPYSRCG,Z1PRONOPN only after      *
       *             UPDATE or WRITE operation.                        *
       *           - Applied for MD-39312                              *

@@ -7,10 +7,11 @@
 /*                                                                  */
 /*     GLC4460 - BATCH HISTORY FILE PURGE                           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD021155           Date 15Jul13              */
-/*       Prev Amend No. CGL127AD           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021155           Date 15Jul13              */
+/*                      CGL127AD           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 Remnants                 */
 /*                - RGZPFM not moved                                 */
 /*       CGL127AD - COB Restructure - GL COB Optimisation Phase 1    */
@@ -43,7 +45,7 @@
 /**********  DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)                               */ /*CGL127AD*/
 /**********  DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7)                               */ /*CGL127AD*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&STEXT) TYPE(*CHAR) LEN(256)                                /*CGL127AD*/
              DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                  /*CGL127AD*/
@@ -260,6 +262,6 @@
                           TEXT(&STEXT)                                                  /*CGL127AD*/
                                                                                         /*CGL127AD*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

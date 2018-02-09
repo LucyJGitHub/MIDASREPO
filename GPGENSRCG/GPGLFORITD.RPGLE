@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas OF Individual Forecast')                         *
@@ -9,14 +9,16 @@
       *                                                               *
       *  GPGLFORITD - On-Line Update of Global File GZGLFORITD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD024003           Date 10Dec13               *
-      *  Prev Amend No. CGL145A            Date 08Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024003           Date 10Dec13               *
+      *                 CGL145A            Date 08Oct13               *
       *                 CGL145   *CREATE   Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024003 - Nostro Summary screen does not display any        *
       *             details (Recompile)                               *
       *  CGL145A - Subsidiaries Daily Sweeping Forecast               *

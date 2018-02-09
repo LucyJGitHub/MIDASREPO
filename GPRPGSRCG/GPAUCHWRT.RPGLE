@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GP Audit Change Header - Write')                 *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GPAUCHWRT - Audit Change Header - Write                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD031371           Date 21Nov14               *
-      *  Prev Amend No. MD026981           Date 16May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031371           Date 21Nov14               *
+      *                 MD026981           Date 16May14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031371 - Revert fix for blank spaces                       *
       *  MD026981 - Remove blanks from REF ID for EERT                *
       *  BG1928 - Audit deliverable data missing                      *

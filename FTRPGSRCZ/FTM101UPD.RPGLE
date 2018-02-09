@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       **********************************************************************
 /*STD *  RPGBASEMOD                                                        *
 /*EXI *  TEXT('Midas FT Update RFT header and details')
@@ -9,11 +9,12 @@
       *                                                                    *
       *  FTM101UPD - Request For Transfert Database Update                 *
       *                                                                    *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                                    *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG24998           Date 17Jul09               *
-      *  Prev Amend No. CSW209             Date 01Apr09               *
+      *  Prev Amend No. BUG24998           Date 17Jul09               *
+      *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
       *                 BUG15235           Date 06Nov07               *
@@ -52,6 +53,7 @@
       *                                                                    *
       *--------------------------------------------------------------------*
       *                                                                    *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG24998 - Bank operation code is missing (Recompile)        *
       *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -3941,7 +3943,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       **********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  ArrWatch                                                                                  CSD015
 <Header Instructing Party>                                                                    CSD015
 </Header Instructing Party>                                                                   CSD015

@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       GLC0201 - Interest Tax not in Base Ccy Report (COB)         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL013  *CREATE    Date 08Jun06              */
+/*       Prev Amend No. CDL013  *CREATE    Date 08Jun06              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL013 - Tiered Withholding Tax                             */
 /*                                                                   */
 /*********************************************************************/
@@ -27,7 +29,7 @@
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3) VALUE('ALL')
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2006')
 /**/
              SNDMSG     MSG('GLC0201 - Interest not in Base Currency +
@@ -45,7 +47,7 @@
 /**/
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM
  

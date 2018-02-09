@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                    BUG27831A
 /*STD *  RPGSQLBND                                                    *                    BUG27831A
@@ -12,10 +12,11 @@
       *  GO000125 - Midas GO Download data control -                  *
       *             Unauthorised WIP items                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD020167           Date 23Apr13               *
-      *  Prev Amend No. CCB020A            Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *                 CCB020A            Date 06Aug12               *
       *                 CCB023             Date 06Aug12               *
       *                 BUG27831A          Date 03Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  CCB020A - COB Restructure - Secondary COB Infrastructure     *
       *  CCB023 - COB Restructure - Input Cycle Termination           *
@@ -35,28 +37,28 @@
       *           Dashboard)                                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Files                                ¦
       ** ¦ =====                                ¦
       ** +--------------------------------------+
- 
+
      F***GPATWIPL  IF   E           K DISK    INFSR(*PSSR)                                 BUG27831A
      FGPZONEL2  IF   E           K DISK    INFSR(*PSSR)
      FGPDWNLL0  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D                 DS
      D  CountN                 1      5  0
      D  CountA                 1      5
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Midas Local Data Area for database error reporting
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** The following fields are defined in the external file:
@@ -70,42 +72,42 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D Value           S             50
      D Zone            S             10                                                    BUG27831A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C/COPY GOCPYSRC,GOUPD_PARM
- 
+
       ** Get Zone Name from system ID.
- 
+
      C     System_ID     CHAIN     GPZONED0                           90
      C                   EVAL      Zone = ZOZONE                                           BUG27831A
- 
+
       ** Unauthorised Retail Account Transfer
- 
+
      C**********         IF        Key_Desc = 'UnauthRATF'                                  BUG27265
      C**********         IF        Key_Desc = 'UnauthAcctTransfers'               BUG27265 BUG27831A
- 
+
      C                   EXSR      UpdateCount
- 
+
      C**********         ENDIF                                                             BUG27831A
- 
+
      C                   IF        %Open(GPDWNLL0)
      C                   CLOSE     GPDWNLL0
      C                   ENDIF
- 
+
      C/COPY GOCPYSRC,GOUPD_DWNL
- 
+
      C     ENDPGM        TAG
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -121,18 +123,18 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     UpdateCount   BEGSR
- 
+
       ** If the Midas phase is not Input Cycle then set data to blank.
- 
+
      C**********         IF        MidasPhase <> 'A'                                         CCB020A
      C                   IF        MidasPhase = 'C'                                          CCB020A
      C                   EVAL      Value = *blanks
      C                   ELSE
- 
+
      C                   EVAL      CountN = 0
- 
+
      C******LOVAL        SETLL     T@MSWIP                                                 BUG27831A
      C**********         READ      T@MSWIP                                01               BUG27831A
       **********                                                                           BUG27831A
@@ -154,13 +156,13 @@
      C                   IF        SQLCOD <> 0                                             BUG27831A
      C                   EXSR      *PSSR                                                   BUG27831A
      C                   ENDIF                                                             BUG27831A
- 
+
      C                   EVAL      Value = CountA
- 
+
      C                   ENDIF
- 
+
      C     UpdateCountE  ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -174,17 +176,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GP Read Valuation Change Alerts File')
@@ -9,20 +9,22 @@
       *                                                               *
       *  GPRDVCHG - Midas GP Read Valuation Change Alerts File        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGP009             Date 22Dec04               *
-      *  Prev Amend No. BG3906 (reopen)    DATE 02Nov04               *
+      *  Prev Amend No. CGP009             Date 22Dec04               *
+      *                 BG3906 (R          Date 02Nov04               *
       *                 BG3906 (reopen)    DATE 04Oct04               *
       *                 BG3906             DATE 28Jun04               *
       *                 CGP003  *CREATE    DATE 19Mar04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGP009 - Local Zone Time Difference (Recompile)              *
       *  BG3906 - (reopen) Change submit to use job queue GPNOMAX     *
       *  BG3906 - (reopen) Unable to update the file twice for        *
@@ -328,7 +330,7 @@
       /COPY GPCPYSRCG,GPPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** WSBMJOB
 SBMJOB CMD(CALL PGM(GPACVCHG) PARM('          ' '          ' '                              '))
 JOB(          ) JOBD(GPBCKGRD) OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD) JOBQ(GPNOMAX)

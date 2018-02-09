@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Outgoing payments level two display')         *
@@ -12,10 +12,11 @@
       *  Function:  This module displays the secondary details screen *
       *             of the Outgoing Payments screen input function.   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD035776           Date 10Sep15               *
-      *  Prev Amend No. MD027047           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035776           Date 10Sep15               *
+      *                 MD027047           Date 19Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035776 - User need to press twice on input screen          *
       *           - Remove unsupported keywords of HATS from dspf     *
       *             (Recompile)                                       *
@@ -723,6 +725,6 @@
       *   F18=Next Payment                                                      CFT007
       ********************************************************************      CFT007
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 000000000000000000000000000000000000000000000000000000000000

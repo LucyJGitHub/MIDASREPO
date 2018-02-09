@@ -8,17 +8,19 @@
       *                                                               *
       *     GPAOCURRR0 - CURRENCY CODES                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK026             Date 11Jan07               *
-      *  Prev Amend No. CSD031  *CREATE    Date 10Apr06               *
+      *  Prev Amend No. CPK026             Date 11Jan07               *
+      *                 CSD031  *CREATE    Date 10Apr06               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK026 - MidasPlus 1.3 packaging.  Remove bound calls.       *
       *         - Call GPZASNMG instead of ZASNMG                     *
       *  CSD031 - Enhanced Centralised Static Data                    *
@@ -246,4 +248,4 @@
 **CTDATA @MG
 GPCURRPD  GPAOCURRR0  Currency Codes
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX CLS Pay-in Schedule Maintenance Display')
@@ -14,14 +14,15 @@
       *             program and will be made switchable under enhance *
       *             ment number CDL008.                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG5671            Date 31Jan05               *
-      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *  Prev Amend No. BUG5671            Date 31Jan05               *
+      *                 CGL029             Date 01Sep03               *
       *                 CAP084             Date 02Jul03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG5671- Add Sequence number to detail record (recompile)    *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  CAP084 - Synchronous calling of APIs                         *
@@ -1195,4 +1197,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

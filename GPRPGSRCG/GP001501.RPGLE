@@ -1,5 +1,5 @@
      H DEBUG ALWNULL(*USRCTL)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Cancel T_MLRSVTRN for A/C Balance Check')     *
@@ -12,15 +12,17 @@
       *  Function:  This program will cancel reservation data         *
       *             from T_MLRSVTRN                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD020087           Date 30Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020087           Date 30Sep13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG27356           Date 31Mar10               *
+      *                 BUG27356           Date 31Mar10               *
       *                 CAP205  *CREATE    Date 15Feb10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020087 - ABC Issue on Amendments on Several Write on       *
       *             Authorise APIs                                    *
       *  BUG27356- Program REC001501 ended abnormally                 *

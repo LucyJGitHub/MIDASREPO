@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate Penalty Transaction Type')
@@ -9,14 +9,16 @@
       *                                                               *
       *  GLVRTTV - Validate Penalty Transaction Type                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CRE015  *CREATE    Date 18Dec09               *
+      *                 CRE015  *CREATE    Date 18Dec09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  CRE015 - Retail Term and Notice Accounts                     *
       *                                                               *

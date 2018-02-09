@@ -7,16 +7,17 @@
     /*                                                               */
     /*  FCC0204 - COB REPORT REQUESTS WITHOUT MODULE SPECIFIC PROMPT */
     /*                                                               */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
     /*                                                               */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-    /*       LAST AMEND NO. 115328           DATE 27JAN98            */
-    /*       PREV AMEND NO. 099929           DATE 31MAY96            */
+/*       Prev Amend No. 115328             Date 27Jan98              */
+/*                      099929             Date 31May96              */
     /*                      087482           DATE 03OCT95            */
     /*                      076789           DATE 03OCT94            */
     /*                      049424           DATE 11JAN93            */
@@ -26,6 +27,7 @@
     /*                                                               */
     /*****************************************************************/
     /*                                                               */
+/*       MD046248 - Finastra Rebranding                              */
     /*    115328 - Remove part of previous fix 087482 in order to    */
     /*             prevent lock on *DTAARA REPSEQ.                   */
     /*    099929 - Allocate dtaara/REPSEQ exclusively, as            */
@@ -85,7 +87,7 @@
              DCL        VAR(&PHASE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(1)                 /*087482*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL        VAR(&OLDNAME) TYPE(*CHAR) LEN(10)      /*049424*076789*/
 /************DCL        VAR(&IBMLVL) TYPE(*CHAR) LEN(6)        /*049424*076789*/
@@ -159,7 +161,7 @@
  SKIP:                                                                /*044847*/
 /**/                                                                  /*LN1144*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /***OBTAIN*THE*NEXT*REPORT*REQUEST*SEQUENCE*NUMBER***********/ /*LN1144 087482*/
 /************RTVDTAARA  DTAARA(REPSEQ) RTNVAR(&REPSEQ)             */ /*087482*/
     /*                                                               */

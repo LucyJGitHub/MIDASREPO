@@ -8,22 +8,24 @@
 /*       GLC2073 - CONTROL ACCOUNTS MAINTENANCE AND                 */
 /*                 INTEREST/CAPITALISATION REQUEST INPUTS           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408            DATE 30OCT95              */
-/*       PREV AMEND NO. S01413            DATE  13APR93             */
+/*       Prev Amend No. S01408             Date 30Oct95              */
+/*                      S01413             Date 13Apr93              */
 /*                      S01383                  27APR92             */
 /*                      LN0756                  14SEP90             */
 /*                      LN0575                  31JUL90             */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - ADDITION OF CORE HOOK GLC2073001                  */
 /*                ADDITION OF CORE HOOK GLC2073END                  */
 /*       S01413 - Retail 3 Incorporation.                           */
@@ -41,7 +43,7 @@
              PGM        PARM(&PGM &MODE &MODULE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&PGM) TYPE(*CHAR) LEN(8)
              DCL        VAR(&MODULE) TYPE(*CHAR) LEN(1)
@@ -122,7 +124,7 @@
  
              DLTOVR     FILE(MEMO)                                    /*S01413*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,GLC2073END                                        */ /*S01408*/
  

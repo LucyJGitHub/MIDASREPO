@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO BSPL Request Deletion')
@@ -9,17 +9,19 @@
       *                                                               *
       *  GOBSRQDEL - BSPL Request Deletion                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAS014             Date 10Aug05               *
-      *  Prev Amend No. CGP010  *CREATE    Date 17Jan05               *
+      *  Prev Amend No. CAS014             Date 10Aug05               *
+      *                 CGP010  *CREATE    Date 17Jan05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAS014 - IAS21 (The Effects of Changes in Foreign Exchange   *
       *           Rates). Recompile.                                  *
       *  CGP010 - Global BSPL                                         *

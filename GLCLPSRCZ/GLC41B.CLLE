@@ -9,19 +9,21 @@
 /*       GLC41B - Midas GL Accounts Postings Merge (Secondary File   */
 /*                Processing)                                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. CGL049             Date 17Feb15              */
-/*       Prev Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL049             Date 17Feb15              */
+/*                      CGL120  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL049 - Separate Out Processing of Spot Reval and FX Tfr   */
 /*       CGL120 - GL COB Components Task Split                       */
 /*                                                                   */
 /*********************************************************************/
              PGM
-
+ 
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
@@ -40,29 +42,29 @@
              DCL        VAR(&ACPO5) TYPE(*DEC) LEN(3 0) VALUE(053)
              DCL        VAR(&ACPO6) TYPE(*DEC) LEN(3 0) VALUE(059) /* CGL049 */
              DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(256)
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           Ltd. 2012')
-
+ 
 /* Global monitor message. */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
-
+ 
 /* Send message to MRUNQ. */
-
+ 
              SNDPGMMSG  MSG('GLC41B - Daily Accounting Merge') +
                           TOMSGQ(MRUNQ)
-
+ 
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SAR) VALUE('CEU024')
              CHGVAR     VAR(&CEU024) VALUE('N')
-
+ 
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
-
+ 
 /* Check if Retail Teller Support Enhancement is installed         */
-
+ 
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CEU024) VALUE('Y'))
@@ -70,28 +72,28 @@
                           '*NRF   ') THEN(DO)
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
              CALL       PGM(AOMMODR0) PARM('*DBERR ' '*FIRST ' &MMOD)
-
+ 
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SAR) VALUE('CMX001')
              CHGVAR     VAR(&CMX001) VALUE('N')
-
+ 
 /*  Check if Meridian export is installed                          */
-
+ 
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
-
+ 
              IF         COND(&RTCD = '       ') THEN(CHGVAR +
                           VAR(&CMX001) VALUE('Y'))
              IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
                           '*NRF   ') THEN(DO)
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 /* Create a DUMMY and empty physcial file                          */
 /* note GLACPSPD is overidden to QTEMP/GLACPSPD                    */
-
+ 
 GLACPSPD:    CHKOBJ     OBJ(QTEMP/GLACPSPD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
              CRTDUPOBJ  OBJ(GLACPSPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
@@ -105,7 +107,7 @@ GLACPSPD:    CHKOBJ     OBJ(QTEMP/GLACPSPD) OBJTYPE(*FILE)
              IF         COND(&NBRRCDS *GT 0) THEN(DO)
              CLRPFM     FILE(QTEMP/GLACPSPD)
              ENDDO
-
+ 
 ACPO1ZB:     CHKOBJ     OBJ(QTEMP/ACPO1ZB) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
              CRTDUPOBJ  OBJ(ACPO1Z) FROMLIB(*LIBL) OBJTYPE(*FILE) +
@@ -117,26 +119,26 @@ ACPO1ZB:     CHKOBJ     OBJ(QTEMP/ACPO1ZB) OBJTYPE(*FILE)
              IF         COND(&NBRRCDS *GT 0) THEN(DO)
              CLRPFM     FILE(ACPO1ZB)
              ENDDO
-
-
+ 
+ 
 ENDACPO:     DLTOVR     FILE(*ALL) LVL(*JOB)
              MONMSG     MSGID(CPF0000)
-
+ 
 /* Overide to empty file - the primary file GL0400                 */
 /* however it secondary files will continue                        */
 /* processing. The empty file is required as                       */
 /* GLC41 will process the correct file                             */
-
+ 
              OVRDBF     FILE(GLACPSPD) TOFILE(QTEMP/GLACPSPD) +
                           OVRSCOPE(*JOB)
              OVRDBF     FILE(ACPO1Z) TOFILE(QTEMP/ACPO1ZB) +
                           OVRSCOPE(*JOB)
-
+ 
              OVRDBF     FILE(EODPOPD) OVRSCOPE(*JOB) SEQONLY(*YES 100)
              OVRDBF     FILE(EODPORA) SEQONLY(*YES 100) OVRSCOPE(*JOB)
-
+ 
              RTVDTAARA  DTAARA(GLSTAT) RTNVAR(&GLSTAT)
-
+ 
              IF         COND(%SUBSTRING(&GLSTAT &ACPO2 1) = 'Y') +
                           THEN(CHGVAR VAR(%SUBSTRING(&SWS 2 1)) +
                           VALUE('1'))
@@ -151,57 +153,57 @@ ENDACPO:     DLTOVR     FILE(*ALL) LVL(*JOB)
                           VALUE('1'))
              IF         COND(%SUBSTRING(&GLSTAT &ACPO6 1) = 'Y') THEN(CHGVAR +
                           VAR(%SUBSTRING(&SWS 6 1)) VALUE('1')) /* CGL049 */
-
+ 
              CHGJOB     SWS(&SWS)
-
+ 
 /* Process only the secondary file. Primary file are processed     */
 /* in GLC41A                                                       */
-
+ 
              CALL       PGM(GL0400) PARM('S')
-
+ 
 /* Check if all is OK: No database error,                          */
 /* No account balance error etc                                    */
-
+ 
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
              COMMIT
              ENDDO
-
+ 
              DLTOVR     FILE(*ALL) LVL(*JOB)
-
+ 
              IF         COND(&CMX001 = 'Y') THEN(DO)
              CALL       PGM(MXC0491)  PARM('GLC41 ' 'XXX' 'N')
              ENDDO
-
+ 
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
-
+ 
              SNDPGMMSG  MSG('FILE OUT OF BALANCE - ACPO') +
                           TOMSGQ(MOPERQ)
              SNDPGMMSG  MSG('FILE OUT OF BALANCE - ACPO') TOMSGQ(MRUNQ)
              GOTO       CMDLBL(ERROR)
-
+ 
              ENDDO
-
+ 
 /* Extract End of Day Postings for all Private Banking Customers   */
-
+ 
              IF   COND(%SUBSTRING(&MMOD 104 1) *EQ 'Y') THEN(DO)
              CALL       PGM(RPC1403)
              ENDDO
-
+ 
              CHGVAR     VAR(%SUBSTRING(&GLSTAT &ACPO1 5)) +
                           VALUE('NNNNN')
              CHGVAR     VAR(%SUBSTRING(&GLSTAT &ACPO6 1)) VALUE('N') /* CGL049 */
              CHGDTAARA  DTAARA(GLSTAT) VALUE(&GLSTAT)
-
+ 
              GOTO       CMDLBL(END)
-
+ 
 /* If error is found                                               */
-
+ 
 ERROR:
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC41 ended abnormally - see job log') +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
-
+ 
 END:
              ROLLBACK
              ENDCMTCTL

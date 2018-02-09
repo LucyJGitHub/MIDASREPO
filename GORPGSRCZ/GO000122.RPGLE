@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Process Data Queue messages in CoB')
@@ -9,17 +9,19 @@
       *                                                               *
       *  GO000122  - Process Data Queue Messages in COB               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG9647 *CREATE    Date 19Dec05               *
-      *  Prev Amend No. XXXXXX             Date ddmmmyy               *
+      *  Prev Amend No. BUG9647 *CREATE    Date 19Dec05               *
+      *                 XXXXXX             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG9647- Syndications Manager Correspondence does not        *
       *           generate any correspondence during COB              *
       *                                                               *
@@ -221,7 +223,7 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005
 ** EOD_MSG
 <?xml version="1.0" encoding="UTF-8"?>
 <MLimitsEODEvent xmlns="http://www.misys.com/midas/midasplus/mlimitsendofday/xml"

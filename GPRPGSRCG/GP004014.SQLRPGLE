@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP Permissions Audit Report')
@@ -13,10 +13,11 @@
       *                                                               *
       *  Called By: GOC004014 - Permissions Audit Report              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. CBF023             Date 04Jan17               *
-      *  Prev Amend No. MD035824A          Date 11May16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CBF023             Date 04Jan17               *
+      *                 MD035824A          Date 11May16               *
       *                 MD035824           Date 11May16               *
       *                 AR1097353          Date 26Mar13               *
       *                 AR1036892          Date 27Sep12               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *  MD035824A - Host and Host Module in Permission Audit Report  *
       *              is not descriptive/readable (Reopen)             *

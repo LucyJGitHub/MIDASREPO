@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL MT94x Production Control')                    *
@@ -12,10 +12,11 @@
       *  Function:  This module sets up GLM94XPD records that are     *
       *             eligible for MT941/MT942 message generation.      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD024640           Date 29Jan14               *
-      *  Prev Amend No. MD024452           Date 21Jan14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024640           Date 29Jan14               *
+      *                 MD024452           Date 21Jan14               *
       *                 CGL146A            Date 10Jul13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024640 - Control the submission of MT940/MT950 in I/C      *
       *             via CGL146.                                       *
       *            Amended Hook: CGL146_111                           *
@@ -447,4 +449,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

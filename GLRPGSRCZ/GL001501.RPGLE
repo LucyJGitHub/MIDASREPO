@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
      H THREAD(*SERIALIZE)
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -16,10 +16,11 @@
       *             collateral register that needs to generate        *
       *             accounting.                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -115,11 +117,11 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas GL Collateral Details select on RECI <> 'M'
      FGLCOLLLF  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
      FFCLTYL1   UF   E           K DISK    INFSR(*PSSR)                                     BUG17987
      F                                     COMMIT                                           BUG17987
      F                                     PREFIX(FD_)                                      BUG17987
@@ -150,10 +152,10 @@
       ** Midas GL Collateral Generated Account Keys Details
      FGLACKYPD  O    E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas GL Collateral Account Key Generator Error Report
      FGL001501P1O    E             PRINTER INFDS(SPOOL1)  USROPN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -161,7 +163,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -173,61 +175,61 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D WRPG            C                   CONST('rpg')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D ArrUPPER        S              1    CTDATA DIM(26) PERRCD(26)
      D ArrLOWER        S              1    CTDATA DIM(26) PERRCD(26)
- 
+
      D WAKEY           DS
      D   WType                 1      5
      D   WLoc                  6      8
      D   WChar                10     10
- 
+
      D SPOOL1          DS
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
      D WSystem         DS
      D   WChar1                1      1
      D   WChar2                2      2
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA
- 
+
       ** Data structure to hold Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry parameter
      D PReturn         S              7
- 
+
       ** Access object parameters
      D PRetCode        S              7
      D POption         S              7
- 
+
      D WorkCREF        S             10
      D WorkCOLI        S             25
      D WorkAPCT        S              1
@@ -267,18 +269,18 @@
      D WCustNo         S              6                                                      BUG4392
      D WAccCde         S             10                                                      BUG4392
      D WAccSqe         S              2                                                      BUG4392
- 
+
       ** +--------------------------------------+
       ** ¦ Prototypes                           ¦
       ** ¦ ==========                           ¦
       ** +--------------------------------------+
- 
+
       ** Prototype for a Java String object
      D crtString       PR              O   EXTPROC(*JAVA:
      D                                             'java.lang.String':
      D                                             *CONSTRUCTOR)
      D   value                       10A   CONST VARYING
- 
+
       ** Prototype for RPGWrapper object creation (instantiation)
      D crtCalcClass    PR              O   EXTPROC(*JAVA:
      D                                     'com.misys.midas.midasplus.+
@@ -288,7 +290,7 @@
      D                                     *CONSTRUCTOR)
      D   value3                        O   CLASS(*JAVA:'java.lang.String')
      D                                     CONST
- 
+
       ** Prototype for CalcClass' getCLVDetails method
      D getValues       PR              O   EXTPROC(*JAVA:
      D                                     'com.misys.midas.midasplus.+
@@ -310,20 +312,20 @@
      D                                     CONST
      D   String6                       O   CLASS(*JAVA:'java.lang.String')
      D                                     CONST
- 
+
       ** Prototype for java string's getBytes method
      D cvtToBytes      PR           179A   EXTPROC(*JAVA:
      D                                             'java.lang.String':
      D                                             'getBytes')
      D                                     VARYING
- 
+
       ** Create CalcClass object field
      D CalcClassObj    S               O   CLASS(*JAVA:
      D                                     'com.misys.midas.midasplus.+
      D**********                           calculationmanager.collend.+                       CLE041
      D**********                           wrapper.as400.RPGWrapper')                         CLE041
      D                                     wrapper.access.RPGWrapper')                        CLE041
- 
+
       ** Create string objects
      D Parm1           S               O   CLASS(*JAVA:'java.lang.String')
      D Parm2           S               O   CLASS(*JAVA:'java.lang.String')
@@ -334,7 +336,7 @@
      D Parm6           S               O   CLASS(*JAVA:'java.lang.String')
      D Parm7           S               O   CLASS(*JAVA:'java.lang.String')
      D RcvParms        S               O   CLASS(*JAVA:'java.lang.String')
- 
+
      D WRcvStr         S            179A   VARYING
      D WRcvFld1        S             25
      D WRcvFld2        S              1
@@ -357,7 +359,7 @@
      D WRcvFld19       S              3
      D WRcvFld20       S              5
      D WRcvFld21       S             15
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -368,13 +370,13 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       *                                                               *
       *  MAIN PROCEDURE                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     KCOLL         KLIST                                                              BUG17987
      C                   KFLD                    KCDMODS           2                        BUG17987
      C                   KFLD                    KCDFCUS           6                        BUG17987
@@ -389,15 +391,15 @@
       *                                                                                     BUG17987
      C     *LOVAL        SETLL     GLCOLLLF
      C                   READ      GLCOLLLF
- 
+
       ** Read through all collateral detail records with CDRECI <> 'M'
- 
+
      C                   DOW       NOT %EOF(GLCOLLLF)
- 
+
      C                   SELECT
- 
+
       ** Reversed record
- 
+
      C                   WHEN      CDRECI = 'R'
      C                   IF        CDLCD = BJRDNB
      C                   IF        CDCLVP <> *ZERO
@@ -408,23 +410,23 @@
      C                   EVAL      CDCLVP = *ZERO
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Live record
- 
+
      C                   WHEN      CDRECI = 'D'
- 
+
       ** Value date is before date of next working day
- 
+
      C                   IF        CDVDAT < BJDNWD
- 
+
       ** Start date postings not yet generated
- 
+
      C                   IF        CDSTGN <> 'Y'
- 
+
      C                   IF        CDGENA = 'Y'
      C                   EXSR      SRGetDets
      C                   EVAL      WPostAmnt = WorkLAMT
- 
+
      C                   IF        WPostAmnt <> *ZERO
      C                   EVAL      WStrtEvnt = 'Y'
      C                   EVAL      WEvntDate = CDVDAT
@@ -433,21 +435,21 @@
      C                   EVAL      CDCLVP = WorkLAMT
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Start date postings generated
- 
+
      C                   ELSE
- 
+
      C                   IF        CDGENA = 'Y'
      C                   EXSR      SRGetDets
      C                   EVAL      WCompLV = WorkLAMT
      C                   ELSE
      C                   EVAL      WCompLV = *ZERO
      C                   ENDIF
- 
+
      C                   EVAL      WPostAmnt = WCompLV - CDCLVP
      C                   EVAL      CDCLVP = WCompLV                                           245680
- 
+
      C                   IF        WPostAmnt <> *ZERO
      C                   IF        WPostAmnt > *ZERO
      C                   EVAL      WCollIncr = 'Y'
@@ -461,9 +463,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** End date is before date of next working day
- 
+
      C                   IF        CDEDAT <> *ZEROS AND
      C                             CDEDAT < BJDNWD
      C                   IF        CDCLVP <> *ZERO
@@ -535,24 +537,24 @@
      C                   ENDIF                                                              BUG17987
      C                   ENDIF
      C                   ENDSL
- 
+
       ** Update Collateral details file
- 
+
      C                   UPDATE    GLCOLLD0
- 
+
      C                   READ      GLCOLLLF
      C                   ENDDO
- 
+
       ** Commit changes
- 
+
      C                   COMMIT
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   CLOSE     GL001501P1
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -561,45 +563,45 @@
       *                                                               *
       *****************************************************************
      C     SRAcctKeys    BEGSR
- 
+
       ** Initialise file fields
- 
+
      C                   EXSR      SRInitFlds
- 
+
      C                   EVAL      GLRECI = 'D'
      C                   EVAL      WType = CDCOLT
      C                   EVAL      WLoc = CDCOLO
- 
+
       ** Start event
- 
+
      C                   IF        WStrtEvnt = 'Y'
      C                   EVAL      WChar = 'S'
      C                   ENDIF
- 
+
       ** Collateral Increase
- 
+
      C                   IF        WCollIncr = 'Y'
      C                   EVAL      WChar = 'I'
      C                   ENDIF
- 
+
       ** Collateral Decrease
- 
+
      C                   IF        WCollDecr = 'Y'
      C                   EVAL      WChar = 'D'
      C                   ENDIF
- 
+
       ** Expiry Event
- 
+
      C                   IF        WExpEvent = 'Y'
      C                   EVAL      WChar = 'E'
      C                   ENDIF
- 
+
       ** Reversal
- 
+
      C                   IF        WReversal = 'Y'
      C                   EVAL      WChar = 'E'
      C                   ENDIF
- 
+
      C                   EVAL      GLAKEY = WAKEY
      C                   EVAL      GLCREF = CDCREF
      C                   EVAL      GLCNUM = CDCNUM
@@ -609,7 +611,7 @@
      C                   EVAL      GLECCY = CDCCY
      C                   EVAL      GLCOPT = CDCOPT
      C                   EVAL      GLPLAM = CDCLVP
- 
+
      C                   IF        WStrtEvnt = 'Y'  OR  WCollIncr = 'Y'  OR
      C                             WCollDecr = 'Y'
      C                   IF        CDGENA = 'Y'
@@ -636,11 +638,11 @@
      C                   EVAL      GLLAMT = WorkLAMT
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   WRITE     GLACKYD0
- 
+
       ** Reset work fields
- 
+
      C                   EVAL      WReversal = *BLANK
      C                   EVAL      WStrtEvnt = *BLANK
      C                   EVAL      WCollIncr = *BLANK
@@ -650,7 +652,7 @@
      C                   EVAL      WPostAmnt = *ZERO
      C                   EVAL      WEvntDate = *ZERO
      C                   EVAL      WCompLV = *ZERO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -660,9 +662,9 @@
       *                                                               *
       *****************************************************************
      C     SRGetDets     BEGSR
- 
+
       ** Create java string objects for all parameters to be passed to getCLVDetails
- 
+
      C                   EVAL      Parm1 = crtString(CDCREF)
      C                   EVAL      Parm2 = crtString(CDCOPT)
      C                   EVAL      Parm3 = crtString(CDCSBR)
@@ -670,9 +672,9 @@
      C                   EVAL      Parm4 = crtString(CDCSCN)                                  CSD027
      C                   EVAL      Parm5 = crtString(CDPTFR)
      C                   EVAL      Parm6 = crtString(CDCSEC)
- 
+
       ** Invoke the getCLVDetails method of the CalcClass object
- 
+
      C                   EVAL      RcvParms = getValues(CalcClassObj:
      C                                                  Parm1:
      C                                                  Parm2:
@@ -680,15 +682,15 @@
      C                                                  Parm4:
      C                                                  Parm5:
      C                                                  Parm6)
- 
+
       ** Convert the received java string to RPG bytes (Varying alpha field)
- 
+
      C                   EVAL      WRcvStr = cvtToBytes(RcvParms)
- 
+
      C                   MOVEL     WRcvStr       WChar5
- 
+
       ** Set all return fields to blanks or zeroes if error occurs
- 
+
      C                   IF        WChar5 = 'ERROR'
      C                   EVAL      WorkCOLI = *BLANKS
      C                   EVAL      WorkAPCT = *BLANKS
@@ -712,9 +714,9 @@
      C                   EVAL      WorkMARG = *ZERO
      C                   EVAL      WorkLAMT = *ZERO
      C                   EXSR      SRReport
- 
+
       ** Retrieve all fields from received string via substring function
- 
+
      C                   ELSE
      C                   EVAL      WRcvFld1 = %SUBST(WRcvStr:1:25)
      C                   EVAL      WRcvFld2 = %SUBST(WRcvStr:26:1)
@@ -737,7 +739,7 @@
      C                   EVAL      WRcvFld19 = %SUBST(WRcvStr:157:3)
      C                   EVAL      WRcvFld20 = %SUBST(WRcvStr:160:5)
      C                   EVAL      WRcvFld21 = %SUBST(WRcvStr:165:15)
- 
+
      C                   MOVEL     WRcvFld1      WorkCOLI
      C                   MOVEL     WRcvFld2      WorkAPCT
      C                   MOVEL     WRcvFld3      WorkNAMT
@@ -760,7 +762,7 @@
      C                   MOVEL     WRcvFld20     WorkMARG
      C                   MOVEL     WRcvFld21     WorkLAMT
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -770,7 +772,7 @@
       *                                                               *
       *****************************************************************
      C     SRInitFlds    BEGSR
- 
+
      C                   EVAL      GLRECI = *BLANKS
      C                   EVAL      GLAKEY = *BLANKS
      C                   EVAL      GLCREF = *BLANKS
@@ -813,7 +815,7 @@
      C                   EVAL      GLMARG = *ZERO
      C                   EVAL      GLLAMT = *ZERO
      C                   EVAL      GLPLAM = *ZERO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -822,25 +824,25 @@
       *  SRReport - Report Errors Encountered in Calculator           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRReport      BEGSR
- 
+
      C                   MOVEL     CDCREF        RCDCREF
      C                   EVAL      RCDDESC = 'ERROR OCCURRED IN CALCULATOR +
      C                                       PROCESSING'
- 
+
       ** Check that sufficient lines remain for the format
- 
+
      C                   EVAL      RQDLN1 = 2
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                      BUG4392
@@ -959,26 +961,26 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PReturn
- 
+
       ** Access Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBKEY  = POption
      C                   EVAL      DBASE  = 1
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialise work fields
- 
+
      C                   EVAL      PReturn = *BLANKS
      C                   EVAL      WReversal = *BLANK
      C                   EVAL      WStrtEvnt = *BLANK
@@ -989,35 +991,35 @@
      C                   EVAL      WPostAmnt = *ZERO
      C                   EVAL      WEvntDate = *ZERO
      C                   EVAL      WCompLV = *ZERO
- 
+
      C                   OPEN      GL001501P1
- 
+
      C                   IN        SDSTAT
      C                   EVAL      WSystem = LIBR
- 
+
      C                   EVAL      Idx = 1
      C     WChar1        LOOKUP    ArrUPPER(Idx)                          89
- 
+
      C                   IF        *IN89 = *ON
      C                   EVAL      WChar1 = ArrLOWER(Idx)
      C                   ENDIF
- 
+
      C                   EVAL      Idx = 1
      C     WChar2        LOOKUP    ArrUPPER(Idx)                          89
- 
+
      C                   IF        *IN89 = *ON
      C                   EVAL      WChar2 = ArrLOWER(Idx)
      C                   ENDIF
- 
+
      C     WSystem       CAT       WRPG          WFolder
- 
+
      C                   EVAL      Parm7 = crtString(WFolder)
- 
+
       ** Create/Instantiate "CalcClass" java object (one time only)
       ** so as to access its "getCLVDetails" method later
- 
+
      C                   EVAL      CalcClassObj = crtCalcClass(Parm7)
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1030,18 +1032,18 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
      C                   ROLBK
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      PReturn = '*ERROR '
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
 ** ArrUPPER

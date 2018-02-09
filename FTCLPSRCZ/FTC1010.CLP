@@ -8,11 +8,12 @@
 /********FTC1010****FUNDS*TRANSFER*-*DAILY*REORGANISATION*           *065746*/
 /*       FTC1010    Funds Transfer - Purge Processing                *065746*/
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR829688           Date 14Nov12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR829688           Date 14Nov12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. BUG24691           Date 30Jul09              */
+/*                      BUG24691           Date 30Jul09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR829688 - Include PF/OTPAYDQD and PF/INPAYDQD              */
 /*                  in the reorganization. (Child: AR829689)         */
 /*       BUG24691 - COV details report are missing                   */
@@ -69,7 +71,7 @@
 /*      DCL     VAR(&FTSTAT) TYPE(*CHAR) LEN(256)                 */  /*S01189*/
          DCL     VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*   Start of amendment 065746                          */
         DCL     VAR(&DAYS) TYPE(*DEC) LEN(5 0)                        /*065746*/
@@ -597,5 +599,5 @@
 /**/
 /* THEEND:  ENDPGM                                                 */ /*S01189*/
 THEEND:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
             ENDPGM                                                    /*S01189*/

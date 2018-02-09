@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Incoming payments charges defaults')          *
@@ -15,10 +15,11 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR898162           Date 25Nov14               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR898162           Date 25Nov14               *
+      *                 CFT157             Date 29Aug14               *
       *                 AR895223           Date 19Nov12               *
       *                 CFT120             Date 28Sep12               *
       *                 AR572042           Date 21Sep12               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR898162 - Charge codes passed via API are lost              *
       *             (Child: AR898163)                                 *
       *  CFT157 - Stop FT Transaction after Authorisation             *
@@ -3522,7 +3524,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** FCTR
 0001
 0010

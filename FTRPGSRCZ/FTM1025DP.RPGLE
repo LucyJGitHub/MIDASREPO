@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       **********************************************************************
 /*STD *  RPGBASEMOD                                                        *
 /*EXI *  TEXT('Midas FT Display one CCT header screen 1')             *
@@ -12,11 +12,12 @@
       *  Function:  This module display a detail of a Customer Credit      *
       *             Transfer                                               *
       *                                                                    *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                                    *
-      *  Last Amend No. MD022652           Date 07Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022652           Date 07Oct13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSW209             Date 01Apr09               *
+      *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
       *                 CSW207             Date 08Jun07               *
@@ -36,6 +37,7 @@
       *                                                                    *
       *--------------------------------------------------------------------*
       *                                                                    *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022652 - Excluded Phase Processing                              *
       *  CSW209 - SWIFT 2009 Changes (Recompile)                           *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -995,4 +997,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       **********************************************************************
 ** Ctdata CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

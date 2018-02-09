@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GP Global Customer Details Trigger Program')     *
@@ -10,10 +10,11 @@
       *  GPGPCSTXPD - On-Line Update of Global File GZGLCUSL          *
       *             - Trigger program for GPCUSTXPD                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGP017             Date 06Aug12               *
-      *  Prev Amend No. AR547326           Date 07Nov12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *                 AR547326           Date 07Nov12               *
       *                 CSF011             Date 12Sep11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24717           Date 14Jul09               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  AR547326 - Prevent CPF4293 error on file GPGLCUSLL1 by doing *
       *             an overide share no before opening it             *

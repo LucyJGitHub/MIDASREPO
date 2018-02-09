@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Maintain Payment Charge Definitions')         *
@@ -9,13 +9,14 @@
       *                                                               *
       *  FT000321   - Maintain Payment Charge Definitions             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Function : This program allows the maintenance of payment    *
       *             charge details                                    *
       *                                                               *
-      *  Last Amend No. MD025574           Date 19Aug14               *
-      *  Prev Amend No. 259785             Date 14Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025574           Date 19Aug14               *
+      *                 259785             Date 14Jan13               *
       *                 CFT147             Date 14Jan13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 251529             Date 06Dec07               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025574 - Description amended not changed on subfile        *
       *  259785 - Fix for CFT147.                                     *
       *           Base Ccy amounts calc'd from max value "other ccy"  *
@@ -18674,4 +18676,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

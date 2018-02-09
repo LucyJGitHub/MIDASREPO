@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                       CGP017
 /*STD *  RPGBASEMOD                                                   *                       CGP017
@@ -10,10 +10,11 @@
       *                                                               *
       *  GOGLACNTQD - Bulk Update of Global File GZGLACNTQD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CRE095             Date 25Apr14               *
-      *  Prev Amend No. CRE090             Date 14Feb14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
       *                 CGP017             Date 06Aug12               *
       *                 AR899028           Date 25Jan12               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
       *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
       *             RUND (Child: AR1095877) (Recompile)               *

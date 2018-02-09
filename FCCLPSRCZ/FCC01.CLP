@@ -7,16 +7,17 @@
     /*                                                               */
     /*  FCC01 - SET UP RCF FILES FOR START OF DAY                    */
     /*                                                               */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+    /*   (c) Finastra International Limited 2001                     */
     /*                                                               */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-    /*       LAST AMEND NO.076417            DATE 01MAR95            */
-    /*       PREV AMEND NO.079455            DATE 23NOV94            */
+    /*       PREV AMEND NO.076417            DATE 01MAR95            */
+    /*                     079455            DATE 23NOV94            */
     /*                     E30569            DATE 06NOV91            */
     /*                     S01343            DATE 15AUG91            */
     /*                     LN1034            DATE 27NOV90            */
@@ -24,6 +25,7 @@
     /*                                                               */
     /*****************************************************************/
     /*                                                               */
+    /*       MD046248 - Finastra Rebranding                          */
     /*  076417  - FCSNOSPD is locked by RCFMONITOR job doing ENDJRNPF*/
     /*            This program should try to allocate it before CPYF */
     /*  079455  - DO NOT CLEAR RCF FILES UNTIL RCF MONITOR HAS       */
@@ -60,7 +62,7 @@
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0)               /*079455*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
      dcl    &rtcd       *char    7  (' ')                   /*LN0381*/
      dcl    &optn       *char    7  ('*FIRST ')             /*LN0381*/
@@ -72,7 +74,7 @@
                           CMDLBL(ABNOR))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*  Loop until RCF Monitor has shut down                              /*079455*/
                                                                       /*079455*/
 FC0100:                                                               /*079455*/

@@ -10,15 +10,16 @@
      F*     FD0510 - Split Journal dump into audit files, one audit   *
      F*              file per Audit Report, and split into fields     *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-     F*     Last Amend No. BUG8891            Date   12Oct05          *
+      *  Prev Amend No. BUG8891            Date 12Oct05               *
       * Midas Release 4 --------------- Base -------------------------*
-     F*     Prev Amend No. CPK014             Date   21Aug01          *
+      *                 CPK014             Date 21Aug01               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
      F*                    S01319             DATE   24SEP91          *
      F*                    S01328             DATE   14FEB91          *
@@ -31,6 +32,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
      F*     BUG8891 - M+ ref DL1956 & DL1950 Single IRS & FRA         *
      F*               revaluation reports can not be found in         *
      F*               intellistor or AS400 during COB                 *
@@ -1328,4 +1330,4 @@
      C                   ENDSR                                                                 S0132
      C****************************************************************    S01328
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

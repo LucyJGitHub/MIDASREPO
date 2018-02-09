@@ -15,10 +15,11 @@
       *             listing all the totals and printing DIFFERENCE    *
       *             against any files which do not tally.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD021155           Date 17Jul13               *
-      *  Prev Amend No. AR722462           Date 10Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD021155           Date 17Jul13               *
+      *                 AR722462           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP204             Date 10Feb10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD021155 - COB Restructure Phase 1 Remnants                  *
       *           - CGL120 changes not done                           *
       *  AR722462 - Add GESPPD and GESP2PD in the report              *
@@ -1134,4 +1136,4 @@ GETXPD    Account Transfer Gen. Entries -      23
 GESPPD    Sweep entries                 -      24
 GESP2PD   Sweep entries 2               -      25
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

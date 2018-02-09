@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Credit interest and charges dtls Validati')   *
@@ -9,11 +9,12 @@
       *                                                               *
       *  GLAMAD3VL -  Credit Interest and Charges Details Validation  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047680           Date 08Sep17               *
-      *  Prev Amend No. MD046635           Date 10Aug17               *
-      *                 MD020938           Date 19Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD047680           Date 08Sep17               *
+      *                 MD046635           Date 10Aug17               *
+      *                 MD020938           Date 19Jun13               *      
       *                 CGL165             Date 17Feb15               *
       *                 CRE090             Date 14Feb14               *
       *                 MD024398           Date 11May14               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD047680 - Prevent validation of authority to the account    *
       *             branch if branch value is blank                   *
       *  MD046635 - User permissions are not verified on account      *
@@ -66,7 +68,7 @@
       *             the user inserting an account is always validated *
       *             to have authority to the branch of the account.   *
       *  MD020938 - Create new system values to check the branch/user *
-      *             authority.                                        *
+      *             authority.                                        *      
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CRE090 - Delay Capitalisation of Interest                    *
       *  MD024398 - API Performance Optimisation                      *
@@ -1637,4 +1639,4 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

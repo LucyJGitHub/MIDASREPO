@@ -8,10 +8,11 @@
       *                                                               *
       *  GLAMADUPC - GL Account Database Update Controller            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. LLN022A            Date 03Jun15               *
-      *  Prev Amend No. CRE101             Date 27Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *                 CRE101             Date 27Aug14               *
       *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 23Feb15               *
       *                 CRE090             Date 14Feb14               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  CRE101 - Interim Interest Statement on a Frequency           *
@@ -1256,7 +1258,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** ##OX1
 OVRDBF FILE(ACCNTLXX) TOFILE(ACCBR) SHARE(*NO)
 ** ##OX2

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Calculate maximum daily delivery riskmat')    *
@@ -9,10 +9,11 @@
       *                                                               *
       *  FXMDDRAMT - Calculate Maximum Daily Delivery Risk            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -63,12 +65,12 @@
       *  185612 - Calculate Maximum Daily Delivery Risk.              *
       *                                                               *
       *****************************************************************
- 
+
      FSDCUSTL4  IF   E           K DISK
- 
+
      FDEALSDBL  IF   E           K DISK
      F                                     RENAME(FXDEALP0:DEALSDL)
- 
+
      FEMDDRNT   IF   E           K DISK
       *****************************************************************
       ** +--------------------------------------+
@@ -88,20 +90,20 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -113,31 +115,31 @@
      D/COPY ZACPYSRC,ERR_ARRAYS
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D**  SIX ARAYS FOR CUSTOMER FX LIMITS
      D XFDT            S              5  0 DIM(6)                               PERIOD END DATES
      D XFLM            S              9  0 DIM(6)                               PERIOD LIMIT AMT.
@@ -163,117 +165,117 @@
      D  PERIOD                 1      6                                         S01272
      D*                                                                   S01272
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       * DATA STRUCTURE FOR Currency details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       * DATA STRUCTURE FOR Customer details
- 
+
      D SDCLLM        E DS                  EXTNAME(SDCLLMPD)
      D** EXTERNAL DS FOR CUSTOMER LIMITS DETAILS
- 
+
      D SDLIMT        E DS                  EXTNAME(SDLIMTPD)
      D** EXTERNAL DS FOR LIMITS DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
      D** EXTERNAL DS FOR DEALING BASE CCY
- 
+
      D SDEXPM        E DS                  EXTNAME(SDEXPMPD)
      D** EXTERNAL DS FOR EXPOSURE MANAGEMENT
      D*
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS FOR ACCESS PROGRAMS, long DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Work fields used by ZFWDT
       ** ~~~~~~~~~~~~~~~~~~~~~~~~~
       ** Currency
      D ZCCY            S              3A
- 
+
       ** Date
      D ZDATE           S              6A
- 
+
       ** Midas day number
      D ZDAYNO          S              5P 0
      D ZDYNBR          S                   LIKE(ZDAYNO)
- 
+
       ** Holiday indicator
      D ZIND            S              1A
- 
+
       ** Location code
      D ZLOC            S              3A
- 
+
       ** Number of days
      D ZNRDYS          S              2P 0
- 
+
       ** INPUT PARMS
       ** ~~~~~~~~~~~
       ** Action code
      D DDACTN          S              1A
- 
+
       ** Customer
      D DDCUST          S             10A
- 
+
       ** Buy Currency
      D DDBCCY          S              3A
- 
+
       ** Sell Currency
      D DDSCCY          S              3A
- 
+
      D** Run Day Number from SDBANKPD
      D BJRDNB          S              5  0
- 
+
       ** System Location Code from SDBANKPD
      D BJSLCD          S              3A
- 
+
       ** Buy Currency Decimal Places
      D BUYCDP          S              1  0
- 
+
       ** Buy Amount
      D BAMT            S             13  0
- 
+
       ** Buy Currency Exchange Rate
      D BYERLC          S             15  8
- 
+
       ** Buy Currency Multiply/Divide Indicator
      D BYMDIN          S              1A
- 
+
       ** Sell Amount
      D SAMT            S             13  0
- 
+
       ** Net FX Exposure Indicator
      D W#NFXE          S              1A
- 
+
       ** Exposure Management indicator
      D BGEXMG          S              1A
- 
+
       ** Value Date in day number format
      D @VDYNO          S              5  0
- 
+
       ** Work Fields
       ** ~~~~~~~~~~~
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       ** Reset error fields
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line resets the fields related to error
       ** handling: ReturnCode, ErrorFound, FldNamXArr, MsgIDXArr,
@@ -282,23 +284,23 @@
       ** It therefore requires ERR_ARRAYS and STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_RESET
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
      C     Strt          TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       *' +----------------------------------------------------------------+
- 
+
       **Initialization
- 
+
      C                   Z-ADD     0             TOTPAR
       *
       **Set Net Exposure indicator
@@ -1002,9 +1004,9 @@
       *           module without disturbing the converted FX0820      *
       *           code                                                *
       *****************************************************************
- 
+
      C     ZFWDT         BEGSR
- 
+
      C                   CALLB     'ZFWDT'
       ** Inputs
       **                                   Midas day number
@@ -1017,9 +1019,9 @@
      C                   PARM                    ZCCY
       **                                   Location
      C                   PARM                    ZLOC
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1047,7 +1049,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** Outputs from this procedure
@@ -1062,10 +1064,10 @@
      C                   PARM                    DDLIM1            3
      C                   PARM                    DDLIM2            3
      C                   PARM                    DDLIM3            9
- 
+
       ** Inputs to this procedure
       ** ------------------------
- 
+
      C** Action code
      C                   PARM                    DDACTN
      C** Customer
@@ -1102,9 +1104,9 @@
      C                   MOVE      *BLANK        DDLIM2
      C                   MOVE      *BLANK        DDLIM3
      C                   MOVE      *BLANK        DDMDDR
- 
+
       ** Key list for DEALSDL
- 
+
      C     DLKEY2        KLIST
      C                   KFLD                    CUSNM
      C                   KFLD                    @VDYY             4 0
@@ -1189,14 +1191,14 @@
      C                   EXSR      *PSSR
      C                   END
      C                   END
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1208,7 +1210,7 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   POW - POWERS OF 10
 0000001
 0000010

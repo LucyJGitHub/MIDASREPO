@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*S*D ***RPGBASEBNC****************************************************                     BUG27914
 /*STD *  RPGBASEBNC                                                   *            BUG27914 BUG28163
@@ -10,15 +10,17 @@
       *                                                               *
       *  GP003005 - GP Update of Global File GPCLEARPD                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. BUG28163           Date 05Oct10               *
-      *  Prev Amend No. BUG27914 *REDUNDANTDate 09Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG28163           Date 05Oct10               *
+      *                 BUG27914           Date 09Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP203  *CREATE    Date 02Feb10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG28163 - Forward movements does not appear on PABE         *
       *             (Recompile due to GPCLEARPD reinstatement)        *
       *  BUG27914 - RAME Design Changes                               *

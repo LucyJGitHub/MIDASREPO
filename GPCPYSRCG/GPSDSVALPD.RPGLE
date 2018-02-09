@@ -4,13 +4,15 @@
       *                                                               *
       *  GPSDSVALPD - On-Line Update of Global File GZSDSVALPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CAP205   *REBUILD  Date 23Mar10               *
+      *  Prev Amend No. CAP205             Date 23Mar10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP205 - Teller Related APIs - Account Balance Check         *
       *                                                               *
       *****************************************************************

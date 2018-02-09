@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT CCT Header Convert- File to Screen Fmt')
@@ -15,11 +15,12 @@
       *             display format for FTM1024DP and can also convert *
       *             in the other direction.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG24998           Date 17Jul09               *
-      *  Prev Amend No. BUG24279           Date 10Jun09               *
+      *  Prev Amend No. BUG24998           Date 17Jul09               *
+      *                 BUG24279           Date 10Jun09               *
       *                 BUG24802           Date 08Jul09               *
       *                 BUG24843           Date 09Jul09               *
       *                 CSW209             Date 01Apr09               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG24998 - Bank operation code is missing (Recompile)        *
       *  BUG24279 - Dump encountered                                  *
       *  BUG24802 - Sending institution in STP is missing             *
@@ -1568,4 +1570,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -7,16 +7,17 @@
     /*                                                               */
     /*  FCC0210 - REQUEST A PERIODIC REPORT                          */
     /*                                                               */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+    /*   (c) Finastra International Limited 2001                     */
     /*                                                               */
-    /*       Last Amend No. MD031966         Date 27Jul15            */
+    /*       Last Amend No. MD046248         Date 27Oct17            */
+    /*       Prev Amend No. MD031966         Date 27Jul15            */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-    /*       Prev Amend No. 096786           Date 27Mar96            */
+    /*                      096786           Date 27Mar96            */
     /*                      092725           Date 13Oct95            */
     /*                      S01486           DATE 07JUN94            */
     /*                      076789           DATE 03OCT94            */
@@ -32,6 +33,7 @@
     /*                                                               */
     /*****************************************************************/
     /*                                                               */
+    /*      MD046248 - Finastra Rebranding                           */
     /*      MD031966-BFM GL3572P1 issue                              */
     /*      096786 - Blank out parameters if F12 taken to ensure     */
     /*               subsequent requests do not collect extraneous   */
@@ -119,7 +121,7 @@
              DCL        VAR(&SBPARMS) TYPE(*CHAR) LEN(213)
              DCL        VAR(&STRING) TYPE(*CHAR) LEN(268)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                       /*LN1165*/
              DCL        VAR(&MBIN) TYPE(*CHAR) LEN(1)
@@ -140,7 +142,7 @@
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGJOB     SWS(00000000)
                                                                       /*LN1165*/
 /*/COPY WNCPYSRC,FCC0210003                                          */
@@ -578,12 +580,12 @@ SELECT:                                                               /*S01486*/
 /**********                  &PARAMETERS &ACTION &CMD)                  E38898*/
  PROMPT:     CHGVAR     VAR(&CMD) VALUE(' ')                          /*E38898*/
 /*/COPY WNCPYSRC,FCC0210006                                          */
-
+ 
 /*             CALL       PGM(&PNAM) PARM('' &D9LVL &D9ETTY +         /*MD031966*/
 /*                        &PARAMETERS &ACTION &CMD) /*E38898 */       /*MD031966*/
   CALL       PGM(&PNAM) PARM(&SEQNO &D9LVL &D9ETTY &PARAMETERS &ACTION &CMD) +
                /*MD031966*/
-
+ 
 /*/COPY WNCPYSRC,FCC0210007                                          */
                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                              CMDLBL(DBEND))
@@ -658,7 +660,7 @@ SELECT:                                                               /*S01486*/
 /*MAIN: CALL       PGM(FC0215) PARM(&D9RNAM &D9COTT &D9CSEQ &D9PDSC &MIDQ &D9USRR +
                     &D9FREQ &FDAY &D9PFDT &D9LVL &D9ETTY &D9DRQD &D9PSQN &ACTION +
                     &D9TNLU &D9SOID &PARAMETERS &CMD &ROUT &OUTQ &MUREP &DBRN) */ /*MD031966*/
-
+ 
  MAIN: CALL       PGM(FC0215) PARM(&D9RNAM &D9COTT &D9CSEQ &D9PDSC &MIDQ &D9USRR +
                     &D9FREQ &FDAY &D9PFDT &D9LVL &D9ETTY &D9DRQD &D9PSQN &ACTION +
                     &D9TNLU &D9SOID &PARAMETERS &CMD &ROUT &OUTQ &MUREP &DBRN +

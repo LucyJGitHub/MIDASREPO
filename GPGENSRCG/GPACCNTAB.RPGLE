@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                       CGP017
 /*STD *  RPGBASEMOD                                                   *                       CGP017
@@ -10,10 +10,11 @@
       *                                                               *
       *  GPACCNTAB  - On-Line Update of Global File GZACCNTAB         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD020772           Date 30Sep13               *
-      *  Prev Amend No. MD020656A          Date 30Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020772           Date 30Sep13               *
+      *                 MD020656A          Date 30Sep13               *
       *                 MD020656           Date 30Sep13               *
       *                 CGP017             Date 06Aug12               *
       *                 CRE073             Date 06Dec10               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020772 - V_ABC SQL incorrect decimal places                *
       *           - Recompiled due to changes done in GPACNTTD.       *
       *  MD020656A - ABC check performance issue due to complex SQL vw*

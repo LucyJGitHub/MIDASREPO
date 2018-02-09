@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP File trigger control program')
@@ -15,14 +15,15 @@
       *                                                               *
       *  Attached to: Any Midas file requiring trigger processing.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 245952             Date 23Feb07               *
+      *  Prev Amend No. 245952             Date 23Feb07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG6921            Date 21Nov05               *
+      *                 BUG6921            Date 21Nov05               *
       *                 BG2778R (reopen)   Date 24Jun04               *
       *                 BUG2778            Date 02Jun04               *
       *                 BG1736             Date 05Apr04               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  245952 - New triggers for T_GPCUSTH, T_GPCTRYH and T_GRINDSH *
       *           Increase length of EntryData.                       *
       *  BUG6921 - T_LVCONFIG has a record format longer than 20,000, *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Global User Security - Action Codes')
@@ -9,20 +9,22 @@
       *                                                               *
       *  GP100003 - Global User Security - Action Codes               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256978             Date 07Oct08               *
+      *  Prev Amend No. 256978             Date 07Oct08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 BUG4091            Date 27Aug04               *
       *                 BUG3052            Date  1Jul04               *
       *                 CGP001  *CREATE    Date 26May04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256978 - Fix, SPF: Authorize to all ends in error 065        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG4091- Replace numeric check on zone with simple TESTN     *

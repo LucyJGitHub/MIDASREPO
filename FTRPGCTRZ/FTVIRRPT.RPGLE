@@ -13,10 +13,11 @@
       *             FTIPAYSIN, and service program for level 2        *
       *             validation modules.                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR920077           Date 13Mar15               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR920077           Date 13Mar15               *
+      *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR920077 - Correct :77B: validation. (Child: AR922613)       *
       *           - Applied for AR981901                              *
       *  MD000091 - Event Codes Substitution                          *
@@ -484,4 +486,4 @@
      C/COPY FTCPYSRC,SFTADDRSC1
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

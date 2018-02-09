@@ -7,15 +7,16 @@
 /*                                                                  */
 /*      GLC1440  - STANDING JOURNAL MAINTENANCE                     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
-/*       Last Amend No. 259359             Date 20Mar09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 259359             Date 20Mar09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Prev Amend No. 244686             Date 28Feb07              */
+/*                      244686             Date 28Feb07              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CGL013             Date 29Mar02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       259359 - Override GLBTNOL0 with SHARE(*NO)                 */
 /*       244686 - Added missing fields to GLJESHPD which CAP086     */
 /*                and CSC024 introduced to GZGLJENHPD in order for  */
@@ -49,7 +51,7 @@ PGM
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CGL013*/
              DCL        VAR(&CGL013) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CGL013*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,GLC1440001                                          */
  
@@ -106,6 +108,6 @@ PGM
 /*/COPY WNCPYSRC,GLC1440END                                           /*S01408*/
 /**/                                                                  /*S01408*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

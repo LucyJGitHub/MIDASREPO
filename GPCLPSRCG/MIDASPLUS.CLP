@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       MIDASPLUS - MidasPlus Initial Program                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. CPK030             Date 11Apr14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CPK030             Date 11Apr14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG12061            Date 20Sep06              */
+/*                      BG12061            Date 20Sep06              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      240279             Date 30Jun06              */
 /*                      BUG10066           Date 24Jan06              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK030 - Clean up of deliverable data library.              */
 /*       BG12061 - Addition of Consumer Banking message file.        */
 /*                 Pass the user multilanguage code to GPC000200     */
@@ -53,7 +55,7 @@
              DCL        VAR(&USRID) TYPE(*CHAR) LEN(10)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /* Global monitor message */
@@ -213,6 +215,6 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

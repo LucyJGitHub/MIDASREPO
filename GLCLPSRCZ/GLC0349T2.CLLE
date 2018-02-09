@@ -8,14 +8,16 @@
 /*                                                                   */
 /*       GLC0349T2 - Midas GL Cleared Balance - Task Split Server    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD037383           Date 25May16              */
-/*       Prev Amend No. CGL049             Date 17Feb15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD037383           Date 25May16              */
+/*                      CGL049             Date 17Feb15              */
 /*                      CGL120   *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
 /*                  Stamp Tax (CER049) processing.                   */
 /*                  Rework that component to make it 'Task Split'    */
@@ -25,7 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&POSTNUM &CNAME &CSEQ &COPY_RECS)
-
+ 
              DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
                           VALUE('GLCBUSPD')
              DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
@@ -46,102 +48,102 @@
              DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
              DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           2012')
-
+ 
 /* Global monitor message */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
 /* Send message to MRUNQ */
-
+ 
              SNDPGMMSG  MSG('GLC0349T2 - Cleared Balance - Task +
                           Split Server') TOMSGQ(MRUNQ)
 /* Start commitment control */
-
+ 
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
-
+ 
              IF         COND(&POSTNUM = '3') THEN(DO)
                 RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
                 IF         COND(&CURRCD = 0) THEN(DO)
                    GOTO       CMDLBL(END)
                 ENDDO
              ENDDO
-
+ 
              ALCOBJ     OBJ((&INDEXFL *FILE *EXCL))
-
+ 
 /* Read COB components file to check the restart status */
-
+ 
              CALL       PGM(CB0160) PARM(&CNAME &CSEQ &STAT)
-
+ 
 /* Check if any problems with COB components file */
-
+ 
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
-
+ 
 /* If restart status = F, only resend END message to sub-Task */
-
+ 
              IF         COND(&STAT = 'F') THEN(DO)
              GOTO       CMDLBL(SNDEND)
              ENDDO
-
+ 
 /* Set restart status to 'Y' */
-
+ 
              CHGVAR     VAR(&STAT) VALUE('Y')
              CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
-
+ 
 /* Wait for data queue entry */
-
+ 
  RECEIVE:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA &RCVWAIT)
-
+ 
 /* Extract member name */
-
+ 
              CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))
-
+ 
 /* Clear the driving file */
-
+ 
              CLRPFM     FILE(&DRIVER) MBR(&MEMBER)
-
+ 
 /* Override driving file */
-
+ 
              OVRDBF     FILE(&DRIVER) TOFILE(&DRIVER) MBR(&MEMBER)
-
+ 
 /* Set overide to correct file based upon posting */
-
+ 
              IF         COND(&POSTNUM *EQ '1') THEN(DO)
                 OVRDBF     FILE(SACPO) TOFILE(ACPO1) FRCRATIO(500) +
                              NBRRCDS(1000) SEQONLY(*YES 2000)
              ENDDO
-
+ 
              IF         COND(&POSTNUM *EQ '2') THEN(DO)
                 OVRDBF     FILE(SACPO) TOFILE(ACPO2) FRCRATIO(500) +
                              NBRRCDS(1000) SEQONLY(*YES 2000)
              ENDDO
-
+ 
              IF         COND(&POSTNUM *EQ '3') THEN(DO)
                 OVRDBF     FILE(SACPO) TOFILE(ACPO3) FRCRATIO(500) +
                              NBRRCDS(1000) SEQONLY(*YES 2000)
              ENDDO
-
+ 
              IF         COND(&POSTNUM *EQ '4') THEN(DO)
                 OVRDBF     FILE(SACPO) TOFILE(ACPO4) FRCRATIO(500) +
                              NBRRCDS(1000) SEQONLY(*YES 2000)
              ENDDO
-
+ 
              IF         COND(&POSTNUM *EQ '5') THEN(DO)
                 OVRDBF     FILE(SACPO) TOFILE(ACPO5) FRCRATIO(500) +
                              NBRRCDS(1000) SEQONLY(*YES 2000)
              ENDDO
-
+ 
              IF         COND(&POSTNUM *EQ '6') THEN(DO) /* CGL049 */
                 OVRDBF     FILE(SACPO) TOFILE(ACPO6) FRCRATIO(500) NBRRCDS(1000) +
                              SEQONLY(*YES 2000) /* CGL049 */
              ENDDO      /* CGL049 */
-
+ 
              IF         COND(&POSTNUM *EQ '7') THEN(DO)                                 /*MD037383*/
                 CHGJOB     SWS(XXXXX000)                                                /*MD037383*/
                 OVRDBF     FILE(SACPO) TOFILE(GLGESTL3) FRCRATIO(500) NBRRCDS(1000) +
@@ -149,72 +151,72 @@
              ENDDO                                                                      /*MD037383*/
                                                                                         /*MD037383*/
 /* Call the program to copy records to specified member */
-
+ 
              CALL       PGM(GL0349T2) PARM(&COPY_RECS &RTN_CODE)
-
+ 
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
-
+ 
 /* Set up data queue and message data */
-
+ 
              CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
              CHGVAR     VAR(&MSGDATA) VALUE('PROMPT')
-
+ 
 /* Send message data to data queue ONLY If data is written to driver file*/
-
+ 
              IF         COND(&RTN_CODE *NE 'NRF') THEN(DO)
                 CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
                              &MSGLENGTH &MSGDATA)
              ENDDO
-
+ 
 /* If return code = EOF, set restart status to 'N' and terminate */
-
+ 
              IF         COND(&RTN_CODE *EQ 'EOF' *OR &RTN_CODE *EQ +
                           'NRF') THEN(DO)
                 CHGVAR     VAR(&STAT) VALUE('F')
                 CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
                 GOTO       CMDLBL(SNDEND)
              ENDDO
-
+ 
 /* If return code <> EOF, wait for another data queue entry */
-
+ 
              GOTO       CMDLBL(RECEIVE)
-
+ 
  SNDEND:
-
+ 
 /* Retrieve first member description */
-
+ 
              RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
-
+ 
 /* Set up data queue and message data */
-
+ 
              CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
              CHGVAR     VAR(&MSGDATA) VALUE('END')
-
+ 
 /* Send message data to data queue */
-
+ 
  LOOP:       CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA)
-
+ 
 /* Retrieve next member description */
-
+ 
              RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
                           RTNMBR(&SNDDTAQ)
              MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(RCVDTAQ))
-
+ 
 /* Loop for all members in driving file */
-
+ 
              CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)
              GOTO       CMDLBL(LOOP)
-
+ 
 /* Wait for data queue entry */
-
+ 
  RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA &RCVWAIT)
-
+ 
 /* If message = FINISH, terminate the program */
-
+ 
              IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
                 CHGVAR     VAR(&STAT) VALUE('N')
                 CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
@@ -229,7 +231,7 @@
                 MONMSG     MSGID(CPF9801)
                 GOTO       CMDLBL(RCVDTAQ)
              ENDDO
-
+ 
  ABNOR:
              SNDPGMMSG  MSG('Program GLC0349T2 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
@@ -237,7 +239,7 @@
              ROLLBACK
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
              CHGJOB     SWS(XXXXXX11)
-
+ 
  END:
              ENDCMTCTL
              ENDPGM

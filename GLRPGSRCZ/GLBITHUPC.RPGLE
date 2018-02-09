@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE header DB update controller')              *
@@ -10,14 +10,15 @@
       *  GLBITHUPC - Journal Batch Entry Header Database Update       *
       *              Controller                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR862086           Date 15Oct12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR862086           Date 15Oct12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSC024             Date 07Feb05               *
+      *                 CSC024             Date 07Feb05               *
       *                 BUG1898            Date 20Apr04               *
       *                 212722             Date 16Jan03               *
       * Midas Release 4.01.03 ----------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR862086 - DBU_BITH job produces a big log file              *
       *           - Applied for AR1026929 (Child:AR1026930)           *
       *  CSC024 - Open Month End (Recompile)                          *
@@ -568,4 +570,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

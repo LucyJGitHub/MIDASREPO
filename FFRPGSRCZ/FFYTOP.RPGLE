@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Standard subroutine FFYTOP as a module')
@@ -26,15 +26,16 @@
       *  the old /COPY member, reconverting it using CVTRPGSRC, and   *
       *  copying it into this member, replacing the existing section. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 222373             Date 28Oct03               *
+      *  Prev Amend No. 222373             Date 28Oct03               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CPK015             Date 17Jun02               *
+      *                 CPK015             Date 17Jun02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 147775             Date 16Nov98               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  222373 - Correct parameters on program calls                 *
       *  CPK015 - Conversion of ZYIELD from PLI to RPG                *
       *  147775 - General FF API fixes - (Pre-release unnanotated)    *
@@ -305,4 +307,4 @@
       ** +---  is the converted ???????4 ----------------------------------+
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

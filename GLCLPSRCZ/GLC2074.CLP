@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       GLC2074 - ACCOUNTS ENQUIRIES                                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD021858           Date 17Aug13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021858           Date 17Aug13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 247699             Date 19Jun07              */
+/*                      247699             Date 19Jun07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      222549             Date 06Jun06              */
@@ -30,6 +31,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021858 - Reinstate Account Details enquiry option        */
 /*       247699 - Ensure that when indicator 05 is on, leave it on  */
 /*                as this has been passed from a non-retail screen  */
@@ -54,7 +56,7 @@
 /************PGM        PARM(&MODE) */                                /*S01413*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /************DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)  */             /*S01413*/
@@ -153,5 +155,5 @@
                 DLTOVR     FILE(REACR REIAC REDEF RECRG)              /*117190*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

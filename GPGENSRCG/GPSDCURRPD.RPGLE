@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                       CGP017
 /*STD *  RPGBASEMOD                                                   *                       CGP017
@@ -10,10 +10,11 @@
       *                                                               *
       *  GPSDCURRPD - On-Line Update of Global File GZSDCURRPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CGP017             Date 06Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER048             Date 19May08               *
       *                 CER043             Date 19May08               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -44,7 +46,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
-
+ 
 O    FGZSDCURRL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZSDCURRPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -55,9 +57,9 @@ O    D Z_SDCURRPD    E DS                  EXTNAME(GZSDCURRPD)
 O    D G_SDCURRPD    E DS                  EXTNAME(GZSDCURRPD) PREFIX(G_)
                                                                                             BUG10215
      D/COPY GPCPYSRCG,GPWRTALTDS                                                            BUG10215
-
+ 
       * ENTRY PARAMETERS
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -106,9 +108,9 @@ O    C                   ENDIF
 O    C                   ENDIF
                                                                                             BUG10215
      C/COPY GPCPYSRCG,GPWRTALTCR                                                            BUG10215
-
+ 
      C                   RETURN
-
+ 
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -127,7 +129,7 @@ O
 O    C     K_GZSDCURRL1  KLIST
 O    C                   KFLD                    A6ZONE
 O    C                   KFLD                    A6CYCD
-
+ 
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -135,15 +137,15 @@ O    C                   KFLD                    A6CYCD
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
-
+ 
      C     W#RUN         IFEQ      *BLANKS
-
+ 
      C                   MOVE      'Y'           W#RUN             1
-
+ 
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
-
+ 
      C                   DUMP
       *
       * If no identified cause of error
@@ -158,10 +160,10 @@ O    C                   KFLD                    A6CYCD
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
-
+ 
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       *********************************************************************

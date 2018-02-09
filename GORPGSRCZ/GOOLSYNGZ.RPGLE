@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(GOOSJSPDN) TOFILE(GOOSJSPD) SHARE(*NO)           *
 /*STD *  RPGBASEMOD                                                   *
@@ -10,10 +10,11 @@
       *                                                               *
       *  GOOLSYNGZ - On-Line Synchronisation of Global Layer          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER073B            Date 25Sep17               *
-      *  Prev Amend No. CER073A            Date 05Sep17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER073B            Date 25Sep17               *
+      *                 CER073A            Date 05Sep17               *
       *                 CER073             Date 10Jul17               *      
       *                 MD046901           Date 21Jul17               *
       *                 CLE068             Date 02Aug16               *
@@ -101,9 +102,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER073B - CER073 Change Control 2 (Recompile)                *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
-      *  CER073 - AnaCredit Reporting (Recompile)                     *      
+      *  CER073 - AnaCredit Reporting (Recompile)                     *
       *  MD046901 - Batch details listview is not loading in the      *
       *             other zone (Recompile)                            *
       *  CLE068 - Loan Event Modeller (Recompile)                     *
@@ -654,4 +656,4 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

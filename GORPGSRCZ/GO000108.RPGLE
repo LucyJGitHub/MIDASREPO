@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*X*IA***CRTPF*FILE(QTEMP/GO000108F1)*RCDLEN(132)**********************                     MD020696
 /*X*IB***RNMOBJFOBJ(QTEMP/GO000108F1)*OBJTYPE(*FILE)*******************                     MD020696
@@ -12,10 +12,11 @@
       *                                                               *
       *  GO000108 - Global Processing data dowload, subsystem         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD020696A          Date 01Jul13               *
-      *  Prev Amend No. MD020696           Date 03Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020696A          Date 01Jul13               *
+      *                 MD020696           Date 03Jun13               *
       *                 MD020167           Date 23Apr13               *
       *                 CCB023             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020696A - Call PGM/GO001081 to get subsystem information   *
       *              instead of using PF/GOSBSDPD                     *
       *  MD020696 - Dashboard doesn't show proper value of Jobs in    *

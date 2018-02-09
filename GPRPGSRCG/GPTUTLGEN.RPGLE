@@ -1,5 +1,5 @@
      H DEBUG ALWNULL(*USRCTL)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GP Global T_GPUTILSR Generation')
@@ -9,17 +9,19 @@
       *                                                               *
       *  GPTUTLGEN - Global Utiliser Details Generation               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG5361            Date 06Jan05               *
-      *  Prev Amend No. BUG4521 *CREATE    Date 14Oct04               *
+      *  Prev Amend No. BUG5361            Date 06Jan05               *
+      *                 BUG4521 *CREATE    Date 14Oct04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG5361- Change the format of field UTSRCODE                 *
       *  BUG4521- Update file T_GPUTILSR                              *
       *                                                               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX CLS Pay-in Schedule Retrieve Detail Rcd')
@@ -11,18 +11,20 @@
       *                                                               *
       *  Function:  This module retrieves a record from the file      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG5671            Date 31Jan05               *
-      *  Prev Amend No. BUG2952            Date 16Dec04               *
+      *  Prev Amend No. BUG5671            Date 31Jan05               *
+      *                 BUG2952            Date 16Dec04               *
       *                 CAP084  *CREATE    Date 02Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG5671- Add Sequence number to detail record                *
       *  BUG2952- Time can legitimately be blank                      *
       *  CAP084 - Synchronous calling of APIs                         *
@@ -333,4 +335,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

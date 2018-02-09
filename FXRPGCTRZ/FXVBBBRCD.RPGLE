@@ -15,18 +15,20 @@
       *                                                               *
       *  Component of: mmnnnnn (program name)                         *
       *                                                               *
-      *  (C) Copyright Midas-Kapiti International Ltd. 2000           *
+      *  (C) Copyright Finastra International Limited 2000            *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 199880             Date 18Apr06               *
-      *  Prev Amend No. 197014             Date 18Apr06               *
+      *  Prev Amend No. 199880             Date 18Apr06               *
+      *                 197014             Date 18Apr06               *
       *                 CGL058  *CREATE    Date 18Apr06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  199880 - Branch code error on FX input link to LGL008.       *
       *  197014 - When customer is being selected, second entry is    *
       *           needed to have a result.                            *
@@ -243,4 +245,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(C) Copyright Midas-Kapiti International Ltd. 2000
+(C) Copyright Finastra International Limited, 2000

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Global Menu item maintenance program')
@@ -9,17 +9,19 @@
       *                                                               *
       *  GP000010 - Midas GP Global Menu item maintenance program     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG2287            Date 28Apr04               *
-      *  Prev Amend No. CGP001  *CREATE    Date 01Mar04               *
+      *  Prev Amend No. BUG2287            Date 28Apr04               *
+      *                 CGP001  *CREATE    Date 01Mar04               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG2287- Show consolidated global view (Recompile)           *
       *  CGP001 - Global processing.                                  *
       *                                                               *

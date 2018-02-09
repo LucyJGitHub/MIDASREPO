@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*S*D ***RPGBASEBNC****************************************************                    AR1097467
 /*STD *  RPGSQLBND                                                    *                    AR1097467
@@ -14,10 +14,11 @@
       *             In original (non-task split) mode the work of     *
       *             this program is done in *inzsr of gofcltlvpd.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD022096           Date 28Aug13               *
-      *  Prev Amend No. MD020751           Date 21Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022096           Date 28Aug13               *
+      *                 MD020751           Date 21Jun13               *
       *                 MD020264           Date 23May13               *
       *                 AR1097467          Date 26Mar13               *
       *                 CER059             Date 19Jul10               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022096 - GOCFCLVIN performance improvement                 *
       *  MD020751 - Component GOCFCLVIN fails trying to delete record *
       *             from GZFCLTLVPD with return code 100              *
@@ -38,20 +40,20 @@
       *  CGP015 - Task Split of Bulk update of Facilities listview    *
       *                                                               *
       *****************************************************************
- 
+
      F***GZFCLTLVL1UF   E           K DISK    INFSR(*PSSR)                                 AR1097467
- 
+
       *****************************************************************
- 
+
       ** Program Status Data Structure
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       *****************************************************************
- 
+
      C     *ENTRY        PList
      C                   Parm                    I_ZONE           10
- 
+
      C*****I_ZONE        SetLl     GZFCLTLVL1                                              AR1097467
      C*****I_ZONE        ReadE     GZFCLTLVL1                                              AR1097467
      C**********         DoW       NOT %EOF(GZFCLTLVL1)                                    AR1097467
@@ -83,17 +85,17 @@
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100                            MD020751
      C                   EXSR      *PSSR                                                   AR1097467
      C                   ENDIF                                                             AR1097467
- 
+
      C                   Eval      *InLr = *On
      C                   Return
- 
+
       *****************************************************************
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *****************************************************************
      C     *PSSR         BegSr
- 
+
      C                   Dump
      C                   SetOn                                        LRU7U8
      C                   Return
- 
+
      C                   EndSr

@@ -7,17 +7,18 @@
 /*                                                                   */
 /*   FFC1080  -  FINAL PROCESSING FOR EOC RUNS DURING INPUT CYCLE    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*   Last Amend No. CRE020             Date 20Jan04                  */
+/*       Prev Amend No. CRE020             Date 20Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   Prev Amend No. CPK009             Date 09Aug99                  */
+/*                      CPK009             Date 09Aug99              */
 /*                  CED005             DATE 12AUG97                  */
 /*                  098204             DATE 21FEB96                  */
 /*                  078508             DATE 08NOV94                  */
@@ -29,6 +30,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   CRE020 - Midas Plus Online Printing of Advices (GE7)            */
 /*   CPK009 - Packaging for DBA3 release. STRCMTCTL values set       */
 /*            to CMTSCOPE(*JOB).                                     */
@@ -70,7 +72,7 @@
              DCL        VAR(&ED_RTCD) TYPE(*CHAR) LEN(7)              /*CED005*/
              DCL        VAR(&ED_FMT)  TYPE(*CHAR) LEN(200)            /*CED005*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                                           /*CRE020*/
 /* Declare the variables to check the enhancements file */                                /*CRE020*/
@@ -269,5 +271,5 @@ END:    DLTOVR     FILE(MEMOSME)
                                                                      /*S01240*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
         ENDPGM

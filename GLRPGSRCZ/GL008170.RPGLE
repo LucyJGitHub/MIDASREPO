@@ -8,16 +8,18 @@
       *                                                               *
       *  GL008170 - Stamp Tax Movements Enquiry                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd 2010             *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. AR888911           Date 26Jan12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR888911           Date 26Jan12               *
       *                 AR879983           Date 21Dec11               *
       *                 AR863954           Date 14Nov11               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  AR888911 - In reversing a deal, REV column in Stamp Tax      *
       *             Movements Enquiry is not changing from N to Y     *
@@ -3668,6 +3670,6 @@
       * End of /COPY SRERRC                                           *
       *****************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd. 2010
+(C) Copyright Finastra International Limited 2010
 ** Command Array
 OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

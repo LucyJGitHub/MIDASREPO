@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       GLC1723 - Create Postings                                   */
 /*                                                                   */
-/*       (C) Misys Banking Systems Ltd. 2006                         */
+/*       (C) Finastra International Limited 2006                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CGL047 *Create     Date 27Jun06              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Prev Amend No. CGL047 *Create     Date 27Jun06              */
+/*                      xxxxxx             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL047 - Midas Generic Posting Interface                    */
 /*                                                                   */
 /*********************************************************************/
              PGM
  
              DCL        VAR(&MISYS) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          Misys Banking Systems Ltd. 2006')
+                          Finastra International Limited 2006')
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
  
 /* Global monitor message */
@@ -62,6 +64,6 @@
              CHGJOB     SWS(XXXXXX11)
  
  END:
-             CHGVAR     VAR(&MISYS) VALUE('(C) Misys Banking +
-                          Systems Ltd. 2006')
+             CHGVAR     VAR(&MISYS) VALUE('(C) Finastra International +
+                          Limited 2006')
              ENDPGM

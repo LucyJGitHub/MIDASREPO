@@ -9,10 +9,11 @@
       *                                                               *
       *     GL0340  -  DAILY JOURNAL                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD042411           Date 18Nov16               *
-      *  Prev Amend No. MD037383           Date 25May16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042411           Date 18Nov16               *
+      *                 MD037383           Date 25May16               *
       *                 CGL049             Date 17Feb15               *
       *                 CGL160             Date 11Nov14               *
       *                 MD024553           Date 30Jan14               *
@@ -76,6 +77,7 @@
      F*                                                                  *
       ********************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042411 - GLC33202 component failure. BRCA/CCY/ACOD         *
       *             totals can be more than 15 digits                 *
       *  MD037383 - ACCNTAB blank after COB component GLC008140 00001 *
@@ -3611,7 +3613,7 @@ SBCS TRANSACTION
 **CTDATA ARG1
 @2
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA ZYDY
 0366073110961461
 **CTDATA ZMDY

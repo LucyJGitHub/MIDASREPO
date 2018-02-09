@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(ACCNTLXX) TOFILE(ACCBR) SHARE(*NO)               *         180721
 /*XBIB*  OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)                *         180721
@@ -14,10 +14,11 @@
       *  Function:  This is the main screen input function            *
       *             for account maintenance.                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 222427             Date 05Dec16               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 222427             Date 05Dec16               *
+      *                 LLN022A            Date 03Jun15               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
       *                 MD021858           Date 17Aug13               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
       *           value is 0.00.  Data structure which includes       *
       *           DDSTFQ should be included in the parameter list on  *
@@ -4799,6 +4801,6 @@
      C/COPY WNCPYSRC,GLAMADSC23
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CMD
 OVRDBF FILE(SDAULGL0) TOFILE(SDAULGL0) SHARE(*NO)

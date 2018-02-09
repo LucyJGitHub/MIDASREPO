@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       GLC4490 - Historic Interface Details File Purge Control     */
 /*                                                                   */
-/*       (C) Copyright Misys International Banking System Ltd. 2003  */
+/*       (C) Copyright Finastra International Limited 2003           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 228542             Date 05Aug04              */
-/*       Prev Amend No. CGL028  *Create    Date 26Sep03              */
+/*       Prev Amend No. 228542             Date 05Aug04              */
+/*                      CGL028  *CREATE    Date 26Sep03              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       CGL028 - GL Postings Interface                              */
 /*                                                                   */
@@ -26,7 +28,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) +
-                          VALUE('Copyright Misys International +
+                          VALUE('Copyright Finastra International +
                           Banking System Ltd. 2003')
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
              DCL        VAR(&LDA)  TYPE(*CHAR) LEN(256)
@@ -80,6 +82,6 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
  END:
-             CHGVAR     VAR(&CPYFLD) VALUE('Copyright Misys +
+             CHGVAR     VAR(&CPYFLD) VALUE('Copyright Finastra +
                           International Banking Systems Ltd. 2003')
              ENDPGM

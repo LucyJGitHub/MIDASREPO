@@ -12,20 +12,22 @@
       *             Exceptions that were captured during today's      *
       *             input cycle, for the branches in this zone.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CSD086             Date 18Mar10               *
+      *  Prev Amend No. CSD086             Date 18Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 BUG7841            Date 04Aug05               *
       *                 BG4543             Date 13Oct04               *
       *                 CGP008 *CREATE     Date 15Sep04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD086 - Overridable Errors                                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG7841- Fixed truncation of exception message.              *
@@ -386,4 +388,4 @@
      C/EJECT
       **********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Ret. Acc. Proj. Mov. upd from Jour. Entry')   *
@@ -10,11 +10,12 @@
       *  GL004446 - Retail Account Projected Movements update from    *
       *             Journal Entry                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *
-      *  Last Amend No. MD023889           Date 10Dic13               *
-      *  Prev Amend No. CGL135B            Date 04Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023889           Date 10Dic13               *
+      *                 CGL135B            Date 04Nov13               *
       *                 AR1093096          Date 30Sep13               *
       *                 CAP207             Date 10Feb11               *
       *                 CRE075             Date 06Dec10               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023889 - Accounting Rules Process (GL Account creation)    *
       *            Added hook: CGL135_111                             *
       *  CGL135B - Accounting Rules Process                           *
@@ -1032,4 +1034,4 @@
       /EJECT
       ********************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

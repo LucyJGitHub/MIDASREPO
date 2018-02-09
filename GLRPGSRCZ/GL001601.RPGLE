@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Journal Entry Interface')                     *
@@ -13,10 +13,11 @@
       *  Function: This program does the validation on the basis of   *
       *            the status of batch number.                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CGL182             Date 11May17               *
-      *  Prev Amend No. MD040602           Date 19Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL182             Date 11May17               *
+      *                 MD040602           Date 19Aug16               *
       *                 MD025865           Date 20Mar14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26846           Date 14Dec09               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *           (Recompile)                                         *
       *  MD040602 - Initialise HQJETP to 'R' as otherwise inteface    *
@@ -915,7 +917,7 @@
       /EJECT
       *****************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** CTDATA Err_Dtl
 Error in Branch
 Error in Dept Code

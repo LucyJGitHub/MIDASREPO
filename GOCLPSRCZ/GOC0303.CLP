@@ -9,14 +9,15 @@
 /*                                                                   */
 /*       GOC0303 - Journal Receiver Chain Refresh                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BUG18886           Date 30May08              */
+/*       Prev Amend No. BUG18886           Date 30May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG9305            Date 21Jul06              */
+/*                      BUG9305            Date 21Jul06              */
 /*                      BUG6098            Date 09May05              */
 /*                      CSC020             Date 31Mar04              */
 /*                      BUG2941            Date 01Jun04              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG18886 - Non-standard codes exist in Midas Plus core      */
 /*                  sources                                          */
 /*       BUG9305 - The Run Time is shorter than the Compile Time     */
@@ -58,7 +60,7 @@
              DCL        VAR(&TENT) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&LENT) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCLF       FILE(QTEMP/DSPOBJD)
  
@@ -145,5 +147,5 @@
              CHGJOB     SWS(XXXXXX11)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Currency OTC validation')                     *
@@ -13,10 +13,11 @@
       *  Function:  This module controls the transaction validation   *
       *             for currency OTC options.                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR798207A          Date 16Aug11               *
-      *  Prev Amend No. AR798207           Date 13Jul11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR798207A          Date 16Aug11               *
+      *                 AR798207           Date 13Jul11               *
       *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR798207A - Required fields in New Instrument Details Tab    *
       *  AR798207 - Required fields in New Instrument Details Tab     *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
@@ -779,4 +781,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

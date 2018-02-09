@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(ACCNTLXX) TOFILE(ACCBR) SHARE(*NO)               *
 /*XBIB*  OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)                *
@@ -32,12 +32,13 @@
       *            the call to the Message Handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044546           Date 20Mar17               *
-      *  Prev Amend No. MD043890           Date 06Feb17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD044546           Date 20Mar17               *
+      *                 MD043890           Date 06Feb17               *
       *                 MD042713           Date 05Dec16               *
-      *                 222427             Date 05Dec16               *      
+      *                 222427             Date 05Dec16               *
       *                 MD040328           Date 16Aug16               *
       *                 MD040146           Date 11Aug16               *
       *                 LLN022A            Date 03Jun15               *
@@ -132,6 +133,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD044546 - Enable the ABC flag when CAP205 is on.            *
       *  MD043890 - Cannot insert term and notice                     *
       *  MD042713 - Display Default Statement commission.             *
@@ -139,7 +141,7 @@
       *           value is 0.00.  Data structure which includes       *
       *           DDSTFQ should be included in the parameter list on  *
       *           call to module GLAMAD4DT.                           *
-      *           Partially Applied for MD042713.                     *      
+      *           Partially Applied for MD042713.                     *
       *  MD040328 - Unable to update Include Account Balance check    *
       *             field via SOAP in AMAD                            *
       *  MD040146 - Account maintenance - Account name different from *
@@ -317,12 +319,12 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
-
+ 
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
-
+ 
      FTABTBRE   IF   E             DISK    INFSR(*pssr)
      F                                     PREFIX(R_)
-
+ 
      FPMPORTLL  IF   E           K DISK    INFSR(*PSSR)  USROPN
      FACCPTFR   IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACCPTFRF)
@@ -332,17 +334,17 @@
      F                                     PREFIX(X_)
      F                                     IGNORE(REDEFAF)
      F                                     IGNORE(REDEFZF)
-
+ 
       ** Retail Interest and Charge File
      FREIACXX   IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** Accounts by Branch
      FACCNTLXX  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** Account Numbers
      FACNUM     IF   E           K DISK    RENAME(ACCNTABF:ACNUMTBF)
      F                                     INFSR(*PSSR)
-
+ 
       ** BRT Customer Details
      FSDCBRTL1  IF   E           K DISK    INFSR(*PSSR)
                                                                                               CRE015
@@ -350,7 +352,7 @@
                                                                                               CRE015
      FSDACD1L0  IF   E           K DISK    INFSR(*PSSR)                                       CRE015
      F                                     PREFIX(X5:2)                                       CRE015
-
+ 
      F/COPY WNCPYSRC,GLAMADJF01
       *                                                                                      LLN022A
      FBYACCTY0  IF   E           K DISK    INFSR(*pssr)                                      LLN022A
@@ -373,61 +375,61 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
-
+ 
      D/COPY ZACPYSRC,PROCPARMS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
-
+ 
       * Incoming Transaction
      D AccnInMast    E DS                  EXTNAME(GLAMADPD)
      D  AcnOthDet             84    213                                                       249660
@@ -439,11 +441,11 @@
      D AccnInPena1   E DS                  EXTNAME(GLAMPP1PD) PREFIX(P1:2)                    CRE015
      D AccnInPena2   E DS                  EXTNAME(GLAMPP2PD) PREFIX(P2:2)                    CRE015
      D/COPY OFCPYSRCZ,CRE101_017                                                              CRE101
-
+ 
      D/COPY WNCPYSRC,GLAMADJD01
-
+ 
      D ValidBoe      E DS                  EXTNAME(GLVAMADX0)                                LLN022A
-
+ 
      D/COPY QWINDSRC,GLAMADDTA
       * Valid Account layout
      D ValidAccn     E DS                  EXTNAME(GLVAMADPD)
@@ -475,13 +477,13 @@
       * Valid Extn. Account layout -> REPRPNPD                                                CRE015
      D ValidPena     E DS                  EXTNAME(GLVAMPPPD)                                 CRE015
      D                                     PREFIX(V_)                                         CRE015
-
+ 
      D/COPY OFCPYSRCZ,CRE101_032                                                              CRE101
      D ValidLux      E DS                  EXTNAME(GLVAMLX1PD)                                CER001
      D                                     PREFIX(V_)                                         CER001
      D SVRCD         E DS                  EXTNAME(REACX1PD)                                  CER001
      D                                     PREFIX(E_)                                         CER001
-
+ 
      D AccnFilFmt    E DS                  EXTNAME(ACCNTAB)
      D ExBXFilFmt    E DS                  EXTNAME(ACCNTBXC)
      D                                     PREFIX(A_)
@@ -500,8 +502,8 @@
      D ExPPFilFmt    E DS                  EXTNAME(REPENAPD)                                  CRE015
      D                                     PREFIX(E_)                                         CRE015
      D/COPY OFCPYSRCZ,CRE101_033                                                              CRE101
-
-
+ 
+ 
       * (Current) Account in Screen Format - Master Details
      D CurAcMast     E DS                  EXTNAME(GLAMADPD)
      D                                     PREFIX(@)
@@ -589,8 +591,8 @@
      D NewAcPena     E DS                  EXTNAME(GLAMPPPD)                                  CRE015
      D                                     PREFIX(N)                                          CRE015
      D/COPY OFCPYSRCZ,CRE101_036                                                              CRE101
-
-
+ 
+ 
       * Error indicators
      D OKAcMast      E DS                  EXTNAME(GLEAMADPD)
      D OKAcDebi      E DS                  EXTNAME(GLEAMDIPD)
@@ -599,36 +601,36 @@
      D OKAcOthe      E DS                  EXTNAME(GLEAMODPD)
      D OKAcPena      E DS                  EXTNAME(GLEAMPPPD) PREFIX(X:1)                     CRE015
      D/COPY OFCPYSRCZ,CRE101_037                                                              CRE101
-
-
+ 
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
-
+ 
      D RETABLE       E DS                  EXTNAME(TABTBRE)
      D                                     PREFIX(R_)
       ** EXTERNAL DS FOR RETAIL TABLE FILE
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** External DS for Midas Modules details
-
+ 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External DS for currency details
-
+ 
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
-
+ 
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
                                                                                               CRE010
       ** Externally described DS for Nostro Code details                                      CRE010
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)                                  CRE010
      D SDNOSTACCD    E                     EXTFLD(QQACCD)                                     CRE010
-
+ 
      D InfData       E DS                  EXTNAME(GLAMIFPD)                                  CAP086
      D                                     PREFIX(IF_)                                        CAP086
       ** GL Extra Data - Classe 1 Data - File (D/B) format                                    CAP086
@@ -644,7 +646,7 @@
       * First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for Access programs - long data structure
-
+ 
      D DSLDY         E DS                  EXTNAME(DSLDY)
       * Third DS for access programs, very long data structure
                                                                                               BG2557
@@ -659,27 +661,27 @@
       ** Override SDAULGL0                                                                    BG2557
      D CMD             S              1    DIM(50) CTDATA PERRCD(50)                          BG2557
                                                                                               BG2557
-
+ 
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
-
+ 
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
-
+ 
      D SDACOD        E DS                  EXTNAME(SDACODPD)
       ** External DS for Account Code Details
-
+ 
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
       ** External DS for Portfolio Customer Details
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
       ** External DS for Customer Details
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D QQACCD1       E                     EXTFLD(QQACCD)                                     CGL029
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
-
+ 
       *                                                                                       CER001
       ** DS for Dealing Details                                                               CER001
       *                                                                                       CER001
@@ -688,7 +690,7 @@
                                                                                               CER001
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       ** EXTERNAL DS FOR MIDAS BASE RATE CODE DETAILS
-
+ 
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WCMTJOBS               4    103A                                                      CSC022
       ** Commitment Control dataarea                                                          CSC022
@@ -707,7 +709,7 @@
      D RUNDAT          DS            13
       * Rundate data area
      D  AGMBIN                13     13
-
+ 
       *                                                                                       CER001
       ** Data Structure for CER001                                                            CER001
       *                                                                                       CER001
@@ -729,13 +731,13 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
-
+ 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
-
+ 
       ** Fields (500A) to receive the incoming transaction
      D Accnt5001       S            500A
      D Accnt5002       S            500A
@@ -747,13 +749,13 @@
      D*RepeatData      S           4500A                                               CRE015 CRE073
      D RepeatData      S           5382A                                                      CRE073
      D/COPY OFCPYSRCZ,CRE101_038                                                              CRE101
-
+ 
       ** Field (500A) to receive the incoming Extra Data                                      CAP086
      D InfData500      S            500A                                                      CAP086
                                                                                               CAP086
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
-
+ 
       *                                                                                       CER001
       ** Field (500A) to receive the incoming Extra Data                                      CER001
       *                                                                                       CER001
@@ -761,16 +763,16 @@
       *                                                                                       CER001
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
-
+ 
       ** Indices for arrays used to set up corresponding sequence numbers
       ** for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
      D TIx             S              3P 0                                                    238839
-
+ 
       ** Field to tell whether Commissions are to be displayed
      D CommDisp        S              1A
-
+ 
       ** Fields for enhancement CSC022                                                        CSC022
      D CSC022          S              1A   INZ('N')                                           CSC022
      D WCmtSk          S              1A                                                      CSC022
@@ -792,7 +794,7 @@
      D RepCred         S              1A   inz('N')
      D RepComm         S              1A   inz('N')
      D RepOthe         S              1A   inz('N')
-
+ 
      D WProcDate       S                   LIKE(BJRDNB)
      D CSC011          S              1A   INZ('N')
      D CRE015          S              1A                                                      CRE015
@@ -802,7 +804,7 @@
                                                                                               240312
       ** Flag to indicate whether defaulting is required                                      240312
      D DefaultFlag     S              1A                                                      240312
-
+ 
       ** Input parameters on call to AOPLCSR1
      D I@PARM          DS           256
      D  I#PORS                 1      1
@@ -812,10 +814,10 @@
      D  I#BOOK                19     20
      D  I#PTFR                21     24
      D  I#CPGM                25     34
-
+ 
       ** Output parameters on call to AOPLCSR1
      D O@PARM          S            256
-
+ 
       *                                                                                       CER001
       ** Parameters on call to GLAMAD6UP                                                      CER001
       *                                                                                       CER001
@@ -831,7 +833,7 @@
       *                                                                                     BUG22742
      D/COPY OFCPYSRCZ,CRE101_039                                                              CRE101
      D/COPY WNCPYSRC,GLAMADVD01
-
+ 
       *                                                                                      LLN022A
       ** Bank of England Details File                                                        LLN022A
       *                                                                                      LLN022A
@@ -849,17 +851,17 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
      C                   MOVEL     Accnt5001     AccnInMast
      C                   MOVEL     Accnt5002     AccnInDebi
      C                   MOVEL     Accnt5003     AccnInCred
@@ -885,27 +887,27 @@
      C                   Eval      DefaultFlag = 'Y'                                          249660
      C                   Eval      DDACTN = 'I'                                               249660
      C                   EndIf                                                                249660
-
+ 
       * Reset variables gradually updated
-
+ 
      C                   EXSR      RESETCYCLE
-
+ 
      C                   MOVE      *OFF          *IN30
      C     DDACTN        IFEQ      'I'
      C                   MOVE      *ON           *IN30
      C                   ENDIF
       *
       *  Processing for Inserts
-
+ 
      C                   EXSR      GLVACSQ
-
+ 
       *  Validate Action Code
-
+ 
      C     DDACTN        IFNE      'I'                                                        249660
      C     DefaultFlag   OREQ      'Y'                                                        249660
      C                   EXSR      ValidatAcn
      C                   ENDIF                                                                249660
-
+ 
       *  If error in validation of action code, fail this input
       *
      C                   Eval      TIx = Ix                                                   238839
@@ -916,7 +918,7 @@
      C                   Endif                                                                249966
      C                   GOTO      INVALID
      C                   END
-
+ 
      C/COPY WNCPYSRC,GLAMADSMV1
       *                                                                                      LLN022A
       ** Move fields from main screen to Data structure                                      LLN022A
@@ -934,7 +936,7 @@
      C                   MOVE      AMATYP        BYATYP                                      LLN022A
      C                   ENDIF                                                               LLN022A
       *                                                                                      LLN022A
-
+ 
      C/COPY WNCPYSRC,GLAMADVC01
       *                                                                                      LLN022A
      C     Key_Byaccty0  KLIST                                                               LLN022A
@@ -970,11 +972,11 @@
      C                   EVAL      SVLLLIM  = LLLIM                                          LLN022A
      C                   ENDIF                                                               LLN022A
      C                   ENDIF                                                               LLN022A
-
+ 
       *  Processing depends upon Action Code
-
+ 
      C                   SELECT
-
+ 
      C                   WHEN         DDACTN = 'I'
       ********************************OR DDACTN = 'D'                                BUG4615 BUG9141
       *  Processing for Inserts
@@ -999,7 +1001,7 @@
      C/COPY WNCPYSRC,GLH00645
                                                                                              BUG9141
      C*COPY*WNCPYSRC,GLAMADJC01*****                                                          243436
-
+ 
      C                   IF        LLN007 = 'Y'                                              LLN022A
      C                   CALLB     'BYAMADW0VL'                                              LLN022A
      C                   PARM                    DDACTN                                      LLN022A
@@ -1018,13 +1020,13 @@
      C                   ENDIF                                                               LLN022A
       *                                                                                      LLN022A
      C                   WHEN         DDACTN = 'A'
-
+ 
       *  Processing for Amends or Changes
      C                   EXSR      SetupAmd
      C                   EXSR      ValdateAmd
      C                   EXSR      ValidateAc
      C/COPY WNCPYSRC,GLAMADJC02
-
+ 
      C                   IF        LLN007 = 'Y'                                              LLN022A
      C                   CALLB     'BYAMADW0VL'                                              LLN022A
      C                   PARM                    DDACTN                                      LLN022A
@@ -1055,16 +1057,16 @@
      C                   EXSR      GLVALID
       **********                                                                      BUG3068 238839
      C*****INVALID       TAG                                                          BUG3068 238839
-
+ 
       *  Write to database
-
+ 
      C     UpdateYN      IFEQ      'Y'
      C     Ix            ANDEQ     0
      C                   EXSR      WriteToDB
      C                   ENDIF
-
+ 
      C                   SETON                                        LR
-
+ 
       ** Please ensure that when setting up the buffer, new core fields                      BUG6218
       ** are added before the data structure ExtData                                         BUG6218
                                                                                              BUG6218
@@ -1108,13 +1110,13 @@
      C                   EVAL      Buffer2 = %SUBST(AccnInPena2:4924) +                     AR946674
      C/COPY OFCPYSRCZ,CRE101_068                                                              CRE101
      C                                         RegData + ExtData                              CRE073
-
+ 
      C     *IN28         IFEQ      *ON
      C                   CLOSE     PMPORTLL
      C                   ENDIF
       *
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1124,7 +1126,7 @@
       *                                                               *
       *****************************************************************
      C     ValidatAcn    BEGSR
-
+ 
      C                   IF        APFOTRANID <> *BLANKS AND                                AR971184
      C                             DDACTN = 'I'                                             AR971184
      C                   EVAL      ModeOfOp = '*FRONT'                                      AR971184
@@ -1134,7 +1136,7 @@
       * Validate action code versus account IDs supplied
       * This function will set the Midas account reference
       * The account in file format from the GL database is retrieved as well
-
+ 
      C                   RESET                   ReturnCode
      C                   CALLB     'GLAMADRTV'
       *
@@ -1212,7 +1214,7 @@
      C                   PARM                    AUTHRQ            1
       * Authorisation Mode
      C                   PARM                    AUTHMD            1
-
+ 
      C                   IF        ULX606 = 'Y'                                               CER001
      C                   CALLB     'GLAMAD2RV'                                                CER001
      C                   PARM                    ReturnCode                                   CER001
@@ -1284,7 +1286,7 @@
      C/COPY WNCPYSRC,GLH00646
       **********************************************************************
      C     GLVACSQ       BEGSR
-
+ 
      C                   CALLB     'GLVACSQ'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
@@ -1387,13 +1389,13 @@
      C     DDACTN        IFEQ      'I'
      C                   EXSR      SRDEFT
      C                   ENDIF
-
+ 
      C                   ENDSR
       **********************************************************************
       /EJECT
       **********************************************************************
      C     GLVALID       BEGSR
-
+ 
       *
       * Initialise screen conditioning fields for initial insert.
       *
@@ -1443,7 +1445,7 @@
      C                   MOVEL     'N'           ALT               1
      C                   MOVEL     ' '           LTYP              1
      C                   MOVEL     *BLANKS       LINK             18
-
+ 
      C                   MOVEL     'N'           INCST             1
       *
      C                   CLEAR                   SDCURR                                       BG2651
@@ -1695,18 +1697,18 @@
       * INPUTS :
       * Response mode
      C                   PARM                    RetCodeIn
-
+ 
       * Customer Retail Group
      C                   PARM                    BBCGRP
       *
       ** CCRM Revenue Analysis
      C                   PARM                    CDE002
-
+ 
       * Account details (DS) in file format
      C                   PARM                    AccnFilFmt
      C                   PARM                    NABXFilFmt
      C                   PARM                    NewAcPrim                                    222427
-
+ 
       * OUTPUTS :
       * Screen 4 Output
      C                   PARM                    DDCEXA1          11
@@ -1719,7 +1721,7 @@
      C                   PARM                    DDDRMG1
      C                   PARM                    DDCRMG1
      C                   EndIf                                                              BUG13639
-
+ 
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1730,10 +1732,10 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
-
+ 
       * For Amends, put the complete (pre-existing) Account into the Valid
       *  file record - fields in this will be updated during processing
-
+ 
      C                   MOVEL     AccnFilFmt    ValidAccn
      C                   MOVEL     ExBXFilFmt    ValidExBX
      C**********         MOVEL     ExRIFilFmt    ValidExRI                                    TDA084
@@ -1751,9 +1753,9 @@
      C                   MOVEL     ExPPFilFmt    ValidPena                                    CRE015
      C                   ENDIF                                                                CRE015
      C/COPY OFCPYSRCZ,CRE101_045                                                              CRE101
-
+ 
       * For Amends, convert the Account to screen format
-
+ 
      C                   CALLB     'GLAMADCVT'
       *
       * INPUTS
@@ -1815,7 +1817,7 @@
      C                   PARM      *BLANK        DDCEXG1           8
      C                   PARM      *BLANK        DDDRMG1          12
      C                   PARM      *BLANK        DDCRMG1          12
-
+ 
      C                   ENDSR
      C/COPY WNCPYSRC,GLH00647
       *****************************************************************
@@ -1826,9 +1828,9 @@
       *                                                               *
       *****************************************************************
      C     ValidateAc    BEGSR
-
+ 
       * Validate Account master details
-
+ 
      C                   EXSR      ValdAcMast
       *
       *  If error in validation, fail this input
@@ -1836,7 +1838,7 @@
      C     Ix            IFNE      0
      C                   GOTO      EValidTr
      C                   END
-
+ 
      C     V_AMATYP      IFEQ      'R'
      C     DDACTN        ANDNE     'D'                                                        237401
                                                                                               CRE015
@@ -1855,7 +1857,7 @@
      C                   ENDIF                                                                CRE015
                                                                                               CRE015
       * Validate Account debit details
-
+ 
      C                   EXSR      ValdAcDebi
       *
       *  If error in validation, fail this input
@@ -1863,9 +1865,9 @@
      C     Ix            IFNE      0
      C                   GOTO      EValidTr
      C                   END
-
+ 
       * Validate Account credit details
-
+ 
      C                   EXSR      ValdAcCred
       *
       *  If error in validation, fail this input
@@ -1873,9 +1875,9 @@
      C     Ix            IFNE      0
      C                   GOTO      EValidTr
      C                   END
-
+ 
       * Validate Account commission details
-
+ 
      C                   EXSR      ValdAcComm
       *
       *  If error in validation, fail this input
@@ -1883,9 +1885,9 @@
      C     Ix            IFNE      0
      C                   GOTO      EValidTr
      C                   END
-
+ 
       * Validate Account other details
-
+ 
      C                   EXSR      ValdAcOthe
       *
       *  If error in validation, fail this input
@@ -1894,7 +1896,7 @@
      C                   GOTO      EValidTr
      C                   END
      C                   ENDIF
-
+ 
       ** Validate Lux Amad File - LU Window                                                   CER001
       *                                                                                       CER001
      C     ULX606        IFEQ      'Y'                                                        CER001
@@ -1918,51 +1920,51 @@
       *                                                               *
       *****************************************************************
      C     ValdAcMast    BEGSR
-
+ 
      C                   MOVE      RETABLE       WRETABLE         52                         245029A
      C                   CALLB     'GLAMAD1VL'
-
+ 
       * INPUTS
-
+ 
       * Response mode
      C                   PARM      'S'           APRESPMODE
-
+ 
       * Screen Format
      C**********         PARM      '  '          WFMT              2                          BUG553
      C                   PARM                    WFMT              2                          BUG553
-
+ 
       ** ICD
      C                   PARM                    RETABLE
-
+ 
       ** Account Master details
      C                   PARM                    AccnInMast
       * Front Office ID
      C**********         PARM                    APFOTranID       20                          CLE025
      C                   PARM                    WAPFOTranID                                  CLE025
-
+ 
       ** Account Master Details OK inds
      C                   PARM                    OKAcMast
-
+ 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Ix
-
+ 
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
-
+ 
       * Full GL Account Number
      C**********         PARM      *BLANKS       WGLKEY           18                          CGL029
      C                   PARM      *BLANKS       WGLKEY           24                          CGL029
       * IBAN Sequence
      C                   Parm                    DDIBSQ            3
-
+ 
       * Valid Account layout (DS) from/to caller
      C                   PARM                    ValidAccn
      C                   PARM                    ValidEXBX
@@ -1979,7 +1981,7 @@
      C                   MOVEL     'DDRF01    '  FldNameArr(I)
      C                   END
      C                   MOVE      WRETABLE      RETABLE                                     245029A
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1989,27 +1991,27 @@
       *                                                               *
       *****************************************************************
      C     ValdAcDebi    BEGSR
-
+ 
      C                   CALLB     'GLAMAD2VL'
-
+ 
       * INPUTS
-
+ 
       ** Account Master details
      C                   PARM                    AccnInMast
-
+ 
       ** Account Debit details
      C                   PARM                    AccnInDebi
-
+ 
       ** Account Commision details
      C                   PARM                    AccnInComm
-
+ 
       * Front Office ID
      C**********         PARM                    APFOTranID       20                          CLE025
      C                   PARM                    WAPFOTranID                                  CLE025
-
+ 
       ** Account Debit Details OK inds
      C                   PARM                    OKAcDebi
-
+ 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -2022,7 +2024,7 @@
      C                   PARM                    WMsgDtaArr                                   CER055
       * Array index (3P0) from/to caller                                                      CER055
      C                   PARM                    WIdx                                         CER055
-
+ 
       * Valid Account layout (DS) from/to caller
      C                   PARM                    ValidAccn
      C                   PARM                    ValidExBX
@@ -2039,7 +2041,7 @@
      C******IN99         IFEQ      '1'                                                        BUG553
      C**********         MOVEL     'DDDRBR    '  FldNameArr(I)                                BUG553
      C**********         END                                                                  BUG553
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2049,27 +2051,27 @@
       *                                                               *
       *****************************************************************
      C     ValdAcCred    BEGSR
-
+ 
      C                   CALLB     'GLAMAD3VL'
-
+ 
       ** Account Master details
      C                   PARM                    AccnInMast
-
+ 
       ** Account Credit details
      C                   PARM                    AccnInCred
-
+ 
       ** Account Commision details
      C                   PARM                    AccnInComm
-
+ 
       ** ICD
      C                   PARM                    R_TCAL
       * Front Office ID
      C**********         PARM                    APFOTranID       20                          CLE025
      C                   PARM                    WAPFOTranID                                  CLE025
-
+ 
       ** Account Credit details OK inds
      C                   PARM                    OKAcCred
-
+ 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -2082,7 +2084,7 @@
      C                   PARM                    WMsgDtaArr                                 AR847249
       ** Array index (3P0) from/to caller                                                   AR847249
      C                   PARM                    WIdx                                       AR847249
-
+ 
       * Valid Account layout (DS) from/to caller
      C                   PARM                    ValidAccn
      C                   PARM                    ValidExRI
@@ -2107,7 +2109,7 @@
      C******IN99         IFEQ      '1'                                                        BUG553
      C**********         MOVEL     'DDCHBR    '  FldNameArr(I)                                BUG553
      C**********         END                                                                  BUG553
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2117,30 +2119,30 @@
       *                                                               *
       *****************************************************************
      C     ValdAcComm    BEGSR
-
+ 
      C                   CALLB     'GLAMAD4VL'
-
+ 
       ** Account Master details
      C                   PARM                    AccnInMast
-
+ 
       ** Account Commision details
      C                   PARM                    AccnInComm
-
+ 
       ** ICD
      C                   PARM                    RETABLE
       ** CCRM Revenue Analysis
      C                   PARM                    CDE002            1
-
+ 
       ** Account Commissions OK inds
      C                   PARM                    OKAcComm
-
+ 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Ix
-
+ 
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
@@ -2153,7 +2155,7 @@
      C                   PARM                    ValidExBX
       * Valid Account layout (DS) from/to caller
      C                   PARM                    ValidAccn
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2163,27 +2165,27 @@
       *                                                               *
       *****************************************************************
      C     ValdAcOthe    BEGSR
-
+ 
      C                   CALLB     'GLAMAD5VL'
-
+ 
       ** Account Master details
      C                   PARM                    AccnInMast
-
+ 
       ** Account Other Details
      C                   PARM                    AccnInOthe
      C/COPY OFCPYSRCZ,CRE101_022                                                              CRE101
-
+ 
       ** Account Other details OK inds
      C                   PARM                    OKAcOthe
      C/COPY OFCPYSRCZ,CRE101_061                                                              CRE101
-
+ 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Ix
-
+ 
       * Warning fields/message IDs/message data (arrays) from/to caller                       CER047
      C                   PARM                    WFldNamArr                                   CER047
      C                   PARM                    WMsgIDArr                                    CER047
@@ -2196,7 +2198,7 @@
      C                   PARM                    ValidExRI
      C                   PARM                    ValidExPW
      C/COPY OFCPYSRCZ,CRE101_046                                                              CRE101
-
+ 
      C                   ENDSR
       *****************************************************************                       CRE015
       /EJECT                                                                                  CRE015
@@ -2249,7 +2251,7 @@
       *                                                               *
       *****************************************************************
      C     ValdateAmd    BEGSR
-
+ 
      C                   CALLB     'GLAMADAMD'
       *
       * INPUTS
@@ -2306,22 +2308,22 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs         1
-
+ 
       ** If any errors overwrite previous error information
-
+ 
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
      C                   MOVEA     AmFldNamAr    FldNameArr
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Ix
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
      C     WriteToDB     BEGSR
-
+ 
      C     Ix            IFEQ      0
      C                   EXSR      SETUPVALID
      C                   EXSR      UpdateDB
@@ -2338,7 +2340,7 @@
      C                   ENDIF                                                               LLN022A
       *                                                                                      LLN022A
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2349,24 +2351,24 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
-
+ 
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Ix
-
+ 
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
-
+ 
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
-
+ 
      C                   RESET                   FldNoArr
-
+ 
      C                   CLEAR                   CurAcMast
      C                   CLEAR                   CurAcDebi
      C                   CLEAR                   CurAcCred
@@ -2374,7 +2376,7 @@
      C                   CLEAR                   CurAcOthe
      C                   CLEAR                   CurAcPena                                    CRE015
      C/COPY OFCPYSRCZ,CRE101_042                                                              CRE101
-
+ 
      C                   MOVE      *ALL'Y'       OKAcMast
      C                   MOVE      *ALL'Y'       OKAcDebi
      C                   MOVE      *ALL'Y'       OKAcCred
@@ -2383,7 +2385,7 @@
      C                   MOVE      *ALL'Y'       OKAcPena                                     CRE015
      C/COPY OFCPYSRCZ,CRE101_043                                                              CRE101
      C/COPY WNCPYSRC,GLH00649
-
+ 
      C                   CLEAR                   AccnFilFmt                                   243129
      C                   CLEAR                   ValidAccn
      C                   CLEAR                   ValidExBX
@@ -2401,7 +2403,7 @@
      C                   EVAL      X5ATTY = *BLANKS                                           CRE015
      C                   ENDIF                                                                CRE015
      C                   ENDIF                                                                CRE015
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2412,7 +2414,7 @@
       *                                                               *
       *****************************************************************
      C     SETUPVALID    BEGSR
-
+ 
       * Set Valid file field for a delete.
      C                   IF        DDACTN = 'D'
      C                   EVAL      ValidAccn = AccnFilFmt
@@ -2451,7 +2453,7 @@
      C                   IF        CAP086 = 'Y'                                               CAP086
      C                   EVAL      V_AMAUTH = IF_AUTH                                         CAP086
      C                   ENDIF                                                                CAP086
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2460,9 +2462,9 @@
       * UPDATEDB - Update Database                                    *
       *                                                               *
       *****************************************************************
-
+ 
      C     UPDATEDB      BEGSR
-
+ 
       ** ACCOUNT DATABASE UPDATE
      C                   CALLB     'GLAMADUPD'
      C                   PARM      *BLANK        @@RTCD            7
@@ -2533,7 +2535,7 @@
      C                   MOVEL     'MMM1067'     MsgIdArr(1)
      C
      C                   END
-
+ 
       ** Send the timestamp back to the screen                                              BUG22973
                                                                                             BUG22973
      C     @@RTCD        IFEQ      *BLANKS                                                  BUG22973
@@ -3259,7 +3261,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -3292,7 +3294,7 @@
      C                   PARM                    GLFullAcct       24                        MD026979
                                                                                             MD026979
      C/COPY WNCPYSRC,GLAMADVC02
-
+ 
       *                                                                                      LLN022A
       ** Access SAR details file to determine if LLN007                                      LLN022A
       ** Bank of England Yellow Book Changes is on.                                          LLN022A
@@ -3316,7 +3318,7 @@
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'SDUSRMSG'                                  CRE073
      C/COPY WNCPYSRC,GLH00651
-
+ 
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,GLAMADM01
       *                                                                                      LLN022A
@@ -3478,7 +3480,7 @@
      C                   OPEN      PMPORTLL
      C                   MOVE      *ON           *IN28
      C                   ENDIF
-
+ 
       *
       ** Access SAR details file to determine if CRT001 Retail
       ** Teller System is switched on
@@ -3493,7 +3495,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CRT001
      C                   END
-
+ 
       *
       ** Access SAR details file to determine if CRT101 Password on
       ** Retail Teller account facilities is switched on
@@ -3570,7 +3572,7 @@
       * Access SAR details file to determine if CSC011 switchable feature
       * is switched on
       ** CSC011 is a redundant feature. No need to check                                    MD024398
-
+ 
      C**********         CALLB     'AOSARDR0'                                               MD024398
      C**********         PARM      *BLANKS       @RTCD                                      MD024398
      C**********         PARM      '*VERIFY'     @OPTN                                      MD024398
@@ -3622,18 +3624,18 @@
      C                   EndIf                                                                CER055
                                                                                               CER055
      C                   EndIf                                                                CER055
-
+ 
       ** If 24X7 Midas availability is installed and support system is
       ** active, used processing date from dataarea SC24X7 as the
       ** rundate.
-
+ 
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
      C                   EVAL      WProcDate = S1DATE
      C                   ELSE
      C                   EVAL      WProcDate = BJRDNB
      C                   ENDIF
-
+ 
      C******             ELSE                                                                 240312
       ***Database error                                                                       240312
       ******                                                                                  240312
@@ -3774,7 +3776,7 @@
      C                   ELSE
      C                   EVAL      CommDisp='N'
      C                   ENDIF
-
+ 
       ** Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -3973,6 +3975,6 @@
      C                   KFLD                    WWACOK                                       BUG553
      C                   KFLD                    WWACSK                                       BUG553
      C                   KFLD                    WWBRCK                                       BUG553
-
+ 
      C                   ENDSR
       *****************************************************************

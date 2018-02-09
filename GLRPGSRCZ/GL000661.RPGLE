@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Reports Management')                          *
@@ -9,14 +9,16 @@
       *                                                               *
       *  GL000661 - Midas GL Reports Management                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD043066           Date 12Dec16               *
-      *  Prev Amend No. MD042950           Date 01Dec16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD043066           Date 12Dec16               *
+      *                 MD042950           Date 01Dec16               *
       *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD043066 - FATCA Payment amount reflected is incorrect for   *
       *             an account holder with exception included in the  *
       *             Draft-New Report                                  *
@@ -1560,7 +1562,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015
 **  WCmdArr
 SBMJOB CMD(CALL GLC000660 PARM(WYR)) JOB(GLC000660) JOBQ(INTERFACE) LOG(4 0 *SECLVL) LOGCLPGM(*YES)
 ** ##OV1

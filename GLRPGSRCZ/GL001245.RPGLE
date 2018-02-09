@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('GL Risk Weighted Assets Balances Update Pgm')
@@ -16,20 +16,22 @@
       *             will be updated on the new GL RWA Balance file if *
       *             the a/c is a RE a/c.                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend no. 258536             Date 21Jan09               *
+      *  Prev Amend No. 258536             Date 21Jan09               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 242239             Date 18Sep06               *
+      *                 242239             Date 18Sep06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       *                 CGL018  *CREATE    Date 26Sep02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  258536 - Recompiled due to COB failure.                      *
       *  242239 - Update Risk Weighted Asset and Balance in MXBLGLPD. *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

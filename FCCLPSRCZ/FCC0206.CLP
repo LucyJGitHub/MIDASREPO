@@ -7,18 +7,20 @@
     /*                                                               */
     /*  FCC0206 - Review Today's Reporting                           */
     /*                                                               */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
     /*                                                               */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-    /*       LAST AMEND.NO  LN0149           DATE 08JUN90            */
+/*       Prev Amend No. LN0149             Date 08Jun90              */
     /*                                                               */
     /*****************************************************************/
     /*                                                               */
+/*       MD046248 - Finastra Rebranding                              */
     /*   LN0149 - OVRDBF OF FCRREQL0 WITH SHARE(*NO)                 */
     /*                                                               */
     /*****************************************************************/
@@ -30,7 +32,7 @@
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* GLOBAL ERROR TRAP                                                 */
@@ -38,7 +40,7 @@
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* RESET JOB SWITCHES                                                */
 /**/
              CHGJOB     SWS(XXXXXX00)

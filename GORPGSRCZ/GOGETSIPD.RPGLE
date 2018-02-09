@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO Get security interest payment dates')         *
@@ -13,13 +13,14 @@
       *             determines the preceeding and next coupon dates   *
       *             and the number of coupons per year.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 261324             Date 24Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 261324             Date 24Apr13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 242841             Date 28Nov06               *
+      *                 242841             Date 28Nov06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG11193           Date 02May06               *
       *                 BUG11164           Date 06Apr06               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  261324 - GOC0020 ended in error during COB.                  *
       *           Initialised NCD to zero in *INIT mode.              *
       *         - Applied for AR1063996 (Child: AR1063998).           *
@@ -248,4 +250,4 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate RFT Credit Detail screen 2')
@@ -12,14 +12,15 @@
       *  Function: This module validates screen 2 of the RFT Credit   *
       *            transaction maintenance function (FTM1011DP).      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG10602           Date 16Feb06               *
-      *  Prev Amend No. 221761             Date 02Apr04               *
+      *  Prev Amend No. BUG10602           Date 16Feb06               *
+      *                 221761             Date 02Apr04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
       *                 185107             Date 17Oct00               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG10602 - MidasPlus Error occurred  (Recompiled)            *
       *  221761 - Recompiled due to change made in PF/FT101HPD.       *
       *  185107 - Mapping of details from swift message - Recompile   *
@@ -552,4 +554,4 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

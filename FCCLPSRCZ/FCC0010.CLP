@@ -7,18 +7,20 @@
 /*                                                                   */
 /*      FCC0010 - DISPLAY MIDAS INFORMATION SCREEN                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*      LAST AMEND NO. E27199                DATE 09AUG91            */
+/*      PREV AMEND NO. E27199                DATE 09AUG91            */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*      MD046248 - Finastra Rebranding                               */
 /*      E27199  -  Rewrite the FC Midas Information Screen system    */
 /*                 to use MSGF/MIDASMSG in all cases.                */
 /*                                                                   */
@@ -85,7 +87,7 @@
 /*  COPYRIGHT STATEMENT VARIABLE  */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*  RETRIEVE INDICATOR SETTINGS FROM DTAARA/MIDASMSG  */
@@ -253,7 +255,7 @@
 /*  END OF PROGRAM PROCESSING  */
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGDTAARA  DTAARA(MIDASMSG (1 99)) VALUE(' ')
  
              ENDPGM

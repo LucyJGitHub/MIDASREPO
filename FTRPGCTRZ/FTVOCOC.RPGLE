@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate Ordering Customer (Cover)')          *
@@ -9,11 +9,12 @@
       *                                                               *
       *  FTVOCOC  - Validate OP Ordering Customer (Cover)             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 06May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG26087           Date 22Sep09               *
+      *                 BUG26087           Date 22Sep09               *
       *                 BUG25973           Date 17Sep09               *
       *                 BUG25005           Date 16Jul09               *
       *                 BUG24663           Date 29Jun09               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  BUG26087 - The word COVER is missing in the error message    *
       *  BUG25973 - When Ordering Customer L1 is equal to valid IBAN  *
@@ -796,7 +798,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009
 **  Alpha - Array of alphabetic characters
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 **  Numeric - Array of numeric characters

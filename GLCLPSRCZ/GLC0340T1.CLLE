@@ -7,14 +7,16 @@
 /*                                                                   */
 /*       GLC0340T1 - Midas GL Daily journal - Start Task Split       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD037383           Date 25May16              */
-/*       Prev Amend No. CGL049             Date 17Feb15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD037383           Date 25May16              */
+/*                      CGL049             Date 17Feb15              */
 /*                      CGL120   *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
 /*                  Stamp Tax (CER049) processing.                   */
 /*                  Rework that component to make it 'Task Split'    */
@@ -24,7 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&POSTNUM &CNAM &CSEQ)
-
+ 
              DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
                           VALUE('GLC0340')
              DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
@@ -46,32 +48,32 @@
              DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
              DCL        VAR(&POST) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(257)
-
+ 
              DCLF       FILE(CBCMPNLC)
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           2012')
-
+ 
 /* Global monitor message. */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
 /* Send message to MRUNQ. */
-
+ 
              SNDPGMMSG  MSG('GLC0340T1 - Daily Journal - Start Task +
                           Split') TOMSGQ(MRUNQ)
-
+ 
              IF         COND(&POSTNUM = '3') THEN(DO)
                 RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
                 IF         COND(&CURRCD = 0) THEN(DO)
                    GOTO       CMDLBL(END)
                 ENDDO
              ENDDO
-
+ 
              CHGVAR     VAR(&POST) VALUE(&POSTNUM)
              CHGVAR     VAR(&POST) VALUE(48 + &POST)
-
+ 
              IF         COND(&POSTNUM *EQ '7') THEN(DO)                                 /*MD037383*/
              CHGVAR     VAR(&POST) VALUE(&POST -6)                                      /*MD037383*/
              ENDDO                                                                      /*MD037383*/
@@ -79,32 +81,32 @@
              IF         COND(&POSTNUM *EQ '6') THEN(DO) /* CGL049 */
                 CHGVAR     VAR(&POST) VALUE(59) /* CGL049 */
              ENDDO      /* CGL049 */
-
+ 
              RTVDTAARA  DTAARA(GLSTAT) RTNVAR(&GLSTAT)
              CHGVAR     VAR(%SUBSTRING(&GLSTAT &POST 1)) VALUE('Y')
              CHGVAR     VAR(%SUBSTRING(&GLSTAT 41 1)) VALUE('N')
              CHGDTAARA  DTAARA(GLSTAT) VALUE(&GLSTAT)
-
+ 
 /* Determine full DTAQLIB library name. */
-
+ 
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
-
+ 
 /* Clear index file. */
-
+ 
              CLRPFM     FILE(&INDEXFL)
-
+ 
 /* Remove all members from driving file. */
-
+ 
              RMVM       FILE(&DRIVER) MBR(*ALL)
              MONMSG     MSGID(CPF7301 CPF7303)
-
+ 
 /* Clear main data queue. */
-
+ 
              CALL       PGM(QCLRDTAQ) PARM(&RCVDTAQ  '*LIBL')
-
+ 
 /* Retrieve number of sub-tasks. */
-
+ 
  CHAIN:
              RCVF
              CHGVAR     VAR(&NAME2_N) VALUE(&DHCSEQ)
@@ -112,46 +114,46 @@
                           &CSEQ)) THEN(DO)
                 GOTO       CMDLBL(CHAIN)
              ENDDO
-
+ 
 /* Add all members and create data queues. */
-
+ 
              CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
  LOOP:
              IF         COND(&LOOP *GT &DHTSNO) THEN(DO)
                 GOTO       CMDLBL(START)
              ENDDO
-
+ 
              CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
              ADDPFM     FILE(&DRIVER) MBR(&MEMBER)
-
+ 
 /* Create data queue if it doesn't already exist */
 /* and set authorities. */
-
+ 
              CHKOBJ     OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 CRTDTAQ    DTAQ(&DTAQLIB/&MEMBER) MAXLEN(50)
              ENDDO
              CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)
-
+ 
              IF         COND(&LOOP *EQ 1) THEN(DO)
                    CHGVAR     VAR(&NAME2_N) VALUE(01000)
                    CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N * &CSEQ)
              ENDDO
-
+ 
              CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
              CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
              CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
              GOTO       CMDLBL(LOOP)
-
+ 
  START:
-
+ 
              GOTO       CMDLBL(END)
-
+ 
  ABNOR:
              SNDPGMMSG  MSG('Program GLC0340T1 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
-
+ 
  END:
              ENDPGM

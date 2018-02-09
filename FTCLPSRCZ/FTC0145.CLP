@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       FTC0145    CHEQUES TO BE PAID AWAITING LEVEL 2              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMENDMENT NO. E42167(PSS206)     DATE  05AUG92         */
-/*       LAST AMENDMENT NO. E29970             DATE  28JUN91         */
-/*       PREV AMENDMENT NO. S01117             DATE  07SEP90         */
+/*       PREV AMENDMENT NO. E42167(PSS206)     DATE  05AUG92         */
+/*                          E29970             DATE  28JUN91         */
+/*                          S01117             DATE  07SEP90         */
 /*                          S01194             DATE  24AUG90         */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       E42167  -  CL PROGRAM FOR RECORD LOCKING                    */
 /*       E29970  -  COMMAND 7 IN FT0085 PROCESSING                   */
 /*       S01117  -  RELEASE 10 MULTIBRANCHING CHANGES                */
@@ -38,7 +40,7 @@
              DCL        VAR(&BORO) TYPE(*CHAR) LEN(1)                /*S01117*/
              DCL        VAR(&PCMD) TYPE(*CHAR) LEN(1)                /*S01117*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                      /*042167*/
              DCL        VAR(&MODULE) TYPE(*CHAR) LEN(2)              /*042167*/
@@ -72,7 +74,7 @@
 /**END:        ENDPGM                                                /*S01117*/
  END:        CHGJOB     SWS(XXXX0XXX)                                /*E29970*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/                                                                  /*042167*/
 /* CALL AOC8000 to release locks */                                   /*042167*/
 /**/                                                                  /*042167*/

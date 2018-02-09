@@ -7,12 +7,13 @@
 /*                                                                  */
 /*       GLSBMBCH - SUBMIT JOURNAL ENTRY JOBS                       */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. 260259             Date 14May09              */
+/*       Prev Amend No. 260259             Date 14May09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 245635             Date 13Feb07              */
+/*                      245635             Date 13Feb07              */
 /*                      241672A            Date 09Jan07              */
 /*                      245631             Date 12Feb07              */
 /*                      243716             Date 17Nov06              */
@@ -37,6 +38,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       260259 - Batch acceptance delay problem. Fix is to          */
 /*                sbmjob GLC445 to MIDASJOBQ and removed MIDASRMV.   */
 /*       245635 - Move SBMJOB of REC0880 to GLC445.                 */
@@ -78,7 +80,7 @@
 /* Declare variables :                                          */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
  
@@ -293,5 +295,5 @@
  
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  PGMEND:     ENDPGM

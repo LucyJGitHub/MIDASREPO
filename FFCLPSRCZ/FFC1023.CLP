@@ -7,8 +7,9 @@
 /*                                                                   */
 /*   FFC1023  -  PRICES LIST (EOC)                                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,11 +17,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 Patch D -------------------------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*   LAST AMEND NO. 163444             DATE 30SEP99                  */
+/*       Prev Amend No. 163444             Date 30Sep99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   PREV AMEND NO. S01117             DATE 22FEB90                  */
+/*                      S01117             Date 22Feb90              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*   163444 - Y2K SORT ORDER                                         */
 /*   S01117 - MULTIBRANCHING                                         */
 /*                                                                   */
@@ -38,7 +40,7 @@
              DCL        &MEM          TYPE(*CHAR)  LEN(44)
              DCL        VAR(&SIX) TYPE(*DEC) LEN(1 0) VALUE(0)        /*163444*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* Global monitor message                                           */
@@ -140,5 +142,5 @@ DBERR:       IF COND(%SWITCH(XXXXXX11)) THEN(DO)
              CHGJOB     SWS(XXXXXX1X)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 END:         ENDPGM

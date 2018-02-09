@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Statement of Account Prompt')                 *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: GL0061 - Customer Account Balances Enquiry        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL140             Date 12Dec12               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL140             Date 12Dec12               *
+      *                 AR787620           Date 10Jun11               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL140 - Online Statement                                    *
       *         - Added Hooks: CGL140_022 to CGL140_031               *
       *  AR787620 - Hooks Incorporation                               *

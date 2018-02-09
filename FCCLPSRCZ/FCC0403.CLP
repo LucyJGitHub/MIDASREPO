@@ -7,21 +7,23 @@
     /*                                                               */
     /*  FCC0403 - DISTRIBUTE SPOOL FILE VIA OFFICE DISTRIBUTION LIST */
     /*                                                               */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
     /*                                                               */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-    /*       LAST AMEND NO. 043702           DATE 21AUG92            */
-    /*       PREV AMEND NO. E26738           DATE 10SEP91            */
+/*       Prev Amend No. 043702             Date 21Aug92              */
+/*                      E26738             Date 10Sep91              */
     /*                      LN0852           DATE 16OCT90            */
     /*                      LN0736           DATE 12SEP90            */
     /*                                                               */
     /*****************************************************************/
     /*                                                               */
+/*       MD046248 - Finastra Rebranding                              */
     /*       043702 - MONITOR FOR INVALID DISTRIBUTION LIST, DO NOT  */
     /*                RETRY AS THIS CAUSES FCC0401 TO LOOP           */
     /*       E26738 - MONITOR FOR SPOOL FILE BEING OPEN AND          */
@@ -57,14 +59,14 @@
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)             /*LN0736*/
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)                /*LN0736*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +   * *LN0736*/
 /************             CMDLBL(END))                               * *LN0736*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))                              /*LN0736*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
     /* SEND NETWORK SPOOL FILE USING INPUT PARAMETERS.               */
     /*                                                               */
              SNDNETSPLF FILE(&FLNAM) TOUSRID((&DLS1 &DLS2)) +

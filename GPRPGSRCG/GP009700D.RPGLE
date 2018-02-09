@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*YMD)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Display WAS Configuration Table')             *
@@ -12,19 +12,21 @@
       *  Function:  This program allows the user to display           *
       *             WAS Configuration Table                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Function:  This program allows the user to Maintain          *
       *             WAS Configuration Table                           *
       *                                                               *
       *  Called By: Menu Item                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD023899 *CREATE   Date 02Dec13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023899 *CREATE   Date 02Dec13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023899 - BF PRB Multiple JMS listeners auto starting       *
       *             during COB                                        *
       *                                                               *

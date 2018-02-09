@@ -7,15 +7,17 @@
 /*                                                                   */
 /*       GOCFCLTLV - Bulk Update of Global File GZFCLTLVPD           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CGP015             Date 06Mar09              */
+/*       Prev Amend No. CGP015             Date 06Mar09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 257576  *CREATE    Date 06Nov08              */
+/*                      257576  *CREATE    Date 06Nov08              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGP015 - Task Split of Bulk update of Facilities listview   */
 /*       257576 - Performance: Facilities Input                      */
 /*                                                                   */
@@ -34,7 +36,7 @@
              DCL        VAR(&MODE)      TYPE(*CHAR) LEN(4)                                /*CGP015*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2008')
  
 /* Global monitor message */

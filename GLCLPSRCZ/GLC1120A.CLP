@@ -7,18 +7,20 @@
 /*                                                                   */
 /*      GLC1120A - AMOUNT ACCRUAL INPUT PROCEDURE                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*      LAST AMEND NO.  S01194           DATE   05/06/89             */
+/*       Prev Amend No. S01194             Date 05/06/89             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*      S01194 - NEW STANDING DATA                                   */
 /*                                                                   */
 /*********************************************************************/
@@ -29,7 +31,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*           DCL     VAR(&MEM) TYPE(*CHAR) LEN(44)              */    /*S01194*/
              DCL     VAR(&MEM) TYPE(*CHAR) LEN(50)                    /*S01194*/
@@ -68,5 +70,5 @@
 /**/
                 ENDDO
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  ENDPGM:       ENDPGM

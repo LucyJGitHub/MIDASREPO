@@ -9,12 +9,13 @@
       *  GL001141 - Midas GL Amount Amortisation Update & Entry       *
       *             Generation                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG13574           Date 19Mar07               *
-      *  Prev Amend No. BUG13288           Date 14Feb07               *
+      *  Prev Amend No. BUG13574           Date 19Mar07               *
+      *                 BUG13288           Date 14Feb07               *
       *                 BUG13056A          Date 29Jan06               *
       *                 BUG13041           Date 16Jan06               *
       *                 BUG12616           Date 15Dec06               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG13574 - Negative balance in the amount Unamortised posted *
       *             to date/Amortisation in excess of the original    *
       *             discount                                          *
@@ -1543,4 +1545,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

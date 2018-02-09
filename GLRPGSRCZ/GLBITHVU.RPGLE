@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE header validate and update')               *
@@ -31,10 +31,11 @@
       *            the call to the Message Handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL182             Date 11May17               *
-      *  Prev Amend No. MD046910           Date 25Jul17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL182             Date 11May17               *
+      *                 MD046910           Date 25Jul17               *
       *                 MD045854           Date 25May17               *
       *                 MD000091           Date 07May13               *
       *                 AR1092517          Date 14Mar13               *
@@ -76,6 +77,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *  MD046910 - Reversal of MD-45854 as part of fix MD-43023      *
       *  MD045854 - Batch Detail cannot be entered with message       *
@@ -310,7 +312,7 @@
       *
       ** Timestamp for the transaction
      D PTimeStamp      S               Z
-
+ 
      D DBerrUpd        C                   CONST('DB error in BITH API update')
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
@@ -471,9 +473,9 @@
      C                   ELSE
      C                   EVAL      B1VALI = 'Y'
      C                   ENDIF
-
+ 
       *  Write to database
-
+ 
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      WriteToDB
@@ -483,9 +485,9 @@
      C**********                                 + PExtData                                   CAP086
      C                                           + PEAHeader                                  CSC054
      C                                           + PInfData + PExtData                        CAP086
-
+ 
      C                   SETON                                        LR
-
+ 
      C                   RETURN
       *
       *****************************************************************
@@ -670,12 +672,12 @@
       /EJECT
       *****************************************************************
      C     WriteToDB     BEGSR
-
+ 
      C     Idx           IFEQ      0
      C                   EXSR      SRSetOFld
      C                   EXSR      UpdateDB
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -684,7 +686,7 @@
       * UPDATEDB - Update Database                                    *
       *                                                               *
       *****************************************************************
-
+ 
      C     UPDATEDB      BEGSR
       *
       ** Update JE Headers file.
@@ -732,12 +734,12 @@
       *
       ** If update not done due to record being updated by another
       *  workstation send message to screen.
-
+ 
      C     PRTCD         IFEQ      '*RECUPD'
-
+ 
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     DBerrUpd      MsgIdArr(1)
-
+ 
      C                   END
       *
       ** If update not done due to user not been authorised (CGL008) send message
@@ -772,11 +774,11 @@
      C                   ADD       1             Idx
      C                   ENDIF
      C**********         ENDIF                                                               BUG1898
-
+ 
       ** Batch Number to pass back to APTRANVU on insert mode
-
+ 
      C                   EVAL                    DDBTNB = B1BTNB
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -929,12 +931,12 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
-
+ 
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'GLUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
-
+ 
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,GLBITH02
       *
@@ -1175,7 +1177,7 @@
      C                   IF        PRTCD = *BLANKS                                            CGL182
      C                   MOVE      'Y'           CGL182                                       CGL182
      C                   ENDIF                                                                CGL182
-      *                                                                                       CGL182                                                                                            
+      *                                                                                       CGL182
      C                   MOVE      *BLANKS       PRTCD                                       BUG9713
                                                                                              BUG9713
      C/COPY WNCPYSRC,GLBITH05                                                                 GOC001
@@ -1201,4 +1203,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

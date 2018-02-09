@@ -11,15 +11,17 @@
       *  GP002900 - Midas GP Send T_MSWIP T_MSRPRQ transactions       *
       *             status back to MHUB                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *    (c) Finastra International Limited 2014                    *    
       *                                                               *
-      *  Last Amend No. MD031980           Date 26Jan15               *
-      *  Prev Amend No. MD032064           Date 23Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031980           Date 26Jan15               *
+      *                 MD032064           Date 23Jan15               *
       *                 MD031644           Date 15Dec14               *
       *                 CFT158  *CREATE    Date 10Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031980 - Retrieval of FRNT from GZINPAYDD fails due        *
       *             to blank WKBRCA.                                  *
       *  MD032064 - In 2-EYES setting, after repairing a transaction, *

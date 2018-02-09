@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       GLC0202 - WHT Deductions by Customer Report (COB)           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. AR787620           Date 10Jun11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR787620           Date 10Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CDL013  *CREATE    Date 08Jun06              */
+/*                      CDL013  *CREATE    Date 08Jun06              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR787620 - Hooks Incorporation                              */
 /*                  WNCPYSRC,GLH00308                                */
 /*                  WNCPYSRC,GLH00309                                */
@@ -33,7 +35,7 @@
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
 /*/COPY WNCPYSRC,GLH00308                                            */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2006')
 /**/
              SNDMSG     MSG('GLC0202 - WHT Deductions by Customer +
@@ -54,6 +56,6 @@
 ENDPGM:
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP Validate Retail Account Number')
@@ -9,17 +9,19 @@
       *                                                               *
       *  GPCHRETL - Validate existence of retail number in WIP        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR978786 *CREATE   Date 28Jun12               *
+      *  Last Amend No. MD046248           Date 27Oct17               * 
+      *  Prev Amend No. AR978786 *CREATE   Date 28Jun12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR978786 - Retail number attribution problem                 *
       *             (Child:AR978788)                                  *
       *                                                               *
       *****************************************************************
- 
+
      D  P_MSWAPI       S             32
      D  P_MSWDATA      S          32000    VARYING
      D  P_MSWZONE      S             12
@@ -30,19 +32,19 @@
      D  PRetail        S             10A
      D  PZone          S             12A
      D @RUN            S              1A
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PReturnCode
      C                   PARM                    PRetail
      C                   PARM                    PZone
- 
+
      C                   EVAL      PZone = %TRIM(PZone)
      C/EXEC SQL
      C+ DECLARE UScursor CURSOR FOR
@@ -91,7 +93,7 @@
      C                   ENDIF
       *
      C                   ENDDO
- 
+
      C                   EVAL      PReturnCode = WFound
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -106,16 +108,16 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C     @RUN          IFEQ      *BLANK
      C                   MOVE      'Y'           @RUN
      C                   DUMP
- 
+
      C                   ENDIF
- 
+
      C                   SETON                                        U7U8LR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

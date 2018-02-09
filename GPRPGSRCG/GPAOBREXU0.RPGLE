@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Branch Code Extension Updater')               *
@@ -9,13 +9,15 @@
       *                                                               *
       *  GPAOBREXU0 - Midas GP Branch Code Extension Updater          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR792029           Date 22Jun11               *
-      *  Prev Amend No. AR694360 *CREATE   Date 06Jan11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR792029           Date 22Jun11               *
+      *                 AR694360 *CREATE   Date 06Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR792029 - INZZ Option in Bridge Failed                      *
       *  AR694360 - Initialise GPBRCHEXPD. (Child: AR694361)          *
       *                                                               *
@@ -111,4 +113,4 @@
      C                   ENDSR
      C****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

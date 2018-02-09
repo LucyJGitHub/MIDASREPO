@@ -13,9 +13,10 @@
 /*       Calls  :   GL0744 - GL Balances Sort for EMU - 1            */
 /*                  GL0750 - GL Balances Report by account code      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,17 +24,18 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CEU011 *Create     Date 11Mar98              */
+/*       Prev Amend No. CEU011 *Create     Date 11Mar98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CEU011 - EMU Position/Risk Reporting                        */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RUNTYPE &RSEQ &RENT)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RUNTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
@@ -101,6 +103,6 @@ ABNOR:       RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
              MONMSG        MSGID(CPF0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 END:         ENDPGM

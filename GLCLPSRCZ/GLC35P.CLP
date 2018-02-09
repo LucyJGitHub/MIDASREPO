@@ -8,18 +8,20 @@
 /*                                                                   */
 /*   GLC35P  - CHART OF ACCOUNTS REPORT PROMPT                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   LAST AMEND NO. E38913     DATE 28APR92                          */
+/*       Prev Amend No. E38913             Date 28Apr92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   E38913 - ALLOW AMEND PROCESSING AND ALSO CORRECT ERROR PROCESS  */
 /*                                                                   */
 /*********************************************************************/
@@ -27,7 +29,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM &RACT &RCMD)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
@@ -139,6 +141,6 @@ ENDPGM:
              CHGVAR     VAR(&RPARM) VALUE(&ONE *CAT &TWO *CAT &THREE)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

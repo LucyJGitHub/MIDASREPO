@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Invalid FX deals repair')                     *
@@ -12,10 +12,11 @@
       *  Function:  This function allows invalid FX deals to be       *
       *             'repaired' and applied to the Midas database.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047971           Date 16Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD047971           Date 16Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -83,8 +84,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
-      *             that side is already netted.                      *
+      *             that side is already netted.                      *      
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -177,12 +179,12 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
- 
+
      FFXIFXDLL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FXIFXDLD0:FXIFXDLX0)
      FFXIFXDLL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
      FAPIDSETL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(APIDSETD0:APIDSETX0)
      FAPIDSETL1 UF   E           K DISK    INFSR(*PSSR)
@@ -196,11 +198,11 @@
      FDLDEALL5  UF A E           K DISK    INFSR(*PSSR)                                       244036
      F                                     IGNORE(DLDLDCD0)                                   244036
      F                                     IGNORE(DLDLDGD0)                                   244036
- 
+
       * Hook to enable non-core files to be included
       ***PY WNCPYSRC,FXFXDLR009*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP009                                                 CPK018
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -219,59 +221,59 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
- 
- 
+
+
      D CrDlFilFmt    E DS                  EXTNAME(FXDEALPP)
       * Current Deal in File Format
      D  FHREC                400    468                                         CAP011
      D  FHPAY                469   1027                                         CAP011
      D  FH@ISDA             1394   2043                                                       CSW212
- 
+
      D CrDlScnFmt    E DS                  EXTNAME(FXFXDLPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(FXVFXDLPD)
      D FXFXDLDORI    E                     EXTFLD(QQDORI)                                     CGL029
      D FXFXDLMORI    E                     EXTFLD(QQMORI)                                     CGL029
@@ -283,37 +285,37 @@
      D  F3REC                400    468
      D  F3PAY                469   1027
      D  F3@ISDA             1394   2043                                                       CSW212
- 
+
      D NwDlScnFmt    E DS                  EXTNAME(FXFXDLPD)
       * New Deal in Screen Format
- 
+
      D FXEFXD        E DS                  EXTNAME(FXEFXDLPD)
       * Error indicators
- 
- 
+
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** FILE RECEIVE INSTRUCTIONS
      D***FLREC                  1     69                                                      CGL029
      D  FLREC                  1     75                                                       CGL029
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** FILE PAYMENT INSTRUCTIONS
      D***FLPAY                  1    559                                                      CGL029
      D  FLPAY                  1    565                                                       CGL029
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
      D  FL@ISDA                1    650                                                       CSW212
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
- 
+
      D CrPaySttmt    E DS                  EXTNAME(SDESSPPD) PREFIX(@)          CAP011
       * Pay Settlement Instructions - Current                                   CAP011
                                                                                 CAP011
@@ -335,24 +337,24 @@
      D  @@PSCY                24     26                                                       CGL029
      D  @@PSTM                27     28  0                                                    CGL029
      D  @@PONS                29     46                                                       CGL029
- 
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
                                                                                 CAP051
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP051
       ** EXTERNAL DS FOR SAR DETAILS                                            CAP051
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)                     CAP011
       ** EXTERNAL DS FOR API ICD                                                CAP011
                                                                                 CAP011
@@ -363,7 +365,7 @@
       ***Midas*Our*Receive*/*Pay**Instructions*(for*Settl*Meth*=*04*)*******           179510 200400
      D**@@MORI****             1     12                                                179510 200400
      D**@@MOPI****            13     24                                                179510 200400
- 
+
      D InfData       E DS                  EXTNAME(FXFXIFPD)                    CAP051
      D                                     PREFIX(IF_)                          CAP051
       * FX (FXDL) Extra Data - File (D/B) format                                CAP051
@@ -371,7 +373,7 @@
      D ExtData       E DS                  EXTNAME(FXFXEXPD)                    CAP004
       * FX Extra Data - File (D/B) format                                       CAP004
      D/COPY WNCPYSRC,FXH00114
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
                                                                                               CSC011
@@ -386,15 +388,15 @@
       * MIDAS SC Jobs Handling Commitment Control Data Structure                              CSC022
                                                                                               CSC022
      D/COPY QWINDSRC,FXDLSINDTA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
@@ -404,18 +406,18 @@
                                                                                               185612
       ** Sell Amount                                                                          185612
      D SAMT            S             13  0                                                    185612
- 
+
       ** -------------------------------------------------------------------
       ** Fields for getting the starting field number from file (parameters
       ** to ZAGETFLDNO, plus the offset to the requested field).
      D Format          S             10A   INZ('FXFXDLPD')
- 
+
      D Field           S             10A   INZ('DDACTN')
- 
+
      D FieldNo         S              5P 0
- 
+
      D FldOffset       S              5P 0
- 
+
       ** End of fields for getting starting field number
       ** -------------------------------------------------------------------
                                                                                 CAP004
@@ -439,12 +441,12 @@
      D DDRonxOK        S              1A   INZ('Y')                                         MD047971
      D DDPonxOK        S              1A   INZ('Y')                                         MD047971
      D/COPY WNCPYSRC,FXH00067
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -452,7 +454,7 @@
       ** +----------------------------------------+
       ***PY WNCPYSRC,FXFXDLR010*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP010                                                 CPK018
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -466,7 +468,7 @@
       *
       ***PY WNCPYSRC,FXFXDLR001*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP001                                                 CPK018
- 
+
       * DO SCREEN: BROWSE INVALID DEALS
       *
      C     @SCRN         IFEQ      'B'
@@ -475,7 +477,7 @@
       *
       ***PY WNCPYSRC,FXFXDLR002*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP002                                                 CPK018
- 
+
       * READ NEXT BROWSE SUBFILE RECORD
       *
      C     @SCRN         IFEQ      'R'
@@ -484,7 +486,7 @@
       *
       ***PY WNCPYSRC,FXFXDLR003*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP003                                                 CPK018
- 
+
       * DO WHILE SCREEN: MAIN DETAILS
       *
      C     @SCRN         DOWEQ     'M'
@@ -493,7 +495,7 @@
       *
       ***PY WNCPYSRC,FXFXDLR004*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP004                                                 CPK018
- 
+
       * SCREEN: WINDOW
       *
      C     @SCRN         IFEQ      'W'
@@ -502,7 +504,7 @@
       *
       ***PY WNCPYSRC,FXFXDLR005*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP005                                                 CPK018
- 
+
       * DO WHILE SCREEN: SETTLEMENT DETAILS
       *
      C     @SCRN         DOWEQ     'S'
@@ -511,7 +513,7 @@
       *
       ***PY WNCPYSRC,FXFXDLR006*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP006                                                 CPK018
- 
+
       * SCREEN: CONFIRMATION OF INPUT
       *
      C     @SCRN         IFEQ      'C'
@@ -520,7 +522,7 @@
       *
       ***PY WNCPYSRC,FXFXDLR007*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP007                                                 CPK018
- 
+
       * DO FILE UPDATES
       *
      C     @SCRN         IFEQ      'U'
@@ -529,7 +531,7 @@
       *
       ***PY WNCPYSRC,FXFXDLR008*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP008                                                 CPK018
- 
+
       * TERMINATE PROGRAM
       *
      C     @SCRN         IFEQ      'T'
@@ -542,11 +544,11 @@
      C                   MOVE      '1'           *INLR
      C                   END
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       ***PY WNCPYSRC,FXFXDLR011*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP011                                                 CPK018
- 
+
       /EJECT
       *****************************************************************
       * SCRN@B - BROWSE INVALID DEALS
@@ -844,7 +846,7 @@
       * SNDM@M - SEND A MESSAGE TO MAIN DETAILS SCREEN
       *****************************************************************
      C     SNDM@M        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -2594,12 +2596,12 @@
      C                   KFLD                    KMsgType                                     CSC011
      C                   KFLD                    KFrntOffID                                   CSC011
      C                   KFLD                    KTimeStamp                                   CSC011
- 
+
       ** Message Type
- 
+
      C*******************MOVEL     'FXFXDL'      @MSGTYPE          8            CAP004
      C                   MOVEL     'FXFXDL'      @MSGTYPE                       CAP004
- 
+
       ** Get the field number for the action code field; the screen fields
       ** start from that number.  Subtract one from it to give the value
       ** to subtract from each field's number.
@@ -2608,10 +2610,10 @@
      C                   PARM                    Format
      C                   PARM                    Field
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffset = FieldNo - 1
- 
+
       ** If there was an error default the offset to 13
      C                   ELSE
      C                   EVAL      FldOffset = 13
@@ -2723,11 +2725,11 @@
      C                   ELSE                                                                 CSW212
      C                   EVAL      CSW212 = 'N'                                               CSW212
      C                   ENDIF                                                                CSW212
- 
+
       *  Hook to enable non-core initial processing to be included
       ***PY WNCPYSRC,FXFXDLR012*************************************************CPK018
       /COPY WNCPYSRC,FXFXDLP012                                                 CPK018
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2740,4 +2742,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

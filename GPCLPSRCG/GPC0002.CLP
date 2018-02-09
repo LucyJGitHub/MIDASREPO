@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       GPC0002 - Universal Transactions Update Manager             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. 259792             Date 19Aug14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 259792             Date 19Aug14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG3963            Date 06Aug04              */
+/*                      BUG3963            Date 06Aug04              */
 /*                      CSC020             Date 31Mar04              */
 /*                      CGP001  *CREATE    Date 23May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       259792 - When receiver is changed, use the updated last     */
 /*                sequence number in order to retrieve the next set  */
 /*                of journal entries to be processed.                */
@@ -39,7 +41,7 @@
              DCL        VAR(&CURRCVNO) TYPE(*DEC) LEN(8)                                  /*CSC020*/
              DCL        VAR(&CURRCVNOA) TYPE(*CHAR) LEN(8)                                /*CSC020*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCLF       FILE(GPUTJSPD)
@@ -161,7 +163,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              DLCOBJ     OBJ((GPUTJSPD *FILE *EXCLRD))
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)

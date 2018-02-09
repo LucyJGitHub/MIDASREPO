@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       GLC0112 - Delete Batch Control 1                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL016  *CREATE    Date 01Aug02              */
-/*       Prev Amend No.                    Date ddmmmyy              */
+/*       Prev Amend No. CGL016  *CREATE    Date 01Aug02              */
+/*                                         Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL016 - Projected Movements Update Prior to Authorisation  */
 /*                                                                   */
 /*********************************************************************/
@@ -33,7 +35,7 @@
              DCL        VAR(&PROGRAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
@@ -54,6 +56,6 @@
                           Rollback')
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  EXIT:
              ENDPGM

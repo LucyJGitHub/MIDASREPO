@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE Header DB Update (Time-Out Processing)')   *
@@ -10,10 +10,11 @@
       *  GLBITHUPF - Journal Batch Entry Header Database Update       *
       *              (Time-Out Processing)                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046910           Date 25Jul17               *
-      *  Prev Amend No. MD045854           Date 25May17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046910           Date 25Jul17               *
+      *                 MD045854           Date 25May17               *
       *                 AR1092517          Date 14Mar13               *
       *                 AR1003955          Date 13Jul12               *
       *                 CSC054             Date 23Feb12               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046910 - Reversal of MD-45854 as part of fix MD-43023      *
       *  MD045854 - Batch Detail cannot be entered with message       *
       *             Batch Header already accepted. Removed CAP209     *
@@ -599,4 +601,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

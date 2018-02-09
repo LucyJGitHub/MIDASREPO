@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Generated Code')                                       *
@@ -9,13 +9,15 @@
       *                                                               *
       *  GOMEBIB3PD - Bulk Update of Global File GZMEBIB3PD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD023533           Date 18Nov13               *
-      *  Prev Amend No. MD022168  *CREATE  Date 12Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023533           Date 18Nov13               *
+      *                 MD022168 *CREATE   Date 12Sep13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023533 - GOC0100 seq 00199 failed in COB                   *
       *  MD022168 - GZMEBIB3PD Replication                            *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *

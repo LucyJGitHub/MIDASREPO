@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Generated Entries Account Transfer')          *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: GLC004601 - Generation of Account Transfer Payment*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD034016           Date 16Jun15               *
-      *  Prev Amend No. MD029951           Date 25Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034016           Date 16Jun15               *
+      *                 MD029951           Date 25Feb15               *
       *                 AR1075388          Date 21Nov13               *
       *                 AR1095876          Date 30Sep13               *
       *                 AR1014090          Date 11Feb13               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034016 - Same Customer Name in the DR/CR transaction       *
       *  MD029951 - Account Transfer - Narratives wrong on file       *
       *             APOSTPD. Transaction Reference value should be    *

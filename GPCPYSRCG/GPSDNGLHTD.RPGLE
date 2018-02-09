@@ -4,14 +4,16 @@
       *                                                               *
       *  GPSDNGLHTD - On-Line Update of Global File GZSDNGLHTD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD027375           Date 05Jun14               *
-      *  Prev Amend No. CGL155   *Create   Date 18Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027375           Date 05Jun14               *
+      *                 CGL155  *CREATE    Date 18Mar14               *
       *                 xxxxxx             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027375 - Group limit details not reflected for all         *
       *             accounts included in the group                    *
       *  CGL155 - Forecast Group Limits                               *

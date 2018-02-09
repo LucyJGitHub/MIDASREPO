@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Nostro Transfer Update')                      *
@@ -9,14 +9,16 @@
       *                                                               *
       *  FTFTNTUPD - Midas FT Nostro Transfer Database Update         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD034756           Date 11Aug15               *
-      *  Prev Amend No. MD032097           Date 28Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034756           Date 11Aug15               *
+      *                 MD032097           Date 28Jan15               *
       *                 CAP212  *CREATE    Date 15Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034756 - Create Projected movements during Amend/Reject    *
       *  MD032097 - Incorrect calculation of NTRANZZ                  *             *
       *  CAP212 - FT Nostro Transfer API                              *
@@ -1517,7 +1519,7 @@
       /EJECT
       ********************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014
 ** OPTAG
 <Destination>
 <Nostro>

@@ -7,14 +7,15 @@
 /*                                                                   */
 /*   FFC0910  -  GENERATE ACCOUNTING ENTRIES (EOC IN COB)            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*   Last Amend No. 262523                 Date 10Nov09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 262523             Date 10Nov09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*   Prev Amend No. 222971                 Date 26May06              */
+/*                      222971             Date 26May06              */
 /*                  CDL045                 Date 14Feb06              */
 /* Midas Plus 1.2 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -36,6 +37,7 @@
 /*                                                   Q               */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  262523 - Component FFC0910 failed due to missing account         */
 /*           keys. System should only halt the COB (component        */
 /*           should not fail) and there will be an option to         */
@@ -85,7 +87,7 @@
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)              /*E41892*/
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(1)                 /*082461*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                      CCB009*/
 /* Declare variable CCB009 - flag for switchable feature                CCB009*/
@@ -491,5 +493,5 @@ END:
                                                                                    /*079666 222971*/
 /*ENDPGM**                                                                         /*079666 222971*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

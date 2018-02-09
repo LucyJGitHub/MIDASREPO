@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP Access Supplied Validation List')
@@ -9,13 +9,15 @@
       *                                                               *
       *  GPACSLDVL - Access GP Supplied Validation List               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD033895           Date 16Apr15               *
-      *  Prev Amend No. MD024244*CREATE    Date 09Jan14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033895           Date 16Apr15               *
+      *                 MD024244*CREATE    Date 09Jan14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033895 - Correct parameters for UT000033.                  *
       *  MD024244 - Document Store Cannot Access Root Directory       *
       *                                                               *

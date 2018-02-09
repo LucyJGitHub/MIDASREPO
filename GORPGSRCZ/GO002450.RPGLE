@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GO Initialisation for GOLSTUPD')                 *
@@ -9,12 +9,14 @@
       *                                                               *
       *  GO002450 - Midas GO Initialisation for GOLSTUPD              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. AR1082904*CREATE   Date 09Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1082904 *CREATE  Date 09Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1082904 - Credit Lines - Performance Issues - Critical     *
       *              (Child: AR1084389)                               *
       *                                                               *

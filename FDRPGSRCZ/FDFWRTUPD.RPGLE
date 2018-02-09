@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FD Forward rates database update')
@@ -9,12 +9,13 @@
       *                                                               *
       *  FDFWRTUPD - Forward Rates Database Update                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. 260291             Date 18May09               *
+      *  Prev Amend No. 260291             Date 18May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 255602             Date 23Jul08               *
       *                 255234             Date 02Jul08               *
       *                 241919             Date 22Dec06               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  260291 - Spot rate updated even when FWRTSpotRateUpd is 'N'. *
       *           Add condition when updating spot rates.             *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -1150,7 +1152,7 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** ##OX1                                                                                      CAP059
 OVRDBF FILE(FWDRT) SHARE(*NO)                                                                 CAP059
 ** ##OX2                                                                                      255602

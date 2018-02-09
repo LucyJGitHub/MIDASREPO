@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Incoming payments validation controller 1')   *
@@ -16,10 +16,11 @@
       *                FTIPAYCTL                                      *
       *                FTIPAYRPR                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
-      *  Prev Amend No. AR900506           Date 04Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *                 AR900506           Date 04Nov14               *
       *                 CFT157             Date 29Aug14               *
       *                 AR798055           Date 19Aug14               *
       *                 MD025111           Date 24Feb14               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  AR900506 - Add/Deduct defaulting not occurring through API   *
       *             (Child: AR900507)                                 *
@@ -376,7 +378,7 @@
       *                                                                                       CSW215
       ** SWIFT 2015 work variables                                                            CSW215
      D CSW215          S              1A                                                      CSW215
-     D PDBACT          S             18A                                                      CSW215     
+     D PDBACT          S             18A                                                      CSW215
       *
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
@@ -1789,7 +1791,7 @@
      C                   PARM                    PDBACT                                       CSW215
       *                                                                                       CSW215
       ** SWIFT 2015 Indicator                                                                 CSW215
-     C                   PARM                    CSW215                                       CSW215     
+     C                   PARM                    CSW215                                       CSW215
      C/COPY WNCPYSRC,FTIPA1VC07
       *
       ** Update error information.
@@ -3723,10 +3725,10 @@
      C                   PARM      *BLANKS       PRTCD                                        CSW215
       *                                                                                       CSW215
      C                   IF        *IN99 = *ON                                                CSW215
-     C                   EVAL      DBPGM = 'FTIPAY1VL'                                        CSW215 
+     C                   EVAL      DBPGM = 'FTIPAY1VL'                                        CSW215
      C                   EVAL      DBFILE = 'SCSARDPD'                                        CSW215
      C                   EVAL      DBKEY = 'CSW215'                                           CSW215
-     C                   EVAL      DBASE = 007                                                CSW215 
+     C                   EVAL      DBASE = 007                                                CSW215
      C                   EXSR      *PSSR                                                      CSW215
      C                   ENDIF                                                                CSW215
       *                                                                                       CSW215
@@ -3762,5 +3764,5 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
      X/COPY WNCPYSRC,FTIPA1VX01

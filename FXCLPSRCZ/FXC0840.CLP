@@ -7,18 +7,20 @@
 /*                                                                   */
 /*    FXC0840  -  Unauthorised FX Deals control program              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*    LAST AMEND NO. 087340 *CREATE        DATE 04MAY85              */
+/*    PREV AMEND NO. 087340 *CREATE        DATE 04MAY85              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*    MD046248 - Finastra Rebranding                                 */
 /*    087340 - New control pgm for FX0840                            */
 /*                                                                   */
 /*********************************************************************/
@@ -30,7 +32,7 @@
  
              DCL        VAR(&MGDA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Monitor for fatal errors and exit program :                  */
@@ -80,5 +82,5 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

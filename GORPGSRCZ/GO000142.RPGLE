@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
       *****************************************************************
@@ -8,12 +8,14 @@
       *                                                               *
       *  GO000142 - Global Processing data download, MM deals         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD037829  *CREATE  Date 23May16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD037829 *CREATE   Date 23May16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD037829 - Unauthorised PT are not shown on Dashboard        *
       *                                                               *
       *****************************************************************
@@ -25,7 +27,7 @@
       *
      FMMPTRMPD  IF   E             DISK    INFSR(*PSSR)
      F                                     USROPN
-
+ 
      FGPDWNLL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     USROPN
       **
@@ -49,13 +51,13 @@
       *                                     181 1830DBase
       *                                     184 193 DBMod
       *                                     194 203 DBProc
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦

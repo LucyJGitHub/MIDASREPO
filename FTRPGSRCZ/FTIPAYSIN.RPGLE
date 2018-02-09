@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Incoming payments input')                     *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Component of: FTIPAYSIN                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD036089           Date 23Oct15               *      
-      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD036089           Date 23Oct15               *
+      *                 AR1090283          Date 10Aug16               *
       *                 MD025111           Date 10May14               *
       *                 CFT151             Date 21Mar14               *
       *                 MD022652           Date 07Oct13               *
@@ -101,7 +102,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD036089 - Incorrect values appeared in FT IPN1              *      
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD036089 - Incorrect values appeared in FT IPN1              *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
       *            - Applied for MD-39986.                            *
@@ -13753,6 +13755,6 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  PSNAR
 Payment Advice From Cashier System

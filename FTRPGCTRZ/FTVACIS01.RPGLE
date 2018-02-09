@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate a/c with institution(merge from)')   *
@@ -9,7 +9,7 @@
       *                                                               *
       *  FTVACIS01 - Validate Account with Institution                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034627           Date 08Jun15               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034627           Date 08Jun15               *
+      *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG25385           Date 10Aug09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,7 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD034627 - Incomplete fix applied 226083 in FTVACIS01 program*      
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD034627 - Incomplete fix applied 226083 in FTVACIS01 program*
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG25385 - Database error appears when opening OPAC          *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -781,4 +783,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP Users By Role Report')
@@ -13,16 +13,18 @@
       *                                                               *
       *  Called By: GPC004001 - Midas GP Users By Role Report         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *     (c) Finastra International Limited 2011                   *
       *                                                               *
-      *  Last Amend No. MD031232           Date 13Feb15               *
-      *  Prev Amend No. AR924843           Date 08Mar12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031232           Date 13Feb15               *
+      *                 AR924843           Date 08Mar12               *
       *                 AR892737C          Date 01Feb12               *
       *                 AR878597           Date 13Dec11               *
       *                 CBF005  *CREATE    Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031232 - SF Audit Reports are empty                        *
       *           - Create a separate processing for COB.             *
       *  AR924843 - Entitlement Type 'Branch' as Booking Branch       *

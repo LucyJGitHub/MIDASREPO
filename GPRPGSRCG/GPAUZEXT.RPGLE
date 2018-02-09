@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GP Audit Extract')
@@ -9,19 +9,21 @@
       *                                                               *
       *  GPAUZEXT - Audit Extract                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 249904             Date 08Jun06               *
+      *  Prev Amend No. 249904             Date 08Jun06               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG8893            Date 08Jun06               *
+      *                 BUG8893            Date 08Jun06               *
       *                 BUG2307            Date 26Apr04               *
       *                 CGP004  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  249904 - Recompiled to correct signature violation error     *
       *  BUG8893 - Recompiled due to change in file GPAUJIPD.         *
       *  BUG2307 - Audit reporting errors                             *

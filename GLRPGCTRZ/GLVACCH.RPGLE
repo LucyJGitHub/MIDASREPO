@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate Subject to account charge Flag')
@@ -9,14 +9,15 @@
       *                                                               *
       *  GLVACCH    - Validate Subject to account charge Flag         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 231128             Date 16Oct06               *
-      *  Prev Amend No. 242488             Date 27Sep06               *
+      *  Prev Amend No. 231128             Date 16Oct06               *
+      *                 242488             Date 27Sep06               *
       *                 239720             Date 11May06               *
       *                 238639             Date 27Feb06               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  231128 - Same fix as 242488.                                 *
       *  242488 - Subject to A/C charge (ATCHIN) should be 'N' if     *
       *           Fixed A/C Charge (FACH) is 'N' in RE ICD.           *
@@ -215,4 +217,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

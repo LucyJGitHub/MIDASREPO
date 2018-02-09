@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate Debit Next Cap. Date, Freq, Day')    *
@@ -10,13 +10,14 @@
       *  GLVDBFQ    - Validate Debit Next Capitalisation Date,        *
       *               Frequency and Day no.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CRE090             Date 14Feb14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE090             Date 14Feb14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 242793             Date 09Oct06               *
+      *                 242793             Date 09Oct06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE090 - Delay Capitalisation of Interest                    *
       *  242793 - Add new message ID to validate if BMLDAI is Y.      *
       *  CAP035 - Midas/ToF Interface                                 *
@@ -380,6 +382,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** FREQ - ARRAY FOR DEBIT CAPITALISATION FREQUENCY VALIDATION
 ABDFLMQRSTWXYZ

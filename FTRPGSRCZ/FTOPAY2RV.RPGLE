@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
  
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Gets next outgoing payment referece')         *
@@ -12,10 +12,11 @@
       *  Function : This module will create the next outgoing payment *
       *             reference number and pass to calling program.     *
  
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
  
-      *  Last Amend No. CFT151             Date 21Mar14               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT151             Date 21Mar14               *
+      *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24774           Date 06Jul09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
  
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT151 - FT IN/OP Alphanumeric sequence                      *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,FTH00067                                 *
@@ -249,4 +251,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

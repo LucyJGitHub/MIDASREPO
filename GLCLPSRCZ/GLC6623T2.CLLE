@@ -8,19 +8,21 @@
 /*                                                                   */
 /*       GLC6623T2 - Midas GL STamp Tax REIACD - Task Split Server   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
-/*       Last Amend No. MD040278 *Create   Date 18Aug16              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD040278 *CREATE   Date 18Aug16              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD040278 - Stamp Tax A/C Keys (GLC008131) is not task split.*/
 /*                  Complete rework of the component to allow task   */
 /*                  split.                                           */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAME &CSEQ)
-
+ 
              DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
                           VALUE('REIASERVE')
              DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10)
@@ -32,41 +34,41 @@
              DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
              DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           2016')
-
+ 
 /* Global monitor message */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
 /* Send message to MRUNQ */
-
+ 
              SNDPGMMSG  MSG('GLC6623T2 - Stamp Tax REIACD - Task +
                           Split Server') TOMSGQ(MRUNQ)
-
-
+ 
+ 
 /* Wait for data queue entry */
-
+ 
  RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA &RCVWAIT)
-
+ 
 /* If message = FINISH, terminate the program */
-
+ 
              IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
                 GOTO       CMDLBL(END)
              ENDDO
              ELSE       CMD(DO)
                 GOTO       CMDLBL(RCVDTAQ)
              ENDDO
-
+ 
  ABNOR:
              SNDPGMMSG  MSG('Program ' *CAT &CNAME *CAT ' ' *CAT +
                           &CSEQC *CAT ' ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
-
+ 
  END:
              ENDPGM

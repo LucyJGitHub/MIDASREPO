@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       GOC0120 - MIDAS GO NOTIFY MANAGEMENT LIMITS IN COB          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG4136            Date 02SEP04              */
-/*       Prev Amend No. BUG3672 *CREATE    Date 16Jul04              */
+/*       Prev Amend No. BUG4136            Date 02SEP04              */
+/*                      BUG3672 *CREATE    Date 16Jul04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG4136- Initialise the reply dataq to ensure the reply     */
 /*                 message is for today COB                          */
 /*       BUG3672- Notify Management Limits during COB                */
@@ -26,7 +28,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCL        VAR(&MLSTAT) TYPE(*CHAR) LEN(128)
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)                                /*BUG4136*/
@@ -87,8 +89,8 @@
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 MONMSG     MSGID(CPF0000 MCH0000)
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       GLC440D - CONTROLLING PROGRAM FOR GROUP JOB SESSION         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG12807           Date 11Dec06              */
-/*       Prev Amend No. BUG8666            Date 04Apr06              */
+/*       Prev Amend No. BUG12807           Date 11Dec06              */
+/*                      BUG8666            Date 04Apr06              */
 /*                                                                   */
 /*********************************************************************/
 /*   ANY CHANGES MADE TO THIS PROGRAM MAY ALSO HAVE TO BE MADE TO    */
 /*                           GLC440                                  */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  BUG12807 - Error 014 in Project Account Movements Enquiry        */
 /*  BUG8666 - Created Projected Accounts Movement program for        */
 /*            non-Retail accounts.  This is in line with the         */
@@ -30,7 +32,7 @@
              PGM
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2006')
 /* */
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(1)
@@ -169,5 +171,5 @@ ABNOR:       SNDPGMMSG  MSG('Error occured in program GLC440B - See program dump
              IF         COND(&TEST *EQ '*NONE     ') THEN(GOTO CMDLBL(GRPEND))
 /* */
              CHGJOB     SWS(00000000)
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
              ENDPGM

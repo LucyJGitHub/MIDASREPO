@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Generated Code')                                       *
@@ -9,15 +9,17 @@
       *                                                               *
       *  GPSDHCIDPD - On-Line Update of Global File GZSDHCIDPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD027295           Date 24May14               *
-      *  Prev Amend No. MD026848           Date 12May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027295           Date 24May14               *
+      *                 MD026848           Date 12May14               *
       *                 MD026193           Date 07Apr14               *
       *                 CSD092   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027295 - SDC009697 COB component run too long              *
       *  MD026848 - History of cust information is not updated when   *
       *             customer's FATCA classification is change         *

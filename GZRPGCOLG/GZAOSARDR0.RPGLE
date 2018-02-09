@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GZ Global switchable features access object')
@@ -9,13 +9,15 @@
       *                                                               *
       *  GZAOSARDR0 - Global Switchable Features Access Object        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. 260169 *CREATE     Date 08May09               *
+      *  Prev Amend No. 260169 *CREATE     Date 08May09               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  260169 - Program was not collected on the upgrade to 1.4.    *
       *           Applied partial core fix 245526.                    *
       *  245526 - Submit EODMONITOR also when CGL014 is on.           *

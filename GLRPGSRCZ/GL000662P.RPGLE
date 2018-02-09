@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Reports Management - Print')                  *
@@ -12,13 +12,15 @@
       *  Function:  This is a new program to print Reports Management *
       *             for both Customer and Non-Account Holder          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD043131           Date 14Dec16               *
-      *  Prev Amend No. CGL154  *CREATE    Date 13Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD043131           Date 14Dec16               *
+      *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD043131 - Incorrect Document Type being displayed in the    *
       *             printed report                                    *
       *  CGL154 - FATCA Reporting                                     *

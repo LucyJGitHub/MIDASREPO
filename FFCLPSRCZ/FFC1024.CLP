@@ -7,8 +7,9 @@
 /*                                                                   */
 /*   FFC1024  -  OUTSTANDING HOLDINGS BY INSTRUMENT (EOC)            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,12 +17,13 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 Patch D -------------------------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*   LAST AMEND NO. 163444             DATE  09AUG99                 */
+/*   PREV AMEND NO. 163444             DATE  09AUG99                 */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   PREV AMEND NO. S01117             DATE 02APR90                  */
+/*                  S01117             DATE 02APR90                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*   MD046248 - Finastra Rebranding                                  */
 /*   163444  - Y2K sort order and file allocation                    */
 /*   S01117 - MULTIBRANCHING                                         */
 /*                                                                   */
@@ -42,7 +44,7 @@
              DCL        VAR(&SIX) TYPE(*DEC) LEN(1 0) VALUE(0)        /*163444*/
              DCL        VAR(&SIX2) TYPE(*DEC) LEN(1 0) VALUE(0)       /*163444*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
@@ -159,5 +161,5 @@ END:    DLTOVR     FILE(POSTN1)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
         ENDPGM

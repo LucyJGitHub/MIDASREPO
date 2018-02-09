@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Determine working day for formula')
@@ -24,20 +24,22 @@
       *  the old /COPY member, reconverting it using CVTRPGSRC, and   *
       *  copying it into this member, replacing the existing section. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
-      *  Last Amend No. 164573             Date 16Jul99               *
+      *  Prev Amend No. 164573             Date 16Jul99               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CAP004  *CREATE    Date 01Jun98               *
+      *                 CAP004  *CREATE    Date 01Jun98               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  164573 - FF exchange traded and OTC trades inputs fail.      *
       *           (ZFWDT used is in TISRVPGM)                         *
       *  CAP004 - Conversion of Midas inputs to APIs.                 *
@@ -1054,6 +1056,6 @@
  
       ** +--- From copyright array to end is the converted FFDATEZ4 -------+
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
 F0S1X2M3U4W5T6

@@ -7,14 +7,15 @@
 /*                                                                   */
 /*   FFC0601  -  JOURNAL EXTRACT (COB)                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG7286            Date 23May05              */
+/*                      BUG7286            Date 23May05              */
 /*                      CSC020             Date 31Mar04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      204748             Date 25Mar02              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       BUG7286 - Error in SCRTVJEVT command                        */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
@@ -46,7 +48,7 @@
              DCL        VAR(&STRSEQ) TYPE(*DEC) LEN(10 0)                                 /*CSC020*/
              DCL        VAR(&ENDSEQ) TYPE(*DEC) LEN(10 0)                                 /*CSC020*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                  */
 /* Audit message to MRUNQ                                           */
@@ -147,6 +149,6 @@
              ADDLFM     FILE(JRNIM1) MBR(JRNIM1) SHARE(*YES)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM
 /*                                                                  */

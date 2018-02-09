@@ -1,6 +1,6 @@
      H DEBUG
      H OPTION(*NOUNREF)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GL Change of Receiver and Increment of JrnSq')   *
@@ -10,15 +10,17 @@
       *                                                               *
       *  GL007002 - Change of Receiver and Increment of JrnSeq        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD026169  *REWRITE Date 04Apr14               *
-      *  Prev Amend No. MD025679B          Date 29Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026169           Date 04Apr14               *
+      *                 MD025679B          Date 29Mar14               *
       *                 MD025679A          Date 21Mar14               *
       *                 MD025679  *CREATE  Date 18Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026169 - GO_ONL_OLP background job is processing           *
       *             full receiver chain                               *
       *  MD025679B - GO_ONL_OLP Background Job Failure                *

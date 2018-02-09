@@ -4,12 +4,14 @@
       *                                                               *
       *  GPRE2CLKPD - On-Line Update of Global File GZRE2CLKPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD035554 *CREATE   Date 25May16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035554 *CREATE   Date 25May16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035554 - 2o'clock/ABC compatibility                        *
       *                                                               *
       *****************************************************************

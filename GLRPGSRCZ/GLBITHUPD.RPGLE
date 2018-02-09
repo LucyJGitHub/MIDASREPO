@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE Header Database Update')                   *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GLBITHUPD - Journal Batch Entry Header Database Update       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046060           Date 21Jun17               *
-      *  Prev Amend No. CGL182             Date 11May17               *      
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046060           Date 21Jun17               *
+      *                 CGL182             Date 11May17               *
       *                 MD046910           Date 25Jul17               *
       *                 MD042261           Date 07Jun17               *
       *                 MD045854           Date 25May17               *
@@ -77,8 +78,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046060 - GLBTNOPD is not defined with COMMIT               *
-      *  CGL182 - Journal Entry via the Interface File - Java Version *      
+      *  CGL182 - Journal Entry via the Interface File - Java Version *
       *  MD046910 - Reversal of MD-45854 as part of fix MD-43023      *
       *  MD042261 - Records from GLJENP1D were not reversed when      *
       *             deleting a batch. Remove record if batch is delete*
@@ -797,7 +799,7 @@
                                                                                              BUG7426
      C/COPY WNCPYSRC,GLH00766
      C                   ELSE                                                                 CAP084
-
+ 
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C**********         MOVE      B1BTSF        BRBTSF                                CAP084 239155
      C     CGL016        IFEQ      'Y'                                                     AR792734A
@@ -1713,7 +1715,7 @@
      C                   IF        PRTCD = *BLANKS                                            CGL182
      C                   EVAL      CGL182 = 'Y'                                               CGL182
      C                   ENDIF                                                                CGL182
-      *                                                                                       CGL182      
+      *                                                                                       CGL182
      C/COPY WNCPYSRC,GLH00709
       *
      C/COPY OFCPYSRCZ,CGL135_015                                                             CGL135A
@@ -2002,6 +2004,6 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CMD1                                                                                      BUG3500
 DLYJOB DLY(2)                                                                                BUG3500

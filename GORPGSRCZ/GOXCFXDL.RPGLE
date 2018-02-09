@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*OVR *  OVRDBF FILE(DEALSX) TOFILE(DEALS) SHARE(*NO)                 *
 /*STD *  RPGBASEMOD                                                   *
@@ -11,10 +11,11 @@
       *  GOXCFXDL - Controller for Foreign                            *
       *             Exchange Deals                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 AR644662           Date 19Aug14               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -57,7 +59,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FFXDEALLL  IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(FXDEALP0)
      FDEALS     IF   E           K DISK    INFSR(*PSSR)
@@ -66,15 +68,15 @@
      F                                     INCLUDE(DEALSDBF)
      F                                     RENAME(DEALSDBF:DEALSDBFX)
      F                                     PREFIX(OL_)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D FXDEAL        E DS                  EXTNAME(FXDEALPP)
      D DEALDB        E DS                  EXTNAME(DEALSDB)
- 
- 
+
+
      C     *ENTRY        PLIST
       /COPY GOCPYSRC,GOXCEPARM
       *
@@ -169,7 +171,7 @@
       * INPUTS
      C                   PARM      I#LOC         W#LOC             4
      C                   PARM      I#CCID        W#CCID           10 0
- 
+
      C                   PARM      I#RDNB        W#RDNB            5 0
      C                   PARM      I#DNWD        W#DNWD            5 0
      C                   PARM      I#PCOD        W#PCOD            5 0
@@ -177,9 +179,9 @@
      C                   PARM                    FXDEAL
      C                   PARM                    DEALDB
      C                   PARM                    OL_ACEI
- 
+
       * If data error encountered, log error
- 
+
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = 'FXDL' + I#EXTT + I#TREF
@@ -200,13 +202,13 @@
       *
      C                   CLEAR                   DEALDB
      C     FHDN38        CHAIN     DEALSDBF                           99        *
- 
+
       * Get 1st leg of swap
- 
+
      C     FSLI          IFEQ      2
      C     SODN          CHAIN     DEALSDBFX                          99
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -214,11 +216,11 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Extract control information
- 
+
       /COPY GOCPYSRC,GOGETEXCT
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -227,4 +229,4 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

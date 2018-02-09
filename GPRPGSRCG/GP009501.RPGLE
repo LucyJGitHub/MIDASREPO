@@ -11,14 +11,15 @@
       *  Function:  This program allows user to enquire/maintain      *
       *             the current setting of a System Value.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK025             Date 11Oct06               *
-      *  Prev Amend No. BUG5613            Date 16Dec05               *
+      *  Prev Amend No. CPK025             Date 11Oct06               *
+      *                 BUG5613            Date 16Dec05               *
       *                 CPK022             Date 29Jul05               *
       *                 CPK019R            Date 17Dec04               *
       *                 CPK019             Date 28May04               *
@@ -26,6 +27,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - Name of /COPY still incorrect.                      *
       *  BUG5613 - Cannot amend ExcptRptRetention system value.       *
       *            Applied BUG7330.                                   *
@@ -1116,6 +1118,6 @@
       *================================================================
      O*
 ** CPY@     : Copyright notice for inclusion in all programs
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** PGM@     : Programs to call
 GPC009520

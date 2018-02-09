@@ -7,14 +7,15 @@
 /*                                                                   */
 /*   FFC1090  -  RECOVERY OF EOC COMPONENT OR REOPEN OF MARKET       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG9619            Date 01Feb06              */
-/*       Prev Amend No. BUG7286            Date 23May05              */
+/*       Prev Amend No. BUG9619            Date 01Feb06              */
+/*                      BUG7286            Date 23May05              */
 /*                      CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG9619 - Close of business components run long if journal  */
 /*                 cache is enabled                                  */
 /*       BUG7286 - Error in SCRTVJEVT command                        */
@@ -64,7 +66,7 @@
              DCL        VAR(&ED_FMT)  TYPE(*CHAR) LEN(200)            /*CED005*/
              DCLF       RSTRDF
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        &STRRCV  TYPE(*CHAR)  LEN(10)                                     /*CSC020*/
              DCL        VAR(&STRSEQ) TYPE(*DEC) LEN(10 0)                                /*BUG7286*/
@@ -239,6 +241,6 @@ FINISH:      DLTOVR     FILE(JRNEF)
              DLTOVR     FILE(RSTRDF)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM
 /**/

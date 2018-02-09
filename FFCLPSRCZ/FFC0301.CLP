@@ -7,17 +7,18 @@
 /*                                                                   */
 /*   FFC0301  -  CUSTOMER/BROKER HOLDINGS ENQUIRY                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL029             Date 01Sep03              */
+/*       Prev Amend No. CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 Patch D -------------------------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*       Prev Amend No. 163444             Date 07OCT99              */
+/*                      163444             Date 07Oct99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01332             Date 17MAY91              */
 /*                  E23409             DATE 31AUG90                  */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*   163444 - Add Century field                                      */
 /*   S01332  -  Amended for Exposure Management Release 10           */
@@ -45,7 +47,7 @@
              DCL        VAR(&EMSDS)  TYPE(*CHAR) LEN(167)                                 /*CGL029*/
              DCL        VAR(&PGN1D)  TYPE(*CHAR) LEN(8)              /*S01332*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
@@ -109,7 +111,7 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 END:                                                                 /*S01332*/
 /*   RESET POSITIONS 2 TO 9 ON EMSDS TO BLANK                     */ /*S01332*/
                                                                      /*S01332*/

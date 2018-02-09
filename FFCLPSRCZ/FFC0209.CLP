@@ -7,8 +7,9 @@
 /*                                                                   */
 /*   FFC0209  -  POSITION PROFIT CENTRES MAINTAINANCE                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,11 +17,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.01 Patch E -------------------------------------------*/
-/*   LAST AMEND NO. 170520             DATE 25NOV99                  */
+/*   PREV AMEND NO. 170520             DATE 25NOV99                  */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   PAST AMEND NO. E27208             DATE 15AUG91                  */
+/*                  E27208             DATE 15AUG91                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+/*   MD046248 - Finastra Rebranding                                  */
 /*   170520  - TRANS11 OVERRIDDEN AS PART OF Y2K SORT ORDER PROBLEM  */
 /*   E27208  - NEW PROGRAMME FOR PROFIT CENTRE MAINTAINANCE          */
 /*                                                                   */
@@ -34,7 +36,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   OVERRIDE FILE AND CALL PROGRAM                                */
@@ -49,6 +51,6 @@
              DLTOVR     FILE(FOPCKX)
              DLTOVR     FILE(TRANS11X)                                /*170520*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
              ENDPGM

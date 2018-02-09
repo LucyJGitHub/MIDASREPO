@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Market Prices Display')
@@ -12,18 +12,20 @@
       *  Function:  This module displays the Market Prices            *
       *             Details maintenance screen                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 245143             Date 24Jan07               *
-      *  Prev Amend No. BUG13119           Date 24Jan07               *
+      *  Prev Amend No. 245143             Date 24Jan07               *
+      *                 BUG13119           Date 24Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG10387           Date 06Feb06               *
       *                 CAP183  *Create    Date 05Jan06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  245143 - No error messages are shown.                        *
       *  BUG13119 - No error message/error is displayed to validate   *
       *             for the market instrument Market Price input      *
@@ -525,4 +527,4 @@
 ** AZ10
 0000000000
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

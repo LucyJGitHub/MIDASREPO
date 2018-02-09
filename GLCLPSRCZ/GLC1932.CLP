@@ -8,20 +8,22 @@
 /*       GLC1932 - Customer Service Fees -                           */
 /*                 Retrieve Customer/Portfolio for Fee processing    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 208383             Date 08Feb13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 208383             Date 08Feb13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CSD011             Date 04Mar02              */
+/*                      CSD011             Date 04Mar02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CSD008  *CREATE    Date 05Feb01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       208383 - Replication subsystem must not be started.         */
 /*                Applied for AR1059422                              */
 /*       CSD011 - Performance Incentive Fees.                        */
@@ -41,7 +43,7 @@
              DCL        VAR(&DMLIB)  TYPE(*CHAR) LEN(10)
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CSD011) TYPE(*CHAR) LEN(1) VALUE('N')    /*CSD011*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*CSD011*/
@@ -257,6 +259,6 @@ ABNOR:
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

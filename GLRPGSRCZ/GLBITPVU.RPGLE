@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE item validate and update')                 *
@@ -31,10 +31,11 @@
       *            the call to the Message Handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD048370           Date 29Nov17               *
-      *  Prev Amend No. MD043023           Date 25Jul17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD048370           Date 29Nov17               *
+      *                 MD043023           Date 25Jul17               *
       *                 MD027817           Date 06Apr17               *
       *                 MD042436           Date 07Nov16               *
       *                 MD033964           Date 07Oct16               *
@@ -92,10 +93,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD048370 - User encounters an error "batch is already        *
       *             accepted" when amending/inserting a BITP whose    *
       *             BITH has BITP inserted via SOAP first then        *
-      *             another BITP via UI.                              *
+      *             another BITP via UI.                              *      
       *  MD043023 - (1) access header with Front Office Id only if    *
       *             it is non blank.                                  *
       *             (2) if Front Office Id is blank, use batch number *
@@ -452,7 +454,7 @@
      D WCmtSk          S              1A                                                      CSC022
                                                                                               CGL014
      D CGL014          S              1                                                       CGL014
-
+ 
       ** Timestamp field                                                                     BUG1175
      D WSysTmSt        S             26Z                                                     BUG1175
       ** Java user information                                                               BUG1175
@@ -770,21 +772,21 @@
      C     UpdateYN      ANDEQ     'Y'                                                      AR994585
      C                   Z-ADD     1             Idx                                        AR994585
      C                   ENDIF                                                              AR994585
-
+ 
       ** Populate Customer Name on Inputs fields                                              CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
                                                                                               CSF011
       *  Write to database
-
+ 
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C     DDDLIT        ANDNE     'U'                                                      AR570314
      C                   EXSR      WriteToDB
      C                   ENDIF
-
+ 
      C                   SETON                                        LR
-
+ 
      C                   EVAL                    Buffer = PTranIn
      C                                           + SGDNOSTRO + SBRNM            CMM121
      C                                           + SBREF                        CMM121
@@ -993,13 +995,13 @@
       /EJECT
       *****************************************************************
      C     WriteToDB     BEGSR
-
+ 
      C     Idx           IFEQ      0
      C                   EXSR      SRSetOFld
      C                   EXSR      UpdateDB
      C                   EXSR      SrAutoAuth                                              AR1029481
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1069,7 +1071,7 @@
       * UPDATEDB - Update Database                                    *
       *                                                               *
       *****************************************************************
-
+ 
      C     UPDATEDB      BEGSR
       *
       ** Update JE Items file.
@@ -1168,9 +1170,9 @@
      C                   MOVEL     'APM1000'     MsgIdArr(1)
      C
      C                   END
-
+ 
       ** Batch Number to pass back to APTRANVU on insert mode
-
+ 
      C                   Z-ADD     B2BINB        #DDBINB           3 0
      C                   MOVE      #DDBINB       DDBINB
      C                   EVAL      DDBTNB = B2BTNB                                         AR1027164
@@ -1179,7 +1181,7 @@
      C                   IF        CGL013 = 'Y' and PAddInfo <> *blanks                       246418
      C                   EVAL      DDAERI = B3AERI                                            246418
      C                   ENDIF                                                                246418
-
+ 
      C                   ENDSR
       *****************************************************************                       CER001
       *  SRValdExt - Validate Batch Item Extension Details            *                       CER001
@@ -1463,14 +1465,14 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
-
+ 
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'GLUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'SDUSRMSG'                                  237621
      C/COPY WNCPYSRC,GLH00663
-
+ 
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,GLBITP02
       *                                                                                       CRE023
@@ -1892,4 +1894,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

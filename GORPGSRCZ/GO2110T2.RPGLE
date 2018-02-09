@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GO GPWTRAPPD Housekeeping - Write Drvr File')    *
@@ -9,13 +9,15 @@
       *                                                               *
       *  GO2110T2 - GPWTRAPPD Housekeeping - Write Driver File        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD023876A          Date 06Jan14               *
-      *  Prev Amend No. MD023876 *CREATE   Date 14Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023876A          Date 06Jan14               *
+      *                 MD023876 *CREATE   Date 14Nov13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023876A - Wrong location of task split objects             *
       *  MD023876 - GOC210000 Performance Issues                      *
       *                                                               *

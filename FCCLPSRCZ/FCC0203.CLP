@@ -7,10 +7,11 @@
     /*                                                               */
     /*  FCC0203 - COB REPORT REQUEST WITH MODULE SPECIFIC PROMPT     */
     /*                                                               */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
     /*                                                               */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG24422           Date 19Jun09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG24422           Date 19Jun09              */
 /*                      BUG24307           Date 16Jun09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -39,6 +40,7 @@
     /*                                                               */
     /*****************************************************************/
     /*                                                               */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
     /*    BUG24422 - Threshold Amount Update screen is missing       */
     /*    BUG24307 - Local Tax Office Statement On Request COB       */
@@ -105,7 +107,7 @@
              DCL        VAR(&MBIN) TYPE(*CHAR) LEN(1)                 /*LN1085*/
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(1)                 /*087482*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL        VAR(&OLDNAME) TYPE(*CHAR) LEN(10)      /*049424*076789*/
 /************DCL        VAR(&IBMLVL) TYPE(*CHAR) LEN(6)        /*049424*076789*/
@@ -119,7 +121,7 @@
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) +
                         EXEC(GOTO CMDLBL(ABNOR))                      /*LN1144*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGJOB     SWS(00000000)
 /*/COPY WNCPYSRC,FCC0203003                                          */
     /*                                                               */

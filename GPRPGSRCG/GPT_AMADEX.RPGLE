@@ -1,6 +1,6 @@
      H***DEBUG*ALWNULL(*INPUTONLY)                                                          MD026161
      H DEBUG ALWNULL(*USRCTL)                                                               MD026161
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GO Global update T_GZAMADEX')                    *
@@ -11,15 +11,17 @@
       *  GPT_AMADEX- Midas GO Global update T_GZAMADEX                *
       *              database update                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD026161           Date 04Apr14               *
-      *  Prev Amend No. AR658311           Date 15Oct10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026161           Date 04Apr14               *
+      *                 AR658311           Date 15Oct10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG25565A *CREATE  Date 25Aug09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026161 - ALWNULL(*INPUTONLY) only allows read of null      *
       *             values. Use ALWNULL(*USRCTL) instead since this   *
       *             prgram updates T_GZAMADEX.                        *
@@ -224,4 +226,4 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

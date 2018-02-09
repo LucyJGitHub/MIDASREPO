@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       GLC440A -  TRANSFER DATA BETWEEN DTAARA'S *GDA/*LDA         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*           1988,1989                                               */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 060468             DATE 21JAN94              */
-/*       PREV AMEND NO. S01405             DATE 03DEC91              */
+/*       Prev Amend No. 060468             Date 21Jan94              */
+/*                      S01405             Date 03Dec91              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       060468 - Update data areas with ACMV group job references   */
 /*                without overriding other data.                     */
 /*       S01405 - Remove group job references.                       */
@@ -33,7 +35,7 @@
              PGM        PARM(&ACTION)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(1)
@@ -100,5 +102,5 @@ ABNOR:       SNDUSRMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Group +
  
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

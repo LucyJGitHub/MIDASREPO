@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GO Check Outgoing Msgs Awaiting Transmission')
@@ -10,15 +10,17 @@
       *  GO000137 - Midas GO Check Outgoing Messages                  *
       *             Awaiting Transmission                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD020167           Date 23Apr13               *
-      *  Prev Amend No. CCB023A            Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *                 CCB023A            Date 06Aug12               *
       *                 AR1092060          Date 27Feb13               *
       *                 CCB023  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  CCB023A - COB Restructure - Input Cycle Termination          *
       *            Restructuring                                      *

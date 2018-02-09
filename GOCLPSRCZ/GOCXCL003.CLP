@@ -8,13 +8,15 @@
 /*       GOCXCL003 - Midas GO Extract Controller Customer Loans      */
 /*                   End Process                                     */
 /*                                                                   */
-/*       (c) Misys Banking Systems Ltd. 2009                         */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CGP014  *Create    Date 27Feb09              */
+/*       Prev Amend No. CGP014  *CREATE    Date 27Feb09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGP014 - Task split of Extract Controller, Customer Loans   */
 /*                                                                   */
 /*********************************************************************/
@@ -34,7 +36,7 @@
                           VALUE('GOXCLNSRV')
              DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global monitor message */
@@ -91,6 +93,6 @@
              CHGJOB     SWS(XXXXXX11)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

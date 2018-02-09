@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GP Access to Retail Acct Balance Extract')
@@ -9,14 +9,16 @@
       *                                                               *
       *  GPAORABER0 - Midas GP Access to Retail Acct Balance Extract  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. BUG27878           Date 06Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27878           Date 06Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG27288 *CREATE   Date 07Apr10               *
+      *                 BUG27288 *CREATE   Date 07Apr10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27878 - Projected Available Balance Enquiry(recompile)    *
       *  BUG27288 - A serios Midas error has occured message comes    *
       *             up when completing insert for Batch Details       *

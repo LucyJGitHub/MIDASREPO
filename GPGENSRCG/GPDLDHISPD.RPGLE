@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Generated Code')                                       *
@@ -9,14 +9,16 @@
       *                                                               *
       *  GPDLDHISPD - On-Line Update of Global File GZDLDHISPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD045500           Date 19May17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD045500           Date 19May17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER034  *CREATE    Date 28Jul08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD045500 - Recompile over amended GZDLDHISPD.                *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER034 - German Features - New fields and enquiries          *

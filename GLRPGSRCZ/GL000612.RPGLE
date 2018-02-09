@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Payment Amounts Collection')                  *
@@ -9,14 +9,16 @@
       *                                                               *
       *  GL000612 - Midas GL Payment Amounts Collection               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD044378           Date 03Mar17               *
-      *  Prev Amend No. MD043672           Date 19Jan17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD044378           Date 03Mar17               *
+      *                 MD043672           Date 19Jan17               *
       *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD044378 - Capitalised interest is being reported as payment *
       *             by the alternate account                          *
       *  MD043672 - Do not capture debit payments                     *
@@ -54,24 +56,24 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Midas Retail Transaction Types Update index
      FSDRETRL0  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** Midas GL Accounts postings - post 1
      FGLACPOL1  IF   F  620    18AIDISK    INFSR(*PSSR)
-
+ 
       ** Midas GL Non-Retail Manual Postings
      FMANPOL3   IF   F  620    18AIDISK    INFSR(*PSSR)
-
+ 
      FSDJACCL0  IF   E           K DISK    INFSR(*PSSR)
                                                                                             MD044378
      FGLGEICL2  IF   E           K DISK    INFSR(*PSSR)                                     MD044378
      F                                     PREFIX(S_)                                       MD044378
-
+ 
       ** Midas GL FATCA Customer Activity/Payment Amounts File
      FGLCAPAPD  UF A E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -90,28 +92,28 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
-
+ 
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Work variables
      D WTrat           S              5
      D WFTPT           S              1
@@ -125,7 +127,7 @@
      D KAcno           S             10S 0                                                  MD044378
      D KPnar           S             30A                                                    MD044378
      D KPsta           S             13P 0                                                  MD044378
-
+ 
       ** Work DS
      DACPOKDS          DS           620
      D ACCNUM                  2      7
@@ -140,15 +142,15 @@
      D ACACNO                 23     32S 0                                                  MD044378
      D ACPNAR                 44     73                                                     MD044378
      D ACSPOS                 96    102                                                     MD044378
-
+ 
       ** Data Structure used by GLCAPAPD
      D GLCAPA        E DS                  EXTNAME(GLCAPAPD)
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -159,33 +161,33 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
-
+ 
       ** Read through all the Events with Transactions types from GLACPOL1
-
+ 
      C     *LOVAL        SETLL     GLACPOL1
      C                   READ      GLACPOL1      ACPOKDS
-
+ 
      C                   DOW       NOT %EOF(GLACPOL1)
-
+ 
       ** Initialize the Work fields for Transactions & FATCA Payment Types
-
+ 
      C                   EVAL      WTrat = *BLANKS
      C                   EVAL      WFTPT = *BLANKS
-
+ 
      C                   IF        ACTRAT <> *ZERO AND ACTRAT <> *BLANKS
      C                   MOVE      ACTRAT        WTrat
-
+ 
       ** Check Transaction Type, execute SRIdTranType
-
+ 
      C                   EXSR      SRIdTranType
-
+ 
       ** If Payment type equal to "D-Dividend,I-Interest,G-Gross Proceeds /
       **    Redemptions or O-Other", execute SRWrite
-
+ 
      C                   IF        WFTPT = 'D' OR WFTPT = 'I' OR
      C                             WFTPT = 'G' OR WFTPT = 'O'
                                                                                             MD044378
@@ -215,50 +217,50 @@
      C                   IF        WWRITE = 'Y'                                             MD044378
      C                   EXSR      SRWrite
      C                   ENDIF                                                              MD044378
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      GLACPOL1      ACPOKDS
      C                   ENDDO
-
+ 
       ** Read through all Debit Journal Entries from
-
+ 
      C     *LOVAL        SETLL     MANPOL3
      C                   READ      MANPOL3       ACPOKDS
-
+ 
      C                   DOW       NOT %EOF(MANPOL3)
-
+ 
       ** Initialize the Work fields for Transactions & FATCA Payment Types
-
+ 
      C                   EVAL      WTrat = *BLANKS
      C                   EVAL      WFTPT = *BLANKS
-
+ 
      C                   IF        ACTRAT <> *ZERO AND ACTRAT <> *BLANKS
      C                   MOVE      ACTRAT        WTrat
-
+ 
       ** Check Transaction Type, execute SRIdTranType
-
+ 
      C                   EXSR      SRIdTranType
-
+ 
       ** If Payment type equal to "D-Dividend,I-Interest,G-Gross Proceeds /
       **    Redemptions or O-Other", execute SRWrite
-
+ 
      C                   IF        WFTPT = 'D' OR WFTPT = 'I' OR
      C                             WFTPT = 'G' OR WFTPT = 'O'
-
+ 
      C                   EXSR      SRWrite
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   READ      MANPOL3       ACPOKDS
      C                   ENDDO
-
+ 
      C                   EVAL      *INLR = *ON
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -267,21 +269,21 @@
       *                Transaction Type                               *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRIdTranType  BEGSR
-
+ 
       ** Access Transaction Types to get FATCA Payment Type
-
+ 
      C     WTrat         CHAIN     @A1RECW
-
+ 
      C                   IF        %FOUND(SDRETRL0)
-
+ 
      C                   EVAL      WFTPT = A1FTPT
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -289,17 +291,17 @@
       * SRWrite - Write Customer Activity and Payment Amounts File    *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRWrite       BEGSR
-
+ 
      C                   CLEAR                   GLCAPA
-
+ 
      C                   MOVEL     ACCNUM        CPCUSD
      C                   MOVEL     ACCNUM        WRCUSD
      C                   MOVEL     ACACOD        WRACOD
      C                   MOVEL     ACACSQ        WRACSQ
      C                   EVAL      WRVALD = ACVALD
-
+ 
      C                   EVAL      CPACNO = (ACBRCA + WRCUSD + ACCCY +
      C                                       WRACOD + WRACSQ)
      C                   EVAL      CPCCY = ACCCY
@@ -316,18 +318,18 @@
      C                   ENDIF
      C                   EVAL      CPPAYT = A1FTPT
      C                   EVAL      CPBRCH = ACBRCA
-
+ 
      C                   EVAL      CPJANO = *BLANKS
      C                   EVAL      CPACHL = CPCUSD
      C                   EVAL      CPACTY = 'CUST'
      C                   EVAL      CPJATP = ' '
      C
      C                   WRITE     GLCAPAD0
-
+ 
      C                   EVAL      JCJANO = CPCUSD
      C     JCJANO        SETLL     SDJACCL0
      C     JCJANO        READE     SDJACCL0
-
+ 
      C                   DOW       NOT %EOF(SDJACCL0)
      C                   EVAL      CPJANO = JCJANO
      C                   EVAL      CPCUSD = JCCUST
@@ -340,13 +342,13 @@
      C                   ENDIF
      C                   EVAL      CPJATP = 'M'
      C                   WRITE     GLCAPAD0
-
+ 
      C     JCJANO        READE     SDJACCL0
      C                   ENDDO
      C                   ENDIF                                                              MD043672
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -354,19 +356,19 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C                   CLEAR                   GLCAPA
                                                                                             MD044378
      C     KGeic         KLIST                                                              MD044378
      C                   KFLD                    KAcno                                      MD044378
      C                   KFLD                    KPnar                                      MD044378
      C                   KFLD                    KPsta                                      MD044378
-
-
+ 
+ 
      C                   ENDSR
-
+ 
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -377,21 +379,21 @@
       *          This subroutine DUMPs the program just once.             *
       *                                                                   *
       *********************************************************************
-
+ 
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
-
+ 
      C                   RETURN
-
+ 
      C                   ENDSR
-
+ 

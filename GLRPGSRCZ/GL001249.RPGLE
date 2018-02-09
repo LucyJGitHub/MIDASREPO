@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Risk Weighted Assets Balances Report')
@@ -18,20 +18,22 @@
       *                                                               *
       *  Component of: GL001249                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 220112             Date 06Jun06               *
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. 220112             Date 06Jun06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CGL029             Date 01Sep03               *
       *                 CGL018   *CREATE   Date 23Sep02               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  220112 - RCOUNT too small causing GL001249 to end in error.  *
       *           Recompiled over changes to GL001249AU.              *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -772,4 +774,4 @@
  
       ********************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Get finished message from ML in CoB')
@@ -9,17 +9,19 @@
       *                                                               *
       *  GO000121  - Wait fot Finished Message From ML                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG4136            Date 01Sep04               *
-      *  Prev Amend No. BUG3672 *CREATE    Date 16Jul04               *
+      *  Prev Amend No. BUG4136            Date 01Sep04               *
+      *                 BUG3672 *CREATE    Date 16Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG4136 - Library of the dataq not setup                      *
       *  BG1673 - Wait for finished message                           *
       *                                                               *
@@ -199,7 +201,7 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** ML_MSG
 <?xml version="1.0" encoding="UTF-8"?>
 <MLimitsEODEvent xmlns="http://www.misys.com/midas/midasplus/mlimitsendofday/xml"

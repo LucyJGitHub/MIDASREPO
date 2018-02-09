@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*OVR *  OVRDBF FILE(FTRTDXL0) TOFILE(T_GZRFT2EX)                     *
 /*OVR *  OVRDBF FILE(FTCTDXL0) TOFILE(T_GZCCT2EX)                     *
@@ -11,16 +11,18 @@
       *                                                               *
       *  FT000010 - Midas FT Extension Table Delete Handler           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSF003  *CREATE    Date 03Nov04               *
+      *  Prev Amend No. CSF003  *CREATE    Date 03Nov04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSF003 - User Defined Forms                                  *
       *                                                               *
       *****************************************************************
@@ -177,4 +179,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

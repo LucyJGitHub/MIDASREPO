@@ -16,13 +16,15 @@
       *                                                               *
       *  Called By: GL003600                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CRE041             Date 28Sep12               *
-      *  Prev Amend No. BUG28073 *CREATE   Date 26Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE041             Date 28Sep12               *
+      *                 BUG28073 *CREATE   Date 26Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE041 - Enhancements to Customer Exchanges (Recompile)      *
       *  BUG28073 - Add missing files in ATU                          *
       *                                                               *
@@ -535,4 +537,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

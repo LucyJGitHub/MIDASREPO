@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Update of Global File GZFCLTLVPD from LEFCLTQD')       *
@@ -9,16 +9,18 @@
       *                                                               *
       *  GPLEFCLVQD - Update of Global File GZFCLTLVPD from LEFCLTQD  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. AR658311           Date 21Oct10               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR658311           Date 21Oct10               *
+      *                 CER059             Date 19Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 257576  *CREATE    Date 08Nov08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR658311 - Failed to compile GPT_AMADEX using Bridge for     *
       *             global program (Recompile)                        *
       *  CER059 - German Feature Upgrade to Delhi                     *

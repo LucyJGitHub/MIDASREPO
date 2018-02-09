@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Outgoing pmnts cnv file to screen format')    *
@@ -14,10 +14,11 @@
       *             payment from their format as on file to a         *
       *             screen format.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039986           Date 10Aug16               *
-      *  Prev Amend No. MD024011           Date 10Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039986           Date 10Aug16               *
+      *                 MD024011           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 CFT157             Date 29Aug14               *
       *                 AR1080200          Date 24Jan13               *
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
       *  MD024011 - Pb when job name is QZDASSINIT                    *
       *           - Applied for MD-39986.                             *
@@ -2427,7 +2429,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** TEXT FOR PAYMENT STATUS
 COMPLETE
 AUTHORIZED

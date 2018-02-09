@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate entered amounts agree')              *
@@ -9,10 +9,11 @@
       *                                                               *
       *  FTVAMAM  - Validate Entered Amounts agree                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR898167           Date 07Nov14               *
-      *  Prev Amend No. AR905067           Date 05Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR898167           Date 07Nov14               *
+      *                 AR905067           Date 05Nov14               *
       *                 CSW213             Date 03Jun13               *
       *                 AR895223           Date 19Nov12               *
       *                 CFT120             Date 28Sep12               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR898167 - Outgoing payment has inconsistent rate in fld 36  *
       *             (Child: AR898168)                                 *
       *  AR905067 - Regular payment receives NegativelyAcked message. *
@@ -1255,7 +1257,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  POWER - Array of powers of 10 for currency conversions                      CFT014
 0000001                                                                         CFT014
 0000010                                                                         CFT014

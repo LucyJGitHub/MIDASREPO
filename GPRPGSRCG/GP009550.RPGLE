@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Global Check if Midas system ID is valid')
@@ -10,17 +10,19 @@
       *  GP009550 - Global Validation of Midas System Value for the   *
       *             Midas system prefix                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG6598            Date 19May05               *
-      *  Prev Amend No. CGP001  *CREATE    Date 26Mar04               *
+      *  Prev Amend No. BUG6598            Date 19May05               *
+      *                 CGP001  *CREATE    Date 26Mar04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG6598 - Changed XLIB to GXLIB to indicate global library   *
       *  CGP001 - Global Layer processing                             *
       *                                                               *

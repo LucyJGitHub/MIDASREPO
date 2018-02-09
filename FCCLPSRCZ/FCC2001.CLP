@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       FCC2001 - Reports Requested Enquiry                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BG2193  *CREATE    Date 16Jun04              */
+/*       Prev Amend No. BG2193  *CREATE    Date 16Jun04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG2193 - Viewing of reports in MidasPlus web-facing         */
 /*                                                                   */
 /*********************************************************************/
@@ -37,7 +39,7 @@
              DCL        VAR(&INKL)  TYPE(*CHAR) LEN( 1)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /** GLOBAL MONITOR MESSAGE */
@@ -91,5 +93,5 @@
              CHGJOB     SWS(XXXXXX11)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

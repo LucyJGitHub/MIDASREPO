@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       FTC0500    REPORT OF PAYMENT CHARGES                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1060743            Date 26Nov12            */
-/*       Prev Amend No. CCB020               Date 06Aug12            */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1060743          Date 26Nov12              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                          000000             DATE 00/00/00         */
 /*                                                                   */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1060743 - All HATS input initial screen appears a         */
 /*                   confirmation of NWDC processing                 */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure    */
@@ -40,7 +42,7 @@
 /*******DCL   VAR(&MPHAS) TYPE(*CHAR)   LEN(1)                                         */ /*CCB020*/
         DCL   VAR(&MPHAS) TYPE(*CHAR)   LEN(4)                                            /*CCB020*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                      /*S01117*/
                                                                      /*S01117*/
@@ -97,6 +99,6 @@
              MONMSG     MSGID(CPF9841)                                /*S01117*/
 /**/                                                                 /*S01117*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
         ENDPGM

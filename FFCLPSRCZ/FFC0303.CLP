@@ -7,14 +7,15 @@
 /*                                                                   */
 /*   FFC0303  -  HISTORIC TRANSACTION ENQUIRY CL CONTROL PGM         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSD027B            Date 23Jun06              */
-/*       Prev Amend No. CGL029             Date 01Sep03              */
+/*       Prev Amend No. CSD027B            Date 23Jun06              */
+/*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      130611             Date 30Mar01              */
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSD027B - Change customer number to alpha                   */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*   130611 - Complete CFF004                                        */
@@ -111,7 +113,7 @@
              DCL        VAR(&RFOI) TYPE(*DEC) LEN(1)                 /*S01332*/
              DCL        VAR(&PGN1D)  TYPE(*CHAR) LEN(8)              /*S01332*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                  */
 /* Global monitor message                                           */
@@ -365,7 +367,7 @@
 /*                                                                  */
  END:        RCLRSC
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                      /*S01332*/
 /*   RESET POSITIONS 2 TO 9 ON EMSDS TO BLANK                     */ /*S01332*/
                                                                      /*S01332*/

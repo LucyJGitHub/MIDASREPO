@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GO On-Line Synch. of Global Layer Cntllr')       *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GOOLSYNGC - On-Line Synchronisation of Global Layer Cntllr   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CAP210             Date 28Sep12               *
-      *  Prev Amend No. AR1064975          Date 05Dec12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP210             Date 28Sep12               *
+      *                 AR1064975          Date 05Dec12               *
       *                 AR1004827          Date 30Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP210 - Adjustment to Accrued Interests API                 *
       *           Issue when filename is equal to 10 characters       *
       *  AR1064975 -  Issue on GO_ONL_SYN                             *
@@ -386,7 +388,7 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 ** #_RCV1
 RCVJRNE JRN(ICJRN) FILE(
 ** #_RCV2

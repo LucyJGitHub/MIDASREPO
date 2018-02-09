@@ -15,10 +15,11 @@
       *                                                               *
       *  Called By: GLC42                                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL120             Date 06Aug12               *
-      *  Prev Amend No. BUG27914           Date 09Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL120             Date 06Aug12               *
+      *                 BUG27914           Date 09Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP203             Date 05Feb10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL120 - GL COB Components Task Split                        *
       *         - Incorporate 261036A and CGL103                      *
       *  BUG27914 - RAME Design Changes                               *
@@ -168,4 +170,4 @@
       *
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

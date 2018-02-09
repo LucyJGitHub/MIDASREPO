@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                    AR1095441
 /*STD *  RPGBASEMOD                                                   *                    AR1095441
@@ -16,10 +16,11 @@
       *  !! changes to GOACCNTAB and GOACCNTAB2.                      *
       *---------------------------------------------------------------*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR1097467B         Date 17Apr13               *
-      *  Prev Amend No. AR1095441          Date 11Mar13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1097467          Date 17Apr13               *
+      *                 AR1095441          Date 11Mar13               *
       *                 CGO001AA           Date 06Aug12               *
       *                 AR854619           Date 06Jan12               *
       *                 CRE075             Date 06Dec10               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1097467B - Expected 15% COB run optimization not met       *
       *  AR1095441 - COBOP Compilation Issues                         *
       *  CGO001AA - COB Restructure - GO COB Optimisation Phase 1     *

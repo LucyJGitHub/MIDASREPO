@@ -9,10 +9,11 @@
      F*                                                               *
      F*  GL3320D - ACCOUNT BALANCES EXTRACT - DELETE                  *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD029673           Date 17Jun15               *
-      *  Prev Amend No. MD031993           Date 07Aug15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029673           Date 17Jun15               *
+      *                 MD031993           Date 07Aug15               *
       *                 CGL165             Date 17Feb15               *
       *                 MD020565           Date 21May13               *
       *                 CGL142             Date 06Aug12               *
@@ -47,6 +48,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029673 - Multiple calls of UTCHOBJEX inside GLC3320.       *
       *             Initialization should be done on first call only. *
       *  MD031993 - Component GLC0000602 00001 failed in COB.         *
@@ -1107,4 +1109,4 @@
      C                   ENDSR
      C*****************************************************************
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

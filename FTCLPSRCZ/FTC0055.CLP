@@ -8,18 +8,19 @@
 /*       FTC0055  - CL COMPONENT TO CONTROL FT0055                  */
 /*                  INCOMING PAYMENTS MAINTENANCE LEVEL 2           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Last Amend No. CFT009             DATE 16Mar01             */
+/*       Prev Amend No. CFT009             Date 16Mar01              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CAC001             DATE 01FEB96             */
+/*                      CAC001             Date 01Feb96              */
 /*                      S01435             DATE 06NOV93             */
 /*                      042167             DATE 15APR93             */
 /*                       S01117           DATE   13MAY91            */
@@ -27,6 +28,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CFT009 - FT Fees and Charges - new parm added to call      */
 /*       CAC001 - Profit Centre Accounting Development:             */
 /*                Provide a blank sixth parameter, for margin info  */
@@ -39,7 +41,7 @@
              PGM        PARM(&ACTION &PREF &COMMAND &LINK)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(1) /* Action +
@@ -128,7 +130,7 @@
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              ENDDO
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */                                                                 /*042167*/
 /* CALL AOC8000 to release locks if not called from another program*/ /*042167*/
 /* */                                                                 /*042167*/

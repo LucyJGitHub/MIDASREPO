@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*: OVRDBF FILE(SDBRCHL0XX) TOFILE(SDBRCHL0) SHARE(*NO)          *
 /*XBIB*: OVRDBF FILE(FOPCKXX   ) TOFILE(FOPCK   ) SHARE(*NO)          *
@@ -11,10 +11,11 @@
       *                                                               *
       *  GOSETFBPS - Setup F&O Book Position TRAP record              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR668434           Date 26Jun13               *
-      *  Prev Amend No. CAP208             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR668434           Date 26Jun13               *
+      *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR668434 - Array error due to Branch records is more than 99 *
       *             Fix is to increase the maximum number of array.   *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
@@ -330,7 +332,7 @@
       /COPY GOCPYSRC,GOPSSR
       *********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 ** ##OV1
 OVRDBF FILE(SDBRCHL0XX) TOFILE(SDBRCHL0) SHARE(*NO)
 ** ##OV2

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FD Forward Rates Screen Input Module')
@@ -12,14 +12,15 @@
       *  Function:  This is the main screen input function            *
       *             for Forward Rates Details.                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 241919             Date 22Dec06               *
+      *  Prev Amend No. 241919             Date 22Dec06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG8233            Date 23Aug05               *
+      *                 BUG8233            Date 23Aug05               *
       *                 BUG8141            Date 11Aug05               *
       *                 238595 (Reopen)    Date 03Apr06               *
       *                 BUG1056            Date 20May04               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  241919 - Recompiled due to changes done to FDVFWRTPD.        *
       *  BUG8233- Error in Forward Rates upload via File Adapter API  *
       *           (Recompile)                                         *
@@ -1257,4 +1259,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

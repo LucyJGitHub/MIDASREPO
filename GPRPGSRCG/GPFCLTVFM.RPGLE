@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************                       CGP017
 /*STD *  RPGBASEMOD                                                   *                       CGP017
@@ -10,10 +10,11 @@
       *                                                               *
       *  GPFCLTVFM - Update of Global File GZFCLTLVPD from FCLTYFM    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD023531           Date 30Apr14               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023531           Date 30Apr14               *
+      *                 CGP017             Date 06Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 AR819939           Date 30Aug11               *
       *                 CSF011             Date 12Sep11               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023531 - Use GZSDCUSTL0 instead of GZSDCUSTL1              *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *

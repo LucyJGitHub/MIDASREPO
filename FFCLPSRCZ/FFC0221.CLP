@@ -7,16 +7,17 @@
 /*                                                                 */
 /*   FFC0221  -  INPUT CYCLE REVALUATION                           */
 /*                                                                 */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                 */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   Last Amend No. CPK009             Date 09Aug99                */
-/*   Prev Amend No. S01408             DATE 10JAN96                */
+/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      S01408             Date 10Jan96              */
 /*                  088717             DATE 12JUN95                */
 /*                  E44667             DATE 18SEP92                */
 /*                  E44681 (FUJI-FF0005)   DATE 17SEP92            */
@@ -27,6 +28,7 @@
 /*                                                                 */
 /*-----------------------------------------------------------------*/
 /*                                                                 */
+/*       MD046248 - Finastra Rebranding                              */
 /*   CPK009 - Packaging for DBA3 release. STRCMTCTL values set     */
 /*            to CMTSCOPE(*JOB).                                   */
 /*   S01408 - Addition of core hook - FFC0221001                   */
@@ -71,7 +73,7 @@
              DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1) VALUE(0)       /*E44667*/
 /**/                                                                  /*E44667*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**********STRCMTCTL  LCKLVL(*CHG) NFYOBJ(*LIBL/MNTYF (*FILE))       /*CPK009*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(*LIBL/MNTYF (*FILE)) +
@@ -227,5 +229,5 @@ END:         DLTOVR     FILE(*ALL)
              ENDDO                                                   /*088717*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

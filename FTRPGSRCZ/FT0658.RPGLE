@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
      H FTRANS                                                                   184509
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -10,10 +10,11 @@
       *                                                               *
       *  FT0658 - Customer Credit Transfer Swift Message Generation   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD035623           Date 27Aug15               *
-      *  Prev Amend No. MD035625           Date 27Aug15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035623           Date 27Aug15               *
+      *                 MD035625           Date 27Aug15               *
       *                 MD034842           Date 30Jun15               *
       *                 MD034390           Date 14May15               *
       *                 CSW215             Date 06Apr15               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035623 - Generated main and cover MT202 for MT102 have     *
       *             different network                                 *
       *  MD035625 - Field Tag 57A first line of MT102 is blank        *
@@ -109,7 +111,7 @@
       *             generating 52a, 56a, 57a when Clearing codes is   *
       *             supplied in transaction screen does affecting the *
       *             reports output                                    *
-      *  CSW215 - SWIFT Changes 2015                                  *      
+      *  CSW215 - SWIFT Changes 2015                                  *
       *  MD023793 - MT102+ is generated when IBAN is invalid          *
       *  MD022546 - No MT102 generated                                *
       *  MD021993A - No STP string output for MT102                   *
@@ -690,7 +692,7 @@
      DSav57a           S                   Like(MFLD)                                       BUG24806
      D CSW215          S              1A                                                      CSW215
      D PErrTyp         S              1A                                                      CSW215
-     D WRK59F          S              1A                                                      CSW215     
+     D WRK59F          S              1A                                                      CSW215
      D WNETWK          S              6A                                                    MD035623
                                                                                               CSW209
      D WBranch         S              3A   INZ(*BLANKS)                                     BUG13217
@@ -2140,7 +2142,7 @@
      C                   ENDIF                                                              MD035625
      C**********         Eval      MFLD = ACCI11                                            MD034390
      C                   EVAL      MFLD = BBCSID                                            MD034390
-     C                   ENDIF                                                              MD034390     
+     C                   ENDIF                                                              MD034390
      C                   IF        CSW209 = 'Y'                                             BUG24806
      C                   EVAL      Sav57aType = 'A'                                         BUG24806
      C                   EVAL      Sav57a = MFLD                                            BUG24806
@@ -6054,7 +6056,7 @@
       *
      O/COPY FTCPYSRC,FTSWIFTRAN                                                 184509
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  #NUMC                                                                                     CSW209
 0123456789                                                                                    CSW209
 **  #ALPH                                                                                     CSW209

@@ -11,18 +11,20 @@
       *                                                               *
       *  GPAOSARDR0 - Global Switchable Features Access Object        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *   Last Amend No. CPK024           Date 13Feb06                *
-      *   Prev Amend No. BUG1950          Date 21May04                *
+      *  Prev Amend No. CPK024             Date 13Feb06               *
+      *                 BUG1950            Date 21May04               *
       *                  CGP002 *CREATE   Date 18Sep03                *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK024 - Packaging for release 1.2.1                         *
       *  BUG1950- Use GPZASNMSG.                                      *
       *  CGP002 - Global Processing Switchability.                    *

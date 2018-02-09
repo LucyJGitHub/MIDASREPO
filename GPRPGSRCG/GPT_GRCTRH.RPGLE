@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GP Global Country Hierarchy Trigger Program')
@@ -10,14 +10,16 @@
       *  GPT_GRCTRH - On-Line Update of Global File T_GPUTILSR        *
       *             - Trigger program for T_GRCTRYH                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 245952  *CREATE    Date 23Feb07               *
+      *  Prev Amend No. 245952  *CREATE    Date 23Feb07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  245952 - Update file T_GPUTILSR                              *
       *                                                               *
       *****************************************************************

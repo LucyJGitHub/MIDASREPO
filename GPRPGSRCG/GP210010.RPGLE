@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(GPWTRAPL0X) TOFILE(GPWTRAPL0) SHARE(*NO)         *
 /*STD *  RPGBASEBNC                                                   *
@@ -10,10 +10,11 @@
       *                                                               *
       *  GP210010 - GPWTRAPPD Housekeeping                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD023876A          Date 30Apr14               *
-      *  Prev Amend No. MD023876           Date 30Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023876A          Date 30Apr14               *
+      *                 MD023876           Date 30Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -23,6 +24,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023876A - Wrong location of task split objects             *
       *  MD023876 - GOC210000 Performance Issues                      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Account LUX Convert')
@@ -12,18 +12,20 @@
       *  Function: This module converts the fields of REACX1PD        *
       *            Transaction Detail from file to screen             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 09May06               *
-      *  Prev Amend No. BUG10444           Date 07Feb06               *
+      *  Prev Amend No. CSD027A            Date 09May06               *
+      *                 BUG10444           Date 07Feb06               *
       *                 CER001  *CREATE    Date 25Apr05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
       *  BUG10444 - Lum sum code not defined due to the wrong         *
       *             representation of value coming from aptranr       *
@@ -199,4 +201,4 @@
       *
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

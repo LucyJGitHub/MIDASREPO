@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       GLC1140 - AMOUNT ACCRUAL UPDATE & ENTRY GENERATION         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No.   CGL141             Date  12Dec12          */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL141             Date 12Dec12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No.   E41721             DATE  25JUN92          */
+/*                      E41721             Date 25Jun92              */
 /*                    .   E18361             DATE  25NOV89          */
 /*       PREV AMEND NO.   E18526             DATE  25/09/89         */
 /*       LAST AMEND NO.    S01189            DATE  03/04/89         */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*      CGL141 - Amount Accruals Extended Narrative.                */
 /*               Added Hooks: CGL141_001 to CGL141_003              */
 /*      E41721 - ADD GLOBAL MONMSG AND ERROR PROCESSING             */
@@ -44,7 +46,7 @@
              PGM     PARM(&CNAM &CSEQ)                                /*S01189*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MSG)     TYPE(*CHAR) LEN(75)
 /*********** DCL        VAR(&MEM)     TYPE(*CHAR) LEN(44)*/           /*S01194*/
@@ -164,7 +166,7 @@
              SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) /* E41721 */
              MONMSG     MSGID(CPF0000) /* E41721 */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000) /* E41721 */
 /**/
 /**/

@@ -8,10 +8,11 @@
 /*       FTC0560  - CL COMPONENT TO CONTROL FT0560                   */
 /*                  DR/CR ADVICES GENERATION - INPUT CYCLE           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 118633             Date 14May13              */
-/*       Prev Amend No. AR1060743          Date 26Nov12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 118633             Date 14May13              */
+/*                      AR1060743          Date 26Nov12              */
 /*                      CCB020             Date 06Aug12              */
 /*                      CER059             Date 19Jul10              */
 /*                      BUG23179           Date 04Mar09              */
@@ -40,6 +41,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       118633 - DLTOVR to ADVGENB before calling FT0560 to prevent */
 /*                CPF4173 error when calling FT0560 program.         */
 /*              - Applied for MD020426.                              */
@@ -85,7 +87,7 @@
 /****DCL***     VAR(&PHASE) TYPE(*CHAR) LEN(1)                                  */ /*S01117 CCB020*/
      DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(4)                                            /*CCB020*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)                /*S01522*/
              DCL        VAR(&W0CMT) TYPE(*CHAR) LEN(3) VALUE('YES')   /*S01522*/
@@ -332,7 +334,7 @@
              ENDDO                                                   /*S01117*/
 /**/                                                                 /*S01117*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*S01117*/
 /**/
         ENDPGM                                                       /*S01117*/

@@ -17,10 +17,11 @@
       *                                                               *
       *  Called By: FTOPAY1SN                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD035776           Date 10Sep15               *
-      *  Prev Amend No. MD027047           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035776           Date 10Sep15               *
+      *                 MD027047           Date 19Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035776 - User need to press twice on input screen          *
       *           - Remove unsupported keywords of HATS from dspf     *
       *             (Recompile)                                       *
@@ -604,6 +606,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  @Z0
 000000000000000000000000000000000000000000000000000000000000

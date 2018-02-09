@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Deal validation')                             *
@@ -12,10 +12,11 @@
       *  Function: This Program Validates FX Deals for Input into     *
       *            the Midas database.                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. MD039203           Date 14Jun16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD039203           Date 14Jun16               *
       *                 CDL094             Date 01Sep14               *
       *                 AR720772           Date 19Aug14               *
       *                 CDL091             Date 12Dec12               *
@@ -88,6 +89,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
       *  MD039203 - When creating an FX Deal, the value of Forward    *
       *             points and sign were not save upon completion of  *
@@ -3360,7 +3362,7 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** Scaling factors array - @SF
 0000000001
 0000000010

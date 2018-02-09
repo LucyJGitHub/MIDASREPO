@@ -8,15 +8,17 @@
 /*       GLC000350 - Midas GL AWV Extract Consolidation, Report      */
 /*                   and Housekeep                                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG26298           Date 06Oct09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG26298           Date 06Oct09              */
 /*                      BUG23276           Date 10Mar09              */
 /*                      CER044  *CREATE    Date 19May08              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG26298 - Enable export to Meridian                        */
 /*       BUG23276 - Items with Customers set up as Banks not shown   */
@@ -27,7 +29,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2008')
  
 /* Global monitor message */
@@ -94,7 +96,7 @@
              CLRPFM     FILE(GLAWXRPD)                                                  /*BUG23276*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              GOTO       CMDLBL(END)
 ABNOR:
  

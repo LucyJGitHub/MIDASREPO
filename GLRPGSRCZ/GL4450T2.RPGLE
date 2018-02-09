@@ -10,12 +10,14 @@
       *                                                               *
       *  Called By: REC4450T2                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CGL127AY *CREATE   Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL127AY *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL127AY - COB Restructure - GL COB Optimisation Phase 1     *
       *                                                               *
       *****************************************************************
@@ -204,4 +206,4 @@
       /EJECT
       *****************************************************************
 ** CPY@ - Object copyright
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

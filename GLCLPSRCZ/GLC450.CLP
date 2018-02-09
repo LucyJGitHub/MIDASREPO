@@ -7,9 +7,10 @@
 /*                                                                  */
 /*        GLC450 - REAL TIME POSTINGS                               */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD023889           Date 10Dic13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD023889           Date 10Dic13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,7 +18,7 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*       Last Amend No. 191263             Date 03May01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      CPK009             Date 09Aug99              */
 /*                      110361             DATE  21JAN97            */
 /*                      CMC001             DATE  18MAR96            */
 /*                      090139             DATE  28JUN96            */
@@ -29,6 +30,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD023889 - Accounting Rules Process (GL Account creation)   */
 /*                  Add /COPY CGL135_113, CGL135_114                 */
 /*       191263 - Add RCLRSC command to prevent GLC450 looping.      */
@@ -55,7 +57,7 @@
              PGM        PARM(&BNUM &WRKSTN)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL VAR(&BNUM)  TYPE(*CHAR) LEN(3)
@@ -268,7 +270,7 @@ ABNOR:                                                                /*087618*/
              ENDCMTCTL                                                /*191263*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*191263*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              DLTOVR     FILE(*ALL)                                    /*090139*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*090139*/
              ENDPGM

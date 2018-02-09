@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL JE item Two Oclock Validation')               *
@@ -16,10 +16,11 @@
       *                                                               *
       *  Component of: GLBITPVAL                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD039509           Date 13Jul16               *
-      *  Prev Amend No. MD039309           Date 08Jun16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039509           Date 13Jul16               *
+      *                 MD039309           Date 08Jun16               *
       *                 MD035554           Date 25May16               *
       *                 MD033630           Date 11May16               *
       *                 MD027587           Date 19Jun14               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039509 - Able to insert a Reversal without a prior insert  *
       *             of an Outward Clearing Check. Included the        *
       *             checking of amount for today's reversal           *
@@ -75,7 +77,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FREMEMLL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     PREFIX(S_)
@@ -105,77 +107,77 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
-
+ 
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
-
+ 
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------
-
+ 
       **------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error
       ** and warning message arrays.
       *
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
-
+ 
       **------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D P_TrnScnFmt   E DS                  EXTNAME(GLBITPPD)
      D P_TrnFilFmt   E DS                  EXTNAME(GLVBITPPD)
      D                                     PREFIX(G)
      D P_TrnOkFlg    E DS                  EXTNAME(GLEBITPPD)
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D P_RtnCode       S             10
      D P_BJRDNB        S              5  0
      D P_Idx           S              3  0
      D P_WIdx          S              3  0
-
+ 
      D K_BTBINB        S                   LIKE(BTBINB)
      D K_BTBTNB        S                   LIKE(BTBTNB)
-
+ 
      D WCMPAMT         S             15  0
-
+ 
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -194,13 +196,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -211,7 +213,7 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
@@ -481,9 +483,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    P_RtnCode
      C                   PARM                    P_TrnScnFmt
@@ -531,7 +533,7 @@
      C                   ENDIF                                                              MD039309
       *
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -548,15 +550,15 @@
       *                                                                   *
       *********************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   EVAL      *inu7 = *ON
      C                   EVAL      *inu8 = *ON
      C                   EVAL      *INLR = *ON
-
+ 
      C                   IF        RunBefore <> 'Y'
-
+ 
      C                   EVAL      RunBefore = 'Y'
       *
       ** Load the APDUMP fields
@@ -568,25 +570,25 @@
       ** and try again.
       *
      C                   IF        *in88
-
+ 
      C                   CLEAR                   PSSRRetCde
      C                   CALL      'APCCRTQTO'
      C                   PARM                    PSSRRetCde       10
-
+ 
      C     *LOCK         IN        APDUMP
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      ARErrMod = PSProcMod
      C                   OUT       APDUMP
-
+ 
      C                   CALLB     'DBERRCTL'
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      P_RtnCode = '*ERROR'
      C                   RETURN
-
+ 
      C                   ENDSR
-
+ 
       ********************************************************************

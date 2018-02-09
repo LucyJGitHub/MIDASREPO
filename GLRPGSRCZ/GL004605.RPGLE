@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Forward Account Transfer Job')                *
@@ -15,16 +15,18 @@
       *                                                               *
       *  Called By: GLC004605 - Forward Account Transfer Job          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR1075388          Date 21Nov13               *
-      *  Prev Amend No. CRE067             Date 05Oct10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1075388          Date 21Nov13               *
+      *                 CRE067             Date 05Oct10               *
       *                 BUG28036           Date 16Aug10               *
       *                 BUG27831B          Date 09Aug10               *
       *                 BUG27831A *CREATE  Date 03Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1075388 - Account transfer fees - net (Child:AR1075389)    *
       *              Applied for MD-23536 (Recompile)                 *
       *  CRE067 - Midas Plus/Teller Interface via Bankfusion          *

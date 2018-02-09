@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP History of Customer Info Field Desc')         *
@@ -10,16 +10,18 @@
       *                                                               *
       *  Function: This module create file fields description         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD026854           Date 29May14               *
-      *  Prev Amend No. MD026666           Date 22May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026854           Date 29May14               *
+      *                 MD026666           Date 22May14               *
       *                 CGL132             Date 01May13               *
       *                 MD026193           Date 07Apr14               *
       *                 CSD092   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026854 - Alternative country of citizenship is missing in  *
       *             history of customer information                   *
       *  MD026666 - Incorrect details reflected in history of         *

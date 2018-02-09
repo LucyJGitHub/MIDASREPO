@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate TI Account')                         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GLVTIAC    - Validate TI Account                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD034725           Date 27Jul16               *
-      *  Prev Amend No. 230445             Date 03Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034725           Date 27Jul16               *
+      *                 230445             Date 03Nov14               *
       *                 MD030198           Date 30Aug14               *
       *                 TI010206           Date 06May13               *
       *                 CSD091             Date 04Jul11               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
       *  230445 - Do not accept 'Y' as TI account flag if the customer*
       *           is a non-TI customer.                               *
@@ -65,13 +67,13 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
-
+ 
       ** GL Accounts by branch, TI A/c no and TI A/c suffix
      FACCNTTI   IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** SD Account Codes Retrieval
      FSDACODL1  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** SD Customer Detail Retrieval                                                         230445
      FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)                                       230445
                                                                                               230445
@@ -105,67 +107,67 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
       ** External data structure for branch codes file
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
-
+ 
       ** External data structure for access programs (long)
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** TI ICD details                                                                      BUG3365
      D SDTIIN        E DS                  EXTNAME(SDTIINPD)                                 BUG3365
                                                                                              BUG3365
@@ -173,12 +175,12 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                              BUG3365
@@ -199,7 +201,7 @@
                                                                                              BUG3365
       ** Indicator Array                                                                     BUG3365
      DIndicatorP       S               *   INZ(%ADDR(*IN))                                   BUG3365
-
+ 
      D CSD012          S              1A                                                     BUG5340
      D CTI006          S              1A                                                    MD034725
       ** +--------------------------------------+
@@ -216,9 +218,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Initialization
-
+ 
      C                   MoveL     *Blanks       RetCodeIn
      C**********         MoveL     *Blanks       FldNamXAr                                   BUG5340
      C**********         MoveL     *Blanks       MsgIDXAr                                    BUG5340
@@ -714,7 +716,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *Entry        Plist
       *
       ** INPUTS
@@ -803,9 +805,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT
@@ -813,4 +815,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

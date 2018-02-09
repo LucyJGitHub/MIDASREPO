@@ -7,14 +7,15 @@
 /*                                                                  */
 /*       GLC39 - TRANSFER OF F/C INCOME AND EXPENSE                 */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL023             Date 31Jul03             */
-/*       Prev Amend No. CSC020             Date 31Mar04              */
+/*       Prev Amend No. CGL023             Date 31Jul03              */
+/*                      CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      CCM003             Date  01Feb01             */
@@ -34,6 +35,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL023 - Retention of Currency of Balance.                 */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
 /*       CCM003  -  Download of Transfer F/C income and expense.    */
@@ -60,7 +62,7 @@
              PGM        PARM(&CNAM &CSEQ &FORB)                       /*E15192*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6) VALUE('  JLIB')  /*S1099*/
 /********    DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)       /*S1099*/ /*S01189*/
@@ -479,7 +481,7 @@ NOJRN:          CHGJOB     INQMSGRPY(*DFT)                             /*S1099*/
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)           /*S01189*/
              CHGJOB     SWS(XXXXXXX1)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,GLC39012                                            */
 /*ENDPGM:*****ENDPGM******************************************************S1099*************CSC020*/
  ENDPGM:                                                                                  /*CSC020*/

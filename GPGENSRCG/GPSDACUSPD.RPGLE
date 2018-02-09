@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Generated Code')                                       *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GPSDACUSPD - On-Line Update of Global File GZSDACUSPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 CGL132             Date 01May13               *
       *                 CLE134             Date 01Aug12               *
       *                 AR742563           Date 06Apr11               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -34,7 +36,7 @@
       *  BUG22529 - Global Additional Customer Details                *
       *                                                               *
       *****************************************************************
-
+ 
 O    FGZSDACUSL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZSDACUSPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -43,9 +45,9 @@ O    F                                     USROPN
 O
 O    D Z_SDACUSPD    E DS                  EXTNAME(GZSDACUSPD)
 O    D G_SDACUSPD    E DS                  EXTNAME(GZSDACUSPD) PREFIX(G_)
-
+ 
       * ENTRY PARAMETERS
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -89,9 +91,9 @@ O    C                   ELSE
 O    C                   WRITE     W_SDACUSD0
 O    C                   ENDIF
 O    C                   ENDIF
-
+ 
      C                   RETURN
-
+ 
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -110,7 +112,7 @@ O
 O    C     K_GZSDACUSL1  KLIST
 O    C                   KFLD                    E5ZONE
 O    C                   KFLD                    E5CUST
-
+ 
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -118,15 +120,15 @@ O    C                   KFLD                    E5CUST
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
-
+ 
      C     W#RUN         IFEQ      *BLANKS
-
+ 
      C                   MOVE      'Y'           W#RUN             1
-
+ 
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
-
+ 
      C                   DUMP
       *
       * If no identified cause of error
@@ -141,10 +143,10 @@ O    C                   KFLD                    E5CUST
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
-
+ 
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       *********************************************************************

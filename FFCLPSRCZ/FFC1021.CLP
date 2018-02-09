@@ -7,8 +7,9 @@
 /*                                                                   */
 /*   FFC1021  -  TRANSACTIONS INPUT TODAY LIST (EOC)                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,13 +18,14 @@
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /* Midas DBA 3.00 Patch D -------------------------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*   LAST AMEND NO. 163444             DATE 09AUG99                  */
+/*       Prev Amend No. 163444             Date 09Aug99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   PREV AMEND NO. S01522             DATE 16MAY95                  */
+/*                      S01522             Date 16May95              */
 /*                  S01117             DATE 07JUN90                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   163444 - Y2K sort order and file allocation                     */
 /*   S01522 - User Defined Correspondence                            */
 /*   S01117 - MULTIBRANCHING                                         */
@@ -46,7 +48,7 @@
              DCL        VAR(&OPTION)  TYPE(*CHAR) LEN(7)              /*S01522*/
              DCL        VAR(&FMT)     TYPE(*CHAR) LEN(200)            /*S01522*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CGUSRMSG) TYPE(*CHAR) LEN(10)            /*S01522*/
              DCL        VAR(&MIDAS   ) TYPE(*CHAR) LEN(10)            /*S01522*/
@@ -157,5 +159,5 @@ END:
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /*/COPY WNCPYSRC,FFC1021002                                          */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

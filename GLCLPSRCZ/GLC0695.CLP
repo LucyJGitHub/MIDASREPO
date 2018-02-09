@@ -8,10 +8,11 @@
 /******GLC0695 - SPOT RATE + BASE RATE HISTORY FILE PURGE           */                  /*CGL127AE*/
 /*     GLC0695 - BASE RATE HISTORY FILE PURGE                       */                  /*CGL127AE*/
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD021155           Date 09Jul13              */
-/*       Prev Amend No. CGL127AE           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021155           Date 09Jul13              */
+/*                      CGL127AE           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - CPY and RGZ of *X files is unneccessary          */
 /*                - RGZ of *PA files (single record) is pointless    */
@@ -45,7 +47,7 @@
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                  /*CGL127AE*/
              DCL        VAR(&STEXT) TYPE(*CHAR) LEN(26)                                 /*CGL127AE*/
@@ -296,7 +298,7 @@ ABNOR:       RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)                          
 /**/
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                                         /*CGL127AE*/
 /**/                                                                                    /*CGL127AE*/
 /* Write current journal sequence number to file SCJSEQPD, using */                     /*CGL127AE*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
  
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate Swift Priority Indicator')
@@ -8,7 +8,7 @@
  
       *  FTVSFIN01  - Validate Swift Priority Indicator               *
  
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
  
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -16,20 +16,22 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
  
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 221761             Date 01Apr04               *
+      *  Prev Amend No. 221761             Date 01Apr04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
-      *  Prev Amend No. 185107             Date 17Oct00               *
+      *                 185107             Date 17Oct00               *
       * Midas DBA 3.03 -----------------------------------------------*
       *                 177782             Date 13Apr00               *
       *                 CFT006  *CREATE    Date 15Jul99               *
  
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  221761 - Recompiled due to change made in PF/FT101HPD.       *
       *  185107 - Mapping of details from swift message - Recompile   *
       *  177782 - Allow swift priority of 'U' and 'N' only            *
@@ -214,4 +216,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

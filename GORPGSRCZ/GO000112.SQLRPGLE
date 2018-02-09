@@ -11,7 +11,7 @@
       *                                                               *
       *  GO000112 - Global Processing data dowload, Securities        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. MD039545           Date 20Jul16               *
       *  Prev Amend No. MD020167           Date 23Apr13               *

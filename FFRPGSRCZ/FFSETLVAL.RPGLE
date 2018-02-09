@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Settlement fields')
@@ -22,14 +22,15 @@
       *  are included in the parameter list although in practice      *
       *  only one will be used in any call to this module.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 240193             Date 12Jul06               *
-      *  Prev Amend No. 239740             Date 29May06               *
+      *  Prev Amend No. 240193             Date 12Jul06               *
+      *                 239740             Date 29May06               *
       *                 BG11679            Date 05Jul06               *
       *                 CSD027B            Date 29Jun06               *
       *                 CSD031             Date 10Apr06               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  240193 - Apply fix 239740.                                   *
       *  239740 - Incorporation conflict introduced at SP01 (BUG9185) *
       *           TDA034 does not reflect the current DSPFFD          *
@@ -2308,4 +2310,4 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

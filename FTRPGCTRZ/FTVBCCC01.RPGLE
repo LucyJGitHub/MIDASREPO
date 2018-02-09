@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate BIC / clearing code')
@@ -9,7 +9,7 @@
       *                                                               *
       *  FTVBCCC01 - Validate BIC and customer shortname              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       * This module receives two parameters : 35A and 11A.            *
       *                                                               *
@@ -24,8 +24,9 @@
       * The second field may contain a BIC, customer number           *
       * or shortname that has a BIC assigned to it from #DCUSTPD.     *
       *                                                               *
-      *  Last Amend No. MD034557           Date 01Jun15               *
-      *  Prev Amend No. MD034498           Date 25May15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034557           Date 01Jun15               *
+      *                 MD034498           Date 25May15               *
       *                 MD034390           Date 14May15               *
       *                 CSW215             Date 06Apr15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034557 - Character inserted in 13th-14th digit for         *
       *             clearing code CN is accepted                      *
       *  MD034498 - Additional validation for //RT//CN allowing       *
@@ -198,7 +200,7 @@
      D CSW206          S              1                                                       CSW206
                                                                                               CSW206
      D CSW215          S              1                                                       CSW215
-                                                                                              CSW215                                                                                         
+                                                                                              CSW215
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1359,7 +1361,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  CTDATA ArrDig
 0123456789
 **  ALPHAN                                                                                    CSW202

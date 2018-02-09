@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Check valid zone')
@@ -9,17 +9,19 @@
       *                                                               *
       *  GP009554 - Check zone entered exists in Global zones table.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
       *  Note: This program is a dummy program to allow free format   *
       *        text to be entered into a system value.                *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BG15997 *CREATE    Date 21Feb08               *
+      *  Prev Amend No. BG15997 *CREATE    Date 21Feb08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG15997 - Check zone entered is defined on GPZONEPD.        *
       *           - Originally GP009553 introduced by GEMS#249175     *
       *****************************************************************

@@ -7,20 +7,22 @@
 /*                                                                   */
 /*   GLC2831 Initialisation program for Fontis TPP/IAT Interface     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*   Last Amendment No. 180223           Date 13Jun00                */
+/*       Prev Amend No. 180223             Date 13Jun00              */
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*   Prev Amendment No. CGL009 *CREATE   Date 28JUL99                */
+/*                      CGL009 *C *CREATE  Date 28Jul99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   180223 - General initialisation problems.                       */
 /*   CGL009 - Midas-Fontis IAT/TPP Interface                         */
 /*                                                                   */
@@ -28,7 +30,7 @@
              PGM        PARM(&RTNCDE &IPMODE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&IPMODE) TYPE(*CHAR) LEN(1)
@@ -84,6 +86,6 @@ ABNOR:
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
      H FTRANS                                                                   184509
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -10,10 +10,11 @@
       *                                                               *
       *  FT0657 - Request for Transfer Swift Message Generation       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD035561           Date 24Aug15               *
-      *  Prev Amend No. MD034368           Date 08May15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035561           Date 24Aug15               *
+      *                 MD034368           Date 08May15               *
       *                 MD034339           Date 06May15               *
       *                 CSW215             Date 06Apr15               *
       *                 MD027286           Date 25Nov14               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035561 - Additional lines were generated in field tag 50F  *
       *             of MT101                                          *
       *  MD034368 - Clearing code //CN12345678901234 in Field Tag 56A *
@@ -4313,7 +4315,7 @@
      C                   ENDIF                                                                CSW215
       *                                                                                       CSW215
      C                   ENDSR                                                                CSW215
-      *                                                                                       CSW215     
+      *                                                                                       CSW215
       *****************************************************************                    BUG15010A
      C/EJECT                                                                               BUG15010A
       *****************************************************************
@@ -4723,4 +4725,4 @@
       *
      O/COPY FTCPYSRC,FTSWIFTRAN                                                 184509
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

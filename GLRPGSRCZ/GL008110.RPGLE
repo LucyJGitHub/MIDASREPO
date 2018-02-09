@@ -8,16 +8,18 @@
      F*                                                               *
      F*  GL008110 - Create Postings from Stamp Tax Keys               *
      F*                                                               *
-     F*  (c) Misys International Banking Systems Ltd 2010             *
+     F*  (c) Finastra International Limited 2010                      *
      F*                                                               *
-      *  Last Amend No. MD040971           Date 30Aug16               *     
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD040971           Date 30Aug16               *
+      *                 CLE148             Date 23Jul12               *
       *                 AR864045           Date 20Nov11               *
       *                 AR821972           Date 07Sep11               *
       *                 CER049  *CREATE    Date 06Dec10               *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD040971 - GL0600 dumps due to account code set to zero.     *
       *             Call AOACODR0 with DSSFY instead as SDACODPD      *
       *             length is greated that 200.                       *
@@ -2118,4 +2120,4 @@
       *
      C                   ENDSR
 ** CPY@   **      OBJECT COPYRIGHT
-(C) Copyright Misys International Banking Systems Ltd. 2010
+(C) Copyright Finastra International Limited 2010

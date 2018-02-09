@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL A/c maintenance display - 1st detl scrn')     *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GLAMAD1DP - Account Maintenance Display - First Detail Scrn  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165  - Dual Withholding Tax (Recompile)                   *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -113,18 +115,18 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FGLAMADDDF CF   E             WORKSTN IGNORE(GLAMADD2:GLAMADD3:
      F                                            GLAMADD4:GLAMADD5)
-
+ 
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
-
+ 
      FRELINKL1  IF   E           K DISK    INFSR(*PSSR)
                                                                                 CPB001
      FPMPORTLL  IF   E           K DISK    INFSR(*PSSR)  USROPN                 CPB001
      FACCPTFR   IF   E           K DISK    INFSR(*PSSR)                         178695
-
+ 
       *****************************************************************
       *                                                               *
       *  ID F  C  H  L    FUNCTION OF INDICATORS                      *
@@ -167,25 +169,25 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -193,28 +195,28 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **---------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -230,21 +232,21 @@
      D ACSQN                 160    161  0                                                    222549
      D BRANCH                162    162                                                       222549
      D AREF15                141    161                                                       222549
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D @Z0             S              1    DIM(25) CTDATA PERRCD(25)
-
+ 
      D @EI             S              1    DIM(33)
-
+ 
       ** Input parameters on call to AOPLCSR1
      D I@PARM          DS           256
      D  I#PORS                 1      1
@@ -254,74 +256,74 @@
      D  I#BOOK                19     20
      D  I#PTFR                21     24
      D  I#CPGM                25     34
-
+ 
       ** Output parameters on call to AOPLCSR1
      D O@PARM          S            256
-
+ 
      D ZMUSER          DS            17
       ** ZMUSER data layout
      D  DBRN                  11     13
-
+ 
      D RUNDAT          DS            13
       ** Rundate data area
      D  AGMBIN                13     13
-
+ 
      D NewAcPrim     E DS                  EXTNAME(GLAMADPD)
      D OKAcPrim      E DS                  EXTNAME(GLEAMADPD)
      D NwAcFilFmt    E DS                  EXTNAME(GLVAMADPD)
      D NA1BFilFmt    E DS                  EXTNAME(GLVAMRIPD)
      D GlRiAcod      E                     EXTFLD(QQACOD)                                     CGL029
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
-
+ 
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
       ** External DS for Retail Details
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External DS for SAR Details
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D SdGelrAccd    E                     EXTFLD(QQACCD)                                     CGL029
       ** External DS for General Ledger Details
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** External DS for Midas Modules Details
                                                                                               208237
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)                                  208237
       ** EXTERNAL DS FOR BRANCH DETAILS                                                       208237
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for Currency Details
-
+ 
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
       ** External DS for Portfolio Customer Details
-
+ 
      D SDACOD        E DS                  EXTNAME(SDACODPD)
      D SdAcodAccd    E                     EXTFLD(QQACCD)                                     CGL029
       ** External DS for Account Code Details
-
+ 
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** External DS for Portfolio Management ICD Details
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                    CPB001
      D  QQDFAC1      E                     EXTFLD(QQDFAC)                                     CGL029
       ** External DS for Customer Details                                       CPB001
                                                                                 CPB001
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for access programs, long data structure
                                                                                 CPB001
      D DSLDY         E DS                  EXTNAME(DSLDY)                       CPB001
       * Third DS for access programs, very long data structure                  CPB001
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of of error message ids etc                           176883
      D Ix              S              3P 0                                      176883
                                                                                 176883
@@ -332,7 +334,7 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
-
+ 
      IFUSIONF1
      I              BRCA                        FBRCA
      I              CNUM                        FCUST
@@ -468,13 +470,13 @@
      C                   MOVE      *IN49         @IN49
       *
      C                   ENDSR
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **---------------------------------------------------------------
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -673,18 +675,18 @@
      C                   MOVE      *ON           *IN46
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Set on *IN89 if user allowed to amend TI Account No. & Suffix
       ** But only initially set it off if the fields are not already
       ** shown in error.
      C                   if        DDTIACOK = 'Y' and DDTIANOK = 'Y'
      C                                and DDTIASOK = 'Y'
-
+ 
       ** Protect TI fields.                                                                  BUG3365
      C                   eval      *in89 = *off
-
+ 
      C                   endif
-
+ 
      C**********         if        DDTIAC = 'Y' and                                          BUG3365
      C**********                     (DDACTN = 'I' or                                        BUG3365
      C**********                        (DDACTN = 'A' and DDTIAN = *blanks                   BUG3365
@@ -697,12 +699,12 @@
      C                             and DDTIASOK = 'N')                                       BUG3365
      C**********                        )                                                    BUG3365
      C**********                     )                                                       BUG3365
-
+ 
       ** TI fields input capable.                                                            BUG3365
      C                   eval      *in89 = *on
-
+ 
      C                   endif
-
+ 
       ** Prepare Amend Authorisation
      C                   MOVE      'A'           @ZACTN
      C                   MOVE      DBRN          @BRCA
@@ -1080,6 +1082,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 000000000000000000000000

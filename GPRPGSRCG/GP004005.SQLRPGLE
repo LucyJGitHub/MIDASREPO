@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP Permissions By User Report')
@@ -13,10 +13,11 @@
       *                                                               *
       *  Called By: GPC004005 - Midas GP Permissions By User Report   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *     (c) Finastra International Limited 2011                   *
       *                                                               *
-      *  Last Amend No. MD042298           Date 08Nov16               *
-      *  Prev Amend No. MD037908           Date 21Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042298           Date 08Nov16               *
+      *                 MD037908           Date 21Mar16               *
       *                 AR924843           Date 08Mar12               *
       *                 AR892737C          Date 01Feb12               *
       *                 AR878597           Date 13Dec11               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042298 - Reports GP004003 / GP004005 not generated         *
       *  MD037908 - Inhouse permissions missing. (MI_CST_*)           *
       *  AR924843 - Entitlement Type 'Branch' as Booking Branch       *

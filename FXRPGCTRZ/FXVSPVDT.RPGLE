@@ -12,16 +12,18 @@
       *  Function: This module will validate the screen entered       *
       *            split value date                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. CDL099  *CREATE    Date 06Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099  *CREATE    Date 06Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -40,79 +42,79 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
- 
+
       * System values fields
      D PRtCd           S              7A
      D PSysVal01       S             20A   INZ('FXDealSplitValueDays')
@@ -138,7 +140,7 @@
      D WSysVal01       S              2S 0
      D #Diff5          S              5S 0
      D #Diff3          S              3S 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -153,11 +155,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -265,17 +267,17 @@
      C                   PARM                    PCurSet09
      C                   PARM                    PSysVal10
      C                   PARM                    PCurSet10
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     PCurSet01     WSysVal01
       *
       ** Get the difference between DDSDAT and DDVDAT
      C                   EVAL      #Diff5 = ValuDtDN - DDVDATNo
- 
+
      C                   if        #Diff5 < 0
      C                   EVAL      #Diff5 = %abs(#Diff5)
      C                   endIF
- 
+
      C                   MOVE      #Diff5        #Diff3
       *
       ** If difference between DDSDAT and DDVDAT is greater than the
@@ -290,14 +292,14 @@
       *
       ** If no record found in SDSVALPD
      C                   ELSE
- 
+
      C                   IF        PRtCd <> '*NRF'
      C                   MOVE      'N'           OK#SVDT
      C                   ADD       1             Idx
      C                   MOVEL     'PSysVal01'   FldNamXAr(Idx)
      C                   MOVEL     'DLF0047'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If valid, do holiday validation
@@ -328,7 +330,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUTS
@@ -357,9 +359,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

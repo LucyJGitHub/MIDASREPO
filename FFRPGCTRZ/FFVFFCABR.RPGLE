@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF Validate FFCABR CAB Reporting')
@@ -15,18 +15,20 @@
       *             If it is valid the 10A return code will be blank, *
       *             if it is not it will contain 'Error'              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CER001             Date 25Apr05               *
-      *  Prev Amend No. ULX605             Date 05Oct00               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX605             Date 05Oct00               *
       *                 ULX604  *CREATE    Date 05Oct00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER001 - LUX Upgrade to MidasPlus                            *
       *  ULX605 - API Luxembourg - Function FFOTCC                    *
       *  ULX604 - API Luxembourg - Function FFEXTR                    *
@@ -181,4 +183,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

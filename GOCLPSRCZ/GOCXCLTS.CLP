@@ -13,14 +13,16 @@
 /*             DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT   */                 /*CGO001AC*/
 /*             ABLE TO RUN IN TASK SPLIT.                            */                 /*CGO001AC*/
 /*                                                                   */                 /*CGO001AC*/
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CGO001AC           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGO001AC           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CGP014  *CREATE    Date 27Feb09              */
+/*                      CGP014  *CREATE    Date 27Feb09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGO001AC - COB Restructure - GO COB Optmisation Phase 1     */
 /*       CGP014 - Task split of Extract Controller, Customer Loans   */
 /*                                                                   */
@@ -76,7 +78,7 @@
  
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global monitor message */
@@ -252,8 +254,8 @@ LOOP:
                 MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
  
- ENDCL:      CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+ ENDCL:      CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

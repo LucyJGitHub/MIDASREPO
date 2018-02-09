@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate JE Header Batch Total')
@@ -10,7 +10,7 @@
       *  GLVBCTO    - Validate Journal Batch Entry Header             *
       *               Batch Totals                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel.                     *
@@ -18,12 +18,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 247277             Date 24May07               *
+      *  Prev Amend No. 247277             Date 24May07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 237512 (Reopen)    Date 22May06               *
+      *                 237512 (R          Date 22May06               *
       *                 240063             Date 06Jun06               *
       *                 BUG2605            Date 14Sep04               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  247277 - Allow for native JDBC driver as well as toolbox.    *
       *  237512 - Initialise DDFNAM to blank.                         *
       *  240063 - Initialise DDFNAM to blank. Applied fix 237512.     *
@@ -311,4 +313,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

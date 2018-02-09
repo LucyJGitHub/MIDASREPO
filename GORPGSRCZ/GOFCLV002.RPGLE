@@ -1,5 +1,5 @@
      h debug
-     h copyright('(c) Misys International Banking Systems Ltd. 2009')
+     h copyright('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GO Bulk Update of GZFCLTLVPD: write to drvr')    *
@@ -10,15 +10,17 @@
       *  GOFCLV002  - Bulk Update of Global File GZFCLTLVPD           *
       *               Task Split - write records to driver.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CGO001AB           Date 06Aug12               *
-      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGO001AB           Date 06Aug12               *
+      *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CGP015  *CREATE    Date 06Mar09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGO001AB - COB Restructure - GO COB Optimisation Phase 1     *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
       *  CGP015 - Task Split of Bulk update of Facilities listview    *

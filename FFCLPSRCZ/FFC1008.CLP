@@ -7,10 +7,11 @@
 /*                                                                   */
 /*   FFC1008  -  TRANSACTIONS UPDATE PHASE 1 (EOC)                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. LLN022A            Date 03Jun15              */
-/*       Prev Amend No. LLN022             Date 03Jun15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. LLN022A            Date 03Jun15              */
+/*                      LLN022             Date 03Jun15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  LLN022A - BOE Upgrade to MidasPlus - incorporate hook FFC1008MPE */
 /*  LLN022  - BOE Upgrade to MidasPlus.                              */
 /*       CFF007 - Futures and Options Enhancement for Private Banking*/
@@ -62,7 +64,7 @@
              DCL        VAR(&CFF007) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CFF007*/
              DCL        VAR(&LLN022) TYPE(*CHAR) LEN(1) VALUE(' ')                       /*LLN022A*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*/COPY WNCPYSRC,FFC1008INT                                        */ /*S01408*/
@@ -203,5 +205,5 @@ END:    DLTOVR     FILE(FOKEYA)
  
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
         ENDPGM

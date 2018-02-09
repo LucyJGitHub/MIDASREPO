@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Netting groups maintenance')
@@ -15,14 +15,15 @@
       *                                                               *
       *  Called By: mmCnnnn - (program name)                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. CSW037A            Date 02May05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
       *                 BUG6198            Date 04Apr05               *
       *                 CSD025             Date 11Jan05               *
       *                 CSW037             Date 15Dec04               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
       *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
@@ -1772,7 +1774,7 @@
      C                   PARM      *BLANK        P@OP10           20
      C                   PARM      *BLANK        P@VL10          200
       *
-      **  Contact Misys: file SDSVALPD not set up for CGL018
+      **  Contact Finastra: file SDSVALPD not set up for CGL018
       *
      C                   IF        P@RTCD <> *BLANK
      C                   MOVE      'USR9383'     ZAMSID

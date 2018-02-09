@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL - Projections for 5th and 6th day')           *
@@ -13,12 +13,14 @@
       *             Credit indicator from zone file RSACMTL8 to be    *
       *             used by global program GPNOSBGEN and GPNOSBUPD.   *
       *                                                               *
-      *  (C) Copyright Misys International Banking Systems Ltd. 2012  *
+      *  (C) Copyright Finastra International Limited 2012            *
       *                                                               *
-      *  Last Amend No. AR987769 *CREATE   Date 28Jun12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR987769 *CREATE   Date 28Jun12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR987769 - Discrepancies on the Projected Nostro Balances    *
       *             enquiry. Updated projections for 6th & 7th day in *
       *             GPNOSBPD based from RSACMTPD.                     *

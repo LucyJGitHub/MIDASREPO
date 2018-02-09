@@ -11,10 +11,11 @@
 /*              DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT  */                 /*CGL127AM*/
 /*              ABLE TO RUN IN TASK SPLIT.                           */                 /*CGL127AM*/
 /*                                                                   */                 /*CGL127AM*/
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD045372           Date 23May17              */
-/*       Prev Amend No. CGL127AM           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD045372           Date 23May17              */
+/*                      CGL127AM           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -43,6 +44,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD045372 - Execute CGL010 process by a new component.       */
 /*       CGL127AM - COB Restructure - GL COB Optimisation Phase 1    */
 /*       228542 - RGZPFM has changed at R5V3                         */
@@ -76,7 +78,7 @@
              PGM        PARM(&CNAME &CSEQ)                            /*CCB003*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           1982, 1989')
 /************DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)                    CCB003*/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)                 /*S01117*/
@@ -111,10 +113,10 @@
              DCLF       FILE(SDGELRPD)                                /*S01117*/
 /**/
 /* Global monitor message */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
 /************CHGDTAARA  DTAARA(*LDA) VALUE('  ')           /*S01117*/ /*CCB003*/
 /**/
              SNDPGMMSG  MSG('GLC26 - Batch Transaction file split') +
@@ -363,6 +365,6 @@ LOOP:                                                                 /*CCB003*/
              ENDDO                                                    /*CCB003*/
                                                                       /*CCB003*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                       /*CCB003*/
              ENDPGM

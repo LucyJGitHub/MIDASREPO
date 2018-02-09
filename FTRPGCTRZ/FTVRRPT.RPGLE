@@ -14,10 +14,11 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR920077           Date 13Mar15               *
-      *  Prev Amend No. MD025880           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR920077           Date 13Mar15               *
+      *                 MD025880           Date 19Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CRE067             Date 05Oct10               *
       *                 CSD089             Date 07Oct10               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR920077 - Correct :77B: validation. (Child: AR922613)       *
       *  MD025880 - Validation of Regulatory Reporting field on FT    *
       *             Outgoing Payments is incorrect.                   *
@@ -482,4 +484,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -16,19 +16,21 @@
       *  Calls    : GLC2822 start end a Fontis job                    *
       *             GLC2826 retrieve the number of members of a file  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAAA03             Date 22Mar04               *
+      *  Prev Amend No. CAAA03             Date 22Mar04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.01 -----------------------------------------------*
-      *  Prev Amend No. CGL009  *CREATE    Date 20MAY99               *
+      *                 CGL009  *CREATE    Date 20May99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       * CAAA03 - Webfacing Changes. Recompile due to changes in       *
       *          GL2821DF.                                            *
       *  CGL009 - Midas-Fontis IAT/TPP interface                      *
@@ -559,7 +561,7 @@
       *
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  FILE@
 GLIATHPD
 MGTPPSPD

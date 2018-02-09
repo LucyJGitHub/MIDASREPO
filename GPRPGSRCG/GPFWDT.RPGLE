@@ -1,6 +1,6 @@
      H DEBUG
      H DATEDIT(*DMYH)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GP Calc working days forward')
@@ -10,17 +10,19 @@
       *                                                               *
       *  GPFWDT  - Calculate Working Days Forward                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGP001  *CREATE    Date 23May03               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Prev Amend No. CGP001  *CREATE    Date 23May03               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
@@ -111,7 +113,7 @@
       *                                                               *
       *  ZFWDT - Calculate Working Days Forward.                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  LAST AMEND NO. S01434             DATE 20SEP93               *
       *  PREV AMEND NO. E38323             DATE 27JUL92               *
@@ -376,4 +378,4 @@
      **********  Converted ZACCH ends here  ************************
      C*
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

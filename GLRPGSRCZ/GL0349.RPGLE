@@ -10,11 +10,12 @@
      F*       GL0349 - SORTED ACCOUNT POSTINGS START OF DAY LEDGER       *
      F*                AND CLEARED BALANCES UPDATE.                      *
      F*                                                                  *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. CGL120             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL120             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSC042             Date 16Feb09               *
+      *                 CSC042             Date 16Feb09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -35,6 +36,7 @@
      F*                                                                  *
      F*       DESCRIPTION OF CHANGE: ADDITION OF ADDRESS REFS            *
      F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL120 - GL COB Components Task Split                           *
      F*     CSC042  - Performance fix. Only CHAIN ACCNT on change of     *
      F*               account as SACPO is sorted by account.
@@ -183,4 +185,4 @@
      O                       SDCB               258P
      O                       SDLB               266P
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL RWA netting groups audit report')
@@ -16,18 +16,20 @@
       *                                                               *
       *  Called By: mmCnnnn - (program name)                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 240791             Date 06May06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. 240791             Date 06May06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL018  *CREATE    Date 03Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  240791 - Initial coding from R4.1 changed/omitted.           *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL018 - Risk Weighted Assets                                *
@@ -563,4 +565,4 @@
      C                   ENDSR
      d/COPY ZSRSRC,ZALIGNZ2LE
 **  CPY@
-(c) Misys International Banking System Ltd. 2002
+(c) Finastra International Limited 2002

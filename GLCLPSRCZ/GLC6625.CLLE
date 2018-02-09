@@ -7,56 +7,58 @@
 /*                                                                   */
 /*       GLC6625 - Midas GL Stamp Tax copy Account Keys              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
-/*       Last Amend No. MD040278 *Create   Date 18Aug16              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD040278 *CREATE   Date 18Aug16              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD040278 - Stamp Tax A/C Keys (GLC008131) is not task split.*/
 /*                  Complete rework of the component to allow task   */
 /*                  split.                                           */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
-
+ 
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           2016')
-
+ 
 /* Global Monitor Message */
-
+ 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                              CMDLBL(ABNOR))
-
+ 
              SNDPGMMSG  MSG('GLC6625 - GL Stamp Tax copy Account +
                           Keys') TOMSGQ(MRUNQ)
-
-
+ 
+ 
 /* Check if normal run or restart                                  */
-
+ 
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
-
+ 
 /* Check if any problems with COB components file                  */
-
+ 
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
-
+ 
              CHGVAR     VAR(&RESTART) VALUE(&STAT)
-
+ 
 /* Set restart status to 'Y'                                       */
-
+ 
              CHGVAR     VAR(&STAT) VALUE('Y')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
-
+ 
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
-
+ 
 /** AVERAGES */
 /** If postings are not to be generated, do not copy postings for averages to */
 /** GLVCLSPD, else do */
@@ -95,28 +97,28 @@
                           *DROP)
              MONMSG     MSGID(CPF2817) EXEC(CHGJOB SWS(XXXXXX11))
 /**/
-
+ 
 /* Sucessful Completion                                            */
-
+ 
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
              CHGVAR     VAR(&RESTART) VALUE('N')
              GOTO       CMDLBL(END)
              ENDDO
-
+ 
 /* Unsuccessful Completion - Remove Changes                        */
-
+ 
              ELSE       CMD(DO)
              ROLLBACK
              ENDCMTCTL
-
+ 
 /* File out of Balance                                             */
-
+ 
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
              SNDPGMMSG  MSG('DATABASE ERROR - GLC6625') TOMSGQ(MOPERQ)
              ENDDO
-
+ 
 /* Database Error                                                  */
-
+ 
              IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&ERROR)
              SNDPGMMSG  MSGID(MEM0001) MSGF(REUSRMSG) MSGDTA(&ERROR) +
@@ -125,22 +127,22 @@
                           TOMSGQ(MOPERQ)
              ENDDO
              ENDDO
-
+ 
 ABNOR:
              SNDPGMMSG  MSG('Program GLC6625 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
-
+ 
 END:
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
              CHGVAR     VAR(&STAT) VALUE('N')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              ENDDO
-
+ 
              DLTOVR     FILE(*ALL)
-
+ 
              ENDCMTCTL
              MONMSG     MSGID(CPF0000)
              RETURN

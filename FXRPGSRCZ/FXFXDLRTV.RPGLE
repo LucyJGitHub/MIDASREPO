@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Deal Retrieve + Act/Deal Validation')         *
@@ -14,10 +14,11 @@
       *             the database. As it does so, it validates the     *
       *             action code and deal number.                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CDL098             Date 06Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CDL098             Date 06Oct17               *      
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
@@ -80,8 +81,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
-      *  CDL098 - Cancelled Deal Numbers                              *
+      *  CDL098 - Cancelled Deal Numbers                              *      
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -237,17 +239,17 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** 24X7 status data area                                                                CSD015
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSD015
                                                                                               CSD015
@@ -256,43 +258,43 @@
                                                                                               CSD015
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
       *
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** Switchable Features File
- 
+
       ** External DS for Compliance Watch Transaction Details                                 CSD015
      D SDWLCC        E DS                  EXTNAME(SDWLCCPD)                                  CSD015
                                                                                               CSD015
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D ZMUSER          DS            17
      D  ZUSER                  1     10                                                       CDL010
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D DealFilFmt    E DS                  EXTNAME(FXDEALPP)
       ** Deal in File Format
- 
+
      D/COPY WNCPYSRC,FXFXDLID01
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** Variables introduced by CAS004                                                       CAS004
      D PRTCD           S              7                                                       CAS004
      D POPTN           S              7                                                       CAS004
@@ -340,7 +342,7 @@
      D CSC054          S              1A                                                    AR996631
       *                                                                                     AR996631
      D/COPY WNCPYSRC,FXH00047
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -539,7 +541,7 @@
       * IF NOT INSERT, UPDATE MIDAS DEAL NUMBER
       *
      C                   MOVEL     FHDN38        DDDLNO
- 
+
      C                   END
       *
       * IF FRONT OFFICE ASSOCIATED TRANSACTION ID IS NOT BLANK
@@ -1749,4 +1751,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

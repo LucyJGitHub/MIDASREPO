@@ -13,18 +13,20 @@
       *             non-null Write Date and stores their information  *
       *             in a temporary file for use by GOEXPRREPT.        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CSD086             Date 18Mar10               *
+      *  Prev Amend No. CSD086             Date 18Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BG4467             Date 05Oct04               *
+      *                 BG4467             Date 05Oct04               *
       *                 CGP008 *CREATE     Date 17Sep04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD086 - Overridable Errors                                  *
       *  BG4467 - Some fields on report GOEXRP1 contain old data.     *
       *  CGP008 - Exception Reporting. Extract today's Exceptions.    *
@@ -271,4 +273,4 @@
      C/EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

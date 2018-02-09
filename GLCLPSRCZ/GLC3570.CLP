@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       GLC3570 -  ACCOUNTS BALANCES EXTRACT                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CGL127AA           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL127AA           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01413 *CREATE     Date 13Apr93              */
+/*                      S01413 *C *CREATE  Date 13Apr93              */
 /*                      xnnnnn             DATE nnxxxnn              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL127AA - COB Restructure - GL COB Optimisation Phase 1    */
 /*       S01413 - Retail 3 incorporation                             */
 /*                                                                   */
@@ -31,7 +33,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&FRF) TYPE(*CHAR) LEN(7) VALUE(SDBANK)
@@ -95,5 +97,5 @@ EXIT3:
 /**/
 ENDCL:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

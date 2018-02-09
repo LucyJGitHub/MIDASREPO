@@ -9,10 +9,11 @@
      F*                                                               *
      F*  GL3320 - ACCOUNT BALANCES EXTRACT                            *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD042411           Date 18Nov16               *
-      *  Prev Amend No. MD033583           Date 03Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042411           Date 18Nov16               *
+      *                 MD033583           Date 03Jun15               *
       *                 253181             Date 26Apr16               *
       *                 MD031642           Date 15Dec14               *
       *                 CRE095             Date 25Apr14               *
@@ -83,6 +84,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042411 - GLC33202 component failure. BRCA/CCY/ACOD         *
       *             totals can be more than 15 digits                 *
       *  MD033583 - Performance - ABEXAG - Reuse deleted records      *
@@ -2633,7 +2635,7 @@
      O                                           39 'ACCOUNTS WRITTEN'                     CGL142
      O                       TNSAW         1     49                                        CGL142
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

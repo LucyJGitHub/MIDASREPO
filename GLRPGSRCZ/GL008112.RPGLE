@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Stamp Tax A/c Keys & Generated Ents Rept')    *
@@ -9,14 +9,16 @@
      F*                                                               *
      F*  GL008112 - Account Keys & Generated Entries Report           *
      F*                                                               *
-     F*  (c) Misys International Banking Systems Ltd 2010             *
+     F*  (c) Finastra International Limited 2010                      *
      F*                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. AR864045           Date 20Nov11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR864045           Date 20Nov11               *
       *                 CER049  *CREATE    Date 06Dec10               *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR864045 - Component GLC008140 00001 failed                  *
      F*  CER049 - Stamp Tax                                           *
@@ -375,4 +377,4 @@
       *
      C                   ENDSR
 ** CPY@   **      OBJECT COPYRIGHT
-(C) Copyright Misys International Banking Systems Ltd. 2010
+(C) Copyright Finastra International Limited 2010

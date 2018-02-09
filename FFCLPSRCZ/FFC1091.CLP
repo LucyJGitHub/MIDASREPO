@@ -7,20 +7,22 @@
 /*                                                                   */
 /*   FFC1091  -  REMOVE JOURNAL CHANGES FOR MULTI-MEMBER FILES (EOC) */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG7286            Date 23May05              */
-/*       Prev Amend No. CSC020             Date 31Mar04              */
+/*       Prev Amend No. BUG7286            Date 23May05              */
+/*                      CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                  E21147             DATE 20FEB90                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG7286 - Error in SCRTVJEVT command                        */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
 /*   E21147  - REPLACE QCAEXEC CALL WITH QCMDEXC FOR AS400           */
@@ -57,7 +59,7 @@
              DCL        &ENDRC TYPE(*CHAR) LEN(10)
              DCLF       FFMMFD
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        &STRRCV  TYPE(*CHAR)  LEN(10)                                     /*CSC020*/
              DCL        VAR(&STRSEQ) TYPE(*DEC) LEN(10 0)                                /*BUG7286*/
@@ -178,5 +180,5 @@ LOOP:        CALL       PGM(QCMDEXC) PARM(&EXEC 560)                  /*E21147*/
              CHGJOB    SWS(XXXXXX1X)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 END:         ENDPGM

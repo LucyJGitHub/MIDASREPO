@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*XBI *  OVRDBF FILE(GBEGINJRNF) TOFILE(UPOBJDTPD)                    *
 /*STD *  RPGBASEBND                                                   *
@@ -12,13 +12,15 @@
       *  GP000001 - Remove records from GBEGINJRNF fir objects not to *
       *             be journaled                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. BUG27134 *CREATE   Date 01Oct08               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27134 *CREATE   Date 01Oct08               *
+      *                 xxxxxx             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27134- Rewrite of GPBEGINJRN.                             *
       *                                                               *
       *****************************************************************

@@ -7,14 +7,15 @@
 /*                                                                   */
 /*   FFC1006  -  CLOSING TRADES AND EXERCISES GENERATION AT MATURITY */
 /*                                                           (EOC)   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*   Last Amend No. 190552             DATE 29May01                  */
+/*       Prev Amend No. 190552             Date 29May01              */
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*   Pevt Amend No. 137719             DATE 30Jan01                  */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   190552 - Delete overrides for file PRICSD and PRICSA            */
 /*            for processing inside FF0355. (Bit missed by 137719)   */
 /*   137719 - Add proper overrides for file PRICSD and PRICSA        */
@@ -51,7 +53,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*S01117*/
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
@@ -264,5 +266,5 @@ END:         DLTOVR     FILE(MATINC)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

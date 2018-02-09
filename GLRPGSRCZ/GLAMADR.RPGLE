@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBI *  OVRDBF FILE(ACCNTLXX) TOFILE(ACCBR) SHARE(*NO)               *
 /*STD *  RPGBASEMOD                                                   *
@@ -12,10 +12,11 @@
       *                                                               *
       *  Function:  This module retrieves a record from the file      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044546           Date 20Mar17               *
-      *  Prev Amend No. 222427             Date 05Dec16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD044546           Date 20Mar17               *
+      *                 222427             Date 05Dec16               *
       *                 MD039546           Date 26Jan17               *
       *                 LLN022A            Date 03Jun15               *
       *                 CRE101             Date 27Aug14               *
@@ -65,14 +66,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD044546 - Enable the ABC flag when CAP205 is on.            *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
       *           value is 0.00.  Data structure which includes       *
       *           DDSTFQ should be included in the parameter list on  *
       *           call to module GLAMAD4DT.                           *
-      *           Partially Applied for MD042713.                     *      
+      *           Partially Applied for MD042713.                     *
       *  MD039546 - Ensure that the buffer take the correct timestamp.*
-      *             Applied for MD-39522.                             *      
+      *             Applied for MD-39522.                             *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  CRE101 - Interim Interest Statements on a Frequency          *
@@ -184,7 +186,7 @@
      D AccnInPena1   E DS                  EXTNAME(GLAMPP1PD) PREFIX(P1:2)                    CRE015
      D AccnInPena2   E DS                  EXTNAME(GLAMPP2PD) PREFIX(P2:2)                    CRE015
      D/COPY OFCPYSRCZ,CRE101_017                                                              CRE101
-
+ 
       **--------------------------------------------------------------------------------------------
       ** FILE FORMATS
       **--------------------------------------------------------------------------------------------
@@ -1589,7 +1591,7 @@
      C/COPY WNCPYSRC,GLH00643
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 ** ##OX1
 OVRDBF FILE(ACCNTL1) TOFILE(ACCNTL0) SHARE(*NO)
 ** ##OX2

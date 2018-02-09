@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas OF Forecast Available Balance')                  *
@@ -9,14 +9,16 @@
       *                                                               *
       *  GOGLFOAVTD - Bulk Update of Global File GZGLFOAVTD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD024791           Date 05Feb14               *
-      *  Prev Amend No. MD024037           Date 18Dec13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024791           Date 05Feb14               *
+      *                 MD024037           Date 18Dec13               *
       *                 CGL145A  *CREATE   Date 08Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024791 - GOC0100 sequence 00205 & 00206 failed in COB      *
       *  MD024037 - Facility availability Enquiry did not display a   *
       *             future datead charge to CL Balance (Recompile)    *

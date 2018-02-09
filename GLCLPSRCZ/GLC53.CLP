@@ -7,8 +7,9 @@
 /*                                                                  */
 /*       GLC53 - GL Balances in orig.ccy, consol, indiv a/c level   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,11 +17,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E42846                  DATE  16JUL92       */
-/*       PREV AMEND NO. S01194                  DATE  16/03/89      */
+/*       Prev Amend No. E42846             Date 16Jul92              */
+/*                      S01194             Date 16/03/89             */
 /*                      S01117                  DATE  02/03/89      */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       E42846 - PRODUCE TEXT ON GL0720                            */
 /*       S01194 - NEW STANDING DATA                                 */
 /*       S01117 - MULTIBRANCHING                                    */
@@ -37,7 +39,7 @@
 /*           Offsets for file indicators in the GLSTAT data area     */
 /**/                                                                  /*S01117*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RUNTYPE) TYPE(*CHAR) LEN(1)    /*E42846*/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01117*/
@@ -85,5 +87,5 @@
 /**********  ENDDO                                                */  /*S01117*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

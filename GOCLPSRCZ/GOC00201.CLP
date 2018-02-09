@@ -8,14 +8,16 @@
 /*       GOC00201 - Preliminary processing for GOC0020 series        */
 /*                  of components                                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CGP017             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGP017             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CGP014  *CREATE    Date 27Feb09              */
+/*                      CGP014  *CREATE    Date 27Feb09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGP017 - Global Layer - GOC0100 Task Split                  */
 /*       CGP014 - Task split of Extract Controller, Customer Loans   */
 /*                                                                   */
@@ -25,7 +27,7 @@
  
              DCL        VAR(&FILNAM) TYPE(*CHAR) LEN(10)                                  /*CGP017*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global monitor */
@@ -56,6 +58,6 @@
  
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

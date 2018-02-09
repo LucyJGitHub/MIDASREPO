@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Gen Code amended for TS Deletions for REIACD')
@@ -9,30 +9,32 @@
       *                                                               *
       *  GO011302 - Bulk Update of Global File GZREIACD               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CGP017  *CREATE    Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGP017  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *                                                               *
       *****************************************************************
- 
+
      FACNTDLL0  IF   E           K DISK    INFSR(*PSSR)
      FREIAC     IF   E           K DISK
      F                                     IGNORE(REIACAF    )
      F                                     IGNORE(REIACZF    )
      F                                     INFSR(*PSSR)
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
      D Z_REIAC       E DS                  EXTNAME(REIACD)
      D G_REIAC       E DS                  EXTNAME(REIACD)
      D                                     PREFIX(G_)
      D GPSBLOGPD     E DS                  EXTNAME(GOSBLOGPD)
- 
+
 B    D SYNLOGREC       DS
 B    D  WBSCNTW                1      9S 0
 B    D  WBSCNTD               10     18S 0
@@ -45,25 +47,25 @@ B
      D  BUF_MM                 4      5
      D  BUF_C2                 6      6
      D  BUF_SS                 7      8
- 
+
      D                 DS
      D  ALP_TIME               1      6
      D  ALP_HH                 1      2
      D  ALP_MM                 3      4
      D  ALP_SS                 5      6
- 
+
      D                 DS
      D  TIME_STR               1      6S 0
      D  STR_HH                 1      2S 0
      D  STR_MM                 3      4S 0
      D  STR_SS                 5      6S 0
- 
+
      D                 DS
      D  TIME_END               1      6S 0
      D  END_HH                 1      2S 0
      D  END_MM                 3      4S 0
      D  END_SS                 5      6S 0
- 
+
 B    D BR              S              3    DIM(999)
 B    D SL              S             27    DIM(999)
      D RUNBEFORE       S              1A
@@ -84,13 +86,13 @@ B    D SL              S             27    DIM(999)
      D TBSCNTD         S              9S 0
      D TBSCNTU         S              9S 0
      D TOTROW          S             13  0
- 
+
       ** Read through the file of deleted accounts. Where zonal record
       ** not found and global record exists, then perform the update.
- 
+
      C                   READ      ACNTDLL0
      C                   DOW       NOT %EOF(ACNTDLL0)
- 
+
      C     ACCNTK        SETLL     REIAC
      C                   IF        NOT %EQUAL(REIAC)
      C
@@ -99,7 +101,7 @@ B    D SL              S             27    DIM(999)
      C+ CNUM = :CNUM and CCY = :CCY and ACOD = :ACOD
      C+ and ACSQ = :ACSQ and BRCA = :BRCA
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ get diagnostics :TotRow = db2_number_rows
      C/END-EXEC
@@ -109,12 +111,12 @@ B    D SL              S             27    DIM(999)
      C                   EXSR      UPDSYTO
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      ACNTDLL0
      C                   ENDDO
- 
+
      C                   EXSR      WRTSYLG
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -139,7 +141,7 @@ B    D SL              S             27    DIM(999)
       *                                                               *
       *****************************************************************
      C     UPDSYTO       BEGSR
- 
+
 B    C                   Z-ADD     1             IDX
 B    C     G_BRCA        LOOKUP    BR(IDX)                                99
 B    C                   IF        *IN99 = *OFF
@@ -154,9 +156,9 @@ B
 B    C                   ADD       1             WBSCNTD
      C                   EVAL      BSCNTW = WBSCNTW
      C                   ADD       1             TBSCNTD
- 
+
 B    C                   MOVEL     SYNLOGREC     SL(IDX)
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -166,9 +168,9 @@ B    C                   MOVEL     SYNLOGREC     SL(IDX)
       *                                                               *
       *****************************************************************
      C     WRTSYLG       BEGSR
- 
+
       ** Write overall totals
- 
+
      C                   MOVEL     '***'         BSBRCA
      C                   Z-ADD     TBSCNTW       WBSCNTW
      C                   Z-ADD     TBSCNTD       WBSCNTD
@@ -176,39 +178,39 @@ B    C                   MOVEL     SYNLOGREC     SL(IDX)
      C                   EVAL      BSCNTW = WBSCNTW
      C                   EVAL      BSCNTD = WBSCNTD
      C                   EVAL      BSCNTU = WBSCNTU
- 
+
      C                   EVAL      BSDATE = PSRUNDATEA
      C                   EVAL      BSJOB  = PSJobName
      C                   EVAL      BSUSER = PSUser
      C                   EVAL      BSJOBN = PSJOBNOA
- 
+
      C                   EXSR      RECTIME
      C                   EVAL      TIME_END = NUM_TIME
      C                   EVAL      BSETIM   = BUF_TIME
- 
+
       ** Calculate total number of seconds
- 
+
      C                   EXSR      CALTOSC
- 
+
      C/EXEC SQL
      C+ insert into GPSBLOGPD
      C+ values
      C+ :GPSBLOGPD
      C/END-EXEC
- 
+
 B     ** Write branch totals
- 
+
 B    C                   Z-ADD     1             IDX
 B    C     BR(IDX)       DOWNE     '***'
 B    C                   MOVEL     BR(IDX)       BSBRCA
 B    C                   MOVEL     SL(IDX)       SYNLOGREC
- 
+
      C/EXEC SQL
      C+ insert into GPSBLOGPD
      C+ values
      C+ :GPSBLOGPD
      C/END-EXEC
- 
+
 B    C                   ADD       1             IDX
 B    C                   ENDDO
 B
@@ -221,32 +223,32 @@ B
       *                                                               *
       *****************************************************************
      C     CALTOSC       BEGSR
- 
+
      C     TIME_END      IFLT      TIME_STR
      C                   ADD       240000        TIME_END
      C                   ENDIF
- 
+
      C     END_HH        SUB       STR_HH        TOT_HH
      C     END_MM        SUB       STR_MM        TOT_MM
      C     END_SS        SUB       STR_SS        TOT_SS
- 
+
      C     STR_MM        IFGT      END_MM
      C                   SUB       1             TOT_HH
      C                   ADD       60            TOT_MM
      C                   ENDIF
- 
+
      C     STR_SS        IFGT      END_SS
      C                   SUB       1             TOT_MM
      C                   ADD       60            TOT_SS
      C                   ENDIF
- 
+
      C                   MULT      3600          TOT_HH
      C                   MULT      60            TOT_MM
- 
+
      C                   Z-ADD     TOT_HH        BSTOS
      C                   ADD       TOT_MM        BSTOS
      C                   ADD       TOT_SS        BSTOS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -273,49 +275,49 @@ B
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I_ZONE
- 
+
      C                   EVAL      I#ERMS = *BLANK
      C                   CLEAR                   Z_REIAC
      C                   CLEAR                   G_REIAC
- 
+
       ** Delete existing log records
- 
+
      C                   EVAL      BSFILE = 'GZREIACD  '
      C                   EVAL      BSZONE = I_ZONE
- 
+
      C/EXEC SQL
      C+ delete from GPSBLOGPD where
      C+ BSFILE = :BSFILE and BSZONE = :BSZONE
      C/END-EXEC
- 
+
      C                   MOVEL     PSRunDate     PSRUNDATEA
      C                   MOVEL     PSJobNo       PSJOBNOA
      C                   EXSR      RECTIME
      C                   EVAL      TIME_STR = NUM_TIME
      C                   EVAL      BSSTIM   = BUF_TIME
- 
+
 B     ** Initialize branches
- 
+
 B    C                   MOVE      '***'         BR
 B
       ** Initialize overall totals
- 
+
      C                   Z-ADD     *ZERO         TBSCNTW
      C                   Z-ADD     *ZERO         TBSCNTD
      C                   Z-ADD     *ZERO         TBSCNTU
- 
+
       * Key lists
- 
+
      C     ACCNTK        KLIST
      C                   KFLD                    CNUM
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
      C                   KFLD                    BRCA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -325,16 +327,16 @@ B
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        RUNBEFORE = *BLANKS
      C                   EVAL      RUNBEFORE = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************

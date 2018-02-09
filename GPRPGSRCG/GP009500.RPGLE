@@ -12,17 +12,19 @@
       *            system values for users to select for maintenance/ *
       *            enquiry.                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK022             Date 29Jul05               *
-      *  Prev Amend No. CGP001 *CREATE     Date 18Mar04               *
+      *  Prev Amend No. CPK022             Date 29Jul05               *
+      *                 CGP001 *C *CREATE  Date 18Mar04               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK022 - Should not use zone /COPYs.                         *
       *  CGP001 - Global Processing                                   *
       *                                                               *
@@ -991,6 +993,6 @@
      CSR                 ENDSR
       *================================================================
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 **CTDATA PGM@
 GPC009520

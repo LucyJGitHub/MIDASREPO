@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       FTC0635 - PAY/RECEIVE COMPONENT (END OF DAY)                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC020             Date 31Mar04              */
+/*       Prev Amend No. CSC020             Date 31Mar04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. 138077             Date 07Jun01              */
+/*                      138077             Date 07Jun01              */
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
 /*       138077 - Journal the new PF/MGOEXTPD to resolve the problem */
 /*                with several customers having the same SWIFT ID.   */
@@ -43,7 +45,7 @@
   START:      PGM   PARM(&CNAM &CSEQ)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
             DCL     VAR(&DATA)  TYPE(*CHAR) LEN(50)
             DCL     VAR(&RSEQ)  TYPE(*CHAR) LEN(5)
@@ -534,7 +536,7 @@ END:         ENDCMTCTL
 /*/COPY WNCPYSRC,FTC0635005                                          */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*                                                                                        /*CSC020*/
 /* Write current journal sequence number to file SCJSEQPD, using command SCWRTJREG.       /*CSC020*/
 /*                                                                                        /*CSC020*/

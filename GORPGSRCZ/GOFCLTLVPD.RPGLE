@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GO Bulk Update of Global File GZFCLTLVPD')       *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GOFCLTLVPD - Bulk Update of Global File GZFCLTLVPD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD025682           Date 19Aug14               *
-      *  Prev Amend No. MD022705           Date 04Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025682           Date 19Aug14               *
+      *                 MD022705           Date 04Oct13               *
       *                 CLE134             Date 01Aug12               *
       *                 CGO001AB           Date 06Aug12               *
       *                 AR812802           Date 01Sep11               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025682 - Set CGZONE to A8ZONE                              *
       *  MD022705 - Duplicate records in GZFCLTLVPD                   *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *

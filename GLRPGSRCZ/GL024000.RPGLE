@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GL Withholding Tax Calculation for Dual WHT')    *
@@ -19,13 +19,15 @@
       *  Called By: RE3360, RE3664, DL0280, DL5350, AOOUMMU0          *
       *             MMLDNIROD                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD034383           Date 12May15               *
-      *  Prev Amend No. CGL165  *CREATE    Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034383           Date 12May15               *
+      *                 CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034383 - Amendment to Tax Calculation Program              *
       *  CGL165 - Dual WIthholding Tax                                *
       *                                                               *
@@ -164,7 +166,7 @@ E2   C                   ENDIF
 E1   C                   ENDIF
       *
       * If Secondary Tax Code defined defined for the account, retreive tax rate
-
+ 
 B1   C     P_TXC2        IFNE      *BLANKS
      C     P_TXC2        CHAIN     SDWTRCL0
 B2   C                   IF        %FOUND(SDWTRCL0)
@@ -466,7 +468,7 @@ E1   C                   ENDIF
      C                   Parm      *Blanks       P@Vl09          200
      C                   Parm      *Blanks       P@Op10           20
      C                   Parm      *Blanks       P@Vl10          200
-
+ 
       **  If the Return Code is blank, set Default Priorities
      C                   If        P@Rtcd = *Blanks
      C                   Eval      RndDown0 = P@Vl01

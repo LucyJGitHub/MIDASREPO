@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas GP Global Customer Details Trigger Program')     *
@@ -10,10 +10,11 @@
       *  GPGPCUSTPD - On-Line Update of Global File GZGLCUSL          *
       *             - Trigger program for GPCUSTPD                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR645170           Date 07Nov12               *
-      *  Prev Amend No. CSF011             Date 12Sep11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR645170           Date 07Nov12               *
+      *                 CSF011             Date 12Sep11               *
       *                 CRE073             Date 06Dec10               *
       *                 CER055             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR645170 - GL: Accounts is not present on file ACCNTAB but   *
       *             present in the Java Listview. Add commit to file  *
       *             so that GPAMADPD will be properly rollback when   *

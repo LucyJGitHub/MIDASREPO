@@ -16,15 +16,17 @@
       *                                                               *
       *  Called By: GLC002200  - Start Shadow Post Interface          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. AR1096687A         Date 04Apr17               *
-      *  Prev Amend No. AR1069768          Date 04Apr17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1096687          Date 04Apr17               *
+      *                 AR1069768          Date 04Apr17               *
       *                 AR1038758          Date 04Apr17               *
       *                 CGL027  *CREATE    Date 04Apr17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1096687A - All shadow postings CGL027 movements are near   *
       *  AR1069768 - Write correct error info to SHDOUTTD             *
       *  AR1038758 - Shadow Interface Posting not updating Balance.   *
@@ -767,7 +769,7 @@
      C/SPACE 5
      C/COPY CGCPYSRC,SRERRCLE
 **CTDATA ##CPY
-(c) Copyright Misys International Banking Systems Ltd. 2017
+(c) Copyright Finastra International Limited 2017
 **CTDATA ##ERR
 ABC fails because of minimum balance requirement
 ABC fails but is within overdraft tolerance

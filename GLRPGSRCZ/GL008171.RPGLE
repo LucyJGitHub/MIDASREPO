@@ -8,12 +8,14 @@
       *                                                               *
       *  GL008171 - Stamp Tax Movements Screen 2                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd 2010             *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CER049  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER049 - Stamp Tax                                           *
       *                                                               *
       *****************************************************************
@@ -750,6 +752,6 @@
       * End of /COPY SRERRC                                           *
       *****************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd. 2010
+(C) Copyright Finastra International Limited 2010
 ** Command Array
 OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

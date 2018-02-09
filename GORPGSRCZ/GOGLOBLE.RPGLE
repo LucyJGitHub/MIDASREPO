@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*: OVRDBF FILE(CLOANCLXX) TOFILE(CLOAN) SHARE(*NO)              *
 /*XBIB*: OVRDBF FILE(FCLTYFMXX) TOFILE(FCLTY) SHARE(*NO)              *
@@ -12,11 +12,12 @@
       *                                                               *
       *  GOGLOBLE - Global Updates - LE                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER073B            Date 25Sep17               *
-      *  Prev Amend No. CER073A            Date 05Sep17               *
-      *                 CER073             Date 10Jul17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER073B            Date 25Sep17               *
+      *                 CER073A            Date 05Sep17               *
+      *                 CER073             Date 10Jul17               *      
       *                 CLE068             Date 02Aug16               *
       *                 CLE164             Date 18Aug14               *
       *                 MD021528           Date 01Aug13               *
@@ -41,9 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER073B - CER073 Change Control 2 (Recompile)                *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
-      *  CER073 - AnaCredit Reporting                                 *
+      *  CER073 - AnaCredit Reporting                                 *      
       *  CLE068 - Loan Event Modeller                                 *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD021528 - Missing facility after authorization (Recompile)  *
@@ -564,7 +566,7 @@
       /COPY GOCPYSRC,GOPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 ** ##OV1
 OVRDBF FILE(CLOANCLXX) TOFILE(CLOAN) SHARE(*NO)
 ** ##OV2

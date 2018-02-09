@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL List of Reporting Group / Account Report')    *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GL000663 - Midas GL List of Reporting Group / Account Report *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD043149           Date 15Dec16               *
-      *  Prev Amend No. MD043135           Date 15Dec16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD043149           Date 15Dec16               *
+      *                 MD043135           Date 15Dec16               *
       *                 MD043079           Date 08Dec16               *
       *                 MD043064           Date 08Dec16               *
       *                 MD043057           Date 07Dec16               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD043149 - When the same account holder is void two times,   *
       *             it appears twice also in the generated Draft Void *
       *  MD043135 - Action code must be '1' error                     *

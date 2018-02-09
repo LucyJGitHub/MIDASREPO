@@ -7,21 +7,23 @@
 /*                                                                   */
 /*   FFC1009  -  TRANSACTIONS UPDATE PHASE 2 (EOC)                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CFF007             Date 13Feb01              */
+/*       Prev Amend No. CFF007             Date 13Feb01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             Date 09Jan96              */
+/*                      S01408             Date 09Jan96              */
 /*                      S01408             Date 10Oct95              */
 /*                                     DATE 19APR90                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CFF007 - Futures and Options Enhancement for Private        */
 /*                Banking.                                           */
 /*   S01408 - Apply Core Hooks FFC1009003                            */
@@ -54,7 +56,7 @@
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CFF007*/
              DCL        VAR(&CFF007) TYPE(*CHAR) LEN(1)                                   /*CFF007*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*/COPY WNCPYSRC,FFC1009INT                                        */ /*S01408*/
@@ -176,5 +178,5 @@ END:    DLTOVR     FILE(FOKEYA)
 /**/                                                                  /*S01408*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
         ENDPGM

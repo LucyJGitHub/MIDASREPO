@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*OVR *: OVRDBF FILE(ACCNTLXX) TOFILE(ACCBR) SHARE(*NO)               *
 /*STD *  RPGBASEMOD                                                   *
@@ -14,11 +14,12 @@
       *             One display a list of accounts for selection,     *
       *             the other picks off the selection made.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG26486           Date 19Oct09               *
-      *  Prev Amend No. 227459A(reopen)    Date 25May05               *
+      *  Prev Amend No. BUG26486           Date 19Oct09               *
+      *                 227459A(R          Date 25May05               *
       *                 227459             Date 15Jun04               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG26486 - Coding Standard (Recompile)                       *
       *  227459A- (reopen) Amend program to bypass reading all other  *
       *           accounts with branches that the user is not         *
@@ -1110,6 +1112,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** NUM
 0123456789

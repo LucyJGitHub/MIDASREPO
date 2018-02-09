@@ -8,15 +8,17 @@
 /*       GOCAC002  - Midas GO Global Update Accounts -               */
 /*                   (Task Split Server)                             */
 /*                                                                   */
-/*       (c) Misys Banking Systems Ltd. 2009                         */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. AR1097467B         Date 17Apr13              */
-/*       Prev Amend No. CGO001AA           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467          Date 17Apr13              */
+/*                      CGO001AA           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CGP013  *Create    Date 18Feb09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1097467B - Expected 15% COB run optimization not met      */
 /*       CGO001AA - COB Restructure - GO COB Optimisation Phase 1    */
 /*       CGP013 - Task split component COB Global Update Accounts    */
@@ -43,7 +45,7 @@
                           VALUE('GOACNTSRV')
              DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global monitor message */
@@ -174,7 +176,7 @@
              CHGJOB     SWS(XXXXXX11)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  
              ENDPGM

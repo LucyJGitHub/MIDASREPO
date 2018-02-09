@@ -7,11 +7,12 @@
 /*                                                                  */
 /*       GLC86 - Balance Sheet Profit & Loss Report (Rewritten)     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CCB016             Date  31May07            */
+/*                      CCB016             Date 31May07              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                       BG18886           Date 29May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure    */
 /*       CCB016 - CoB Performance Enhancements                      */
 /*                Optimize OPNQRYF command.                         */
@@ -67,7 +69,7 @@
 /*/COPY WNCPYSRC,GLC86004                                            */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
@@ -163,7 +165,7 @@
                           DATA AREA EQUIVALENT'))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
              CHGJOB     SWS(XXXXXX00)
 /*/COPY WNCPYSRC,GLC86010                                            */

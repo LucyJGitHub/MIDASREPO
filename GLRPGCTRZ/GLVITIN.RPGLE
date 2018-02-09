@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate Interest Taxable Flag')              *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GLVITIN    - Validate Interest Taxable Flag                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD030865           Date 23Jun15               *
-      *  Prev Amend No. CER069             Date 03Jul14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030865           Date 23Jun15               *
+      *                 CER069             Date 03Jul14               *
       *                 AR762349A          Date 08Jun11               *
       *                 AR762349           Date 03Jun11               *
       *                 CER059             Date 19Jul10               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD030865 - LDNI/Retail Transaction does not allow Tax        *
       *             Indicator = 'A' when Customer is not in Country   *
       *             of Tax Table                                      *
@@ -413,4 +415,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

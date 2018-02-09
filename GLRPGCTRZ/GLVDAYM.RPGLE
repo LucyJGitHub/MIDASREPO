@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL Validate Day of the Month')
@@ -9,16 +9,18 @@
       *                                                               *
       *  GLVDAYM - Validate Rollover Day of the Month                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG27605           Date 04May10               *
-      *  Prev Amend No. BUG27468           Date 23Apr10               *
+      *  Prev Amend No. BUG27605           Date 04May10               *
+      *                 BUG27468           Date 23Apr10               *
       *                 BUG27484           Date 21Apr10               *
       *                 CRE015  *CREATE    Date 18Dec09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27605 - Error for max number of months                    *
       *  BUG27468 - Serious midas error when using no. of months      *
       *  BUG27484 - Error validation for period and penalty details   *

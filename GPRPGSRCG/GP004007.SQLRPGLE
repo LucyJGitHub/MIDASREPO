@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP Users Security Report Selection')
@@ -11,15 +11,17 @@
       *                                                               *
       *  Function: Produce Midas GP Users Security Report Selection   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *     (c) Finastra International Limited 2011                   *
       *                                                               *
-      *  Last Amend No. AR892737B          Date 16Jan11               *
-      *  Prev Amend No. AR892737A          Date 16Jan11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR892737B          Date 16Jan11               *
+      *                 AR892737A          Date 16Jan11               *
       *                 AR878597           Date 13Dec11               *
       *                 CBF005  *CREATE    Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR892737B - Permissions by User Report does not allow lower  *
       *              case characters on user profile                  *
       *  AR892737A - Permissions by User Report does not allow lower  *

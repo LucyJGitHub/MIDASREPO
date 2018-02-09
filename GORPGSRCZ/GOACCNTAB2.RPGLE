@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Bulk Global Update of Accounts (deletions) tsk-spt')   *
@@ -15,10 +15,11 @@
       *  !! changes in GOACCNTAB and GOACCNTAB1.                      *
       *---------------------------------------------------------------*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR854619           Date 06Jan12               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR854619           Date 06Jan12               *
+      *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CGP013             Date 20Feb09               *
       *                 BUG15716           Date 18Feb08               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR854619 - In Main list the new fields are blank and user    *
       *             input contractual spread (Recompile)              *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *

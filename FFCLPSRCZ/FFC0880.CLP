@@ -7,18 +7,19 @@
 /*                                                                   */
 /*   FFC0880  -  INSTRUMENT HOLDINGS BY BROKER REPORT (EOC IN COB)   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*   Last Amend No. CCB009             Date 01Jun00                  */
+/*       Prev Amend No. CCB009             Date 01Jun00              */
 /* Midas DBA 3.00 Patch D -------------------------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*   Prev Amend No. 163444             Date 09Aug99                  */
+/*                      163444             Date 09Aug99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                  082461             Date 08Mar95                  */
 /*                  079666             DATE 01DEC94                  */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  CCB009 - Journal files throughout close of business              */
 /*  163444 - Y2K sort order and file allocation.                     */
 /*  082461 - If journalling fails because pgm cannot allocate file,  */
@@ -47,7 +49,7 @@
              DCL        VAR(&FFEOC) TYPE(*CHAR) LEN(62)
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(1)                 /*082461*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                      CCB009*/
 /* Declare variable CCB009 - flag for switchable feature                CCB009*/
@@ -209,5 +211,5 @@ ABNOR:                                                                /*079666*/
                                                                       /*079666*/
 ENDPGM:                                                               /*079666*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('On-Line Synch of EQ data for Consumer Banking Ctrl')
@@ -13,16 +13,18 @@
       *             with Consumer Banking                             *
       *  Called By: GOC0104 - On-line synchronisation of Equation data*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14101           Date 19Jun07               *
-      *  Prev Amend No. BUG13624           Date 23Mar07               *
+      *  Prev Amend No. BUG14101           Date 19Jun07               *
+      *                 BUG13624           Date 23Mar07               *
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG14101 - Background job EQ_ONL_SYN is generated errors     *
       *             and looping                                       *
       *  BUG13624 - Background job EQ_ONL_SYN is not running          *
@@ -221,7 +223,7 @@
       * *PSSR - Program exception error routine
       /COPY GOCPYSRC,GOPSSR
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006
 **  #_RCV1
 RCVJRNE JRN(!
 **  #_RCV2

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*S*D****RPGBASEBNC****************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -9,20 +9,22 @@
       *                                                               *
       *  GPSDBRCHX0 - On-Line Update of Global File GZSDBRCHX0        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL052             Date 02Dec15               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL052             Date 02Dec15               *
+      *                 CGP017             Date 06Aug12               *
       *                 BUG10215 *REBUILD  Date 27Sep06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL052 - Amend Washout Processing                            *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *
       *                                                               *
       *****************************************************************
-
+ 
 O    FGZSDBRX0L1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZSDBRCHX0O  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -31,9 +33,9 @@ O    F                                     USROPN
 O
 O    D Z_SDBRCHX0    E DS                  EXTNAME(GZSDBRCHX0)
 O    D G_SDBRCHX0    E DS                  EXTNAME(GZSDBRCHX0) PREFIX(G_)
-
+ 
       * ENTRY PARAMETERS
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -78,9 +80,9 @@ O    C                   ELSE
 O    C                   WRITE     W_SDBRCHF0
 O    C                   ENDIF
 O    C                   ENDIF
-
+ 
      C                   RETURN
-
+ 
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -99,7 +101,7 @@ O
 O    C     K_GZSDBRX0L1  KLIST
 O    C                   KFLD                    A8ZONE
 O    C                   KFLD                    A8BRCD
-
+ 
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -107,15 +109,15 @@ O    C                   KFLD                    A8BRCD
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
-
+ 
      C     W#RUN         IFEQ      *BLANKS
-
+ 
      C                   MOVE      'Y'           W#RUN             1
-
+ 
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
-
+ 
      C                   DUMP
       *
       * If no identified cause of error
@@ -130,10 +132,10 @@ O    C                   KFLD                    A8BRCD
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
-
+ 
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       *********************************************************************

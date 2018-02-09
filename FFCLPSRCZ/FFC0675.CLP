@@ -7,18 +7,19 @@
 /*                                                                   */
 /*   FFC0675  -  GENERATE ACCRUAL ACCOUNTING ENTRIES FOR ANWD (COB)  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL045             Date 14Feb06              */
+/*       Prev Amend No. CDL045             Date 14Feb06              */
 /* Midas Plus 1.2 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 Patch D -------------------------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*       Prev Amend No. 163444             DATE 03AUG99              */
+/*                      163444             Date 03Aug99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      109562             DATE 01NOV96              */
 /*                      E41892             DATE 25MAR93              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   CDL045 - Copy out Account Keys file to Extract library          */
 /*            as specified on the System Value parameter             */
 /*            'AccountKeysSavedLib'                                  */
@@ -53,7 +55,7 @@
              DCL        VAR(&SEQ) TYPE(*DEC) LEN(5 0)                 /*S01189*/
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)              /*E41892*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                                           /*CDL045*/
              DCL        VAR(&FOKEY) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
@@ -274,5 +276,5 @@ END:         DLTOVR     FILE(MGEFFHH)
              CHGJOB     SWS(X0XXXXXX)                                /*E41892*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

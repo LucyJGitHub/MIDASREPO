@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate CCT credit detail screen 1')
@@ -12,11 +12,12 @@
       *  Function: This Program Validates screen 1 of the CCT Credit  *
       *            transaction maintenance function (FTM1021DP).      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG24243           Date 16Jun09               *
-      *  Prev Amend No. CSW209             Date 01Apr09               *
+      *  Prev Amend No. BUG24243           Date 16Jun09               *
+      *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
       *                 CSW207             Date 08Jun07               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG24243 - CCTD ended in database error when Sender charge's *
       *           currency is invalid                                 *
       *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
@@ -762,4 +764,4 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

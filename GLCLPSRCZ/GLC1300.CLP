@@ -6,8 +6,9 @@
 /*                                                                   */
 /*       GLC1300 - S.W.I.F.T. STATEMENT PRODUCTION                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -15,11 +16,11 @@
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*       Last Amend No. CDL008             Date 02May00             */
+/*       Prev Amend No. CDL008             Date 02May00              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK009             DATE 10SEP99              */
+/*                      CPK009             Date 10Sep99              */
 /*                      CEU013             DATE 03APR98              */
 /*                      101867             DATE 10MAR97              */
 /*                      S01408             DATE 31JUL96              */
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) */
 /*       CPK009 - Replace reference to SWPOSX1 with SWPOSAPD.        */
 /*       CEU013 - EMU Account Postings Narrative                     */
@@ -61,7 +63,7 @@
 /*/COPY WNCPYSRC,GLC1300008                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
@@ -286,6 +288,6 @@
 /*/COPY WNCPYSRC,GLC1300END                                          */
                                                                       /*E40242*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM
  

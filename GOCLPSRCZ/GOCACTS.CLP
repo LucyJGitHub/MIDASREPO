@@ -13,15 +13,17 @@
 /*             DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT   */                 /*CGO001AA*/
 /*             ABLE TO RUN IN TASK SPLIT.                            */                 /*CGO001AA*/
 /*                                                                   */                 /*CGO001AA*/
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. AR1097467B         Date 17Apr13              */
-/*       Prev Amend No. CGO001AA           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467          Date 17Apr13              */
+/*                      CGO001AA           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CGP013  *CREATE    Date 20Feb09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1097467B - Expected 15% COB run optimization not met      */
 /*       CGO001AA - COB Restructure - GO COB Optimisation Phase 1    */
 /*       CGP013 - Task Split for Accounts Global Update              */
@@ -65,7 +67,7 @@
  
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
              DCL        VAR(&STRRRN) TYPE(*DEC) LEN(10 0)                             /*AR1097467B*/
              DCL        VAR(&ENDRRN) TYPE(*DEC) LEN(10 0)                             /*AR1097467B*/
@@ -269,8 +271,8 @@
                 MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
  
- ENDCL:      CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+ ENDCL:      CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

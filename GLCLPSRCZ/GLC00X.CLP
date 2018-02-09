@@ -7,8 +7,9 @@
 /*                                                                  */
 /*     GLC00X  -  NOSTRO FILE SET UP                                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,12 +17,13 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     LAST AMEND NO. S01408         DATE 21FEB96                   */
-/*     PREV AMEND NO. 066422         DATE 03MAR94                   */
+/*     PREV AMEND NO. S01408         DATE 21FEB96                   */
+/*                    066422         DATE 03MAR94                   */
 /*                    036796         DATE 10JAN94                   */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     MD046248 - Finastra Rebranding                               */
 /*     S01408  -  ADDITION OF CORE HOOK GLC00X001.                  */
 /*     066422  -  REMOVE CALL TO GL0580. RSACMTPD DOES NOT NEED TO  */
 /*                BE SET UP IN A NEW SYSTEM.                        */
@@ -38,7 +40,7 @@
              PGM                                                      /*S01117*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3) VALUE(ALL)
@@ -117,5 +119,5 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

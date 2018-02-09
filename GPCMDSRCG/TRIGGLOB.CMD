@@ -9,17 +9,19 @@
 /*                                                                   */
 /*       TRIGGLOB - Triggers Maintenance                             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGP001  *Create    Date 17Jun04              */
+/*       Prev Amend No. CGP001  *CREATE    Date 17Jun04              */
 /*                      xxxxxx             Date                      */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGP001 - Command to invoke Trigger Maintenance programs.    */
 /*                                                                   */
 /*********************************************************************/

@@ -9,10 +9,11 @@
      F*                                                               *
      F*    GL4116 - Daily Journal Summary                             *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CGL127AQ           Date 06Aug12               *
-      *  Prev Amend No. CGL120             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL127AQ           Date 06Aug12               *
+      *                 CGL120             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL127AQ - COB Restructure - GL COB Optimisation Phase 1     *
       *  CGL120 - GL COB Components Task Split                        *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -821,4 +823,4 @@
      C*
      C********************************************************************
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

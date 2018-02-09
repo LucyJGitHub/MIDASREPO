@@ -7,22 +7,24 @@
 /*                                                                  */
 /*   FFCJRN2X  -  INITIAL JOURNAL PROCESSING FOR SUB-COMPONENT      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*   Last Amend No. BG18886            Date 28May08                 */
+/*       Prev Amend No. BG18886            Date 28May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*   Prev Amend No. CCB009             Date 01Jun00                 */
+/*                      CCB009             Date 01Jun00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                  079666             Date 01Dec94                 */
 /*                  E21147             Date 20Feb90                 */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*  BG18886 - Amend non-standard codes.                             */
 /*  CCB009  -  Journal files throughout close of business           */
 /*  079666  -  Add global monitor message processing                */
@@ -71,7 +73,7 @@
              DCL        VAR(&FFSTAT) TYPE(*CHAR) LEN(256)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                      CCB009*/
 /* Declare variable CCB009 - flag for switchable feature                CCB009*/
@@ -296,5 +298,5 @@ ABNOR:                                                                /*079666*/
                                                                       /*079666*/
 END:                                                                  /*079666*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -8,17 +8,18 @@
 /*       FTC0210    ACCOUNT KEYS GENERATION                          */
 /*                  =======================                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Last Amend No. CFT009             Date 16May01              */
+/*       Prev Amend No. CFT009             Date 16May01              */
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*       Prev Amend No. CFT014             Date 25May00              */
+/*                      CFT014             Date 25May00              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CFT006             Date 20Dec99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -33,6 +34,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CFT009 - Delete and recreate XOTPAYXPD and XINPAYXPD if     */
 /*                the layouts do not match OTPAYXPD and INPAYXPD.    */
 /*       CFT014 - Straight-through Processing Phase 2 MT103          */
@@ -61,7 +63,7 @@
             DCL     VAR(&PRE)  TYPE(*CHAR) LEN(2)
             DCL     VAR(&CMT_A) TYPE(*CHAR) LEN(1)                    /*S01435*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,FTC0210006                                          */
 /**/
@@ -372,7 +374,7 @@
                             TOMSGQ(MRUNQ MOPERQ)
              ENDDO
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /* Reclaim Resources to remove FT0005 from stack */                   /*056031*/
 /* */                                                                 /*056031*/

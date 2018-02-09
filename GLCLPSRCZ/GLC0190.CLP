@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       GLC0190 - Transfer External GL Postings to Interface File   */
 /*                                                                   */
-/*       (C) Copyright Misys International Banking Systems 2003      */
+/*       (C) Copyright Finastra International Limited 2003           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL028  *CREATE   Date  22Sep03              */
+/*       Prev Amend No. CGL028  *CREATE    Date 22Sep03              */
 /*                                                                   */
 /*------------------------------------------------------------------ */
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL028 - GL Postings Interface                              */
 /*                                                                   */
 /*********************************************************************/
              PGM
  
              DCL       VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                         MISYS INTERNATIONAL BANKING SYSTEMS LTD. +
+                         FINASTRA INTERNATIONAL LIMITED +
                          2003')
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -208,6 +210,6 @@ ENDPGM:
              DLTOVR     FILE(*ALL)
              MONMSG     MSGID(CPF0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

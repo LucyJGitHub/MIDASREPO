@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Generated Code')                                       *
@@ -9,13 +9,15 @@
       *                                                               *
       *  GPGLACRUTD - On-Line Update of Global File GZGLACRUTD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD024513           Date 23Jan14               *
-      *  Prev Amend No. CGL135A   *Create   Date 10Jul13              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024513           Date 23Jan14               *
+      *                 CGL135A *CREATE    Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024513 - Add Description field (30A) to the Accounting     *
       *             Rules. (Recompile)                                *
       *  CGL135A - Accounting Rules Process                           *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FF validate customer')
@@ -19,7 +19,7 @@
       *        other value signifies broker validation.               *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -27,12 +27,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034379           Date 12May15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034379           Date 12May15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 BG9185             Date 08Nov05               *
       *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034379 - Serious Midas Error occurs in exchange traded     *
       *             transactions when complete button is pressed.     *
       *             Check Instrument currency or Market and Instrument*
@@ -55,18 +57,18 @@
       *  CAP004 - Conversion of Midas inputs to APIs.                 *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Midas FF Charges/Commissions Details
      FCHGCM     IF   E           K DISK
                                                                                               CFF007
       ** Midas FF Customer/broker instrument defaults                                         CFF007
      FDEFLT     IF   E           K DISK                                                       CFF007
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -78,19 +80,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -98,26 +100,26 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -126,71 +128,71 @@
      D RNG             S              5S 0 DIM(9) INZ(*Zeros)                                 CFF007
                                                                                               CFF007
      D AMT             S             13S 0 DIM(9) INZ(*Zeros)                                 CFF007
-
+ 
      D FFVSETL       E DS                  EXTNAME(FFVSETLPD)
       ** The valid settlement (and charges and commissions) details
-
+ 
      D FFEBSETPD     E DS                  EXTNAME(FFEBSETPD)
       * Broker settlement OK flags
-
+ 
      D FFECSETPD     E DS                  EXTNAME(FFECSETPD)
       * Customer settlement OK flags
-
+ 
      D FFCSETPD      E DS                  EXTNAME(FFCSETPD)
       * Customer settlement format definition
-
+ 
       * Customer/Broker commission code (standard and same day)
      D  SBCM                   1      4
-
+ 
       * Customer/Broker commission amount
      D  SCCMA1                 5      5
      D  SCCMA2                 6     18
-
+ 
       ** External data structure for currency details.
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
-
+ 
       **Second DS for access programs, long data structure.
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Flag which indicates whether the validation processing is
       ** for the customer or broker (1A)
      D XBRKI           S              1A
-
+ 
       ** Charge Code flag
      D OKXCHC          S              1A
-
+ 
       ** Charge Amount flag
      D OKXCHA          S              1A
-
+ 
       ** Standard Charge Code
      D OKXCMC          S              1A
-
+ 
       ** Same Day Charge Code
      D OKXCMS          S              1A
-
+ 
       ** Same Day Charge Code
      D OKXCMA          S              1A
-
+ 
       ** Return flag from ZAlign
      D ZAlignOK        S              1A
-
+ 
       ** Alpha field to be validated or edited by ZAlign
      D ZFIELD          S             16A
-
+ 
       ** Number of decimal places for validation or editing
      D Decimals        S              1P 0
-
+ 
       ** Number of integers for validation
      D Integers        S              2P 0
-
+ 
       ** Commission code - key for reading LF/CHGCM
      D KCGCM           S              2S 0
-
+ 
       ** Instrument currency - key for reading LF/CHGCM
      D KCCY            S              3A
                                                                                               CFF007
@@ -205,16 +207,16 @@
                                                                                               CFF007
       ** Number of Contracts                                                                  CFF007
      D PNUCO           S              5P 0                                                    CFF007
-
+ 
       ** Work field for commission amount
      D WXCMA           S                   LIKE(CCMA)
-
+ 
       ** Work field for charges amount
      D WXCHA           S                   LIKE(CCHA)
-
+ 
       ** Work field for initial margin.
      D WXMAR           S             13  0
-
+ 
       ** Numeric version of ZFIELD.
      D ZFldAmt         S             13  0
                                                                                               CFF007
@@ -223,7 +225,7 @@
                                                                                               CFF007
       ** Private Banking Customer Indicator                                                   CFF007
      D PPBFLG          S              1A                                                      CFF007
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -231,21 +233,21 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
      C     Start         TAG
-
+ 
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Reset error fields
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line resets the fields related to error
       ** handling: ReturnCode, ErrorFound, FldNamXArr, MsgIDXArr,
@@ -267,204 +269,204 @@
      C     CFF007        IFEQ      'Y'                                                        CFF007
      C                   EXSR      SRCMPAT                                                    CFF007
      C                   ENDIF                                                                CFF007
-
+ 
       ** Determine instrument currency decimal places
-
+ 
      C                   EXSR      DetInCcyDP
-
+ 
      C                   Z-ADD     0             ZFldAmt
      C                   Z-ADD     0             WXCMA
      C                   Z-ADD     0             WXCHA
      C                   Z-ADD     0             WXMAR
-
+ 
       **   1. Commission Code: Standard
       **      ~~~~~~~~~~~~~~~~~~~~~~~~~
      C     SCCMC         IFNE      '  '
      C                   TESTN                   SCCMC                75
-
+ 
       **   If Not Numeric
      C     *IN75         IFEQ      '0'
      C                   MOVE      'N'           OKXCMC
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0438'
      C                   EVAL      OKCCMC = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0431'
      C                   EVAL      OKBCMC = 'N'
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
      C                   MOVE      SCCMC         KCGCM
-
+ 
      C     KCHGCM        CHAIN     CHGCM                              71
      C  N71RECI          COMP      'D'                                7171
-
+ 
       **   - invalid
-
+ 
      C     *IN71         IFEQ      '1'
      C                   MOVE      'N'           OKXCMC
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0438'
      C                   EVAL      OKCCMC = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0431'
      C                   EVAL      OKBCMC = 'N'
      C                   ENDIF
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
       **   2. Commission Code: Same day
       **      ~~~~~~~~~~~~~~~~~~~~~~~~~
      C     SCCMS         IFNE      '  '
-
+ 
      C                   TESTN                   SCCMS                75
       **   If Not Numeric
      C     *IN75         IFEQ      '0'
      C                   MOVE      'N'           OKXCMS
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMS'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0439'
      C                   EVAL      OKCCMS = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMS'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0432'
      C                   EVAL      OKBCMS = 'N'
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
      C                   MOVE      SCCMS         KCGCM
-
+ 
      C     KCHGCM        CHAIN     CHGCM                              71
      C  N71RECI          COMP      'D'                                7171
-
+ 
       **   - invalid
-
+ 
      C     *IN71         IFEQ      '1'
      C                   MOVE      'N'           OKXCMS
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMS'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0439'
      C                   EVAL      OKCCMS = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMS'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0432'
      C                   EVAL      OKBCMS = 'N'
      C                   ENDIF
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
       **   3. Commission Code - cross-check
       **      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      C     OKXCMC        IFEQ      'Y'
      C     OKXCMS        ANDEQ     'Y'
-
+ 
       **   - if one entered, the other must also be entered
      C                   IF        SCCMC <> *blanks AND SCCMS = *blanks
      C                   MOVE      'N'           OKXCMC
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0438'
      C                   EVAL      OKCCMC = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0431'
      C                   EVAL      OKBCMC = 'N'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        SCCMS <> *blanks AND SCCMC = *blanks
      C                   MOVE      'N'           OKXCMS
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0439'
      C                   EVAL      OKCCMS = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0432'
      C                   EVAL      OKBCMS = 'N'
      C                   ENDIF
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
       **   4. Commission Amount
       **      ~~~~~~~~~~~~~~~~~
      C     SCCMA         IFNE      *BLANKS
-
+ 
      C     SCCMA1        IFEQ      'A'
-
+ 
      C     SCCMA2        IFNE      *BLANKS
      C                   MOVE      'N'           OKXCMA
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0440'
      C                   EVAL      OKCCMA = 'N'
-
+ 
      C                   ELSE
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0433'
      C                   EVAL      OKBCMA = 'N'
-
+ 
      C                   ENDIF
-
+ 
      C                   END
-
+ 
      C                   ELSE
-
+ 
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      SCCMA         ZFIELD
      C                   CALLB     'ZALIGN'
@@ -477,15 +479,15 @@
      C                   MOVE      'N'           OKXCMA
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0440'
      C                   EVAL      OKCCMA = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0433'
      C                   EVAL      OKBCMA = 'N'
@@ -494,58 +496,58 @@
      C                   ELSE
      C                   MOVE      ZFIELD        ZFldAmt
      C                   EVAL      WXCMA = ZFldAmt
-
+ 
      C     ZFldAmt       IFEQ      0
      C                   MOVE      *BLANK        SCCMA
      C                   ELSE
-
+ 
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    Decimals
      C                   MOVE      ZFIELD        SCCMA
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
       **   5. Commission Codes + Amount
       **      ~~~~~~~~~~~~~~~~~~~~~~~~~
      C     OKXCMC        IFEQ      'Y'
      C     OKXCMS        ANDEQ     'Y'
      C     OKXCMA        ANDEQ     'Y'
-
+ 
      C     SCCMA1        IFEQ      'A'
-
+ 
       **   - codes must be entered
-
+ 
      C     SBCM          IFEQ      *BLANK
      C                   MOVE      'N'           OKXCMC
      C                   MOVE      'N'           OKXCMS
      C                   MOVE      'N'           OKXCMA
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0441'
      C                   EVAL      OKCCMC = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0434'
      C                   EVAL      OKBCMC = 'N'
      C                   ENDIF
      C                   END
-
+ 
      C                   ELSE
-
+ 
       **   - codes and amount cannot both be entered
-
+ 
      C     SBCM          IFNE      *BLANK
      C     SCCMA         ANDNE     *BLANK
      C     PPBFLG        ANDNE     'Y'                                                        CFF007
@@ -557,15 +559,15 @@
      C                   MOVE      'N'           OKXCMA
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0441'
      C                   EVAL      OKCCMC = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCMC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0434'
      C                   EVAL      OKBCMC = 'N'
@@ -646,73 +648,73 @@
      C                   ENDIF                                                                CFF007
                                                                                               CFF007
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
       **   6. Charge Code
       **      ~~~~~~~~~~~
      C     SCCHC         IFNE      '  '
-
+ 
      C                   TESTN                   SCCHC                75
-
+ 
       **   If Not Numeric
-
+ 
      C     *IN75         IFEQ      '0'
      C                   MOVE      'N'           OKXCHC
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCHC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0442'
      C                   EVAL      OKCCHC = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCHC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0435'
      C                   EVAL      OKBCHC = 'N'
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
      C                   MOVE      SCCHC         KCGCM
-
+ 
      C     KCHGCM        CHAIN     CHGCM                              71
      C  N71RECI          COMP      'D'                                7171
-
+ 
       **   - invalid
-
+ 
      C     *IN71         IFEQ      '1'
      C                   MOVE      'N'           OKXCHC
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCHC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0442'
      C                   EVAL      OKCCHC = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCHC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0435'
      C                   EVAL      OKBCHC = 'N'
      C                   ENDIF
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
       **   7. Charge Amount
       **      ~~~~~~~~~~~~~
      C     SCCHA         IFNE      *BLANKS
-
+ 
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      SCCHA         ZFIELD
      C                   CALLB     'ZALIGN'
@@ -720,22 +722,22 @@
      C                   PARM                    ZFIELD
      C                   PARM                    Decimals
      C                   PARM                    Integers
-
+ 
       **   - invalid
-
+ 
      C     ZAlignOK      IFEQ      'N'
      C                   MOVE      'N'           OKXCHA
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCHA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0443'
      C                   EVAL      OKCCHA = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCHA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0436'
      C                   EVAL      OKBCHA = 'N'
@@ -744,28 +746,28 @@
      C                   ELSE
      C                   MOVE      ZFIELD        ZFldAmt
      C                   EVAL      WXCHA = ZFldAmt
-
+ 
      C     ZFldAmt       IFEQ      0
      C                   MOVE      *BLANK        SCCHA
      C                   ELSE
-
+ 
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    Decimals
      C                   MOVE      ZFIELD        SCCHA
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
       **   8. Charge Code + Amount
       **      ~~~~~~~~~~~~~~~~~~~~
      C     OKXCHC        IFEQ      'Y'
      C     OKXCHA        ANDEQ     'Y'
-
+ 
       **   - code and amount cannot both be entered
-
+ 
      C     SCCHC         IFNE      *BLANK
      C     SCCHA         ANDNE     *BLANK
      C     PPBFLG        ANDNE     'Y'                                                        CFF007
@@ -776,15 +778,15 @@
      C                   MOVE      'N'           OKXCHA
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
       **   Broker or Customer error processing
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCCHC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0444'
      C                   EVAL      OKCCHC = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBCHC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0437'
      C                   EVAL      OKBCHC = 'N'
@@ -857,84 +859,84 @@
      C                   ENDIF                                                                CFF007
      C                   ENDIF                                                                CFF007
      C                   END
-
+ 
      C                   END
       **   9. Validate Broker/Customer Initial Margin
       **      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      C                   Z-ADD     0             WXMAR
      C                   MOVEL     *BLANK        ZFIELD
      C                   MOVE      SCMAR         ZFIELD
-
+ 
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZAlignOK
      C                   PARM                    ZFIELD
      C                   PARM                    Decimals
      C                   PARM                    Integers
-
+ 
       **   - invalid
-
+ 
      C     ZAlignOk      IFEQ      'N'
-
+ 
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
-
+ 
      C     XBRKI         IFEQ      'N'
      C                   EVAL      FldNamXArr(XIdx) = 'SCMAR'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0533'
      C                   EVAL      OKCMAR = 'N'
      C                   ELSE
-
+ 
      C                   EVAL      FldNamXArr(XIdx) = 'SBMAR'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0534'
      C                   EVAL      OKBMAR = 'N'
      C                   ENDIF
-
+ 
       **   - valid
-
+ 
      C                   ELSE
      C                   MOVE      ZFIELD        WXMAR
-
+ 
       **    - if Margin is input as zero, store it as -1
       **    - if Margin is input as blank, store it as zero
-
+ 
      C     SCMAR         IFNE      *BLANK
-
+ 
      C     WXMAR         IFEQ      *ZERO
      C                   Z-SUB     1             WXMAR
      C                   END
-
+ 
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    Decimals
-
+ 
      C                   MOVE      ZFIELD        SCMAR
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
       ** If there have been no errors, set up the valid settlements
       ** (charges and commisions) file details for customer or broker, as
       ** appropriate.
      C                   IF        XIdx = 0
      C                   IF        XBRKI = 'N'
-
+ 
      C                   EXSR      SetupVCust
-
+ 
      C                   ELSE
-
+ 
      C                   EXSR      SetupVBrok
-
+ 
      C                   ENDIF
      C                   ENDIF
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
       **--------------------------------------------------------------------------------------------
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -942,9 +944,9 @@
       * DetInCcyDP - Determine instrument currency decimal places     *
       *                                                               *
       *****************************************************************
-
+ 
      C     DetInCcyDP    BEGSR
-
+ 
       *
       ** Check Instrument currency if not blank before checking of                          MD034379
       ** currency code                                                                      MD034379
@@ -955,10 +957,10 @@
      C                   PARM      KCCY          @AJCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
      C                   ENDIF                                                              MD034379
-
+ 
      C                   Z-ADD     A6NBDP        Decimals
      C     13            SUB       A6NBDP        Integers
-
+ 
      C                   ENDSR
       *****************************************************************                       CFF007
       /EJECT                                                                                  CFF007
@@ -1112,7 +1114,7 @@
      C                   ENDIF                                                                CFF007
                                                                                               CFF007
      C                   ENDSR                                                                CFF007
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1121,54 +1123,54 @@
       *              commissions                                      *
       *                                                               *
       *****************************************************************
-
+ 
      C     SetupVCust    BEGSR
-
+ 
       ** Opening contracts standard
      C                   Z-ADD     0             OCSC
-
+ 
       ** Opening contracts same day
      C                   Z-ADD     0             OCDC
-
+ 
       ** Closing contracts standard
      C                   Z-ADD     0             CCSC
-
+ 
       ** Closing contracts same day
      C                   Z-ADD     0             CCDC
-
+ 
       ** Standard contracts posted
      C                   Z-ADD     0             CPSC
-
+ 
       ** Same day contracts posted
      C                   Z-ADD     0             CPDC
-
+ 
       ** Charges posted
      C                   Z-ADD     0             CCHP
-
+ 
       ** Commissions posted
      C                   Z-ADD     0             CCMP
-
+ 
       ** Customer commission code
      C                   MOVE      SCCMC         CCMC
-
+ 
       ** Customer commission code - same day
      C                   MOVE      SCCMS         CCMS
-
+ 
       ** Customer commission amount
      C                   Z-ADD     WXCMA         CCMA
-
+ 
       ** Customer charges code
      C                   MOVE      SCCHC         CCHC
-
+ 
       ** Customer charges amount
      C                   Z-ADD     WXCHA         CCHA
-
+ 
       ** Customer margin
      C                   Z-ADD     WXMAR         CMAR
-
+ 
      C                   ENDSR
-
-
+ 
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1177,53 +1179,53 @@
       *              commissions                                      *
       *                                                               *
       *****************************************************************
-
+ 
      C     SetupVBrok    BEGSR
-
+ 
       ** Opening contracts standard
      C                   Z-ADD     0             OCSB
-
+ 
       ** Opening contracts same day
      C                   Z-ADD     0             OCDB
-
+ 
       ** Closing contracts standard
      C                   Z-ADD     0             CCSB
-
+ 
       ** Closing contracts same day
      C                   Z-ADD     0             CCDB
-
+ 
       ** Standard contracts posted
      C                   Z-ADD     0             CPSB
-
+ 
       ** Same day contracts posted
      C                   Z-ADD     0             CPDB
-
+ 
       ** Charges posted
      C                   Z-ADD     0             BCHP
-
+ 
       ** Commissions posted
      C                   Z-ADD     0             BCMP
-
+ 
       ** Broker commission code
      C                   MOVE      SCCMC         BCMC
-
+ 
       ** Broker commission code - same day
      C                   MOVE      SCCMS         BCMS
-
+ 
       ** Broker commission amount
      C                   Z-ADD     WXCMA         BCMA
-
+ 
       ** Broker charges code
      C                   MOVE      SCCHC         BCHC
-
+ 
       ** Broker charges amount
      C                   Z-ADD     WXCHA         BCHA
-
+ 
       ** Broker margin
      C                   Z-ADD     WXMAR         BMAR
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1235,11 +1237,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *inzsr        BEGSR
-
+ 
      C     *entry        PLIST
-
+ 
       ** Parameters returned to caller
       ** -----------------------------
       ** Return code (10A, returned to caller)
@@ -1256,7 +1258,7 @@
      C                   PARM                    FFECSETPD
       ** The valid settlements file format (data structure, from FFVSETLPD)
      C                   PARM                    FFVSETL
-
+ 
       ** Parameters received from caller
       ** -------------------------------
       ** Customer settlement format definition, used generically
@@ -1283,24 +1285,24 @@
      C                   PARM                    CFF007            1                          CFF007
       ** Private Banking Customer Inidcator                                                   CFF007
      C                   PARM                    PPBFLG                                       CFF007
-
-
+ 
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
-
+ 
      **  Key List
      **  ~~~ ~~~~
-
+ 
       **   LF/CHGCM - keylist for chaining to logical file CHGCM
      C     KCHGCM        KLIST
      C                   KFLD                    KCCY
      C                   KFLD                    KCGCM
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1313,4 +1315,4 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

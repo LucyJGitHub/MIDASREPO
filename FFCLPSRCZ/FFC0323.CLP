@@ -7,19 +7,20 @@
 /*                                                                   */
 /*   FFC0323  -  CUSTOMER TRADING STATEMENTS ( INTERIM )             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*   Last Amend No. MD046248           Date 27Oct17                  */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. 205448             Date 02May02              */
-/*       Prev Amend No. CCG015             Date 09Aug01              */
+/*       PREV Amend No. 205448             Date 02May02              */
+/*                      CCG015             Date 09Aug01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 Patch D -------------------------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*       Prev Amend No. 163444             Date 29Sep99              */
+/*                      163444             Date 29Sep99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01522             Date 28Mar95              */
 /*                  E27708             DATE 27AUG91                  */
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*   MD046248 - Finastra Rebranding                                  */
 /*   205448  - UDC module must be on for Correspondence Manager      */
 /*   CCG015  - Correspondence Manager Phase 1                        */
 /*   163444  -  Y2K Sort Order and file allocation.                  */
@@ -79,7 +81,7 @@
              DCL        VAR(&MSG)        TYPE(*CHAR) LEN(50)          /*S01522*/
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(8)                                   /*CCG015*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
@@ -231,5 +233,5 @@ ENDLOOP:                                                              /*163444*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*FO0046*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

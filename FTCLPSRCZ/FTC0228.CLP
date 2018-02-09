@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       FTC0228   - Unauthorised RFT by Booking Branch              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. BUG25160A *CREATE  Date 18Aug09              */
+/*       Prev Amend No. BUG25160A *CREATE  Date 18Aug09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG25160A - Apply fix 229655                                */
 /*       229655 - Separate RFT Unauthorised report from FTC0230      */
 /*                                                                   */
@@ -26,7 +28,7 @@
         DCL   VAR(&RLEV)  TYPE(*CHAR)   LEN(1)
         DCL   VAR(&RENT)  TYPE(*CHAR)   LEN(3)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
         DCL        VAR(&PTYP) TYPE(*CHAR) LEN(2)
         DCL        VAR(&STRT) TYPE(*DEC) LEN(5 0)
@@ -66,7 +68,7 @@
                    TOPGMQ(*EXT) TOMSGQ(MOPERQ)
         ENDDO
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 ENDPGM:
         ENDPGM

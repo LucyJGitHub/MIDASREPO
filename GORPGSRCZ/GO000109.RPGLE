@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GO Download data control - Lending')             *
@@ -9,10 +9,11 @@
       *                                                               *
       *  GO000109 - Global Processing data dowload, Lending           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD020167           Date 23Apr13               *
-      *  Prev Amend No. AR1089839          Date 19Feb13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *                 AR1089839          Date 19Feb13               *
       *                 CCB020A            Date 06Aug12               *
       *                 CCB023             Date 06Aug12               *
       *                 AR318462           Date 01Aug12               *
@@ -31,6 +32,7 @@
       *                 CGP002  *CREATE    Date 02Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  AR1089839 - COBOP and 2.1 source clashes                     *
       *  CCB020A - COB Restructure - Secondary COB Infrastructure     *

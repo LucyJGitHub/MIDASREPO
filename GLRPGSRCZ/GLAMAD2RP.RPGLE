@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas GL AMAD - Repair - LU Window')
@@ -12,17 +12,19 @@
       *  Function:  This function allows invalid REACX1PD details to  *
       *             be 'repaired' and applied to the Midas database   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CER001  *CREATE    Date 25Apr05               *
+      *                 CER001  *CREATE    Date 25Apr05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER001 - LUX Upgrade to MidasPlus                            *
       *                                                               *
@@ -46,60 +48,60 @@
       *  *IN99  -  Chain indicator                                    *
       *                                                               *
       *****************************************************************
-
+ 
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error
       ** and warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       **
       **   Named constants
       **   ===============
       **
-
+ 
       **
       **   Arrays and Data Structures
       **   ==========================
       **
-
+ 
      D DataLux         DS          1024
      D  L1FLD1                 1      6  0
      D  L1CNUM                 1      6
@@ -113,62 +115,62 @@
      D  L1FOTR                45     84
      D  L1TMST                85    110Z
      D  L1DEXT               111    111
-
+ 
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** External data structures for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** External data structures for Midas Modules
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
-
+ 
       ** DS for Dealing Details
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
-
+ 
       ** New Account in File Format (#6LXWE)
      D NwDlFilFmt    E DS                  EXTNAME(GLVAMLX1PD)
-
+ 
       ** New Account in Screen Format (LnLX)
      D NwDlScnFmt    E DS                  EXTNAME(GLAMRXPD)
-
+ 
       ** New Account in Screen Format (Reset purposes)
      D PrvDlScnFmt   E DS                  EXTNAME(GLAMRXPD) PREFIX(P)
-
+ 
       ** Error indicators (OKL#LX)
      D OkFlags       E DS                  EXTNAME(GLEAMLX1PD)
-
+ 
      D @EI             S              1    DIM(5)
-
+ 
       ** Data passed from caller program
      D/COPY QWINDSRC,GLAMADDTA
-
+ 
       **
       **   Declared variables
       **   ==================
       **
-
+ 
       ** Fields for getting the starting field number from file
       ** (parmaters to ZAGETFLDNO, plus the offset to the requested
       ** field).
-
+ 
      D Format          S             10A   INZ('GLACCNPD')
      D Field           S             10A   INZ('L6LXCOBR')
      D FieldNo         S              5P 0
      D FldOffset       S              5P 0
-
+ 
       ** "Standard" variables
-
+ 
      D WFIRST          S              1
      D WWERR           S              1
-
+ 
       ** "Standard" *entry parameters
-
+ 
      D ACTN            S              1
      D W0RTN           S              7
-
+ 
       ** "Standard" modules parameters
-
+ 
      D @EINKJ          S              1
      D @EINKE          S              1
      D @EIN20          S              1
@@ -176,18 +178,18 @@
      D @INKL           S              1
      D @INKE           S              1
      D @INKJ           S              1
-
+ 
      D Idx             S              3P 0 INZ(0)
      D WIdx            S              3P 0 INZ(0)
      D L1FOTR20        S             20
      D E               S              3  0
      D F               S              3  0
      D WWFLDL6         S              2
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    ACTN
@@ -195,7 +197,7 @@
      C                   PARM                    W0RTN
      C                   PARM                    NwDlScnFmt
      C                   PARM                    NwDlFilFmt
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -410,7 +412,7 @@
      C                   PARM      '*BLANKS'     @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
      C                   IF        @RtCd <> *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     '001'         DBASE
@@ -424,7 +426,7 @@
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDMMOD        PARM      SDMMOD        DSFDY
-
+ 
      C                   IF        @RtCd <> *BLANKS
      C                   MOVEL     'SDMMODPD'    DBFILE
      C                   MOVEL     '002'         DBASE
@@ -532,4 +534,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

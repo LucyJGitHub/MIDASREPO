@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO Override Profiles')
@@ -12,14 +12,16 @@
       *  Function:  This program retrieves the records from file      *
       *             GPOVPRL0                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG27504           Date 21Apr10               *
-      *  Prev Amend No. CSD086  *CREATE    Date 17Mar10               *
+      *  Prev Amend No. BUG27504           Date 21Apr10               *
+      *                 CSD086  *CREATE    Date 17Mar10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27504 - Prevent GP000025S from locking LDA. Also pass     *
       *             the zone as parameters for GP000025S              *
       *  CSD086 - Overridable Errors                                  *

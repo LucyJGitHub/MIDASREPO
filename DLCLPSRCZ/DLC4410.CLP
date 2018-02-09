@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       DLC4410 - Forward Commitments Revaluation (UP/UL)           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 226165             Date 31Mar04              */
-/*       Prev Amend No. CAS005  *CREATE    Date 16Dec02              */
+/*       Prev Amend No. 226165             Date 31Mar04              */
+/*                      CAS005  *CREATE    Date 16Dec02              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       226165 - Limit UP/UL Generation in DL COB Prompt            */
 /*       CAS005 - Enhancements to CAS001, CAS002 and CAS004          */
 /*                                                                   */
@@ -35,7 +37,7 @@
              DCL        VAR(&FREVAL) TYPE(*CHAR) LEN(1)                                   /*226165*/
              DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)                                 /*226165*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global monitor message */
@@ -147,5 +149,5 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       DLC0767 - Statements for Time/Call Deposits                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG6474            Date 18Apr05              */
-/*       Prev Amend No. CDL012  *CREATE    Date 12Aug03              */
+/*       Prev Amend No. BUG6474            Date 18Apr05              */
+/*                      CDL012  *CREATE    Date 12Aug03              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG6474 (00041016) - Commitment definition not valid.       */
 /*       CDL012 - Interest Statements for Call/Time Deposits.        */
 /*                                                                   */
@@ -25,7 +27,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
@@ -194,5 +196,5 @@ END:
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                   /*BUG6474*/
                                                                                          /*BUG6474*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*S*D ***RPGBASE*******************************************************                       CAAA02
 /*STD *  RPGBASEMOD                                                   *                       CAAA02
@@ -10,12 +10,13 @@
      F*                                                               *
      F* DL1909  - FRA MONTHLY SUMMARY ENQUIRY                         *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -57,6 +58,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

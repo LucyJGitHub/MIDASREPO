@@ -7,23 +7,25 @@
 /*                                                                  */
 /*       DLC1401 - MONTHLY INTEREST REPORT                          */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     LAST AMEND NO. S01189                  DATE  05JAN90         */
-/*     PREV AMEND NO. S01117                  DATE  17/07/89        */
+/*       Prev Amend No. S01189             Date 05Jan90              */
+/*                      S01117             Date 17/07/89             */
 /*                    S01194                  DATE  17/07/89        */
 /*                    S01179                  DATE  14/09/88        */
 /*                    E10376                  DATE  26/02/87        */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     S01189 - COB recovery processing.                            */
 /*     S01117 - MULTIBRANCHING                                      */
 /*     S01194 - STANDING DATA CHANGES.                              */
@@ -37,7 +39,7 @@
              PGM        PARM(&CNAM &CSEQ)                             /*S01189*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RENT) TYPE(*CHAR) LEN(3) /* RCF entity code (all/comp/bch)/*S01117*/
@@ -166,5 +168,5 @@
 /**/
 ENDCLPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

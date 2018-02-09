@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DE Get security interest payment dates')
@@ -15,14 +15,15 @@
       *                                                               *
       *  Component of: DEPXTSBPS                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG11193           Date 02May06               *
-      *  Prev Amend No. BUG11164           Date 06Apr06               *
+      *  Prev Amend No. BUG11193           Date 02May06               *
+      *                 BUG11164           Date 06Apr06               *
       *                 CSE071             Date 19Jul05               *
       *                 218087             Date 16Jun03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG11193 - Purchased Interest not calculated on BackValued   *
       *             Trade. (Recompile)                                *
       *  BUG11164 - A Serious Midas Error on SETRAD insert/amend      *
@@ -262,4 +264,4 @@
       /COPY DECPYSRC,DEPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

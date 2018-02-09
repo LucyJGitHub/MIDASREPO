@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas DL Nostro Events for FX Nets')                   *
@@ -14,17 +14,20 @@
       *                                                               *
       *  Called By: GLC0802C  - Events File Creation                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD046325           Date 26Jul17               *
-      *  Prev Amend No. MD045382           Date 20Apr17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD046325           Date 26Jul17               *
+      *                 MD045382           Date 20Apr17               *      
       *                 MD036589A          Date 22Feb17               *
       *                 MD036589 *CREATE   Date 14Feb16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046325 - GLC0802C failed due to invalid nostro code.       *
-      *             Check settlement first if nostro.                 *
+      *             Check settlement first if nostro.                 *      
       *  MD045382 - No contra posting on FX netting ICD for nostro    *
       *             settling on a different branch.  Always correctly *
       *             set branch code.                                  *
@@ -1268,7 +1271,7 @@
      C                   ENDSR
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2016
+(c) Finastra International Limited 2016
 **   POWER - ARRAY OF POWERS OF 10 FOR CURRENCY CONVERSIONS
 0000001
 0000010

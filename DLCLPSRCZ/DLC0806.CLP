@@ -7,8 +7,9 @@
 /*                                                                  */
 /*       DLC0806 - EXPOSURE AGAINST LIMITS & MATURITY OF FX DEALS   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,8 +17,8 @@
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. CDL002             DATE 22SEP97             */
-/*       PREV AMEND NO. S01433             DATE 30SEP93             */
+/*       Prev Amend No. CDL002             Date 22Sep97              */
+/*                      S01433             Date 30Sep93              */
 /*                      E40459             DATE 04JUN92             */
 /*                      S01360             DATE 03MAR92             */
 /*                      BHF934             DATE 26NOV90             */
@@ -33,6 +34,7 @@
 /*                      S01105             DATE 22/09/86            */
 /*                                                                  */
 /*------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL002 - FX Netting. Set Switches for FX Net Event file     */
 /*                processing                                         */
 /*       S01433  -  ENHANCED DEALING LIMITS                         */
@@ -73,7 +75,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &PARM)                 /*E273*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)        /*S01117*/
@@ -331,7 +333,7 @@
                           THEN(SNDMSG MSG(&MSG2) TOMSGQ(MOPERQ))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /****        ENDPGM                                                */ /*S01360*/
 /**EXIT:********ENDPGM                                      /*S01360* *E40459*/
 EXIT:                                                                /*E40459*/

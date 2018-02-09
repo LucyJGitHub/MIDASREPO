@@ -7,19 +7,21 @@
 /*                                                                  */
 /*       DLC0601C - MANUAL ADJUSTMENTS TO ACCRUED INTEREST          */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E47380                  DATE   1FEB93       */
-/*       PREV AMEND NO. S01117                  DATE  13/07/89      */
+/*       Prev Amend No. E47380             Date 1FEb93               */
+/*                      S01117             Date 13/07/89             */
 /*            AMEND NO. S01194                  DATE  13/07/89      */
 /*            AMEND NO. E18                     DATE  30OCT89       */
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*   E47380 - SHOULD BE AVAILABLE ON REQUEST IN INPUT CYCLE         */
 /*   S01117 - MULTIBRANCHING (INCLUDING RCF) CHANGES                */
 /*   S01194 - NEW STANDING DATA FILES                               */
@@ -28,13 +30,13 @@
 /********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RENT) TYPE(*CHAR) LEN(3) /* RCF entity code (all/comp/bch)/*S01117*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* THESE ARE MANDATORY REPORTS SO PARMS ARE PASSED HARD CODED HERE */
              CHGVAR     VAR(&RENT) VALUE('ALL')                       /*S01117*/

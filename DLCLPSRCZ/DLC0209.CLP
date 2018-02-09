@@ -7,25 +7,27 @@
 /*                                                                  */
 /*       DLC0209-MANUAL ADJUSTMENTS TO ACCRUED INTEREST             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL026             Date 12NOV04              */
+/*       Prev Amend No. CDL026             Date 12Nov04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev AMEND NO. S01194                  DATE  01/09/89      */
+/*                      S01194             Date 01/09/89             */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*  CDL026 - Authorisation on Dealing Accrued Interest Adjustments  */
 /*       S01194 - NEW STANDING DATA CHANGES                         */
 /********************************************************************/
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
@@ -53,5 +55,5 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       ERC0781 - CAD report                                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX012             Date 15Dec98              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX012             Date 15Dec98              */
 /*                      ULX004             Date 22APR97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       ULX012 - Guarantees and Collateral Management enhancements  */
 /*                Recompile over changed file ERLUICPD               */
@@ -35,7 +37,7 @@
                           VALUE('ERxx81')
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /**********  DCLF       FILE(ERLUICPD) RCDFMT(ERLUICD0)                   */              /*CER001*/
@@ -90,7 +92,7 @@
                           TOMSGQ(MOPERQ)                                                  /*CER001*/
              MONMSG     MSGID(CPF0000 MCH0000)
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
  
              ENDPGM

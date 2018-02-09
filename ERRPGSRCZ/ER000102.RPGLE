@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas @24 KWG transmission file creation')             *
@@ -13,10 +13,11 @@
       *             records of type 'A', 'C' and 'E' and copies it    *
       *             into PC format.                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER068             Date 25Feb14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER068             Date 25Feb14               *
+      *                 CER059             Date 19Jul10               *
       *                 262700             Date 03Dec09               *
       *                 262095             Date 14Oct09               *
       *                 BUG25857           Date 04Sep09               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
       *           (Recompile)                                         *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -1305,6 +1307,6 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008
 **  System Values
 QCENTURY  QDAY      QMONTH    QYEAR     QHOUR     QMINUTE   QSECOND

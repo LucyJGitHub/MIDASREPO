@@ -8,16 +8,18 @@
 /*       DLC0601G - List of Today's Deals                           */
 /*                  Fixed Deposits and Non-Fixed Deposits           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2004          */
+/*       (c) Finastra International Limited 2004                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL016  *CREATE         Date  06Oct04       */
+/*       Prev Amend No. CDL016  *CREATE    Date 06Oct04              */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL016 - Automatic Rollover of Fixed Term Loans/Deposits   */
 /*                                                                  */
 /********************************************************************/
@@ -25,7 +27,7 @@
              PGM        PARM(&TYPE &STYP &RSEQ &RLVL &RENT)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
@@ -93,6 +95,6 @@
              SNDPGMMSG  MSG('FILE CONTROLS OUT OF BALANCE') +
                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)
              ENDDO
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
 END:         ENDPGM

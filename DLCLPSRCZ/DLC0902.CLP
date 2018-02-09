@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       DLC0902 - INTERIM BROKERAGE REPORT                         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 048654             DATE 31DEC92             */
-/*       PREV AMEND NO. AUS007             DATE 13JUL92             */
+/*       Prev Amend No. 048654             Date 31Dec92              */
+/*                      AUS007             Date 13Jul92              */
 /*                      E27942             DATE 03SEP91             */
 /*                      S01194             DATE 22/09/89            */
 /*                      S01117             DATE 22/09/89            */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       048654 - AUS007 APPLIED INCORRECTLY                        *  *048654*/
 /*       AUS007 - AUSTRALIAN BROKERAGE.                             *  *AUS007*/
 /*       E27942  -  FOR NONMULTIBRANCHING SYSTEM SHOULD EXPECT A    */
@@ -43,7 +45,7 @@
    DCL VAR(&RENT) TYPE(*CHAR) LEN(3) /* RCF entity code (all/comp/bch)/*S01117*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*AUS007*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                 /*AUS007*/
@@ -113,5 +115,5 @@
                           THEN(SNDMSG MSG(&MSG2) TOMSGQ(MOPERQ))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

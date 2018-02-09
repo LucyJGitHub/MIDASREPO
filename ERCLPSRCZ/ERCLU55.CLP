@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       ERCLU55 - Investment Company Codes Maintenance              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX008  *CREATE    Date 21Feb00              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX008  *CREATE    Date 21Feb00              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses*/
 /*                                                                   */
@@ -33,7 +35,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /* Global monitor message */
@@ -80,7 +82,7 @@
              SNDPGMMSG  MSG('Program ERLU55 - Investment Company Codes +
                           Maintenance ended abnormally.')
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
  
              ENDPGM

@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       CLP/ERC0050P - Book code / Investment type report           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. FIXML              Date 20Apr98              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      FIXML              Date 20Apr98              */
 /*                      132893             Date 20Apr98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       FIXML  - Parameters passed to ER0050P not correct.          */
 /*       132893 - SPF/RCF for IBLC/BNB on DBA2.3                     */
@@ -33,7 +35,7 @@
 /****** END FIXML *****/
  
              DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(50) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /***  Declare parameter.  ***/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas @24 KWG workfile creation')                      *
@@ -13,16 +13,18 @@
       *             fills the workfile and calles the transmission    *
       *             file creation.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER068             Date 25Feb14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER068             Date 25Feb14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26298           Date 06Oct09               *
       *                 BUG24101           Date 27May09               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26298 - Enable export to Meridian                         *
@@ -447,4 +449,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

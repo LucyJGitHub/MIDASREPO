@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       DLC0728P - Fixed Deposits Rollover History Prompt           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last amend no. CDL024  *Create    DATE 31Mar04              */
+/*       Prev Amend No. CDL024  *CREATE    Date 31Mar04              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL024 - Fixed Deposits Register                            */
 /*                                                                   */
 /*********************************************************************/
@@ -27,7 +29,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM &RACT &RCMD)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
@@ -57,5 +59,5 @@ ABNOR:
              MONMSG     MSGID(CPF0000 MCH0000)
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

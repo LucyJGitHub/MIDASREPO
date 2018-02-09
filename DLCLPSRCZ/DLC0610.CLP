@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       DLC0610 - (Program Name)                                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 228542             Date 05Aug04              */
+/*       Prev Amend No. 228542             Date 05Aug04              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. 202865             Date 15Apr02              */
+/*                      202865             Date 15Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      197643  *CREATE    Date 25May01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       202865 - File reorganisation should not fail if the file    */
 /*                is empty, MONMSG was added.                        */
@@ -38,7 +40,7 @@
              DCL        VAR(&LAST) TYPE(*CHAR) LEN(1)                                     /*228542*/
              DCL        VAR(&MBRCHK) TYPE(*CHAR) LEN(10)                                  /*228542*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCLF       FILE(QAFDMBRL)
  
@@ -100,7 +102,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,DLC0610END                                          */
  

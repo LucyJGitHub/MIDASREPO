@@ -7,21 +7,23 @@
 /*                                                                  */
 /*        DLC0603A   C.O.B. S.W.I.F.T. Confirmations                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. LN0299            DATE  30MAY90             */
-/*       PREV AMEND NO. S17216            DATE  25APR90             */
+/*       Prev Amend No. LN0299             Date 30May90              */
+/*                      S17216             Date 25Apr90              */
 /*                      E243              DATE  26FEB89             */
 /*            AMEND NO. S01117            DATE  17/07/89            */
 /*            AMEND NO. S01179            DATE  10/09/88            */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       LN0299 - S17216 NOT NEEDED                                 */
 /*       S17216 - RE DESIGN TO STOP LOCK OUT OF MSIXOPF,MSMSOPF     */
 /*       E243   - REMOVE EXCESS PARAMETERS                          */
@@ -33,7 +35,7 @@
              PGM                                                      /*S01117*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**DCL*VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number /*S01117* /*E243*/
 /**DCL*VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/*S01117*/ /*E243*/
@@ -197,5 +199,5 @@
 /* END:                                                   S17216*/    /*LN0299*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

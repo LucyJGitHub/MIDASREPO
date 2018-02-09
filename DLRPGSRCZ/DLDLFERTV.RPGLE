@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Dealing Fees retrieve')                       *
@@ -14,10 +14,11 @@
       *             the database. As it does so, it validates the     *
       *             action code and deal number.                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -52,18 +54,18 @@
       *  CAS009 - Effective Interest Rate/Amortised Cost Accounting.  *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Transaction File by Front Office Id
      FDLFEEDL2  IF   E           K DISK    INFSR(*PSSR)
-
+ 
      FDLFEEDL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLFEEDD0:DLFEEDTR)
-
+ 
       ** Transaction File by Transaction Number
      FDEALS     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(DEALSDAF)
@@ -71,8 +73,8 @@
      F                                     IGNORE(DEALSDEF)
      F                                     IGNORE(DEALSDFF)
      F                                     IGNORE(DEALSDGF)
-
-
+ 
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -84,59 +86,59 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** External DS for bank details ICD retrieval
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
-
+ 
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
      D DealsDtlC     E DS                  EXTNAME(DEALSDC)
      D                                     PREFIX(C_)
-
+ 
      D DealsDtlD     E DS                  EXTNAME(DEALSDD)
      D                                     PREFIX(D_)
-
+ 
      D DealsDtl1     E DS                  EXTNAME(DEALSDC)
      D DLFEFilFmt    E DS                  EXTNAME(DLFEED)
      D                                     PREFIX(@)
@@ -144,12 +146,12 @@
      D DLF2FilFmt    E DS                  EXTNAME(DLFEED)
      D P_RONS        E                     EXTFLD(RONSQQ)                                     CAS011
      D P_PONS        E                     EXTFLD(PONSQQ)                                     CAS011
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
      D ZMUSER          DS            17
@@ -172,7 +174,7 @@
      D Fotrid          S             20A
      D ZBR             S                   LIKE(DFBRCA)
      D WWDLNO          S              6  0
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -180,35 +182,35 @@
       *****************************************************************
       /EJECT
       **************************************************************
-
+ 
       * Initialization
-
+ 
      C                   EXSR      INIT
-
+ 
       * If the mode is 'Front Office Transaction Interface'
       * Do (Extra) Validation for Front Office Transaction Interface
-
+ 
      C                   IF        ModeofOp = '*FRONT'
      C                   EXSR      VFRNT
-
+ 
       **  Carry out no further validation if errors have occurred.
-
+ 
      C                   IF        OKACTN = 'N'
      C                   RETURN
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Validate Action Code & Transaction Number
-
+ 
      C                   EXSR      VAL
-
+ 
       **  Carry out no further validation if errors have occurred.
-
+ 
      C                   IF        OKACTN = 'N' OR  OKDLNO = 'N'
      C                             OR OKFSEQ = 'N'
      C                   RETURN
      C                   ENDIF
-
+ 
      C     DDACTN        CASEQ     'I'           VALINS
      C     DDACTN        CASEQ     'A'           VALAMD
      C     DDACTN        CASEQ     'D'           VALDEL
@@ -216,26 +218,26 @@
      C     DDACTN        CASEQ     'X'           VALAUT
      C                   CAS                     VALERR
      C                   ENDCS
-
+ 
       ** If single branching
       ** Access Security Checking - Single Branching
-
+ 
      C                   IF        BJSBRC <> *BLANK AND
      C                             RESPMODE = 'S'
      C                   EXSR      ACSSES
      C                   ENDIF
-
+ 
       ** If multibranching
       ** Access Security Checking - Multi-Branching
-
+ 
      C                   IF        BJSBRC = *BLANK AND
      C                             DDACTN <> 'I' AND
      C                             RESPMODE = 'S'
      C                   EXSR      ACSSEM
      C                   ENDIF
-
+ 
       ** Return
-
+ 
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -243,22 +245,22 @@
       * ACSSES - ACCESS SECURITY CHECKING - SINGLE BRANCHING
       *****************************************************************
      C     ACSSES        BEGSR
-
+ 
       **  Check user's authority for the action.
-
+ 
      C                   CALL      'ZVACTU'
      C                   PARM      DDACTN        ZACTN
      C                   PARM                    ERR
-
+ 
       **  If action invalid for user
-
+ 
      C                   IF        ERR = 1
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   EVAL      MsgIdArr(Idx) = 'FXM0292'
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -266,16 +268,16 @@
       * ACSSEM - ACCESS SECURITY CHECKING - MULTI-BRANCHING
       *****************************************************************
      C     ACSSEM        BEGSR
-
+ 
       **  Check user's authority for the action & Booking Branch.
-
+ 
      C                   CALL      'ZVACTBU'
      C                   PARM      DDACTN        ZACTN
      C                   PARM      BRCA          ZBR
      C                   PARM                    ERR
-
+ 
       **   If action invalid for user
-
+ 
      C                   IF        ERR = 1
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Idx
@@ -292,7 +294,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -300,13 +302,13 @@
       * RTVDLFE - Retrieve Transaction Details If action code 'A', 'E' , 'X' OR 'D'
       *****************************************************************************
      C     RTVDLFE       BEGSR
-
+ 
       **  If there is no valid record on DLFEEDL1, it is an error.
-
+ 
      C     @DEALKY       CHAIN     DLFEEDL1
-
+ 
       **  Check for a valid record.
-
+ 
      C                   IF        NOT %FOUND(DLFEEDL1) OR DFRECI <> 'D'
      C                             AND DDACTN <> 'E'
      C                   EVAL      OKDLNO = 'N'
@@ -315,7 +317,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDDLNO'
      C                   EVAL      MsgIdArr(Idx) = 'DLF0029'
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -323,9 +325,9 @@
       * VFRNT - VALIDATION FOR FRONT OFFICE TRANSACTION INTERFACE
       *****************************************************************
      C     VFRNT         BEGSR
-
+ 
       ** Error if action code is not 'I','A','E' OR 'D'
-
+ 
      C                   IF        DDACTN <> 'I' AND
      C                             DDACTN <> 'A' AND
      C                             DDACTN <> 'E' AND
@@ -336,9 +338,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   EVAL      MsgIdArr(Idx) = 'APM0200'
      C                   ENDIF
-
+ 
       ** Error if Front Office Transaction ID is Blank
-
+ 
      C                   IF        FOTRID = *BLANK
      C                   EVAL      OKACTN = 'N'
      C                   ADD       1             Idx
@@ -346,17 +348,17 @@
      C                   EVAL      MsgIdArr(Idx) = 'APM0201'
      C                   GOTO      EVFRNT
      C                   ENDIF
-
+ 
       ** Access Transaction with Front Office Transaction ID
-
+ 
      C     FOTRID        CHAIN     DLFEEDL2
-
+ 
       ** If Insert
-
+ 
      C                   IF        DDACTN = 'I'
-
+ 
       ** Front Office Transaction ID can't be Present already
-
+ 
      C                   IF        %FOUND(DLFEEDL2)
      C                   EVAL      OKACTN = 'N'
      C                   ADD       1             Idx
@@ -365,11 +367,11 @@
      C                   EVAL      MsgDtaArr(Idx) = FOTRID
      C                   GOTO      EVFRNT
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
       ** If not insert, Front Office Transaction ID Must be Present
-
+ 
      C                   IF        NOT %FOUND(DLFEEDL2)
      C                   EVAL      OKACTN = 'N'
      C                   ADD       1             Idx
@@ -378,9 +380,9 @@
      C                   EVAL      MsgDtaArr(Idx) = FOTRID
      C                   GOTO      EVFRNT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C     EVFRNT        ENDSR
       *****************************************************************
       /EJECT
@@ -388,10 +390,10 @@
       * VAL - VALIDATION OF ACTION CODE AND TRANSACTION NUMBER
       *****************************************************************
      C     VAL           BEGSR
-
+ 
       ** Action Code
       **  .. must be 'I','A','D', 'X', or 'E'
-
+ 
      C                   IF        DDACTN <> 'I' AND
      C                             DDACTN <> 'A' AND
      C                             DDACTN <> 'D' AND
@@ -402,9 +404,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   EVAL      MsgIdArr(Idx) = 'DLF0036'
      C                   ENDIF
-
+ 
       ** Deal number  required
-
+ 
      C                   IF        DDDLNO = *BLANKS OR
      C                             DDDLNO = *ZEROS
      C                   EVAL      OKDLNO = 'N'
@@ -413,9 +415,9 @@
      C                   EVAL      MsgIdArr(Idx) = 'DLF0037'
      C                   GOTO      EVAL
      C                   ENDIF
-
+ 
       ** If the Deal Number is not blank, check that it is numeric.
-
+ 
      C                   TESTN                   DDDLNO               98
      C                   MOVE      DDDLNO        W1TRNN
      C                   TESTZ                   W1TRNN                   99
@@ -430,16 +432,16 @@
      C                   GOTO      EVAL
      C                   ENDIF
      C                   MOVEL     DDDLNO        WWDLNO
-
+ 
       ** Access Transaction from the Transactions file
-
+ 
      C     WWDLNO        CHAIN     DEALS
      C                   IF        RCDT = 'C'
      C                   MOVEL     DealsDtl1     DealsDtlC
      C                   ELSE
      C                   EXSR      MoveDtl
      C                   ENDIF
-
+ 
      C     EVAL          ENDSR
       *****************************************************************
       /EJECT
@@ -447,9 +449,9 @@
       * VALINS - VALIDATION OF ACTION CODE 'I'
       *****************************************************************
      C     VALINS        BEGSR
-
+ 
       ** Error if not found
-
+ 
      C                   IF        NOT %FOUND(DEALS)
      C                   EVAL      OKDLNO = 'N'
      C                   ADD       1             Idx
@@ -469,9 +471,9 @@
      C                   EVAL      MsgIdArr(Idx) = 'DLF0028'
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Fee sequence should be blank on insert
-
+ 
      C                   IF        DDFSEQ <> *BLANKS
      C                   EVAL      OKFSEQ = 'N'
      C                   ADD       1             Idx
@@ -484,33 +486,33 @@
       * VALENQ - VALIDATION OF ACTION CODE 'E'
       *****************************************************************
      C     VALENQ        BEGSR
-
+ 
       ** Access Transaction from the Transactions file
-
+ 
      C                   EXSR      RTVDLFE
      C                   ENDSR
       *****************************************************************
       * VALAMD - VALIDATION OF ACTION CODE 'A'
       *****************************************************************
      C     VALAMD        BEGSR
-
+ 
       ** Access Transaction from the Transactions file
-
+ 
      C                   EXSR      RTVDLFE
-
+ 
      C                   ENDSR
       *****************************************************************
       * VALAUT - VALIDATION OF ACTION CODE 'X'
       *****************************************************************
      C     VALAUT        BEGSR
-
+ 
       ** Access Transaction from the Transactions file
-
+ 
      C                   EXSR      RTVDLFE
-
+ 
       ** Authorising user must be different from the insert and
       ** amend users
-
+ 
      C     ZUSER         IFEQ      DFIUSR
      C     ZUSER         OREQ      DFAUSR
      C                   EVAL      OKACTN = 'N'
@@ -518,10 +520,10 @@
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   EVAL      MsgIdArr(Idx) = 'DLF0031'
      C                   ENDIF
-
+ 
       ** Status of deal must be complete or requiring re-authori-
       ** sation
-
+ 
      C     DFFSTS        IFNE      'C'
      C     DFFSTS        ANDNE     'R'
      C                   EVAL      OKACTN = 'N'
@@ -529,7 +531,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   EVAL      MsgIdArr(Idx) = 'DLF0032'
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -537,16 +539,16 @@
       * VALDEL - VALIDATION OF ACTION CODE 'D'
       *****************************************************************
      C     VALDEL        BEGSR
-
+ 
       ** Access Transaction from the Transactions file
-
+ 
      C                   EXSR      RTVDLFE
      C                   ENDSR
       *****************************************************************
       * MOVEDTL - Move DealsDc fields to DealsDtlD Data strcuture
       *****************************************************************
      C     MOVEDTL       BEGSR
-
+ 
      C                   EVAL      D_RECI = RECI
      C                   EVAL      D_DLNO = DLNO
      C                   EVAL      D_RCDT = RCDT
@@ -710,18 +712,18 @@
      C                   EVAL      D_AMCOST = AMCOST
      C                   EVAL      D_YMCOST = YMCOST
      C                   EVAL      D_YAINT = YAINT
-
+ 
      C                   ENDSR
       *****************************************************************
       *  VALERR - Error in Action code                                *
       *****************************************************************
      C     VALERR        BEGSR
-
+ 
      C                   EVAL      OKACTN = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   EVAL      MsgIdArr(Idx) = 'DLF0033'
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -729,12 +731,12 @@
       * INIT - INITIALIZATION
       *****************************************************************
      C     INIT          BEGSR
-
+ 
      C                   IN        ZMUSER
      C                   UNLOCK    ZMUSER
-
+ 
       ** Clear Outputs
-
+ 
      C                   CLEAR                   DLF2FilFmt
      C                   CLEAR                   DealsDtlC
      C                   CLEAR                   DealsDtlD
@@ -767,7 +769,7 @@
      C     @DEALKY       KLIST
      C                   KFLD                    DEALKY
      C                   KFLD                    FSEQKY
-
+ 
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -775,88 +777,88 @@
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
       ** Parameters
      C     *ENTRY        PLIST
-
+ 
       ** Inputs
       ** Return code
      C                   PARM                    RetCodeIn
-
+ 
       ** Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ** Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
-
+ 
      C                   PARM                    ModeofOp
-
+ 
       ** Response mode
      C                   PARM                    RespMode
-
+ 
       ** Action Code
      C                   PARM                    DDACTN
-
+ 
       ** Front Office Transaction ID
      C                   PARM                    FOTRID
-
+ 
       ** Deal number
      C                   PARM                    DDDLNO
-
+ 
       ** Fee Sequence
      C                   PARM                    DDFSEQ
-
+ 
       ** Outputs
       ** Transaction Details in File Format
      C                   PARM                    DLF2FilFmt
-
+ 
       ** OK - Action code
      C                   PARM                    OKACTN
-
+ 
       ** OK - Deal Number
      C                   PARM                    OKDLNO
-
+ 
       ** OK - Fee sequence
      C                   PARM                    OKFSEQ
-
+ 
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
-
+ 
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
       ** Deals Detail (DEALSDC)
      C                   PARM                    DealsDtlC
       ** Deals Detail (DEALSDD)
      C                   PARM                    DealsDtlD
-
+ 
       ** Initialize program name
-
+ 
      C                   EVAL      DBPGM = 'DLDLFERTV'
-
+ 
      C     *DTAARA       DEFINE                  ZMUSER
-
+ 
       ** Access Bank Details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** Database Error
-
+ 
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   MOVEL     '900'         DBASE
      C                   EVAL      DBKEY = @OPTN
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Access API ICD via access program
-
+ 
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDAPI         PARM      SDAPI         DSFDY
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -869,4 +871,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

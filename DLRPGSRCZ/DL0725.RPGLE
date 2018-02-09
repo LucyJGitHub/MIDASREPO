@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Early Maturity of Loans/Deposits')            *
@@ -9,10 +9,11 @@
       *                                                               *
       *  DL0725 - Deal Amendments made today with Early Maturity      *
       *           Date Change                                         *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. 260239             Date 18May09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 260239             Date 18May09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompiled)                                        *
       *  260239 - Overflow error cause DLC0725 to fail.               *
@@ -566,6 +568,6 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 **  MONTH SHORTNAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

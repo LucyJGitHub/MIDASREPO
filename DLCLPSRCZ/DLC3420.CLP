@@ -7,19 +7,21 @@
 /*                                                                   */
 /*     DLC3420 - LIST OF TODAY'S DEALS                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO  E40459            DATE  04JUN92             */
-/*       PREV AMEND NO  S01358            DATE  03MAR92             */
+/*       Prev Amend No. E40459             Date 04Jun92              */
+/*                      S01358             Date 03Mar92              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       E40459 - S01362 put in a call to access program AOSARDR0,  */
 /*                to check whether the SAR in question is enabled;  */
 /*                however no call was coded with an option of *FREE,*/
@@ -35,7 +37,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
              DCL        VAR(&SRTCD) TYPE(*CHAR) LEN(7)
@@ -93,7 +95,7 @@ ABNOR:       IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**EXIT:********ENDPGM                                               /*E40459*/
 EXIT:                                                                /*E40459*/
 /* */                                                                /*E40459*/

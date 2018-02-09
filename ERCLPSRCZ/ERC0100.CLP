@@ -8,10 +8,11 @@
 /*                                                                   */
 /*       ERC0100 - Midas @24 KWG data extraction                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. M029184            Date 25Nov14              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. M029184            Date 25Nov14              */
+/*                      CER059             Date 19Jul10              */
 /*                      BUG26298           Date 06Oct09              */
 /*                      262095             Date 14Oct09              */
 /*                      BUG24908           Date 13Jul08              */
@@ -19,6 +20,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD029184 - COB ERC0100 ends in error (dumped) but the COB   */
 /*                  didn't stop with a failed component.             */
 /*                - Amended CL program to make sure the COB will     */
@@ -36,7 +38,7 @@
              PGM        PARM(&PUTP &PFNR &PRTNCDE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems +
+                          Finastra International Limited +
                           2008.')
              DCL        VAR(&PUTP) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PFNR) TYPE(*DEC) LEN(8 0)

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL MM Deals due for Automatic Rollover Today')   *
@@ -9,10 +9,11 @@
       *                                                               *
       *  DL0720 - Money Market Deals due for Automatic Rollover Today *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR747438           Date 11Nov13               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -70,7 +72,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDEALS     IF   E           K DISK    INFSR(*PSSR)
       ** Midas MM Loan/deposit/CD issued
      F                                     IGNORE(DEALSDAF)
@@ -79,16 +81,16 @@
      F                                     IGNORE(DEALSDDF)                                 AR747438
      F                                     IGNORE(DEALSDEF)                                 AR747438
      F                                     IGNORE(DEALSDGF)                                 AR747438
- 
+
      FDL0720P1  O    E             PRINTER INFDS(SPOOL1)
      F                                     USROPN
      F                                     INFSR(*PSSR)
       ** Midas MM Deals due for Automatic Rollover Today
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -99,112 +101,112 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Data Structure for AOSVALR0 string
      DSVAL1            DS           200
      DSVAL11                   1      1
- 
+
       ** Array holding shortnames of each month
      D SSA             S              3    DIM(12) CTDATA PERRCD(12)
- 
+
       ** Externally described DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Externally described DS for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Externally described DS for Deal details                                           AR747438
       *                                                                                     AR747438
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                AR747438
       *                                                                                     AR747438
       ** Externally described DS for branch details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** Externally described DS for Rundate details
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA
- 
+
       ** DS for access objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for access objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Entry Parameter
      D PARMS           DS
      D PDealType               1      2
      D PDealSubType            3      4
      D PDealClass              5      8                                                       CDL038
- 
+
       ** File Information Data Structure for DL0720P1
      D SPOOL1          DS
      D   SFILE1               83     92
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** Value Date Data Structure
      D S1ValueDate     DS
      D   S1VDDD                1      2
      D   S1VDMM                3      5
      D   S1VDYY                6      7
- 
+
       ** Maturity Date Data Structure
      D S1MatDate       DS
      D   S1MDDD                1      2
      D   S1MDMM                3      5
      D   S1MDYY                6      7
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for ZSEDITF
      D PINAMT          S             15P 0
      D PINDEC          S              1P 0
      D PINCODE         S              1A
      D PINCHAR         S              1A
      D POUTAMT         S             21A
- 
+
       ** Parameters for access object programs
      D PRTCD           S              7A
      D POPTN           S              7A
- 
+
       ** Other fields used
      D WFile           S             10A
      D ZSNum           S              6  0
@@ -218,7 +220,7 @@
      D WFIRST          S              1A
      D WRUN            S              1A
      D WREQUESTED      S              1A
- 
+
       ** System values array                                                                AR747438
       *                                                                                     AR747438
      D SVAl            S             20    DIM(2) CTDATA PERRCD(1)                          AR747438
@@ -233,35 +235,35 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Perform Detail Processing
- 
+
       ** Read first record from File
      C                   READ      DEALS                                  20
- 
+
       ** Do Until End of File
      C                   DOW       *IN20 = *OFF
- 
+
       ** Record requested for Report ?
      C                   EVAL      WRequested = 'Y'
- 
+
       ** Deal Type Selected....
      C                   IF        PDealType <> '**' AND
      C                             PDealType <> DTYP
      C                   EVAL      WRequested = 'N'
      C                   ENDIF
- 
+
       ** Deal Type not Selected, then only output TI,TD,IP and IT from file...
      C                   IF        PDealType = '**' AND
      C                             DTYP <> 'TI'     AND
@@ -270,7 +272,7 @@
      C                             DTYP <> 'IT'
      C                   EVAL      WRequested = 'N'
      C                   ENDIF
- 
+
       ** Deal SubType Selected....
      C                   IF        PDealSubType <> '**' AND
      C                             PDealSubType <> DLST
@@ -282,9 +284,9 @@
      C                             PDealClass <> CLAS                                         CDL038
      C                   EVAL      WRequested = 'N'                                           CDL038
      C                   ENDIF                                                                CDL038
- 
+
       ** Deal not due for Automatic Rollover Today....
- 
+
       *    MDAT          SUB       SVAL11        WROLL
       *                                                                                     AR747438
       ** Calculate rollover generation date                                                 AR747438
@@ -302,7 +304,7 @@
      C                   IF        AURO <> 'A'                                              AR747438
      C                   EVAL      WRequested = 'N'
      C                   ENDIF
- 
+
       ** Deal already rolled over                                                           AR747438
       *                                                                                     AR747438
      C                   IF        RBDN <> 0                                                AR747438
@@ -317,7 +319,7 @@
       *                                                                                     AR747438
       ** Process only selected  records
      C                   IF        WRequested = 'Y'
- 
+
       ** Header Needed ?
      C                   Z-ADD     1             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
@@ -325,29 +327,29 @@
      C                   WRITE     DL0720R0
      C                   WRITE     DL0720R1
      C                   ENDIF
- 
+
       ** Process Detail Record
      C                   ADD       1             WCOUNT
      C                   EXSR      SRDETAIL
- 
+
      C                   ENDIF
- 
+
       ** Read next record
      C                   READ      DEALS                                  20
- 
+
      C                   ENDDO
- 
+
      ** No Details to report
      C                   IF        WCOUNT = 0
      C                   WRITE     DL0720R0
      C                   WRITE     DL0720R5
      C                   ENDIF
- 
+
      C                   WRITE     DL0720R3
      C                   CLOSE     DL0720P1
      C                   SETON                                        LR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -359,9 +361,9 @@
       *  Calls    : SRFMTAMT  SRCHKLIN                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDETAIL      BEGSR
- 
+
       ** Move Input Fields to Output Fields
      C                   EVAL      S1BRCA = BRCA                                Branch Code
      C                   EVAL      S1DTYP = DTYP                                Deal Type
@@ -373,12 +375,12 @@
      C**********         EVAL      S1CCY  = PUCY                                Currency    AR747438
      C                   EVAL      S1CCY  = CCY                                 Currency    AR747438
      C                   EVAL      S1PCEN = PRFC                                Profit Centre
- 
+
      C**********         EVAL      PINAMT = PUAM                                Amount      AR747438
      C                   EVAL      PINAMT = PCPL                                Amount      AR747438
      C                   EXSR      SRFMTAMT
      C                   MOVE      POUTAMT       S1AMNT                         Formatted Amount
- 
+
       ** Value Date
      C                   Z-ADD     VDAT          DateIn            5 0
      C                   CALLB     'ZDATE2'
@@ -388,7 +390,7 @@
      C                   PARM                    DateOut           7
      C                   MOVE      DateOut       S1VDAT                                       CDL038
      C*******************MOVE      DateOut       S1ValueDate                                  CDL038
- 
+
       ** Maturity Date
      C                   IF        MDAT <> 0
      C                   Z-ADD     MDAT          DateIn2           5 0
@@ -402,13 +404,13 @@
      C                   ELSE                                                                 CDL038
      C                   MOVE      *BLANK        S1MDAT                                       CDL038
      C                   ENDIF
- 
+
       ** Write Detail Record Format
- 
+
      C                   WRITE     DL0720R2
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -420,9 +422,9 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFMTAMT      BEGSR
- 
+
       ** Check Currency Decimal Places
      C                   CALLB     'AOCURRR0'
      C                   PARM      '        '    PRTCD
@@ -431,16 +433,16 @@
      C                   PARM                    CCY                                        AR747438
      C     SDCURR        PARM      SDCURR        DSSDY
      C                   EVAL      PINDEC = A6NBDP
- 
+
      C                   CALLB     'ZSEDITF'
      C                   PARM                    PINAMT
      C                   PARM                    PINDEC
      C                   PARM                    PINCODE
      C                   PARM      *BLANKS       PINCHAR
      C                   PARM      *BLANKS       POUTAMT
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -452,24 +454,24 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Receive entry parameters
      C     *ENTRY        PLIST
      C                   Parm                    PSEQ              5
      C                   Parm                    PENTY             3
      C                   Parm                    PARMS           100
- 
+
       ** Initialise LDA field
      C                   EVAL      DBPGM = 'DL0720'
- 
+
       ** Call Access Program for Bank Details
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Handle Database Error
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
@@ -482,35 +484,35 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access RUNDAT for multibranching indicator
      C                   IN        RUNDAT
      C                   MOVE      AGMRDT        RRRUNA
      C                   MOVE      BJURPT        RRTITL                                       239233
- 
+
      C                   IF        AGMBIN = 'Y'
      C                   EVAL      *IN02 = *ON
      C                   ENDIF
- 
+
       ** Initialize Amount and Work Fields
      C                   Z-ADD     0             WCOUNT
      C                   MOVE      'Y'           WFIRST
      C                   MOVE      'N'           WOPEN
- 
+
       ** Setup DealType/SubType Narrative
      C                   MOVE      PDealType     S0DTYP
      C                   MOVE      PDealSubType  S0DLST
      C                   MOVE      PDealClass    S0CLAS                                       CDL038
- 
+
      C                   IF        PDealType <> '**'
      C                   MOVE      '1'           *IN40
      C                   ENDIF
- 
+
      C                   IF        PDealType <> '**' AND
      C                             PDealSubType = '**'
      C                   MOVE      'xx'          S0DLST
      C                   ENDIF
- 
+
       ** Access Dealing ICD Details                                                         AR747438
       *                                                                                     AR747438
      C                   CALL      'AODEALR0'                                               AR747438
@@ -557,7 +559,7 @@
      C                   PARM                    SVAL10          200
       *
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     SVAL10        IFEQ      '*NRF'
      C                   MOVE      SVALK0        DBKEY
      C                   ENDIF
@@ -588,7 +590,7 @@
      C     SVAL1         IFEQ      '*NRF'
      C                   MOVE      SVALK1        DBKEY
      C                   ENDIF
- 
+
      C     *LOCK         IN        LDA
      C                   Z-ADD     1             DBASE
      C                   MOVE      'SDSVALPD'    DBFILE
@@ -605,7 +607,7 @@
      C*****SVAL11        IFEQ      'Y'                                                      AR747438
      C*                  MOVE      '1'           HKROLDAYS
      C**********         ENDIF                                                              AR747438
- 
+
       ** Generating non-authorized deals requires one extra days notice                     AR747438
       *                                                                                     AR747438
      C     AUTOAU        IFEQ      'N'                                                      AR747438
@@ -618,9 +620,9 @@
      C                   Z-Add     SFNum1        ZSNum
      C                   Move      SFile1        WFile
      C                   Exsr      RcdRCF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -628,25 +630,25 @@
       *  RcdRCF - Register a printer file via RCF                     *
       *                                                               *
       *****************************************************************
- 
+
      C     RcdRCF        Begsr
- 
+
      C                   Call      'ZSFILE'
      C                   Parm                    PSEQ
      C                   Parm                    PENTY
      C                   Parm                    WFile
      C                   Parm                    ZSNum
      C                   Parm                    ZSErr
- 
+
      C                   If        ZSErr = 'Y'
      C                   Move      *On           *INU7
      C                   Move      *On           *INU8
      C                   Move      *On           *INLR
      C                   Return
      C                   Endif
- 
+
      C                   Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -661,11 +663,11 @@
       *  Calls    :                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
       ** Check to see that *PSSR has not already been called
- 
+
      C                   IF        WRUN = *BLANKS
      C                   MOVE      'Y'           WRUN
      C                   EVAL      *INU7 = *ON
@@ -676,23 +678,23 @@
      C                   WRITE     DL0720R4
      C                   CLOSE     DL0720P1
      C                   ENDIF
- 
+
       ** If *PSSR already run, then just end the program here
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/COPY ZSRSRC,ZACCHLE                                                                  AR747438
      C/COPY ZSRSRC,ZBKDT_ILE                                                                AR747438
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 **  MONTH SHORTNAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 **   SVAL  -  SYSTEM VALUES ARRAY                                                           AR747438

@@ -21,10 +21,11 @@
 /*                ED0080                                            */
 /*                EDC0045                                           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD021155           Date 10Jul13              */
-/*       Prev Amend No. AR1060743          Date 26Nov12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021155           Date 10Jul13              */
+/*                      AR1060743          Date 26Nov12              */
 /*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -41,6 +42,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                */
 /*                - CCB009 conditioning left in                     */
 /*       AR1060743 - All HATS input initial screen appears a        */
@@ -60,7 +62,7 @@
 /* Copyright statement definition */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Other declarations */
@@ -98,7 +100,7 @@
 /* Copyright statement definition - at runtime */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* If Input Cycle then create LDA */
  
 /**********  RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&PHASE)                             */ /*CCB020*/

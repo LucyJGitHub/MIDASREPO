@@ -7,14 +7,15 @@
 /*                                                                  */
 /*       DLC0608 - FORWARD REVALUATION                              */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 242842             Date 11Oct06              */
-/*       Prev Amend No. 240553             Date 28Jun06              */
+/*       Prev Amend No. 242842             Date 11Oct06              */
+/*                      240553             Date 28Jun06              */
 /*                      CDL048             Date 26Jun06              */
 /*                      237367             Date 02Mar06              */
 /*                      228542             Date 05Aug04              */
@@ -33,6 +34,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       242842 - Avoid DB error in CB0180.                          */
 /*                Apply fix 240553.                                  */
 /*       240553 - No need to define value for &CSEQ since it is now  */
@@ -69,7 +71,7 @@
              DCL        VAR(&FREVAL) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(128)               /*CAC002*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)        /*S01117*/
@@ -296,5 +298,5 @@ END:                                                                            
 /**/
 /*/COPY WNCPYSRC,DLC0608003                                          */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

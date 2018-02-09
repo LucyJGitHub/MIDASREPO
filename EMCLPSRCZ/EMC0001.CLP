@@ -8,19 +8,21 @@
 /*       EMC0001 - Set up Exposure Management -> Trade Innovation    */
 /*                 switchable feature                                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK009             Date 09Aug99              */
-/*       Prev Amend No. CTI002             DATE 23Feb99              */
+/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      CTI002             Date 23Feb99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
 /*       CTI002 - Created for Exposure Management Development        */
@@ -29,7 +31,7 @@
              PGM        PARM(&RTCDE &PMODE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
@@ -146,6 +148,6 @@
              CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -7,20 +7,22 @@
 /*                                                                  */
 /*  EDC0240 - FF Transactions Reconciliation Extract Control        */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  LAST AMEND NO. 113682                  DATE 04FEB98             */
-/*  PREV AMEND NO. 101973 *CREATE          DATE 08FEB96             */
+/*       Prev Amend No. 113682             Date 04Feb98              */
+/*                      101973 *C *CREATE  Date 08Feb96              */
 /*                 Ennnnn                  DATE DDMMMYY             */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*  113682 - Error messages should be sent to MOPERQ not QSYSOPR.   */
 /*  101973 - Reconciliation Reporting - this program created.       */
 /*                                                                  */
@@ -30,7 +32,7 @@
 /* Copyright statement definition */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,EDC0240001                                          */
  
@@ -57,7 +59,7 @@
 /* Copyright statement definition - at runtime */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              GOTO       CMDLBL(ENDCLPGM)
  

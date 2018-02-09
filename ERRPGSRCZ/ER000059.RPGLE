@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ER Update MX Files for Bundesbank')              *
@@ -9,14 +9,16 @@
       *                                                               *
       *  ER000059 - Midas ER Update MX Files for Bundesbank           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD025621A          Date 04Apr14               *
-      *  Prev Amend No. MD025621           Date 31Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025621A          Date 04Apr14               *
+      *                 MD025621           Date 31Mar14               *
       *                 AR690511*CREATE    Date 31Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025621A - Files are updated even when inputs did not pass  *
       *              validation.                                      *
       *  MD025621 - Include an optional MQ Manager Field.             *
@@ -624,4 +626,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

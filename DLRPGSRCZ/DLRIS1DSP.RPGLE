@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Reporting Information Screen 1 Display')      *
@@ -12,15 +12,17 @@
       *  Function:  This module displays the screen 1 of the Dealing  *
       *             Reporting Information screen                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSW214             Date 25Nov14               *
-      *  Prev Amend No. MD023264           Date 05Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *                 MD023264           Date 05Nov13               *
       *                 MD023197           Date 03Nov13               *
       *                 CSW213  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  MD023264 - CCP House details should only be shown for FXDL   *
       *             with non-precious metal currencies. (Recompile)   *

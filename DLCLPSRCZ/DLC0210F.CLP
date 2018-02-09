@@ -8,19 +8,21 @@
 /********DLC0210F-RESET*BUSY*FLAG*IN*DLSTAT*****                     */
 /*   DLC0210F - RESET 'DEALING CONFIRMATIONS ACTIVE' FLAG ON DLSTAT  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 079445             DATE 02DEC94              */
-/*       PREV AMEND NO. E14914             17/07/89                  */
+/*       Prev Amend No. 079445             Date 02Dec94              */
+/*                                         Date                      */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       079445 - Include in Release 10                              */
 /*                Amend pgm to use Midas Info Screen                 */
 /*       E14914 - NEW PROGRAM                                        */
@@ -30,7 +32,7 @@
              DCL        VAR(&REPLY) TYPE(*CHAR) LEN(1)
              DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                       /*079445*/
              ALCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD)) WAIT(30)
@@ -74,6 +76,6 @@
                                                                       /*079445*/
  ENDPGM:     DLCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

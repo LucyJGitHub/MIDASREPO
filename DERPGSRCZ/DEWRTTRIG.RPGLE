@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DE Write trigger entries')
@@ -19,20 +19,22 @@
       *             details are sent to CCRM through Meridian         *
       *             replication via MQ/Series messages.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CDE005             Date 20Aug02               *
+      *  Prev Amend No. CDE005             Date 20Aug02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
-      *  Prev Amend No. CCB009             Date 19Jun00               *
+      *                 CCB009             Date 19Jun00               *
       *                 CDE001  *CREATE    Date 23Nov99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDE005 - Data Export - Reservation ID                        *
       *  CCB009 - COB Journalling. Set on LR to allow ENDCMTCTL.      *
       *  CDE001 - Data Export - CCRM Limits.                          *
@@ -76,4 +78,4 @@
       *                                                                         CCB009
      C                   RETURN
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

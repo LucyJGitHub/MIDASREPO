@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       DLC0727 - Fixed Deposit Register                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG3871            Date 30Jul04              */
-/*       Prev Amend No. CDL024 *CREATE     Date 31Mar04              */
+/*       Prev Amend No. BUG3871            Date 30Jul04              */
+/*                      CDL024 *C *CREATE  Date 31Mar04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG3871 - Fixed Deposit Register always reports an error.   */
 /*       CDL024 - Fixed Deposit Register                             */
 /*                                                                   */
@@ -25,7 +27,7 @@
              PGM PARM(&RSEQ &RLEV &RENT &RPARM)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL       VAR(&LDA)   TYPE(*CHAR)  LEN(256) VALUE(' ')
 /**/
@@ -78,5 +80,5 @@ ABNOR:
 /**/
 /**/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

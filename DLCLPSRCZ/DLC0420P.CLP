@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       DLC0420P - Fwd Revaluation by NPV Method Prompt Screen      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG11277           Date 25Apr06              */
+/*       Prev Amend No. BUG11277           Date 25Apr06              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CAS001  *CREATE    Date 23Nov01              */
+/*                      CAS001  *CREATE    Date 23Nov01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG11277 - DLC0420 10001 terminated abnormally              */
 /*       CAS001 - Net Present Value (NPV) Accounting                 */
 /*                                                                   */
@@ -26,7 +28,7 @@
              PGM        PARM(&RSEQN &RLEVL &RENTY &RPARM &RACTN &RFUNC)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&RSEQN) TYPE(*CHAR) LEN(5)
@@ -80,6 +82,6 @@
              CHGVAR     VAR(%SUBSTRING(&RPARM 1 1)) VALUE(&#1NPV)
  
  ENDLBL:
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2001')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2001')
              ENDPGM

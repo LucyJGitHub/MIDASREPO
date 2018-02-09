@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Accounting Rules Monitor Check')
@@ -10,10 +10,11 @@
       ***GL000585*-*Midas*OF*Accounting*Rules*Monitor*Check************                     MD029739
       *  DI000585 - Midas OF Accounting Rules Monitor Check           *                     MD029739
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD029739 *RENAMED* Date 15Aug14               *
-      *  Prev Amend No. MD029683           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *                 MD029683           Date 19Aug14               *
       *                 MD025967           Date 24Apr14               *
       *                 MD024878           Date 20Feb14               *
       *                 MD025013           Date 13Feb14               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029739 - File renaming for integration layer.              *
       *  MD029683 - All Nostro transactions subject to reconciliation *
       *             should be written to Accounting Rules Nostro      *
@@ -45,12 +47,12 @@
       *  CGL135B  - Accounting Rules Process                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
@@ -64,30 +66,30 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Nostro Details                                                    MD023628
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)                               MD023628
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      ** File DS
      **   Midas GL Accounting Rules Monitor File
      D*DSACMNTD*     E DS                  EXTNAME(GLACMNTD)                                MD029739
      D DSACMNTD      E DS                  EXTNAME(DIACMNTD)                                MD029739
- 
+
      **   Midas GL Accounting Rules Sequence Holder
      D DSACSQTD      E DS                  EXTNAME(GLACSQTD)
- 
+
      **   Midas OF Accounting Rules Process for Nostro Reconciliation                      MD023628
      D*DSARNRTD*     E DS                  EXTNAME(GLARNRTD)                      MD023628 MD029739
      D DSARNRTD      E DS                  EXTNAME(DIARNRTD)                               MD029739
@@ -99,23 +101,23 @@
       **   Midas OF Meridian Intellimatch RAW data                                         MD023628
      D*DSACMETD*     E DS                  EXTNAME(IGACMETD)                      MD023628 MD029739
      D DSACMETD      E DS                  EXTNAME(DIACMETD)                               MD029739
- 
+
       **   Midas OF MT940/941/942/950 Messages Requests - Extented detail                  MD023628
      D DSMR941D      E DS                  EXTNAME(GLMR941D)                               MD023628
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access object programs
      D @RTCD           S              7
      D @OPTN           S              7
      D @SARD           S              6
- 
+
      D WSEQN           S              7  0
      D WRun            S              1
- 
+
       ***Front*Office*Id*DS*(GLACMNTD)*********************************                     MD029739
       ** Front Office Id DS (DIACMNTD)                                                      MD029739
      D WHFRNT          DS            20
@@ -125,7 +127,7 @@
      D**WHFRNLT               16     16                                         Letter
      D**WHFRNFL               17     20                                         Filler
      D  WHFRNFL               16     20                                         Filler
- 
+
       ** Parameter list fields
      D PBTID           S             60                                         Batch Id
      D PARST           S             30                                         AR Status
@@ -133,7 +135,7 @@
      D PMSGR           S                   LIKE(DSMR941D)                       Msg Req.   MD023628
      D PSEQN           S              7                                         Sequence
      D PZONE           S             10                                         Zone
- 
+
       ** AR Status
      D*ArSTAT1****     C                   CONST('AR INITIATED')                           MD023629
      D*ArSTAT2****     C                   CONST('AR PROCESSING')                          MD023629
@@ -146,12 +148,12 @@
      D ArSTAT5         C                   CONST('Journal Batch Held')                     MD023989
      D ArSTAT6         C                   CONST('Real Time Post Failed')                  MD023989
      D ArSTAT7         C                   CONST('Complete - No Journal Batch')             MD029683
- 
+
      D LETR            S              1    DIM(26) CTDATA PERRCD(26)
- 
+
      D CGL145          S              1                                         ForeCast   MD023628
      D CGL146          S              1                                         MT940 I/C CMD023628
- 
+
      D WkRealTime      S              1A                                        Real Time PMD023628
      D WkProdMT9xx     S              1A                                        Produce MT9MD023628
      D WkOurAccNost    S             35A                                        Our AccountMD023628
@@ -188,7 +190,7 @@
      D   P@YYYY                1      4  0                                                 MD023628
      D   P@MM                  5      6  0                                                 MD023628
      D   P@DD                  7      8  0                                                 MD023628
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -200,13 +202,13 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       * Init Processing
      C                   EXSR      INIT
- 
+
       * End Processing
      C                   EXSR      END
- 
+
      C                   RETURN
       *****************************************************************
       *  P R O G R A M   E N D                                        *
@@ -890,28 +892,28 @@ b1   C                   If        SQLSTT = '00000'
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PBTID
      C                   PARM                    PARST
      C                   PARM                    PZONE
- 
+
       ** Set off program indicators
      C                   EVAL      *INU7 = *OFF
      C                   EVAL      *INU8 = *OFF
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Access Bank details
      C                   CALL      'AOBANKR0'
      C                   PARM      *Blanks       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        @RTCD <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = @OPTN
@@ -920,7 +922,7 @@ b1   C                   If        SQLSTT = '00000'
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CGL145 - Forecast is enabled                                             MD023628
       *                                                                                    MD023628
      C                   EVAL      CGL145 = 'N'                                            MD023628
@@ -1030,9 +1032,9 @@ b1   C                   If        SQLSTT = '00000'
       *                                                               *
       *****************************************************************
      C     END           BEGSR
- 
+
      C                   EVAL      *INLR = *On
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1049,18 +1051,18 @@ b1   C                   If        SQLSTT = '00000'
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blanks
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
 ** LETR

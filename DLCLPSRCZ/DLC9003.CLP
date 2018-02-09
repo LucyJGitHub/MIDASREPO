@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       DLC9003 - ADJUSTMENTS PROCESSING FOR SERVICE FEE           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC020             Date 31Mar04              */
+/*       Prev Amend No. CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. CCB009            DATE 01Jun00              */
+/*                      CCB009             Date 01Jun00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408            DATE 04MAY95              */
 /*                      S01390            DATE 03AUG92              */
@@ -25,6 +26,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
 /*       CCB009 - Journal files throughout close of business        */
 /*       S01408 - Addition of core hook DLC9003MP1                  */
@@ -40,7 +42,7 @@
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6) VALUE('  JLIB')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                /*S01390*/
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)                  /*S01390*/
@@ -309,7 +311,7 @@ NOJRNRCV:    ENDDO                                                    /*S01390*/
              CALL      PGM(CB0150) PARM(&CNAM &CSEQ 'N')              /*S01390*/
 /***END:         ENDPGM                                              * *S01390*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,DLC9003011                                          */
 /*                                                                                        /*CSC020*/
 /* Write current journal sequence number to file SCJSEQPD, using command SCWRTJREG.       /*CSC020*/

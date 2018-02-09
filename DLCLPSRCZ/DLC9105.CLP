@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       DLC9105 - PRINT INTEREST HISTORY REPORT                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 073175 *CREATE     DATE 21MAR97              */
+/*       PREV AMEND NO. 073175 *CREATE     DATE 21MAR97              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       073175 - Interest history enquiry print <F9> resulted in    */
 /*                message 'Interest history print unsuccessful'.     */
 /*                Introduce pgm DLC9105 and DLC9110. Fix originally  */
@@ -30,7 +32,7 @@
 /*/COPY WNCPYSRC,DLC9105INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&SEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&LEV) TYPE(*CHAR) LEN(1)
@@ -104,7 +106,7 @@ ABNOR:
 /**/
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,DLC9105END                                          */
  

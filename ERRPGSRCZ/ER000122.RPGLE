@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas @24 KWG display transmitted authority')          *
@@ -13,10 +13,11 @@
       *  Function : This program displays the transmitted authority   *
       *             holders for an account.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD041464           Date 23Sep16               *
-      *  Prev Amend No. CER068             Date 25Feb14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD041464           Date 23Sep16               *
+      *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24101           Date 27May09               *
       *                 BUG23947           Date 20May09               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD041464 - Non-account holder numbers truncated.  Increase   *
       *             D1CUS to 10. (Recompile)                          *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
@@ -409,4 +411,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

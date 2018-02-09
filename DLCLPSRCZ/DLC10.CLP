@@ -7,10 +7,11 @@
 /*                                                                  */
 /*       DLC10 - SHADOW POSTING FOR DEALING                         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*       Last Amend No. BUG23732           Date 23Apr09              */
-/*       Prev Amend No. BUG23123           Date 09Mar09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG23732           Date 23Apr09              */
+/*                      BUG23123           Date 09Mar09              */
 /*                      BUG23008           Date 20Feb09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -39,6 +40,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG23732- Joint Account threshold                           */
 /*       BUG23123 - Report: Does not show Retail Account Number      */
 /*                          Date is not Midas Standard Date          */
@@ -83,7 +85,7 @@
 /**/
 /*/COPY WNCPYSRC,DLC10003                                            */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number * /*S01117**BHF124*/
 /**DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)/*S01117**BHF124*/
@@ -373,5 +375,5 @@
                                                                      /*S01408*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       ERLUTOPC - Download PCfile to Folder                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX008  *CREATE    Date 23Feb00              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX008  *CREATE    Date 23Feb00              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses*/
 /*                                                                   */
@@ -37,7 +39,7 @@
              DCL        VAR(&CPT2) TYPE(*DEC) LEN(2 0) VALUE(9)
              DCL        VAR(&CPT2CHR) TYPE(*CHAR) LEN(2) VALUE('09')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
              DCLF       FILE(ERLUDPPD) RCDFMT(ERLUDPD0)
  
@@ -143,7 +145,7 @@ ERROR:       IF         COND(&TYPE *EQ 'RT14') THEN(SNDPGMMSG +
                           MSG('Download of ERFT14PP failed') +
                           TOMSGQ(MOPERQ MRUNQ))
  
- ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
              MONMSG     MSGID(CPF0000)
              ENDPGM

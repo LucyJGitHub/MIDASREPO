@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       DLC9035 - PROGRAM TO CONTROL THE CHEQUE RE-PRINT            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 051880             DATE 07JAN94              */
-/*       PREV AMEND NO. S01390             DATE 04AUG92              */
+/*       Prev Amend No. 051880             Date 07Jan94              */
+/*                      S01390             Date 04Aug92              */
 /*                      S01179             DATE 17/01/89             */
 /*                      AUS006             DATE 18DEC90              */
 /*                      EA001              DATE 07/06/88             */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       051880 - Reinstate part deleted by S01390 on                */
 /*                interactive printing.                              */
 /*              - Message should be sent to user.                    */
@@ -46,7 +48,7 @@
              DCL        VAR(&OPT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&OPT1) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01390*/
              DCL        VAR(&RLVL) TYPE(*CHAR) LEN(1)                 /*S01390*/
@@ -202,5 +204,5 @@
  
 /***END:         ENDPGM                                              * *S01390*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01390*/

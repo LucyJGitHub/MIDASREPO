@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas @24 KWG display transmission response')          *
@@ -12,15 +12,17 @@
       *  Function : This program displays the response to a           *
       *             transmitted file.                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD027196           Date 19Aug14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027196           Date 19Aug14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG23947           Date 20May09               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027196 - Missing Error Codes for BankVerlag missinng in    *
       *             BFM.                                              *
       *           - Recompiled due to CER068 changes in ERTRSPPD.     *
@@ -302,4 +304,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

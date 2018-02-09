@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       EMC0603 INPUT CYCLE EXPOSURE FILE CREATE                   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*           Last Amend No. MD030956         Date  09Oct14           */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD030956           Date 09Oct14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*           Prev Amend No. CTI002           Date  20Nov98          */
+/*                      CTI002             Date 20Nov98              */
 /*                          S01408           Date  20Jun95          */
 /*                          S01473           DATE  26JUL94          */
 /*                          E23410           DATE  19OCT90          */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*        MD030956 - Additional changes to BFM-TI enhancement       */
 /*        CTI002 - Trade innovation phase 2                         */
 /*        S01408 - Addition of core hooks EMC0603MP1                */
@@ -42,7 +44,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
@@ -219,5 +221,5 @@ MSG:         IF         COND(&ERR *EQ 'Y') THEN(DO)                   /*S01473*/
     ERROR:
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
            ENDPGM

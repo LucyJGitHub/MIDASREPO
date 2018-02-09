@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /***D ***RPG***********************************************************
 /*OVRF*: OVRDBF DLPCSCRX DLPCSCPD                                     *
@@ -11,10 +11,11 @@
      F*                                                               *
      F*  DL2901 - DETERMINE DEAL ACTIVITY FOR ON-LINE UPDATES         *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. AR743357           Date 06Jul17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 AR743357 *CREATE   Date 06Jul17               *
       *                 AR812349           Date 23Oct12               *
       *                 AR746335           Date 17Oct12               *
       *                 CLE134             Date 01Aug12               *
@@ -48,6 +49,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  AR743357 - Clone of DL2900 where it will use DLPCSCRX        *
       *             instead of DLPCSCPD.                              *
@@ -1529,4 +1531,4 @@
      C*****************************************************************
       /SPACE 5
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

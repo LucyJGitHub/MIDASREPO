@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas EM Update I/C Exposure for Nxt Days TF Trans')   *
@@ -17,12 +17,14 @@
       *             forward transactions from the Dealing, Lending,   *
       *             etc. modules (EM0700).                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CTI007  *CREATE    Date 31Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CTI007  *CREATE    Date 31Mar14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
 /*    *  CTI007 - Trade Finance BF Midas 2.2 Exposure Management      *
       *                                                               *
       *****************************************************************

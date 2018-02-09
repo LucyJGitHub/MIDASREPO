@@ -9,7 +9,7 @@
       *                                                               *
       *  DL0280 - DEALS FILE UPDATE                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
       *****************************************************************
@@ -29040,7 +29040,7 @@
       /EJECT                                                                                  CAS005
       *Externalisation of SR/SRRSAC                                                           CPK024
      C/COPY DLCPYSRC,DL0280RSAC
-
+ 
       /EJECT                                                                                  CAS005
       *Externalisation of SR/SRRSIN                                                           CPK021
      C/COPY DLCPYSRC,DL0280RSIN
@@ -31771,7 +31771,7 @@
      C                                                                                        CRE105
      C                   ENDSR                                                                CRE105
       ****************************************************************                        CRE105
-
+ 
      C/COPY DLCPYSRC,DL0280MMCF                                                               CAS009
      C/COPY DLCPYSRC,DL0280HIST                                                               232928
      C/COPY DLCPYSRC,DL0280HSTQ                                                               232928
@@ -33099,7 +33099,7 @@
 SALE VALUE                                                                                    CDL099
 PURCH. VALUE                                                                                  CDL099
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   ZFMD  -  NUMBER OF DAYS IN THE MONTH
 312831303130313130313031
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN

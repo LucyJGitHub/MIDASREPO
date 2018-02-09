@@ -16,21 +16,23 @@
 /*                 If a Rebuild is not necessary then the file,      */
 /*                 DLMMDFPP, is reorganised to stop it getting huge. */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 228542             Date 05Aug04              */
+/*       Prev Amend No. 228542             Date 05Aug04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 102674             Date 25Apr96              */
+/*                      102674             Date 25Apr96              */
 /*                      E28440             Date 30Sep91              */
 /*                      S29020             DATE 30SEP91              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       102674 - Reorganisation of premium discount file fails if   */
 /*                no records on file.                                */
@@ -47,7 +49,7 @@
              PGM        PARM(&TERM)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&DLMMDF) TYPE(*CHAR) LEN(16)
@@ -115,5 +117,5 @@
 ERROR:       CHGVAR     VAR(&TERM) VALUE('E')
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

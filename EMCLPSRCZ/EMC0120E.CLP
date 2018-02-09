@@ -7,19 +7,21 @@
 /*                                                                   */
 /*  EMC0120C - OPTIONS DEAL ENQUIRY FOR EXPOSURE MANAGEMENT          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL029             Date 01Sep03              */
+/*       Prev Amend No. CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01332             Date 24APR91              */
+/*                      S01332             Date 24Apr91              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*  S01332 - Program created for Exposure Management Release 10      */
 /*                                                                   */
@@ -33,7 +35,7 @@
     PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&RETN) TYPE(*CHAR) LEN(1)
@@ -85,6 +87,6 @@
     ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
     ENDPGM

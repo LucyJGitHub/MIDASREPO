@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       DLC07 - SPOT REVALUATION                                   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       LAST AMEND. 142919                  DATE 09MAY01           */
+/*       PREV AMEND. 142919                  DATE 09MAY01           */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND. S01408                  DATE 18NOV96           */
+/*                   S01408                  DATE 18NOV96           */
 /*                   S01408                  DATE 26JUL96           */
 /*                   S01408                  DATE 08MAY96           */
 /*                   E243                    DATE 26FEB90           */
@@ -25,6 +26,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       142919 - When Analytical Accounting module is *ON, do not  */
 /*                run DL0450.                                       */
 /*                AOMMODR0 should be called with &OPTN(*FREE) in    */
@@ -56,7 +58,7 @@
 /*                                                                     *S01408*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**DCL*VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number * *S01117 /*E243*/
 /**DCL*VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B *S01117 /*E243*/
@@ -142,5 +144,5 @@ END:                                                                  /*S01408*/
 /*/COPY WNCPYSRC,DLC07END                                              *S01408*/
 /*                                                                     *S01408*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

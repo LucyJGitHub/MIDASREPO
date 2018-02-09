@@ -8,14 +8,15 @@
 /*                                                                  */
 /*     ERC0000  - SETUP European Reporting Files                    */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG10196           Date 28Jan06              */
+/*                      BUG10196           Date 28Jan06              */
 /*                      BUG10108           Date 25Jan06              */
 /*                      CER001             Date 25Apr05              */
 /*                      ULX024             Date 03Sep99              */
@@ -34,6 +35,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       BUG10196 - Deal Type/Sub Type DB Error                      */
 /*       BUG10108 - Failed during switching off                      */

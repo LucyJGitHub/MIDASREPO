@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       DLC0401 - INPUT CYCLE TERMINATION CONFIRMATION PRINT       */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 111547                  DATE  26FEB97       */
-/*       PREV AMEND NO. S01408                  DATE  13MAY96       */
+/*       PREV AMEND NO. 111547                  DATE  26FEB97       */
+/*                      S01408                  DATE  13MAY96       */
 /*                      083768                  DATE  16JAN95       */
 /*                      S01522                  DATE  18NOV94       */
 /*                      AUS009                  DATE  23JUL92       */
@@ -30,6 +31,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       111547  -  You should not overide the printer file.        */
 /*       S01408  -  Addition of core hook DLC0401002                */
 /*                  Addition of core hook DLC0401001                */
@@ -50,7 +52,7 @@
 /*/                                                             */    /*S01408*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*********   DCLDTAARA  DTAARA(MMOD)                                    S01179*/
 /**********  DCLDTAARA  DTAARA(DLSTAT)                                  S01179*/
@@ -229,5 +231,5 @@
              RCLRSC     LVL(*CALLER)                                  /*E252*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

@@ -10,10 +10,11 @@
       *                                                               *
       *  Function: This program validates DL RPIF user input.         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. MD030858A          Date 25Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD030858A          Date 25Nov14               *
       *                 MD030858           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
       *                 MD024185           Date 19Dec13               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD030858A - Execution timestamp (Date) is not generated when *
       *             the RPIF fields were populated via Interface      *

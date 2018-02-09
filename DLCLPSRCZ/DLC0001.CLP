@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       DLC0001 - APPC connection program to Citydealer             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Last Amend No. 130547             Date 06Jan00              */
+/*       Prev Amend No. 130547             Date 06Jan00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK009             Date 09Jul99              */
+/*                      CPK009             Date 09Jul99              */
 /*                      085931             Date 07APR95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       130547 - CREATE DATA AREA LDA , OVERRIDE SDCURRL1 TO        */
 /*                SHARE(*NO)                                         */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
@@ -34,7 +36,7 @@
 /* Copyright statement definition                               */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
  
@@ -50,7 +52,7 @@
 /**  Copyright statement definition - at runtime                   */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /** START OF 130547 **/
              OVRDBF     FILE(SDCURRL1) SHARE(*NO)

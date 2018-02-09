@@ -7,19 +7,21 @@
 /*                                                                  */
 /*     ERC0605  - RECOVERY PROCESSING                               */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. 132400             Date 18Mar98              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      132400             Date 18Mar98              */
 /*                      IMI001             Date 24May97              */
 /*                    ER0356 PT          DATE 11AUG93               */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*     132400 - EMERGENCY FIX TO INCREASE THE LENGHT OF &LIB1       */
 /*     IMI001 - DLIB REPLACED BY DPLIB                              */

@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       ERCLU25 - Folder Path for PCFiles - Maintenance             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX040  *CREATE    Date 28Feb01              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX040  *CREATE    Date 28Feb01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       ULX040 - FIRE - RT30 Generation in Midas                    */
 /*                                                                   */
@@ -28,7 +30,7 @@
 /**********  DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)                   */              /*CER001*/
 /**********  DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)                   */              /*CER001*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))
@@ -51,7 +53,7 @@
              MONMSG     MSGID(CPF0000)
  
  ENDPGM:
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
              MONMSG     MSGID(CPF0000)
              ENDPGM

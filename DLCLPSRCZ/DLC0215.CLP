@@ -7,23 +7,25 @@
 /*                                                                  */
 /*       DLC0215 -BROKERAGE RATES FILE MAINTENANCE (LUXEMBOURG)     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01194                  DATE  27NOV89       */
+/*       Prev Amend No. S01194             Date 27Nov89              */
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01194 - RELEASE 10 NEW STANDING DATA FILES                */
 /*       S01199 - PGM NEW FOR ON LINE HELP TEXT                     */
 /********************************************************************/
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
@@ -42,6 +44,6 @@
                 SNDPGMMSG MSG(&MSG) TOMSGQ(MOPERQ) MSGTYPE(*INFO)
              ENDDO
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 ENDPGM:      ENDPGM

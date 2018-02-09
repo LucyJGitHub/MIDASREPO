@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       ERCAG08 - AGDL Extract details                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. CC0001             Date 20Jul99              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CC0001             Date 20Jul99              */
 /*                      155076             Date 11Feb99              */
 /*                      ULX010  *CREATE    Date 21apr98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       CC0001 - Change Control for DL                              */
 /*       155076 - New fonctionalities of ULX010                      */
@@ -30,7 +32,7 @@
  
 /*  Declare variables  */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(75) VALUE('ERAG08 +
@@ -90,5 +92,5 @@
 /***  End Program  ***/
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

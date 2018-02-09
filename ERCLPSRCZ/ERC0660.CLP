@@ -7,14 +7,15 @@
 /*                                                                  */
 /*     ERC0660  - EUROPEAN REPORTING - Download of Tables           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. 187689             Date 19Dec00              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      187689             Date 19Dec00              */
 /*                      CAD016 PT          Date 11Sep98              */
 /*                    ULX004             DATE 18OCT94               */
 /*                    ER_R10             DATE 18OCT94               */
@@ -25,6 +26,7 @@
 /*                    ERL300 AF          DATE   19JAN93             */
 /*                    ER0117             DATE  10DEC92              */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*     187689 - "GRD" CURRENCY IN EMU                                */
 /*     CAD016 - ERLU111 IS STILL APPLICABLE                          */

@@ -10,23 +10,25 @@
 /**      Function: This program will call DL0200: Deals with       */
 /**                Effective Interest Rate equal to Zero.          */
 /**                                                                */
-/**      (c) Misys International Banking Systems Ltd. 2005         */
+/**      (c) Finastra International Limited 2005                   */
 /**                                                                */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/**      Last Amend No. CDL033  *CREATE    Date 23Feb05            */
+/*       Prev Amend No. CDL033  *CREATE    Date 23Feb05              */
 /**                                                                */
 /**----------------------------------------------------------------*/
 /**                                                                */
+/*       MD046248 - Finastra Rebranding                              */
 /**      CDL033 - Floating Rate CDs Issued                         */
 /**                                                                */
 /*******************************************************************/
              PGM        PARM(&CNAM &CSEQ)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
@@ -94,7 +96,7 @@
                           MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
  
              ENDPGM

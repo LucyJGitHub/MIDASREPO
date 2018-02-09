@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DE Projected extract of FX deals')               *
@@ -14,10 +14,11 @@
       *             and DEPCASHPD files. These are used for the       *
       *             reporting of exposure within CCRM.                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CSW212             Date 03May12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -69,13 +71,13 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
-
+ 
      FDEPTRANPD O    E           K DISK    INFSR(*PSSR)
      FDEPPOSNPD O    E           K DISK    INFSR(*PSSR)
      FDEPEVNTPD O    E           K DISK    INFSR(*PSSR)
      FDEPCASHPD O    E           K DISK    INFSR(*PSSR)
      FFXNETML3  IF   E           K DISK    INFSR(*PSSR)                                       208221
-
+ 
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -93,14 +95,14 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
-
+ 
       *
       **  Deal types
      D TABCDE          S              2    DIM(8) CTDATA PERRCD(1)
@@ -108,12 +110,12 @@
                                                                                               208221
       * Power array                                                                           208221
      D POWER           S              7  3 DIM(7) CTDATA PERRCD(1)              POWERS OF 10  208221
-
-
+ 
+ 
      D FXDEAL        E DS                  EXTNAME(FXDEALPP)
      D DEALDB        E DS                  EXTNAME(DEALSDB)
-
-
+ 
+ 
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D**W#PAYA**               3     14                                                       CGL029
@@ -137,16 +139,16 @@
      D  W#ISCY                18     20
      D W#TABT          DS
      D  W#TDES                 1     16
-
-
+ 
+ 
       ** DEFINE FIELDS FOR ZDATE10
      D                 DS
      D ZWDTIN                  1      8S 0
      D  ZWYYYY                 1      4S 0
      D  ZWMTH                  5      6S 0
      D  ZWDAY                  7      8S 0
-
-
+ 
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -157,7 +159,7 @@
       ** External DS for Switchable Features details                                          CDE002
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)                                  208221
       ** Extract Control Data                                                                 208221
                                                                                               208221
@@ -189,7 +191,7 @@
       *
      C                   MOVEL     Dataarea      DEEXTCTL                                     208221
      C                   EXSR      INIT
-
+ 
      C     I#ACTN        IFNE      'D'
       *
       ** MAIN PROCESSING - 'ASSET' POSITION
@@ -809,7 +811,7 @@
       * Inputs
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           30
-
+ 
      C                   PARM                    BUYSELL           1
      C                   PARM      W#CCY         ECCY              3
      C                   PARM      T#MDAT        EDAT              5 0
@@ -980,7 +982,7 @@
       *********************************************************************
       /SPACE 5
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** TABSEQ/TABTYP. DEAL TYPES
 FPFX FOR.CCY PURCH
 FSFX FOR.CCY SOLD

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Fwd reval by NPV mtd w/ PCA - on request')
@@ -10,14 +10,15 @@
       *  DL0421 - Forward Commitments Revaluation Report by NPV       *
       *           with PCA Periodic - On Request                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 242593             Date 21Nov06               *
+      *  Prev Amend No. 242593             Date 21Nov06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG12465           Date 08Nov06               *
+      *                 BUG12465           Date 08Nov06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  242593 - Database error occurs in SDBOOKPD when Internal     *
       *           Contract deals with blank book codes are processed. *
       *  BUG12465 - Validate profit center code only if they are      *
@@ -1712,4 +1714,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

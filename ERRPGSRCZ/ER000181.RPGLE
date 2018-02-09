@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ER Transaction Type Decision Take-On')           *
@@ -12,14 +12,16 @@
       *  Function:  This program populates Transaction Type Decision  *
       *             Table with dealing and lending type/subtype/class *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG26779           Date 27Nov09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26779           Date 27Nov09               *
       *                 CER045  *CREATE    Date 20Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26779 - Change Request on GSART Table                     *
       *  CER045 - German Features - Reporting Bundesbank              *

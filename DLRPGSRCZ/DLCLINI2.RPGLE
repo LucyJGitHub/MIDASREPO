@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(C) Copyright Midas-Kapiti International Ltd. 2005')
+     H COPYRIGHT('(C) Copyright Finastra International Limited, 2005')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas DL Set class on transactions')                   *
@@ -10,10 +10,11 @@
       *  DLCLINI2 - Set class on transactions                         *
       *             (Dealing initialisation program)                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSW212             Date 03May12               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -57,66 +59,66 @@
       *  CDL038 - Extended Deal Sub Type                              *
       *                                                               *
       *****************************************************************
-
+ 
      FSDTCLDPD  IP   E             DISK
-
+ 
      FDEALSDB   UF   E             DISK
      FDLBHISPD  UF   E             DISK
      FFXDEALPP  UF   E             DISK
      FABDEALPP  UF   E             DISK
-
+ 
      FDEALSDC   UF   E             DISK
      FDLCHISPD  UF   E             DISK
      FMMDELDPP  UF   E             DISK
-
+ 
      FDEAMSDI   UF   E             DISK
      FMMDEAMPP  UF   E             DISK
-
+ 
      FDEALSDD   UF   E             DISK
      FDLDHISPD  UF   E             DISK
      FMMDENBPP  UF   E             DISK
-
+ 
      FDEALSDE   UF   E             DISK
      FDLEHISPD  UF   E             DISK
      FMMDENSPP  UF   E             DISK
-
+ 
      FDEALSDG   UF   E             DISK
      FDLGHISPD  UF   E             DISK
-
+ 
      FQSYSPRT   O    F  132        PRINTER USROPN
-
+ 
      D DB              S              2    DIM(10) CTDATA PERRCD(10)
      D DC              S              2    DIM(30) CTDATA PERRCD(30)
      D DD              S              2    DIM(30) CTDATA PERRCD(30)
      D DE              S              2    DIM(30) CTDATA PERRCD(30)
      D DG              S              2    DIM(30) CTDATA PERRCD(30)
-
-
+ 
+ 
      C                   EXSR      P_DEALSDB
      C                   EXSR      P_DLBHISPD
      C                   EXSR      P_FXDEALPP
      C                   EXSR      P_ABDEALPP
-
+ 
      C                   EXSR      P_DEALSDC
      C                   EXSR      P_DLCHISPD
      C                   EXSR      P_MMDELDPP
-
+ 
      C                   EXSR      P_DEAMSDI
      C                   EXSR      P_MMDEAMPP
-
+ 
      C                   EXSR      P_DEALSDD
      C                   EXSR      P_DLDHISPD
      C                   EXSR      P_MMDENBPP
-
+ 
      C                   EXSR      P_DEALSDE
      C                   EXSR      P_DLEHISPD
      C                   EXSR      P_MMDENSPP
-
+ 
      C                   EXSR      P_DEALSDG
      C                   EXSR      P_DLGHISPD
-
+ 
      C                   ADD       1             Count             3 0
-
+ 
      CLR                 EXSR      FINISH
       /SPACE 5
       ********************************************************************
@@ -405,16 +407,16 @@
       ********************************************************************
      C     FINISH        BEGSR
      C                   OPEN      QSYSPRT
-
+ 
       * Report error or completion
-
+ 
      C     Count         IFNE      1
      C                   EXCEPT    ERR
      C                   SETON                                        U8
      C                   ELSE
      C                   EXCEPT    FIN
      C                   ENDIF
-
+ 
      C                   CLOSE     QSYSPRT
      C                   ENDSR
       ********************************************************************

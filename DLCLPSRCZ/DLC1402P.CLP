@@ -8,20 +8,22 @@
 /*       DLC1402P - ON REQUEST PROCESSING MENU                      */
 /*                  (BASED ON L3MNUK)                               */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E36223         DATE 30APR92                 */
-/*       PREV AMEND NO. E38675         DATE 23APR92                 */
+/*       Prev Amend No. E36223             Date 30Apr92              */
+/*                      E38675             Date 23Apr92              */
 /*                      E245           DATE 7MAR90                  */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*    E36223 - ALLOW DISPLAY OF PROMPT VALUE WHEN AMEND             */
 /*    E38675 - SHOW MIDAS RUN DATE ON DISPLAY INSTEAD OF ACTUAL DATE*/
 /*    E245 - CORRECT PARMS AND ADD CMD PROCESSING                   */
@@ -31,7 +33,7 @@
              PGM PARM(&RSEQ &RLEV &RENT &PARM &RACT &RCMD)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1) VALUE(C)
              DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
@@ -157,6 +159,6 @@ MNUBGN:      SNDRCVF    RCDFMT(DL1402DF)
              GOTO       MNUBGN
 MNUEND:      CHGJOB     SWS(00000000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
              ENDPGM

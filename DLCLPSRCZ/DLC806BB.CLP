@@ -6,16 +6,17 @@
 /*                                                                  */
 /* DLC806BB - COUNTRY DEALING EXPOSURE BY BOOKING BRANCH            */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/* LAST AMEND NO. CDL002               DATE  22SEP97                */
-/* PREV AMEND NO. 064998               DATE  23DEC93                */
+/* PREV AMEND NO. CDL002               DATE  22SEP97                */
+/*                064998               DATE  23DEC93                */
 /*                E27942               DATE  03SEP91                */
 /*                E195                 DATE  19DEC89                */
 /*                E26                  DATE  02NOV89                *  E26   */
@@ -23,6 +24,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /* CDL002  - FX Netting. Override net event file to correct logical */
 /*           based on entity of the report.                         */
 /* 064998  - If called twice through the same job the program leaves*/
@@ -38,7 +40,7 @@
 /**/
              PGM        PARM(&RSEQ &RLEV &RENT &PARM)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
@@ -151,7 +153,7 @@
              GOTO       CMDLBL(END)
 ABNOR:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              SNDPGMMSG  MSG('Country Dealing Exposure - ' *CAT +
                           &PROPNR *TCAT '  ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)

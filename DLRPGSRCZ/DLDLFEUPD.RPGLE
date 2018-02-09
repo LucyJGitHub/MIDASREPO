@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Dealing Fees Database Update')                *
@@ -12,10 +12,11 @@
       *  Function:  This function allows the update of corresponding  *
       *             Dealing Fees record into the Midas database.      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -60,14 +62,14 @@
       * Midas DL Dealing Fees File
      FDLFEEDL7  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
-
+ 
       * Midas DL Dealing FeeS File by Deal/Fee Seq
      FDLFEEDL1  IF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLFEEDD0 : DLFEEDX0)
-
+ 
       * Midas DL Dealing Fees History File
      FDLFHSTL1  IF A E           K DISK    INFSR(*PSSR)
-
+ 
       * Midas DL Dealing Fees Trailer File
      FDLFEEZ    UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
@@ -101,56 +103,56 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
-
+ 
       **  Table
      D CURR            S              3    DIM(150)                             ALL CCYS
      D TXND            S              1  0 DIM(150)                             Tlx NtcDay/CCY
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
-
+ 
       ** Timestamp for the transaction
      D TimeStamp       S               Z
-
+ 
       **  Externally Described Data Structure for Valid Deal Fees
      D DLVDLFE       E DS                  EXTNAME(DLVDLFEPD)
-
+ 
       ** Rename fields for Timestamp checking
      D ChkDLFEFmt    E DS                  EXTNAME(DLFEED)
      D                                     PREFIX(CH)
-
+ 
      D DealsDtlC     E DS                  EXTNAME(DEALSDC)
      D                                     PREFIX(C_)
-
+ 
      D DealsDtlD     E DS                  EXTNAME(DEALSDD)
      D                                     PREFIX(D_)
-
+ 
       **  Midas Dealing Fees File
      D DealFee       E DS                  EXTNAME(DLFEED)
-
+ 
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** Midas Modules details accessed via access program
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Currency Details
                                                                                               CAS011
@@ -159,41 +161,41 @@
                                                                                               CAS011
       * First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       * Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
-
+ 
       ** 24X7 status data area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
-
+ 
       ** Midas API Message Header Format Definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
-
+ 
       * Data Structure for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
-
+ 
       ** External DS for Nostro Details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
-
+ 
       ** Work file of update to LE position files
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
-
+ 
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
-
+ 
       ** DS for ZMUSER details                                                               BUG9516
      D ZMUSER          DS            17                                                      BUG9516
      D  PUSRID                 1     10                                                      BUG9516
                                                                                              BUG9516
       ** Fields defined for Enhancement CSC011
-
+ 
      D CSC011          S              1A
      D TRANSDTL        S           5800A
      D PDealNum        S             18A
@@ -202,10 +204,10 @@
      D PRtCd           S              7A
      D POptn           S              7A
      D PSard           S              6A
-
+ 
       ** AOFEER0 Parameters                                                                   CAS011
      D PKEY            S              2A                                                      CAS011
-
+ 
       ** Work fields
      D Idx             S              3P 0
      D WKREQI          S             32A
@@ -233,7 +235,7 @@
      D @XTIME          S              6S 0                                                    CSW208
 GDM  D WADJY           S              1A
 GDM  D WUPDEI          S              1A
-
+ 
       /EJECT
       *****************************************************************
       *                                                               *
@@ -243,11 +245,11 @@ GDM  D WUPDEI          S              1A
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
-
+ 
      C     ReturnCode    IFNE      *BLANKS
      C                   RETURN
      C                   END
-
+ 
       **  Get default user from ZMUSER                                                       BUG9516
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG9516
      C                   IN        ZMUSER                                                    BUG9516
@@ -255,19 +257,19 @@ GDM  D WUPDEI          S              1A
      C                   EVAL      PSUser = PUSRID                                           BUG9516
                                                                                              BUG9516
       ** Exit if not Insertion, Amendment, Deletion
-
+ 
      C     DLLCDT        IFNE      'I'
      C     DLLCDT        ANDNE     'A'
      C     DLLCDT        ANDNE     'D'
      C     DLLCDT        ANDNE     'X'
      C                   RETURN
      C                   END
-
+ 
       ** Clear Shadow Post data structures
-
+ 
      C                   CLEAR                   Z#BSTS
      C                   CLEAR                   Z#ASTS
-
+ 
      C                   MOVE      DLFCOD        PKEY                                         CAS011
      C                   CALL      'AOFEER0'                                                  CAS011
      C                   PARM      '*BLANKS'     PRTCD                                        CAS011
@@ -281,13 +283,13 @@ GDM  D WUPDEI          S              1A
      C                   ENDIF                                                                CAS011
                                                                                               CAS011
       ** Insert, Amend, Authorise or Delete Dealing Fee
-
+ 
      C     DLLCDT        CASEQ     'I'           DLFEINS
      C     DLLCDT        CASEQ     'A'           DLFEAMD
      C     DLLCDT        CASEQ     'X'           DLFEAUT
      C     DLLCDT        CASEQ     'D'           DLFEDLT
      C                   END
-
+ 
       *                                                                                       CSW208
       ** Generate Confirmation                                                                CSW208
       ** SWIFT 2008 should be ON                                                              CSW208
@@ -302,31 +304,31 @@ GDM  D WUPDEI          S              1A
                                                                                               CSW208
      C                   MOVEL     DealFee       Z#ASTS
      C                   EXSR      SRSHDW
-
+ 
       ** If 24x7 Midas Availability is installed
       ** and Support System is active
-
+ 
      C                   IF        (CSC011 = 'Y') AND (S1SUPP = LIBR)
-
+ 
      C                   CALLB     'DLDLFELOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    DealFee
      C                   PARM                    TRANSDTL
-
+ 
       ** If there is no error, write the log file
-
+ 
      C                   IF        RetCodeOut = *BLANKS
-
+ 
      C                   EVAL      APTGTTYPE = 'DLFEED'
      C                   EVAL      APFOTRANID = DFFRNT
      C                   EVAL      APRPRLOCN  = DFREPA
      C                   EVAL      APUSERID   = PSUser
      C                   EVAL      APMIDUSR   = PSUser
-
+ 
      C                   MOVE      DFDLNO        DADLNO
      C                   MOVE      DFFSEQ        DAFSEQ
      C                   EVAL      PDealNum = DADLNO + DAFSEQ
-
+ 
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
@@ -334,19 +336,19 @@ GDM  D WUPDEI          S              1A
      C                   PARM      *BLANKS       PTimestamp
      C                   PARM                    PDealNum
      C                   PARM      *BLANKS       PADealNo
-
+ 
      C                   ENDIF
-
+ 
       ** If there is an error in either log file, end program
-
+ 
      C                   IF        RetCodeOut <> *BLANKS
      C                   EVAL      ReturnCode = '*ERROR'
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Exit Program
-
+ 
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -356,25 +358,25 @@ GDM  D WUPDEI          S              1A
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
-
+ 
       ** Retrieve current details
-
+ 
      C                   EVAL      ReturnCode = *BLANKS
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
-
+ 
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    @Return           6
      C                   PARM                    @Type             1
-
+ 
       ** Set retrieve mode to blank  (Access using Midas transaction ID).
-
+ 
      C     @Type         IFEQ      '0'
      C                   MOVE      '*FRONT'      ModeofOp
      C                   ELSE
      C                   MOVE      *BLANKS       ModeofOp
      C                   END
-
+ 
      C                   IF        DLFSEQ = 0
      C                   EVAL      DAFSEQ = *BLANK
      C                   ELSE
@@ -398,25 +400,25 @@ GDM  D WUPDEI          S              1A
      C                   PARM                    Idx
      C                   PARM                    DealsDtlC
      C                   PARM                    DealsDtlD
-
+ 
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
-
+ 
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original record was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
-
+ 
       ** Interactive mode:
-
+ 
      C     @TYPE         IFEQ      '1'
-
+ 
      C     CHDFTMST      IFNE      DLTMST
      C                   MOVEL     '*RECUPD'     ReturnCode
      C                   END
-
+ 
       ** Batch mode:
      C                   ELSE
      C     OKACTN        IFEQ      'N'
@@ -424,7 +426,7 @@ GDM  D WUPDEI          S              1A
      C     OKFSEQ        OREQ      'N'
      C                   MOVEL     '*RECUPD'     ReturnCode
      C                   Z-ADD     1             C                 2 0
-
+ 
      C     C             DOWLE     ArrayMax
      C     FldNameArr(C) ANDNE     *BLANKS
      C                   MOVEL     *BLANKS       DBError          28
@@ -436,11 +438,11 @@ GDM  D WUPDEI          S              1A
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -450,26 +452,26 @@ GDM  D WUPDEI          S              1A
       *                                                              *
       ****************************************************************
      C     DLFEINS       BEGSR
-
+ 
       ** Initialise Deal Fee
-
+ 
       ** Generate fee sequence no.
      C                   EVAL      WDLNO = DLDLNO
      C                   EXSR      DLFESEQ
      C                   EVAL      WDLNO = DLDLNO
      C                   EVAL      WFSEQ = DFFSEQ
      C                   EVAL      DLFSEQ = DFFSEQ                                             TEDDY
-
+ 
      C                   CLEAR                   DealFee
-
+ 
      C                   MOVEL     DLVDLFE       DealFee
-
+ 
      C                   EVAL      DFDLNO = WDLNO
      C                   EVAL      DFFSEQ = WFSEQ
-
+ 
       ** If CSC011 is installed, supply a Front Office ID for the
       ** transaction even if it originated from SIN module.
-
+ 
      C                   IF        CSC011 = 'Y'
      C                   IF        DFFRNT = *BLANKS
      C                   MOVE      DFDLNO        DADLNO
@@ -477,7 +479,7 @@ GDM  D WUPDEI          S              1A
      C                   EVAL      DFFRNT = 'MD' + DADLNO + DAFSEQ
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
@@ -494,18 +496,18 @@ GDM  D WUPDEI          S              1A
      C                   EVAL      DFORED = BJRDNB
      C                   EVAL      DFIUSR = PSUser
      C                   EVAL      DFTMST = TimeStamp
-
+ 
 GDM  C                   EXSR      SRUpdEIR                                                   CAS011
 GDM  C                   EVAL      DFTFTD = *ZERO
 GDM  C                   EVAL      DFAFLS = *ZERO
 GDM  C                   EVAL      DFADJY = WADJY
       ** WRITE Deal Fee
-
+ 
      C                   WRITE     DLFEEDD0
-
+ 
       * Update Trailer File
      C                   EXSR      SRTRAL
-
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -515,15 +517,15 @@ GDM  C                   EVAL      DFADJY = WADJY
       *                                                              *
       ****************************************************************
      C     DLFEAMD       BEGSR
-
+ 
       ** Access Deal Fee
-
+ 
      C                   EVAL      DFDLNO = DLDLNO
      C                   EVAL      DFFSEQ = DLFSEQ
      C     @KDLFE0       CHAIN     DLFEEDL7                           99
-
+ 
       ** Database Error
-
+ 
      C                   IF        *IN99 = '1'
      C                   MOVEL     DFDLNO        DBKEY
      C                   MOVE      DFFSEQ        DBKEY
@@ -537,7 +539,7 @@ GDM  C                   EVAL      DFADJY = WADJY
      C                   ENDIF                                                                CSW208
       *
       ** Set SWIFT Message Regeneration Indicator
-
+ 
      C                   EXSR      SRSWRI
 GDM
 GDM  C                   EVAL      WUPDEI = 'N'
@@ -574,15 +576,15 @@ GDM  C                   IF        WUPDEI = 'Y'
 GDM  C                   EXSR      SRUpdEIR
 GDM  C                   EVAL      DFADJY = WADJY
 GDM  C                   ENDIF
-
+ 
      C                   MOVEL     DealFee       Z#BSTS
-
+ 
      C                   MOVEL     DLVDLFE       DealFee
-
+ 
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
-
+ 
      C                   EVAL      DFSWRI = W@SWRI
      C                   EVAL      DFFCOD = DLFCOD
      C                   EVAL      DFFCCY = DLFCCY
@@ -599,11 +601,11 @@ GDM  C                   ENDIF
      C                   EVAL      DFFSTS = 'C'
      C                   END
      C                   EVAL      DFTMST = TimeStamp
-
+ 
       * Update Deal Fee
-
+ 
      C                   UPDATE    DLFEEDD0
-
+ 
       * Update Trailer File
      C                   EXSR      SRTRAL
       *
@@ -616,15 +618,15 @@ GDM  C                   ENDIF
       *                                                              *
       ****************************************************************
      C     DLFEAUT       BEGSR
-
+ 
       ** Access Deal Fee
-
+ 
      C                   EVAL      DFDLNO = DLDLNO
      C                   EVAL      DFFSEQ = DLFSEQ
      C     @KDLFE0       CHAIN     DLFEEDL7                           99
-
+ 
       ** Database Error
-
+ 
      C                   IF        *IN99 = '1'
      C                   MOVEL     DFDLNO        DBKEY
      C                   MOVE      DFFSEQ        DBKEY
@@ -644,17 +646,17 @@ GDM  C                   ENDIF
       ** Set SWIFT Message Regeneration Indicator
       *
      C                   EXSR      SRSWRI
-
+ 
      C                   MOVEL     DLVDLFE       DealFee
-
+ 
      C                   EVAL      DFSWRI = W@SWRI
      C                   EVAL      DFLCDT = DLLCDT
      C                   EVAL      DFLCHD = BJRDNB
      C                   EVAL      DFXUSR = PSUser
      C                   EVAL      DFFSTS = 'A'
-
+ 
       * Update Deal Fee
-
+ 
      C                   UPDATE    DLFEEDD0
       *
      C                   ENDSR
@@ -666,15 +668,15 @@ GDM  C                   ENDIF
       *                                                               *
       *****************************************************************
      C     DLFEDLT       BEGSR
-
+ 
       * Access Deal Fee
-
+ 
      C                   EVAL      DFDLNO = DLDLNO
      C                   EVAL      DFFSEQ = DLFSEQ
      C     @KDLFE0       CHAIN     DLFEEDL7                           99
-
+ 
       ** Database error
-
+ 
      C     *IN99         IFEQ      '1'
      C                   MOVEL     DFDLNO        DBKEY
      C                   MOVE      DFFSEQ        DBKEY
@@ -688,7 +690,7 @@ GDM  C                   ENDIF
      C                   IF        CSW208 = 'Y'                                               CSW208
      C                   EXSR      CONF                                                       CSW208
      C                   ENDIF                                                                CSW208
-
+ 
       *
       ** Set SWIFT Message Regeneration Indicator
       *
@@ -702,15 +704,15 @@ GDM  C                   ENDIF
      C                   EVAL      DFLCHD = BJRDNB
      C                   EVAL      DFFSTS = 'A'
      C                   EVAL      DFAUSR = PSUser
-
+ 
  GDM C                   EXSR      SRUpdEIR
       * Delete Deal Fee Logically
-
+ 
      C                   UPDATE    DLFEEDD0
-
+ 
       * Update Trailer File
      C                   EXSR      SRTRAL
-
+ 
      C                   ENDSR
       /EJECT
       ****************************************************************
@@ -718,7 +720,7 @@ GDM  C                   ENDIF
       * SRSWRI  - Set SWIFT Message Regeneration Indicator           *
       *                                                              *
       ****************************************************************
-
+ 
      C     SRSWRI        BEGSR
       *
      C                   MOVE      *BLANK        W@SWRI
@@ -972,15 +974,15 @@ GDM  C                   ENDIF
      C                   MOVE      *BLANKS       KCNUM
      C                   CALL      'AONOSTR0'    PLIST1
       ** Call Nostro Details Access Object
-
+ 
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      *BLANK        ZLOC
      C                   ELSE
      C                   MOVE      A7NOSN        ZLOC
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   EXSR      ZFWDT
       ** Calculate Number of days forward
       *
@@ -1043,53 +1045,53 @@ GDM  C                   ENDIF
       *                                                               *
       *****************************************************************
      C     DLFESEQ       BEGSR
-
+ 
      C                   Z-ADD     99            WFSEQ
-
+ 
       **  Prevent pick up of details from previous fee
-
+ 
      C     KEY001        SETGT     DLFEEDX0
      C     KEY002        READPE    DLFEEDX0                               20
-
+ 
      C                   IF        *IN20 = *ON
      C                   MOVE      '01'          DFFSEQ
-
+ 
      C                   ELSE
-
+ 
      C                   IF        WDLNO = DFDLNO
      C                   ADD       1             DFFSEQ
-
+ 
      C                   ELSE
-
+ 
       ** There are no existing fee records with the key fields input so
       ** put original values back in key fields ready for file update
       ** and allocate a fee sequence no. of 01.
-
+ 
      C                   Z-ADD     WDLNO         DFDLNO
      C                   MOVE      '01'          DFFSEQ
-
+ 
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Having checked the live fees the matured fees need to be
       ** checked in the same way
-
+ 
      C     KEY001        SETGT     DLFHSTD0
      C     KEY002        READPE    DLFHSTD0                               20
-
+ 
      C                   IF        *IN20 = *OFF
-
+ 
      C                   IF        WDLNO = HIDLNO
      C                   ADD       1             HIFSEQ
-
+ 
      C                   ELSE
      C                   MOVE      '01'          HIFSEQ
-
+ 
      C                   ENDIF
      C                   ENDIF
-
+ 
       **  Store allocated sequence number for output
-
+ 
      C                   IF                  DFFSEQ > HIFSEQ
      C                   MOVE      DFFSEQ        @ALSEQ
      C                   ELSE
@@ -1097,7 +1099,7 @@ GDM  C                   ENDIF
      C                   ENDIF
       *
      C                   MOVE      @ALSEQ        DFFSEQ
-
+ 
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -1300,13 +1302,13 @@ GDM  C                   ENDIF
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
       **  Program Parameters
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    DLVDLFE
-
+ 
       ** Set up parameter fields
       ** PLIST for access program AONOSTR0
      C     PLIST1        PLIST
@@ -1321,32 +1323,32 @@ GDM  C                   ENDIF
      C                   PARM                    KEYG             10
      C                   PARM                    KEYH              1
      C     SDNOST        PARM      SDNOST        DSFDY
-
+ 
       * Key list to chain Dealing Fee file DLFEEDL1
      C     @KDLFE0       KLIST
      C                   KFLD                    DFDLNO
      C                   KFLD                    DFFSEQ
-
+ 
       ** Key list for accessing Market Data Feed Requested Items Details
-
+ 
      C     KLMDFI        KLIST
      C                   KFLD                    WKREQI
      C                   KFLD                    WKDITM
-
+ 
       ** Key list for accessing last Fee Sequence 1
-
+ 
      C     KEY001        KLIST
      C                   KFLD                    WDLNO
      C                   KFLD                    WFSEQ
-
+ 
       ** Key list for accessing last Fee Sequence 2
-
+ 
      C     KEY002        KLIST
      C                   KFLD                    WDLNO
-
+ 
       ** Access Bank details via access program
       ** (database error handling done in access program)
-
+ 
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
@@ -1357,23 +1359,23 @@ GDM  C                   ENDIF
      C                   EVAL      DBASE = 5
      C                   EXSR      *PSSR
      C                   END
-
+ 
       ** Access Module Details
-
+ 
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
-
+ 
       * Database error
-
+ 
      C     @RTCD         IFNE      *BLANKS
      C                   EVAL      DBKEY = @OPTN
      C                   EVAL      DBFILE = 'SDMMODPD'
      C                   EVAL      DBASE = 6
      C                   EXSR      *PSSR
      C                   END
-
+ 
       *
       ** Read in information for dealing currencies.
       ** Store in array
@@ -1410,17 +1412,17 @@ GDM  C                   ENDIF
      C                   ENDDO
       *
       ** Check if CSC011 is installed
-
+ 
      C                   EVAL      CSC011 = 'N'
-
+ 
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
-
+ 
       ** Database error
-
+ 
      C                   IF        (PRtCd <> *BLANKS) and
      C                             (PRtCd <> '*NRF   ')
      C                   EVAL      DBKEY = 'CSC011'
@@ -1428,21 +1430,21 @@ GDM  C                   ENDIF
      C                   EVAL      DBASE = 7
      C                   EXSR      SRERR
      C                   ENDIF
-
+ 
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SDSTAT
      C                   IN        SC24X7
      C                   ENDIF
-
+ 
       ** Determine if CEU003 is installed
-
+ 
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      'CEU003'      PSARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
-
+ 
      C     PRTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CEU003            1
      C                   ELSE
@@ -1458,7 +1460,7 @@ GDM  C                   ENDIF
      C                   IF        PRTCD = 'CSW2008'                                          CSW208
      C                   MOVEL     'Y'           CSW208                                       CSW208
      C                   ENDIF                                                                CSW208
-
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1468,16 +1470,16 @@ GDM  C                   ENDIF
       *                                                              *
       ****************************************************************
      C     SRERR         BEGSR
-
+ 
      C                   MOVEL     '*ERROR '     ReturnCode
      C                   MOVEL     'DLDLFEUPD'   DBPGM
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
      C                   DUMP
-
+ 
       **  Terminate the program
-
+ 
      C                   RETURN
       *
      C                   ENDSR
@@ -1488,4 +1490,4 @@ GDM  C                   ENDIF
      C/COPY ZACPYSRC,PSSR_ILE
       **--------------------------------------------------------------------------------------------
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

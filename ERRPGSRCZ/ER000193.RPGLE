@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                       CER070
 /*STD *  RPGBASEMOD                                                   *                       CER070
@@ -13,10 +13,11 @@
       *  Function: This program creates Transaction and Account       *
       *            Balances extract files for GRI reporting.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. MD030247           Date 26Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 MD030247           Date 26Jan15               *
       *                 MD030946           Date 11Dec14               *
       *                 CER070             Date 19Aug14               *
       *                 CDL096             Date 22Sep14               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD030247 - Increase size of GSRE to 21.                      *
       *             Applied for MD032081                              *
@@ -1014,4 +1016,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

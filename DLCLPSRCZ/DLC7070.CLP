@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       DLC7070  -  OUTSTANDING LOANS/DEPOSITS BY CUSTOMER          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 061431             DATE 07JAN94              */
-/*       PREV AMEND NO. E47978             DATE 01FEB93              */
+/*       Prev Amend No. 061431             Date 07Jan94              */
+/*                      E47978             Date 01Feb93              */
 /*                      S01390             DATE 30AUG92              */
 /*                      S01179             DATE 17/01/89             */
 /*                      SA001              DATE 07/06/88             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       061431 - OVRDBF with POSITION replaced by OPNQRYF due to    */
 /*                a generic problem with the command. If the key     */
 /*                argument has trailing blanks the operation fails.  */
@@ -43,7 +45,7 @@
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)                /*S01179*/
              DCL        VAR(&QRYSEL) TYPE(*CHAR) LEN(80)             /*061431*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01390*/
              DCL        VAR(&RLVL) TYPE(*CHAR) LEN(1)                 /*S01390*/
@@ -156,5 +158,5 @@
 /**/
 /************END:         ENDPGM                                     * *S01390*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01390*/

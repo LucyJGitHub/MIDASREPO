@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas @24 KWG response file receiver')                 *
@@ -13,16 +13,18 @@
       *                                                               *
       *  Component of : ER000110                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER068             Date 25Feb14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER068             Date 25Feb14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26268           Date 01Oct09               *
       *                 262095             Date 14Oct09               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
       *           (Recompile)                                         *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -1364,4 +1366,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

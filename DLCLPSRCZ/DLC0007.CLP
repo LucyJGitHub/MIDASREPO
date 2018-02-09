@@ -13,19 +13,21 @@
 /*                 copy of PF/DLCDNCPD will be created and then      */
 /*                 PGM/DL0007 will be called.                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 096395             DATE 24NOV95              */
-/*       Prev Amend No. CCM002 *CREATE     DATE 04SEP95              */
+/*       Prev Amend No. 096395             Date 24Nov95              */
+/*                      CCM002 *C *CREATE  Date 04Sep95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       096395 - Process items in clearing separately to avoid      */
 /*                extracting the same posting more than once.        */
 /*       CCM002 - Midas/Citydealer Interface (Phases V and VI)       */
@@ -42,7 +44,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&ACCR) TYPE(*CHAR) LEN(5)                 /*096395*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*    Global monitor message                                         */
@@ -135,5 +137,5 @@
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
 /**/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

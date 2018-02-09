@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Accounting Rules Submit transactions')
@@ -10,10 +10,11 @@
       ***GL000587*-*Midas*OF*Accounting*Rules*Submit*transactions******                     MD029739
       *  DI000587 - Midas OF Accounting Rules Submit transactions     *                     MD029739
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD027107           Date 11Dec14               *
-      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027107           Date 11Dec14               *
+      *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD026935           Date 15May14               *
       *                 MD025869           Date 24Mar14               *
       *                 MD024772           Date 03Feb14               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027107 - Split the Accounting Rules Journal Batch Entry    *
       *             once it reach 998 entries.                        *
       *  MD029739 - File renaming for integration layer.              *

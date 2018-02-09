@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(C) Copyright Midas-Kapiti International Ltd. 2005')
+     H COPYRIGHT('(C) Copyright Finastra International Limited, 2005')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas DL Create transfer keys')                        *
@@ -10,18 +10,20 @@
       *  DLCLINI5 - Create Transfer Keys                              *
       *             (Dealing initialisation program)                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER049             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER049             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG9397            Date 14Nov05               *
+      *                 BUG9397            Date 14Nov05               *
       *                 CDL038  *CREATE    Date 10May05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER049 - Stamp Tax (Recompile)                               *
       *  BUG9397 - Swap fees reversed with debit not credit           *
       *  CDL038 - Extended Deal Sub Type                              *

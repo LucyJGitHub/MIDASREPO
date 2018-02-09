@@ -15,22 +15,24 @@
 /*                                                                  */
 /*       Calls :    CB0150                                          */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 228542             Date 05Aug04              */
+/*       Prev Amend No. 228542             Date 05Aug04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 113682             Date 04Feb98              */
+/*                      113682             Date 04Feb98              */
 /*                      101971             Date 17Jul95              */
 /*                      S01408             DATE 19JUN95             */
 /*                      S01493 *CREATE     DATE 16MAY94             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                        */
 /*       113682 - Error messages should be sent to MOPERQ not       */
 /*                QSYSOPR.                                          */
@@ -44,7 +46,7 @@
 /* Copyright statement definition */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
@@ -135,7 +137,7 @@
 /* Copyright statement definition - at runtime */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              CHGVAR     VAR(&BUSY) VALUE('N')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)

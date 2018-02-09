@@ -7,10 +7,11 @@
 /*                                                                  */
 /*       DLC0606C - GENERATE ACCOUNTING ENTRIES                     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG23276           Date 10Mar09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG23276           Date 10Mar09              */
 /*                      CER044             Date 19May08              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -39,6 +40,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG23276 - Items with Customers set up as Banks not shown   */
 /*       CER044 - German Features LF035-00 AWV Reporting             */
@@ -79,7 +81,7 @@
 /*/COPY WNCPYSRC,DLC0606C06                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RENT) TYPE(*CHAR) LEN(3) /* RCF entity code (all/comp/bch)/*S01117*/
@@ -335,5 +337,5 @@
                ENDDO                                                  /*CDL008*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

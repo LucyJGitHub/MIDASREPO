@@ -7,21 +7,23 @@
 /*                                                                   */
 /*     DLC0763    -   FX LIMIT USAGE (80/100%) REPORT                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Last Amend No. 146263             Date 28OCT98              */
+/*       Prev Amend No. 146263             Date 28Oct98              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CDL002             Date 22SEP97              */
+/*                      CDL002             Date 22Sep97              */
 /*                      094233             Date 06OCT95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*      146263 - Run limits extract program DL0740 if the extract    */
 /*               file doesn't already exist.                         */
 /*      CDL002 - FX Netting. Set Switches U3 for Parent/Customer     */
@@ -32,7 +34,7 @@
 PGM    PARM(&RSEQ &RLEV &RENT &RPARM)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
@@ -143,5 +145,5 @@ ABNOR:                                                                /*094233*/
 /**/                                                                  /*094233*/
 END:                                                                  /*094233*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM

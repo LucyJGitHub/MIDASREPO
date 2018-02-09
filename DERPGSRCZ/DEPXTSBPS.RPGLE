@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DE Proj ext of securities book positions')       *
@@ -14,14 +14,15 @@
       *             and DEPCASHPD files. These are used for the       *
       *             reporting of issuer exposure within CCRM.         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 234300             Date 28Sep06               *
+      *                 234300             Date 28Sep06               *
       *                 CSD031             Date 10Apr06               *
       *                 BUG11164           Date 06Apr06               *
       *                 CSE075             Date 17Nov05               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  234300 - Recompiled over changed in PF/HSTTRD.               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -1273,4 +1275,4 @@
       /COPY DECPYSRC,DEPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       EDC0005 - Create a Special Case Batch                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CPK030             Date 08Apr14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CPK030             Date 08Apr14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 117467 *CREATE     Date 30APR97              */
+/*                      117467 *C *CREATE  Date 30Apr97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK030 - Clean up of deliverable data library.              */
 /*       117467 - New program to allow creation of special types     */
 /*                of DTA batch.                                      */
@@ -48,7 +50,7 @@
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')                        /*CPK030*/
              DCL        VAR(&RUNSQL) TYPE(*CHAR) LEN(5000)                                /*CPK030*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -142,7 +144,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,EDC0005END                                          */
  

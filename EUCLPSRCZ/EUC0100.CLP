@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       EUC0100 - Define 'In' Ccy to Euro Retail Account Mapping    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. 243017             Date 05Jul07              */
+/*       Prev Amend No. 243017             Date 05Jul07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. TDA082             Date 29Mar04              */
+/*                      TDA082             Date 29Mar04              */
 /*                      217435             Date 09May03              */
 /*                      CRE008             Date 19Feb02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       243017 - Customer number now can be non-numeric.             */
 /*       TDA082 - No mapping record created                          */
 /*       217435 - Refine mapping to specified A/c Seq. No.           */
@@ -36,7 +38,7 @@
              PGM        PARM(&EMUM)                          /*CRE008*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&DBER) TYPE(*CHAR) LEN(50)
@@ -237,6 +239,6 @@
  
 /*     Normal termination                                            */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  END:
              ENDPGM

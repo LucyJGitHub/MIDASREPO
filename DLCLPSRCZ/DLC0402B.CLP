@@ -7,19 +7,21 @@
 /*                                                                  */
 /*       DLC0402B - PRINT PAY/RECEIVE REPORTS AT I/C TERMINATION    */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01117                  DATE  17/04/89      */
-/*       PREV AMEND NO. S01194                  DATE  17/04/89      */
+/*       Prev Amend No. S01117             Date 17/04/89             */
+/*                      S01194             Date 17/04/89             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01117 - MULTIBRANCHING                                    */
 /*       S01194 - STANDING DATA CHANGES.                            */
 /*                                                                  */
@@ -29,7 +31,7 @@
 /* &RLEV IS A STANDARD RCF PARAMETER NOT USED BY THIS PROGRAM  */
              PGM        PARM(&RSEQ &RLEV &RENT)                       /*S01117*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)        /*S01117*/
@@ -76,5 +78,5 @@
                            TOMSGQ(MOPERQ) MSGTYPE(*INFO)
              ENDDO
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

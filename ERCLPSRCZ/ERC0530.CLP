@@ -7,20 +7,22 @@
 /*                                                                  */
 /*       ERC0530 - Facilites Update For Dealing                     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      CCB009             Date 01Jun00              */
 /*                      ER_R10             Date 12Apr95              */
 /*                      ER0116             Date 15DEC92              */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       CCB009 - Journal files throughout close of business         */

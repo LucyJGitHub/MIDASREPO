@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ER Bundesbank Cash Flow Extract Report')         *
@@ -12,10 +12,11 @@
       *  Function: This program generates report of Extracted         *
       *            Cash Flow detail.                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD030247           Date 26Jan15               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030247           Date 26Jan15               *
+      *                 CER070             Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26702           Date 16Nov09               *
       *                 BUG26695           Date 06Nov09               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD030247 - Increase size of GSRE to 21.                      *
       *             Applied for MD032081 (Recompile)                  *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -603,4 +605,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*DMY)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*S*D ***RPGBASE*******************************************************                       CAAA02
 /*STD *  RPGBASEMOD                                                   *                       CAAA02
@@ -10,10 +10,11 @@
       *                                                               *
       *  DL1912  - IRS Summary Details Enquiry                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 245692             Date 09Dec13               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 245692             Date 09Dec13               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -47,6 +48,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  245692 - Incorrect validation of rates when the decimal se-  *
       *           parator in the Dealing ICD was defined as "," ins-  *
       *           tead of ".".                                        *

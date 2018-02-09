@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       EUC0140  - Bulk Retail account maintenance - Menu           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CRE008             Date 19Feb02              */
+/*       Prev Amend No. CRE008             Date 19Feb02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CEU022 *Create     Date 05Jan98              */
+/*                      CEU022 *C *CREATE  Date 05Jan98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE008 - Cash Management                                    */
 /*       CEU022 - EMU Retail Utilities                               */
 /*                                                                   */
@@ -31,7 +33,7 @@
              DCL        VAR(&EMUM)    TYPE(*CHAR) LEN(1)     /*CRE008*/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -64,6 +66,6 @@
              CHGJOB     SWS(XXXXXX11)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

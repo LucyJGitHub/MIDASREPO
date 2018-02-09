@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       ERC0710 - Downlaod CAd Reporting in PC Format               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. 209262             Date 20Feb01              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      209262             Date 20Feb01              */
 /*                      ULX040  *CREATE    Date 20Feb01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       209262 - CHANGE .PP TO .TXT                                 */
 /*       ULX040 - FIRE - RT30 Generation in Midas                    */
@@ -35,7 +37,7 @@
              DCL        VAR(&DOCNAME) TYPE(*CHAR) LEN(12)
              DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50) VALUE(' ')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /**********  DCLF       FILE(ERPATHPD) RCDFMT(ERPATHD0)                   */              /*CER001*/
@@ -140,7 +142,7 @@
              DLTOVR     FILE(ERBNKXPD)                                                    /*CER001*/
              MONMSG     MSGID(CPF0000)
  
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              MONMSG     MSGID(CPF0000)
              ENDPGM

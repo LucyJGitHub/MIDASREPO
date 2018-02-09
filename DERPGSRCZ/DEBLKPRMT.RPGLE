@@ -17,19 +17,21 @@
       *             DEC0060 - Send Transaction extract data available *
       *                       message                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
-      *  Last Amend No. CDE002             Date 05Dec00               *
+      *  Prev Amend No. CDE002             Date 05Dec00               *
       * Midas DBA 3.03 -----------------------------------------------*
-      *  Prev Amend No. CDE001  *CREATE    Date 16Nov99               *
+      *                 CDE001  *CREATE    Date 16Nov99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDE002 - Data Export - CCRM Revenue Analysis                 *
       *  CDE001 - Data Export - CCRM Limits                           *
       *                                                               *
@@ -320,4 +322,4 @@
       *
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

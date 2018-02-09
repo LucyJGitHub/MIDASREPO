@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas EM Trade finance account balance update')        *
@@ -66,10 +66,11 @@
       *         EM0010   - EM validate and calculate currencies       *
       *         AOCURRR0 - Midas AO currency codes                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD030956           Date 09Oct14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       *                 BUG23967           Date 14May09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -87,6 +88,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
@@ -706,7 +708,7 @@
       *
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
 0000001
 0000010

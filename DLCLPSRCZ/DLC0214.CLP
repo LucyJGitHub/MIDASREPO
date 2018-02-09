@@ -7,14 +7,15 @@
 /*                                                                  */
 /*       DLC0214  - LIST OF TODAY'S DEALS - INPUT CYCLE REPORT      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL038                  Date  10May05       */
-/*       Prev Amend No. CDL021                  Date  03Feb04       */
+/*       Prev Amend No. CDL038             Date 10May05              */
+/*                      CDL021             Date 03Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408                  Date  19AUG96       */
@@ -25,6 +26,7 @@
 /*                      E263                    DATE  14MAR90       */
 /*                      S01194                  DATE  11/08/89      */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL038 - Extended Deal Sub Type                            */
 /*       CDL021 - Reports by Deal Type                              */
 /*       S01408 - Core Hook DLC0214001 Added                        */
@@ -42,7 +44,7 @@
 /*********** PGM PARM(&TYPE &RSEQ &RLEV &RENT) */                                  /*AUS016 CDL021*/
              PGM PARM(&TYPE &RSEQ &RLEV &RENT &PARMS)                                     /*CDL021*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*E263*/
    DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)        /*E263*/
@@ -92,5 +94,5 @@
                            TOMSGQ(MOPERQ) MSGTYPE(*INFO)
              ENDDO
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

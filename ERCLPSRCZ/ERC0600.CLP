@@ -7,14 +7,15 @@
 /*                                                                  */
 /*     ERC0600  - CONTROL MANAGER                                   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX024             Date 03Sep99              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX024             Date 03Sep99              */
 /*                      MHFIX              Date 09Mar99              */
 /*                    ER0449             Date 18Jan95               */
 /*                    ER_R10             DATE 31OCT94               */
@@ -31,6 +32,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*  ULX024 - Trade Innovation/CSSF Reporting Interface              */
 /*  MHFIX  - CALL OF ERC0605 WITH GOOD PARAMETERS                   */

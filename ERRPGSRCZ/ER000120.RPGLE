@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas @24 KWG display transmission file history')      *
@@ -15,16 +15,18 @@
       *                                                               *
       *  Component of : ER000120                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD031059           Date 25Nov14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031059           Date 25Nov14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24101           Date 27May09               *
       *                 BUG23947           Date 20May09               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031059 - Bug in enquiry screen: §24c KWG Transmission File *
       *             History. Do not call ZVACTBU when action code is  *
       *             blank.                                            *
@@ -990,4 +992,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

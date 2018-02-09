@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Reporting Information Maintenance')           *
@@ -12,10 +12,11 @@
       *  Function:  This is the main screen input function for        *
       *             DL Reporting Information Maintenance              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. MD029862           Date 25Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD029862           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
       *                 MD024151           Date 18Dec13               *
       *                 MD023197           Date 03Nov13               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD029862 - Various Function Key Errors in Deals Enquiry      *
       *  CSW214 - SWIFT Changes 2014                                  *

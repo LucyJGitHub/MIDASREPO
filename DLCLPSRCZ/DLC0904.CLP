@@ -7,22 +7,24 @@
 /*                                                                  */
 /*       DLC0904 - DEAL NUMBER INPUT GAPS - INPUT CYCLE             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Last Amend No. 169253             Date 15May02              */
+/*       Prev Amend No. 169253             Date 15May02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. E312               Date 09Apr90              */
+/*                      E312               Date 09Apr90              */
 /*                      S01117             Date 22Sep89              */
 /*                       S01194       DATE 22/09/89                 */
 /*                       S01179       DATE 14/09/88                 */
 /*                                                                  */
 /*------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       169253 - Call DL0850 before calling DL0851. New PF is       */
 /*                created and used for DL0850.                       */
 /*       E312    -  CREATE LDA IN QTEMP                             */
@@ -42,7 +44,7 @@
    DCL VAR(&RENT) TYPE(*CHAR) LEN(3) /* RCF entity code */            /*E264*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*********** DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)                 /*S01117*/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*S01117*/
@@ -93,5 +95,5 @@ ERROR:          IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
             ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

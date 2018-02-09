@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       ERC0932 - ER Maturing Collateral Report                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX004             Date 22Jan97              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX004             Date 22Jan97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       ULX004 - Capital Adequacy                                   */
 /*                                                                   */
@@ -25,7 +27,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                      Misys International Banking Systems Ltd. 2005')
+                      Finastra International Limited 2005')
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
@@ -75,6 +77,6 @@
              DMPCLPGM
  
  ENDPGM:     CHGVAR     VAR(&CPYFLD) +
-                     VALUE('(c) Misys International Banking Systems +
-                            Ltd. 2005')
+                     VALUE('(c) Finastra International Limited +
+                            2005')
              ENDPGM

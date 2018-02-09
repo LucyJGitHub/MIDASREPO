@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Fees activity enquiry')                       *
@@ -12,10 +12,11 @@
       *  Function:  This module will show all fee attached to the     *
       *             deal.                                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD036070           Date 19Oct15               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
       *             function key F11.                                 *
@@ -877,7 +879,7 @@
       *
      C                   DOW       @INKC = '0' AND
      C                             @INKL = '0'
-     C                             AND @INKK = '0'                                          MD036070           
+     C                             AND @INKK = '0'                                          MD036070
  
      C                   CALLB     'ZASETINSIN'
       *

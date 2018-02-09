@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DE Put message on MQM queue')                    *
@@ -13,20 +13,22 @@
       *             to instruct the CCRM Limits system that data      *
       *             is ready for retrieval.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1004819          Date 30Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1004819          Date 30Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
-      *  Prev Amend No. CDE001  *CREATE    Date 19Nov99               *
+      *                 CDE001  *CREATE    Date 19Nov99               *
       *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1004819 - Only recognises default queue manager            *
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
@@ -320,4 +322,4 @@
       * * P S S R  --- A B N O R M A L   E R R O R   C O N D I T I O N S
       /COPY DECPYSRC,DEPSSR
 **CTDATA cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

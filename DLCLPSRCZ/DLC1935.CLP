@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       DLC1935 - SWAP RATES MAINTENANCE                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC023             Date 29Jan04              */
+/*       Prev Amend No. CSC023             Date 29Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 110242             Date 07Nov96              */
+/*                      110242             Date 07Nov96              */
 /*                      CIR001             Date 13Jun95              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
 /*       110242 - Change defaults for SBMJOB cmd to take *JOBD       */
@@ -31,7 +33,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -60,7 +62,7 @@ ERROR:       SNDPGMMSG MSG('Transaction failed. Re-input necessary. +
              RETURN
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 END:
  /* Submit job to recalculate IRS Discount Factors */

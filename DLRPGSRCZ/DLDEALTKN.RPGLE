@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Deal Take-on Module')                         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  DLDEALTKN - Take-on tax calculation on deposit deals         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CER070             Date 25Nov14               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -104,7 +106,7 @@
       *  235045 - Calculate tax on deal for take-on                   *
       *                                                               *
       *****************************************************************
-
+ 
      FDEALSALL  IF   E           K DISK    PREFIX(D_)
      F                                     IGNORE(DEALSDBF)
      F*****                                IGNORE(DEALSDCF)
@@ -120,18 +122,18 @@
      F                                     IGNORE(DLDHISD0)
      F                                     IGNORE(DLEHISD0)
      F                                     IGNORE(DLGHISD0)
-
+ 
      FSDJACCLB  IF   E           K DISK
-
+ 
       ** Tax Calculation Methods file
      FSDTXCML1  IF   E           K DISK    INFSR(*pssr)
                                                                                               236453
       ** Historic Deal Events                                                                 236453
      FHIST4     IF   E           K DISK    PREFIX(H_)                                         236453
-
+ 
       ** Customer Income File
      FSDCSINPD  O    E             DISK    INFSR(*pssr)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -151,73 +153,73 @@
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the SE standard declares
      D/COPY SECPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data Structure for Bank Details
-
+ 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       * External DS for Branch Details
-
+ 
      D SDLOCN        E DS                  EXTNAME(SDLOCNPD)
       * External DS for Location Details
-
+ 
      D SDCTTX        E DS                  EXTNAME(SDCTTXPD)
       * External DS for Securities Clients
-
+ 
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
       ** External DS for Additional Customer Details
-
+ 
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)
       ** External DS for Non Account Holder Details
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       * Data Structure for Currency Details
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D  QQDFA1       E                     EXTFLD(QQDFAC)                                     CGL035
       ** External DS for Customer
-
+ 
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** Second DS for Access Programs, Long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     236453
-
+ 
       *                                                                                       CER048
       ** External DS for Sar Details                                                          CER048
       *                                                                                       CER048
@@ -230,17 +232,17 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D ZZBEG           S              5P 0
      D ZZBEG2          S              5P 0                                                    236453
      D IP1Date         S              5P 0                                                    236453
      D ZZEND           S              5P 0
      D @@IDays         S              5P 0
      D @@TDays         S              5P 0
-
+ 
      D @PCUST          S              6A
      D @PNAHO          S             10A
-
+ 
      D PCURR           S              3A
      D PDBaseKey       S             10A
      D PDBaseFil       S             10A
@@ -289,7 +291,7 @@
      D PTrnTypEnd      S              1A
      D PTSTNLU         S              5P 0
      D PRTCD           S              7A
-
+ 
      D WCustomer       S              6A
      D WCNCD           S              2A
      D WCOLC           S              2A
@@ -302,10 +304,10 @@
      D WYear1          S              2A
      D WYear2          S              4A
      D WELGTx          S              1A                                                    BUG23325
-
+ 
       ** Timestamp for the transaction
      D TimeStamp       S               Z
-
+ 
      D ZRATE1          S             13P 8
      D ZRATE2          S             13P 8
      D ZRATEX          S             13P 8
@@ -338,7 +340,7 @@
      D*PStxa****       S             15P 0                                           CER048 BUG22911
      D PSard           S              6A                                                      CER048
      D WSecTxAmt       S             15P 0                                                    CER048
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -353,11 +355,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Initialization
-
+ 
      C     *LOVAL        SETLL     DEALSALL
-
+ 
      C                   DOW       *IN30 = '0'
      C                   READ      DEALSALL                               30
      C**********         IF        *IN30 = '0'                                             BUG16152A
@@ -372,7 +374,7 @@
      C                   IF        D_DTYP = 'IT'  OR D_DTYP = 'TD'
      C                             OR D_DTYP = 'CD' OR D_DTYP = 'DT'
      C                             OR D_DTYP = 'LT' OR D_DTYP = 'FT'
-
+ 
      C                   IF        D_POBR <> '   '
      C                   EVAL      PBranch = D_POBR
      C                   ELSE
@@ -382,7 +384,7 @@
      C                   EVAL      PCurrency = D_CCY
      C                   EVAL      PSetType = D_PSTM
      C                   EVAL      PSetAcc = D_PONS
-
+ 
      C                   EVAL      WEUTaxAmt = *Zero
      C                   EVAL      WSecTxAmt = *ZEROS                                         CER048
      C                   EXSR      SRRtvEff
@@ -390,25 +392,25 @@
      C                              OR ( D_SLID <> D_VDAT AND D_SLID <> 0
      C                                   AND D_SLID >= EWEDT1
      C                                   AND D_SLID < BJRDNB )
-
+ 
       ** Retrieve Interest Settlement Customer
-
+ 
      C                   EXSR      SRGetSetAc
-
+ 
      C                   MOVE      PCustNum      WCustomer
      C                   MOVE      D_DLNO        WDealNo
-
+ 
      C                   EXSR      SRInterest
      C                   EXSR      SRCal_Tax
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
-
+ 
       ** Return
-
+ 
      C                   SETON                                        LR
       *****************************************************************
       /EJECT
@@ -418,22 +420,22 @@
      C     SRGetSetAc    BEGSR
       *
      C                   EVAL      PCustNum = D_CNUM
-
+ 
      C                   IF        PSetType <> 00
      C                   CALLB     'ZAGETSETAC'
-
+ 
       ** Outputs
      C                   PARM                    PRetCode
      C                   PARM                    PAccCode
      C                   PARM                    PAccSeq
      C                   PARM                    PMemosInd
      C                   PARM                    PPronoInd
-
+ 
       ** Input/Output
      C                   PARM                    PBranch
      C                   PARM                    PCustNum
      C                   PARM                    PCurrency
-
+ 
       ** Inputs
      C                   PARM                    PSetType
      C                   PARM                    PSetAcc
@@ -442,9 +444,9 @@
      C     PCustNum      IFEQ      *BLANKS                                                   CSD027A
      C                   EVAL      PCustNum = D_CNUM                                          236064
      C                   ENDIF                                                                236064
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -454,7 +456,7 @@
       *                                                               *
       *****************************************************************
      C     SRRtvEff      BEGSR
-
+ 
      C                   MOVEL     D_BRCA        @BRCH             3
      C**********         CALLB     'AOBRCHR0'                                                 CGL035
      C                   CALL      'AOBRCHR1'                                                 CGL035
@@ -463,33 +465,33 @@
      C                   PARM                    @BRCH
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL035
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL035
-
+ 
      C     @RTCD         IFNE      *BLANKS
      C                   EVAL      DBKEY = D_BRCA
      C                   EVAL      DBFILE = 'SDBRCHPD'
      C                   EVAL      DBASE = 3
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   MOVEL     A8LCCD        @LCCD             3
      C                   CALL      'AOLOCNR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @LCCD
      C     SDLOCN        PARM      SDLOCN        DSFDY
-
+ 
      C     @RTCD         IFNE      *BLANKS
      C                   EVAL      DBKEY = A8LCCD
      C                   EVAL      DBFILE = 'SDLOCNPD'
      C                   EVAL      DBASE = 4
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   MOVEL     *BLANK        @PKEY1           10
      C                   MOVEL     D_CNUM        @PKEY1
-
+ 
       ** Customer details
-
+ 
      C**********         CALL      'AOCUSTR0'                                                 236453
      C                   CALL      'AOCUSTR2'                                                 236453
      C                   PARM      *BLANK        @RTCD
@@ -498,9 +500,9 @@
      C                   PARM                    @PKYST            7
      C*****SDCUST        PARM      SDCUST        DSSDY                                        236453
      C     SDCUST        PARM      SDCUST        DSLDY                                        236453
-
+ 
       ** Database Error
-
+ 
      C     @RTCD         IFNE      *BLANK
      C     BBCLST        ANDNE     'Y'                                                        236453
      C**********         EVAL      DBKEY = @PKYST                                             236453
@@ -509,21 +511,21 @@
      C                   EVAL      DBASE = 5
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Country of Tax
-
+ 
      C                   EVAL      WCNCD = DVCNCD
      C                   EVAL      WCOLC = BBCOLC
-
+ 
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      WCNCD         @PCTRT            2
      C                   PARM      WCOLC         @PCTRR            2
      C     SDCTTX        PARM      SDCTTX        DSFDY
-
+ 
      C                   IF        @RTCD = '*NRF   '
-
+ 
      C                   EVAL      WCOLC = *BLANK
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       @RTCD
@@ -531,18 +533,18 @@
      C                   PARM      WCNCD         @PCTRT
      C                   PARM      WCOLC         @PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
-
+ 
       ** Database Error
-
+ 
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      DBKEY = @PCTRT + ' ' + @PCTRR
      C                   EVAL      DBFILE = 'SDCTTXPD'
      C                   EVAL      DBASE = 6
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      WELGTx = *BLANKS                                         BUG23325
       *                                                                                     BUG23325
       ** Check for type of Tax based on Residents and Non Residents                         BUG23325
@@ -577,30 +579,30 @@
       *              last interest payment date                       *
       *****************************************************************
      C     SRInterest    BEGSR
-
+ 
      C                   IF        D_VDAT > EWEDT1
      C                   EVAL      ZZBEG = D_VDAT
      C                   ELSE
      C                   EVAL      ZZBEG = EWEDT1
      C                   ENDIF
-
+ 
      C                   EVAL      ZZEND = 0
      C                   IF        D_SLID <> 0 AND D_SLID <> D_VDAT
      C                   EVAL      ZZEND = D_SLID
      C                   ENDIF
-
+ 
      C                   IF        ZZEND = 0 AND D_MDAT <> 0
      C                             OR ( D_MDAT > ZZEND AND D_MDAT >= EWEDT1
      C                                                 AND D_MDAT < BJRDNB )
      C                   EVAL      ZZEND = D_MDAT
      C                   ENDIF
-
+ 
      C                   IF        D_INTC = 'Y'
      C                   EVAL      PTotalInt = D_ICTD
      C                   ELSE
      C                   EVAL      PTotalInt = D_IPRD
      C                   ENDIF
-
+ 
      C                   IF        D_VDAT <> ZZBEG AND D_VDAT <> ZZEND
      C                   EVAL      @@IDays = ZZEND - ZZBEG
      C                   EVAL      @@TDays = ZZEND - D_VDAT
@@ -660,7 +662,7 @@
      C                   Endif                                                  - E2          236453
                                                                                               236453
      C                   ENDIF                                                  - E1          236453
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -668,19 +670,19 @@
       * SRCal_Tax - Calculate Tax for the Interest                    *
       *****************************************************************
      C     SRCal_Tax     BEGSR
-
+ 
       ** Calculate Withholding Tax
-
+ 
      C                   EXSR      SRCallZPI
-
+ 
      C                   SELECT
-
+ 
      C                   WHEN      PReturn = 'ERROR'
      C                   EVAL      DBASE = 103
      C                   EVAL      DBFILE = PDBaseFil
      C                   EVAL      DBKEY  = PDBaseKey
      C                   EXSR      *PSSR
-
+ 
      C                   WHEN      PReturn <> 'JOINT'
      C                   EVAL      WEUTaxAmt = PTaxAmt
      C                   EVAL      WSecTxAmt = PStxa                                          CER048
@@ -689,15 +691,15 @@
      C                   IF        PTaxCcy <> '   '
      C                   EXSR      SR_OutFile
      C                   ENDIF
-
+ 
      C                   WHEN      PReturn = 'JOINT'
-
+ 
       ** Process JOINT accounts
-
+ 
      C                   EXSR      SRProcJA
-
+ 
      C                   ENDSL
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -705,7 +707,7 @@
       * SRCallZPI - Calculate EU Withhlding Tax for Private Individual
       *****************************************************************
      C     SRCallZPI     BEGSR
-
+ 
      C                   MOVE      *BLANKS       PJointAcNo                                   235320
      C                   MOVE      *BLANKS       PNAHRef                                      235320
      C                   MOVE      *BLANKS       PInvProp                                     235320
@@ -716,7 +718,7 @@
      C                   ENDIF                                                              BUG23325
                                                                                               235320
      C                   CALL      'ZATXCLPI'
-
+ 
       ** Input parameters
      C                   PARM      'D'           PModuleID
      C                   PARM      WDealNo       PTransRef
@@ -729,7 +731,7 @@
      C                   PARM      D_CCY         POrigCcy
      C**********         PARM      'T'           PInth                               CER048 BUG23325
      C                   PARM                    PInth                                      BUG23325
-
+ 
       ** Output parameters
      C                   PARM                    PIntEfDat
      C                   PARM                    PTaxAmt
@@ -751,7 +753,7 @@
      C                   PARM                    PDBaseFil
      C                   PARM                    PReturn
      C     SDTXPA        PARM      SDTXPA        DSSDY                                      BUG22911
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -759,10 +761,10 @@
       * SRCallZJA - Calculate EU Withhlding Tax for Joint Account
       *****************************************************************
      C     SRCallZJA     BEGSR
-
+ 
      C                   MOVE      JCCUST        PCustomer
      C                   CALL      'ZATXCLJA'
-
+ 
       ** Input parameters
      C                   PARM      'D'           PModuleID
      C                   PARM      WDealNo       PTransRef
@@ -779,7 +781,7 @@
      C                   PARM      D_CCY         POrigCcy
      C**********         PARM      'T'           PInth                               CER048 BUG23325
      C                   PARM                    PInth                                      BUG23325
-
+ 
       ** Output parameters
      C                   PARM                    PIntEfDat
      C                   PARM                    PTaxAmt
@@ -802,7 +804,7 @@
      C                   PARM                    PDBaseFil
      C                   PARM                    PReturn
      C     SDTXPA        PARM      SDTXPA        DSSDY                                      BUG22911
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -810,43 +812,43 @@
       * SRProcJA - Process Joint Accounts
       *****************************************************************
      C     SRProcJA      BEGSR
-
+ 
      C     WCustomer     SETLL     SDJACCLB
      C     WCustomer     READE     SDJACCLB                               21
-
+ 
      C                   DOW       *IN21 = *OFF
-
+ 
      C                   EXSR      SRCallZJA
-
+ 
      C                   IF        PReturn = 'ERROR'
      C                   EVAL      DBASE = 104
      C                   EVAL      DBFILE = PDBaseFil
      C                   EVAL      DBKEY  = PDBaseKey
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   IF        PCustStat = 'TAXAB'
-
+ 
      C                   IF        PTaxCcy <> '   '
      C                   EXSR      SR_OutFile
      C                   ENDIF
-
+ 
      C                   EVAL      WEUTaxAmt = WEUTaxAmt + PTaxAmt
      C                   EVAL      WSecTxAmt = WSecTxAmt + PStxa                              CER048
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        PReturn = 'NOTAX'
      C                             OR PReturn = 'TAXAB'
      C     WCustomer     READE     SDJACCLB                               21
      C                   ENDIF
-
+ 
      C                   IF        PReturn = 'LAST'
      C                   MOVE      *ON           *IN21
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -855,21 +857,21 @@
       * SR_OutFile - Output result file                               *
       *                                                               *
       *****************************************************************
-
+ 
      C     SR_OutFile    BEGSR
-
+ 
       ** Initialize fields of PF/SDCSINPD
-
+ 
      C                   EXSR      SRInitFields
-
+ 
       ** Tax calculation Date
-
+ 
      C**********         EVAL      TSRDNB = BJRDNB                                            236446
      C                   EVAL      TSRDNB = BJRDNB - 1                                        236446
      C                   EVAL      TSEDAT = ZZEND
-
+ 
       ** Tax year and month
-
+ 
      C                   EVAL      ZDAYNO = ZZEND
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
@@ -878,17 +880,17 @@
      C                   PARM                    ZADATE
      C                   MOVEL     ZDATE         WMMDD
      C                   MOVE      ZDATE         WYear1
-
+ 
      C     BJDFIN        IFEQ      'M'
      C                   MOVEL     WMMDD         WMonth
      C                   ELSE
      C                   MOVE      WMMDD         WMonth
      C                   ENDIF
-
+ 
      C                   EVAL      WYear2 = '20' + Wyear1
      C                   MOVEL     WYear2        TSTAXY
      C                   EVAL      TSTAXM = WMonth
-
+ 
       ** Country of tax
       ** Booking branch code
       ** Joint account number
@@ -896,7 +898,7 @@
       ** Non-account holder reference
       ** Investment type
       ** Residence country code
-
+ 
      C                   EVAL      TSCTRT = PCtryOfTax
      C                   EVAL      TSBRCA = D_BRCA
      C                   MOVEL     PJointAcNo    TSJOIN
@@ -904,9 +906,9 @@
      C                   EVAL      TSNAHO = PNAHRef
      C                   EVAL      TSINVP = PInvProp
      C                   EVAL      TSRCTR = PCtryOfLoc
-
+ 
       ** Customer Status
-
+ 
      C                   SELECT
      C     PCustStat     WHENEQ    'DISCL'
      C                   EVAL      TSSTAT = 'D'
@@ -915,26 +917,26 @@
      C     PCustStat     WHENEQ    'TAXAB'
      C                   EVAL      TSSTAT = 'T'
      C                   ENDSL
-
+ 
      C     PNAHRef       IFNE      *BLANK
-
+ 
       ** Retrieve non account holder details
-
+ 
      C                   CALL      'AONAHOR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      PNAHRef       @PNAHO
      C*****SDNAHO        PARM      SDNAHO        DSSDY                                      BUG24029
      C     SDNAHO        PARM      SDNAHO        DSLDY                                      BUG24029
-
+ 
       ** Database error.
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBKEY = @PNAHO
      C                   EVAL      DBFILE = 'SDNAHOPD'
      C                   MOVEL     '914'         DBASE
      C                   EXSR      *PSSR
-
+ 
      C                   ELSE
       ** Family name
       ** First name
@@ -954,26 +956,26 @@
      C                   EVAL      TSTBTH = NHBTHT
      C                   EVAL      TSCBTH = NHBTHC
      C                   ENDIF
-
+ 
      C                   ELSE
      C     PCustomer     IFNE      *BLANK
-
+ 
       ** Retrieve additional customer details.
-
+ 
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      PCustomer     @PCUST
      C     SDACUS        PARM      SDACUS        DSSDY
-
+ 
       ** Database error.
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBKEY = @PCUST
      C                   EVAL      DBFILE = 'SDACUSPD'
      C                   MOVEL     '913'         DBASE
      C                   EXSR      *PSSR
-
+ 
      C                   ELSE
       ** Family name
       ** First name
@@ -993,21 +995,21 @@
      C                   EVAL      TSTBTH = E5BTHT
      C                   EVAL      TSCBTH = E5BTHC
      C                   ENDIF
-
+ 
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Interest payment date
-
+ 
      C                   CALLB     'ZDATE9'
      C                   PARM                    ZZEND
      C                   PARM                    WDATEYYYY
      C                   PARM                    RetCodeIn
      C                   EVAL      TSIPDT = WDATEYYYY
-
+ 
       ** Tax basket
       ** Eu withholding tax code
-
+ 
      C                   MOVEL     PTaxBasket    TSTXBS
      C                   EVAL      TSWTAC = PEUWTaxAcCd
       *                                                                                       CER048
@@ -1022,88 +1024,88 @@
      C                   MOVEL     PStxb         TSSTXB                                       CER048
       *                                                                                       CER048
      C                   ENDIF                                                                CER048
-
+ 
       ** Original currency code
-
+ 
      C                   EVAL      TSOCCY = D_CCY
      C                   EVAL      WCURRKEY = TSOCCY
-
+ 
       ** Retrieve currency details of original currency
-
+ 
      C                   EXSR      SRRtvCurrDet
-
+ 
       ** Original currency spot rate
-
+ 
      C     A6MDIN        IFEQ      'D'
      C                   EVAL      TSOCSR = A6SPRT
      C                   ELSE
      C                   EVAL      TSOCSR = 1 / A6SPRT
      C                   ENDIF
-
+ 
       ** Original currency multiply/divide
       ** Original currency decimal places
-
+ 
      C                   EVAL      TSOCMD = 'D'
      C                   EVAL      TSOCDP = A6NBDP
      C                   EVAL      ZADEC  = A6NBDP
-
+ 
       ** Settlement currency code
-
+ 
      C                   EVAL      TSSCCY = D_CCY
      C                   EVAL      WCURRKEY = TSSCCY
-
+ 
       ** Retrieve currency details of settlement currency
-
+ 
      C                   EXSR      SRRtvCurrDet
-
+ 
       ** Settlement currency spot rate
-
+ 
      C     A6MDIN        IFEQ      'D'
      C                   EVAL      TSSCSR = A6SPRT
      C                   ELSE
      C                   EVAL      TSSCSR = 1 / A6SPRT
      C                   ENDIF
-
+ 
       ** Settlement currency multiply/divide
       ** Settlement currency decimal places
-
+ 
      C                   EVAL      TSSCMD = 'D'
      C                   EVAL      TSSCDP = A6NBDP
-
+ 
       ** Tax currency code
-
+ 
      C                   EVAL      TSTXCY = PTaxCcy
      C                   EVAL      WCURRKEY = TSTXCY
-
+ 
       ** Retrieve currency details of tax currency
-
+ 
      C                   EXSR      SRRtvCurrDet
-
+ 
       ** Tax currency spot rate
-
+ 
      C     A6MDIN        IFEQ      'D'
      C                   EVAL      TSTCSR = A6SPRT
      C                   ELSE
      C                   EVAL      TSTCSR = 1 / A6SPRT
      C                   ENDIF
-
+ 
       ** Tax currency multiply/divide
       ** Tax currency decimal places
-
+ 
      C                   EVAL      TSTCMD = 'D'
      C                   EVAL      TSTCDP = A6NBDP
-
+ 
       ** Original/settlement currency exchange rate
-
+ 
      C                   EVAL      TSXROS = 1
-
+ 
       ** Retrieve currency exchange rate
-
+ 
      C                   EVAL      ZRATE1 = TSSCSR
      C                   EVAL      ZRATE2 = TSTCSR
      C                   EVAL      ZMDI1 = TSSCMD
      C                   EVAL      ZMDI2 = TSTCMD
-
+ 
      C                   CALLB     'ZXRATE'
      C                   PARM                    ZRATE1
      C                   PARM                    ZMDI1
@@ -1111,23 +1113,23 @@
      C                   PARM                    ZMDI2
      C                   PARM      *ZERO         ZRATEX
      C                   PARM      *BLANK        ZMDIX
-
+ 
       ** Settlement/tax currency exchange rate
       ** Original/settlement cross rate multiply/divide
       ** Settlement/tax cross rate multiply /divide
-
+ 
      C                   EVAL      TSXRST = ZRATEX
      C                   EVAL      TSOSMD = 'M'
      C                   EVAL      TSSTMD = ZMDIX
-
+ 
       ** Module identifier
-
+ 
      C                   EVAL      TSMODI = 'D'
-
+ 
       ** Deal Type/Trade type
       ** Deal sub-type/trade sub-type
       ** Deal number/trade number
-
+ 
      C                   EVAL      TSTRTP = D_DTYP
      C                   EVAL      TSTRST = D_DLST
      C                   MOVEL     D_DLNO        TSDLLN
@@ -1138,28 +1140,28 @@
      C                   MOVE      'No. '        WWRK1                                        236453
      C     WWRK1         CAT       AADLNO        WWRK2            18                          236453
      C                   MOVEL     WWRK2         TSINST                                       236453
-
+ 
       ** Account code
       ** Account sequence
       ** IBAN number
-
+ 
      C                   EVAL      TSACOD = 0
      C                   EVAL      TSACSQ = 0
      C                   EVAL      TSIBAN = *BLANK
-
+ 
       ** Principal amount in original currency
       ** Gross interest amount in original currency
-
+ 
      C                   EVAL      TSPAMT = D_PCPL
      C                   EVAL      TSGINT = PIntAmt
-
+ 
       ** Tax rate
       ** Tax deducted at source in original currency
       *                                                                                       CER048
       ** Secondary Tax rate                                                                   CER048
       ** Secondary Tax deducted at source in original currency                                CER048
       *                                                                                       CER048
-
+ 
      C     TSSTAT        IFEQ      'T'
      C                   EVAL      TSTXRT = PTaxRatePd
      C                   EVAL      TSTXSR = PTaxAmt
@@ -1172,18 +1174,18 @@
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
      C                   ENDIF
-
+ 
       ** Net interest amount in original ccy
-
+ 
      C                   IF        CER048 = 'Y'                                               CER048
      C                             AND WELGTx <> 'E'                                        BUG23325
      C                   EVAL      TSNINT = TSGINT - TSTXSR - TSSTDO                          CER048
      C                   ELSE                                                                 CER048
      C                   EVAL      TSNINT = TSGINT - TSTXSR
      C                   ENDIF                                                                CER048
-
+ 
       ** Principal amount in settlement currency
-
+ 
      C     TSOCCY        IFEQ      TSSCCY
      C                   EVAL      TSPAMS = TSPAMT
      C                   ELSE
@@ -1198,9 +1200,9 @@
      C                   PARM      *ZERO         ZAMTCO
      C                   EVAL      TSPAMS = ZAMTCO
      C                   ENDIF
-
+ 
       ** Gross interest amount in settlement currency
-
+ 
      C     TSOCCY        IFEQ      TSSCCY
      C                   EVAL      TSGINS = PIntAmt
      C                   ELSE
@@ -1215,9 +1217,9 @@
      C                   PARM      *ZERO         ZAMTCO
      C                   EVAL      TSGINS = ZAMTCO
      C                   ENDIF
-
+ 
       ** Tax deducted at source in settlement currency
-
+ 
      C     TSOCCY        IFEQ      TSSCCY
      C                   EVAL      TSTXSS = PTaxAmt
      C                   ELSE
@@ -1256,10 +1258,10 @@
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
      C                   ENDIF                                                                CER048
-
+ 
       ** Net interest amount in settlement currency
       ** Principal amount in tax currency
-
+ 
      C                   IF        CER048 = 'Y'                                               CER048
      C                             AND WELGTx <> 'E'                                        BUG23325
      C                   EVAL      TSNINS = TSGINS - TSTXSS - TSSTDS                          CER048
@@ -1280,9 +1282,9 @@
      C                   PARM      *ZERO         ZAMTCO
      C                   EVAL      TSPAMC = ZAMTCO
      C                   ENDIF
-
+ 
       ** Gross interest amount in tax currency
-
+ 
      C     TSTXCY        IFEQ      TSSCCY
      C                   EVAL      TSGINC = TSGINS
      C                   ELSE
@@ -1297,9 +1299,9 @@
      C                   PARM      *ZERO         ZAMTCO
      C                   EVAL      TSGINC = ZAMTCO
      C                   ENDIF
-
+ 
       ** Tax deducted at source in tax currency
-
+ 
      C     TSTXCY        IFEQ      TSSCCY
      C                   EVAL      TSTXSC = TSTXSS
      C                   ELSE
@@ -1338,23 +1340,23 @@
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
      C                   ENDIF                                                                CER048
-
+ 
       ** Net interest amount in tax currency
-
+ 
      C                   IF        CER048 = 'Y'                                               CER048
      C                             AND WELGTx <> 'E'                                        BUG23325
      C                   EVAL      TSNINS = TSGINC - TSTXSC - TSSTDT                          CER048
      C                   ELSE                                                                 CER048
      C                   EVAL      TSNINC = TSGINC - TSTXSC
      C                   ENDIF                                                                CER048
-
+ 
       ** Retrieve currency details of bank currency
-
+ 
      C                   EVAL      WCURRKEY = BJCYCD
      C                   EXSR      SRRtvCurrDet
-
+ 
       ** Principal amount in base currency
-
+ 
      C     BJCYCD        IFEQ      TSSCCY
      C                   EVAL      TSPAMB = TSPAMS
      C                   ELSE
@@ -1369,9 +1371,9 @@
      C                   PARM      *ZERO         ZAMTCO
      C                   EVAL      TSPAMB = ZAMTCO
      C                   ENDIF
-
+ 
       ** Gross interest amount in base currency
-
+ 
      C     BJCYCD        IFEQ      TSSCCY
      C                   EVAL      TSGINB = TSGINS
      C                   ELSE
@@ -1386,9 +1388,9 @@
      C                   PARM      *ZERO         ZAMTCO
      C                   EVAL      TSGINB = ZAMTCO
      C                   ENDIF
-
+ 
       ** Tax deducted at source in base currency
-
+ 
      C     BJCYCD        IFEQ      TSSCCY
      C                   EVAL      TSTXSB = TSTXSS
      C                   ELSE
@@ -1427,30 +1429,30 @@
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
      C                   ENDIF                                                                CER048
-
+ 
       ** Net interest amount in base currency
-
+ 
      C                   IF        CER048 = 'Y'                                               CER048
      C                             AND WELGTx <> 'E'                                        BUG23325
      C                   EVAL      TSNINB = TSGINB - TSTXSB - TSSTDB                          CER048
      C                   ELSE                                                                 CER048
      C                   EVAL      TSNINB = TSGINB - TSTXSB
      C                   ENDIF                                                                CER048
-
+ 
       ** Customer income processed
-
+ 
      C                   EVAL      TSINPR = 'N'
-
+ 
       ** Get transaction no of last update, one for every trade number
-
+ 
      C                   CALLB     'ZTNLU1'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    PTSTNLU
-
+ 
      C                   EVAL      TSTNLU = PTSTNLU
-
+ 
      C                   WRITE     SDCSIND0
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1458,7 +1460,7 @@
       * SRInitFields - Initialise PF/SDCSINPD                         *
       *****************************************************************
      C     SRInitFields  BEGSR
-
+ 
      C                   EVAL      TSTAXY = 0
      C                   EVAL      TSTAXM = 0
      C**********         EVAL      TSJOIN = 0                                                CSD027A
@@ -1498,7 +1500,7 @@
      C                   EVAL      TSSTDS = *ZEROS                                            CER048
      C                   EVAL      TSSTDT = *ZEROS                                            CER048
      C                   EVAL      TSSTDB = *ZEROS                                            CER048
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1506,22 +1508,22 @@
       * SRRtvCurrDet - Retrieve Currency Details                      *
       *****************************************************************
      C     SRRtvCurrDet  BEGSR
-
+ 
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      WCURRKEY      PCURR
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
       ** Database error.
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBKEY = PCURR
      C                   EVAL      DBFILE = 'SDCURRPD'
      C                   MOVEL     '915'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1579,15 +1581,15 @@
      C     KHIST2        Klist                                                                236453
      C                   Kfld                    D_CNUM                                       236453
      C                   Kfld                    D_DLNO                                       236453
-
-
+ 
+ 
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1595,4 +1597,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

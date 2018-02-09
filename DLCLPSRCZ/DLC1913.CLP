@@ -7,19 +7,21 @@
 /*                                                                  */
 /* DLC1913 - CONTROL SUMMARY REBUILD                                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01194            DATE  17NOV89             */
-/*       PREV AMEND NO. S01157            DATE  15/07/88            */
+/*       Prev Amend No. S01194             Date 17Nov89              */
+/*                      S01157             Date 15/07/88             */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01194 - NEW STANDING DATA                                 */
 /*       S01157 - NEW PROGRAM FOR FRA/IRS PROJECT                   */
 /*                                                                  */
@@ -27,7 +29,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&SLT) TYPE(*CHAR) LEN(14) VALUE('vdat +
@@ -182,5 +184,5 @@
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  END:        ENDPGM

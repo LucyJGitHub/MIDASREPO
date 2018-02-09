@@ -7,20 +7,22 @@
 /*                                                                 */
 /*       PROGRAM     DLC9100 - INTEREST HISTORY SWITCHABILITY      */
 /*                                                                 */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                   */
 /*                                                                 */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND : 073175         DATE : 21NOV95                */
-/*       PREV AMEND : 085716         DATE : 12APR95                */
+/*       PREV AMEND : 073175         DATE : 21NOV95                */
+/*                    085716         DATE : 12APR95                */
 /*                    AUS006         DATE : 04AUG92                */
 /*                                                                 */
 /*-----------------------------------------------------------------*/
 /*                                                                 */
+/*       MD046248 - Finastra Rebranding                            */
 /*       073175 - Interest History Enquiry Print loops if more     */
 /*                than one user takes the option since both write  */
 /*                records with the same RRN - fix is to create a   */
@@ -33,7 +35,7 @@
  
              PGM        PARM(&PARM)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&PARM) TYPE(*CHAR) LEN(10) /*S01390*/
@@ -114,5 +116,5 @@ ENDPGM:                                                               /*073175*/
 /*/COPY WNCPYSRC,DLC9100END                                        */ /*073175*/
                                                                       /*073175*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

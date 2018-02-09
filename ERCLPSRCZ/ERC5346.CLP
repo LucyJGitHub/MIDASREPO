@@ -8,17 +8,19 @@
 /*       ERC5346 - GL Accounts Post - Daily Journal                 */
 /*                 (based on GLC32)                                 */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. EMFIX              Date 26Aug98              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      EMFIX              Date 26Aug98              */
 /*                      ER1023             Date 01Feb93              */
 /*                                                                  */
 /*------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*   EMFIX  - DBA2 upgrade : GL3320 and GL0340                      */
 /*            are called with parameter.                            */

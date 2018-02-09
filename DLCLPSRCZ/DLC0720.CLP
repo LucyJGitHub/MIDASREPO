@@ -7,16 +7,18 @@
 /*                                                                  */
 /*       DLC0720 - Deals due for Automatic Rollover Today           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2004          */
+/*       (c) Finastra International Limited 2004                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL016 *Create    Date  03Feb04             */
+/*       Prev Amend No. CDL016 *Create    Date  03Feb04             */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       CDL016 - Autumatic Rollover of Fixed Term Loan/Dep         */
 /*                                                                  */
 /********************************************************************/
@@ -24,7 +26,7 @@
              PGM        PARM(&RSEQ &RLVL &RENT &PARMS)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
              DCL        VAR(&TYPE) TYPE(*CHAR) LEN(2)
@@ -63,6 +65,6 @@
                   terminated abnormally.') TOMSGQ(MOPERQ MRUNQ)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  END:        ENDPGM

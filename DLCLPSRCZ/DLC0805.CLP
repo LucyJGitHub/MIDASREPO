@@ -7,8 +7,9 @@
 /*                                                                  */
 /*       DLC0805 - EVENT3 REPORTING BY DEAL SUB-TYPE/DEAL           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -19,6 +20,7 @@
 /*       PREV AMEND NO. S01117             DATE 17/07/89            */
 /*                      S01194             DATE 17/07/89            */
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       E27942  -  FOR NONMULTIBRANCHING SYSTEM SHOULD EXPECT A    */
 /*                  LEVEL OF BLANKS                                 */
 /*       S01117  -  MULTIBRANCHING                                  */
@@ -29,7 +31,7 @@
              PGM PARM(&RSEQ &RLEV &RENT)                              /*S01117*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)        /*S01117*/
@@ -68,5 +70,5 @@
                         TOMSGQ(MOPERQ))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

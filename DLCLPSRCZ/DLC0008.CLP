@@ -15,20 +15,22 @@
 /*                 beginning of business database save can be taken  */
 /*                 (SCC0410).                                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CPK014             Date 06Nov01              */
+/*       Prev Amend No. CPK014             Date 06Nov01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 099850             DATE 21FEB96              */
+/*                      099850             Date 21Feb96              */
 /*                      CCM002 *CREATE     DATE 04SEP95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK014 - Release 4 packaging.  Move data queues from XLIB   */
 /*                to DPLIB.                                          */
 /*       099850 - Citydealer Dataqueue must be deleted and recreated */
@@ -49,7 +51,7 @@
              DCL        VAR(&JSEQNO) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&NXTJRC) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,DLC0008001                                          */
 /**/
@@ -181,6 +183,6 @@
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
 /**/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,DLC0008007                                          */
              ENDPGM

@@ -7,8 +7,9 @@
 /*                                                                  */
 /*       DLC0811 - OUTSTANDING DELIVERY INSTRUCTIONS                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,10 +17,11 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E27942                  DATE  03SEP91       */
+/*       PREV AMEND NO. E27942                  DATE  03SEP91       */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       E27942  -  FOR NONMULTIBRANCHING SYSTEM SHOULD EXPECT A    */
 /*                  LEVEL OF BLANKS                                 */
 /*                                                                  */
@@ -28,7 +30,7 @@
              PGM PARM(&RSEQ &RLEV &RENT)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */
    DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B) */
@@ -75,5 +77,5 @@ ERRCHK:
                           THEN(SNDMSG MSG(&MSG2) TOMSGQ(MOPERQ))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

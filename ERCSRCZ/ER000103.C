@@ -10,13 +10,15 @@
      /*  Function  : This module Copy transmission data to stream    */
      /*              file.                                           */
      /*                                                              */
-     /*  (c) Misys International Banking Systems Ltd. 2008           */
+     /*  (c) Finastra International Limited 2008                     */
      /*                                                              */
-     /*  Last Amend No. CER059                Date 19Jul10           */
-     /*  Prev Amend No. CER047  *CREATE       Date 19May08           */
+     /*  Last Amend No. MD046248              Date 27Oct17           */
+     /*  Prev Amend No. CER059                Date 19Jul10           */
+     /*                 CER047  *CREATE       Date 19May08           */
      /*                                                              */
      /****************************************************************/
      /*                                                              */
+     /*  MD046248 - Finastra Rebranding                              */
      /*  CER059 - German Feature Upgrade to Delhi                    */
      /*  CER047 - German Features LF037-00 Reporting @24c KWG        */
      /*                                                              */
@@ -37,7 +39,7 @@
      /*C   DBGVIEW(*LIST)      - {*NONE,*ALL,*STMT,*SOURCE or *LIST} */
      /*C   SYSIFCOPT(*NOIFSIO) - {*NOIFSIO or *IFSIO}                */
      /****************************************************************/
- 
+
 #include <stdio.h>
 #include <recio.h>
 #include <stdlib.h>
@@ -45,20 +47,20 @@
 #include <decimal.h>
 #include <fcntl.h>
 #include <unistd.h>
- 
+
 /* Include the external definition of the database file GWV10P.      */
 /* The #pragma statement creates a typedef struct that holds the     */
 /* structure of the database file. This structure is then imported   */
 /* by the #include statement.                                        */
- 
+
 #ifdef __cplusplus
 #include <bcd.h>
 #else
 #include <decimal.h>
 #endif
- 
+
 typedef _Packed struct {
- 
+
 #ifndef __cplusplus
    decimal( 4, 0) F1WLEN;
 #else
@@ -67,37 +69,37 @@ typedef _Packed struct {
 #endif
    char F1WDTA[2000];                    /* Data */
 } ERTSNDPD_ERTSNDD0_i_t;
- 
- 
+
+
 /* Define work values.                                               */
- 
+
 #define OK                0
 #define OPENSTMFFAILED    1
 #define OPENDBAFFAILED    2
 #define WRITESTMFFAILED   3
- 
+
 /* Main procedure.                                                   */
 /* One parameter is passed from the calling program, consist of      */
 /* full path of the file to copy too. This parameter must be         */
 /* passed as NULL terminated string.                                 */
- 
+
 int ER000103(const char *stmfile)
 {
- 
+
 /* Declare rcd, dta of data structure type                           */
 /* ERTSNDPD_ERTSNDD0_i_t.                                            */
 /* The data structure type was defined from the DDS specified (see   */
 /* #pragma statement above).                                         */
- 
+
   ERTSNDPD_ERTSNDD0_i_t rcd, *dta = &rcd;
   _RFILE       *in;
   _RIOFB_T     *fb;
   char         *dbfile   = "ERTSNDPD";
   int          fildes;
- 
+
 /* Open and create the stream file using the open() Integrated       */
 /* File System API.                                                  */
- 
+
   fildes = open( stmfile, O_WRONLY¦O_CREAT¦O_TRUNC, S_IRWXU );
   if (fildes == -1)
   {
@@ -105,43 +107,43 @@ int ER000103(const char *stmfile)
   }
   else
   {
- 
+
 /* Open the database file for processing in arrival sequence.        */
- 
+
     if (( in = _Ropen( dbfile, "rr, arrseq=Y" )) == NULL )
     {
       return OPENDBAFFAILED;
     }
     else
     {
- 
+
 /* Read a record of the database file.                               */
- 
+
       fb = _Rreadn( in, dta, in->buf_length, __DFT );
- 
+
 /* Loop until end of file not reached.                               */
- 
+
       while ( fb->num_bytes != EOF )
       {
- 
+
 /* Write the buffer to the stream file using the Integrated File     */
 /* System write() API                                                */
- 
+
         if (( write( fildes, rcd.F1WDTA, rcd.F1WLEN )) == -1)
           return WRITESTMFFAILED;
- 
+
 /* Read next record of the database file.                            */
- 
+
         fb = _Rreadn( in, dta, in->buf_length, __DFT );
       };
- 
+
 /* Close database file.                                              */
- 
+
       _Rclose( in );
     };
- 
+
 /* Close stream file.                                                */
- 
+
     close ( fildes );
   };
   return OK;

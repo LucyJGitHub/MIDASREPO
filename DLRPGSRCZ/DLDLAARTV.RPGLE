@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('DL Adjustment Accrued Interest Retrieve')              *
@@ -14,15 +14,17 @@
       *             the database. As it does so, it validates the     *
       *             action code and Transaction number.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD047196           Date 08Aug17               *
-      *  Prev Amend No. AR1096788          Date 18Mar13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD047196           Date 08Aug17               *
+      *                 AR1096788          Date 18Mar13               *
       *                 258839             Date 28Sep12               *
       *                 CAP210  *CREATE    Date 28Sep12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD047196 - Authority Validation not working.                 *
       *  AR1096788 - DLAA details should be written in core STRANF    *
       *              file instead of the new DLSTRANFPD file          *

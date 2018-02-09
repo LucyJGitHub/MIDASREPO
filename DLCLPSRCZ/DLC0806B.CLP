@@ -8,14 +8,16 @@
 /*       DLC0806B - EXPOSURE AGAINST LIMITS & MATURITY OF FX DEALS   */
 /*                  - REPORTS                                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CCB016  *CREATE    Date 28May08              */
+/*       Prev Amend No. CCB016  *CREATE    Date 28May08              */
 /*      Midas Plus 1.4 Base -----------------------------------------*/
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   CCB016 - CoB Performance Enhancements                           */
 /*            Split DLC0806 into two components, DLC0806A for data   */
 /*            extraction and DLC0806B for reporting.                 */
@@ -24,7 +26,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &PARM)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2008')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
@@ -149,7 +151,7 @@ ABNOR:       IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000)
  
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
  
  ENDPGM:     ENDPGM

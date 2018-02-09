@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ER Acct Code Decision Table Maint/Enquiry')      *
@@ -13,16 +13,18 @@
       *  Function:  This program is used to maintain or enquire       *
       *             the account code decision table.                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG26779           Date 27Nov09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26779           Date 27Nov09               *
       *                 BUG26636           Date 03Nov09               *
       *                 BUG25878           Date 03Sep09               *
       *                 CER045  *CREATE    Date 20Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26779 - Change Request on GSART Table                     *
       *  BUG26636 - The inserted account code is missing after        *
@@ -1518,4 +1520,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

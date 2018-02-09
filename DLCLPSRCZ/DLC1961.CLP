@@ -13,18 +13,20 @@
 /*                                                                   */
 /*       Calls: DL1961 - MM Rates and Discount Factor Report         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01328             DATE 07FEB91              */
+/*       Prev Amend No. S01328             Date 07Feb91              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01328 - FRA/IRS Revaluations - New Program.                */
 /*                                                                   */
 /*********************************************************************/
@@ -32,7 +34,7 @@
              PGM        PARM(&SEQ &LVL &ENT &RPARM)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&SEQ) TYPE(*CHAR) LEN(5)
@@ -75,6 +77,6 @@
                           TOMSGQ(MOPERQ MRUNQ)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
  END:        ENDPGM

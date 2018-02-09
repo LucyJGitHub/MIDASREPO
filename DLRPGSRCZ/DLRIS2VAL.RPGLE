@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Reporting Information Screen 2 Validate')     *
@@ -9,10 +9,11 @@
       *                                                               *
       *  DLRIS2VAL - Midas DL Reporting Information Screen 2 Validate *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD039656           Date 11Jul16               *      
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039656           Date 11Jul16               *
+      *                 CSW216             Date 14Mar16               *
       *                 CSW214             Date 25Nov14               *
       *                 MD024179           Date 19Dec13               *
       *                 MD024166           Date 19Dec13               *
@@ -31,7 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD039656 - Unable to reverse an authorised deal              *      
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD039656 - Unable to reverse an authorised deal              *
       *  CSW216 - SWIFT Changes 2016                                  *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  MD024179 - Reporting party party ID defaulted again after    *
@@ -1469,7 +1471,7 @@
      C**********         EXSR      UpdatErrs                                                MD039656
      C**********         ENDIF                                                              MD039656
       **********                                                                            MD039656
-     C**********         ENDIF                                                              MD039656      
+     C**********         ENDIF                                                              MD039656
       *
       ** Validate Reporting Party's Party ID 2
       *
@@ -2300,7 +2302,7 @@
      C                   EXSR      UpdatErrs                                                  CSW216
      C                   ENDIF                                                                CSW216
                                                                                               CSW216
-     C                   ELSE                                                                 CSW216     
+     C                   ELSE                                                                 CSW216
                                                                                               CSW214
      C                   IF        CSW214 <> 'Y'                                              CSW214
      C                   IF        %SUBST(R2UTI4:11:10) <> *BLANKS                            CSW214

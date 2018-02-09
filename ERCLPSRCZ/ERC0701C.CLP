@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       ERC0701C - ER Clear Output Files                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX046             Date 31Oct02              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX046             Date 31Oct02              */
 /*                      ULX004             Date 09Apr97              */
 /*                      ART021 PT          Date 16SEP96              */
 /*                      ER0126 ThL         Date 17DEC92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       ULX046 - Circulars 2002/170-174-175 Integration             */
 /*       ULX004 - Capital Adequacy                                   */
@@ -42,7 +44,7 @@
                           subsystem prefix*/                         /*ART021*/
              DCL        VAR(&XXDPLIB) TYPE(*CHAR) LEN(10)                                 /*CER001*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')                                      /*ULX004*/
              DCL        VAR(&RETCOD) TYPE(*CHAR) LEN(7) +
                           VALUE('       ')                            /*ULX046*/
@@ -145,6 +147,6 @@
  
 /******EOJ:         ENDPGM                                              ULX004*/
 EOJ:                                                                  /*ULX004*/
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')                 /*ULX004*/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')                              /*ULX004*/
              ENDPGM                                                   /*ULX004*/

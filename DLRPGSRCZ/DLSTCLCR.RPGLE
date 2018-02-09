@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(C) Copyright Midas-Kapiti International Ltd. 2005')
+     H COPYRIGHT('(C) Copyright Finastra International Limited, 2005')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas DL Deal SubType/Class Changes - A/c Key Rpt')    *
@@ -9,18 +9,20 @@
       *                                                               *
       *  DLSTCLCR - Deal Sub-Type/Class Changes - A/c Key Reporting   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR821740           Date 29Aug11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR821740           Date 29Aug11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027A            Date 05May06               *
+      *                 CSD027A            Date 05May06               *
       *                 CDL038  *CREATE    Date 10May05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR821740 - COB - No stamp tax account keys generated         *
       *             (Recompile)                                       *
       *  CSD027A- Conversion of customer number to alpha.             *

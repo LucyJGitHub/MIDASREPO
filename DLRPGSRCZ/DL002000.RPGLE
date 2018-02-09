@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas DL Default Deal Sub Type and Class')
@@ -12,17 +12,19 @@
       *  Function:  This program may default deal sub-type and        *
       *             class based on attibutes of the deal.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG9717            Date 16Jan06               *
-      *  Prev Amend No. CDL038  *CREATE    Date 10May05               *
+      *  Prev Amend No. BUG9717            Date 16Jan06               *
+      *                 CDL038  *CREATE    Date 10May05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG9717 - Remove these unnecessary codes (Recompile)         *
       *  CDL038 - Extended Deal Sub Type                              *
       *                                                               *

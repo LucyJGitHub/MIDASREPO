@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Execution Venue')                    *
@@ -9,13 +9,15 @@
       *                                                               *
       *  SDV0001 - Midas SD Validate Execution Venue                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD022702           Date 04Oct13               *
-      *  Prev Amend No. CSW213  *CREATE    Date 03Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022702           Date 04Oct13               *
+      *                 CSW213  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022702 - Error encountered when previous entry was invalid.*
       *  CSW213 - SWIFT Changes 2013                                  *
       *                                                               *

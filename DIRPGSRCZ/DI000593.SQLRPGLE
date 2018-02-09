@@ -1,6 +1,6 @@
      H DEBUG
      H***DFTACTGRP(*NO)                                                                     MD023629
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*S*D ***RPGSQLBND*****************************************************                     MD023629
 /*STD *  RPGSQLMOD                                                    *                     MD023629
@@ -16,18 +16,20 @@
       *  Function:  This program displays Nostro Reconciliation       *
       *                 Monitor                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD035766           Date 25May16               *      
-      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035766           Date 25May16               *
+      *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD029683           Date 19Aug14               *
       *                 MD023629           Date 22Nov13               *
       *                 CGL135A *CREATE    Date 08Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035766 - Monitor Nostro Reconciliation Process screen is   *
-      *             showing wrong Account ID for some Nostro accounts *      
+      *             showing wrong Account ID for some Nostro accounts *
       *  MD029739 - File renaming for integration layer.              *
       *  MD029683 - Nostro Accounts Reconciliation Monitor            *
       *             Enhancement.                                      *
@@ -76,18 +78,18 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Forecast Static Data Display File
      F***GL000593DFCFE             WORKSTN USROPN                                           MD029739
      FDI000593DFCF   E             WORKSTN USROPN                                           MD029739
      F                                     SFILE(GL000593S1:SRLRN)
      F                                     INFDS(INFDS#)
      F                                     INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -98,50 +100,50 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D*RECONSTAT***    S             25    DIM(9) CTDATA PERRCD(1)                          MD023629
      D*RECONDESC***    S             50    DIM(9) CTDATA PERRCD(1)                          MD023629
      D*RECONSTAT***    S             25    DIM(12) CTDATA PERRCD(1)                MD023629 MD029683
      D*RECONDESC***    S             50    DIM(12) CTDATA PERRCD(1)                MD023629 MD029683
      D RECONSTAT       S             25    DIM(13) CTDATA PERRCD(1)                         MD029683
      D RECONDESC       S             50    DIM(13) CTDATA PERRCD(1)                         MD029683
- 
+
       ** Review from fields                                                                 MD023629
      D                 DS                                                                   MD023629
      D**SPOSN***               1      5                                                     MD023629
@@ -157,31 +159,31 @@
      D  #1POS6                40     94                                                     MD029683
      D  #1POS7                95    100                                                     MD029683
      D  #1POS8               101    110                                                     MD029683
- 
+
       ** Display file information data structure
      D INFDS#        E DS                  EXTNAME(Y2I#DSP)
- 
+
       ***Rundate*data*area                                                                  MD023629
      D*RUNDAT***       DS                                                                   MD023629
      D**WSUC****              11     11                                                     MD023629
      D**WMBIN***              13     13                                                     MD023629
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for Nostro Details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** External DS for Account Details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(A_)
- 
+
       ** External DS for Customer Details                                                   MD029683
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                MD029683
                                                                                             MD029683
@@ -190,11 +192,11 @@
      D  WHR                    1      2
      D  WMIN                   3      4
      D  WSEC                   5      6
- 
+
      D*ARNR*****     E DS                  EXTNAME(GLARNRTD)                                MD029739
      D ARNR          E DS                  EXTNAME(DIARNRTD)                                MD029739
      D                                     PREFIX(B_)
- 
+
       ** File DS - Midas OF Meridian Intellimatch RAW Data                                  MD023629
      D*DSACMETD*     E DS                  EXTNAME(IGACMETD)                       MD023629 MD029739
      D DSACMETD      E DS                  EXTNAME(DIACMETD)                                MD029739
@@ -244,30 +246,30 @@
       *                                                                                     MD023629
      D pSQL_RanOk      PR              N
      D  iSQLState                     5A   Const
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D UP              C                   CONST('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
      D LO              C                   CONST('abcdefghijklmnopqrstuvwxyz')
      D
- 
+
      D @RUN            S              1
      D*CAIN89***       S              1                                                     MD023629
      D CPY2@           S             80
- 
+
       ** Database error workfields
      D PRTCD           S              7
      D POPTN           S              7
- 
+
       ** Message file workfields - Parameters list for ZA0340 / ZA0350
      D PZMsgFile       S             10A   INZ(' ')
      D PZMsgID         S             10
      D PZMsgDta        S             45A
- 
+
       ** General workfields
      D*CAIN81***       S              1                                                     MD023629
      D PMODE           S              1
@@ -279,16 +281,16 @@
      D WSFPG           S              3  0
      D*W1PMD****       S              3                                                     MD023629
      D W1RSF           S              1
- 
+
       ** Subfile workfields
      D WSkipRec        S              1
- 
+
       ** Parameter list fields for ZDATE2
      D PzDayNo         S              5  0
      D PBJDFIN         S              1
      D PzDate          S              6  0
      D PZADate         S              7
- 
+
       ** Parameters for GLC000597                                                           MD023629
      D PPARM100        S            100                                                     MD023629
       *                                                                                     MD023629
@@ -349,7 +351,7 @@
      D WTimeStamp      S             26A                                                    MD023629
      D WStat           S              1                                                     MD023629
      D WScreen         S              1                                                     MD023629
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -357,58 +359,58 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Main Program
- 
+
      C                   DO        *HIVAL
- 
+
       ** Initialise and load subfile page
- 
+
      C                   EXSR      SRBuild
- 
+
      C                   EVAL      W1RSF = 'N'
- 
+
       ** Display screen until reload requested
- 
+
      C                   DOW       W1RSF = 'N'
- 
+
       ** Display screen
- 
+
      C                   EVAL      WScreen = '1'                                            MD023629
       *                                                                                     MD023629
      C                   EXSR      SRDisplay
- 
+
       ** Process response
- 
+
      C     *IN03         CASEQ     *ON           SREnd
- 
+
      C     *IN05         CASEQ     *ON           SRReload
- 
+
      C     SPOSN         CASNE     WPOSN         SRReload                                   MD023629
- 
+
      C     *IN27         CASEQ     *ON           SRLoad
- 
+
      C***********        CAS                     SRProcess                                  MD023629
      C     *IN81         CASEQ     *ON           SRProcess                                  MD023629
      C                   ENDCS
- 
+
      C                   IF        *IN03 = *ON
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDDO
       *****************************************************************
       /EJECT
@@ -418,50 +420,50 @@
       *                                                               *
       *****************************************************************
      C     SRBuild       BEGSR
- 
+
       ** Initialise & load subfile page
- 
+
      C                   EVAL      *IN80 = *ON
      C                   WRITE     GL000593C1
      C                   EVAL      *IN80 = *OFF
      C                   EVAL      *IN81 = *OFF
- 
+
       ** Reset Number of Records in Subfile
- 
+
      C                   Z-ADD     0             WLRCD
      C                   Z-ADD     0             SRLRN                                      MD023629
- 
+
       ** If CHANGE mode, then position file
- 
+
      C                   EVAL      *IN82 = *OFF
- 
+
      C**********         IF        W1PMD <> 'ADD'                                           MD023629
      C**********         EVAL      WPOSN = SPOSN                                            MD023629
- 
+
       ** Setup key
- 
+
      C/exec SQL
      C+ close NostroRecon
      C/end-exec
- 
+
      C/exec sql
      C+ open NostroRecon
      C/end-exec
- 
+
      C/exec SQL
      C+ fetch next
      C+ from NostroRecon
      C+ into : ARNR
      C/end-exec
- 
+
      C**********         ELSE                                                               MD023629
      C**********         EVAL      *IN82 = *OFF                                             MD023629
      C**********         ENDIF                                                              MD023629
- 
+
      C                   If        %Subst(SQLState:1:2) = '02'
      C                   EVAL      *IN82 = *ON
      C                   ENDIF
- 
+
       ** Control selection fields                                                           MD023629
       *                                                                                     MD023629
       ***Currency***                                                               MD023629 MD029683
@@ -512,7 +514,7 @@
      C                   ENDIF                                                              MD023629
       *                                                                                     MD023629
       ** Save previous selector values
- 
+
      C******LIKE         DEFINE    #1POS1        WZCCY                                      MD023629
      C**********         EVAL      WZCCY = #1POS1                                           MD023629
      C******LIKE         DEFINE    #1POS2        WZSTS                                      MD023629
@@ -556,20 +558,20 @@
      C                   ENDIF                                                              MD029683
                                                                                             MD029683
      C                   EVAL      WPOSN = SPOSN                                            MD023629
- 
+
       ** Load subfile page
- 
+
      C                   EXSR      SRLoad
- 
+
       ** If no records found, display error message
- 
+
      C                   IF        %Subst(SQLState:1:2) = '02' AND SRLRN = 0
      C***********        EVAL      PZMsgFile = 'GBSDUSRMSG'                                 MD023629
      C                   EVAL      PZMsgFile = 'SDUSRMSG'                                   MD023629
      C                   EVAL      PZMsgID = 'USR7590'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -579,44 +581,44 @@
       *                                                               *
       *****************************************************************
      C     SRLoad        BEGSR
- 
+
       ** Load subfile page but write empty page if add mode
- 
+
      C                   EVAL      *IN84 = *OFF
      C                   EVAL      W0RTN = *Blanks
- 
+
       ** Re-establish fields in read-ahead record
- 
+
      C**********         IF        W1PMD <> 'ADD' and *IN27 = *ON                           MD023629
      C                   IF        *IN27 = *ON                                              MD023629
      C                   IF        pSQL_RanOk(SQLSTATE)
- 
+
      C/exec SQL
      C**********+ fetch prior                                                               MD029683
      C+ fetch current                                                                       MD029683
      C+ from NostroRecon
      C+ into : ARNR
      C/end-exec
- 
+
      C**********/exec SQL                                                                   MD029683
      C**********+ fetch next                                                                MD029683
      C**********+ from NostroRecon                                                          MD029683
      C**********+ into : ARNR                                                               MD029683
      C**********/end-exec                                                                   MD029683
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Start at previous highest record in SFL
- 
+
      C                   Z-ADD     WLRCD         SRLRN
      C                   Z-ADD     1             WRCTR
- 
+
       ** Load next subfile page
- 
+
      C                   DOW       %Subst(SQLState:1:2) <> '02'
      C                             and WRCTR <= WSFPG
- 
+
      C                   EVAL      WSkipRec = 'N'
      C**********         ADD       1             SRLRN                                      MD023629
       *                                                                                     MD023629
@@ -624,12 +626,12 @@
       *                                                                                     MD023629
      C                   EVAL      WTimeStamp = *Blanks                                     MD023629
      C                   EXSR      SRACME                                                   MD023629
- 
+
       ***Protect*fields during Enquiry Mode                                                 MD023629
- 
+
       ** Start Mode
      C**********         IF        (W1PMD <> 'ADD')                                         MD023629
- 
+
       ** Status                                                                             MD029683
      C**********         MOVE      *Blanks       WPOS2            22                        MD029683
      C                   MOVE      *Blanks       WPOS2            30                        MD029683
@@ -645,7 +647,7 @@
      C**********         EVAL      *IN33 = *OFF                                             MD023629
      C**********         EVAL      *IN34 = *OFF                                             MD023629
      C**********         MOVE      'N'           INVALID           1                        MD023629
- 
+
       ** Bank and Bank Shortname                                                            MD029683
      C                   IF        (#1POS7 <> *BLANK                                        MD029683
      C                             AND WSkipRec = 'N')                                      MD029683
@@ -720,24 +722,24 @@
      C                   PARM      ZZDTIN        DateIn                                     MD029683
      C                   PARM      *ZEROS        DaynoOut                                   MD029683
      C                   MOVE      DaynoOut      DateToday                                  MD029683
- 
+
      C                   IF        #1POS5 = 'Y' And
      C**********                   B_ARNRDAT >= BJRDNB                                      MD029683
      C                             B_ARNRDAT <> DateToday                                   MD029683
      C                   EVAL      WSkipRec = 'Y'
- 
+
      C                   ELSEIF    #1POS5 = 'N' And                                         MD029683
      C                             B_ARNRDAT >= DateToday                                   MD029683
      C                   EVAL      WSkipRec = 'Y'                                           MD029683
- 
+
      C                   ELSEIF    #1POS5 <> 'Y' AND #1POS5 <> 'N'                          MD023629
      C**********                   AND #1POS5 <> *BLANKS                                    MD023629
      C**********         MOVE      'Y'           INVALID                                    MD023629
      C                   EVAL      WSkipRec = 'Y'                                           MD023629
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** A/C Branch
      C**********         IF        #1POS4 <> *BLANK                                         MD023629
       ***Name*search required?                                                              MD023629
@@ -747,10 +749,10 @@
      C**********         PARM      *BLANK        W0RTN                                      MD023629
      C*****#1POS4        PARM      *BLANK        WQ0003                                     MD023629
      C**********         ENDIF                                                              MD023629
- 
+
      C                   IF        #1POS4 <> *BLANK
      C                             AND WSkipRec = 'N'
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -763,20 +765,20 @@
      C                   PARM      *BLANKS       @CSSN
      C                   PARM      *BLANKS       @PNOI
      C     SDNOST        PARM      SDNOST        DSSDY
- 
+
      C                   IF        @RTCD <> *BLANKS OR A7BRCD <> #1POS4
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
      C**********         ENDIF                                                              MD023629
- 
+
       ***Nostro*Code***                                                                     MD029683
      C**********         IF        #1POS3 <> *BLANK  AND  B_ARNRNCD <> #1POS3               MD029683
      C**********                   AND WSkipRec = 'N'                                       MD029683
      C**********         EVAL      WSkipRec = 'Y'                                           MD029683
      C**********         ENDIF                                                              MD029683
- 
+
       ** Status
      C**********         IF        #1POS2 <> *BLANK                                         MD023629
       **********                                                                            MD023629
@@ -794,7 +796,7 @@
      C**********         EVAL      #1POS2 = *BLANKS                                         MD023629
      C**********         ENDIF                                                              MD023629
      C**********         ENDIF                                                              MD023629
- 
+
      C                   IF        #1POS2 <> *BLANK  AND  WPOS2 <> #1POS2
      C                             AND WSkipRec = 'N'
      C                   EVAL      POS = %Scan(%Trim(#1POS2):WPOS2)
@@ -802,9 +804,9 @@
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C**********         ENDIF                                                              MD023629
- 
+
       ** Currency
      C**********         IF        #1POS1 <> *BLANK                                         MD023629
       ***Name*search required?                                                              MD023629
@@ -814,70 +816,70 @@
      C**********         PARM      *BLANK        W0RTN             7                        MD023629
      C*****#1POS1        PARM      *BLANK        WQ0003            3        Currency Code   MD023629
      C**********         ENDIF                                                              MD023629
- 
+
      C                   IF        #1POS1 <> *BLANK AND #1POS1 <> B_ARNRCCY
      C                                  + B_ARNRNCD                                         MD029683
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
- 
+
      C**********         ENDIF                                                              MD023629
- 
+
       ** End Mode
      C**********         ENDIF                                                              MD023629
- 
+
      C                   IF        WSkipRec = 'N'
- 
+
       ** Clear subfile fields
- 
+
      C                   EXSR      SRClrScrn
- 
+
       ***If*CHANGE mode, load subfile fields                                                MD023629
       **********                                                                            MD023629
      C**********         IF        W1PMD <> 'ADD'                                           MD023629
      C                   EXSR      SRMove
- 
+
      C**********         ENDIF                                                              MD023629
- 
+
       ** Output to subfile
- 
+
      C                   ADD       1             SRLRN                                      MD023629
      C                   ADD       1             WRCTR                81
      C                   EVAL      *IN81 = *ON
- 
+
       ***If*SFLRCD invalid, note that errors present                                        MD023629
       **********                                                                            MD023629
      C**********         IF        *IN83 = *ON and *IN40 = '0'                              MD023629
      C**********         EVAL      *IN40 = *ON                                              MD023629
      C**********         ENDIF                                                              MD023629
- 
+
      C                   WRITE     GL000593S1
- 
+
      C**********         ELSE                                                               MD023629
      C**********         SUB       1             SRLRN                                      MD023629
      C                   ENDIF
- 
+
       ** End of File
- 
+
      C**********         IF        W1PMD <> 'ADD'                                           MD023629
- 
+
      C/exec SQL
      C+ fetch next
      C+ from NostroRecon
      C+ into : ARNR
      C/end-exec
- 
+
      C                   IF        %Subst(SQLState:1:2) = '02'
      C                   EVAL      *IN82 = *ON
      C                   ELSE
      C                   EVAL      *IN82 = *OFF
      C                   ENDIF
- 
+
      C**********         ENDIF                                                              MD023629
- 
+
      C                   ENDDO
- 
+
      C                   Z-ADD     SRLRN         WLRCD
- 
+
      C**********         IF        INVALID = 'Y'                                            MD023629
      C**********         EVAL      *IN34 = *ON                                              MD023629
      C**********         EVAL      PZMsgFile = 'GBSDUSRMSG'                                 MD023629
@@ -885,7 +887,7 @@
      C**********         EXSR      SRZasnms                                                 MD023629
      C**********         EVAL      *IN40 = *ON                                              MD023629
      C**********         ENDIF                                                              MD023629
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -894,9 +896,9 @@
       *  SRDisplay - Display Subfile                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDisplay     BEGSR
- 
+
       ***Set*screen conditioning indicators                                                 MD023629
       **********                                                                            MD023629
      C**********         IF        W1PMD = 'ADD'                                            MD023629
@@ -920,12 +922,12 @@
      C**********         IF        PMODE = 'E'                                              MD023629
      C**********         EVAL      *IN31 = *ON                                              MD023629
      C**********         ENDIF                                                              MD023629
- 
+
       ***Display*appropriate Header depending upon Mode whether it is                       MD023629
       ***Enquiry*or Maintenance                                                             MD023629
- 
+
       ***Set*cursor*by**SET CURSOR data                                                     MD023629
- 
+
      C                   EVAL      *IN26 = *OFF                                             MD023629
      C                   EVAL      *IN28 = *OFF                                             MD023629
      C                   EVAL      *IN29 = *OFF                                             MD023629
@@ -947,11 +949,11 @@
      C                   ELSE                                                               MD023629
      C                   EXFMT     GL000593F3                                               MD023629
      C                   ENDIF                                                              MD023629
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -961,9 +963,9 @@
       *                                                               *
       *****************************************************************
      C     SRProcess     BEGSR
- 
+
       ** Change of position specified
- 
+
      C**********         IF        W1PMD <> 'ADD' and WPOSN <> SPOSN                        MD023629
      C**********                   OR WZCCY <> #1POS1 OR WZNCD <> #1POS3                    MD023629
      C**********                   OR WZSTS <> #1POS2 OR WZBRC <> #1POS4                    MD023629
@@ -978,17 +980,17 @@
      C**********         IF        *IN81 = *ON                                              MD023629
      C**********         EVAL      WKIPIN = 'N'                                             MD023629
      C**********         ENDIF                                                              MD023629
- 
+
       ** Validate action code                                                               MD023629
       *                                                                                     MD023629
      C                   EVAL      *IN40 = *OFF                                             MD023629
      C                   EXSR      SRVAction                                                MD023629
- 
+
       ** Process subfile records
- 
+
      C**********         EXSR      SRProcRec                                                MD023629
      C  N40              EXSR      SRProcRec                                                MD023629
- 
+
      C  N40              EXSR      SRReload                                                 MD023629
       ***Switch*between *ADD/*CHANGE modes is allowed when no errors                        MD023629
       ***exists*during update                                                               MD023629
@@ -996,9 +998,9 @@
      C**********         IF        *IN40 = *OFF                                             MD023629
      C**********         EXSR      SRMode                                                   MD023629
      C**********         ENDIF                                                              MD023629
- 
+
      C**********         ENDIF                                                              MD023629
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1008,7 +1010,7 @@
       *                                                               *
       *****************************************************************
      C     SRProcRec     BEGSR
- 
+
      C**********         EVAL      #1CCY = *BLANKS                                          MD023629
      C**********         EVAL      #1NOSC = *BLANKS                                         MD023629
      C**********         EVAL      #1ANAM = *BLANKS                                         MD023629
@@ -1175,7 +1177,7 @@
      C                   READC     GL000593S1                             85                MD023629
       *                                                                                     MD023629
      C                   ENDDO                                                              MD023629
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1203,11 +1205,11 @@
       *                                                               *
       *****************************************************************
      C     SRReload      BEGSR
- 
+
       ** Request subfile reload
- 
+
      C                   EVAL      W1RSF = 'Y'
- 
+
      C                   IF        *IN05 = *ON
      C                   EVAL      SPOSN = *BLANKS
      C**********         EVAL      #1POS1 = *Blanks                                         MD023629
@@ -1222,7 +1224,7 @@
      C                   EVAL      *IN35 = *OFF                                             MD029683
      C                   EVAL      *IN36 = *OFF                                             MD029683
      C**********         ENDIF                                                              MD023629
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1232,9 +1234,9 @@
       *                                                               *
       *****************************************************************
      C     SRClrScrn     BEGSR
- 
+
       ** Initialise subfile record
- 
+
      C**********         EVAL      #1CCY  = *BLANKS                                         MD029683
      C**********         EVAL      #1NOSC = *BLANKS                                         MD029683
      C                   EVAL      #1NOST = *BLANKS                                         MD029683
@@ -1255,7 +1257,7 @@
      C                   EVAL      #0NBTF  = *BLANKS                                        MD023629
      C                   EVAL      #0TMST  = *BLANKS                                        MD023629
      C                   EVAL      #1ACTN  = *BLANKS                                        MD023629
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1266,22 +1268,22 @@
       *                                                               *
       *****************************************************************
      C     SRMove        BEGSR
- 
+
       ***Move*GLARNRTD*fields*to*subfile*******************************                     MD029739
       ** Move DIARNRTD fields to subfile                                                    MD029739
- 
+
      C                   EVAL      #1SLSH1 = '/'
      C                   EVAL      #1SLSH2 = '/'
       ***Currency**                                                                         MD029683
       ** Nostro                                                                             MD029683
      C**********         EVAL      #1CCY  = B_ARNRCCY                                       MD029683
      C                   EVAL      #1NOST = B_ARNRCCY + B_ARNRNCD                           MD029683
- 
+
       ***Nostro*Code***                                                                     MD029683
      C**********         EVAL      #1NOSC = B_ARNRNCD                                       MD029683
- 
+
       ** Get Nostro Details via AONOSTR0
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -1294,7 +1296,7 @@
      C                   PARM      *BLANKS       @CSSN            10
      C                   PARM      *BLANKS       @PNOI             1
      C     SDNOST        PARM      SDNOST        DSSDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      A7CUST        @CNUM
      C                   MOVE      A7CYCD        @CCYD
@@ -1302,11 +1304,11 @@
      C                   MOVE      A7ACSN        @ASEQ
      C                   MOVE      A7BRCD        @BRCA
      C                   ENDIF
- 
+
      C     @RTCD         IFEQ      *BLANKS                                                  MD029683
                                                                                             MD029683
       **Get Account Details via AOACCTR0
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
@@ -1317,24 +1319,24 @@
      C                   PARM                    @ASEQ
      C                   PARM                    @BRCA
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
       ** Account Name
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   EVAL      #1ANAM = A_ANAM
      C                   ENDIF
- 
+
       ** Account Branch
      C                   EVAL      #1BRCH = @BRCA
                                                                                             MD029683
      C                   ENDIF                                                              MD029683
- 
+
       ** Last Bank Statement Number
      C                   MOVE      B_ARNRLSN     #1LSTN
- 
+
       ** Last Bank Statement Sequence
      C                   MOVE      B_ARNRLSS     #1LSTS
- 
+
       ** Call ZDATE2 to convert date from Midas Dayno. format to
       ** DDMMMYY format.
      C                   EVAL      PZDayNo = B_ARNRDAT
@@ -1344,14 +1346,14 @@
      C                   PARM      BJDFIN        PBJDFIN                                    MD023629
      C                   PARM      *ZEROS        PZDate
      C                   PARM      *BLANKS       PZADate
- 
+
       ** Date Last Initiated
      C                   MOVE      PZADate       #1LDAT
- 
+
       ** Time Last Initiated
      C                   MOVE      B_ARNRTIM     WTIME
      C                   EVAL      #1LTIM = WHR + ':' + WMIN + ':' + WSEC
- 
+
       ** Account ID                                                                         MD029683
       *                                                                                     MD035766
      C                   IF        B_ARNBTID <> XFBTID                                      MD035766
@@ -1380,7 +1382,7 @@
       ** SRBTCP  -  Check if batch completed                                                MD023629
       *                                                                                     MD023629
      C                   EXSR      SRBTCP                                                   MD023629
- 
+
       ** Error Code
      C                   EVAL      #1ERCD = B_ARNRERC
      C                   IF        B_ARNRERC <> *BLANKS                                     MD023629
@@ -1450,7 +1452,7 @@
       ** Timestamp                                                                          MD023629
       *                                                                                     MD023629
      C                   EVAL      #0TMST = WTimeStamp                                      MD023629
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                MD023629
@@ -1810,11 +1812,11 @@
       *                                                               *
       *****************************************************************
      C     SRZasnms      BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM                    PZMsgFile
      C                   PARM                    PZMsgID
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1824,17 +1826,17 @@
       *                                                               *
       *****************************************************************
      C     SREnd         BEGSR
- 
- 
+
+
       ** If selection mode and F3 has been pressed
       ** Terminate program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       ** Exit program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1844,45 +1846,45 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Set up copyright parameter
- 
+
      C                   MOVEA     CPY@          CPY2@
- 
+
       ** Receive entry parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRTCD
      C                   PARM                    PMODE
- 
+
      C*****PPAR1         PLIST                                                              MD023629
      C**********         PARM      *BLANKS       PRTCD             7                        MD023629
      C**********         PARM                    PSCRF            16                        MD023629
      C**********         PARM                    PNDEC             1 0                      MD023629
      C**********         PARM                    PNDIG             2 0                      MD023629
      C**********         PARM      *BLANKS       PRVAL            16                        MD023629
- 
+
       ** Define LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'GL000593'
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY =  *BLANKS
      C                   EVAL      DBASE = 1
      C                   OUT       LDA
- 
+
      C******DTAARA       DEFINE                  RUNDAT                                     MD023629
      C**********         IN        RUNDAT                                                   MD023629
- 
+
       ** Obtain default message file
- 
+
       ** Call Access Program for Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -1892,7 +1894,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Retrieve the system value                                                          MD023629
                                                                                             MD023629
      C                   CALL      'AOSVALR0'                                               MD023629
@@ -1938,12 +1940,12 @@
                                                                                             MD023629
      C                   MOVEL     ' '           WACAAF                                     MD023629
      C                   EVAL      WACAAF = SVAL3                                           MD023629
- 
+
       ** Open files for update
- 
+
      C**********         OPEN      GL000593DF                                               MD029739
      C                   OPEN      DI000593DF                                               MD029739
- 
+
      C/exec sql
      C+ declare NostroRecon Scroll Cursor
      C+  for select *
@@ -1956,26 +1958,26 @@
      C**********+  ARNRCCY, ARNRNCD                                                         MD029683
      C+  ARNRDAT DESC, ARNRTIM DESC                                                         MD029683
      C/end-exec
- 
+
      C/exec sql
      C+ open NostroRecon
      C/end-exec
- 
+
      C**********         Z-ADD     8             WSFPG                                      MD029683
      C                   Z-ADD     4             WSFPG                                      MD029683
- 
+
       ** Set to *CHANGE mode
- 
+
      C**********         EVAL      W1PMD = 'CHG'                                            MD023629
- 
+
       ** Initialise subfile control
- 
+
      C                   EVAL      SPOSN = *BLANKS
      C                   EVAL      #1RUNA = BJMRDT
      C                   EVAL      #1PGMQ = PSProcName
      C                   EVAL      #1WSID = PSJobName
      C                   EVAL      #1USER = PSUser
- 
+
       ***Initialise subfile control                                                         MD023629
       **********                                                                            MD023629
      C**********         MOVEL     *BLANK        #1POS1                                     MD023629
@@ -1997,9 +1999,9 @@
      C                   MOVEL     SELYY         SELDY                                      MD023629
      C                   MOVEL     SELMM         SELDM                                      MD023629
      C                   MOVEL     SELDA         SELDD                                      MD023629
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2008,19 +2010,19 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   CALL      'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2031,10 +2033,10 @@
      P pSQL_RanOk      b
      D pSQL_RanOk      pi              n
      D  iSQLState                     5a   Const
- 
+
      C                   Return    %Subst(iSQLState:1:2) = '00'
      C                             or %Subst(iSQLState:1:2) = '01'
- 
+
      P                 e
 ** CPY@
 (c) Misys International Banking Systems Ltd. 2013

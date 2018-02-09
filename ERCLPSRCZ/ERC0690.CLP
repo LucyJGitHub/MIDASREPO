@@ -9,19 +9,21 @@
 /******ERC0690  - EUROPEAN REPORTING - Download to xxERDLIB*********   ULX004*/
 /*     ERC0690  - EUROPEAN REPORTING - Download to xxCADLIB            ULX004*/
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX004             Date 30Apr97              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX004             Date 30Apr97              */
 /*                      82577  SL          Date 03Feb95              */
 /*                     ERL406 PT         DATE   14JUL94             */
 /*                     ER0125 ADs        DATE   17DEC92             */
 /*********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*     ULX004 - Capital Adequacy                                    */
 /*     82577  - RETRY CPYF WHEN FILE CANNOT BE ALLOCATED            */

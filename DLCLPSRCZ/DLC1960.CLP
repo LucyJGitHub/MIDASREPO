@@ -25,19 +25,21 @@
 /*                 RADA > 0 and this Program will be rerun.          */
 /*                 This job does not run under commitment control.   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E28440             DATE 17SEP91              */
-/*       PREV AMEND NO. S01328             DATE 07FEB91              */
+/*       Prev Amend No. E28440             Date 17Sep91              */
+/*                      S01328             Date 07Feb91              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       E28440 - Clear down of physical file, DLMMDFPP, will be     */
 /*                done in DL1960 to avoid error if file locked by    */
 /*                the FRA Book positions program (DL1905).           */
@@ -48,7 +50,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -102,6 +104,6 @@
                           FRA or IRS Revaluation.') TOMSGQ(MOPERQ)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
  END:        ENDPGM

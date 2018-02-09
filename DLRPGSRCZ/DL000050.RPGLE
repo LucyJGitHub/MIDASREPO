@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas DL IRS Rate Fixing')                             *
@@ -9,10 +9,11 @@
       *                                                               *
       *  DL000050   - IRS Rate Fixing                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -73,12 +75,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDEALSDG   IP   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DEALSDGF:SAVE)
      F                                     PREFIX(SV)
       ** RTV: Midas IRS Deals File (saved copy)
- 
+
      FDEALALL   IF   E           K DISK    INFSR(*PSSR)
      F                                     ignore(DEALSDAf)
      F                                     ignore(DEALSDBf)
@@ -89,14 +91,14 @@
      F                                     RENAME(DEALSDGF:IRS)
      F                                     PREFIX(IR)
       ** RTV: Midas IRS Deals File
- 
+
      FDLIRLFL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLIRLFD0:DG)
       ** UPD: IRS Last Interest Rate Fix File
- 
+
      FDL000050AUO    E             PRINTER
       ** Bulk Short Rate Amendments printer file - audit
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -115,79 +117,79 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External data structure for Currency Details file
- 
+
      D   SDBSRT      E DS                  EXTNAME(SDBSRTPD)
       **Base Rate Code details accessed via access programme
- 
+
      D   ZADEC         S              1  0
       **Decimal data length passed as a parameter to ZALIGN
- 
+
      D   ZADIG         S              2  0
       **Digital data length passed as a parameter to ZALIGN
- 
+
      D   ZFIELD        S             16A
       **Field Passed to ZALIGN on which the work is done
- 
+
      D   ZALIGNok      S              1A
       **Indicator to show whether or not ZALIGN was successful
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D                 DS
      D  @@YEAR                 1      4  0
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
+
      D                 DS
      D  a1brcd                 1      2
      D  a1brcd#                1      2  0
@@ -195,7 +197,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -476,4 +478,4 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

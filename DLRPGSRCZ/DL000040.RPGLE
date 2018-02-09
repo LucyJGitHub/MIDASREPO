@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Bulk Short Term Amendments')                  *
@@ -9,10 +9,11 @@
       *                                                               *
       *  DL000040   - Bulk Short Term Rate Amendments                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 245692             Date 10Dec13               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -112,15 +114,15 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDL000040DFCF   E             WORKSTN
      F                                     SFILE(dl0040S1:@@RRN)
       ** Bulk Short Rate Amendments display file
- 
+
      FDLIRLFL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLIRLFD0:DG)
       ** RTV: IRS Last Interest Rate Fix File
- 
+
      FDEALALL   UF   E           K DISK    INFSR(*PSSR)
      F                                     ignore(DEALSDAf)
      F                                     ignore(DEALSDBf)
@@ -130,11 +132,11 @@
      F                                     ignore(DEALSDFf)
      F                                     RENAME(DEALSDGF:IRS)
       ** RTV: Midas IRS Deals File
- 
+
      FDLIRHFPD  O    E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DLIRHFD0:HISTORY)
       ** OUT: IRS Back-valued Rate Fix History File
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -153,89 +155,89 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External data structure for Currency Details file
- 
+
      D   SDBSRT      E DS                  EXTNAME(SDBSRTPD)
       **Base Rate Code details accessed via access programme
- 
+
      D   ZADEC         S              1  0
       **Decimal data length passed as a parameter to ZALIGN
- 
+
      D   ZADIG         S              2  0
       **Digital data length passed as a parameter to ZALIGN
- 
+
      D   ZFIELD        S             16A
       **Field Passed to ZALIGN on which the work is done
- 
+
      D   ZALIGNok      S              1A
       **Indicator to show whether or not ZALIGN was successful
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  245692
      D QQACC1        E                     EXTFLD(QQACCD)                                     245692
       ** Data Structure to retrieve DEALING ICD details                                       245692
                                                                                               245692
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D                 DS
      D  ddmmyy                 1      6  0
      D  dd                     1      2  0
      D  mm                     3      4  0
      D  yy                     5      6  0
- 
+
      D rtchgstr        DS
      D  rtchgstrd              1      5
- 
+
      D                 DS
      D  start_days8            1      8
      D  str_dd                 1      2
@@ -243,12 +245,12 @@
      D  str_mm                 4      5
      D  str_slash2             6      6
      D  str_yy                 7      8
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
                                                                                               245692
       ** Parameter list for ZA0840                                                            245692
       ** =========================                                                            245692
@@ -404,20 +406,20 @@
      C                   PARM      *blanks       Msgid1            7
      C                   PARM      #1ccy         DDCCY             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        RetCodeIn  = 'Error' or ddccy=*blanks
- 
+
      C                   eval      #1ccyd = *blanks
      c                   seton                                        6621
      c                   MOVEL     'MMM0202'     ZAMSID
      C                   EVAL      #MsgFile = 'DRSMM'
      c                   EXSR      ZASNMS
- 
+
      c                   else
- 
+
      C                   eval      #1ccy  = A6CYCD
      C                   eval      #1ccyd = A6CYNM
- 
+
      C                   endif
       *
      C                   endif
@@ -445,7 +447,7 @@
      C                   PARM      #1ccy         @UCUCY            3
      C                   PARM      #1bsrc        @UBRTT            2
      C     SDBSRT        PARM      SDBSRT        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C     @ubrtt        oreq      *BLANK
      C                   eval      #1bsrn = *blanks
@@ -453,16 +455,16 @@
      C                   MOVEL     'MMA0014'     zamsid
      C                   EVAL      #MsgFile = 'DRSMM'
      c                   EXSR      ZASNMS
- 
+
      C                   else
- 
+
      C                   eval      #1ccy  = @ucucy
      c                   exsr      sr_ccy
      c                   setoff                                       6621
      C                   eval      #1bsrc = babsrc
      C                   eval      #1bsrn = babsrn
      c                   move      #1bsrc        #1bsrc#           2 0
- 
+
      C                   ENDIF
       *
      C                   ENDIF
@@ -1143,4 +1145,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

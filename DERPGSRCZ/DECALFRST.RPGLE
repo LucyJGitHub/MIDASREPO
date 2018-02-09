@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DE Calculate FRA settlement amount')
@@ -17,15 +17,16 @@
       *                                                               *
       *  Component of: DEPXTFRAS                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 208221             Date 11Dec02               *
+      *  Prev Amend No. 208221             Date 11Dec02               *
       * Midas Release 4 --------------- Base -------------------------*
-      *  Prev Amend No. CDE002             Date 05Dec00               *
+      *                 CDE002             Date 05Dec00               *
       * Midas DBA 3.05 -----------------------------------------------*
       *                 188050             Date 27Dec00               *
       * Midas DBA 3.03 -----------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  208221 - Changes identified during alpha site                *
       *  CDE002 - Revenue Analysis                                    *
       *  188050 - Int. calc. basis 7 not processed                    *
@@ -680,4 +682,4 @@
       /COPY DECPYSRC,DEPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Adjustment Accrued Int Validate & Update')    *
@@ -32,14 +32,16 @@
       *            the call to the message handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. BUG5809            Date 08Aug17               *
-      *  Prev Amend No. AR1096788          Date 18Mar13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG5809            Date 08Aug17               *
+      *                 AR1096788          Date 18Mar13               *
       *                 CAP210  *CREATE    Date 28Sep12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG5809 - Response mode should be 'S'.                       *
       *            Apply fix for MD-47196.                            *
       *  AR1096788 - DLAA details should be written in core STRANF    *

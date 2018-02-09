@@ -14,14 +14,15 @@
 /*       Calls :  ED0060                                            */
 /*                ED0080                                            */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG9941            Date 14Dec05              */
-/*       Prev Amend No. BUG7286            Date 23May05              */
+/*       Prev Amend No. BUG9941            Date 14Dec05              */
+/*                      BUG7286            Date 23May05              */
 /*                      228542             Date 05Aug04              */
 /*                      CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -34,6 +35,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG9941 - Job ends if abnormally if no entries to process   */
 /*       BUG7286 - Error in SCRTVJEVT command                        */
 /*       228542 - RGZPFM has changed at R5V3                         */
@@ -51,7 +53,7 @@
 /* Copyright statement definition */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&EDDRIP) TYPE(*CHAR) LEN(43)
              DCL        VAR(&STRSNO) TYPE(*DEC) LEN(10)
@@ -79,7 +81,7 @@
 /* Copyright statement definition - at runtime */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* Access the Drip Feed process data area */
  
 START:

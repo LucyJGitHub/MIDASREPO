@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                       CER070
 /*STD *  RPGBASEMOD                                                   *                       CER070
@@ -13,10 +13,11 @@
       *  Function: This program creates Off Balance Extract file      *
       *            for Midas Export Composite message.                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26748           Date 26Nov09               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *           Change compilation directive from RPGBASEBND to     *
       *           RPGBASEMOD and create associated program.           *
@@ -554,4 +556,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

@@ -8,14 +8,15 @@
 /*       ERC5349 - SPOT TRADE HISTORIC A/C POSTINGS MERGE           */
 /*                 (based on GLC41 - Daily Accounting Merge)        */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. FS0001             Date 14Sep95              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      FS0001             Date 14Sep95              */
 /*                      ER0004 VT          Date 30Nov92              */
 /*                      EMFIX1             DATE 16AUG90             */
 /*                      EU                 DATE 19JUN90             */
@@ -25,6 +26,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       FS0001  -  FILE HPOSTPD IS REPLACED BY GLACPHPD            */
 /*       ER0004  -  WRITTEN TO CALL NEW DAILY REPORTING MERGE PGM   */

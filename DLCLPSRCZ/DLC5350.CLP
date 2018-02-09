@@ -7,19 +7,21 @@
 /*                                                                  */
 /*       DLC5350 - MM Automatic Rollover (COB process)              */
 /*                                                                  */
-/*       (C) Copyright Misys International Banking Systems Ltd 2004 */
+/*       (C) Copyright Finastra International Limited 2004           */
 /*                                                                  */
-/*       Last Amend No. 259376            Date 20Sep12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 259376             Date 20Sep12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Prev Amend No. 243473            Date 09Nov06              */
+/*                      243473             Date 09Nov06              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      BUG4122           Date 14Sep04              */
 /*                      CDL016  *Create   Date 03Feb04              */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*      259376 - Produce confirmations in Correspondence Manager    */
 /*               for auto-rollover deals.                           */
 /*             - Applied for AR1034429 (Child: AR1034430)           */
@@ -33,7 +35,7 @@
      PGM        PARM(&CNAM &CSEQ)
 /**/
      DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                   Misys International Banking Systems Ltd. +
+                   Finastra International Limited +
                    2004')
      DCL VAR(&MEM) TYPE(*CHAR) LEN(50)
      DCL VAR(&LDA) TYPE(*CHAR) LEN(256)
@@ -522,7 +524,7 @@ ABNOR: +
  
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM: +
      ENDPGM

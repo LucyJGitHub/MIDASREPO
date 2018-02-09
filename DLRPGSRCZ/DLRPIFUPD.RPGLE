@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Reporting Information Update')                *
@@ -9,10 +9,11 @@
       *                                                               *
       *  DLRPIFUPD - Midas DL Reporting Information Update Program    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD039656           Date 12Jul16               *      
-      *  Prev Amend No. MD024368           Date 13Dec16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039656           Date 12Jul16               *
+      *                 MD024368           Date 13Dec16               *
       *                 MD030983           Date 04Oct16               *
       *                 CSW216             Date 14Mar16               *
       *                 MD023231           Date 25Nov14               *
@@ -26,7 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD039656 - Unable to reverse an authorised deal              *      
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD039656 - Unable to reverse an authorised deal              *
       *  MD024368 - DB Error when reversing Deal with no Reporting    *
       *             details. Applied for MD-39839                     *
       *  MD030983 -  Generated messages still display previous trade  *
@@ -103,7 +105,7 @@
      D***ValdS2              1042   1846                                               CSW214 CSW216
      D***ValdS3              1858   1866                                               CSW214 CSW216
      D***ValdS4              1898   1954                                               CSW214 CSW216
-     D  ValdSu1              582    825                                                     MD039656     
+     D  ValdSu1              582    825                                                     MD039656
      D  ValdS1                 1   1077                                                       CSW216
      D  ValdS2              1082   1886                                                       CSW216
      D  ValdS3              1898   1906                                                       CSW216
@@ -119,7 +121,7 @@
      D***RPIFS2*             1042   1846                                               CSW214 CSW216
      D***RPIFS3*             1858   1866                                               CSW214 CSW216
      D***RPIFS4*             1898   1954                                               CSW214 CSW216
-     D  RPIFSu1              582    825                                                     MD039656     
+     D  RPIFSu1              582    825                                                     MD039656
      D  RPIFS1                 1   1077                                                       CSW216
      D  RPIFS2              1082   1886                                                       CSW216
      D  RPIFS3              1898   1906                                                       CSW216

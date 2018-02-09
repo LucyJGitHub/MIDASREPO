@@ -8,19 +8,21 @@
 /*       ERC5347 - GL Accounts Post - Spot Trade Historic Post A/c's*/
 /*                 (based on GLC37)                                 */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. CGL165             Date 17Feb15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL165             Date 17Feb15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      EMFIX              Date 26Aug98              */
 /*                      ER0999             Date 22Dec91              */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL165 - Dual Withholding Tax (Recompile)                   */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       EMFIX  - ACORDBX0 DOES NOT EXIST AFTER DBA2. MONMSG        */

@@ -7,14 +7,15 @@
 /*                                                                  */
 /*       ERC5342 - Spot Trade Historic A/c Postings Generation      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CAP204             Date 03Mar10              */
+/*       Prev Amend No. CAP204             Date 03Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      132893             Date 21Apr98              */
 /*                      FS0001             Date 14Sep95              */
 /*                     ER_R10            DATE  08AUG95              */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAP204  - Retail Account Transfer                           */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*  132893 - RCF DBA2.3                                             */

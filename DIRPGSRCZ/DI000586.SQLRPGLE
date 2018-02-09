@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Accounting Rules Batch Details - DIACIFTD')
@@ -10,10 +10,11 @@
       ***GL000586*-*Midas*OF*Accounting*Rules*Batch*Details************                     MD029739
       *  DI000586 - Midas OF Accounting Rules Batch Details           *                     MD029739
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD031513           Date 26Apr16               *
-      *  Prev Amend No. MD027107           Date 11Dec14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031513           Date 26Apr16               *
+      *                 MD027107           Date 11Dec14               *
       *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD029683           Date 19Aug14               *
       *                 MD027197A          Date 03Jun14               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031513 - Serious midas error due to Cheque No. 00000000.   *
       *             Make Cheque No blank if equal to zeros.           *
       *           - Applied for MD036733                              *

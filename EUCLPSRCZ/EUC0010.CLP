@@ -15,19 +15,21 @@
 /*                                                                   */
 /*       Calls :   EU0010 - EMU BCA Conversion Prompt                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No.  137485            Date 25Jun998             */
-/*       Prev Amend No.  CEU001 *CREATE    Date  8Sep97              */
+/*       Prev Amend No. 137485             Date 25Jun998             */
+/*                      CEU001 *C *CREATE  Date 8SEp97               */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       137485 - Fix to prevent Database error when going into      */
 /*                Mapping Maintenance after exiting from Base        */
 /*                Ccy Conversion prompt.                             */
@@ -39,7 +41,7 @@
 /*/COPY WNCPYSRC,EUC0010INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL      VAR(&MEM) TYPE(*CHAR) LEN(50)
 /**/
@@ -85,7 +87,7 @@
 /*********** MONMSG     MSGID(CPF8350)                       /*137485*/
  END:                                                        /*137485*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,EUC0010END                                          */
  

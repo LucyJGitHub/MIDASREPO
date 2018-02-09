@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       ERCHKFLR - Check Folder                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX040             Date 19Feb01              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX040             Date 19Feb01              */
 /*                      ULX008             Date 23Feb00              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       ULX040 - FIRE - RT30 Generation in Midas                    */
 /*                Re-use it                                          */
@@ -32,7 +34,7 @@
              DCL        VAR(&PATH)   TYPE(*CHAR) LEN(51)
              DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /***  Check folder existance.  ***/
@@ -65,7 +67,7 @@
              MONMSG     MSGID(CPF0000) EXEC(CHGVAR +
                           VAR(&RETURNCODE) VALUE('OTHER  '))
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
  
              ENDPGM

@@ -8,16 +8,18 @@
 /*     ERC0700 - EUROPEAN REPORTING                                 */
 /*               SUBMIT EUROPEAN REPORTING INTERFACE MAIN COMPONENT */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX004             Date 27Oct97        ThL   */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX004             Date 27Oct97              */
 /*                      ER1003             Date 03Nov92        ThL   */
 /*------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /* ULX004 - Change Submit Job parameter                             */
 /* ER1003 - Change Submit Job parameter                             */

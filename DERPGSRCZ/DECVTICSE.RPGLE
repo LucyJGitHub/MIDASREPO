@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DE Convert interest calculation methods - SE')
@@ -16,19 +16,21 @@
       *                                                               *
       *  Component of: DEPXTSBPS                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
-      *  Last Amend No. CDE001  *CREATE    Date 16Dec99               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CDE001  *CREATE    Date 16Dec99               *
+      *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
@@ -119,7 +121,7 @@
       /COPY DECPYSRC,DEPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** DYBS/DVBS
 51
 11

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas OF Accounting Rules Submit JRNE - HTTP')         *
@@ -10,10 +10,11 @@
       ***GL000587H*-*Midas*OF*Accounting*Rules*Call*JRNE*thru*HTTP*****                     MD029739
       *  DI000587H - Midas OF Accounting Rules Call JRNE thru HTTP    *                     MD029739
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD035656           Date 25May16               *      
-      *  Prev Amend No. MD027107           Date 11Dec14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035656           Date 25May16               *
+      *                 MD027107           Date 11Dec14               *
       *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD033895           Date 03Feb14               *
       *                 MD024772           Date 03Feb14               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035656 - Batch with wrong account configured in the        *
       *             accounting rules do not appears in the repair     *
       *             queue.                                            *

@@ -8,20 +8,22 @@
 /*                                                                   */
 /*       DEC0080 - Merge Historic Extract Files for Transfer.        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDE005             Date 22Aug02              */
-/*       Prev Amend No. CDE003             Date 11Dec02              */
+/*       Prev Amend No. CDE005             Date 22Aug02              */
+/*                      CDE003             Date 11Dec02              */
 /*                      208221             Date 11Dec02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CDE002  *CREATE    Date 29Mar00              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDE005 - Data Export - Reservation ID (Re-compile)          */
 /*       CDE003 - Data Export - MCR Limits Phase II (Recompiled)     */
 /*       208221 - Don't copy DEH* files into member INT              */
@@ -33,7 +35,7 @@
 /*/COPY WNCPYSRC,DEC0080INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(QTEMP/FDMBR)
@@ -128,7 +130,7 @@ FINISH:
                 MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,DEC0080END                                          */
  

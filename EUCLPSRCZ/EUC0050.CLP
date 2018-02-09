@@ -13,23 +13,25 @@
 /*                                                                   */
 /*       Calls :   EU0050 - Update BCCY / Spot Rates with Euro       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC020             Date 31Mar04              */
+/*       Prev Amend No. CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. CCB009             DATE 01Jun00              */
+/*                      CCB009             Date 01Jun00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CPK009             Date 09Aug99              */
 /*                       CEU001 *CREATE    DATE 08Sep97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
 /*       CCB009 - Journal files throughout close of business         */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
@@ -42,7 +44,7 @@
 /*/COPY WNCPYSRC,EUC0050INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM)   TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ)   TYPE(*DEC)  LEN(5)
@@ -275,7 +277,7 @@ NOJRNRCV:    ENDDO
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,EUC0050END                                          */
  

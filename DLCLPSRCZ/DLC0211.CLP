@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       DLC0211 - INPUT CYCLE PAY/RECEIVE PROCESSING                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD044140           Date 02Mar17              */
-/*       Prev Amend No. 220343             Date 02Mar17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD044140           Date 02Mar17              */
+/*                      220343             Date 02Mar17              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -44,6 +45,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD044140 - Ensure automatic submission of the job will      */
 /*                  display the program name                         */
 /*       220343 - Retrieve the value of the user profile that        */
@@ -102,7 +104,7 @@
 /*/                                                                  */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
@@ -820,5 +822,5 @@ END:         ALCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD)) WAIT(32000)
 /*/COPY WNCPYSRC,DLC0211023                                          */
                                                                       /*E33130*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       EUC0420 - EMU UPDATE OF STATEMENT BLANCE IN EUROS FLAG      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. CEU013              DATE 13JUL98             */
+/*       Prev Amend No. CEU013             Date 13Jul98              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*   CEU013 - EMU A/C Posting Narrative Enhancements                 */
 /*                                                                   */
 /*********************************************************************/
@@ -25,7 +27,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&SRTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&SOPTN) TYPE(*CHAR) LEN(7) +
@@ -77,5 +79,5 @@
              ENDDO                                                    /*077681*/
              CHGJOB     SWS(0XXXXXXX)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

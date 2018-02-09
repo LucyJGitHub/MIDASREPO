@@ -8,10 +8,11 @@
 /*       DLC04 - INPUT CYCLE TERMINATION                             */
 /*               CONFIRMATION & PAY/RECEIVE PROCESSING               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD039542           Date 30Jun16              */
-/*       Prev Amend No. MD031673           Date 17Dec14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD039542           Date 30Jun16              */
+/*                      MD031673           Date 17Dec14              */
 /*                      CSW214             Date 25Nov14              */
 /*                      MD021693A          Date 29Aug13              */
 /*                      CSW213             Date 03Jun13              */
@@ -68,6 +69,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD039542 - Commitment definition control error              */
 /*       MD031673 - Component DLC0400 00001 failed during COB run    */
 /*       CSW214 - SWIFT Changes 2014                                 */
@@ -154,14 +156,14 @@
              DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)               /*CFF003*/
 /**/                                                                  /*CFF003*/
 /*/                                                                  */
-
+ 
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
-
+ 
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
              DCL        VAR(&REON) TYPE(*CHAR) LEN(1) VALUE(N)        /*E29588*/
-
+ 
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
              DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MCSTAT) TYPE(*CHAR) LEN(256)             /*S01427*/
@@ -194,7 +196,7 @@
              DCL        VAR(&CAS009) TYPE(*CHAR) LEN(1)                                   /*CAS009*/
              DCL        VAR(&ACTION)     TYPE(*CHAR) LEN(8)                               /*227780*/
 /*/COPY WNCPYSRC,DLC04016                                            */
-
+ 
              DCL        VAR(&CSW2008) TYPE(*CHAR) LEN(7) VALUE('       ')                 /*CSW208*/
                                                                                           /*CSW208*/
              DCL        VAR(&CMG003) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CMG003*/
@@ -205,17 +207,17 @@
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)                                 /*CSW213*/
                                                                                           /*CSW213*/
              DCLF       FILE(SDMGMEPD)
-
+ 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
 /*/COPY WNCPYSRC,DLC04015                                            */
-
+ 
 /* Zero switches */
 /*********** CHGJOB     LOG(4) LOGCLPGM(*YES) SWS(10100000) ********/ /*081957*/
 /*/COPY WNCPYSRC,DLC04013                                            */
              CHGJOB     LOG(4) LOGCLPGM(*YES) SWS(10110000)           /*081957*/
 /*/COPY WNCPYSRC,DLC04014                                            */
-
+ 
 /* Create LDA */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' ') TEXT('Midas SD AS400 LOCAL +
@@ -278,13 +280,13 @@
 /**/                                                                  /*CDL008*/
 /*  Set Type of Run flag to 'Confirmations' for Audit report          /*E40242*/
              CHGVAR     VAR(&TYPR) VALUE('C')                         /*E40242*/
-
+ 
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
 /* If Retail or IoA switched on, set Retail-on flag */                /*E29588*/
              IF         COND((%SUBSTRING(&MMOD 23 1) = 'Y') *OR +
                           (%SUBSTRING(&MMOD 16 1) = 'Y')) +
                           THEN(CHGVAR VAR(&REON) VALUE(Y))            /*E29588*/
-
+ 
 /*/COPY WNCPYSRC,DLC04012                                            */
              RTVDTAARA  DTAARA(DLSTAT) RTNVAR(&DLSTAT)
 /**/                                                                  /*CSW097*/
@@ -353,12 +355,12 @@
 /* */
 /** File over-ride for MGOREFL0                                   */ /*E41062*/
              OVRDBF     FILE(MGOREFL0) SHARE(*NO)                    /*E41062*/
-
+ 
 /* DLC0401 */
              IF COND(%SST(&DLSTAT 98 1) *EQ 'A') THEN(GOTO TAGA)
              IF COND(%SST(&DLSTAT 98 1) *EQ 'B') THEN(GOTO TAGB)
              IF COND(%SST(&DLSTAT 98 1) *EQ 'C') THEN(GOTO TAGC)
-
+ 
              SNDPGMMSG  MSG('Input Cycle Termination Confirmation +
                         Print') TOMSGQ(MRUNQ)
 /* */                                                                 /*S01522*/
@@ -418,7 +420,7 @@
              ENDDO                                                                        /*174646*/
 /**/                                                                                      /*174646*/
 /**/                                                                                      /*174646*/
-
+ 
 /*/                                                             */    /*S01408*/
 /*/COPY WNCPYSRC,DLC04003                                       */    /*S01408*/
 /*/                                                             */    /*S01408*/
@@ -426,7 +428,7 @@
 /*/                                                             */    /*S01408*/
 /*/COPY WNCPYSRC,DLC04004                                       */    /*S01408*/
 /*/                                                             */    /*S01408*/
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Confirmations print failure')
@@ -450,15 +452,15 @@
              ENDDO                                                                        /*CSW213*/
                                                                                           /*CSW213*/
              ENDDO                                                                        /*CSW213*/
-
+ 
              IF COND(%SST(&MMOD 25 1) *EQ 'Y') THEN(DO)
-
+ 
 TAGA:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('A')
-
+ 
 /* Extract messages */
 /*/COPY WNCPYSRC,DLC04020                                            */
              CALL       PGM(DL6305) /* COMIT ONLY DEALS */
-
+ 
 /* If all CONEX not processed report failure */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
@@ -512,7 +514,7 @@ TAGA:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('A')
 /*/COPY WNCPYSRC,DLC04017                                            */
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
                                                                                           /*CSW213*/
              IF         COND(&CSW2013 *EQ 'CSW2013') THEN(DO)                             /*CSW213*/
@@ -560,9 +562,9 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              CLRPFM     FILE(CONEXCY)
              CLRPFM     FILE(CONEXCZ)
 /*/COPY WNCPYSRC,DLC04021                                            */
-
+ 
 /* GDFs records are deleted as they are processed */
-
+ 
 /* Process foreign exchange confirmations */
              IF         COND(&CSW097 = 'N') THEN( +
              CALL       PGM(MG0300))                                  /*CSW097*/
@@ -572,7 +574,7 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
                 CALL       PGM(MG0300A)                                                 /*MD039542*/
              ENDDO                                                                      /*MD039542*/
 /*********** CALL       PGM(MG0300)                                */ /*CSW097*/
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
 /*************************%SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -586,10 +588,10 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
 /*/COPY WNCPYSRC,DLC04022                                            */
-
+ 
 /* Process fixed loan/deposit confirmations */
              CALL       PGM(MG0320)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
 /*************************%SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -603,7 +605,7 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
 /*/COPY WNCPYSRC,DLC04023                                            */
-
+ 
              IF         COND(&CMG003 *EQ 'Y') THEN(DO)                                    /*CMG003*/
              CALL       PGM(MG000600)                                                     /*CMG003*/
                                                                                           /*CMG003*/
@@ -624,7 +626,7 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
                                                                                           /*CSW208*/
 /* Process secondary certificate of deposits */
              CALL       PGM(MG0321)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
 /*************************%SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -637,12 +639,12 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              ROLLBACK
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 /* Process liquidation of loan/deposits */
 /*                  (only if CSW200 is off)                        */ /*CSW200*/
              IF         COND(&CSW200 *NE 'CSW200') THEN(DO)           /*CSW200*/
              CALL       PGM(MG0324)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
 /*************************%SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -656,10 +658,10 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
              ENDDO                                                    /*CSW200*/
-
+ 
 /* Process call loan/deposits */
              CALL       PGM(MG0330)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -673,12 +675,12 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
 /*/COPY WNCPYSRC,DLC04024                                            */
-
+ 
 /* Process interest rate change advices */
 /*                  (only if CSW200 is off)                        */ /*CSW200*/
              IF         COND(&CSW200 *NE 'CSW200') THEN(DO)           /*CSW200*/
              CALL       PGM(MG0335)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -692,10 +694,10 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
              ENDDO                                                    /*CSW200*/
-
+ 
 /* Process interest advices */
              CALL       PGM(MG0350)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -749,7 +751,7 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              ENDDO                                                    /*CSW005*/
              ENDDO                                                    /*CSW005*/
                                                                       /*CSW005*/
-
+ 
 /**********  RGZPFM     FILE(MGF300PD)                           */                       /*228542*/
 /**********  MONMSG     MSGID(CPF2995 CPF2981)                   */                       /*228542*/
              CALL       PGM(SCC000060) PARM('MGF300PD' '*FIRST')                          /*228542*/
@@ -834,7 +836,7 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ERROR))                                                  /*228542*/
              ENDDO                                                    /*CSW005*/
-
+ 
              IF         COND(&CSW011 *EQ 'Y' *AND &CSW005 *EQ 'N') +
                           THEN(DO)                                    /*CSW011*/
 /**********  RGZPFM     FILE(MGF340PD)                             */          /*CSW011*/ /*228542*/
@@ -851,9 +853,9 @@ TAGB:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('B')
              ENDDO                                                                        /*CMG003*/
                                                                                           /*CMG003*/
 /*/COPY WNCPYSRC,DLC04018                                            */
-
+ 
 TAGC:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('C')
-
+ 
 /* If ISO confirmations required print messages */
              RCVF
              IF         COND(&ENFFCR = 'N') THEN(DO)
@@ -875,9 +877,9 @@ TAGC:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('C')
                           &SDATE &STIME)                              /*E40242*/
              CHGVAR     VAR(&TYPR) VALUE(' ')                         /*E40242*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)      /*E40242*/
-
+ 
              CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE(' ')
-
+ 
 /* Block large files */
              OVRDBF     FILE(PREXPH) SEQONLY(*YES 50)
              OVRDBF     FILE(PREX1PH) SEQONLY(*YES 50)
@@ -886,7 +888,7 @@ TAGC:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('C')
              OVRDBF     FILE(PREX4PH) SEQONLY(*YES 50)
              OVRDBF     FILE(PREX5PH) SEQONLY(*YES 50)
              OVRDBF     FILE(PREX6PH) SEQONLY(*YES 50)
-
+ 
              OVRDBF     FILE(TRANS) TOFILE(DTRIN)
                                                                       /*E40242*/
 /*  Retrieve System Date and Time - required to extract journal       /*E40242*/
@@ -896,7 +898,7 @@ TAGC:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('C')
                                                                       /*E40242*/
 /*  Set Type of Run flag to 'Pay/Receives' for Audit report           /*E40242*/
              CHGVAR     VAR(&TYPR) VALUE('P')                         /*E40242*/
-
+ 
              IF COND(%SST(&DLSTAT 99 1) *EQ 'D') THEN(GOTO TAGD)
              IF COND(%SST(&DLSTAT 99 1) *EQ 'E') THEN(GOTO TAGE)
              IF COND(%SST(&DLSTAT 99 1) *EQ 'F') THEN(GOTO TAGF)
@@ -908,27 +910,27 @@ TAGC:        CHGDTAARA  DTAARA(DLSTAT (98 1)) VALUE('C')
              IF COND(%SST(&DLSTAT 99 1) *EQ 'L') THEN(GOTO TAGL)
              IF COND(%SST(&DLSTAT 99 1) *EQ 'M') THEN(GOTO TAGM)      /*E29020*/
              IF COND(%SST(&DLSTAT 99 1) *EQ 'N') THEN(GOTO TAGN)      /*E29588*/
-
+ 
 /* DLC2350A */
              CHGJOB     SWS(01000000)
-
+ 
              SNDPGMMSG  MSG('Create Pay/Receive Extract Files') +
                           TOMSGQ(MRUNQ)
-
+ 
              CLRPFM     FILE(DTRIEHH)
              CLRPFM     FILE(DTRIEPH)
              CLRPFM     FILE(DTRIEZZ)
-
+ 
              CALL DL1700
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Pay/receive extract failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 TAGD:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('D')
-
+ 
              CLRPFM     FILE(PREXHH)
              CLRPFM     FILE(PREXPH)
              CLRPFM     FILE(PREXZZ)
@@ -936,14 +938,14 @@ TAGD:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('D')
              CHGJOB     SWS(00000010)
              CALL DL1705
 /*/COPY WNCPYSRC,DLC04006                                       */    /*S01408*/
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Create pay/receive extract +
                           file failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 /*  if netting installed run the extract prune to remove records to   /*CDL002*/
 /*  be processed in the net run of pay/receives                       /*CDL002*/
              IF         COND(&CDL002 *EQ 'Y') THEN(DO)                /*CDL002*/
@@ -967,7 +969,7 @@ TAGD:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('D')
              ENDDO                                                                        /*CAS009*/
                                                                                           /*CAS009*/
 TAGE:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('E')
-
+ 
              CLRPFM     FILE(PREX1HH)
              CLRPFM     FILE(PREX1PH)
              CLRPFM     FILE(PREX1ZZ)
@@ -987,9 +989,9 @@ TAGE:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('E')
              CLRPFM     FILE(PREX6PH)
              CLRPFM     FILE(PREX6ZZ)
 /*/COPY WNCPYSRC,DLC04030                                            */
-
+ 
              CALL       PGM(DL0307)
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Pay/receive file split +
@@ -1011,72 +1013,72 @@ TAGE:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('E')
              IF         COND(&RTN *EQ '       ') THEN(DO)             /*CFF003*/
                 CALL    PGM(FF0307)                                   /*CFF003*/
              ENDDO                                                    /*CFF003*/
-
+ 
              SNDPGMMSG  MSG('Pay/Receive Settlements Report') +
                           TOMSGQ(MRUNQ)
-
+ 
              CALL       PGM(DL0320) PARM('     ')
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Pay/receive settlements +
                           failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 TAGF:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('F')
-
+ 
 /* DLC2350B */
              SNDPGMMSG  MSG('Pay/Receive Telexes Report') TOMSGQ(MRUNQ)
-
+ 
 /*           CHGJOB     SWS(XXXXXX1X)             */
 /*           CALL       PGM(DL0308) PARM('     ') */
 /************CHGJOB*****SWS(XXXXXX1X)             *         *062858*  *130302*/
 /*   Ensure U4 is off before call to DL0308 */                       /*130302*/
              CHGJOB     SWS(XXX0XX1X)                                /*130302*/
              CALL       PGM(DL0308) PARM('     ')                    /*062858*/
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Complete pay/receive +
                           telexes failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 TAGG:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('G')
-
+ 
              SNDPGMMSG  MSG('Incomplete Instructions Report') +
                           TOMSGQ(MRUNQ)
-
+ 
 /************CHGJOB*****SWS(XXXXXX1X)                                /*130302*/
 /*   Ensure U4 is off before call to DL0312 */                       /*130302*/
              CHGJOB     SWS(XXX0XX1X)                                /*130302*/
              CALL       PGM(DL0312) PARM('     ')
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Incomplete pay/receive +
                           telexes failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 TAGH:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('H')
-
+ 
              SNDPGMMSG  MSG('Bankers Authorisations Report') +
                           TOMSGQ(MRUNQ)
-
+ 
              CHGJOB     SWS(XXXXXX1X)
              CALL       PGM(DL0314) PARM('     ')
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Bankers authorisations +
                           failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 TAGI:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('I')
-
+ 
              SNDPGMMSG  MSG('Internal Settlements Report') +
                           TOMSGQ(MRUNQ)                               /*E29588*/
                                                                       /*E29588*/
@@ -1091,14 +1093,14 @@ TAGI:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('I')
              ENDDO                                                    /*E29588*/
                                                                       /*E29588*/
              IF         COND(%SST(&MMOD 25 1) *EQ 'Y') THEN(DO)
-
+ 
 TAGJ:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('J')              /*E29588*/
 /* DLC2350D */
              OVRDBF FILE(CLOAN) SHARE(*NO)                           /*E40462*/
              OVRDBF FILE(DEALS) SHARE(*NO)                           /*E40462*/
 /*/COPY WNCPYSRC,DLC04026                                            */
              CALL DL6315  /* COMIT DEALS ONLY */
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Pay/receive message +
@@ -1129,18 +1131,18 @@ TAGJ:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('J')              /*E29588*/
              GOTO       CMDLBL(ERROR)                                                     /*CIR003*/
              ENDDO                                                                        /*CIR003*/
              ENDDO                                                                        /*CIR003*/
-
+ 
 /*/COPY WNCPYSRC,DLC04031                                            */
 TAGK:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('K')     /*E29588*/
 /*GJ:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('J')       E29588*/
-
+ 
 /* GDFs records are deleted as they are processed */
 /*/COPY WNCPYSRC,DLC04009                                            */
-
+ 
 /*/COPY WNCPYSRC,DLC04032                                            */
 /* Process customer transfer messages */
              CALL       PGM(MG0100)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -1152,10 +1154,10 @@ TAGK:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('K')     /*E29588*/
              ROLLBACK
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 /* Process nostro transfer messages */
              CALL       PGM(MG0200)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -1167,10 +1169,10 @@ TAGK:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('K')     /*E29588*/
              ROLLBACK
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 /* Process Bank transfer messages */
              CALL       PGM(MG0202)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -1182,10 +1184,10 @@ TAGK:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('K')     /*E29588*/
              ROLLBACK
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 /* Process notice to receive messages */
              CALL       PGM(MG0210)
-
+ 
 /************IF*********COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +             */ /* 082024 */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
@@ -1197,7 +1199,7 @@ TAGK:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('K')     /*E29588*/
              ROLLBACK
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 /**********  RGZPFM     FILE(MGF100PD)                           */                       /*228542*/
 /**********  MONMSG     MSGID(CPF2995 CPF2981)                   */                       /*228542*/
              CALL       PGM(SCC000060) PARM('MGF100PD' '*FIRST')                          /*288542*/
@@ -1259,7 +1261,7 @@ TAGK:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('K')     /*E29588*/
 /*/COPY WNCPYSRC,DLC04010                                            */
              ENDDO
 /*/COPY WNCPYSRC,DLC04027                                            */
-
+ 
 /* If ISO advices required (PF/SDMGMEPD, ENFFAR='N') print messages */
              IF         COND(&ENFFAR = 'N') THEN(DO)
              CRTDTAQ    DTAQ(QTEMP/MEISOPRT) MAXLEN(90) +
@@ -1271,14 +1273,14 @@ TAGK:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('K')     /*E29588*/
              GOTO       CMDLBL(ERROR)
              ENDDO
              ENDDO
-
+ 
 TAGL:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('L')     /*E29588*/
 /*GK:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('K')       E29588*/
-
+ 
 /* Generate C.H.I.P.S. messages if interface present */
 /************IF         COND(%SUBSTRING(&MMOD 41 1) *EQ 'Y') +       /*S01427*/
 /************             THEN(CALL PGM(CHC01))                      /*S01427*/
-
+ 
              IF         COND(%SUBSTRING(&MMOD 41 1) *EQ 'Y') +
                           THEN(DO)                                    /*S01427*/
 /**/                                                                  /*S01427*/
@@ -1286,7 +1288,7 @@ TAGL:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('L')     /*E29588*/
 /**/                                                                  /*S01427*/
               CHGJOB    SWS(010XXXXX)                                 /*S01427*/
               CALL PGM(CHC01)                                         /*S01427*/
-
+ 
               IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)             /*S01427*/
                RTVDTAARA  DTAARA(MCSTAT) RTNVAR(&MCSTAT)              /*S01427*/
                CHGVAR VAR(%SUBSTRING(&MCSTAT 2 1)) VALUE('N')         /*S01427*/
@@ -1296,20 +1298,20 @@ TAGL:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('L')     /*E29588*/
               ENDDO                                                   /*S01427*/
              ENDDO                                                    /*S01427*/
                                                                       /*S01427*/
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('C.H.I.P.S. message +
                           generation failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 TAGM:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('M')     /*E29588*/
 /*GL:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('L')       E29588*/
-
+ 
 /* DLC2350C */
              CALL       PGM(DL0330) PARM('     ')
-
+ 
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Update pay/receive +
@@ -1416,7 +1418,7 @@ TAGN:        CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE('N')              /*E29588*/
            ENDDO                                                      /*E46893*/
                                                                       /*E29020*/
 /* --------------------------------------------------------------- */ /*E29020*/
-
+ 
              CHGDTAARA  DTAARA(DLSTAT (99 1)) VALUE(' ')
                                                                       /*CDL002*/
 /*  Run Netting Pay/Receives                                          /*CDL002*/
@@ -1473,7 +1475,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ) +
                           MSGTYPE(*INFO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-
+ 
 /* Send database error message to workstation & MOPERQ */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MSG)
@@ -1497,9 +1499,9 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
 /* If Correspondence manager is switched on, delete overrides                             /*227780*/
 /**********  CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ') */                          /*227780*245403*/
 /**********  CALL       PGM(CGC3605) PARM(&ACTION) */                              /*227780*245403*/
-
+ 
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,DLC04011                                            */
 RCLRSC                                                                /*089167*/
              ENDPGM

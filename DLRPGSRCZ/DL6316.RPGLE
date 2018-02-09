@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas DL Pay/receive message extraction for CLS')
@@ -16,14 +16,15 @@
       *                                                               *
       *  Called By: DLC6316 - Pay/Receive message extraction for CLS  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 217486             Date 06Jun06               *
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. 217486             Date 06Jun06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
       *                 BUG5671            Date 01Feb05               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  217486 - MT202/MT210 generated for a customer even though it *
       *           is setup not to.  Do not generate message if it is  *
       *           suppressed in Standing Data.  Applied fix 209950.   *
@@ -1024,4 +1026,4 @@
       *
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

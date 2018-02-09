@@ -16,16 +16,17 @@
 /*       Calls :        AOMEXPR0                                    */
 /*                      ED0030                                      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 228542             Date 05Aug04              */
+/*       Prev Amend No. 228542             Date 05Aug04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/**      Prev Amend No. CCB009             Date 01Jun00              */
+/*                      CCB009             Date 01Jun00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CEU031             Date 12Nov98              */
 /*                      136827             DATE 02JUN98             */
@@ -33,6 +34,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       CCB009 - Journal files throughout close of business        */
 /*       CEU031 - EMU Global Manager Changes                        */
@@ -47,7 +49,7 @@
 /* Copyright statement definition */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Other declarations */
@@ -98,7 +100,7 @@
 /* Copyright statement definition - at runtime */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGVAR     VAR(&MEM) VALUE('EDC0011 - ED Bulk Transfer +
                           Initialisation')
  

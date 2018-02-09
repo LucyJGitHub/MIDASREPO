@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       DLC0728 - Fixed Deposit Rollover History                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL024 *CREATE     DATE 31Mar04              */
+/*       Prev Amend No. CDL024 *CREATE     DATE 31Mar04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL024 - Fixed Deposit Register                             */
 /*                                                                   */
 /*********************************************************************/
              PGM PARM(&RSEQ &RLEV &RENT &RPARM)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
              DCL       VAR(&LDA)   TYPE(*CHAR)  LEN(256) VALUE(' ')
 /**/
@@ -71,5 +73,5 @@ ABNOR:
 /**/
 /**/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

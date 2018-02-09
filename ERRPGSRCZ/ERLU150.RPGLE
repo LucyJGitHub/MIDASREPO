@@ -1,5 +1,5 @@
      H DEBUG FTRANS                                                                      /*222594*/
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ER Records Type 28 Generation')
@@ -14,14 +14,15 @@
       *                                                               *
       *  Called By: ERC0702 - ER Interface to FRS Component           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 225555             Date 01Nov06               *
+      *  Prev Amend No. 225555             Date 01Nov06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027A            Date 03May06               *
+      *                 CSD027A            Date 03May06               *
       *                 CER001             Date 25Apr05               *
       *                 222594             Date 25Mar03               *
       *                 ULX047             Date 25Mar03               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  225555 - Add discount/premium amount, amount to amortize     *
       *           and 'Prix d'Acquisition'. Recompile only over       *
       *           changed ERLUTRPD.                                   *

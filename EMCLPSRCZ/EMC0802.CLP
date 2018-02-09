@@ -7,18 +7,20 @@
 /*                                                                  */
 /*       EMC0802 - CUSTOMER LIMIT/EXPOSURE/AVAILABILITY REPORT      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*           LAST AMEND NO.  LN0081         DATE   01MAY90          */
-/*           PREV AMEND NO.  E10841         DATE   28/07/87         */
+/*           PREV AMEND NO.  LN0081         DATE   01MAY90          */
+/*                           E10841         DATE   28/07/87         */
 /*                                                                  */
 /*------------------------------------------------------------------*/
+/*           MD046248 - Finastra Rebranding                         */
 /*           LN0081  -  NO RCF PARMS RECEIVED                       *  *LN0081*/
 /*           E10841  -  USE NEW LOGICAL FILE SORTED ON CUSTOMERS    *  *E10841*/
 /*                      ACCOUNT OFFICER CODE                        *  *E10841*/
@@ -32,7 +34,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM)                /*LN0081*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01117*/
@@ -51,5 +53,5 @@
              CALL       PGM(EM0600) PARM(&RSEQ &RENT &RPARM)          /*S01117*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
            ENDPGM

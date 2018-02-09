@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ER Transaction Type Decision Table List')        *
@@ -12,10 +12,11 @@
       *  Function:  To generate Transaction Type Decision Table       *
       *             Reports.                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG26779           Date 27Nov09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26779           Date 27Nov09               *
       *                 BUG26481           Date 19Oct09               *
       *                 BUG26260           Date 02Oct09               *
       *                 BUG25987           Date 11Sep09               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26779 - Change Request on GSART Table                     *
       *  BUG26481 - Audit report reflected records while in actual    *
@@ -582,4 +584,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

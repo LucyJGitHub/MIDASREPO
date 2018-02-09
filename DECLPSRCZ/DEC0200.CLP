@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       DEC0200 - Fiduciary Accrual A/c Keys Extract Control        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CDE002  *CREATE    Date 29Mar00              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. CDE002  *CREATE    Date 29Mar00              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDE002 - Data Export - CCRM Revenue Analysis                */
 /*                                                                   */
 /*********************************************************************/
@@ -37,7 +39,7 @@
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CDL006) TYPE(*CHAR) LEN(1) VALUE('N' )
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -126,7 +128,7 @@
                 MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,DEC0200END                                          */
  

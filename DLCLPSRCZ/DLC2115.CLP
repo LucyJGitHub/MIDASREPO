@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       DLC2115 - Fiduciary Charges/Commissions Types Report        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*       Phase:  I/C  on request or COB                              */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*       Last Amend No. CDL006  *CREATE    Date 26Apr99              */
+/*       Prev Amend No. CDL006  *CREATE    Date 26Apr99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL006 - Dealing Fiduciary.                                 */
 /*                                                                   */
 /*********************************************************************/
@@ -33,7 +35,7 @@
              DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* RCF Sequence Number                                             */
@@ -93,6 +95,6 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -20,10 +20,11 @@
 /*                 EU0030 - BCAE Conversion Report                   */
 /*                 EU0040 - BCE Account Balance Transfer             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
-/*       Prev Amend No. AR999702           Date 05Jul12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*                      AR999702           Date 05Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -39,6 +40,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       AR999702 - Insert of corrective batch in Live with batch    */
 /*                  number in PEA displays an error                  */
@@ -55,7 +57,7 @@
 /*/COPY WNCPYSRC,EUC0020INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM)   TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ)   TYPE(*DEC)  LEN(5)
@@ -336,7 +338,7 @@ NOJRNRCV:      ENDDO
              CLOF       OPNID(GLHIBLPD)
              MONMSG     MSGID(CPF0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,EUC0020END                                          */
  

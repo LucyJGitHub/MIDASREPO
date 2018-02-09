@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('© Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('© Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas DL Interest Calculation')                        *
@@ -15,10 +15,11 @@
       *                                                               *
       *  Called by: DL0280 Deals File Update Phase 2                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD027681           Date 02Jul14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027681           Date 02Jul14               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027681 - Incorrect int. accrued calculation                *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CDL034 - Back-valued Base Rate changes for MM deals          *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2017')
+     H COPYRIGHT('(c) Finastra International Limited 2017')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas DL Cancelled Deals report')                      *
@@ -12,11 +12,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2017            *
       *                                                               *
-      *  Last Amend No. CDL098 *CREATE     Date 06Oct17               *
-      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL098 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL098 - Cancelled Deal Numbers                              *
       *
       *****************************************************************

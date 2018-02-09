@@ -7,17 +7,19 @@
 /*                                                                  */
 /*     ERC9105  - EUROPEAN REPORTING I.C.D. REPORT                  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. 132893             Date 16Apr98             */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      132893             Date 16Apr98              */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       132893 - SPF/RCF for IBLC/BNB on DBA2.3                    */
 /*                                                                  */

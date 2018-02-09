@@ -8,20 +8,22 @@
 /*                                                                   */
 /*       DEC9999 - Clear Export Files                                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 208221             Date 11Dec02              */
+/*       Prev Amend No. 208221             Date 11Dec02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CDE002             Date 12Nov99              */
+/*                      CDE002             Date 12Nov99              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CDE001  *CREATE    Date 12Nov99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       208221 - If Revenue Analysis is on, only clear file         */
 /*                DEELOGPD in the first run of the Close of Business */
 /*       CDE002 - Data Export - CCRM Revenue Analysis                */
@@ -40,7 +42,7 @@
              DCL        VAR(&MOD) TYPE(*CHAR) LEN(1)                  /*208221*/
              DCL        VAR(&CDE002) TYPE(*CHAR) LEN(1) VALUE('N' )   /*CDE002*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(QTEMP/FDMBR)
@@ -129,7 +131,7 @@ FINISH:
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,DEC9999END                                          */
  

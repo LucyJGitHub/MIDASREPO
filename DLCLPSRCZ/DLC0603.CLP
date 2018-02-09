@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       DLC0603 - CLOSE OF BUSINESS CONFIRMATION PROCESSING         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD044136           Date 13Mar17              */
-/*       Prev Amend No. MD031243           Date 06Nov14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD044136           Date 13Mar17              */
+/*                      MD031243           Date 06Nov14              */
 /*                      CSW214             Date 25Nov14              */
 /*                      MD030111           Date 28Aug14              */
 /*                      MD028093           Date 03Jul14              */
@@ -62,6 +63,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD044136 - DLC0603 00001 in MSGW                            */
 /*       MD031243 - DLC0603 sequence 00001 failed in COB             */
 /*       CSW214 - SWIFT Changes 2014                                 */
@@ -133,7 +135,7 @@
              PGM        PARM(&CNAM &CSEQ)                             /*CCB009*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6)
@@ -756,7 +758,7 @@
 /**  Share open data path to YES   **/                                                  /*MD022405*/
 /**********  IF         COND(&CSW2013 *EQ 'CSW213') THEN( +
              OVRDBF     FILE(DEALS) SHARE(*YES))                   */          /*MD022405 MD030111*/
-/**********  IF         COND(&CSW2013 *EQ 'CSW2013') THEN( +                  
+/**********  IF         COND(&CSW2013 *EQ 'CSW2013') THEN( +
              OVRDBF     FILE(DEALS) SHARE(*YES))                   */          /*MD030111 MD031243*/
                                                                                         /*MD022405*/
 /**                                                                   /*084318*/
@@ -1265,5 +1267,5 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('E') +
                           TEXT(&STEXT)                                                    /*CSC020*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

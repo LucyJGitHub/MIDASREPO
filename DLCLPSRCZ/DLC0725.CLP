@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       DLC0725 - Early Maturity of Loans/Deposits                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL017  *CREATE    Date 03Feb04              */
+/*       Prev Amend No. CDL017  *CREATE    Date 03Feb04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL017 - Penalty Fees and Early Maturity of Fixed Term      */
 /*                Loans/Deposits                                     */
 /*                                                                   */
@@ -28,7 +30,7 @@
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
  
@@ -85,6 +87,6 @@ ABNOR:
 END:
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

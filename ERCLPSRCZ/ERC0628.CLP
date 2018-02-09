@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       ERC0628 - ER Extract - Futures & Options                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG10459           Date 08Feb06              */
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*       Prev Amend No. BUG10459           Date 08Feb06              */
+/*                      CER001             Date 25Apr05              */
 /*                      ULX004             Date 25Apr97              */
 /*                      067746  PT         Date 10Mar94              */
 /*                      063766               DATE 14DEC93            */
@@ -22,6 +23,7 @@
 /*                      ER0201               DATE 11JAN93            */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG10459 - ERC0600 on message wait                          */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*   ULX004 - Capital Adequacy                                       */

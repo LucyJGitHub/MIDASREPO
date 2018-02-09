@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Update Actual Amounts against Forecasts')
@@ -14,10 +14,11 @@
       *            the update of Actual Amounts against Forecasts     *
       *  (I/C)     from the Accounting Rules process                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD029739 *RENAMED* Date 15Aug14               *
-      *  Prev Amend No. MD031513           Date 27Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *                 MD031513           Date 27Jan15               *
       *                 MD030256           Date 27Oct14               *
       *                 MD027428           Date 09Jun14               *
       *                 MD027243           Date 29May14               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029739 - File renaming for integration layer.              *
       *  MD031513 - Serious midas error due to Cheque No. 00000000.   *
       *             Make Cheque No blank if equal to zeros.           *

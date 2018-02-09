@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD FATCA Classification Codes Maint - List')     *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SD000200 - Classification Codes Maintenance                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD034087           Date 11Apr15               *
-      *  Prev Amend No. MD034079           Date 10Apr15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034087           Date 11Apr15               *
+      *                 MD034079           Date 10Apr15               *
       *                 MD033128           Date 25Feb15               *
       *                 MD036917           Date 22Dec15               *
       *                 MD036806           Date 14Dec15               *
@@ -22,6 +23,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034087 - Incorrect behavior when selecting a record in     *
       *             FATCA Classification Code                         *
       *  MD034079 - IO error on display file                          *

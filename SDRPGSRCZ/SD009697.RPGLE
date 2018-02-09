@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Account Review Housekeeping')                 *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: SDC009697 - Account Review Housekeeping           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD027577           Date 17Jun14               *
-      *  Prev Amend No. MD027295           Date 24May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027577           Date 17Jun14               *
+      *                 MD027295           Date 24May14               *
       *                 MD026599           Date 28May14               *
       *                 MD026848           Date 12May14               *
       *                 MD026766           Date 12May14               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027577 - History of customer information purge issue       *
       *  MD027295 - SDC009697 COB component run too long              *
       *  MD026599 - FATCA information complete flag is missing in     *

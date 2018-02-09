@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       SEC8400A - SMI Yearly Profitability Report I/C              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2017           */
+/*       (c) Finastra International Limited 2017                     */
 /*                                                                   */
-/*       Last Amend No. CSE108 *CREATE     Date 06Oct17              */
-/*       Prev Amend No. nnnnnn             Date ddmmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSE108 *CREATE     Date 06Oct17              */
+/*                      nnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSE108 - Yearly Profitability Report and Enquiry            */
 /*                                                                   */
 /*********************************************************************/
@@ -27,7 +29,7 @@
              DCL        VAR(&BOTH) TYPE(*CHAR) LEN(1)
              DCL        VAR(&TORV) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
@@ -115,6 +117,6 @@ ERROR2:      IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO ENDPGM
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

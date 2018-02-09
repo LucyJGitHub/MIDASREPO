@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Customer details datab. update controller')
@@ -9,14 +9,15 @@
       *                                                               *
       *  SDSECDUPC - SD CUSTOMERS Security Details CONTROLLER         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 243070             Date 10Jul06               *
+      *  Prev Amend No. 243070             Date 10Jul06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE070             Date 15Feb05               *
+      *                 CSE070             Date 15Feb05               *
       *                 CSE042             Date 05Feb03               *
       *                 CSE041             Date 05Feb03               *
       *                 CSE039             Date 05Feb03               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  243070 - Recompile over changed PF/SDVSECDPD                 *
       *  CSE070 - Repo Coupon Claims Report                           *
       *  CSE042 - Auto Feed of Trades and Movements (Recompile)       *
@@ -411,6 +413,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** ##OX1
 OVRDBF FILE(SDSECSLR) TOFILE(SDSECSL0) SHARE(*NO)

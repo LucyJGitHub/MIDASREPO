@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       SCC0106 - Midas Dummy Default Routing Entry Program.        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 114755             Date 26FEB97              */
-/*       Prev Amend No. 099150  *CREATE    Date 26JAN96              */
+/*       Prev Amend No. 114755             Date 26Feb97              */
+/*                      099150  *CREATE    Date 26Jan96              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       114755 - Program does not actually apply any MLS overrides, */
 /*                call MLC0020 rather than QCMD to do this.          */
 /*       099150 - New program introduced to standardise entry        */
@@ -31,7 +33,7 @@
 /*/COPY WNCPYSRC,SCC0106INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&PARM1) TYPE(*CHAR) LEN(200)
              DCL        VAR(&PARM2) TYPE(*CHAR) LEN(200)
@@ -72,7 +74,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,SCC0106END                                          */
  

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBI *  OVRDBF FILE(FFD) TOFILE(QADSPFFD)                            *
 /*STD *  RPGBASEMOD                                                   *
@@ -13,14 +13,15 @@
       *  Function:  This program displays the changes that have       *
       *             taken place.                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG003             Date 04Oct12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CMG003             Date 04Oct12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 239499             Date 24Apr06               *
       *                 BUG7323            Date 24May05               *
       *                 CSW037A            Date 02May05               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CMG003 - SWIFT MT600 Message Generation                      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  239499 - For signed numeric fields, use ZASIGN for           *
@@ -1368,7 +1370,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** ERR
  END OF FILE
  START OF FILE

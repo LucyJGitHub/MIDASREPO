@@ -15,10 +15,11 @@
 /*       1) Submitted by SEC02 in Input Cycle;                      */
 /*       2) Run during I/C Termination.                             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. 261402             Date 11May16              */
-/*       Prev Amend No. CCB023             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 261402             Date 11May16              */
+/*                      CCB023             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -58,6 +59,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       261402 - Duplicate records in MGF51NPD after restart of     */
 /*                SEC05.                                             */
 /*              - Applied for MD-37893.                              */
@@ -118,7 +120,7 @@
              PGM                                                      /*S01401*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
 /*********** DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)      /*S01117*/ /*S01401*/
@@ -226,8 +228,8 @@
 /**/
 /*           CHGVAR     VAR(&PARM1) VALUE(%SST(&SESTAT 62 1))*S01169*  *E16903*/
              CHGVAR     VAR(&PARM1) VALUE(%SST(&SESTAT 61 1))         /*E16903*/
-
-
+ 
+ 
 /*  CONFIRMATIONS CANNOT BE RUN IF THEY ARE ALREADY BEING      */     /*S01271*/
 /*  PRINTED.                                                   */     /*S01271*/
 /***                                                           */     /*S01271*/
@@ -499,7 +501,7 @@ TAGB:        CHGDTAARA (SESTAT (76 1)) VALUE('B')                     /*S01401*/
                           Correspondence Extract failure')            /*S01522*/
              GOTO       CMDLBL(ERROR)                                 /*S01522*/
              ENDDO                                                    /*S01522*/
-
+ 
 /* 088442 - Ensure only items suppressed by UDC are processed by   */ /*088442*/
 /* SE0550 if UDC switched on.                                      */ /*088442*/
 /*           OVRDBF     FILE(TRDCONF) TOFILE(TRDCONFS)    /*088442*/  /*CSE006*/
@@ -537,7 +539,7 @@ TAGC:        CHGDTAARA (SESTAT (76 1)) VALUE('C')                     /*S01401*/
                           Correspondence Extract failure')            /*S01522*/
              GOTO       CMDLBL(ERROR)                                 /*S01522*/
              ENDDO                                                    /*S01522*/
-
+ 
 /* 088442 - Ensure only items suppressed by UDC are processed by   */ /*088442*/
 /* SE0560 if UDC switched on.                                      */ /*088442*/
              OVRDBF     FILE(DPTCONF) TOFILE(DPTCONFS)                /*088442*/
@@ -704,5 +706,5 @@ END:                                                                  /*S01401*/
                                                                       /*S01271*/
 /*ENDPGM:****ENDPGM*******                                             *S01117*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01117*/

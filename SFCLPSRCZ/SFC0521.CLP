@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SFC0521  - Drop Deleted Midas User Records in COB           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD041858           Date 24Mar17              */
-/*       Prev Amend No. CBF023             Date 04Jan17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD041858           Date 24Mar17              */
+/*                      CBF023             Date 04Jan17              */
 /*                      MD021155           Date 08Jul13              */
 /*                      MD07223            Date 04Apr13              */
 /*                      CCB023             Date 06Aug12              */
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD041858 - CBCOBRPD is now cleared by CBC0540.              */
 /*       CBF023 - Soft Delete Feature on Security Related Modules    */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
@@ -61,7 +63,7 @@
              PGM        PARM(&CNAM &CSEQ &SEQ &LVL &ETY)                                /*BUG10349*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**********  DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)          */                     /*CCB023*/
 /**********  DCL        VAR(&ID) TYPE(*CHAR) LEN(2)                */                     /*CCB023*/
@@ -81,7 +83,7 @@
 /**/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
-
+ 
 /** Check if CBF023 is installed */                                                       /*CBF023*/
              CHGVAR     VAR(&RTNC) VALUE('       ')                                       /*CBF023*/
              CHGVAR     VAR(&SARD) VALUE('CBF023')                                        /*CBF023*/
@@ -217,10 +219,10 @@
 /************             TOFILE(&TOLIB/BMCMPSDD) CRTFILE(*YES) MBROPT(*REPLACE)       */ /*CSC012*/
 /************MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +                   */ /*CSC012*/
 /************             FILE(&TOLIB/BMCMPSDD))                                       */ /*CSC012*/
-
+ 
 /**********  CPYF       FROMFILE(MUSERDD) TOFILE(&TOLIB/BMUSERDD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)           */          /*CSF002*/ /*CCB023*/
-
+ 
 /**********  CPYF       FROMFILE(MACBRDD) TOFILE(&TOLIB/BMACBRDD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)   */                  /*CSC012*/ /*CBF005*/
 /**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
@@ -277,7 +279,7 @@
 /************             INCCHAR(RECI 1 *EQ D)                                           /*CSC012*/
 /************MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +                      /*CSC012*/
 /************             FILE(&TOLIB/MCMPSDD))                                           /*CSC012*/
-
+ 
 /**********  CPYF       FROMFILE(BMUSERDD) TOFILE(MUSERDD) +
                           MBROPT(*REPLACE) INCCHAR(RECI 1 *EQ D)   */          /*CSF002*/ /*CCB023*/
 /**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
@@ -319,7 +321,7 @@
 /************DLTF       FILE(&TOLIB/BMBRBSDD)                                          */ /*CSC012*/
 /************DLTF       FILE(&TOLIB/BMBROSDD)                                          */ /*CSC012*/
 /************DLTF       FILE(&TOLIB/BMCMPSDD)                                          */ /*CSC012*/
-
+ 
 /**********  DLTF       FILE(BMUSERDD)                             */          /*CSF002*/ /*CCB023*/
 /**********  DLTF       FILE(BMACBRDD)   */                                    /*CSC012*/ /*CBF005*/
 /**********  DLTF       FILE(BMBRBSDD)                             */          /*CSC012*/ /*CCB023*/
@@ -411,6 +413,6 @@ ENDPGM:                                                                         
 /**/
 /**********  DLCOBJ     OBJ((SDSTAT *DTAARA *EXCLRD))              */                     /*CCB023*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
              ENDPGM

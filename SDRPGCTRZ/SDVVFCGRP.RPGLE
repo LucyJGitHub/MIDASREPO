@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate VFCGRP Economic Group')
@@ -17,19 +17,21 @@
       *                                                               *
       *  Component of:  SP121CTYLX - Core Luxembourg service program  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CER001             Date 25Apr05               *
-      *  Prev Amend No. 203235             Date 22Feb02               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 203235             Date 22Feb02               *
       *                 FIXML              Date 31Jul00               *
       *                 ULX609  *CREATE    Date 31Jul00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER001 - LUX Upgrade to MidasPlus (Recompile only)           *
       *  203025 - Defaulting must not cause any problem               *
       *           but when redisplay due to F12 pressed on next window*
@@ -238,4 +240,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

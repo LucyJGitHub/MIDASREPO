@@ -8,9 +8,10 @@
 /*       SCC4100 - Overrides database files in SC3010M to read       */
 /*                 either non-core or core switchable feature files. */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD048501           Date 08Nov17              */
+/*       Last Amend No. MD046248           Date 05Feb18              */
+/*       Prev Amend No. MD048501           Date 08Nov17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD048501 - System dumps on GP270000 due to missing LDA      */
 /*       CSC010 - Override SCSARSPD to SCSARZPD in non-core mode.    */
 /*       CSC007 - Remove call to initialisation programs.            */
@@ -45,9 +47,8 @@
              DCL        VAR(&STSMSG) TYPE(*CHAR) LEN(5)                   /*CSC007*/
              DCL        VAR(&RPY) TYPE(*CHAR) LEN(1)                      /*CSC007*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                 /*CSC007*/
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
-                          2001')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2001')
 
 /* Global monitor message */
 
@@ -139,7 +140,6 @@
                                                                           /*CSC007*/
 
  END:
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
 
              ENDPGM

@@ -7,21 +7,23 @@
 /*                                                                   */
 /*      SCC0010 - DISPLAY MIDAS INFORMATION SCREEN                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*      Last Amend No. CPK018                Date 23Feb04            */
+/*       Prev Amend No. CPK018             Date 23Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*      Prev Amend No. S01345                Date 01Nov91            */
+/*                      S01345             Date 01Nov91              */
 /*                     S01343                Date 15Aug91            */
 /*                     E26655                Date 08Aug91            */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*      CPK018 - MidasPlus packaging.  Remove use of RUNDAT.         */
 /*      S01345  -  NEW STANDARD FORMAT (OPTION2) ADDED.              */
 /*      S01343  -  SC/RR/SD MODULE RENAME PROJECT.                   */
@@ -97,7 +99,7 @@
 /*  COPYRIGHT STATEMENT VARIABLE  */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*  RETRIEVE INDICATOR SETTINGS FROM DTAARA/MIDASMSG  */
@@ -272,7 +274,7 @@
 /*  END OF PROGRAM PROCESSING  */
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              CHGDTAARA  DTAARA(MIDASMSG (1 99)) VALUE(' ')
  

@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       CLP/SEC026 - Trade Settlement - Menu Option Control         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG2502            Date 12May04              */
-/*       Prev Amend No. CAP182   *CREATE   Date 13Mar03              */
+/*       Prev Amend No. BUG2502            Date 12May04              */
+/*                      CAP182  *CREATE    Date 13Mar03              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG2502 - TRSM should be dependent on feature CAP182 and    */
 /*                 not CSE039.                                       */
 /*       CAP182 - Automatic Settlement of Trades                     */
@@ -39,7 +41,7 @@
              DCL        VAR(&NoReply)    TYPE(*CHAR) LEN(1)
  
              DCL        VAR(&CpyFld)     TYPE(*CHAR) LEN(64) VALUE('(c) +
-                               Misys International Banking Systems Ltd. +
+                               Finastra International Limited +
                                2003')
  
 /** Monitor for error messages not trapped in the rest of the **/
@@ -114,5 +116,5 @@
  
  EndPgm:
              CHGVAR     VAR(&CpyFld) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Account Review Frequency')           *
@@ -10,10 +10,11 @@
       *  SDVARFR - Validate Account Review Frequency and Next         *
       *            Schedule Date                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD025689           Date 03Apr14               *
-      *  Prev Amend No. MD027573A          Date 24Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025689           Date 03Apr14               *
+      *                 MD027573A          Date 24Sep14               *
       *                 MD027573           Date 04Aug14               *
       *                 MD027575           Date 07Aug14               *
       *                 MD027572           Date 06Aug14               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025689 - "Next schedule date does not match with account   *
       *             review frequency date" should be removed because  *
       *             it is not mentioned in FDS                        *
@@ -472,7 +474,7 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014
 **   ZFMD  -  NUMBER OF DAYS IN THE MONTH
 312831303130313130313031
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(C) MISYS INTERNATIONAL BANKING SYSTEMS LTD. 2012')
+     H COPYRIGHT('(C) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas SD Past Due Loan Type/Subtype List')             *
@@ -9,12 +9,14 @@
       *                                                               *
       *  SD000285 - Past Due Loan Type/Subtype List                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CLE134  *CREATE    Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
       *                                                               *
       *****************************************************************

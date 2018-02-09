@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('SD Currency/Time of Netting Details Update')           *
@@ -10,12 +10,14 @@
       *  SDCTNMUPD - SD Currency/Time of Netting Details              *
       *              Database Update                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. AR1086546 *CREATE  Date 13Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1086546 *CREATE  Date 13Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1086546 - Upgrade of CDL025 to MP1.4 (Child: AR1086547).   *
       *              Applied for MD021813                             *
       *                                                               *
@@ -573,4 +575,4 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

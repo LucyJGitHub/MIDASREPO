@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Document Id and Place')              *
@@ -13,15 +13,17 @@
       *  Function:  This module validates the Document Id and         *
       *             Issuing Place on the new Details screen           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. AR738849           Date 13Apr11               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR738849           Date 13Apr11               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24346           Date 16Jun09               *
       *                 CER034  *CREATE    Date 06Aug08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR738849 - If Identification Type is not blanks, Documents   *
       *             Id is mandatory but the word in error is not      *
       *             highlighted (Child: AR738850)                     *

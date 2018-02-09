@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       SCCHKTRIG - Check if trigger active on file                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BG5090R            Date 18Feb05              */
-/*       Prev Amend No. CGP001  *CREATE    Date 23May03              */
+/*       Prev Amend No. BG5090R            Date 18Feb05              */
+/*                      CGP001  *CREATE    Date 23May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG5090R - Remove sequence number processing                 */
 /*       CGP001 - Global Processing                                  */
 /*                                                                   */
@@ -38,7 +40,7 @@
  
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCLF       FILE(QAFDTRG)
@@ -105,6 +107,6 @@ AGAIN:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

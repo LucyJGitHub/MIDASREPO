@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Customer Withholding Tax details validate & Update')
@@ -32,15 +32,17 @@
       *            the call to the message handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG22148           Date 19Jan09               *
-      *  Prev Amend No. CSD079  *CREATE    Date 05Feb07               *
+      *  Prev Amend No. BUG22148           Date 19Jan09               *
+      *                 CSD079  *CREATE    Date 05Feb07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG22148 - Missing authorization field in repository.        *
       *  CSD079 - Enhanced Customer Maintenance API                   *
       *                                                               *
@@ -1089,4 +1091,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2007
+(c) Finastra International Limited 2007

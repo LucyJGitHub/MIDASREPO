@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Identification Type')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVTINO01 - Validate Identification Type                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,9 +17,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. AR671813           Date 23Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR671813           Date 23Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG25053           Date 21Jul09               *
+      *                 BUG25053           Date 21Jul09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR671813 - Bypass validation done by BUG25053 if CER034 is   *
       *             turned on. Applied for MD033988                   *
       *  BUG25053 - Blank Tax ID No. must not be accepted by the      *
@@ -302,4 +304,4 @@ als  C                   MOVEL     'USR4756'     MsgIDXAr(Idx)
      C                   ENDSR
       ********************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

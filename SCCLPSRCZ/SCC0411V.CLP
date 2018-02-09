@@ -7,14 +7,16 @@
 /*                                                                   */
 /*       SCC0411V - Input Cycle Initiation V                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. 260192             Date 11May09              */
-/*       Prev Amend No. 260091  *CREATE    Date 04May09              */
+/*       Prev Amend No. 260192             Date 11May09              */
+/*                      260091  *CREATE    Date 04May09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       260192 - Discrepancies in files MMDEAMPP and MMDELDPP in    */
 /*                Release 4 and MidasPlus.                           */
 /*       260091 - COB performance fixes.                             */
@@ -37,7 +39,7 @@
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('*')
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global Monitor Message */

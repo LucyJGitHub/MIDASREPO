@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('SD Currency/Time of Netting Details Validate')         *
@@ -9,13 +9,15 @@
       *                                                               *
       *  SDCTNMVAL - Currency/Time of Netting Details Validation      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD021813           Date 28Aug13               *
-      *  Prev Amend No. AR1086546 *CREATE  Date 14Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD021813           Date 28Aug13               *
+      *                 AR1086546 *CREATE  Date 14Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD021813 - BankFusion_FX Netting:CDL025 Missing Menu Options *
       *  AR1086546 - Upgrade of CDL025 to MP1.4 (Child: AR1086547).   *
       *              Applied for MD021813                             *
@@ -716,4 +718,4 @@
       **------------------------------------------------------------------
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

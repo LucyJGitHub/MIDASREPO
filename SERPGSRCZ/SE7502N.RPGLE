@@ -10,10 +10,11 @@
       *  SE7502N - SE Corporate Actions Events Maintenance            *
       *            Subordinate Action                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CER020             Date 19May08               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
       *           Midas Plus (Recompile)                              *
@@ -6267,7 +6269,7 @@
       *****************************************************************
       /EJECT
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA TXT
 F3=Exit  F5=Refresh Screen  F11=View Option(s) Rollup/Rolldown
 F3=Exit  F5=Refresh Screen  F9=Go to 'Change' Mode  Rollup/Rolldown

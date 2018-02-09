@@ -1,19 +1,21 @@
      H DEBUG DATEDIT(*YMD)
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas SD Withholding Tax Rate Code Display')           *   
+/*EXI *  TEXT('Midas SD Withholding Tax Rate Code Display')           *
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data Module                                 *
       *                                                               *
       *  SD000204 - Withholding Tax Rate Code Display                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL165  *CREATE    Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165  *CREATE    Date 17Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Withholding Tax Enhancement                         *
       *                                                               *
       *****************************************************************
@@ -669,7 +671,7 @@
       *================================================================
      CSR   ZZEXIT        ENDSR
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015
 **CTDATA AENA
 E=Enquire   F3=Main Menu   F5=Refresh
 A=Amend  D=Delete  E=Enquire  F3=Main Menu  F5=Refresh  F9=Go to 'Add' Mode

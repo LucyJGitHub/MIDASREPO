@@ -7,14 +7,15 @@
 /*                                                                  */
 /*      SCBACKUP - INPUT CYCLE DATABASE BACKUP                      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CSC033             Date 18May07              */
+/*       Prev Amend No. CSC033             Date 18May07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG2381            Date 13May04              */
+/*                      BUG2381            Date 13May04              */
 /*                      CRE020             Date 20Jan04              */
 /*                      CGP004             Date 23Feb04              */
 /*                      CSC023             Date 02Feb04              */
@@ -60,6 +61,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC033 - Include global libraries in database saves.        */
 /*       BUG2381 - Batch submit of confirmations programs            */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
@@ -123,7 +125,7 @@
 /*/COPY WNCPYSRC,SCBACKUINT                                   */      /*S01408*/
 /**/                                                                  /*S01408*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                            */
              DCL        &PRM01        TYPE(*CHAR)  LEN(8)
@@ -751,5 +753,5 @@ ABNORMAL:
                 MONMSG     MSGID(CPF2105)                             /*S01127*/
              ENDDO                                                    /*S01127*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM     /* END CL PGM */

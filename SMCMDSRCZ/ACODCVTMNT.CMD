@@ -10,17 +10,19 @@
 /*                                                                   */
 /*       ACODCVTMNT - Convert and Maintain Account Codes Command     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK025             Date 17Aug06              */
-/*       Prev Amend No. CSM007  *CREATE    Date 05Oct05              */
+/*       Prev Amend No. CPK025             Date 17Aug06              */
+/*                      CSM007  *CREATE    Date 05Oct05              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK025 - Allow more versatile padding of Account Codes.     */
 /*                Add panel group help as well.                      */
 /*       CSM007 - Conversion of Account Codes                        */

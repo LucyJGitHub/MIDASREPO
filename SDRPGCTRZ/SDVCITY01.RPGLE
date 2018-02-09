@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate City for A/C Holders')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVCITY01 - Validate City                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,10 +17,11 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256481B            Date 24Nov08               *
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *  Prev Amend No. 256481B            Date 24Nov08               *
+      *                 256564             Date 17Sep08               *
       *                 250804A            Date 11Oct07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256481B - Do not default value for Additional Customer Name  *
       *            and Address if system value is not required        *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -368,4 +370,4 @@
      C                   ENDSR
       ********************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

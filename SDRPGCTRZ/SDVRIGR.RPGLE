@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Risk Classification Code')           *
@@ -12,12 +12,14 @@
       *  Function:  This module validates the field Risk              *
       *             Classification Code                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CER070   *CREATE   Date 20Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER070  *CREATE    Date 20Aug14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *                                                               *
       *****************************************************************
@@ -257,4 +259,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

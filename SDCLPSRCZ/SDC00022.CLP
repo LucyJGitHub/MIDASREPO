@@ -7,24 +7,26 @@
 /*                                                                   */
 /*       SDC00022 - Initialisation Program for Enhancement CSE022    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CSE022  *CREATE    Date 29Mar01              */
+/*       Prev Amend No. CSE022  *CREATE    Date 29Mar01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSE022  - Depository Definition Enhancement                 */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RTCD &PMODE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
@@ -99,7 +101,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              IF         COND((&PMODE *EQ '1') *OR (&PMODE  *EQ '2')) THEN(DO)
                 DLTF       FILE(SDSECSPDX)

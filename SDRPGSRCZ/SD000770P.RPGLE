@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Tax Self Declaration Statement Summary')      *
@@ -12,10 +12,11 @@
       *  Function:  This module will list out all the annual taxable  *
       *             income by customer.                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR787305           Date 13Jun11               *
-      *  Prev Amend No. AR782377           Date 04Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR787305           Date 13Jun11               *
+      *                 AR782377           Date 04Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24029           Date 20May09               *
       *                 CER054             Date 07Apr09               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR787305 - Tax Self Declaration Statement usability issues   *
       *  AR782377 - Retail account's income not reflected on Tax      *
       *             Self-Declaration Statement                        *
@@ -1066,4 +1068,4 @@
       /EJECT                                                                                AR787305
       *****************************************************************                     AR787305
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

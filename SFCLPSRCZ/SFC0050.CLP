@@ -8,19 +8,21 @@
 /*  SFC0050  - CL COMPONENT TO CONTROL SF0050                        */
 /*             REQUEST UNIVERSAL PASSWORD CHANGE                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  LAST AMEND NO. E28090            DATE  06SEP91                   */
-/*  PREV AMEND NO. RT0157            DATE  24JUN91                   */
+/*       Prev Amend No. E28090             Date 06Sep91              */
+/*                      RT0157             Date 24Jun91              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  E28090 - Amend calls to SFC0700 to reflect the rewrite           */
 /*           of that program.                                        */
 /*  RT0157 - Messages should be sent via new Midas Info Screen.      */
@@ -33,7 +35,7 @@
  
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)             /*E28090*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              CHGJOB     SWS(00000000)
@@ -59,6 +61,6 @@
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

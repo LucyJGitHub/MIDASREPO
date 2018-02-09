@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Account Transfer Type/Sub-Type Housekeep')
@@ -15,13 +15,15 @@
       *  Called By: SDC009831 - Account Transfer Type/Sub-Type        *
       *             Housekeeping                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG27394*CREATE    Date 26Apr10               *
+      *  Prev Amend No. BUG27394 *CREATE   Date 26Apr10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27394 - Add new field Record ID to allow logical deletion *
       *             of this file                                      *
       *                                                               *

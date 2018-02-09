@@ -7,15 +7,17 @@
 /*                                                                   */
 /*       SDCCRE015 - Feature Initialisation                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. 237781             Date 25Jan06              */
-/*       Prev Amend No. 237976             Date 25Jan06              */
+/*       Prev Amend No. 237781             Date 25Jan06              */
+/*                      237976             Date 25Jan06              */
 /*                      CRE015  *CREATE    Date 18Dec09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       237781 - No interest capitalisation on some T&N accounts.   */
 /*       237976 - Ensure next cap dates on ACCNTAB match REPRPNPD    */
 /*       CRE015 - Retail Term and Notice Accounts                    */

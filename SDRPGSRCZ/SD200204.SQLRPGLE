@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CER069             Date 03Jul14               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CER069             Date 03Jul14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26816           Date 08Dec09               *
       *                 BUG26730           Date 12Nov09               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CER069 - German Tax Enhancement                              *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -82,22 +84,22 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
       *
@@ -143,7 +145,7 @@
      D SPOOLU          DS
      D   SFileU               83     92
      D   SFNumU              123    124B 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -194,7 +196,7 @@
       *
      C/COPY ZSRSRC,ZDATE9Z1LE
      C/COPY ZSRSRC,ZDATE9Z2LE
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -389,7 +391,7 @@
      C                   IF        TSMODI = 'M'
      C                   EVAL      PRTYPE = 'M'
      C                   ENDIF
- 
+
       *
       ** Access currencies file for number of decimal places
       *
@@ -1537,7 +1539,7 @@
       ** Initialise LDA field.
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
@@ -1741,7 +1743,7 @@
      C+       WHERE TSIPDT = :RUNDAT
      C+       ORDER BY TSIPDT, TSBRCA, AXETXS, TSCUST
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ OPEN QRY_CSINJ0
      C/END-EXEC
@@ -1752,7 +1754,7 @@
       * *INZSR - Initial Processing
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    SEQ
      C                   ENDSR

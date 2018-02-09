@@ -6,16 +6,18 @@
 /*                                                                   */
 /*       SEC4606  - Unrealised Profit/Loss Report                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSE036  *CREATED   Date 22Apr02              */
+/*       Prev Amend No. CSE036  *CREATE    Date 22Apr02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSE036 - Unrealised Profit and Loss Report by Trade         */
 /*                                                                   */
 /*********************************************************************/
@@ -30,7 +32,7 @@
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
  
@@ -116,5 +118,5 @@
 /**/
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

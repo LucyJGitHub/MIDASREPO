@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE DPMV WI/WO Extended Settlement - Default')    *
@@ -14,10 +14,11 @@
       *             Movement Extension and the Extended Settlement    *
       *             displays (only for WI/WO)                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR586519           Date 02Aug10               *
-      *  Prev Amend No. AR578319           Date 14Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR586519           Date 02Aug10               *
+      *                 AR578319           Date 14Jul10               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR586519 - Account for Payment and Account for Payment       *
       *             (detail) not populated from SEST                  *
       *  AR578319 - New fields are being blanked out if CSW210 is on  *
@@ -853,4 +855,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

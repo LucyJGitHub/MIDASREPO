@@ -7,14 +7,16 @@
 /*                                                                   */
 /*       SDC0116 - SD Midas Link Types Maintenance                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. AR797240           Date 30Jun11              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR797240           Date 30Jun11              */
+/*                      CER059             Date 19Jul10              */
 /*                      BUG22521 *CREATE   Date 25Mar09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR797240 - New standing data tables available in the        */
 /*                  maintenance menu are not available in the        */
 /*                  enquiry menu                                     */
@@ -33,8 +35,8 @@
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)                                   /*AR797240*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                             Misys International Banking Systems +
-                             Ltd. 2009')
+                             Finastra International Limited +
+                             2009')
  
 /** Return code for call to ZAGETACTGP. */
  
@@ -114,6 +116,6 @@ ERROR:
 ENDIS:
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Equation Holidays to Br.Calendar Holidays mapping')
@@ -16,16 +16,18 @@
       *  Called By: SD000056 - Holiday Mapping and Update of Equation *
       *                        Currency and Branch Calendars          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG13704           Date 03May07               *
-      *  Prev Amend No. BG12014            Date 13Nov06               *
+      *  Prev Amend No. BUG13704           Date 03May07               *
+      *                 BG12014            Date 13Nov06               *
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG13704 - The trigger program to update the Equation        *
       *             holiday table from the Midas Holiday              *
       *             Maintenance does not appear to work.              *
@@ -559,4 +561,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

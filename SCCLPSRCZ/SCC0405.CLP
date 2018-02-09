@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC0405 - Set up for journalling                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD025193           Date 19Aug14              */
-/*       Prev Amend No. MD022045           Date 27Aug13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD025193           Date 19Aug14              */
+/*                      MD022045           Date 27Aug13              */
 /*                      AR762171           Date 26May11              */
 /*                      AR1071218          Date 27Jan13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD025193 - Journal sequence number is at the maximum value  */
 /*       MD022045 - SCC0404 performance degradation                  */
 /*       AR762171 - Meridian Replication jobs fails with MSGW after  */
@@ -61,7 +63,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&SMSG)   TYPE(*CHAR) LEN(132)
@@ -1081,5 +1083,5 @@ eSKIPPER:                                                                       
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SC Update PEA Driving File Status')              *
@@ -9,14 +9,16 @@
       *                                                               *
       *  SC000109 - Update PEA Driving File Status                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1009800          Date 20Nov12               *
-      *  Prev Amend No. AR999518           Date 04Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1009800          Date 20Nov12               *
+      *                 AR999518           Date 04Jul12               *
       *                 CSC054  *CREATE    Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1009800 - Added mutually exclusive key field               *
       *  AR999518 - Moved SCPEADPD from SCDDSSRCGP to SCDDSSRCDP      *
       *             source file (Recompile)                           *

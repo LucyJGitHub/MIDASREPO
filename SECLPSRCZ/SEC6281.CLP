@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       SEC6281    MISSING CUSTODY FEES REPORT ON REQUEST           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 091522             Date 24Aug95              */
+/*                      091522             Date 24Aug95              */
 /*                      S01464             Date 04Apr94              */
 /*                      R0131             DATE  11FEB91             */
 /*                      R00300            DATE  28AUG90             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*   CLE134 - Past Due Call Loan Processing (Recompile)             */
 /*   091522 - Safe Custody Fees - Private Banking (CSE001)          */
 /*   S01464 - Safe Custody Fees                                     */
@@ -37,7 +39,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM)                /*S01464*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                       /*S01464*/
              DCL        VAR(&WWCUST) TYPE(*CHAR) LEN(6)
@@ -260,5 +262,5 @@
  
 /***END:********ENDPGM                                                /*S01464*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM                                                                /*S01464*/

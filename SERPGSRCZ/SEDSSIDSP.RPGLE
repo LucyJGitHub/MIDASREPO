@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Addnl SWIFT details for depot movement')      *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SEDSSIDSP - Additional SWIFT Details for Depot Movement      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR642262           Date 14Sep10               *
-      *  Prev Amend No. AR636523           Date 02Sep10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR642262           Date 14Sep10               *
+      *                 AR636523           Date 02Sep10               *
       *                 AR635847           Date 31Aug10               *
       *                 AR634357           Date 27Aug10               *
       *                 AR589197           Date 11Aug10               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR642262 - Error in IBAN validation                          *
       *  AR636523 - Incorrect error message on some fields            *
       *  AR635847 - Acct for Payment, Acct w/ Institution, and        *
@@ -6408,7 +6410,7 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 00000000000000000000000000000000000000000000000000000000
 **  VA0  - All Numeric Chars

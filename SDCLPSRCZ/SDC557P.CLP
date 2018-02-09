@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       SDC551P - CUstomer Details Authorisation - Detail Rpt       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSD012             Date 15Oct02              */
+/*                      CSD012             Date 15Oct02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CSD012 - Standing Data Authorisation                        */
 /*                                                                   */
@@ -25,7 +27,7 @@
              PGM        PARM(&PGM &SEQ &LEVEL &ENTITY)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
              DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
@@ -58,6 +60,6 @@
              SNDMSG     MSG(&MSG) TOMSGQ(MRUNQ MOPERQ)
              ENDDO
  
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              ENDPGM

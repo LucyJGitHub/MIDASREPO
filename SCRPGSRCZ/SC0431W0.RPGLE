@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SC Invalid features look-up window')
@@ -21,19 +21,21 @@
       *                                                               *
       *  Called By: SC3010M - Switchable features maintenance         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGP002             Date 03Sep03               *
+      *  Prev Amend No. CGP002             Date 03Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CSC010  *CREATE    Date 24May99               *
+      *                 CSC010  *CREATE    Date 24May99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGP002 - Global Processing.                                  *
       *           - Rename SCCSECPD to GP file.                       *
       *  CSC010 - Inactive switchable features look up window         *
@@ -583,4 +585,4 @@
      C                   RETURN
      C                   ENDSR
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

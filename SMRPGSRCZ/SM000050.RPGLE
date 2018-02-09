@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Maintain Account Code Conversion Table')
@@ -13,11 +13,12 @@
       *            in SMAC10PD on a subfile and allow for maintenance *
       *            on the file.                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG27641           Date 07May10               *
-      *  Prev Amend No. 260070             Date 07May10               *
+      *  Prev Amend No. BUG27641           Date 07May10               *
+      *                 260070             Date 07May10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27641 - Apply fix 260070                                  *
       *  260070 - Last record not displayed.  Display codes in order. *
       *  CSM007 - Change Account Codes Utility                        *

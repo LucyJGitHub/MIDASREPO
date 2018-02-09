@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Classification Codes Maint')                  *
@@ -9,17 +9,19 @@
       *                                                               *
       *  SD000203 - Classification Codes Maintenance                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  IMPORTANT: This module is a clone of SD000200. Any changes   *
       *  to SD000200 should be reflected to this module               *
       *                                                               *
-      *  Last Amend No. MD034079           Date 10Apr15               *
-      *  Prev Amend No. MD033531           Date 16Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034079           Date 10Apr15               *
+      *                 MD033531           Date 16Mar14               *
       *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034079 - IO error on display file                          *
       *  MD033531 - I/O error on '?' Processing                       *
       *  CGL154 - FATCA Phase 2 - FATCA Reporting                     *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas Take on of Stamp Tax Cheques to be Collected')   *
@@ -10,12 +10,14 @@
       *  SD008201 - Midas Take on of Stamp Tax Cheques to be          *
       *             Collected                                         *
       *                                                               *
-      *  (C) Copyright Misys International Banking Systems Ltd. 2011  *
+      *  (C) Copyright Finastra International Limited 2011            *
       *                                                               *
-      *  Last Amend No. AR821872 *CREATE   Date 03Sep11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR821872 *CREATE   Date 03Sep11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR821872 - Component FTC0610 00001 failed                    *
       *                                                               *
       *****************************************************************
@@ -300,4 +302,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd., 2011
+(C) Copyright Finastra International Limited 2011

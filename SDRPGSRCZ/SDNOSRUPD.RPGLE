@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Nostro Codes - Update Module')                         *
@@ -10,10 +10,11 @@
       *  SDNOSRUPD - Nostro Code Details                              *
       *              database update                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CDL094             Date 30May14               *
-      *  Prev Amend No. AR1095725          Date 15Mar13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL094             Date 30May14               *
+      *                 AR1095725          Date 15Mar13               *
       *       Amend No. AR920354           Date 09Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *  AR1095725- Program fails due to missing SD0152 object.       *
       *             SD0152 is being renamed to SD000152 by AR571693.  *
@@ -851,4 +853,4 @@
                                                                                               CDL094
      C                   ENDSR                                                                CDL094
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('API Interface using Unicode ZL Form, Driver')
@@ -9,16 +9,18 @@
       *                                                               *
       *  SCFNCTJ - API Interface using Unicode ZL Form, Driver        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CSC043             Date 18Jun10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSC043             Date 18Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BG13742 *CREATE    Date 17Apr07               *
+      *                 BG13742 *CREATE    Date 17Apr07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC043 - MidasPlus IASP Enablement                           *
       *  BG13742 - Authority problem on MidasPlus Equation interface  *
       *                                                               *

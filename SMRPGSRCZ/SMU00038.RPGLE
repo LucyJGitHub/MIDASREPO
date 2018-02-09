@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Private Banking migration - SDACODPD')
@@ -9,14 +9,16 @@
       *                                                               *
       *  SMU00038 - Migrate SDACODPD                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 27Jan10               *
-      *  Prev Amend No. CSM001 *CREATE     Date 14Oct02               *
+      *  Prev Amend No. BG26993            Date 27Jan10               *
+      *                 CSM001 *C *CREATE  Date 14Oct02               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program CPBMIG24.                          *
       *  CSM001  - Upgrade of Private Banking layer.                  *

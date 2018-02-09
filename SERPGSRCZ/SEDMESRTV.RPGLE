@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE DPMV WI/WO Extended Settlement - Retrieve')   *
@@ -16,19 +16,21 @@
       *             done by the main retrieve module SEDPMVRTV for    *
       *             the base file.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAP087             Date 12Sep05               *
+      *                 CAP087             Date 12Sep05               *
       *                 222727             Date 05Nov03               *
       *                 CSE045  *CREATE    Date 06Jun03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CAP087 - Depot Movement API - Java Wrapper in Midasplus.     *
       *  222727 - Release 5.0 errors  (Recompile)                     *
@@ -224,4 +226,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

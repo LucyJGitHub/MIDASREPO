@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*YMD)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Select PDP Priority Group ID')                *
@@ -9,12 +9,14 @@
       *                                                               *
       *  SD00321S - Midas SD Select PDP Priority Group ID             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE164  *CREATE    Date 18Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164  *CREATE    Date 18Aug14               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *                                                               *
       *****************************************************************

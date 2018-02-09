@@ -8,14 +8,15 @@
 /*       SCC1713 - SET UP JOURNAL LIBRARY FOR RESTORATION TO        */
 /*                 BEGINNING OF BUSINESS                            */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG9619            Date 01Feb06              */
+/*                      BUG9619            Date 01Feb06              */
 /*                      BUG7286            Date 23May05              */
 /*                      CSC020             Date 31Mar04              */
 /*                      CSC018             Date 31May03              */
@@ -32,6 +33,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       BUG9619 - Close of business components run long if journal  */
 /*                 cache is enabled                                  */
@@ -57,7 +59,7 @@
 /********************************************************************/
              PGM        PARM(&VOL1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*  INITIAL PROCESSING                                               */
@@ -611,7 +613,7 @@ ABNOR:       SNDPGMMSG  MSG('Set up Journal Library for Restoration +
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,SCC1713019                                          */
  ENDPGM:     ENDPGM
 /*/COPY WNCPYSRC,SCC1713020                                          */

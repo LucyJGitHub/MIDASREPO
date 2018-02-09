@@ -12,18 +12,20 @@
       *            system values for users to select for maintenance/ *
       *            enquiry.                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR796650           Date 27Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR796650           Date 27Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG7330            Date 03Jun05               *
+      *                 BUG7330            Date 03Jun05               *
       *                 216378 *CREATE     Date 06Mar03               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR796650 - Use of data area Y2MGFLA is redundant             *
       *  BUG7330 - Cannot amend RolloverDays system value             *
       *  216378 - Convert to RPGLE type                               *
@@ -1018,6 +1020,6 @@
      CSR                 ENDSR
       *================================================================
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 **CTDATA PGM@
 SDC009520

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  DBGVIEW(*LIST)                                               *
@@ -11,14 +11,16 @@
       *                                                               *
       *  SM000024 - Update 'to' System Values                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR933964           Date 13Mar12               *
-      *  Prev Amend No. CUP003  *CREATE    Date 23Sep10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR933964           Date 13Mar12               *
+      *                 CUP003  *CREATE    Date 23Sep10               *
       *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR933964 - UPSVALTPD has been made redundant.                *
       *  CUP003 - Enhancement to update System Values.                *
       *                                                               *

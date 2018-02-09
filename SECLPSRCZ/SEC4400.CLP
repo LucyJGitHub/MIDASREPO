@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       SEC4400 - Midas SE Transaction Message Enquiry              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG10851R          Date 27Apr06              */
-/*       Prev Amend No. BUG10851           Date 16Mar06              */
+/*       Prev Amend No. BUG10851R          Date 27Apr06              */
+/*                      BUG10851           Date 16Mar06              */
 /*                      BUG8823            Date 17Nov05              */
 /*                      BUG2526            Date 13May04              */
 /*                      CSE039   *CREATE   Date 21Jan03              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG10851R- Additional database error occurred during Depot  */
 /*                  Movement enquiry                                 */
 /*       BUG10851 - Database error occured in Depot Movement enquiry.*/
@@ -43,7 +45,7 @@
 /**********  DCL        VAR(&TOLIB2)  TYPE(*CHAR) LEN(10)            */     /*BUG8823*/ /*BUG10851*/
 /**********  DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)                 */                 /*BUG10851*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
 /*/COPY GPCPYSRCG,GPSVALDCL                                          */                  /*BUG8823*/
  
@@ -137,8 +139,8 @@
              MONMSG     MSGID(CPF0000)
  
  END:
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2003')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2003')
  
 /*           RMVLIBLE   LIB(MRDLNKOBJ)                                                     BUG8823*/
 /**********  RMVLIBLE   LIB(&TOLIB2)                                 */     /*BUG8823*/ /*BUG10851*/

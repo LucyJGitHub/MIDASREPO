@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Base rate codes database update')             *
@@ -9,11 +9,12 @@
       *                                                               *
       *  SDBSRTUPD - SD BASE RATE DATABASE UPDATE                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CTI006             Date 31Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG22792           Date 23Feb08               *
+      *                 BUG22792           Date 23Feb08               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
       *                 245028             Date 02Feb07               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
       *  BUG22792 - Apply fix 258440                                  *
       *  258440   - Value date of current rate must not be updated    *
@@ -1143,6 +1145,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       **--------------------------------------------------------------------------------------------
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CMD
 OVRDBF FILE(SDBRSHL0) TOFILE(SDBRSHL0) SHARE(*NO)

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE DPMV walk-in transaction display')            *
@@ -12,14 +12,15 @@
       *  Function:  This module displays the main details screen of   *
       *             the Walk In Depot Movement screen input function. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAP087             Date 03Aug05               *
+      *                 CAP087             Date 03Aug05               *
       *                 CSD027             Date 09Dec05               *
       *                 237063             Date 20Nov05               *
       *                 CGL031             Date 05Jul04               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CAP087 - Depot Movement - Java Wrapper in Midasplus.         *
       *           (recompile due to changes in file SEDMWIPD)         *
@@ -877,7 +879,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 000000000000000000000000000000000000000000000000000000000000
 ** @NAR

@@ -11,11 +11,13 @@
       *  Function:  This sub-file program allows the user to maintain *
       *             from a list of network ID transaction codes       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD024441           Date 21Jan14               *
-      *  Prev Amend No. CGL152   *CREATE   Date 02Dec13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024441           Date 21Jan14               *
+      *                 CGL152  *CREATE    Date 02Dec13               *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024441 - Network Identification Transaction Codes action   *
       *             validation                                        *
       *  CGL152 - Include Transaction Type Identification Code on     *
@@ -1236,7 +1238,7 @@
       *================================================================
      CSR   ZZEXIT        ENDSR
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 **CTDATA @CN
 N
 CHG

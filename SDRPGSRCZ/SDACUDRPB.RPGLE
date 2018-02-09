@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Invalid Additional Custmr Details Browse')    *
@@ -14,10 +14,11 @@
       *             for selection the other picks off the selection   *
       *             mode.                                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR689705           Date 03Jan11               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR689705           Date 03Jan11               *
+      *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR689705 - Nominal and value settled were missing after      *
       *             enter. Applied fix AR656294 (Child: AR689706)     *
       *  AR656294 - HATS issue (Recompile)                            *
@@ -844,6 +846,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 **  Array of error messages - ErrorText
 The last transaction was not applied to the database

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Average Fiscal Price on Cposnd Init')         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SE008080 - SE Average Fiscal Price on Cposnd                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
       *                 CER048             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER054 - German Features - Church Tax (Recompile)            *
@@ -383,7 +385,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005
 **  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION                                          233774
 00000001                                                                                      233774
 00000010                                                                                      233774

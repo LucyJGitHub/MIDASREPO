@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Network Transaction Identifier subfile')      *
@@ -11,16 +11,18 @@
       *                                                               *
       *  Function : This Module handles networks and network          *
       *             Identification Transaction Code                   *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CGL152             Date 02Dec13               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL152             Date 02Dec13               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG22693           Date 05Feb09               *
       *                 BG22303            Date 19Jan08               *
       *                 CER030  *CREATE    Date 09Jul08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL152 - Include Transaction Type Identification Code on     *
       *           MT940/MT950 (Recompile)                             *
       *  CER059 - German Feature Upgrade to Delhi                     *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Find last day of previous month')
@@ -9,14 +9,16 @@
       *                                                               *
       *  SMU00095 - Find last day of previous month                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. 172614 *CREATE     Date 26Feb01               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 172614 *C *CREATE  Date 26Feb01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program S17261402.                         *
       *  172614  - CoB component lasting many hours                   *

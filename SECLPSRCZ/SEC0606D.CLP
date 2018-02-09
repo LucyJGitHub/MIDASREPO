@@ -9,8 +9,9 @@
 /*                  WITH THE EFFECT OF TRADES, DEPOT MOVEMENTS       */
 /*                  AND TRADE SETTLEMENTS                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -18,8 +19,8 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 096090             DATE 16JUL96              */
-/*       PREV AMEND NO. 101194             DATE 11MAR96              */
+/*       Prev Amend No. 096090             Date 16Jul96              */
+/*                      101194             Date 11Mar96              */
 /*                      S01408             DATE 11MAY95              */
 /*                      081358             DATE 09JAN95              */
 /*                      E29032             DATE 01OCT91              */
@@ -35,6 +36,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       096090 - CLRPFM PMBVALPD as done in PMC0606T                */
 /*       101194 - Remove Security Copy of UDEPPD, and removal of     */
 /*                Logical members                                   */
@@ -62,7 +64,7 @@
              PGM        PARM(&ACCRX &CNAM &CSEQ)                      /*S01189*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
 /************DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)                * *S01117*/
@@ -380,5 +382,5 @@ ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
  
 ENDPGM:                                                               /*101194*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                 ENDPGM

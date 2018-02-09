@@ -8,13 +8,15 @@
 /*                                                                   */
 /*  SCRUNSQL - Run dynamic SQL statement                             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*  Last Amend No. CGL127  *CREATE    Date 06Aug12                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL127  *CREATE    Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  CGL127 - General Ledger  Module optimisation - Phase 1           */
 /*                                                                   */
 /*********************************************************************/

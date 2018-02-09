@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Updates Invalid Data in FDDTSTPD File for AR796905')   *
@@ -15,12 +15,14 @@
       *                                                               *
       *  Called By: SMUC00612                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR796904 *CREATE   Date 20Dec12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR796904 *CREATE   Date 20Dec12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR796904 - Utility to update the invalid value populated     *
       *             in FDDTSTPD Deal Type/SubType file.               *
       *             (Child: AR796905)                                 *
@@ -260,4 +262,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

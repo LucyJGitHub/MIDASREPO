@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Additional Customer Details Validation')      *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SDACUDVAL - Transactions  Details Validation                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD022651           Date 10Oct13               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022651           Date 10Oct13               *
+      *                 CLE134             Date 01Aug12               *
       *                 263285             Date 15Jan10               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022651 - Impossible to amend additional customer details   *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  263285 - Issuer Code Missing from Screen                     *
@@ -1463,4 +1465,4 @@
  
       *****************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

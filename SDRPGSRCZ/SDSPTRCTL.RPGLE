@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Spot Rate Interface Controller')              *
@@ -26,14 +26,15 @@
       *            the call to the Message Handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT147             Date 14Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT147             Date 14Jan13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 BUG8205            Date 22Aug05               *
       *                 BUG8130            Date 10Aug05               *
       *                 CSC022             Date 24Feb04               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT147 - Automatic update of payment charges definitions     *
       *           Added hooks: CFT147_022, CFT147_023, CFT147_024     *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -1183,6 +1185,6 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** ##OX1
 OVRDBF FILE(SDSPTRLR) TOFILE(SDSPTRL0) SHARE(*NO)

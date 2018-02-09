@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Electronic Broker field in SDBROKPD')
@@ -10,14 +10,16 @@
       *  SMU00079 - This program fills Electronic Broker field        *
       *             in SDBROKPD. (Y if REUTERS, N if other)           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            DATE 26Jan10               *
-      *  Prev Amend No. 125375   *CREATE   DATE 02Aug98               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 125375  *CREATE    Date 02Aug98               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program S12537501.                         *
       *  125375  - Add Electronic Broker field in SDBROKPD            *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('SE Invalid securities browse')
@@ -16,14 +16,15 @@
       *                                                               *
       *  Component of: SESECSRPR                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL032             Date 05Jul04               *
+      *                 CGL032             Date 05Jul04               *
       *                 CER001             Date 25Apr05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSC022             Date 24Feb04               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN022A- BOE Upgrade to MidasPlus - incorporate code from    *
       *           /COPY members and add switchability.                *
       *  CGL032 - Automatic Exchange of Information (Recompile)       *
@@ -1202,6 +1204,6 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  Array of error messages - ErrorText
 The last transaction was not applied to the database

@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC000101 - Change of Zone Set Up and Checks                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD027054           Date 04Jun15              */
-/*       Prev Amend No. MD031644           Date 08Jan15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD027054           Date 04Jun15              */
+/*                      MD031644           Date 08Jan15              */
 /*                      AR1000912          Date 13Nov14              */
 /*                      CGL155             Date 21Mar14              */
 /*                      AR687098           Date 04Sep12              */
@@ -40,6 +41,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD027054 - Impossible to work on HATS during secondary COB  */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
 /*                  Status of Interfaced FT Payments). Unable        */
@@ -93,7 +95,7 @@
              PGM        PARM(&ZONECHG)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCL        VAR(&ZONECHG) TYPE(*CHAR) LEN(1)
  

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Non-Account Holder - Database Update')        *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SDNAHLUPC - SD Non-A/C Holders Database Update Controller    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL132             Date 01May13               *
-      *  Prev Amend No. AR1043440          Date 11Oct12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL132             Date 01May13               *
+      *                 AR1043440          Date 11Oct12               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24746           Date 02Jul09               *
       *                 CER054             Date 07Apr09               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
       *  AR1043440 - Tax records wrongly created by NAHL RPG API      *
@@ -488,4 +490,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

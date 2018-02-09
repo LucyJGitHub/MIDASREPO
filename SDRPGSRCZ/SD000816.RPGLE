@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD EC Types Maintenance')                        *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SD000816 - Midas SD Exemption Certificate Types Maintenance  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. AR797240           Date 30Jun11               *
-      *  Prev Amend No. AR795895           Date 27Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR797240           Date 30Jun11               *
+      *                 AR795895           Date 27Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22516           Date 09Feb09               *
       *                 BUG22515           Date 30Jan09               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR797240 - New standing data tables available in the         *
       *             maintenance menu are not available in the         *
       *             enquiry menu                                      *
@@ -1173,4 +1175,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

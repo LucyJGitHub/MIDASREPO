@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SC Midas clustering - exit processing')
@@ -16,20 +16,22 @@
       *                                                               *
       *  Called By: OS/400 Cluster Resource Services                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Last Amend No. 203053             Date 15Feb02               *
-      *  Prev Amend No. 203048             Date 15Feb02               *
+      *  Prev Amend No. 203053             Date 15Feb02               *
+      *                 203048             Date 15Feb02               *
       * Midas Release 4 --------------- Base -------------------------*
       *                 CSC013  *CREATE    Date 05Nov01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  203053 - For action 'switchover' delay job until data CRG    *
       *           is available (QCSTHAAPPO position 51 is 'A').
       *  203048 - Clustering data areas are in xxDPLIB, not xxDTALIB. *

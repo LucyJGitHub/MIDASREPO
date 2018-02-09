@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
      H THREAD(*SERIALIZE)
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -14,16 +14,18 @@
       *             open it and check if server is ready to process   *
       *             request.                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD015  *CREATE    Date 03Mar03               *
+      *  Prev Amend No. CSD015  *CREATE    Date 03Mar03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD015 - Midas Compliance Watch - Watch List Checking        *
       *                                                               *
       *****************************************************************

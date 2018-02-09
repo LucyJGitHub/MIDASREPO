@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD AML database customer details exporter')      *
@@ -12,10 +12,11 @@
       *  Function:  This module exports the details of Midas          *
       *             Customers into the AML Database.                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -58,12 +60,12 @@
       *  CSD017 - Midas Compliance Watch - Anti-Money Laundering      *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       *
       ** Customer Details Database
       *
@@ -81,45 +83,45 @@
       ** Branch Details Database by Internal Customer
       *
      FSDBRCHL5  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structure. They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       *
       ** PMode Constants
       *
      D ALL             C                   CONST('A')
      D CHANGED         C                   CONST('C')
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       *
       ** Customer Details Data Structure
       *
@@ -200,12 +202,12 @@
       ** Long Access Object Data Structure
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       *
       ** Program Parameter
       *
@@ -232,18 +234,18 @@
       ** Customer Details Database Key
       *
      D KCustNo         S              6
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +---------------- Start of Main Processing ------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
      C                   READ      SDCUSTPD
       *
      C                   DOW       NOT %EOF(SDCUSTPD)
@@ -718,20 +720,20 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +---------------------------------------+
       ** ¦ Program, module, and procedure        ¦
       ** ¦ names for DB error processing         ¦
       ** ¦ =============================         ¦
       ** +---------------------------------------+
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY includes the DB error processing routines.
      C/COPY ZACPYSRC,PSSR_ILE
       **---------------------------------------------------------------
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

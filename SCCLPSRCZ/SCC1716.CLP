@@ -7,10 +7,11 @@
 /*                                                                  */
 /*       SCC1716 - CHANGE JOURNAL RECEIVER(S)                       */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. AR1097467          Date 04Apr13              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467          Date 04Apr13              */
+/*                      CLE134             Date 01Aug12              */
 /*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -44,6 +45,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1097467 - Expected 15% COB run optimization not met       */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
@@ -82,7 +84,7 @@
 /********************************************************************/
              PGM        PARM(&PARM)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&PARM) TYPE(*CHAR) LEN(1)
@@ -839,7 +841,7 @@ ABNOR:       IF         COND(&PARM *EQ '1') THEN(DO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,SCC1716013                                          */
 END:         ENDPGM
 /*/COPY WNCPYSRC,SCC1716014                                          */

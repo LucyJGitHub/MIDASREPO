@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SEC7560 - SE Generation Trades & Depot Movements            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1092150          Date 01Mar13              */
-/*       Prev Amend No. CCB023             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1092150          Date 01Mar13              */
+/*                      CCB023             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1092150 - SEC7560 is looping during GN EN clean COB       */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
 /*                Restructuring                                      */
@@ -54,7 +56,7 @@
 /* Declare PGM Variables */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM)    TYPE(*CHAR) LEN(52)
 /**********  DCL        VAR(&PRESBS) TYPE(*CHAR) LEN(2)            */                     /*CCB023*/
@@ -668,7 +670,7 @@ ABNOR:                                                                /*178065*/
              ENDDO                                                                        /*CCB023*/
                                                                                           /*CCB023*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* Write current journal sequence number to file SCJSEQPD, using   */                     /*CCB023*/
 /* command SCWRTJREG                                               */                     /*CCB023*/

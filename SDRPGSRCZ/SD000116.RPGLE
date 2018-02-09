@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Link Types Maintenance')                      *
@@ -9,15 +9,17 @@
       *                                                               *
       *  SD000116 - Midas Link Types Maintenance                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. AR798548           Date 04Jul11               *
-      *  Prev Amend No. AR797240           Date 30Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR798548           Date 04Jul11               *
+      *                 AR797240           Date 30Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22521 *CREATE   Date 25Mar09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR798548 - Title consistency with menu option (Recompile)    *
       *  AR797240 - New standing data tables available in the         *
       *             maintenance menu are not available in the         *
@@ -987,6 +989,6 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009
 ** Array Check
  0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ

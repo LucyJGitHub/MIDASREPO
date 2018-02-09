@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SCC5040 - Midas Clustering - Initialise QCSTHAAPPI          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. 203050             Date 15Feb02              */
-/*       Prev Amend No. 203043             Date 15Feb02              */
+/*       Prev Amend No. 203050             Date 15Feb02              */
+/*                      203043             Date 15Feb02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CSC013  *CREATE    Date 05Nov01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       203050 - Several changes and enhancements                   */
 /*       203043 - Move SCOBSPPD from xxDMLIB to xxDPLIB              */
 /*       CSC013 - Midas Clustering Feature                           */
@@ -34,7 +36,7 @@
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&OSLVL) TYPE(*CHAR) LEN(10)
@@ -310,7 +312,7 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,SCC5040END                                          */
  

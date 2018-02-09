@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       SEC8400B - SMI Yearly Profitability Report Prompt           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2017           */
+/*       (c) Finastra International Limited 2017                     */
 /*                                                                   */
-/*       Last Amend No. CSE108 *CREATE     Date 06Oct17              */
-/*       Prev Amend No. nnnnnn             Date ddmmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSE108 *CREATE     Date 06Oct17              */
+/*                      nnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSE108 - Yearly Profitability Report and Enquiry            */
 /*                                                                   */
 /*********************************************************************/
@@ -26,7 +28,7 @@
              DCL        VAR(&RACT)  TYPE(*CHAR) LEN(1)
              DCL        VAR(&RCMD)  TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2017')
  
              DCLF       FILE(SEC8400DF)
@@ -35,7 +37,7 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* Set-off Database Error Switches */
              CHGJOB     SWS(XXXXXX00)

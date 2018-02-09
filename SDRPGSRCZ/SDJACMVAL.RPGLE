@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Joint A/c Member Details Validation')         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SDJACMVAL - Midas SD Joint Account Member Details Validate   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR916535           Date 21Feb12               *
-      *  Prev Amend No. AR739551           Date 30Mar11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR916535           Date 21Feb12               *
+      *                 AR739551           Date 30Mar11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23732           Date 23Apr09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR916535 - Cannot add members to joint customer              *
       *  AR739551-Selection (?) is not working for NAH field in       *
       *           Joint Account Member Maint. Part of core fix 233207 *
@@ -767,4 +769,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

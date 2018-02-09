@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Update Change User on GPCURRPD')              *
@@ -8,13 +8,15 @@
       *                                                               *
       *  SMU00219 - Midas SM Update Change User on GPCURRPD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD031342           Date 24Nov14               *
-      *  Prev Amend No. CFB001  *CREATE    Date 12Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031342           Date 24Nov14               *
+      *                 CFB001  *CREATE    Date 12Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031342 - Error encountered when running from Bridge.       *
       *  CFB001 - FusionBanking Midas Rebranding                      *
       *                                                               *

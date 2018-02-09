@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Additional Customer Details 3 Validation')       *
@@ -12,10 +12,11 @@
       *  Function:  This module validates the Additional Customer     *
       *             Details screen input function                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. AR855391           Date 27Oct11               *
-      *  Prev Amend No. CSD091             Date 04Jul11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR855391           Date 27Oct11               *
+      *                 CSD091             Date 04Jul11               *
       *                 AR740758           Date 04Apr11               *
       *                 AR739532           Date 30Mar11               *
       *                 CER059             Date 19Jul10               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR855391 - CUSD Overridable Errors not found in EN System    *
       *  CSD091 - Overrideable Errors Configurability Enabler Phase 2 *
       *  AR740758 - System does not validate customer's individual    *

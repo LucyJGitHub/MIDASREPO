@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       SMC1062 - Restore data base libraries                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CUP016 *CREATE     Date 01Apr03              */
+/*                      CUP016 *C *CREATE  Date 01Apr03              */
 /*                      xxxxxx             Date ddmmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       CUP016 - Add implementation software to core.               */
 /*                                                                   */
@@ -39,7 +41,7 @@
              DCL        VAR(&DEVTYPE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OPTFILE) TYPE(*CHAR) LEN(11)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
              DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
@@ -195,5 +197,5 @@ ABNOR:
              MONMSG     MSGID(CPF0000)
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

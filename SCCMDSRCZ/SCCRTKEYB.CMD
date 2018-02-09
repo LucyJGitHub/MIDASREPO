@@ -10,20 +10,22 @@
 /*       SCCRTKEYB- Generate new or update old core                  */
 /*                  switchable feature and details.                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC010             Date 10Jun99              */
-/*       Prev Amend No. CSC007             Date 08May98              */
+/*       Prev Amend No. CSC010             Date 10Jun99              */
+/*                      CSC007             Date 08May98              */
 /*                      CSC005  *CREATE    Date 08May98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC010 - Change default to 'B' for Maintained by and        */
 /*                disallow use of 'C' for non core changes           */
 /*       CSC007 - Allow switchable features flagged as 'B' for       */

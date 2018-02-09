@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2006            *
       *                                                               *
-      *  Last Amend No. A1084804           Date 29Jan13               *
-      *  Prev Amend No. CUP003             Date 12Aug10               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. A1084804           Date 29Jan13               *
+      *                 CUP003             Date 12Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CUP034  *CREATE    Date 18Dec06               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  A1084804 - Ensure user text is brought across.               *
       *  CUP003 - Rename user profiles on SFACAUPD.                   *
       *  CUP034 - MidasPlus user data migration.                      *

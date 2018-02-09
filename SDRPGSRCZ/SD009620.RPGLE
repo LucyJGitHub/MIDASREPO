@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Convert Zone Name to Upper Case')
@@ -12,14 +12,16 @@
       *  Function:  This program will convert zone system value to    *
       *             uppercase upon maintenance                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG13076  *CREATE  Date 19Jan07               *
+      *  Prev Amend No. BUG13076 *CREATE   Date 19Jan07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG13076 - Mixed case for zone name system value conflicts   *
       *             uppercase requirement of Java                     *
       *                                                               *

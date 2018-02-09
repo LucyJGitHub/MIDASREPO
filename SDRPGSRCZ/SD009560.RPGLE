@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate support system subsystem name')
@@ -10,18 +10,20 @@
       *  SD009560 - Validate a Midas System Value for the following:  *
       *             - A valid support system subsystem name.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSC018             Date 25Jun03               *
+      *  Prev Amend No. CSC018             Date 25Jun03               *
       * Midas Release 4.01.03 ----------------------------------------*
-      *  Prev Amend No. 213557  *CREATE    Date 02Jan03               *
+      *                 213557  *CREATE    Date 02Jan03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC018 - High Availability Enhancements:                     *
       *           - Extend processing mode from 10 to 190.            *
       *  213557 - New program to check for the existance of the       *

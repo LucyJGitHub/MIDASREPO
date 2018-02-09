@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD FATCA Cust Type & Classif. Report&Update')    *
@@ -18,10 +18,11 @@
       *             updates the FACTA customer type (and sub-type if  *
       *             FFI/NFE) and classification for the customer.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD027298           Date 06Aug14               *
-      *  Prev Amend No. MD029848           Date 29Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027298           Date 06Aug14               *
+      *                 MD029848           Date 29Aug14               *
       *                 MD027707           Date 01Jul14               *
       *                 MD027498           Date 20Jun14               *
       *                 MD027578           Date 17Jun14               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027298 - Incorrect label 'Exempt' (Recompile)              *
       *  MD029848 - (TNT) FATCA Report Issue. Applied fix MD029618    *
       *  MD027707 - FCAT is unable to set Information complete flag   *
@@ -788,4 +790,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

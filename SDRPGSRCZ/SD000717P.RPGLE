@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD FATCA Non-account Holder Details Report')     *
@@ -12,16 +12,18 @@
       *  Function:  This is a new program to list the details of all  *
       *             FATCA NAHO Details Report in the system.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CGL154             Date 13Oct14               *
-      *  Prev Amend No. MD027545           Date 01Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 MD027545           Date 01Aug14               *
       *                 MD027439           Date 18Jun14               *
       *                 MD024592           Date 28Jan14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD027545 - Previous FATCA Classification Description is      *
       *             Populated in Reports even if it is not yet Defined*
@@ -1526,4 +1528,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

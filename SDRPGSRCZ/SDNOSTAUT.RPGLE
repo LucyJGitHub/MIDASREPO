@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(SDNOSTAU) TOFILE(SDNOSTL0) SHARE(*NO)            *
 /*XBIB*  OVRDBF FILE(SDNOSHAU) TOFILE(SDNOSHL0) SHARE(*NO)            *
@@ -14,20 +14,22 @@
       *  Function:  This program performs the update processes that   *
       *             are to be carrired out on the unauthorised record *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. B07400             Date 16May06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. B07400             Date 16May06               *
+      *                 CSD027             Date 09Dec05               *
       *                 235845             Date 06Sep05               *
       *                 CGL029             Date 01Sep03               *
       *                 CSD012  *CREATE    Date 15Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  B07400 - Nostro Codes maintenance not updating TABLETL.      *
       *           Re-arranged parm list when calling TABLETL.         *
       *  CSD027 - Conversion Of Customer Number to alpha.             *
@@ -651,4 +653,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

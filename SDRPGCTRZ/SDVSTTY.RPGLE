@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Validate Settlement Type')                             *
@@ -9,19 +9,21 @@
       *                                                               *
       *  SDVSTTY -  validate Settlement Type                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
       *   /COPY, Customer Future and Options Details amendments must  *
       *        not be applied to this source.                         *
       *                                                               *
-      *  Last Amend No. MD025484           Date 19Aug14               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025484           Date 19Aug14               *
+      *                 MD000091           Date 15May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CSD079  *CREATE    Date 05Feb07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025484 - Duplicate DDSMAC Settlement Account field in CUSD *
       *  MD000091 - Event Codes Substitution                          *
       *  CSD079 - Enhanced Customer Maintenance API                   *
@@ -467,4 +469,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

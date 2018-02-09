@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Customer Risk Weighted Assets details database upd')
@@ -10,15 +10,17 @@
       *  SDRWANUPD - Customer Risk Weighted Assets Details            *
       *              database update                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BG12238            Date 24Oct06               *
-      *  Prev Amend No. CRE026  *CREATE    Date 16May06               *
+      *  Prev Amend No. BG12238            Date 24Oct06               *
+      *                 CRE026  *CREATE    Date 16May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG12238 - Conditional writes to files within wholesale/      *
       *            universal customer input                           *
       *  CRE026 - Consumer Banking                                    *
@@ -748,4 +750,4 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

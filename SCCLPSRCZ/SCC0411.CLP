@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC0411 - Input Cycle Initiation                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD029791           Date 25Aug14              */
-/*       Prev Amend No. MD029611           Date 08Aug14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD029791           Date 25Aug14              */
+/*                      MD029611           Date 08Aug14              */
 /*                      MD021155           Date 11Jul13              */
 /*                      CSC056             Date 06Aug12              */
 /*                      CRE041             Date 28Sep12              */
@@ -81,6 +82,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD029791 - Remove calling of EMC09 and move it in SCC41119  */
 /*       MD029611 - EMCEXX1 Exposure Header file was corrupted       */
 /*                  after COB                                        */
@@ -198,7 +200,7 @@
 /*/COPY WNCPYSRC,SCC0411INT                                        */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
@@ -390,5 +392,5 @@ ENDCLPGM:                                                                       
 /*/COPY WNCPYSRC,SCH00049                                            */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 THEEND:      ENDPGM

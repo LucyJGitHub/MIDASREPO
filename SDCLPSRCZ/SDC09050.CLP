@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       SDC09050 - Initialisation program for CDL027                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL027  *CREATE    Date 24Mar05              */
+/*       Prev Amend No. CDL027  *CREATE    Date 24Mar05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL027 - Back-value base rate changes                       */
 /*                                                                   */
 /*********************************************************************/
@@ -26,7 +28,7 @@
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
@@ -92,5 +94,5 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

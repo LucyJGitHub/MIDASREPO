@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
      H THREAD(*SERIALIZE)
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -21,18 +21,20 @@
       *             violation is detected the function will create an *
       *             investigation case in the case management system. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 221934             Date 08Oct03               *
-      *  Prev Amend No. CSD019             Date 02Jun03               *
+      *  Prev Amend No. 221934             Date 08Oct03               *
+      *                 CSD019             Date 02Jun03               *
       *                 CSD015  *CREATE    Date 03Mar03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  221934 - Compliance Watch alpha site fix                     *
       *           CWLCHECK falls down if COMPWATCH job slow to start  *
       *  CSD019 - Midas Compliance Watch - Entry Level Watch List     *

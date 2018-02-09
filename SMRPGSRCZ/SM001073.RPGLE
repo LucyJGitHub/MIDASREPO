@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*XBI *  OVRDBF FILE(MACBRDDQT) TOFILE(MACUB1)                        *
 /*STD *  RPGBASEBND                                                   *
@@ -12,15 +12,17 @@
       *  SM001073 - Update MACBRDD for copied Midas users, pre-       *
       *             MidasPlus                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CUP034  *CREATE    Date 20Dec06               *
+      *  Prev Amend No. CUP034  *CREATE    Date 20Dec06               *
       *  Last Amend No. xxxxxx             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP034 - MidasPlus user data migration.                      *
       *                                                               *
       *****************************************************************

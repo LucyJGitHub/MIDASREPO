@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       SEC0904 - CUSTOMER VALUATION STATEMENT                     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408                  DATE 11MAY95        */
-/*       PREV AMEND NO. S01502             DATE 08JUL94              */
+/*       Prev Amend No. S01408             Date 11May95              */
+/*                      S01502             Date 08Jul94              */
 /*                      E30860             DATE 30OCT91              */
 /*                      S01117                  DATE  10JAN91       */
 /*                      S01189                  DATE  10JAN91       */
@@ -28,6 +29,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*         S01408 - Addition of core hook SEC0904MPS                */
 /*       S01502 - BLI Telekurs Processing.  Recompiled due to        */
 /*                change in length of SESTAT, 133 long.              */
@@ -51,7 +53,7 @@
              PGM    PARM(&CNAM &CSEQ &RENT)                           /*S01117*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
 /* S01179                                                              *S01179*/
@@ -231,5 +233,5 @@ ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

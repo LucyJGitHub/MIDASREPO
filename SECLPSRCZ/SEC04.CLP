@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       SEC04     CL COMPONENT TO CONTROL SE ENQUIRIES              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 213230             Date 17Oct06              */
-/*       Prev Amend No. 235184             Date 04Aug05              */
+/*       Prev Amend No. 213230             Date 17Oct06              */
+/*                      235184             Date 04Aug05              */
 /*                      214953             Date 11Apr03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       213230 - Override SECTYX to SECTY to avoid CPF4101 using    */
 /*                action code 'E'.                                   */
 /*       235184 - Dbase error due to file TRADSDZ3 does not exist.   */
@@ -54,7 +56,7 @@
 /*           DCLDTAARA  DTAARA(LDA)                                 *  *S01179*/
 /**/                                                                  /*S01117*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
              DCL        VAR(&LDA)     TYPE(*CHAR)  LEN(256)           /*S01179*/
@@ -192,6 +194,6 @@
  
 /*ENDPGM:****ENDPGM*******                                             *S01117*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              DLTOVR *ALL                                              /*S01401*/
              ENDPGM                                                   /*S01117*/

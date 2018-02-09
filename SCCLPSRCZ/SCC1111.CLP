@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       SCC1111 - Check Leo Phase of Day                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO.  091837           DATE 16AUG95               */
-/*       PREV AMEND NO.  082075           DATE 25JAN95               */
+/*       Prev Amend No. 091837             Date 16Aug95              */
+/*                      082075             Date 25Jan95              */
 /*                       S01408           DATE 19JUN95               */
 /*                       S01467           DATE 04AUG94               */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       091837 - Reverse out 082075, LPHAS is in the DTALIB.        */
 /*       082075 - DTAARA/LPHAS is located in DMLIB, not DTALIB       */
 /*       S01408 - Addition of core hook SCC1111MP1                   */
@@ -35,7 +37,7 @@
              PGM        PARM(&LPHA &ACTN &RTRN)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&LPHA) TYPE(*CHAR) LEN(1)
@@ -153,6 +155,6 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

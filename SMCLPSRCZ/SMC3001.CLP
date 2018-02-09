@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       SMC3001 - Switch mandatory features on for Lending          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CUP016 *CREATE     Date 01Apr03              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Prev Amend No. CUP016 *CREATE     Date 01Apr03              */
+/*                      xxxxxx             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP016 - Add implementation software to core.               */
 /*                                                                   */
 /*********************************************************************/
@@ -26,7 +28,7 @@
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&WRTNCODE) TYPE(*CHAR) LEN(6)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCLF       FILE(SMSARDPD)
@@ -64,6 +66,6 @@ ABNOR:
              CHGJOB     SWS(XXXXXX11)
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

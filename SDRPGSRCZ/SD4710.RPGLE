@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Standing Data Authorisation Summary Rpt')
@@ -12,23 +12,25 @@
       *  Function:  This program will report all the items of         *
       *             Standing Data which have not been authorised.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Phase(s): I/C - On Request.                                  *
       *            COB - Automatic.                                   *
       *                                                               *
       *  Called By: SDC4710 Midas SD equiring Authorisation Summary   *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD028             Date 22Aug05               *
-      *  Prev Amend No. CSD012  *CREATE    Date 15Oct02               *
+      *  Prev Amend No. CSD028             Date 22Aug05               *
+      *                 CSD012  *CREATE    Date 15Oct02               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD028 - KYC (Standing Data Authorisations)                  *
       *  CSD012 - Standing Data Requiring Authorisation               *
       *                                                               *
@@ -542,4 +544,4 @@
       *
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

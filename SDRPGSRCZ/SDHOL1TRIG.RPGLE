@@ -1,6 +1,6 @@
      H OPTION(*NODEBUGIO:*SRCSTMT)
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Update Holidays Extract File')                *
@@ -13,12 +13,14 @@
       *  Function:  This program will update SDHOL1PD file everytime  *
       *             SDHOLPD is changed                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CRE071  *CREATE    Date 05Oct10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE071  *CREATE    Date 05Oct10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE071 - BankFusion Midas Teller CBS related changes         *
       *                                                               *
       *****************************************************************

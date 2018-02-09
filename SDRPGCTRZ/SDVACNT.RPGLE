@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Nostro Codes - Account Number Validation Module')      *
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVACNT  - Validate the Account Number                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Nostro Code amendments must not be                  *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CRE095             Date 25Apr14               *
-      *  Prev Amend No. AR1095876          Date 30Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *                 AR1095876          Date 30Sep13               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
       *             RUND (Child: AR1095877) (Recompile)               *
@@ -518,4 +520,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

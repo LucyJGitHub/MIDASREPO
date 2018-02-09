@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Update GLAVBLPD - blank assoc cust if 0s')    *
@@ -9,15 +9,17 @@
       *                                                               *
       *  SMU00230 - Blank zeros in Assoicated Customer                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *   Last Amend No. CUP039  *CREATE       Date 16Mar11           *
-      *   Prev Amend No. xxxxxx                Date ddMmmyy           *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUP039  *CREATE    Date 16Mar11               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP039 - Set Associated Customer to blank if 000000.         *
       *                                                               *
       *****************************************************************

@@ -1,19 +1,21 @@
      H DATEDIT(*YMD)
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas SD Withholding Tax Rate Code Report')            *   
+/*EXI *  TEXT('Midas SD Withholding Tax Rate Code Report')            *
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data Module                                 *
       *                                                               *
       *  SD000204P - Withholding Tax Rate Code Report                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL165  *CREATE    Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165  *CREATE    Date 17Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Withholding Tax Enhancement                         *
       *                                                               *
       *****************************************************************
@@ -1016,7 +1018,7 @@
      CSR   ZZEXIT        ENDSR
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015
 **CTDATA UARRAY
 MAINT. - AUDIT RPT
 LISTING

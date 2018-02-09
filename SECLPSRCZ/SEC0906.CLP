@@ -7,20 +7,22 @@
 /*                                                                  */
 /*       SEC0906 - MONTHLY TRADING RECONCILIATION                   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E35724                  DATE  11FEV92       */
-/*       PREV AMEND NO. S01117                  DATE  10JAN91       */
+/*       Prev Amend No. E35724             Date 11Fev92              */
+/*                      S01117             Date 10Jan91              */
 /*                      S01179                  DATE  16/09/88      */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*         E35724 - No override to value date file if value date    */
 /*                  report and branch ALL is requested.             */
 /*         S01117 - MULTIBRANCHING                                  */
@@ -35,7 +37,7 @@
              PGM        PARM(&PARM &RSEQ &RLEV &RENT)                 /*S01117*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
 /* S01179                                                              *S01179*/
@@ -110,5 +112,5 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

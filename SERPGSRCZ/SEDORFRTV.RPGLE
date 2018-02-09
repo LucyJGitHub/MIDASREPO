@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Depot a/c reference retrieve')
@@ -12,12 +12,13 @@
       *  Function:  This module will retrieve the depot reference     *
       *             for a given depot.                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. BUG27939           Date 30Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27939           Date 30Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 244007             Date 01Dec06               *
+      *                 244007             Date 01Dec06               *
       *                 BUG13172A          Date 01Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 242372             Date 25Sep06               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27939 - SEC0603 00001                                     *
       *  244007 - Align customer parameter when accessing it in       *
       *           AOSECSR0.                                           *
@@ -464,4 +466,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

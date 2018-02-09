@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate FATCA Customer Sub Type')            *
@@ -9,14 +9,16 @@
       *                                                               *
       *  SDVCSST - Validate FATCA Customer Sub Type                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD027252           Date 04Aug14               *
-      *  Prev Amend No. MD027010A          Date 22May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027252           Date 04Aug14               *
+      *                 MD027010A          Date 22May14               *
       *                 CGL132   *CREATE   Date 15Mar13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027252 - Error Message is displayed when FATCA Customer    *
       *             Type (F or N) is amended to blank                 *
       *  MD027010A - FATCA Exempt and Reporting type is incorrect     *
@@ -250,4 +252,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

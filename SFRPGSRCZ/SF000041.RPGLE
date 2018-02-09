@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SF Update Global user')
@@ -12,17 +12,19 @@
       *  Function: This program copies the global rights from an      *
       *  I/C       existing user to the new one.                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CSD086             Date 17Mar10               *
+      *  Prev Amend No. CSD086             Date 17Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG13895           Date 15May07               *
+      *                 BUG13895           Date 15May07               *
       *                 BUG14103           Date 18Jun07               *
       *                 241013 *CREATE     Date 12Dec06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD086 - Overridable Errors (Recompile)                      *
       *  BUG13895 - Copy user failed. Pgm tried to delete a           *
       *             non-existing record. Applied by 246242            *

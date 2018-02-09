@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Close of Business System Value Reset')
@@ -16,13 +16,15 @@
       *  Called By: SDC009827 - Close of Business System Value Reset  *
       *                         Control                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CAP205    *CREATE  Date 11Mar10               *
+      *  Prev Amend No. CAP205  *CREATE    Date 11Mar10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP205 - Retail Account Balance Check                        *
       *                                                               *
       *****************************************************************

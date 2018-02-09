@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       SCC2471 - Check and Correct Unjournalled Data Areas         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886            Date 22May08              */
+/*       Prev Amend No. BG18886            Date 22May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG6546            Date 21Apr05              */
+/*                      BUG6546            Date 21Apr05              */
 /*                      CSC018 *CREATE     Date 31May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       BUG6546 - Pass back error status to be trapped in calling   */
 /*                 programs.                                         */
@@ -40,7 +42,7 @@
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&MSGCLR) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
              DCLF       FILE(QADSPOBJ)
  
@@ -116,7 +118,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              DSPMSG     MSGQ(QTEMP/SCC2472) OUTPUT(*PRINT)
              MONMSG     MSGID(CPF0000)

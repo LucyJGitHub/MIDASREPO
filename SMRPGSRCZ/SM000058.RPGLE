@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Update message queues on MXCOMDPD')
@@ -9,15 +9,17 @@
       *                                                               *
       *  SM000058 - Midas SM Update message queues on MXCOMDPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256038  *CREATE    Date 13Aug08               *
-      *  Prev Amend No.                    Date                       *
+      *  Prev Amend No. 256038  *CREATE    Date 13Aug08               *
+      *                                    Date                       *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256038 - New utility to migrate MXCOMDPD                     *
       *                                                               *
       *****************************************************************

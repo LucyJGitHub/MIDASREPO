@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('PV  Interface using Unicode ZL Form')
@@ -9,15 +9,17 @@
       *                                                               *
       *  SCPRMTJ2 - PV  Interface using Unicode ZL Form, Driver       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BG13742 *CREATE    Date 17Apr07               *
+      *  Prev Amend No. BG13742 *CREATE    Date 17Apr07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG13742 - Authority problem on MidasPlus Equation interface  *
       *                                                               *
       *****************************************************************

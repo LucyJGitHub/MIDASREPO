@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Check if Nostro is used by deals')            *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: SD0151R                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. MD036510           Date 10Jul17               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD036510           Date 10Jul17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD036510 - Possibility to close Nostro Account with live     *
       *             Fees linked to it                                 *
@@ -41,92 +43,92 @@
       *             (Child: AR571693)                                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDEALSC    IF   E           K DISK
- 
+
      FDEALALL   IF   E           K DISK
      F                                     IGNORE(DEALSDAF:DEALSDCF:DEALSDDF)
      F                                     IGNORE(DEALSDEF:DEALSDFF:DEALSDGF)
- 
+
      FDEAMS     IF   E           K DISK
      F                                     IGNORE(DEAMSDHF:DEAMSDJF)
- 
+
      FDLDLDGLE  IF   E           K DISK
- 
+
      FCLOAN     IF   E           K DISK
      F                                     IGNORE(CLOANHHF:CLOANCKF:CLOANZ1F)
- 
+
      FLELOAML3  IF   E           K DISK
- 
+
      FACCNTL0   IF   E           K DISK
- 
+
      FTRADSDLJ  IF   E           K DISK
      F                                     RENAME(TRADSDF:TRDCCYF)
- 
+
      FSOBTRDL2  IF   E           K DISK
      F                                     RENAME(TRADSDF:SOBCCYF)
- 
+
      FINPAYL1   IF   E           K DISK
- 
+
      FOTPAYL1   IF   E           K DISK
- 
+
      FTRANS     IF   E           K DISK
- 
+
      FTRSET     IF   E           K DISK
- 
+
      FLEFEEDL0  IF   E           K DISK                                                     MD036510
      F                                     PREFIX(A)                                        MD036510
                                                                                             MD036510
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D***@Txt***       S             25A   DIM(8) CTDATA PERRCD(1)                          MD036510
      D @Txt            S             25A   DIM(9) CTDATA PERRCD(1)                          MD036510
- 
+
      D  AccOne         DS
      D  ##Brca                 1      3
      D  ##Cnum                 4      9
      D  XxCcy                 10     12
      D  ##Acod                13     22  0
      D  ##Acsq                23     24  0
- 
+
      D  AccTwo         DS
      D  @@Brca                 1      3
      D  @@Cnum                 4      9
      D  @@Ccy                 10     12
      D  @@Acod                13     22  0
      D  @@Acsq                23     24  0
- 
+
      D  OSDA           DS
      D  RCnum                  1      6  0
      D  RAcod                  7     10  0
      D  RAcsq                 11     12  0
- 
+
      D  OMDA           DS
      D  PCnum                  1      6  0
      D  PAcod                  7     10  0
      D  PAcsq                 11     12  0
- 
+
      D  WMsgD          DS
      D  MsgD1                  1     25
      D  MsgD2                 26     45
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D YyBrca          S              3A
      D YyCnum          S              6A
      D YyCcy           S              3A
@@ -134,47 +136,47 @@
      D YyAcsq          S              2A
      D XxNost          S              2A
      D XxRtn           S              1A
- 
+
      D Nostro          S              2S 0
- 
+
      D ##Acno          S             10A
- 
+
      D @Nost           S              2A
      D @Ccy            S              3A
- 
+
      D WRun            S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
      IACCNTABF
      I              BRCA                        BrcaXX
      I              CNUM                        CnumXX
      I              CCY                         CcyXX
- 
+
      ITRDCCYF
      I              CRSK                        CrsKX
- 
+
      ISOBCCYF
      I              CRSK                        CrsKXX
- 
+
       ** +--------------------------------------+
       ** ¦ End of I-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
@@ -872,7 +874,7 @@
      C                   EVAL      *INLR = *ON
       *
      C                   RETURN
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************

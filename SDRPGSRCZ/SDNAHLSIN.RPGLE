@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Non-account Holder - Screen Input')           *
@@ -12,10 +12,11 @@
       *  Function:  This is the main screen input function            *
       *             for Non-account Holder Details.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD043147           Date 03Jan17               *
-      *  Prev Amend No. MD036509           Date 12Nov15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD043147           Date 03Jan17               *
+      *                 MD036509           Date 12Nov15               *
       *                 MD036460           Date 05Nov15               *
       *                 MD033967           Date 01Apr15               *
       *                 MD029805           Date 05Sep14               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD043147 - US account authority holder indicia is not        *
       *             updated from insert like other US Indicia         *
       *             system values                                     *
@@ -3335,7 +3337,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** ##OV1
 OVRDBF FILE(SDNAHOL0) TOFILE(SDNAHOL0) SHARE(*NO)
 ** ##OV2

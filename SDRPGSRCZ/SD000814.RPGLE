@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Threshold Amt Reduction/Increase')            *
@@ -12,10 +12,11 @@
       *  Function:  This program updates the threshold amount for     *
       *             customers accounts(Individual/Joint)              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 CER069             Date 03Jul14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CER069 - German Tax Enhancement                              *
@@ -900,4 +902,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

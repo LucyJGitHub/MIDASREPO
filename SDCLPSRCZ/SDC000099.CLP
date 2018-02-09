@@ -7,15 +7,17 @@
 /*                                                                   */
 /*       SDC000099 - Midas SD Initialisation program for CER034      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG22611A          Date 10Feb09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG22611A          Date 10Feb09              */
 /*                      BUG22611           Date 09Feb09              */
 /*                      CER034  *CREATE    Date 19May08              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG22611A - CER048 init pgm error                           */
 /*       BUG22611 - German Features initialization pgm error         */
@@ -29,7 +31,7 @@
              DCL        VAR(&LIB)   TYPE(*CHAR) LEN(10)
              DCL        VAR(&PREF)  TYPE(*CHAR) LEN(2)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2008')
  
 /** Create LDA */                                                                      /*BUG22611A*/
@@ -79,6 +81,6 @@ ABNOR:
  
 END:
              MONMSG     MSGID(CPF2105)
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              ENDPGM

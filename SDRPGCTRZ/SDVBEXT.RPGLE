@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Customer Reqd for Bundesbank Rpt')   *
@@ -13,15 +13,17 @@
       *  Function:  This module validates the field Customer Required *
       *             for Bundesbank Reporting                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MK024991           Date 24Mar14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MK024991           Date 24Mar14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26637           Date 03Nov09               *
       *                 CER045  *CREATE    Date 20Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024991 - Error appears upon deleting customer.             *
       *           - Do not perform defaulting if action code is 'D'.  *
       *           - Do not perform validation if action code is 'D'.  *
@@ -234,4 +236,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

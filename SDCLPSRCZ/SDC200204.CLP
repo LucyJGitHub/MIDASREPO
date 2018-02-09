@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       SDC200204 - Midas SD Today's Credit Interest Posting List   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. CER054  *CREATE    Date 07Apr09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      CER054  *CREATE    Date 07Apr09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       CER054 - German Features - Church Tax                       */
 /*                                                                   */
@@ -25,7 +27,7 @@
              DCL        VAR(&PENTY) TYPE(*CHAR) LEN(3)
              DCL        VAR(&PMEMO) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global monitor message */
@@ -59,7 +61,7 @@ ABNOR:
 /* End Program */
  
 END:         MONMSG      MSGID(CPF2105)
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              ENDPGM
  

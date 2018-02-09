@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE EU Saving Tax Customer Position Retrieval')
@@ -9,18 +9,20 @@
       *                                                               *
       *  SEETCPRTT - Retrieve EU Tax Customer Position (for a trade)  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 05May06               *
-      *  Prev Amend No. 235546             Date 09Aug05               *
+      *  Prev Amend No. CSD027A            Date 05May06               *
+      *                 235546             Date 09Aug05               *
       *                 234577             Date 29Jun05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion Of Customer Number to Alpha             *
       *  235546 - Due to back valuations, need to return the last     *
       *           record for the requested date if a new transaction  *
@@ -287,4 +289,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

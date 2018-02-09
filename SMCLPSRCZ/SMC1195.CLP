@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SMC1195 - Update trailer files SDFCTLPA and TABLETX         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. CUP003             Date 04Nov10              */
-/*       Prev Amend No. BUG27962           Date 03Aug10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP003             Date 04Nov10              */
+/*                      BUG27962           Date 03Aug10              */
 /*                      BUG27792           Date 02Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP003 - Does not handle the alpha-keys on TABLETX.         */
 /*       BUG27792 - New utility to update trailers post-migration    */
 /*       CUP033 - Removal of System Value /COPYs                     */
@@ -47,7 +49,7 @@
 /**********  DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)                                   */ /*CSM003*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
@@ -183,5 +185,5 @@ TABLETX:                                                                        
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

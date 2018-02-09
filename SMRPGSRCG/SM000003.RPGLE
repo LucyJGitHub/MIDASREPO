@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Update SMCNUMPD status to blank')             *
@@ -9,16 +9,18 @@
       *                                                               *
       *  SM000003 - Update SMCNUMPD status to blank                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. AR1085447          Date 05Feb13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1085447          Date 05Feb13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CUP034  *CREATE    Date 12Mar07               *
+      *                 CUP034  *CREATE    Date 12Mar07               *
       *                 xxxxxx             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1085447 - Set status field on SMLNRFPD to blank            *
       *  CUP034 - Set status field on SMCNUMPD to blank.              *
       *                                                               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Additional Customer Details 4 Validation')       *
@@ -12,10 +12,11 @@
       *  Function:  This module validates the Additional Customer     *
       *             Details screen input function                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 MD024991           Date 24Mar14               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field                             *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *  MD024991 - Error appears upon deleting customer.             *
@@ -1013,4 +1015,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

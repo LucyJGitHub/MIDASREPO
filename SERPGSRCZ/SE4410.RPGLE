@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*: OVRDBF FILE(MESSAGES10) TOFILE(MEML10PD)                     *
 /*XBIB*: OVRDBF FILE(MESSAGES11) TOFILE(MEML11PD)                     *
@@ -15,16 +15,18 @@
       *  Function:  This program allows the user to see all SWIFT     *
       *             messages for a particular transaction             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSE039   *CREATE   Date 21Jan03               *
+      *  Prev Amend No. CSE039  *CREATE    Date 21Jan03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSE039 - Auto-settle of trades                               *
       *                                                               *
       *****************************************************************
@@ -1165,4 +1167,4 @@ Rejected
 Neg. Ack.
 Queued
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

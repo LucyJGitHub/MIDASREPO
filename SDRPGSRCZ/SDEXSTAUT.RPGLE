@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIA*: OVRDBF FILE(SDEXSTAU) TOFILE(SDEXSTL0) SHARE(*NO)          : *
 /*XBIB*: OVRDBF FILE(SDEXSTAX) TOFILE(SDEXSTLA) SHARE(*NO)          : *                      BUG6431
@@ -16,10 +16,11 @@
       *  Function:  This program performs the update processes that   *
       *             are to be carrired out on the unauthorised record *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CDL094             Date 30May14               *
-      *  Prev Amend No. CSD095             Date 08Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL094             Date 30May14               *
+      *                 CSD095             Date 08Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions (Recompile)*
       *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
       *  BUG7234 - SSI Warning report not showing Deleted details     *
@@ -743,6 +745,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 **   ZMNM - Months Short Names
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

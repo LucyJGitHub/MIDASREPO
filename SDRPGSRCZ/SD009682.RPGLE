@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Cust Segmentation Code Validation DUMMY')     *
@@ -10,15 +10,17 @@
       *  SD009682 - Customer Segmentation Code Default Value          *
       *             Validation Program - DUMMY                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
       *  Note: This program is a dummy program to allow free format   *
       *        text to be entered into CustSegmDft system value.      *
       *                                                               *
-      *  Last Amend No. CSD090  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD090  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD090 - Customer Segmentation                               *
       *                                                               *
       *****************************************************************

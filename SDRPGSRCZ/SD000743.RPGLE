@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Hedge strategy table maintenance')            *
@@ -14,7 +14,7 @@
       *             strategy, effectiveness measure, frequency, and   *
       *             permissible Midas transaction types).             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CDL099             Date 06Oct17               *
       *  Prev Amend No. CGL165             Date 15Feb17               *
@@ -47,7 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL099 - Split Value Date (Recompile)                        *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *

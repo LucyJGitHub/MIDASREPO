@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SC Change user profile password')
@@ -9,17 +9,19 @@
       *                                                               *
       *  SCCHGPWD - Change user profile paswword                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG6695            Date 21Apr05               *
-      *  Prev Amend No. BG4652  *CREATE    Date 29Oct04               *
+      *  Prev Amend No. BUG6695            Date 21Apr05               *
+      *                 BG4652  *CREATE    Date 29Oct04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG6695- Password can be lower case if password level <> 0   *
       *  BG4652 - New menu option.                                    *
       *                                                               *

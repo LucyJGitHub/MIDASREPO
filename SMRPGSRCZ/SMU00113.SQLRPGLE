@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
  **** *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Migration Utility for SDLENOPD')
@@ -9,28 +9,30 @@
       *                                                               *
       *  SMU00112 - Migration Utility for SDLENOPD                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. AR1092128B         Date 01Mar13               *
-      *  Prev Amend No. AR1075447A*CREATE  Date 11Feb13               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. AR1092128B         Date 01Mar13               *
+      *                 AR1075447A*CREATE  Date 11Feb13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1092128B - Update SDLENOPD to move the values from the     *
       *               numeric to the alpha loan ranges and initialize *
       *               the numeric loan ranges to 0.                   *
       *  AR1085447A - Migration utility for SDLENOPD                  *
       *                                                               *
       *****************************************************************
- 
+
      D*SQLSTRING*      S          32000A   VARYING INZ                                    AR1092128B
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** File SDLENOPD
- 
+
      C/exec SQL
      C+  UPDATE SDLENOPD                                                                  AR1092128B
      C+  SET F9FRAA=CASE WHEN F9FRAN=0 THEN '      ' ELSE CONCAT(                         AR1092128B
@@ -86,14 +88,14 @@
      C*****DIGITS(a.F9NALN)                                                               AR1092128B
      C***FROM*SMLENOPD a                                                                  AR1092128B
      C/end-exec
- 
+
      C                   IF         SQLCOD < 0 AND SQLCOD <> -204
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

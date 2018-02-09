@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Base Rate Validation')                        *
@@ -12,10 +12,11 @@
       *  Function: This Program Validates Base Rate for Input into    *
       *            the Midas database.                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD000091           Date 03May13               *
-      *  Prev Amend No. AR817540           Date 15Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 03May13               *
+      *                 AR817540           Date 15Aug12               *
       *                 AR641183           Date 27Nov12               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26041           Date 17Sep09               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR817540 - Cannot input negative all-in-rate on Lending.     *
       *             Allow input and computation for negative          *

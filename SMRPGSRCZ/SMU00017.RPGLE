@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Compound API ext.file Initialisation Pgm')    *
@@ -12,10 +12,11 @@
       *            - Accounts Extension Details Initialisation        *
       *            - Deals Extension Details Initialisation           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -58,44 +60,44 @@
       *  CLE025 - Credit Lines                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** LE Facilities Extension File
      FLEFCLTLG  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** Accounts Master Extension file
      FGLACNTL3  UF A E           K DISK    PREFIX(AX_)
      F                                     INFSR(*PSSR)
- 
+
       ** FX/MM/FRA/IRS Extension files
      FDLDEALL5  UF A E           K DISK    PREFIX(DX_)
      F                                     INFSR(*PSSR)
- 
+
       ** LE Customer Loans
      FCLOANM    IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Facility Details Retrieval Index
      FFCLTYL1   IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(F1)
- 
+
       ** SD Customer Details File
      FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Accounts Master File
      FACCNTAB   IF   E             DISK    PREFIX(AC_)
      F                                     INFSR(*PSSR)
- 
+
       ** Foreign Exchange Deals File
      FFXDEALPP  IF   E             DISK    INFSR(*PSSR)
      F
- 
+
       ** Money Market and Loans Deals File
      FMMDELDPP  IF   E             DISK    INFSR(*PSSR)
- 
+
       ** FRA/IRS Deals File
      FDEALSDG   IF   E             DISK    PREFIX(DG_)
      F                                     INFSR(*PSSR)
@@ -108,12 +110,12 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D PRtCd           S              7A
      D POptn           S              7A
- 
+
      D WRun            S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -127,35 +129,35 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialise the Facility Extension File
- 
+
      C                   EXSR      SRInitFCEx
- 
+
       ** Initialise the Accounts Extension File
- 
+
      C                   EXSR      SRInitACEX
- 
+
       ** Initialise the FX/MM/FRA/IRS Extension Files
- 
+
      C                   EXSR      SRInitDLEX
- 
+
       ** End program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * SRInitFCEx - Subroutine that Initialises PF/LEFCLTQD          *
       *****************************************************************
      C     SRInitFCEx    BEGSR
- 
+
      C     *LOVAL        SETLL     FCLTYL1
- 
+
      C                   READ      FCLTYL1                                60
- 
+
      C                   DOW       *IN60 = *OFF
      C                   EVAL      FCXBRC = F1BRCA
      C                   MOVE      F1CNUM        FCXFCU
@@ -164,7 +166,7 @@
      C                   WRITE     LEFCLTD0
      C                   READ      FCLTYL1                                60
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -172,13 +174,13 @@
       *  SrInitAMEX - Initialise the Account Master Extension File    *
       *****************************************************************
      C     SrInitACEX    BEGSR
- 
+
       ** Read records then update the Accounts extension file
- 
+
      C                   READ      ACCNTAB                                81
- 
+
      C                   DOW       *IN81 = *OFF
- 
+
      C                   EVAL      AX_F1CNUM = AC_CNUM
      C                   EVAL      AX_F1CCY  = AC_CCY
      C                   EVAL      AX_F1ACOD = AC_ACOD
@@ -190,12 +192,12 @@
      C                   EVAL      AX_F1TEXO = *ZERO
      C                   EVAL      AX_F1TEOF = *ZERO
      C                   EVAL      AX_F1TEOC = *ZERO
- 
+
      C                   WRITE     GLACNTD0
      C                   READ      ACCNTAB                                81
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -203,33 +205,33 @@
       *  SrInitDLEX - Initialise the FX/MM/FRA/IRS Extension Files    *
       *****************************************************************
      C     SrInitDLEX    BEGSR
- 
+
       ** Read records then update the FX Deals Extension File
- 
+
      C                   READ      FXDEALPP                               82
- 
+
      C                   DOW       *IN82 = *OFF
      C                   MOVE      FHDN38        DX_F1DLNO
      C                   MOVE      FHDBRC        DX_F1BRCA
      C                   WRITE     DLDLDBD0
      C                   READ      FXDEALPP                               82
      C                   ENDDO
- 
+
       ** Read records then update the MM and Loans Deals Extension File
- 
+
      C                   READ      MMDELDPP                               83
- 
+
      C                   DOW       *IN83 = *OFF
      C                   MOVE      HKDN38        DX_F1DLNO
      C                   MOVE      HKBRCA        DX_F1BRCA
      C                   WRITE     DLDLDCD0
      C                   READ      MMDELDPP                               83
      C                   ENDDO
- 
+
       ** Read records then update the FRA/IRS Deals Extension File
- 
+
      C                   READ      DEALSDG                                84
- 
+
      C                   DOW       *IN84 = *OFF
      C                   MOVE      DG_DLNO       DX_F1DLNO
      C                   MOVE      DG_BRCA       DX_F1BRCA
@@ -248,7 +250,7 @@
      C                   WRITE     DLDLDBD0                                                   241302
      C                   READ      DLNXTPL0                               85                  241302
      C                   ENDDO                                                                241302
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -256,7 +258,7 @@
       * *INZSR - Subroutine for Initial First Cycle processing        *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -264,16 +266,16 @@
       * *PSSR - Program exception error routine                       *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *blanks
      C                   MOVE      'Y'           WRun
      C                   DUMP
      C                   ENDIF
- 
+
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************

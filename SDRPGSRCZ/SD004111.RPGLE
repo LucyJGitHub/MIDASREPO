@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD User Security Audit Extract - MBRBSDD')       *
@@ -13,14 +13,16 @@
       *                                                               *
       *  Called By: CLLE/GPC0041100                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD022874           Date 15Oct13               *
-      *  Prev Amend No. MD020822           Date 24Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022874           Date 15Oct13               *
+      *                 MD020822           Date 24Jun13               *
       *                 AR1059289 *CREATE  Date 23Nov12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022874 - Increase the size of MuNoRec from 4S to 7S.       *
       *  MD020822 - Increase the size of SgNoRec from 4S to 7S.       *
       *  AR1059289 - Global program compilation issues                *

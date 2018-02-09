@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD DST Code Report')
@@ -17,16 +17,18 @@
       *             or for a specific year and/or for a specific DST  *
       *             in input cycle or close of business.              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG20967           Date 03Sep08               *
-      *  Prev Amend No. BUG20609           Date 11Aug08               *
+      *  Prev Amend No. BUG20967           Date 03Sep08               *
+      *                 BUG20609           Date 11Aug08               *
       *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG20967 - Start and End Rule in DST Report.                 *
       *  BUG20609 - start time & end time format in SD001106 report   *
       *              is incorrect.                                    *
@@ -845,4 +847,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

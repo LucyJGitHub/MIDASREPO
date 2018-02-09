@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Securities input validation controller 4')    *
@@ -16,10 +16,11 @@
       *                SESECSCTL                                      *
       *                SESECSRPR                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD000091           Date 16May13               *
-      *  Prev Amend No. AR947093           Date 26Apr12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 16May13               *
+      *                 AR947093           Date 26Apr12               *
       *                 AR847249           Date 28Jan12               *
       *                 AR875871           Date 06Dec11               *
       *                 AR864546           Date 24Nov11               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR947093 - Base Rate amendment resulted to 0 interest rate   *
       *  AR847249 - Negative interest is shown in the main list and   *
@@ -1421,4 +1423,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

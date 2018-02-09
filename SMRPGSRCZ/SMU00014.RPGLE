@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM API Upgrade Program for CAP007')
@@ -13,14 +13,16 @@
       *             the values of APDLNO to a new field which is      *
       *             APTRAN                                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. CAP007  *CREATE    Date 03Feb00               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 CAP007  *CREATE    Date 03Feb00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program CAP00701.                          *
       *  CAP007  - Conversion of PM inputs into modular structure     *

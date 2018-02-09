@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Update temp SE Depot Movement file')          *
@@ -20,20 +20,22 @@
       *            movements before they are updated to the Midas     *
       *            database                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 233352             Date 06May05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CAP067  *CREATE    Date 24Sep01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  233352 - Problem in REPO API (Recompile)                     *
@@ -268,7 +270,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd. 2001
+(C) Copyright Finastra International Limited 2001
 ** ##CF
 CLRPFM QTEMP/SEDMRPXX
 ** ##CF1

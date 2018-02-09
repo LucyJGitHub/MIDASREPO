@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SDC9002 - I.C.D. MAINTENANCE CONTROL PROGRAM.               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1062470          Date 29Nov12              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1062470          Date 29Nov12              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -50,6 +51,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1062470 - System does not display ICD screens             */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       245656 - Submit job GLC000011 failed with authorisation     */
@@ -128,7 +130,7 @@
              DCL        VAR(&CFX001) TYPE(*CHAR) LEN(7)                                   /*CFX001*/
              DCL        VAR(&CGL032) TYPE(*CHAR) LEN(7)                                   /*CGL032*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CDL013) TYPE(*CHAR) LEN(7)                                   /*CDL013*/
              DCL        VAR(&RTNCD) TYPE(*CHAR) LEN(5)                                    /*CDL013*/
@@ -139,7 +141,7 @@
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO (ERROR))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGJOB     SWS(00000000)
  
 /* Main processing */

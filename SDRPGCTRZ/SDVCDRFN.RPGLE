@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate secs depot refs and participants')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVCDRFN - Validate Depot References and Participants        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,12 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. 212918             Date 08May03               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 212918             Date 08May03               *
       * Midas Release 4.01.02 ----------------------------------------*
       *                 212004             Date 14Nov02               *
       * Midas Release 4.01 -------------------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  212918 - Remove Euroclear reference validation to allow any  *
       *           value to be inserted.                               *
@@ -975,7 +977,7 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  RefFldNam                                                                                 CSE022
 DDDRF1    DDDRF2    DDNDR3    DDNDR4    DDNDR5                                                CSE022
 DDNDR6    DDNDR7    DDNDR8    DDNDR9    DDNDR0                                                CSE022

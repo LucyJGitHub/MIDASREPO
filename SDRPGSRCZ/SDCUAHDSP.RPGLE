@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Customer/Authority Holder Display Screen')    *
@@ -12,10 +12,11 @@
       * Function:  This module will display the Customer/Authority    *
       *            Holders                                            *
       *                                                               *
-      *  (C) COPYRIGHT Misys International Banking Systems Ltd 2008   *
+      *  (C) COPYRIGHT Finastra International Limited 2008            *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG25211C          Date 14Aug09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG25211C          Date 14Aug09               *
       *                 BUG24083           Date 25May09               *
       *                 BUG23775           Date 21Apr09               *
       *                 BUG23774           Date 20Apr09               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG25211C - Account Holder Shortname missing                 *
       *  BUG24083 - Disable F12 in the Add Screen Mode                *
@@ -1163,4 +1165,4 @@
       *****************************************************************
       *****************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

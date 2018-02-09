@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD
 /*EXI *  TEXT('Maintain Equation Unit Access Security File')
@@ -13,14 +13,16 @@
       *                                                               *
       *  Called By: SFAMUSVU                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CRE026B  *CREATE    Date 19Dec06              *
+      *  Prev Amend No. CRE026B *CREATE    Date 19Dec06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE026B - Maintain Equation Unit Access Security File KAPSEC *
       *                                                               *
       *****************************************************************

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*XBI *  OVRDBF FILE(UPSVALTPD) TOFILE(SDSVALL0)                      *                     MD019975
 /*STD *  RPGBASEBND                                                   *
@@ -11,13 +11,15 @@
       *                                                               *
       *  SM000026 - Update 'to' System Values                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD019975           Date 10Apr13               *
-      *  Prev Amend No. CUP003  *CREATE    Date 23Sep10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD019975           Date 10Apr13               *
+      *                 CUP003  *CREATE    Date 23Sep10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD019975 - Use different version of SDSVAL* file.            *
       *  CUP003 - Enhancement to update System Values.                *
       *                                                               *

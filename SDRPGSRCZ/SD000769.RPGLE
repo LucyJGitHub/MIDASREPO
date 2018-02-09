@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Annual Tax Deducted Statement - Prompt')      *
@@ -13,10 +13,11 @@
       *             the user  selection input of Annual Tax           *
       *             Deducted Statement                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR689705           Date 03Jan11               *
-      *  Prev Amend No. BUG24574           Date 07Jul09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR689705           Date 03Jan11               *
+      *                 BUG24574           Date 07Jul09               *
       *                 BUG24767           Date 07Jul09               *
       *                 BUG24280A          Date 18Jun09               *
       *                 BUG22797           Date 05Mar09               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR689705 - Nominal and value settled were missing after      *
       *             enter. Applied fix AR656294 (Child: AR689706)     *
       *  AR656294 - HATS issue                                        *
@@ -1105,7 +1107,7 @@
       *  0384.00 DLTOVR SDINPHL1                                                            BUG24574
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  ArrChk (2)
 0123456789
 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ

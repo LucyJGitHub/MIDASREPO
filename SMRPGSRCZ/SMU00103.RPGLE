@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Update LEFHST (HIFRTn & HIAMTn): 240668')     *
@@ -13,15 +13,17 @@
       *             (HIFRTn and HIAMTn) of LEFHST to reflect the      *
       *             rates and amounts specific to a fee period.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 BG26993            Date 26Jan10               *
       *                 240668A            Date 25Sep06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program S240668R01.                        *

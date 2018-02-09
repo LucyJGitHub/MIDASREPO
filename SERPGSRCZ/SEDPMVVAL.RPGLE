@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE DPMV transaction details validation')         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SEDPMVVAL - Transaction Details Validation Module            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD037824           Date 09Mar16               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD037824           Date 09Mar16               *
+      *                 CRE073             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -84,6 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD037824 - Mismatch in value date between repo deal and depot*
       *             movement. Remove checking of DDDRID to always do  *
       *             validation of Associated Deal Number field.       *
@@ -3333,4 +3335,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

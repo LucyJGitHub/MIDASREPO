@@ -7,23 +7,25 @@
 /*                                                                  */
 /*       SEC3300 - INPUT CYCLE PAY/RECEIVE CONTROL                  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. CSC011             Date 18Sep01              */
+/*       Prev Amend No. CSC011             Date 18Sep01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01502             Date 08Jul94              */
+/*                      S01502             Date 08Jul94              */
 /*                      E28678             Date 19Nov91              */
 /*                      S01117             DATE 11JAN91              */
 /*                      S01271             DATE 08JUN90              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC011 - 24x7 Midas Availability                            */
 /*       S01502 - BLI Telekurs Processing.  Recompiled due to        */
 /*                change in length of SESTAT, 133 long.              */
@@ -40,7 +42,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT)                       /*E28678*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*E28678*/
@@ -167,5 +169,5 @@
 /*  END PROGRAM                                             */
 ENDPROG:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
       ENDPGM

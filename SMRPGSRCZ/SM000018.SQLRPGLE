@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Change file names on FILEMULMBR')
@@ -9,8 +9,9 @@
       *                                                               *
       *  SM001071 - Add records to new user files                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *  Last Amend No. CSM010             Date 22Jun07               *
@@ -18,6 +19,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSM010 - Applied by CER001.                                  *
       *  CER001 - MidasPlus 1.3 packaging.  Changes to migration.     *
       *                                                               *

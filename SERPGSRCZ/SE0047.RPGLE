@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
  
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Security detail maintenance - tax details')
@@ -13,13 +13,14 @@
       *             maintenance, if CSE023 is switched on, to allow   *
       *             user to define the withholding tax details.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CRE026             Date 24May06               *
+      *  Prev Amend No. CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CER001             Date 25Apr05               *
       *                 220008             Date 28Jul03               *
       *                 BUG3644            Date 12Jul04               *
@@ -33,6 +34,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CER001 - LUX Upgrade to Midas Plus                           *
@@ -533,4 +535,4 @@
       ********************************************************************
       /EJECT
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

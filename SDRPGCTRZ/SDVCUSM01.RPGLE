@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Customer Number for Joint A/cs')     *
@@ -10,7 +10,7 @@
       *  SDVCUSM01 - Midas SD Validate Customer Number for Joint      *
       *              Accounts                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 MD027720           Date 30Jul14               *
       *                 MD026549           Date 12May14               *
       *                 MD026711           Date 12May14               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  MD027720 - Incorrect Error Message in Joint Account Member   *
@@ -60,15 +62,15 @@
       *  CGL031 - Taxation of Savings Income                          *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Midas SD Joint A/c Member Details by Joint A/c No./Customer No.
      FSDJACCL1  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       ** Midas SD Additional Customer Details by Customer Number
      FSDACUSL1  IF   E           K DISK    INFSR(*PSSR)
       *                                                                                     BUG23732
@@ -81,44 +83,44 @@
      FSDJACCLB  IF   E           K DISK    INFSR(*PSSR)                                     BUG23732
      F                                     RENAME(SDJACCD0:SDJACCD1)                        BUG23732
      F                                     PREFIX(J)                                        BUG23732
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       **---------------------------------------------------------------
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** Standard D-specs
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** API Validation X Error Array Declarations
      D/COPY ZACPYSRC,ERR_XARRYS
       **---------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ Named Constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** Customer Details Data Structure
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
-
+ 
       ** External DS for SAR details                                                          CGL132
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL132
                                                                                               CGL132
@@ -150,29 +152,29 @@
       ** External DS for Country of Tax Code                                                BUG23732
       *                                                                                     BUG23732
      D SDCTTX        E DS                  EXTNAME(SDCTTXPD)                                BUG23732
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Entry Parameters
      D PRetCode        S             10A
      D PDJANO          S              6A
      D PDCUST          S              6A
      D OKCUST          S              1A
-
+ 
       ** Access Object Parameters
      D PRtCd           S              7A
      D POptn           S              7A
      D PCust           S             10A
      D PKyst           S              7A
      D CGL132          S              1A                                                      CGL132
-
+ 
       ** Key Fields
      D KCust           S                   LIKE(E5CUST)
      D KJANo           S                   LIKE(JCJANO)
-
+ 
       ** Working Variables
      D Ix              S              3P 0
      D CER048          S              1A                                                    BUG23732
@@ -187,37 +189,37 @@
      D PCustT          S              6A                                                    BUG23732
      D WAxetxs         S              1A                                                    BUG23732
      D WMemThres       S              6P 0 INZ(0)                                           BUG23732
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +---------------- Start of Main Processing ------------------+
       ** ¦                                                            ¦
       ** ¦  *INZSR is automatically executed at program activation.   ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
       ** Initialise relevant variables.
-
+ 
      C                   EVAL      PRetCode  = *BLANKS
      C                   EVAL      FldNamXAr = *BLANKS
      C                   EVAL      MsgIDXAr  = *BLANKS
      C                   EVAL      MsgDtaXAr = *BLANKS
      C                   EVAL      Ix = *ZERO
-
+ 
       ** Validate Customer Number.
-
+ 
      C                   IF        PDCUST <> *BLANKS
-
+ 
      C                   EXSR      SRVCust
-
+ 
      C                   IF        OKCUST <> 'Y'
      C                   EVAL      PRetCode  = '*ERROR'
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -227,52 +229,52 @@
       *                                                               *
       *****************************************************************
      C     SRVCust       BEGSR
-
+ 
       ** Check first if the given customer exists.
-
+ 
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      PDCUST        PCust
      C                   PARM      *BLANKS       PKyst
      C     SDCUST        PARM      SDCUST        DSSDY
-
+ 
      C                   IF        PRtCd = *BLANKS
-
+ 
      C                   IF        %SCAN('?':PDCUST) <> *ZERO
      C                   EVAL      PDCUST = BBCUST
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
      C                   SELECT
-
+ 
      C                   WHEN      PRtCd = '*NRF   ' OR
      C                             PRtCd = '*KEY   '
-
+ 
       ** Invalid Customer Number.
-
+ 
      C                   EVAL      OKCUST = 'N'
      C                   EVAL      Ix = Ix + 1
      C                   EVAL      FldNamXAr(Ix) = 'DDCUST'
      C                   EVAL      MsgIDXAr(Ix) = 'SDM0113'
-
+ 
      C                   WHEN      PRtCd = '*NOSEL '
      C                   EVAL      PDCUST = *BLANKS
-
+ 
      C                   OTHER
-
+ 
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDCUSTPD'
      C                   EVAL      DBKey = PCust
      C                   EVAL      DBase = 101
      C                   OUT       LDA
      C                   EXSR      *PSSR
-
+ 
      C                   ENDSL
-
+ 
      C                   LEAVESR
-
+ 
      C                   ENDIF
      C                   IF        CGL132 = 'Y'                                               CGL132
                                                                                               CGL132
@@ -323,7 +325,7 @@
      C                   LEAVESR                                                              CGL132
      C                   ENDIF                                                                CGL132
      C                   ENDIF                                                                CGL132
-
+ 
       ***Check*if*the*given*customer*is*a*Joint*Account.***************                       CGL132
       **********                                                                              CGL132
      C**********         EVAL      KCust = PDCUST                                             CGL132
@@ -556,7 +558,7 @@
      C                   ENDIF                                                              BUG24489
       *                                                                                     BUG23732
      C                   ENDIF                                                              BUG23732
-
+ 
      C                   ENDSR
       *****************************************************************                     BUG23732
       /EJECT                                                                                BUG23732
@@ -643,16 +645,16 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** Input Parameters **
       ** Return Code
      C                   PARM                    PRetCode
-
+ 
       ** Joint Account Number
      C                   PARM                    PDJANO
-
+ 
       ** Customer Number
      C                   PARM                    PDCUST
       *                                                                                     BUG23732
@@ -663,16 +665,16 @@
       ** Switchable feature German Taxes                                                    BUG23732
       *                                                                                     BUG23732
      C                   PARM                    CER048                                     BUG23732
-
+ 
       ** Output Parameters **
       ** Error Fields/Message IDs/Message Data (arrays) From/To Caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** OK - Customer Number
      C                   PARM                    OKCUST
-
+ 
       ** Check if CGL132 is ON                                                                CGL132
      C                   CALL      'AOSARDR0'                                                 CGL132
      C                   PARM      *BLANKS       PRTCD                                        CGL132
@@ -698,16 +700,16 @@
       ** Program, module, and procedure names for DB error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **---------------------------------------------------------------
-
+ 
       ** Key Lists
-
+ 
      C     KJACC         KLIST
      C                   KFLD                    KJANo
      C                   KFLD                    KCust
      C     KCustByTax    KLIST                                                              BUG23732
      C                   KFLD                    KCust                                      BUG23732
      C                   KFLD                    KCtax                                      BUG23732
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -717,19 +719,19 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   CALLB     'DBERRCTL'
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

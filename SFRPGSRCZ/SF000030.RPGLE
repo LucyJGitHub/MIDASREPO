@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SF Menu Items Extract')
@@ -9,19 +9,21 @@
       *                                                               *
       *  SF000030 - Midas SF Menu Items Extract                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 240985             Date 13Jul06               *
-      *  Prev Amend No. BUG8922            Date 14Jun06               *
+      *  Prev Amend No. 240985             Date 13Jul06               *
+      *                 BUG8922            Date 14Jun06               *
       *                 BUG2975            Date 28May04               *
       *                 BUG2711 *CREATE    Date 26May04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  240985 - Database error 101 in file SFMNUIPD, within program *
       *           SF000020. Reversed part of fix BUG8922 and passed   *
       *           the user's security level value from SF000020.      *

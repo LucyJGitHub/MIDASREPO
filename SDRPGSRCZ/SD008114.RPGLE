@@ -8,12 +8,14 @@
       *                                                               *
       *  SD008114 - Stamp Tax Loan Type Defaults                      *
       *                                                               *
-      *  (c) Copyright Misys International Banking Systems Ltd 2010   *
+      *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. CER049  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER049 - Stamp Tax                                           *
       *                                                               *
       *****************************************************************
@@ -1582,6 +1584,6 @@
       * End of /COPY SRERRC                                           *
       *****************************************************************
 **  CPY@
-(c) COPYRIGHT Misys International Banking Systems Ltd. 2010
+(c) COPYRIGHT Finastra International Limited 2010
 ** Command Array
 OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

@@ -11,17 +11,19 @@
 /*                 library that the program resides in are both      */
 /*                 parameter driven using SD System Values.          */
 /*                                                                   */
-/*       (C) Copyright Misys Banking Systems 2006                    */
+/*       (C) Copyright Finastra International Limited 2006           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC027             Date 15Feb06              */
+/*       Prev Amend No. CSC027             Date 15Feb06              */
 /*------ Midas Plus 1.2 Base ----------------------------------------*/
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC027 - This reporting component runs in the Midas COB     */
 /*                right after SCC0350 - Extraction Program runs.     */
 /*                It is used as an entry point into the Midas COB    */

@@ -8,12 +8,14 @@
       *                                                               *
       *  sd000207 - Display Withholding Tax Rate Matrix               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL165  *CREATE    Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *                                                               *
       *****************************************************************
@@ -1801,7 +1803,7 @@
     Type
  S.Type
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2007
+(c) Finastra International Limited 2007
 **CTDATA SCHD
       Withholding Tax Rate Default Matrix Maintenance
         Withholding Tax Rate Default Matrix                            Mode

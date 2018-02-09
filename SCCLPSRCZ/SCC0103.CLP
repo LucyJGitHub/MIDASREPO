@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC0103 - Start Up Input Cycle Background Jobs.             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD045731           Date 27Sep17              */
-/*       Prev Amend No. CSD083             Date 27May10              */
+/*       Last Amend No. MD046248           Date 05Feb18              */
+/*       Prev Amend No. MD045731           Date 27Sep17              */
+/*                      CSD083             Date 27May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 22May08              */
@@ -60,6 +61,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD045731 - Restart MT94x batch job.                         */
 /*       CSD083 - Watch List Compliance Upgrade                      */
 /*       BG18886 - Amend non-standard codes.                         */
@@ -138,12 +140,11 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&MODULE)
- 
+
 /*/COPY WNCPYSRC,SCC0103INT                                        */ /*S01408*/
- 
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
-                          2001')
+
+  DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra International +
+               Limited 2001')
              DCL        VAR(&MODULE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&HAFFMT) TYPE(*CHAR) LEN(200)
              DCL        VAR(&HAFRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
@@ -181,12 +182,12 @@
              DCL        VAR(&W1OFSR) TYPE(*CHAR) LEN(32)                                  /*CSD015*/
              DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)                                  /*CSD015*/
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CRE020*/
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*/COPY WNCPYSRC,SCC0103MPS                                        */ /*S01408*/
- 
+
                                                                                           /*CSC011*/
 /** Check if 24x7 Midas Availability Feature is on */                                     /*CSC011*/
                                                                                           /*CSC011*/
@@ -264,24 +265,24 @@
                 IF         COND(&RTCD *EQ '       ') THEN(CALL +
                            PGM(SEC4320))                          /*CSE039*/
              ENDDO                                                /*CSE039*/
- 
+
 /* Submit the Exposure Management background jobs */
- 
+
              IF         COND(&MODULE *EQ 'EM') THEN(DO)
 /*/COPY WNCPYSRC,SCC0103003                                          */
- 
+
 /* Retrieve various module status data areas */
- 
+
                 RTVDTAARA  DTAARA(EMSTAT) RTNVAR(&EMSTAT)
- 
+
                 ALCOBJ     OBJ((EMCHK *DTAARA *EXCL)) WAIT(1)
                 MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(SKIP1))
- 
+
                 IF         COND(%SUBSTRING(&EMSTAT 2 1) *EQ 'N') +
                              THEN(DO)
- 
+
 /* Submit the Exposure Management journal processing job */
- 
+
 /*************    SBMJOB     JOB(EM0101) JOBD(MBATCH) JOBQ(EMJOBQ) +  /*110242*/
 /*************                 USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +*110242*/
 /*************                 EMC02') MSGQ(*NONE) */                 /*110242*/
@@ -291,9 +292,9 @@
                   SBMJOB     JOB(EM0101) JOBD(MBATCH) JOBQ(EMJOBQ) +
                                USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +
                                EMC02') INLLIBL(*JOBD) MSGQ(*NONE) OUTQ(*JOBD)             /*CSC023*/
- 
+
 /* Submit the Exposure Management clearup processing job */
- 
+
 /*************    SBMJOB     JOB(EMCLR) JOBD(MBATCH) JOBQ(EMJOBQ) +   /*110242*/
 /*************                 USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +*110242*/
 /*************                 EMCLR') MSGQ(*NONE) */                 /*110242*/
@@ -303,9 +304,9 @@
                   SBMJOB     JOB(EMCLR) JOBD(MBATCH) JOBQ(EMJOBQ) +
                                USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +
                                EMCLR') INLLIBL(*JOBD) MSGQ(*NONE) OUTQ(*JOBD)             /*CSC023*/
- 
+
                   CHGDTAARA  DTAARA(EMSTAT (2 1)) VALUE('Y')
- 
+
                   DLCOBJ     OBJ((EMCHK *DTAARA *EXCL))
  SKIP1:
                 ENDDO
@@ -364,13 +365,13 @@
              IF         COND((&RTCD *EQ '       ') *AND (&BKJOBRUN +
                           *EQ 'Y')) THEN(CALL PGM(REC4510) +
                           PARM('START'))                                                  /*CSC011*/
- 
+
 /* Submit the Midas Export Data Drip Feed Background job               *S01493*/
- 
+
 /**********  IF         COND(&MODULE *EQ 'ED') THEN(DO) */                     /*S01493*/ /*CSC011*/
              IF         COND((&MODULE *EQ 'ED') *AND (&BKJOBRUN *EQ +
                           'Y')) THEN(DO)                                                  /*CSC011*/
- 
+
              ALCOBJ   OBJ((EDC0040 *DTAARA *EXCL)) WAIT(1)            /*S01493*/
              MONMSG   MSGID(CPF1002) EXEC(GOTO CMDLBL(EDLABL))        /*S01493*/
              DLCOBJ   OBJ((EDC0040 *DTAARA *EXCL))                    /*S01493*/
@@ -522,7 +523,7 @@ CGLABL:                                                               /*CGL004*/
  TP:                                                                                    /*MD045731*/
 /*/COPY WNCPYSRC,SCC0103002                                          */
 /* Submit the Technical Platform background jobs */
- 
+
              IF         COND(&MODULE *EQ 'TP') THEN(DO)
 /**/                                                                                     /*BUG2381*/
 /* Start the APIs Confirmations job                                                      /*BUG2381*/
@@ -556,12 +557,12 @@ SKIP2:                                                                          
 /*                                                                                        /*CPK014*/
 /* If the background RCF distribution program is not already */
 /* running then start it up                                  */
- 
+
                 ALCOBJ     OBJ((FC0100 *DTAARA *EXCL)) WAIT(0)
                 MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(HAF))
- 
+
 /************DLCOBJ     OBJ((FC0100 *DTAARA *EXCL))                 /* 115624 */
- 
+
 /***********  SBMJOB     CMD(CALL PGM(FCC0401) PARM(I)) +           166101*/
 /***********              JOB(RCFMONITOR) JOBD(FCJOBD) JOBQ(FCJOBQ)+166101*/
 /***********              OUTQ(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD)  166101*/
@@ -569,24 +570,24 @@ SKIP2:                                                                          
                             JOB(RCFMONITOR) JOBD(FCJOBD) JOBQ(FCJOBQ) +
                             OUTQ(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD) +
                             USER(*JOBD)                               /*166101*/
- 
+
              DLCOBJ     OBJ((FC0100 *DTAARA *EXCL))                 /* 115624 */
- 
+
 /* Submit HAFMONITOR to read journal entries */
- 
+
 /* Access PF/SDMMODPD to determine which modules are live */
- 
+
  HAF:
              CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &FMT)
- 
+
 /*  Database error handling  */
- 
+
              IF         COND(&RTCD *NE '       ') THEN(DO)
                 SNDPGMMSG  MSG('Database error on Midas modules +
                              file') TOMSGQ(MOPERQ MRUNQ)
- 
+
 /* Call SCC0010 to inform user that an error has occurred */
- 
+
                 RTVMSG     MSGID(SCM0074) MSGF(MIDASMSG) +
                              MSG(&MESSAGE)
                 CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
@@ -597,23 +598,23 @@ SKIP2:                                                                          
                 CALL       PGM(SCC0010) PARM('SCC0103' 'ENTER' ' ')
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
                 IF         COND(%SST(&FMT 94 1) *EQ 'Y') THEN(DO)
- 
+
 /* Access PF/SDHAFDPD to determine whether to submit HAFMONITOR */
- 
+
                    CALL       PGM(AOHAFDR0) PARM(&HAFRTCD &HAFOPTN +
                                 &HAFFMT)
- 
+
 /* Database error handling */
- 
+
                    IF         COND(&HAFRTCD *NE '       ') THEN(DO)
- 
+
                       SNDPGMMSG  MSG('Error on access to ICD +
                                    file AOHAFDPD') TOMSGQ(MOPERQ MRUNQ)
- 
+
 /* Call SCC0010 to inform user that an error has occurred */
- 
+
                       RTVMSG     MSGID(SCM0074) MSGF(MIDASMSG) +
                                    MSG(&MESSAGE)
                       CHGDTAARA  DTAARA(MIDASMSG (251 50)) +
@@ -627,22 +628,22 @@ SKIP2:                                                                          
                                    ' ')
                       GOTO       CMDLBL(ABNOR)
                    ENDDO
- 
+
                    IF         COND(%SST(&HAFFMT 15 1) *EQ 'Y') THEN(DO)
- 
+
                       ALCOBJ     OBJ((HFLOCK *DTAARA *EXCL)) WAIT(0)
- 
+
 /* If unable to allocate HFLOCK then HAFMONITOR is already active */
 /* in the process of being submitted                              */
- 
+
                       MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(END))
- 
+
 /* Ensure that DTAARA/HFCOB is blank */
- 
+
                       CHGDTAARA  DTAARA(HFCOB) VALUE('     ')
- 
+
 /* Submit the HAF monitor program */
- 
+
 /**********           SBMJOB     CMD(CALL PGM(HFC0400)) +
 /**********                        JOB(HAFMONITOR) JOBD(*LIBL/HFJOBD) +
 /**********                        JOBQ(*LIBL/HFJOBQ) INLLIBL(*JOBD)  /*076725*/
@@ -655,15 +656,15 @@ SKIP2:                                                                          
                       SBMJOB     CMD(CALL PGM(HFC0400)) JOB(HAFMONITOR) +
                           JOBD(*LIBL/HFJOBD) JOBQ(*LIBL/HFJOBQ) +
                           USER(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD) OUTQ(*JOBD)            /*CSC023*/
- 
+
 /* Deallocate HFLOCK */
- 
+
                       DLCOBJ     OBJ((HFLOCK *DTAARA *EXCL))
- 
+
                    ENDDO
                 ENDDO
              ENDDO
- 
+
 /** Check if Midas Message Manager is installed */                                        /*CSD015*/
                                                                                           /*CSD015*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CSD015*/
@@ -671,7 +672,7 @@ SKIP2:                                                                          
                           &FMT)                                                           /*CSD015*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CSW025) VALUE('Y'))                                        /*CSD015*/
- 
+
 /** Check if Midas Compliance Watch Feature is on */                                      /*CSD015*/
                                                                                           /*CSD015*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CSD015*/
@@ -686,7 +687,7 @@ SKIP2:                                                                          
                 IF         COND((&CSC011 *EQ 'N') *OR ((&CSC011 *EQ +
                                'Y') *AND (&SWMD *EQ ' ') *AND +
                                (&CURR *EQ &MAIN))) THEN(DO)
- 
+
                    IF         COND(&CSC011 *EQ 'N') THEN(DO)                              /*CSD015*/
                       RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&CURR)                       /*CSD015*/
                    ENDDO                                                                  /*CSD015*/
@@ -785,40 +786,39 @@ SKIP2:                                                                          
              ENDDO                                                                        /*CRE020*/
                                                                                           /*CRE020*/
 /*/COPY WNCPYSRC,SCC0103MPE                                        */ /*S01408*/
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
- 
+
 /*/COPY WNCPYSRC,SCC0103ERR                                        */ /*S01408*/
- 
+
              SNDPGMMSG  MSG('Midas background monitors initiation +
                           terminated abnormally') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 /* Call SCC0010 to inform the user that an error has occurred */
- 
+
              RTVMSG     MSGID(SCM0082) MSGF(MIDASMSG) MSG(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              RTVMSG     MSGID(SCM0022) MSGF(MIDASMSG) MSG(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CALL       PGM(SCC0010) PARM('SCC0103' 'ENTER' ' ')
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              SIGNOFF    LOG(*LIST)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
-END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
- 
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
+
 /*/COPY WNCPYSRC,SCC0103END                                        */ /*S01408*/
- 
+
              ENDPGM

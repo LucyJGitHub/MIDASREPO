@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate US Indicium of Authority Holder')    *
@@ -9,15 +9,17 @@
       *                                                               *
       *  SDVUSAAH - Validate US Indicium of Account Authority Holder  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD027584B          Date 17Jun14               *
-      *  Prev Amend No. MD027499           Date 08Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027584B          Date 17Jun14               *
+      *                 MD027499           Date 08Aug14               *
       *                 MD026740           Date 29May14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027584B - Validation issues with Override comments         *
       *  MD027499 - Override Document (Evidence) accepts Documents    *
       *             with the same Code                                *
@@ -523,4 +525,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

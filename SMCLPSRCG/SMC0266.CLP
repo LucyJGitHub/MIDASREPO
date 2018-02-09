@@ -8,18 +8,20 @@
 /*                                                                   */
 /*       SMC0266 - Rebuild logical file member                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CPK026             Date 08Dec06              */
+/*       Prev Amend No. CPK026             Date 08Dec06              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK025             Date 24Aug06              */
+/*                      CPK025             Date 24Aug06              */
 /*                      CUP016 *CREATE     Date 01Apr03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK026 - MidasPlus 1.3 packaging.  CHKOBJ in case member    */
 /*                doesn't exist.                                     */
 /*       CPK025 - MidasPlus 1.3 packaging.  Change to /COPY          */
@@ -35,7 +37,7 @@
              DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCLF       FILE(FILEMBR)
@@ -94,6 +96,6 @@ RETRY:
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

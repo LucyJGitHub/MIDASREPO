@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD CSD092 Initialization pgm')                   *
@@ -10,15 +10,17 @@
       *  SD009698 - Midas SD History of Customer Information          *
       *             Initialization program                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD026854           Date 29May14               *
-      *  Prev Amend No. CGL132             Date 01May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026854           Date 29May14               *
+      *                 CGL132             Date 01May13               *
       *                 MD026193           Date 07Apr14               *
       *                 CSD092   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026854 - Alternative country of citizenship is missing in  *
       *             history of customer information                   *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *

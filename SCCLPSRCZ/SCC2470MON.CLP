@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       SCC2470MON - Monitor COB and save journal rcvrs             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. 260790  *CREATE    Date 19Jun09              */
+/*       Prev Amend No. 260790  *CREATE    Date 19Jun09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       260790 - COB performance fix                                */
 /*                Save journal receivers to disk as they are chg'd.  */
 /*                                                                   */
@@ -39,7 +41,7 @@
 /* Copyright statement definition */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
 /**/
 /* Global MONMSG */

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SC Processing Day Closure Maintenance')
@@ -16,19 +16,21 @@
       *             close of business when the database is            *
       *             initialised for the new processing day.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CRE026             Date 24May06               *
+      *  Prev Amend No. CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. TDA035             Date 02Apr04               *
+      *                 TDA035             Date 02Apr04               *
       *                 CSF002             Date 11Aug03               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CSC011  *CREATE    Date 18Sep01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
       *  CSF002 - Global Processing.                                  *
@@ -753,7 +755,7 @@
       ********************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

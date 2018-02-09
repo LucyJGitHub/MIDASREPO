@@ -7,22 +7,24 @@
 /*                                                                  */
 /*       SDCHKASP - CHECK IF ASP EXISTS                             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
 /*       WRITTEN FOR S01173 - USER SPECIFIED ASP FOR JRN/JRNRCV     */
 /*                                                                  */
-/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 069393             DATE  05MAY94            */
+/*                      069393             Date 05May94              */
 /*                      E29436             DATE  11OCT91            */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                         */
 /*  069393 - CHANGE CRTSAVF CMD TO BE AS/400 NOT S/38.              */
 /*         - CREATE LIBRARY QTEMPMIDAS INSTEAD OF USING QTEMP AS    */
@@ -36,7 +38,7 @@
 /*********************************************************************/
              PGM        PARM(&ASP &RTNCDE)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*           DECLARE VARIABLES                                       */
@@ -130,5 +132,5 @@
 /**/
 ERROR:       CHGVAR     VAR(&RTNCDE) VALUE(9)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Default Customer Details Country of Tax')     *
@@ -10,12 +10,14 @@
       *  SDCCTXDFT - SD Country of Tax Default for Private            *
       *              Individuals and Joint Accounts                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR811594*CREATE    Date 09Aug11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR811594 *CREATE   Date 09Aug11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR811594 - Defaulf entry of Customer details by Country of   *
       *             Tax for a taxable customer is not automatically   *
       *             generated (Child: AR811595)                       *

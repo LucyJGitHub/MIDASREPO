@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate SSIDealsubtype Check')               *
@@ -10,13 +10,15 @@
       *  SD009603 - Midas SD Validate SSIDealsubtype Check            *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD043278            Date 06Jan17              *
-      *  Prev Amend No. CSD095CC1 *CREATE   Date 13Sep16              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD043278           Date 06Jan17               *
+      *                 CSD095CC1 *CREATE  Date 13Sep16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD043278 - Incomplete valid values indicated for             *
       *             SSIDealSubtype_Trans in System Value Maintenance  *
       *  CSD095CC1 - Allow Deal Sub-Type and Branch for IRS, FRA and  *
@@ -44,24 +46,24 @@
      D SystemValue     S             20
       ** New current value string
      D NewSysVal       S            200A
-
+ 
       ** Error message id in SDUSRMSG
      D ErrMsgId        S              7
-
+ 
       ** Processing mode
      D ProcMode        S            190
-
+ 
       ** Return Flag
      D Rflag           S              1
-
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              2P 0
-
+ 
       ** Array of error message IDs
      D MsgIDXArr       S                   DIM(99) LIKE(ErrMsgId)
-
+ 
      D P@STYP          C                   'SSIDealSubtype_Trans'
-
+ 
      D P@RTCD          S              7
      D P@OP01          S             20
      D P@VL01          S            200
@@ -83,7 +85,7 @@
      D P@VL09          S            200
      D P@OP10          S             20
      D P@VL10          S            200
-
+ 
      D WSTYPV          DS            20
      D WSTYP1                  1      2
      D WSTYP2                  3      4
@@ -96,14 +98,14 @@
      D WSTYP9                 17     18
      D WSTY10                 19     20
       /EJECT
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** If value of SSIDealsubtype_trans is a non-blank
      C                   IF        WSTYPV <> *BLANKS
       ** Check for 1st value
@@ -585,10 +587,10 @@
      C                   ENDIF
       *
       ** Normal end processing
-
+ 
      C                   EVAL      RFlag = ' '
      C                   EVAL      *INLR = *ON
-
+ 
      C                   RETURN
       /EJECT
       *****************************************************************
@@ -601,9 +603,9 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** Value entered by user
      C                   PARM                    SystemValue
       ** Value entered by user
@@ -616,9 +618,9 @@
      C                   PARM                    Idx
       ** Error message ID (array)
      C                   PARM                    MsgIDXArr
-
+ 
       ** Get system values for STYP display
-
+ 
      C*                  CALL      'AOSVALR0'
      C*                  PARM      *BLANKS       P@RTCD
      C*                  PARM      P@STYP        P@OP01
@@ -645,7 +647,7 @@
      C*                  IF        P@RTCD = *BLANKS
      C                   EVAL      WSTYPV = NewSysval
      C*                  ENDIF
-
+ 
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -657,15 +659,15 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   EVAL      RFlag = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
-
+ 
      C                   RETURN
-
+ 
      C                   ENDSR
       *****************************************************************

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Threshold Amount Update Prompt')                       *
@@ -9,15 +9,17 @@
       *                                                               *
       *  SD000815 - Threshold Amount Update Prompt                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. AR656988           Date 14Oct10               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR656988           Date 14Oct10               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24196A          Date 26Jun08               *
       *                 CER048  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR656988 - Use core message IDs instead of XXXnnnn format    *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG24196A - Correct processing of Increase/Decrease of       *
@@ -539,4 +541,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

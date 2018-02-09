@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Process CAR migration SDCUAHPD')              *
@@ -11,14 +11,16 @@
       *                                                               *
       *  Called By: SMUC00000                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CGL132             Date 01May13               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL132             Date 01May13               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG25211C          Date 14Aug09               *
       *                 BUG25211 *CREATE   Date 27Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master (Recompile)                 *
       *  CER059 - German Feature Upgrade to Delhi                     *

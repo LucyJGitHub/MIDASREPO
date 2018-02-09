@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Export Branch Details Into AML Database')     *
@@ -12,10 +12,11 @@
       *  Function:  This module will export details of the Midas      *
       *             into the AML database.                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -79,13 +81,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FSDBRCHPD  IF   E             DISK    INFSR(*PSSR)
       ** Branch Details File
-
+ 
      FSDACUSL1  IF   E           K DISK    INFSR(*PSSR)
       ** Additional Customer Details File
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -93,93 +95,93 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       **  Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       **  Branch Details
      D PBrchDetls    E DS                  EXTNAME(SDBRCHPD)
-
+ 
       **  Customer Details
      D PCustDetls    E DS                  EXTNAME(SDCUSTPD)
      D QQDFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
-
+ 
       **  Additional Customer Details
      D PAdCustdet    E DS                  EXTNAME(SDACUSPD)
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D PMode           S              1
      D PRtcd           S              7
      D POptn           S              7
      D PCust           S             10
      D PKey            S              7
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
-
+ 
      C                   READ      SDBRCHPD
-
+ 
      C                   DOW       NOT %EOF(SDBRCHPD)
-
+ 
       **  If the mode is ALL('A'), process all the records that is not deleted
       **  or if the mode is CHANGED('C'), process only the records that has
       **  changed today.
-
+ 
      C                   IF        (PMode = 'A'  AND A8TYLC <> 'D')
      C                             OR (PMode = 'C' AND A8LCD = BJRDNB)
      C                   EXSR      SRExport
      C                   ENDIF
-
+ 
       **  Read next record.
-
+ 
      C                   READ      SDBRCHPD
      C                   ENDDO
-
+ 
      C                   EVAL      *INLR = *ON
-
+ 
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -192,45 +194,45 @@
       * Calls: SD000019                                               *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRExport      BEGSR
-
+ 
       **  Access AOCUSTR0 to get customer details.
-
+ 
      C                   CALL      'AOCUSTR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY'        POptn
      C                   PARM      A8BICN        PCust
      C                   PARM      *Blanks       PKey
      C     PCustDetls    PARM      PCustDetls    DSSDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRtcd <> *Blanks
      C                   EVAL      DBKEY  =  PCust
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBASE  = 002
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       **  Access SDACUSL1 to get additional customer details.
-
+ 
      C     A8BICN        CHAIN     @ACUSL1
-
+ 
      C                   IF        NOT %FOUND(SDACUSL1)
      C                   CLEAR                   PAdCustDet
      C                   ENDIF
-
+ 
       **  Populate the AML Branch Details Import Table.
-
+ 
      C                   CALL      'SD000019'
      C                   PARM                    PMode
      C                   PARM                    PBrchDetls
      C                   PARM                    PCustdetls
      C                   PARM                    PAdCustDet
-
+ 
      C                   ENDSR
-
+ 
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -242,30 +244,30 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *entry        PLIST
      C                   PARM                    PMode
-
+ 
       ** Access Bank Details
-
+ 
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRtcd <> *Blanks
      C                   EVAL      DBKEY  = POptn
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE  = 001
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
@@ -275,4 +277,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

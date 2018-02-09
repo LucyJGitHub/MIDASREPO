@@ -7,18 +7,20 @@
 /*                                                                  */
 /*       SCMENUG  - RESTART INPUT CYCLE INITIATION MENU             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*      (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  LAST AMEND NO. S01343                       DATE 15AUG91        */
+/*  PREV AMEND NO. S01343                       DATE 15AUG91        */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*  MD046248 - Finastra Rebranding                                  */
 /*  S01343  -  SC/RR/SD MODULE RENAME PROJECT.                      */
 /*             - RENAMED FROM L1MNUG10                              */
 /*             - SCUSRMNU RENAMED FROM MUSRMNU                      */
@@ -31,7 +33,7 @@
 /**/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&NUM) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RUNA) TYPE(*CHAR) LEN(7)
@@ -64,5 +66,5 @@
              GOTO       CMDLBL(RDSPLY)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM     /* END CL PGM SCMENUG    */

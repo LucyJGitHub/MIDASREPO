@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Initialisation program for CGL047')           *
@@ -9,15 +9,17 @@
       *                                                               *
       *  SD000007 - Initialisation Program for CGL047                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CER049             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER049             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. 141037             Date 24Aug06               *
+      *                 141037             Date 24Aug06               *
       *                 CGL047  *CREATE    Date 03Jul06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER049 - Stamp Tax (Recompile)                               *
       *  141037 - Remove references to LDA                            *
       *  CGL047 - Generic Posting Interface                           *

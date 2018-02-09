@@ -7,11 +7,12 @@
 /*                                                                   */
 /*          SCC2473 - DELETE ELIGIBLE JOURNAL RECEIVERS              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. CCB023A           Date 06Aug12               */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB023A            Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 260399            Date 21May09               */
+/*                      260399             Date 21May09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB023A - COB Restructure - Input Cycle Termination         */
 /*                 Restructuring                                     */
 /*       260399 - Take no action if DDM file details missing.        */
@@ -32,7 +34,7 @@
 /* Copyright statement definition  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
              DCLF       FILE(SDBANKPD)
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
@@ -62,8 +64,8 @@
 /*                                                                                                */
 /* Copyright statement definition at runtime                                                      */
 /*                                                                                                */
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
 /*                                                                                                */
 /*  Determine the 2-character system I.D.                                                         */
 /*                                                                                                */

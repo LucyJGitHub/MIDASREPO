@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Work out statuses for database migration')    *
@@ -9,13 +9,15 @@
       *                                                               *
       *  SM000009 - Work out statuses of database migration           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUP003             Date 08Aug10               *
-      *  Prev Amend No. BUG27793  *CREATE  Date 07Jun10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUP003             Date 08Aug10               *
+      *                 BUG27793 *CREATE   Date 07Jun10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP003 - Handle unique key problems better.                  *
       *  BUG27793 - Make migration multi-streamed.                    *
       *                                                               *

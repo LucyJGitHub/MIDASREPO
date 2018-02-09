@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC1712 - SAVE MASTER LIBRARY                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1033813          Date 18Sep12              */
-/*       Prev Amend No. CBF002             Date 04Jul11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1033813          Date 18Sep12              */
+/*                      CBF002             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CSC039             Date 18Aug08              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     AR1033813 - Zone schemas/libraries to be backed-up will not   */
 /*                 be processed if there is an error in finding      */
 /*                 any system value                                  */
@@ -39,7 +41,7 @@
              PGM        PARM(&BIND &TIND)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&NUM) TYPE(*DEC) LEN(3 0)
              DCL        VAR(&SMSG) TYPE(*CHAR) LEN(132)
@@ -550,7 +552,7 @@ ABNOR:
              GOTO       CMDLBL(ENDPGM)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /*/COPY WNCPYSRC,SCC1712016                                                                      */
 /**/

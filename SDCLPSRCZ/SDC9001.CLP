@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       SDC9001 - ICD display control program.                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CDL013             Date 10Jul06              */
-/*       Prev Amend No. CLE025             Date 20Oct03              */
+/*       Prev Amend No. CDL013             Date 10Jul06              */
+/*                      CLE025             Date 20Oct03              */
 /*                      CRE008             Date 19Feb02              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CAS002             Date 14Jan02              */
@@ -42,6 +43,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CDL013 - Tiered Withholding Tax                             */
 /*       CLE025 - Credit Lines                                       */
 /*       CRE008 - Cash Management                                    */
@@ -85,7 +87,7 @@
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&WRTNCODE) TYPE(*CHAR) LEN(5)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CDL013) TYPE(*CHAR) LEN(7)                                   /*CDL013*/
              DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CDL013*/
@@ -364,5 +366,5 @@
  ABNOR:      SNDPGMMSG  TOMSGQ(MOPERQ) MSG('Program SDC9001 +
                           ended abnormally')                          /*S01379*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

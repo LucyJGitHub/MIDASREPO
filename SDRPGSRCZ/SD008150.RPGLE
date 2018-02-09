@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Stamp Tax Effective Date update')             *
@@ -13,10 +13,11 @@
       *            defaults to current values and blanks out new      *
       *            values.                                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. AR888911           Date 26Jan12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR888911           Date 26Jan12               *
       *                 AR941869           Date 28Mar12               *
       *                 AR879983           Date 21Dec11               *
       *                 AR853091           Date 29Nov11               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  AR888911 - In reversing a deal, REV column in Stamp Tax      *
       *             Movements Enquiry is not changing from N to Y     *
@@ -447,4 +449,4 @@
 **  @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                        AR941869
 00000000310005900090001200015100181002120024300273003040033400365                           AR941869
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

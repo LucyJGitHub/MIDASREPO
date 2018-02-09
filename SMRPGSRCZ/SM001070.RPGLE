@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(OLDUSER) TOFILE(MUSER)                           *
 /*XBIB*  OVRDBF FILE(NEWUSER) TOFILE(MUSER)                           *
@@ -12,16 +12,18 @@
       *                                                               *
       *  SM001070 - Select and copy Midas user data to the new system *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. A1084804           Date 29Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. A1084804           Date 29Jan13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. B07809             Date 07Nov07               *
+      *                 B07809             Date 07Nov07               *
       *                 CUP034  *CREATE    Date 18Dec06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  A1084804 - Ensure user text is brought across.               *
       *  B07809 - Can not handle over 999 users.                      *
       *  CUP034 - MidasPlus user data migration.                      *

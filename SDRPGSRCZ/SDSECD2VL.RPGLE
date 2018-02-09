@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Securities clients details validation 2')
@@ -9,20 +9,22 @@
       *                                                               *
       *  SDSECD2VL - Security Customers Details Validation 2          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 ----------- Base ------------------------------*
-      *  Last Amend No. 243070             Date 10Jul06               *
+      *  Prev Amend No. 243070             Date 10Jul06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *                 CGL029             Date 01Sep03               *
       *                 CSE042             Date 05Feb03               *
       *                 CSE041             Date 05Feb03               *
       *                 CSE039 *CREATE     Date 05Feb03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  243070 - Recompile over changed PF/SDVSECDPD                 *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  CSE042 - Auto Feed of Trades and Movements                   *
@@ -625,4 +627,4 @@
       **--------------------------------------------------------------------------------------------
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

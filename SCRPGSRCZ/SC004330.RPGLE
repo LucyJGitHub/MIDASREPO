@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SC 24x7 re-open option prompt')
@@ -13,19 +13,21 @@
       *             to be taken on the 'support' system once the      *
       *             input-cycle is reopened.                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01.02 ----------------------------------------*
-      *  Last Amend No. CSD013             Date 23Jul02               *
+      *  Prev Amend No. CSD013             Date 23Jul02               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSC011  *CREATE    Date 18Sep01               *
+      *                 CSC011  *CREATE    Date 18Sep01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD013 - Generic Midas ICD Project:                          *
       *           - CBPROMPT data has moved to SDSVALPD.              *
       *  CSC011 - 24x7 Midas Availability                             *
@@ -523,4 +525,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

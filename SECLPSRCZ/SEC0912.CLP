@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       SEC0912 - Unrealised Profit and Loss Analysis Using N-T-P   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 229177             Date  02Sep04             */
-/*       Prev Amend No. CAS008             Date  11May04             */
+/*       Prev Amend No. 229177             Date 02Sep04              */
+/*                      CAS008             Date 11May04              */
 /*                      224132             Date  22Dec03             */
 /*                      CAS006  *CREATE    Date  21Jan03             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       229177 - ZSFILE failed due to SE0917 and SE0919 shared      */
 /*                the same sequence no. However, assigned sequence   */
 /*                no. should be unique. Amend program to rename and  */
@@ -33,7 +35,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
@@ -183,6 +185,6 @@ AGAIN:
              GOTO       CMDLBL(REPEAT)                                                    /*224132*/
              ENDDO                                                                        /*224132*/
  
- ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              ENDPGM

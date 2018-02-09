@@ -14,12 +14,14 @@
       *             SDCURRPD and write those records to the           *
       *             Installation control data files.                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. AR213428 *Create   Date 19May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR213428 *CREATE   Date 19May14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR213428 - Utility that will populate data to RECCYD,        *
       *             RECCYDXC from SDCURRPD if Retail Module is ON.    *
       *           - Applied for MD-26962                              *

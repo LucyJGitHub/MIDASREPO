@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Non-Account Holder - Database Update')        *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SDNAHLUPD - Non-A/C Holders Database Update                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD033947           Date 28Apr15               *
-      *  Prev Amend No. MD029836           Date 22Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033947           Date 28Apr15               *
+      *                 MD029836           Date 22Aug14               *
       *                 MD027473           Date 11Jun14               *
       *                 MD027115           Date 22May14               *
       *                 MD026752           Date 19May14               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033947 - Database Error occurred when amending US Indicia  *
       *             details of Non-account Holder                     *
       *  MD029836 - OCBC FATCA - US Indicia Comments History          *
@@ -2030,7 +2032,7 @@ als  C                   PARM                    @In36
      C                   ENDSR
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** CMDNH                                                                                    MD027115
 OVRDBF FILE(SDFTNHL0) TOFILE(SDFTNHL0) SHARE(*NO)                                           MD027115
 ** CMDIN                                                                                    MD027115

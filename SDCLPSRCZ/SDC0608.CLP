@@ -7,8 +7,9 @@
 /*                                                                  */
 /*       SDC0608 - CHECK UPDATE/ACCRUAL DATES                       */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,12 +17,13 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S10736                  DATE  11NOV92       */
-/*       PREV AMEND NO. S01333                  DATE  04APR91       */
+/*       Prev Amend No. S10736             Date 11Nov92              */
+/*                      S01333             Date 04Apr91              */
 /*                      S01189                  DATE  06/04/89      */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S10736 - MANAGEMENT ACCOUNTS                               */
 /*       S01333 - MIS GL REAL TIME POSTING                          */
 /*       S01189 - STANDARDISE DATABASE ERROR JOB SWITCH SETTINGS    */
@@ -34,12 +36,12 @@
              PGM
              DCL           VAR(&JOB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,SDC0608001                                          */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*                                                                  */
              RTVJOBA       JOB(&JOB)
 /**/

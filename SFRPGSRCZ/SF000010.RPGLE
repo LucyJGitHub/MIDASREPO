@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SF Menu item maintenance')
@@ -9,14 +9,15 @@
       *                                                               *
       *  SF000010 - Midas Menu Items Maintenance                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 246891             Date 25May07               *
+      *  Prev Amend No. 246891             Date 25May07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG5820            Date 17Mar05               *
+      *                 BUG5820            Date 17Mar05               *
       *                 CGP009             Date 22Dec04               *
       *                 BUG2287            Date 28Apr04               *
       *                 CSF002 *RENAME     Date 11Aug03               *
@@ -28,6 +29,7 @@
       *                 153359             Date 05Jan99               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  246891 - Allow duplication of menu item short code and       *
       *           narrative.                                          *
       *  BUG5820- Change screen title to 'Client Menu Items Mainte-   *

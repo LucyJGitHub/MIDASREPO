@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       BFCMPUSR - Compare user access for BF migration             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*       (c) Finastra International Limited 2011                     */
 /*                                                                   */
-/*       Last Amend No. CBF005   *CREATE   Date 04Jul11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CBF005  *CREATE    Date 04Jul11              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CBF005 - BF Infrastructure: Single Security User Maintenance*/
 /*                Profile                                            */
 /*                                                                   */

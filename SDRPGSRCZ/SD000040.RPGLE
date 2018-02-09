@@ -1,6 +1,6 @@
      h debug
      h fixnbr(*zoned : *inputpacked)
-     h copyright('(c) Misys International Banking Systems Ltd. 2005')
+     h copyright('(c) Finastra International Limited 2005')
  
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -11,19 +11,21 @@
       *                                                               *
       *  SD000040 - Maintenance of Regulatory Reporting extension     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG11157           Date 06Apr06               *
-      *  Prev Amend No. BUG9233            Date 04Jan06               *
+      *  Prev Amend No. BUG11157           Date 06Apr06               *
+      *                 BUG9233            Date 04Jan06               *
       *                 BUG10154           Date 27Jan06               *
       *                 CRN001  *Create    Date 31Oct05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG11157 - Add new field CPRTYRES US counterparty residence  *
       *              to customer extension file.                      *
       *  BUG9233  - Include ? processing                              *

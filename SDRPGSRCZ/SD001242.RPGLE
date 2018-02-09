@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Customer risk weighted asset codes maint')
@@ -12,14 +12,15 @@
       *  Function:  This program records valid Risk Weighted          *
       *             Assets Sets.                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. CSD079             Date 05Feb07               *
+      *  Prev Amend No. CSD079             Date 05Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSW037A            Date 02May05               *
       *                 BUG6198            Date 04Apr05               *
       *                 BUG5139            Date 10Mar05               *
       *                 CSD025             Date 11Jan05               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
       *  BUG6198- Cannot save new Details for CUSD (Recompile)        *

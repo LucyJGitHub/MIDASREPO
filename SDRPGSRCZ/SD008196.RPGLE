@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas - Stamp Tax: Loans Take On')                     *
@@ -9,15 +9,17 @@
       *                                                               *
       *  SD008196 - Portugese Stamp Tax: Loans Take On                *
       *                                                               *
-      *  (C) Copyright Misys International Banking Systems Ltd. 2010  *
+      *  (C) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. AR940910           Date 26Feb12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR940910           Date 26Feb12               *
       *                 AR909846           Date 09Feb12               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  AR940910 - Demand Loan did not calculate and post Stamp Tax  *
       *             on Average Balance during month end COB           *
@@ -211,4 +213,4 @@
       *
      C                   ENDSR
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd., 2010
+(C) Copyright Finastra International Limited 2010

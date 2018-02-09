@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*XBI *  OVRDBF FILE(STRANTEMP) TOFILE(STRAN)                         *
 /*STD *  RPGBASEBND                                                   *
@@ -10,16 +10,18 @@
       *                                                               *
       *  SMU00050 - Update LEADINPD from STRAN                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 BG26993            Date 26Jan10               *
       *                 CSD026             Date 30Apr07               *
       *                 CPK025  *CREATE    Date 12Apr07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program CPK025R01.                         *

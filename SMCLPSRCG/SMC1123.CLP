@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       SMC1123 - Change owner, grant authority                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 250022             Date 16Aug07              */
+/*                      250022             Date 16Aug07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CPK023             Date 13Dec05              */
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       250022 - Reflect changes to CHGOWNAUT command.              */
 /*       CPK023 - Add exception handling for ZZ* message files.      */
@@ -49,7 +51,7 @@
              DCL        VAR(&ASPF) TYPE(*CHAR) LEN(7)
              DCL        VAR(&PAUTL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /* Set up parameters for library CHGOWNAUT. */
@@ -122,5 +124,5 @@ ABNOR:
              CHGJOB     SWS(XXXXXX11)
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

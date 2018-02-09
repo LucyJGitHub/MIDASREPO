@@ -7,11 +7,12 @@
 /*                                                                  */
 /*          SCC2449 - SAVE JOURNAL RECEIVERS TO SAVE FILES          */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. BUG27440          Date 21Apr10               */
+/*                      BUG27440           Date 21Apr10              */
 /*                      260790            Date 19Jun09               */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CRE026            Date 24May06               */
@@ -33,6 +34,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       BUG27440 - SCC0401 00001 failed                             */
 /*       260790 - COB performance fix                                */
@@ -60,7 +62,7 @@
 /* Copyright statement definition  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* File of journal receiver save file object descriptions */
@@ -197,7 +199,7 @@
 /* Copyright statement defination at runtime */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /* Determine if job is interactive or batch  */
 /**/

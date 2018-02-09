@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Trade SWIFT Extended Settle Validation')      *
@@ -17,10 +17,11 @@
       *                                                               *
       *  Component of: SETSESSIN                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR596191           Date 19Aug14               *
-      *  Prev Amend No. MD022800           Date 18Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR596191           Date 19Aug14               *
+      *                 MD022800           Date 18Oct13               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR640670           Date 13Sep10               *
       *                 CSW210             Date 04May10               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR596191 - Error on Safekeeping Account is issued even if    *
       *             a valid value is inserted                         *
       *  MD022800 - No validation for clearing correspondent when     *
@@ -3981,4 +3983,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

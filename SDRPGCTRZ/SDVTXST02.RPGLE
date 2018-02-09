@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Tax Status for Non-a/c Holder')      *
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVTXST02 - Validate European Tax Status for Non-A/C Holder  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER069             Date 03Jul14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER069             Date 03Jul14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24029           Date 20May09               *
       *                 CER054             Date 07Apr09               *
       *                 BUG22580           Date 02Feb09               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER069 - German Tax Enhancement                              *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG24029 - COB Error RE3662 Database Error                   *
@@ -405,4 +407,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

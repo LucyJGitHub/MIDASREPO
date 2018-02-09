@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Cashier Transaction Type Posting Details Report')      *
@@ -15,23 +15,25 @@
       *             COB         - Listing of all the Commission Code  *
       *                           that has been changed today.        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Phase(s): I/C - On Request.                                  *
       *            COB - Automatic                                    *
       *                                                               *
       *  Called By: SDC1246 Cashier Transaction Types Posting Details *
       *                                                               *
-      *  Last Amend No. CCB023             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB023             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CRT012   *CREATE   Date 12May03               *
+      *                 CRT012  *CREATE    Date 12May03               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CCB023 - COB Restructure - Input Cycle Termination           *
       *           Restructuring                                       *
       *  CRT012 - Midas/Cashier Interface - Multiple Charges          *
@@ -529,4 +531,4 @@
       *
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

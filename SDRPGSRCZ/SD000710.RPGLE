@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Document Management Report Control')          *
@@ -13,14 +13,16 @@
       *             Document Management Records for the Customer or   *
       *             Non-account Holders defined in the system.        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD029841           Date 29Aug14               *
-      *  Prev Amend No. MD026276           Date 08Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029841           Date 29Aug14               *
+      *                 MD026276           Date 08Apr14               *
       *                 CSD093  *CREATE    Date 01Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029841 - SD000710AU 2 reports produced during COB          *
       *             Apply Fix MD027026                                *
       *  MD026276 - Incorrect Audit Report is generated when Documents*
@@ -711,4 +713,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

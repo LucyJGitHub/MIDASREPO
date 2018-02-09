@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas SD Initialize SDRPKYTD new fields')              *
@@ -9,13 +9,15 @@
       *                                                               *
       *  SDCLE16401 -  Initialise new fields (Take-on Only)           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No.  MD036852             Date 11Dec15            *
-      *  Prev Amend No.  MD031687  *CREATE    Date 18Dec14            *
+      *  Last Amend No.  MD046248             Date 05Feb18            *
+      *  Prev Amend No.  MD036852             Date 11Dec15            *
+      *                  MD031687  *CREATE    Date 18Dec14            *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD036852 - Resolve spelling errors                           *
       *  MD031687 - Initialise data for SDRPKYTD                      *
       *             Repayment Priority Key                            *

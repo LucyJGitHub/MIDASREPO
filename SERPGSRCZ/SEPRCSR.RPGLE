@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Prices Input - Retrieve a record')
@@ -11,14 +11,15 @@
       *                                                               *
       *  Function:  This module retrieves a record from the file      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. BUG9475            Date 10Jan06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG9475            Date 10Jan06               *
       *                 CGL031             Date 05Jul04               *
       *                 CSE071             Date 19Jul05               *
       *                 BUG4258            Date 13Sep04               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG9475 - Incorrect Net Treasury Price display format        *
       *  CGL031 - Taxation of Savings Income                          *
@@ -649,4 +651,4 @@
       /EJECT
       *********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

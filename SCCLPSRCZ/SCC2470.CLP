@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       SCC2470 - Monitor Journal Receiver Size                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 260790             Date 19Jun09              */
+/*                      260790             Date 19Jun09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       260790 - COB Performance fix                                */
 /*                Call SCC2470SAV to see if journal receivers should */
@@ -67,7 +69,7 @@
              DCL        VAR(&SVAL10SAV) TYPE(*CHAR) LEN(200)                              /*CSC018*/
              DCL        VAR(&SUPPUPD) TYPE(*CHAR) LEN(20)                                 /*CSC018*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                                        /*CSC018*/
 /* Declare variables for CSC018 - journaling optons for High Availability                 /*CSC018*/
@@ -1051,6 +1053,6 @@ END:
 /*/COPY WNCPYSRC,SCC2470END                                          */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -7,18 +7,20 @@
 /*                                                                   */
 /*  SDC1325  - Call to Reporting Structures Report Program.          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  LAST AMEND NO. RT0159            DATE 25JUN91                    */
+/*       Prev Amend No. RT0159             Date 25Jun91              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  RT0159 - Messages should be sent via new Midas Info Screen.      */
 /*                                                                   */
 /*********************************************************************/
@@ -31,7 +33,7 @@
 /**/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&SEQ)  TYPE(*CHAR)  LEN(5)
@@ -56,7 +58,7 @@
                           DATA AREA EQUIVALENT'))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
              CHGJOB     SWS(XXXXXX00)
 /**/

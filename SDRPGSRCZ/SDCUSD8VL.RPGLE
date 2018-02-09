@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Customer MT3xx BEI and Fund Info')            *
@@ -17,10 +17,11 @@
       *                SDCUSDCTL                                      *
       *                SDCUSDRPR                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD024046           Date 11Dec13               *
-      *  Prev Amend No. MD023456           Date 14Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024046           Date 11Dec13               *
+      *                 MD023456           Date 14Nov13               *
       *                 MD022557A          Date 03Oct13               *
       *                 CSW213             Date 03Jun13               *
       *                 AR855391           Date 27Oct11               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024046 -  Invalid LEI Accepted in MT3xx Receiver Party     *
       *              Information Field                                *
       *  MD023456 -  Error and warning descriptions were displayed    *
@@ -757,4 +759,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -7,15 +7,16 @@
 /*                                                                  */
 /*       SDC541P - ON REQUEST REPORTS                               */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG7198            Date 30May05              */
+/*       Prev Amend No. BUG7198            Date 30May05              */
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Prev Amend No. 195963             Date 13May02              */
+/*                      195963             Date 13May02              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CAS002             Date 14Jan02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -27,6 +28,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG7198 - SDC541P 10007 failed component                    */
 /*       195963 - Deleted broker codes not shown in SD0070P audit.   */
 /*       CAS002 - Hedge Strategy/Linkage                             */
@@ -43,7 +45,7 @@
  
 PGM  PARM(&PGM &SEQ &LEVEL &ENTITY)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /**DCL**VAR(&PGM)    TYPE(*CHAR)  LEN(8)  ***/                        /*CAS002*/
@@ -81,5 +83,5 @@ PGM  PARM(&PGM &SEQ &LEVEL &ENTITY)
    ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM

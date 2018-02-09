@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Add new zone SDBRCHPD recs to GZSDBRCHPD')    *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SM1094  - Add new zone SDBRCHPD records to GZSDDBRCHPD       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR756177           Date 16May11               *
-      *  Prev Amend No. CUP004             Date 20Oct10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR756177           Date 16May11               *
+      *                 CUP004             Date 20Oct10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR756177 - Update zone field on SDBRCHPD too.                *
       *  CUP004 - Replacement for SCBEGIN.                            *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

@@ -7,19 +7,21 @@
 /*                                                                   */
 /*  SEC6595 - Customer Groups Audit/List Report                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  LAST AMEND NO. S01496                  DATE 27OCT94              */
-/*  PREV AMEND NO. S10984                  DATE 10MAY93              */
+/*       Prev Amend No. S01496             Date 27Oct94              */
+/*                      S10984             Date 10May93              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  S01496 - Incorporation of JYSKE Enhancements (S10984)            */
 /*  S10984 - JYSZRH: Customer Groups for SE Charges                  */
 /*           (copy of CLP/SEC6210)                                   */
@@ -34,7 +36,7 @@
              PGM        PARM(&MODE &RSEQ &RLEV &RENT)                 /*S01496*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01496*/
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)                 /*S01496*/
@@ -130,5 +132,5 @@
              ENDDO                                                    /*S01496*/
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

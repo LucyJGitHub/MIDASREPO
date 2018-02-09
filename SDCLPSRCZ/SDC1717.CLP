@@ -7,14 +7,15 @@
 /*                                                                  */
 /*     SDC1717 - SAVE DATA AREAS FOR RECOVERY TO RECEIVER SAVE      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. AR1096929          Date 08Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1096929          Date 08Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG9619            DATE 21Dec05              */
+/*                      BUG9619            Date 21Dec05              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      096044             DATE 29MAR96              */
@@ -38,6 +39,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     AR1096929 - Device *REQUESTER* not found while opening       */
 /*                 SDC0700DF in library B14CBASZ                    */
 /*     BUG9619 -  Close of business components run long if journal  */
@@ -69,7 +71,7 @@
 /********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&DAREA) TYPE(*CHAR) LEN(256)
@@ -397,7 +399,7 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,SDC1717008                                          */
  END:        ENDPGM
 /*/COPY WNCPYSRC,SDC1717009                                          */

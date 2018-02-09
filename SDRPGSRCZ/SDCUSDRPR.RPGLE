@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Invalid customer details repair')             *
@@ -12,10 +12,11 @@
       *  Function:  This function allows invalid Customer details to  *
       *             be 'repaired' and applied to the Midas database.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD030956           Date 09Oct14               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *                 AR787620           Date 10Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26917A          Date 27Jan10               *
       *                 BUG26917           Date 20Jan10               *
@@ -76,6 +77,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,SDH00103                                 *
@@ -5080,6 +5082,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CMD
 OVRDBF FILE(SDAULGL2) TOFILE(SDAULGL2) SHARE(*NO)

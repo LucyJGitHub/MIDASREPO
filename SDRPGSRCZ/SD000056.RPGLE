@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Holiday Map and upd of Eq. Curr.and Br.Calendars')
@@ -16,12 +16,13 @@
       *  Called By: SDC000072 - Update Equation with consumer Banking *
       *                         Standing Data Details Control         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14620D          Date 04Sep07               *
-      *  Prev Amend No. BUG14620C          Date 03Sep07               *
+      *  Prev Amend No. BUG14620D          Date 04Sep07               *
+      *                 BUG14620C          Date 03Sep07               *
       *                 BUG14024           Date 21May07               *
       *                 BUG13704           Date 03May07               *
       *                 BG12014            Date 10Nov06               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG14620D - Consumer Banking Data Migration                  *
       *              Validate Holiday when date is rundate or         *
       *              next working date. Set tran type to blank        *
@@ -1165,6 +1167,6 @@
       /EJECT                                                                               BUG14620D
       *****************************************************************                    BUG14620D
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006
 **  @@MTH
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

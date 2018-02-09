@@ -8,12 +8,14 @@
 /*       SMUC00293 - Currency not in Installation control            */
 /*                   data files - control pgm                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. AR213428 *CREATE   Date 19May14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR213428 *CREATE   Date 19May14              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR213428 - Utility that will populate data to RECCYD,       */
 /*                  RECCYDXC from SDCURRPD if Retail Module is ON.   */
 /*                - Applied for MD-26962                             */
@@ -22,7 +24,7 @@
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2014')
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7)
@@ -106,7 +108,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
  END:
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
                           Banking Systems Ltd. 2014')
  
              ENDPGM

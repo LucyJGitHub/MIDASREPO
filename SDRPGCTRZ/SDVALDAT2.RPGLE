@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Exemption Threshold Dates')          *
@@ -12,10 +12,11 @@
       *  Function:  This module validates the different Date fields   *
       *             on the new Additional Customer Details screen     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD039287A          Date 17Jun16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039287A          Date 17Jun16               *
+      *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR741461           Date 06May11               *
       *                 AR737976           Date 14Apr11               *
@@ -30,6 +31,7 @@
       *                                                               *
       *--------------------------------------------------------------**
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039287A - Customer number is not automatically generated   *
       *              when CSD021 is on                                *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *

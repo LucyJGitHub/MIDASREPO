@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE DPMV WI/WO Extension - Validation')           *
@@ -9,12 +9,13 @@
       *                                                               *
       *  RPGLE/SEDMES1VL - Depot Movement WI/WO extension - Validation*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG21221           Date 27Sep08               *
+      *                 BUG21221           Date 27Sep08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CAP087             Date 18Aug05               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  BUG21221 - Applied fix BUG19956                              *
       *  BUG19956 - SEW7010 Confirmation Request error                *
@@ -1319,7 +1321,7 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 **CTDATA VA0
 0123456789
 **CTDATA VA1

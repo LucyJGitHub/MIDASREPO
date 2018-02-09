@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Compliance Watch Hit List Housekeeping')
@@ -18,17 +18,19 @@
       *  Called By: SDC000030 - Compliance Watch Hit List Housekeeping*
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD019             Date 02Jun03               *
-      *  Prev Amend No. CSD015  *CREATE    Date 03Mar03               *
+      *  Prev Amend No. CSD019             Date 02Jun03               *
+      *                 CSD015  *CREATE    Date 03Mar03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD019 - Midas Compliance Watch - Entry Level Watch List     *
       *           Checking                                            *
       *  CSD015 - Midas Compliance Watch - Watch List Checking        *
@@ -1043,4 +1045,4 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBI *  OVRDBF FILE(FILEMULMBR) TOFILE(*LIBL/QAFDMBR)                *
 /*STD *  RPGBASEBND                                                   *
@@ -11,17 +11,19 @@
       *  SM0264 - Change library names for FILEMULMBR                 *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK025  *MOVED     Date 02Sep06               *
-      *  Prev Amend No. CUP016 *CREATE     Date 01Apr03               *
+      *  Prev Amend No. CPK025             Date 02Sep06               *
+      *                 CUP016 *C *CREATE  Date 01Apr03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - MidasPlus 1.3 packaging.  Move to global layer.     *
       *  CUP016 - Add implementation software to core.                *
       *                                                               *

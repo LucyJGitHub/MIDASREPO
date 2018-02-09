@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE DPMV validate trade date')
@@ -9,15 +9,16 @@
       *                                                               *
       *  SEVTRDT    - DPMV Validate Trade Date                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 235997             Date 12Sep05               *
+      *  Prev Amend No. 235997             Date 12Sep05               *
       * Midas Release 4.02 -------------------------------------------*
-      *  Prev Amend No. 203240             Date 03Oct02               *
+      *                 203240             Date 03Oct02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
       *                 180597             Date 30Jun00               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  235997 - Do not invoke ZCHKH if date is invalid (i.e. field  *
       *           DMTD is zero).                                      *
       *           Also do not set Trade Date equal to Depot Movement  *
@@ -404,4 +406,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

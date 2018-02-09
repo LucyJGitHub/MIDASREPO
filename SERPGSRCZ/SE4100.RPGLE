@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Repo and bond lending confirmations')         *
@@ -13,10 +13,11 @@
       *             Reverse Repos, Bond Borrowing, Bond Lending,      *
       *             Pledge Loans and Pledge deposits.                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
       *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -104,7 +106,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDEALS     IF   E           K DISK
      F
      FMMDEALLL  IF   E           K DISK
@@ -121,15 +123,15 @@
      F                                     INFDS(SPOOL1)
      FSE4100AU  O    E             PRINTER
      F                                     INFDS(SPOOLU)
- 
+
      D*
      D** Table containing text for Narrative
      D ##TXT           S             55    DIM(6) CTDATA PERRCD(1)
- 
+
      D*
      D** Array for month short names
      D ZMNM            S              3    DIM(12) CTDATA PERRCD(12)            ZDATE2 SR. ARRAY
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -147,25 +149,25 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
      D SPOOL1          DS
      D*
      D**  DS for P1 spool file name
@@ -173,14 +175,14 @@
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D*
- 
+
      D SPOOL2          DS
      D*
      D**  DS for P2 spool file name
      D*
      D  SFILE2                83     92
      D  SFNUM2               123    124B 0
- 
+
      D SPOOLU          DS
      D*
      D**  DS for Audit spool file name
@@ -194,46 +196,46 @@
      D
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D**  Branch Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D  QQDFA1       E                     EXTFLD(QQDFAC)                                     CGL029
      D**  Customer details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D**  Currency details
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
       ** Nostro details
- 
+
      D SDBROK        E DS                  EXTNAME(SDBROKPD)
      D**  Broker details
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D**  Long data structure
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D**  Short data structure
- 
+
      D**  Data Structure for date returned from ZDATE9
      D                 DS
      D  VDT                    1      8  0
      D  YR                     1      4  0
      D  MM                     5      6  0
      D  DD                     7      8  0
- 
+
      D**  Data Structure for date in DDMMMYY Format
      D                 DS
      D  Date                   1      7
      D  Day                    1      2
      D  Mnth                   3      5
      D  Year                   6      7
- 
+
       ** Formatted input from ZSEDIT
      D   ZFLD15        S             15  0
- 
+
       ** Number of decimal position
      D   ZADEC         S              1P 0
- 
+
       ** AONOSTR0 Parameters
      D*P@ACCD***       S              4A                                                      CGL029
      D P@ACCD          S             10A                                                      CGL029
@@ -244,13 +246,13 @@
      D P@CYCD          S              3A
      D P@NONB          S              2A
      D P@PNOI          S              1A
- 
+
       ** AOCUSTR0 Parameters
      D @KEY1           S             10A
      D @KYST           S              7A
- 
+
      D RptHdr          S              1A
- 
+
       *
       ** Register Spool File via RCF
      C                   EXSR      INIT
@@ -290,7 +292,7 @@
      C                   MOVE      W#DPNA        ZFLD15
      C                   Z-ADD     0             W#DPNA
      C                   MOVE      NMDP          ZADEC
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZADEC
@@ -353,7 +355,7 @@
      C** Set up Customer Address
      C                   MOVE      *BLANKS       @KEY1
      C                   MOVEL     CNUM          @KEY1
- 
+
      C                   EXSR      AOCUST
       *
      C                   EVAL      PCNA1 = BBCNA1
@@ -378,7 +380,7 @@
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    DealNo            6 0
- 
+
      C     DealNo        CHAIN     DEALS                              89
      C
      C** Record not Found
@@ -424,7 +426,7 @@
      C** Set up Customer Address
      C                   MOVE      *BLANKS       @KEY1
      C                   MOVEL     CNUM          @KEY1
- 
+
      C                   EXSR      AOCUST
       *
      C                   EVAL      CNA1 = BBCNA1
@@ -493,11 +495,11 @@
      C                   PARM                    DDAT
      C                   PARM                    VDT
      C                   PARM                    @@RTN             1
- 
+
      C                   EXSR      CVTDAT
- 
+
      C                   EVAL      TDAT = Date
- 
+
      C                   EVAL      Date = *Blanks
      C                   EVAL      VDT = *Zero
      C*
@@ -508,11 +510,11 @@
      C                   PARM                    VDAT
      C                   PARM                    VDT
      C                   PARM                    @@RTN             1
- 
+
      C                   EXSR      CVTDAT
- 
+
      C                   EVAL      VDAT1 = Date
- 
+
      C                   EVAL      Date = *Blanks
      C                   EVAL      VDT = *Zero
      C*
@@ -524,11 +526,11 @@
      C                   PARM                    MDAT
      C                   PARM                    VDT
      C                   PARM                    @@RTN             1
- 
+
      C                   EXSR      CVTDAT
- 
+
      C                   EVAL      VDAT1 = Date
- 
+
      C                   EVAL      Date = *Blanks
      C                   EVAL      VDT = *Zero
      C                   ENDIF
@@ -668,15 +670,15 @@
      C                   PARM                    MatDat
      C                   PARM                    VDT
      C                   PARM                    @@RTN             1
- 
+
      C                   EXSR      CVTDAT
- 
+
      C                   EVAL      PMTDY = Date
      C*
      C** Set up Nominal
      C                   MOVE      DPNA          ZFLD15
      C                   MOVE      NMDP          ZADEC
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZADEC
@@ -696,7 +698,7 @@
      C*
      C** Set up Certificate Number and write DETAIL2 records
      C                   EXSR      CRTDTL
- 
+
      C                   ENDSR
      C*
      C********************************************************************
@@ -957,7 +959,7 @@
      C                   EVAL      PFRA1 = BBCRTN
      C*
      C                   ENDIF
- 
+
      C                   IF        DTYP = 'IT' or DTYP = 'CD' or DTYP = 'TD'
      C*
      C                   IF        TSTN <> *Blanks
@@ -1003,7 +1005,7 @@
      C                   EVAL      PTOA1 = BBCRTN
      C*
      C                   ENDIF
- 
+
      C                   IF        DTYP = 'IP' or DTYP = 'CL' or DTYP = 'TI'
      C*
      C                   IF        TSTN <> *Blanks
@@ -1049,7 +1051,7 @@
      C                   EVAL      PFRA2 = BBCRTN
      C*
      C                   ENDIF
- 
+
      C                   IF        DTYP = 'IP' or DTYP = 'CL' or DTYP = 'TI'
      C*
      C                   IF        TMAN <> *Blanks
@@ -1095,7 +1097,7 @@
      C                   EVAL      PTOA2 = BBCRTN
      C*
      C                   ENDIF
- 
+
      C                   IF        DTYP = 'IT' or DTYP = 'CD' or DTYP = 'TD'
      C*
      C                   IF        TMAN <> *Blanks
@@ -1213,7 +1215,7 @@
       *                                                               *
       *****************************************************************
      C     AONOST        BEGSR
- 
+
      C                   CALLB     'AONOSTR0'
      C                   PARM                    @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -1226,7 +1228,7 @@
      C                   PARM      *BLANKS       P@CSSN
      C                   PARM      *BLANKS       P@PNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1236,14 +1238,14 @@
       *                                                               *
       *****************************************************************
      C     AOCUST        BEGSR
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM                    @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    @KEY1
      C                   PARM                    @KYST
      C     SDCUST        PARM      SDCUST        DSFDY
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -1355,4 +1357,4 @@ WE CONFIRM OUR PLEDGE LOAN AGREEMENT AS FOLLOWS
 **   ZMNM - MONTHS SHORT NAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

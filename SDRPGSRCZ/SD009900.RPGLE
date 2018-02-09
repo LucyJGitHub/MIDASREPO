@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate MT10350* system values')             *
@@ -16,13 +16,15 @@
       *             - MT10350K_7_TaxC                                 *
       *             - MT202COV50x_AcFmt                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1094263          Date 22Mar13               *
-      *  Prev Amend No. CFT124  *CREATE    Date 28Sep12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1094263          Date 22Mar13               *
+      *                 CFT124  *CREATE    Date 28Sep12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1094263 - Corrected system value validation as per v1.01   *
       *              version of CFT120 FDS                            *
       *  CFT124 - Ordering Customer of MT103 50K - 'Account' Formats  *

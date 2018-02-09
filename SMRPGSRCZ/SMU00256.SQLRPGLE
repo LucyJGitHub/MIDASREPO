@@ -9,10 +9,12 @@
       *                                                               *
       *  SMU00256 - Midas SM Upgrade for ORBR field in CLOANCL        *
       *                                                               *
-      *  Last Amend No. MD023442A*CREATE   Date 02Jan14               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. MD023442A*CREATE   Date 02Jan14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023442A - Update CLOANCL->ORBR field for Facility Fees     *
       *                                                               *
       *****************************************************************
@@ -31,12 +33,12 @@
       *
      C     *ENTRY        PLIST
      C                   PARM                    Mode              1
- 
+
       /free
        EXEC SQL
           alter table CLOANTMP
           add column febrca char(3);
- 
+
        EXEC SQL
           declare Pcursor cursor for
           Select a.*, c.febrca
@@ -48,34 +50,34 @@
           And b.yecnum = c.fecnum
           And b.yeseq  = c.fefseq
           And a.orbr   <> c.febrca;
- 
+
        EXEC SQL Open Pcursor;
- 
+
        EXEC SQL
           Fetch NEXT from Pcursor into :CLON,:BRANCH;
- 
+
           Count = 0;
- 
+
           DoW SQLCODE = 0;
               Count = Count + 1;
- 
+
               If Mode = 'L';
                  Exsr SrInsert;
               Else;
                  Exsr SrUpdate;
               Endif;
- 
+
               EXEC SQL
                    Fetch NEXT from Pcursor into :CLON,:BRANCH ;
- 
+
            EndDo;
- 
+
         EXEC SQL
         Close Pcursor;
- 
+
         *INLR = *ON;
         Return;
- 
+
        //-------------------------------------------------------------*
        // SrInsert - Insert fields to CLOANTMP                        *
        //-------------------------------------------------------------*

@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       SCC3010M - Switchable Features Control                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR316373           Date 03Jun15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR316373           Date 03Jun15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CSC014             Date 11Apr02              */
+/*                      CSC014             Date 11Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CCB009             DATE 01Jun00              */
@@ -33,6 +34,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR316373 - Recompile due to change in /COPY MLCOVRDCL and   */
 /*                  MLCOVROVR.                                       */
 /*       CSC014 - Allow support for DBCS (Recompiled)                */
@@ -57,7 +59,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
@@ -269,7 +271,7 @@
                           CMDLBL(ABNOR))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
              GOTO       CMDLBL(END)
 /**/

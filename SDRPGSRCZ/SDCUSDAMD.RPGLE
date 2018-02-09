@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Customer Details Amend Checking')             *
@@ -16,10 +16,11 @@
       *             the calling process.                              *
       *             It can optionally reset fields wrongly amended.   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
       *                 CSW214             Date 25Nov14               *
       *                 CFT050             Date 03Jun13               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -94,7 +96,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -108,49 +110,49 @@
       ** the copyright array definition,
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       * (Current) Customer in Screen Format
      D CustScnFm1    E DS                  EXTNAME(SDCUPRPD)
      D                                     PREFIX(@)
@@ -188,7 +190,7 @@
      D                                     PREFIX (@12)                                       CSD079
      D CustCuCtnm    E DS                  EXTNAME (SDCCTNPD)                              AR1086546
      D                                     PREFIX (@24)                                    AR1086546
-
+ 
       * New Customer in Screen Format
      D NewCusScn1    E DS                  EXTNAME(SDCUPRPD)
      D NewCusScn2    E DS                  EXTNAME(SDCUSEPD)
@@ -221,12 +223,12 @@
      D                                     PREFIX(@23)                                        CSD079
      D NewCusCtnm    E DS                   EXTNAME (SDCCTNPD)                             AR1086546
      D                                     PREFIX(@25)                                     AR1086546
-
+ 
       ** External DS for SAR Details                                                          CSD079
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD079
       * (Current) Customer in File Format
      D CustFilFmt    E DS                  EXTNAME(SDCUSTPD)
-
+ 
       * (Current) Base Rate Tax details in File Format
      D BrTxFilFmt    E DS                  EXTNAME(SDCBRTPD)
                                                                                               CSD079
@@ -257,37 +259,37 @@
       ** Currency/Time of Netting Details                                                  AR1086546
      D CtnmFilFmt    E DS                  EXTNAME(SDCTNMPD)                               AR1086546
                                                                                            AR1086546
-
+ 
      D RUNDAT          DS
      D  @MBIN                 13     13
-
-
+ 
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
-
+ 
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       **  Data structure for Portfolio Management ICD File
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
-
+ 
       ** Index for arrays of warning error message ids etc                                  AR855391
      D WIdx            S              3P 0                                                  AR855391
-
+ 
       * Error indicators
      D OKCuPrim      E DS                  EXTNAME(SDECUPRPD)
      D OKCuSeco      E DS                  EXTNAME(SDECUSEPD)
@@ -329,8 +331,8 @@
      D PMODE           S              1                                                       CSD079
                                                                                               CSD079
      D CDL002          S              1                                                       CSD079
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -489,7 +491,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -705,4 +707,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

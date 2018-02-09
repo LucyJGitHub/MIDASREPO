@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       SEC0602D  GENERATE A/C KEYS - TRADE SETTLEMENTS            */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408                  DATE 10MAY95        */
-/*       PREV AMEND NO. S01189                  DATE  07JAN91       */
+/*       Prev Amend No. S01408             Date 10May95              */
+/*                      S01189             Date 07Jan91              */
 /*                      S01117                  DATE  10DEC90       */
 /*                      E23543                  DATE  10SEP90       */
 /*                      E16870                  DATE  08/03/89      */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     S01408 - Addition of core hook SEC0602DMS                    */
 /*     S01189 - CLOSE OF BUSINESS IMPROVEMENTS PHASE 2              */
 /*     S01117 - MULTIBRANCHING                                      */
@@ -43,7 +45,7 @@
              PGM        PARM(&CNAM &CSEQ)                             /*S01189*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                /*S01189*/
@@ -263,5 +265,5 @@
 /************ENDPGM*******************                                *E23543*/
 /*ENDPGM:*****ENDPGM                                          *S01117* *E23543*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01117*/

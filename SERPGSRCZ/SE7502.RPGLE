@@ -9,10 +9,11 @@
       *                                                               *
       *  SE7502 - SE Corporate Actions Events Maintenance             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
@@ -7573,7 +7575,7 @@ S3    *                                                                   155622
       *                                                               *
       *  ZALIGNZ2 - To validate and right align numeric fields        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Any changes made to this /COPY member may also need to be    *
       *  incorporated in ZALIGNZ2L.                                   *
@@ -8393,7 +8395,7 @@ S3    *                                                                   155622
 **CTDATA ZMNM
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA TXT
 F3=Exit  F5=Refresh Screen  F11=View Option(s) Rollup/Rolldown
 F3=Exit  F5=Refresh Screen  F9=Go to 'Change' Mode  Rollup/Rolldown

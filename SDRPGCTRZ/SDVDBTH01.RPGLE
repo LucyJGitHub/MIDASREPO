@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Date of Birth')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVDBTH01 - Validate Date of Birth                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,16 +17,18 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 232543             Date 14Mar05               *
+      *  Prev Amend No. 232543             Date 14Mar05               *
       * Midas Release 4.04 -------------------------------------------*
-      *  Prev Amend No. CGL031  *CREATE    Date 05Jul04               *
+      *                 CGL031  *CREATE    Date 05Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  232543 - Fix to CGL031                                       *
       *  CGL031 - Taxation of Savings Income                          *
       *                                                               *
@@ -401,4 +403,4 @@ als  C                   MOVEL     'USR4771'     MsgIDXAr(Idx)
      C                   ENDSR
       ********************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

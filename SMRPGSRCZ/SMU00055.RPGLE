@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Initialise PMPCAAPD QSACCU field')
@@ -12,15 +12,17 @@
       *  Function:  This program initialises a blank PMPCCA to QSCNUM *
       *             the Portfolio Customer                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. CPM004             Date 25MAR96               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 CPM004             Date 25Mar96               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program CPM00401.                          *
       *  CPM004  - PM Bank Portfolios                                 *

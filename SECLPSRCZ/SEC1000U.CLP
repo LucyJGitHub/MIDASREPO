@@ -7,15 +7,17 @@
 /*                                                                   */
 /*      SEC1000U : DROP OFF SECURITIES TRADING FILES  MAIN PGM       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       Last Amend No. 260765             Date 29Jun09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 260765             Date 29Jun09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 095907 *CREATE     Date 02Dec05              */
+/*                      095907 *C *CREATE  Date 02Dec05              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       260765 - Partially applied fix 182818.                      */
 /*                Removed DSPFD command and moved it to CL/SEC1004.  */
 /*       095907 - NEW PROGRAM TO CONTROL SE DROP PROCESSING          */

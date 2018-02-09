@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       SFC0912 - AUTHORISED USERS BY ACCOUNT RANGES REPORT         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CRE024   *CREATE   Date 07Oct05              */
+/*       Prev Amend No. CRE024  *CREATE    Date 07Oct05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE024 - COUNTRY LEVEL SWITCHABLE FEATURE :                 */
 /*                SECURITY FEATURES FOR RESTRICTED ACCOUNTS          */
 /*                                                                   */
 /*********************************************************************/
              PGM  PARM(&SEQ &LVL &ENT)
              DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
              DCL  VAR(&SEQ)  TYPE(*CHAR)  LEN(5)
@@ -54,6 +56,6 @@
                   MONMSG MSGID(CPF0000 MCH0000)
  
  END:        RCLRSC
-             CHGVAR     VAR(&MKICPY) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+             CHGVAR     VAR(&MKICPY) VALUE('(c) Finastra International +
+                          Limited 2005')
  ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Process CAR migration SDACUSPD - 02')         *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Called By: SMUC00000                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -100,8 +102,8 @@
       * then leave.
      C                   LEAVESR
      C                   ENDIF
-
-
+ 
+ 
      C                   IF        BBJCU1 > 0                                   B24416
       *
       * Check if joint 1 already exist.
@@ -119,7 +121,7 @@
      C                   EXSR      AddRelat
      C                   ENDIF
      C                   ENDIF                                                  B24416
-
+ 
      C                   IF        BBJCU2 > 0                                   B24416
       *
       * Check if joint 2 already exist.

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Securities trade SWIFT screen 1')             *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Function:  This module is a replacement for SE1805.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSF011A            Date 28Nov11               *
-      *  Prev Amend No. AR630707           Date 23Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *                 AR630707           Date 23Aug10               *
       *                 AR598682           Date 14Aug10               *
       *                 AR597791           Date 13Aug10               *
       *                 AR580916           Date 22Jul10               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
       *  AR630707 - BULK - Extended Settlement appear twice even if   *
@@ -3016,4 +3018,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

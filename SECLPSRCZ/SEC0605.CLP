@@ -7,12 +7,13 @@
 /*                                                                  */
 /*       SEC0605 - BOOK POSITIONS COMPONENT                         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CSE111             Date 06Oct17              */
+/*       Last Amend No. MD046248           Date 05Feb18              */
+/*       Prev Amend No. CSE111             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 246619             Date 28Mar07              */
+/*                      246619             Date 28Mar07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CSE036             Date 22Apr02              */
@@ -32,6 +33,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       CSE111 - Suppress Account Keys on Back-Value of dividends  */
 /*       246619 - Clear PF/BKPOPD prior to call on PGM/SE2230.       */
 /*       CSE036 - Unrealised Profit and Loss Report by Trade         */
@@ -63,19 +65,18 @@
 /*********************************************************************/
 /************PGM                                                     * *S01189*/
              PGM        PARM(&CNAM &CSEQ)                             /*S01189*/
- 
+
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0605INT                                          */
                                                                       /*S01408*/
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
-                          2001')
+  DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra International +
+               Limited 2001')
 /**/                                                                  /*S01117*/
              DCL        VAR(&LDA)     TYPE(*CHAR)  LEN(256)
              DCL        VAR(&MBR)     TYPE(*CHAR)  LEN(1)
 /************DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(128)          * *S01189*/
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
- 
+
 /*           DCL        VAR(&MEM)  TYPE(*CHAR) LEN(44)               * *S01117*/
              DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)                /*S01117*/
              DCL        VAR(&MSG)  TYPE(*CHAR) LEN(79)
@@ -95,7 +96,7 @@
 /*/COPY WNCPYSRC,SEC0605001                                          */
                                                                       /*S01408*/
                 MONMSG MSGID(CPF2817)
- 
+
              RTVDTAARA DTAARA(SDSTAT) RTNVAR(&SDSTAT)
              CHGVAR    VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
 /************CHGVAR    VAR(&TOLIB) VALUE(&PRE *TCAT 'DLIB')             S01117*/
@@ -104,21 +105,21 @@
 /*/COPY WNCPYSRC,SEC0605MPS                                          */
                                                                       /*S01408*/
              CHGVAR    VAR(&MBR) VALUE('A')
- 
+
 /*  SETUP AND SEND PGM MESSAGE                                      */
- 
+
              CHGVAR     VAR(&MSG) VALUE('SEC0605 - BOOK +
                           POSITIONS UPDATE')
- 
+
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
- 
+
 /*  SET OFF ALL SWITCHES                                            */
- 
+
              CHGJOB SWS(00000000)
- 
+
 /*  CLEAR OUTPUT FILES                                              */
 /*/COPY WNCPYSRC,SEC0605011                                          */
- 
+
              CLRPFM     FILE(BKPORD)
              CLRPFM     FILE(BKPORA)
              CLRPFM     FILE(BKPHRD)
@@ -147,22 +148,22 @@
              CLRPFM     FILE(SEKEYA) MBR(MMREVAL)                                         /*CSE111*/
              ENDDO                                                                        /*CSE111*/
 /**/                                                                                      /*CSE111*/
- 
+
 /*  CHECK FOR COMPONENT RESTART                                     */
- 
+
 /********    RTVDTAARA  DTAARA(SESTAT (1 3)) RTNVAR(&BUSY)            /*S01189*/
              CHGVAR     VAR(&BUSY) VALUE(' ')                         /*S01189*/
              CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)                /*S01189*/
- 
+
 /*  IF RESTART, DISABLE ACCESS PATHS                                */
- 
+
 /********    IF         COND(&BUSY = 'NEW') THEN(DO)                  /*S01189*/
              IF         COND(&BUSY = 'Y') THEN(DO)                    /*S01189*/
- 
- 
+
+
 /*  OVERRIDE TO SEQONLY(*YES 100)                                   */
 /*/COPY WNCPYSRC,SEC0605012                                          */
- 
+
                 OVRDBF     FILE(XBKPHDD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XBKPOSD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XBKPHHD) SEQONLY(*YES 100)
@@ -171,7 +172,7 @@
                 OVRDBF     FILE(XBPACBD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XBKMTHD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XSNDEVD) SEQONLY(*YES 100)
- 
+
                 OVRDBF     FILE(XBKPHDA) SEQONLY(*YES 1)
                 OVRDBF     FILE(XBKPOSA) SEQONLY(*YES 1)
                 OVRDBF     FILE(XBKPHHA) SEQONLY(*YES 1)
@@ -181,8 +182,8 @@
                 OVRDBF     FILE(XBKMTHA) SEQONLY(*YES 1)
                 OVRDBF     FILE(XSNDEVA) SEQONLY(*YES 100)
 /*/COPY WNCPYSRC,SEC0605013                                          */
- 
- 
+
+
                 OVRDBF     FILE(BKPHDD) SEQONLY(*YES 100)
                 OVRDBF     FILE(BKPOSD) SEQONLY(*YES 100)
                 OVRDBF     FILE(BKPHHD) SEQONLY(*YES 100)
@@ -191,7 +192,7 @@
                 OVRDBF     FILE(BPACBD) SEQONLY(*YES 100)
                 OVRDBF     FILE(BKMTHD) SEQONLY(*YES 100)
                 OVRDBF     FILE(SNDEVD) SEQONLY(*YES 100)
- 
+
                 OVRDBF     FILE(BKPHDA) SEQONLY(*YES 1)
                 OVRDBF     FILE(BKPOSA) SEQONLY(*YES 1)
                 OVRDBF     FILE(BKPHHA) SEQONLY(*YES 1)
@@ -200,11 +201,11 @@
                 OVRDBF     FILE(BPACBA) SEQONLY(*YES 1)
                 OVRDBF     FILE(BKMTHA) SEQONLY(*YES 1)
                 OVRDBF     FILE(SNDEVA) SEQONLY(*YES 1)
- 
- 
+
+
 /*  AND COPY FILES                                                  */
 /*/COPY WNCPYSRC,SEC0605014                                          */
- 
+
                 CPYF       FROMFILE(XBKPHDD) TOFILE(BKPHDD) +
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
@@ -213,7 +214,7 @@
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM BKPHDA)
- 
+
                 CPYF       FROMFILE(XBKPHHD) TOFILE(BKPHHD) +
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
@@ -222,7 +223,7 @@
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM BKPHHA)
- 
+
                 CPYF       FROMFILE(XBKPOSD) TOFILE(BKPOSD) +
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
@@ -231,7 +232,7 @@
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM BKPOSA)
- 
+
                 CPYF       FROMFILE(XBPACHD) TOFILE(BPACHD) +
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
@@ -244,7 +245,7 @@
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM BPACBD)
- 
+
                 CPYF       FROMFILE(XBPACHA) TOFILE(BPACHA) +
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
@@ -257,7 +258,7 @@
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM BPACBA)
- 
+
                 CPYF       FROMFILE(XBKMTHD) TOFILE(BKMTHD) +
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
@@ -266,7 +267,7 @@
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM BKMTHA)
- 
+
                 CPYF       FROMFILE(XSNDEVD) TOFILE(SNDEVD) +
                             MBROPT(*REPLACE) FMTOPT(*NONE)            /*E20085*/
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
@@ -278,21 +279,21 @@
 /*                                                                    /*S01408*/
 /*/COPY WNCPYSRC,SEC0605009                                           /*S01408*/
 /*                                                                    /*S01408*/
- 
+
 /*  CHANGE DATA AREA TO 'OLD'                                      */
- 
+
 /********       CHGDTAARA  DTAARA(SESTAT (1 3)) VALUE('OLD')          /*S01189*/
                 CHGVAR     VAR(&BUSY) VALUE('N')                      /*S01189*/
                 CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)             /*S01189*/
- 
+
              ENDDO
- 
+
 /*  ELSE BACKUP FILES                                               */
- 
+
              ELSE       CMD(DO)
- 
+
 /* DELETE COPY FILES                               */
- 
+
                DLTF       FILE(XBKPOSD)
                    MONMSG MSGID(CPF0000)
                DLTF       FILE(XBKPOSA)
@@ -326,14 +327,14 @@
                    MONMSG MSGID(CPF0000)
                DLTF       FILE(XSNDEVA)
                    MONMSG MSGID(CPF0000)
- 
+
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0605002                                          */
                                                                       /*S01408*/
- 
+
 /*  OVERRIDE TO SEQONLY                                             */
 /*/COPY WNCPYSRC,SEC0605016                                          */
- 
+
                 OVRDBF     FILE(XBKPHDD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XBKPOSD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XBKPHHD) SEQONLY(*YES 100)
@@ -342,7 +343,7 @@
                 OVRDBF     FILE(XBPACBD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XBKMTHD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XSNDEVD) SEQONLY(*YES 100)
- 
+
                 OVRDBF     FILE(XBKPHDA) SEQONLY(*YES 1)
                 OVRDBF     FILE(XBKPOSA) SEQONLY(*YES 1)
                 OVRDBF     FILE(XBKPHHA) SEQONLY(*YES 1)
@@ -352,7 +353,7 @@
                 OVRDBF     FILE(XBKMTHA) SEQONLY(*YES 1)
                 OVRDBF     FILE(XSNDEVA) SEQONLY(*YES 100)
 /*/COPY WNCPYSRC,SEC0605017                                          */
- 
+
                 OVRDBF     FILE(BKPHDD) SEQONLY(*YES 100)
                 OVRDBF     FILE(BKPOSD) SEQONLY(*YES 100)
                 OVRDBF     FILE(BKPHHD) SEQONLY(*YES 100)
@@ -361,7 +362,7 @@
                 OVRDBF     FILE(BPACBD) SEQONLY(*YES 100)
                 OVRDBF     FILE(BKMTHD) SEQONLY(*YES 100)
                 OVRDBF     FILE(SNDEVD) SEQONLY(*YES 100)
- 
+
                 OVRDBF     FILE(BKPHDA) SEQONLY(*YES 1)
                 OVRDBF     FILE(BKPOSA) SEQONLY(*YES 1)
                 OVRDBF     FILE(BKPHHA) SEQONLY(*YES 1)
@@ -370,10 +371,10 @@
                 OVRDBF     FILE(BPACBA) SEQONLY(*YES 1)
                 OVRDBF     FILE(BKMTHA) SEQONLY(*YES 1)
                 OVRDBF     FILE(SNDEVA) SEQONLY(*YES 1)
- 
+
 /*  AND COPY FILES                                                 */
 /*/COPY WNCPYSRC,SEC0605018                                          */
- 
+
              CPYF       FROMFILE(BKPHDD) TOFILE(&TOLIB/XBKPHDD) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           FMTOPT(*NONE)
@@ -389,7 +390,7 @@
                           FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM XBKPHHD)
- 
+
              CPYF       FROMFILE(BPACHD) TOFILE(&TOLIB/XBPACHD) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           FMTOPT(*NONE)
@@ -405,7 +406,7 @@
                           FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM XBPACBD)
- 
+
              CPYF       FROMFILE(BKPOSA) TOFILE(&TOLIB/XBKPOSA) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           FMTOPT(*NONE)
@@ -436,7 +437,7 @@
                           FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM XBPACBA)
- 
+
              CPYF       FROMFILE(BKMTHD) TOFILE(&TOLIB/XBKMTHD) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           FMTOPT(*NONE)
@@ -447,7 +448,7 @@
                           FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM XBKMTHA)
- 
+
              CPYF       FROMFILE(SNDEVD) TOFILE(&TOLIB/XSNDEVD) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           FMTOPT(*NONE)
@@ -461,70 +462,70 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0605003                                          */
                                                                       /*S01408*/
- 
+
              ENDDO
- 
+
 /*  CHANGE DATA AREA TO 'NEW'                                       */
- 
+
 /********    CHGDTAARA  DTAARA(SESTAT (1 3)) VALUE('NEW')             /*S01189*/
              CHGVAR     VAR(&BUSY) VALUE('Y')                         /*S01189*/
              CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)                /*S01189*/
- 
+
 /*  SETUP AND SEND PGM MESSAGE                                      */
- 
+
              CHGVAR     VAR(&MBR) VALUE('A')
              CHGVAR     VAR(&MSG) VALUE('SEC0605A - Reset Book +
                           Positions for Backvaluations')
- 
+
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
 /*/COPY WNCPYSRC,SEC0605010                                          */
- 
+
            CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CSE036')                        /*CSE036*/
            IF         COND(&RTCD *EQ '       ') THEN(DO)                                  /*CSE036*/
- 
+
 /*    Save a copy of BKPOS before updating for reversals                                  /*CSE036*/
- 
+
              CPYF       FROMFILE(BKPOSD) TOFILE(SEBKPSVD) +
                           MBROPT(*REPLACE)                                                /*CSE036*/
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM SEBKPSVD)                                         /*CSE036*/
- 
+
 /*    Save a copy of BKPHD before updating for reversals                                  /*CSE036*/
- 
+
              CPYF       FROMFILE(BKPHDD) TOFILE(SEBKHSVD) +
                           MBROPT(*REPLACE)                                                /*CSE036*/
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM SEBKHSVD)                                         /*CSE036*/
- 
+
            ENDDO                                                                          /*CSE036*/
- 
+
 /*  CALL PROGRAM                                                    */
- 
+
              CALL       PGM(SE2230)
- 
+
              DLTOVR     FILE(*ALL)
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA                     */
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))
- 
+
 /* SETUP AND SEND PGM MESSAGE                                    */
- 
+
              CHGVAR     VAR(&MBR) VALUE('B')
              CHGVAR     VAR(&MSG) VALUE('SEC0605B - Generate A/C Keys +
                           - Book Positions - Reversals Since +
                           Backvaluation')
- 
+
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
- 
+
 /* SET SWITCH U1 ON TO INDICATE REVERSAL MODE                    */
 /* AND SET OFF OTHER SWITCHES                                    */
- 
+
              CHGJOB SWS(10000000)
- 
+
 /* OVERRIDE FILES                                                */
- 
+
              OVRDBF     FILE(BPACC) TOFILE(BPACR)
              OVRDBF     FILE(BKPHD) TOFILE(BKPHR)
              OVRDBF     FILE(BKPOS) TOFILE(BKPOR)
@@ -545,7 +546,7 @@
              CALL       PGM(SE0050)                                                       /*CSE111*/
              GOTO       DUGTAGA                                                           /*CSE111*/
              ENDDO                                                                        /*CSE111*/
- 
+
 /* CALL PROGRAM                                                  */
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0605004                                          */
@@ -556,9 +557,9 @@
                                                                       /*S01408*/
 DUGTAGA:                                                                                  /*CSE111*/
              DLTOVR     FILE(*ALL)
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA                     */
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))
                                                                                           /*CSE111*/
@@ -587,21 +588,21 @@ DUGTAGA:                                                                        
                                                                                           /*CSE111*/
              ENDDO                                                                        /*CSE111*/
 /**/                                                                                      /*CSE111*/
- 
+
 /*  SETUP AND SEND PGM MESSAGE                                      */
- 
+
              CHGVAR     VAR(&MBR) VALUE('C')
              CHGVAR     VAR(&MEM) VALUE('SEC0605C - Delete Reversed +
                           Book Position Actions')
- 
+
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
- 
+
 /*  SET OFF ALL SWITCHES                                            */
- 
+
              CHGJOB SWS(00000000)
- 
+
 /*  CALL PROGRAM                                                    */
- 
+
              IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
              CALL       PGM(SE0052)                                                       /*CSE111*/
              GOTO       CMDLBL(DUGTG1)                                                    /*CSE111*/
@@ -611,80 +612,80 @@ DUGTAGA:                                                                        
                                                                                           /*CSE111*/
  DUGTG1:                                                                                  /*CSE111*/
              DLTOVR     FILE(*ALL)
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA                     */
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))
- 
+
 /*  SETUP AND SEND PGM MESSAGE                                      */
- 
+
              CHGVAR     VAR(&MBR) VALUE('D')
              CHGVAR     VAR(&MSG) VALUE('SEC0605D - Reset Book Positi+
                           ons for Backvaluations')
- 
+
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
- 
+
 /*  SET OFF ALL SWITCHES                                            */
- 
+
              CHGJOB SWS(00000000)
- 
+
 /*  CALL PROGRAM                                                    */
- 
+
              CALL       PGM(SE2250)
- 
+
              DLTOVR     FILE(*ALL)
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA                     */
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))
- 
+
 /*  SETUP AND SEND PGM MESSAGE                                      */
- 
+
              CHGVAR     VAR(&MBR) VALUE('E')
              CHGVAR     VAR(&MSG) VALUE('SEC0605E - Generate Coupon +
                           Actions for Back-Valuations')
- 
+
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
- 
+
 /*  SET OFF ALL SWITCHES                                            */
- 
+
              CHGJOB SWS(00000000)
- 
+
 /*  CALL PROGRAM                                                    */
- 
+
              CALL       PGM(SE2235)
- 
+
              DLTOVR     FILE(*ALL)
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA                     */
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))
- 
+
 /*  SETUP AND SEND PGM MESSAGE                                      */
- 
+
              CHGVAR     VAR(&MBR) VALUE('F')
              CHGVAR     VAR(&MSG) VALUE('SEC0605F - Generate A/C Keys +
                           - Book Positions - Forward Mode')
- 
+
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
- 
+
 /*  CREATE FILE OF RE-ACTIONED HISTORIC TRADES FOR REPORTING        */
- 
+
              CPYF       FROMFILE(BPACHD) TOFILE(BPACHZ) +
                           MBROPT(*REPLACE) INCREL((*IF RECI *EQ 'D')) +
                           FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM BPACHZ)
- 
+
 /*  SET OFF ALL SWITCHES                                            */
- 
+
              CHGJOB SWS(00000000)
- 
+
 /*  OVERRIDE FILES                                                  */
- 
+
                 OVRDBF     FILE(SEKEYD) TOFILE(SEKEYD) MBR(BKPOSN)
                 OVRDBF     FILE(SEKEYA) TOFILE(SEKEYA) MBR(BKPOSN)
                 OVRDBF     FILE(HTRACBX) TOFILE(HTRACB) SHARE(*NO)
@@ -702,13 +703,13 @@ DUGTAGA:                                                                        
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0605007                                          */
                                                                       /*S01408*/
- 
+
 DUGTAGB:                                                                                  /*CSE111*/
              DLTOVR     FILE(*ALL)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))
- 
+
              IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
 /** Setup and send PGM message                                                            /*CSE111*/
                                                                                           /*CSE111*/
@@ -735,53 +736,53 @@ DUGTAGB:                                                                        
              ENDDO                                                                        /*CSE111*/
                                                                                           /*CSE111*/
 /*  SETUP AND SEND PGM MESSAGE                                      */
- 
+
              CHGVAR     VAR(&MBR) VALUE('G')
              CHGVAR     VAR(&MSG) VALUE('SEC0605G - Profit Adjustment +
                           Reconciliation Report')
- 
+
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
- 
- 
+
+
 /*  SET OFF ALL SWITCHES                                            */
- 
+
              CHGJOB SWS(00000000)
- 
+
 /* Preserve data from BPACxD for SE0720 and SE0730              */
- 
+
                 CPYF       FROMFILE(BPACBD) TOFILE(BPACBZ) +
                             MBROPT(*REPLACE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                            EXEC(CLRPFM BPACBZ)
- 
+
                 CPYF       FROMFILE(BPACCD) TOFILE(BPACCZ) +
                             MBROPT(*REPLACE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                            EXEC(CLRPFM BPACCZ)
- 
+
 /*  CALL PROGRAM                                                    */
- 
+
              IF         COND(&CSE111 *EQ 'Y') THEN(DO)                                    /*CSE111*/
              CALL       PGM(SE0053)                                                       /*CSE111*/
              GOTO       CMDLBL(DUGTG2)                                                    /*CSE111*/
              ENDDO                                                                        /*CSE111*/
- 
+
              CALL       PGM(SE0740)
- 
+
  DUGTG2:                                                                                  /*CSE111*/
              DLTOVR     FILE(*ALL)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           (%SWITCH(XXXXXXX1))) THEN(GOTO CMDLBL(ERROR))
- 
+
 /*  IF U7 AND U8 OFF, CHANGE SESTAT TO "OLD"                       */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
 /********      CHGDTAARA  DTAARA(SESTAT (1 3)) VALUE('OLD')          * *S01189*/
                CHGVAR     VAR(&BUSY) VALUE('N')                       /*S01189*/
                CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)              /*S01189*/
- 
+
 /*  COPY ACTIONS TO BPACHD                                            /*E23769*/
                                                                       /*E23769*/
 /*           CPYF       FROMFILE(BPACCD) TOFILE(BPACHD) MBROPT(*ADD) +/*E29207*/
@@ -797,16 +798,16 @@ DUGTAGB:                                                                        
              CALL SE0605                                              /*153017*/
 /* */                                                                 /*153017*/
 /* CLEAR OUTPUT FILES                                            */
- 
+
              CLRPFM     FILE(BKPORD)
              CLRPFM     FILE(BKPORA)
              CLRPFM     FILE(BKPHRD)
              CLRPFM     FILE(BKPHRA)
              CLRPFM     FILE(BPACCD)
              CLRPFM     FILE(BPACBD)
- 
+
 /*  CLEAR FILES                                                    */
- 
+
              DLTF       FILE(XBKPOSD)
                  MONMSG MSGID(CPF0000)
              DLTF       FILE(XBKPOSA)
@@ -847,9 +848,9 @@ DUGTAGB:                                                                        
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0605MPE                                          */
                                                                       /*S01408*/
- 
+
 /*  FOR DATABASE ERRORS RECOVER DATA FROM LDA                       */
- 
+
  ERROR:      IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
 /*              RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)         * *S01117*/
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)          /*S01117*/
@@ -860,18 +861,17 @@ DUGTAGB:                                                                        
                 SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ MOPERQ)
                 GOTO ENDPGM
              ENDDO
- 
+
 /*  FOR FILE CONTROLS OUT OF BALANCE ERROR                          */
- 
+
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MEM) VALUE('SEC0605' *TCAT &MBR *TCAT +
                           ' - File Controls Out Of Balance')
                 SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ MOPERQ)
              ENDDO
- 
+
 /*ENDPGM:*****ENDPGM                                                 * *S01117*/
-ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC0605END                                          */
                                                                       /*S01408*/

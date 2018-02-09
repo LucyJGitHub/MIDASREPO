@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Eq. Holidays to Currency Calendar Holiday Mapping')
@@ -16,17 +16,19 @@
       *  Called By: SD000056 - Holiday Mapping and Update of Equation *
       *                        Currency and Branch Calendars          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14620C          Date 03Sep07               *
+      *  Prev Amend No. BUG14620C          Date 03Sep07               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. BG12014            Date 10Nov06               *
+      *                 BG12014            Date 10Nov06               *
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG14620C - Consumer Banking Data Migration                  *
       *              Get the branch from SDBRCHPD                     *
       *  BG12014 - Holiday updates are not replicated into equation.  *
@@ -571,4 +573,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

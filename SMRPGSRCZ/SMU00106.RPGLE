@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Crt. missing initial value rcds on SEDEVD')
@@ -9,15 +9,17 @@
       *                                                               *
       *  SMU00106 - Create missing initial value records in SEDEVD    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       *---------------------------------------------------------------*
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. R10.6/19           Date 29FEB96               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 R10.6/19           Date 29FEB96               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993  - Delivery of upgrade programs to core.             *
       *           - Renamed program X.6P1901.                         *
       *  R10.6/19 - Create missing initial value records in diary     *

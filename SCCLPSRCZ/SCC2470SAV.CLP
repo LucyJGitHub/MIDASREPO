@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       SCC2470SAV - Save Journal Receivers To Save Files           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. MD036915           Date 06Jan16              */
-/*       Prev Amend No. AR855839           Date 25Nov12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD036915           Date 06Jan16              */
+/*                      AR855839           Date 25Nov12              */
 /*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      260790  *CREATE    Date 19Jun09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD036915 - COB: COBJRNMON is not ready for IASP.            */
 /*       AR855839 - Reopen of Input cycle gives MSGW in COBJRNMON.   */
 /*                  Fix is to CALL CB0602X and AOSARDR0 only when    */
@@ -79,7 +81,7 @@
 /* Copyright statement definition */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
 /**/
 /* Global MONMSG */

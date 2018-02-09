@@ -9,17 +9,19 @@
       *                                                               *
       *  SM001075 - Midas SM Copy Selected Account keys to new acct   *
       *                                                               *
-      *  (c) Misys Banking Systems Ltd. 2014                          *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD027475 *CREATE   Date 29Aug14               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. MD027475 *CREATE   Date 29Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027475 - Narrative PDCL_loan event (subtype_change)        *
 /*    *             Utility to correct PF/ACKEYAL.                    *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -27,20 +29,20 @@
      D AccountKey    E DS                  EXTNAME(ACKEYAL)
      D AAKEY           DS            14
      D   EVENTID               3      3A
- 
+
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
       ** ¦ ====================                 ¦
       ** +--------------------------------------+
      D SQLSTR          S           2000A   INZ(*BLANKS)
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   EVAL      SQLSTR = 'SELECT * FROM ACKEYAL ' +
      C                             'WHERE   SUBSTRING(AKEY,3,1) = ''R'' ' +
      C                             'AND SUBSTRING(AKEY,6,1) = ''T'' ' +

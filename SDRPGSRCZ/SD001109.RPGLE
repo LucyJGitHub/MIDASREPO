@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Time Zone History Report Program')
@@ -12,15 +12,17 @@
       *  Function:  This program list all Time Zone Code history      *
       *             defined in the system.                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG20953           Date 11Sep08               *
-      *  Prev Amend No. CSW208  *CREATE    Date 15Apr08               *
+      *  Prev Amend No. BUG20953           Date 11Sep08               *
+      *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG20953 - Dberror on SDC001109 00001 during COB             *
       *  CSW208 - SWIFT 2008 Changes                                  *
       *                                                               *
@@ -773,4 +775,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

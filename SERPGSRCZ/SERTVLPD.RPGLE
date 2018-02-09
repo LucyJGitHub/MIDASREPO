@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Retrieve Last Purchase Date')
@@ -9,23 +9,25 @@
       *                                                               *
       *  SERTVLPD - Retrieve Last Purchase Date                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
       *    This program retrieve the last purchase date from          *
       *    Trade Sale(TS) or Walk-In.                                 *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 234300             Date 26Sep06               *
-      *  Prev Amend No. CSD027A            Date 05May06               *
+      *  Prev Amend No. 234300             Date 26Sep06               *
+      *                 CSD027A            Date 05May06               *
       *                 CGL035             Date 01Mar05               *
       *                 234404             Date 24Jun05               *
       *                 234440  *CREATE    Date 18Jun05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  234300 - Recompiled over changed in PF/HSTTRD.               *
       *  CSD027A - Conversion Of Customer Number to Alpha (Recompile) *
       *  CGL035 - EUSD Upgrade to Midasplus                           *
@@ -221,4 +223,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

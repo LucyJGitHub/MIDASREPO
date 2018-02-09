@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Sec diary events retrieve + actn/key val')    *
@@ -19,10 +19,11 @@
       *                SESEDERPR                                      *
       *                SESEDEUPC                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD038918           Date 31May16               *
-      *  Prev Amend No. 260331             Date 31Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038918           Date 31May16               *
+      *                 260331             Date 31Mar16               *
       *                 MD000091           Date 17May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD038918 - Rate reset in Bank Fusion. Allow insertion of IR  *
       *             event for an FRN security with event date equal   *
       *             to the coupon array or the adjusted coupon date.  *
@@ -1940,6 +1942,6 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   TABMTH/TABDAY     Month No/No of days in month
 013102280331043005310630073108310930103111301231

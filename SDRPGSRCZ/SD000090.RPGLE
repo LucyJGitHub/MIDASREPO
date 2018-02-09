@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Location Mapping & update of Equation Region File')
@@ -14,15 +14,17 @@
       *  Called By: SDC000081 - Update Equation with consumer Banking *
       *                         Standing Data Details Control         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG13700           Date 24Apr07               *
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *  Prev Amend No. BUG13700           Date 24Apr07               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG13700 - Trigger program for Midas Location not working    *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
@@ -442,4 +444,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD T Distribution Table Maintenance')
@@ -12,17 +12,19 @@
       *  Function:  This module manages a table of critical T         *
       *             Values used in Regression calculations.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAS007             Date 26Apr04               *
-      *  Prev Amend No. CAS006  *CREATE    Date 21Jan03               *
+      *  Prev Amend No. CAS007             Date 26Apr04               *
+      *                 CAS006  *CREATE    Date 21Jan03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAS007 - Hedge Accounting Control                            *
       *  CAS006 - Hedge Accounting Phase B                            *
       *                                                               *
@@ -1907,4 +1909,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

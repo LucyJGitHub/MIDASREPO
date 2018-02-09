@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SCC0002 - Determine the Level of the Midas System           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CUP023             Date 17Mar11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP023             Date 17Mar11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CPK014             Date 27Sep01              */
+/*                      CPK014             Date 27Sep01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      159708  *CREATE    Date 23Apr99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP023 - Addition of sequence numbers for release levels    */
 /*                (Recompile)                                        */
 /*       CPK014 - Release 4 packaging:                               */
@@ -45,7 +47,7 @@
              DCL        VAR(&AXIREL) TYPE(*CHAR) LEN(3)
              DCL        VAR(&MSGNUMBER) TYPE(*CHAR) LEN(2)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(SCRELHPD)
@@ -115,7 +117,7 @@ LOOP1:
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,SCC0002END                                          */
  

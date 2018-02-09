@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Cashier Transaction Posting Details')         *
@@ -12,10 +12,11 @@
       *  Function:  This program allows the user to maintain and      *
       *             enquire Cashier Transaction Posting Details       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CER030             Date 09Jul08               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature (Recompile)                *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -2509,4 +2511,4 @@ D=Delete   F3=Exit   F5=Refresh   F9=Go to 'Add' Mode
 F3=Exit   F5=Refresh   F9=Go to 'Change' Mode
 F3=Exit   F5=Refresh
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

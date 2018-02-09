@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       SEC0616 - AMORTISATION BY SECURITY REPORT                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSE105             Date 06Dec10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSE105             Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*       Prev Amend No. CSE006             Date 21Jul99              */
+/*                      CSE006             Date 21Jul99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      E47991             Date 01Feb93              */
 /*                      S01397             DATE 10SEP92              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSE105 - Portuguese Upgrade - Discount/Premium Amortisation */
 /*                on Trade Date                                      */
 /*       CSE006 - REPURCHASE AGREEMENTS ENHANCEMENTS                 */
@@ -42,7 +44,7 @@
              DCL (&MEM)  TYPE(*CHAR) LEN(44)
              DCL (&PARM) TYPE(*CHAR) LEN(8)                          /*CSE006*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*/COPY WNCPYSRC,SEC0616001                                          */
@@ -210,6 +212,6 @@
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

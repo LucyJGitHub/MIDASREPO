@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Customer income extract')
@@ -13,13 +13,14 @@
       *             from position settlement file and output income   *
       *             record to customer income detail file.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. BUG27723           Date 07Jun10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27723           Date 07Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. CSD079             Date 05Feb07               *
+      *                 CSD079             Date 05Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27723 - SEC7610 00001 Attempt made to divide by zero      *
       *             for fixed point operation                         *
       *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
@@ -888,7 +890,7 @@
       *
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  PoArr - ARRAY OF POWERS FOR CURRENCY CONVERSION  (MEMBER ZPOWERZ2)                        187473
 00000001                                                                                      187473
 00000010                                                                                      187473

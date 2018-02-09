@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Federal States Codes')               *
@@ -9,19 +9,21 @@
       *                                                               *
       *  SDVGERCOD - Validate State Codes                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
       *    This source is created as a validation for the third       *
       *    tax details.                                               *
       *                                                               *
-      *  Last Amend No. AR739532           Date 30Mar11               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR739532           Date 30Mar11               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG25854           Date 08Sep09               *
       *                 BUG25533           Date 19Aug09               *
       *                 CER054  *CREATE    Date 07Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR739532 - CUSD Error issued if State code has value         *
       *             (Child : AR739533)                                *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -378,4 +380,4 @@
      C                   ENDSR
       ********************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

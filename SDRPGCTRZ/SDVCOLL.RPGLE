@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Collateralised Lending Fields')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVCOLL  - Validate Collateralised Lending Fields            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,16 +17,18 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG3644            Date 12Jul04               *
-      *  Prev Amend No. CFX001             Date 20Oct03               *
+      *  Prev Amend No. BUG3644            Date 12Jul04               *
+      *                 CFX001             Date 20Oct03               *
       *                 CLE025  *CREATE    Date 20Oct03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
       *  CFX001 - FX Margin Trading                                   *
       *  CLE025 - Multi-Option Facilities                             *
@@ -351,4 +353,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

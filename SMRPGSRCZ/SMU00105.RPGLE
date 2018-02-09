@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Init. the Modulus 10 field on SDBANKPD')
@@ -9,14 +9,16 @@
       *                                                               *
       *  SMU00105 - Upgrade Bank ICD File with Modulus 10 Value.      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. R10.6/xx           Date 29Feb96               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 R10.6/xx           Date 29Feb96               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993  - Delivery of upgrade programs to core.             *
       *           - Renamed program X.6P0701.                         *
       *  R10.6/xx - Initialise the Modulus 10 field on SDBANKPD       *

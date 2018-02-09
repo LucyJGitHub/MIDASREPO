@@ -7,14 +7,15 @@
 /*                                                                  */
 /*         SEC3000 - BULK INPUT                                     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 235546           Date 23Aug05                */
-/*       Prev Amend No. 234691           Date 05Jul05                */
+/*       Prev Amend No. 235546             Date 23Aug05              */
+/*                      234691             Date 05Jul05              */
 /*                      CRE020             Date 20Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      204747             Date 30Apr02              */
@@ -29,6 +30,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       235546 - monitor for activation group mot exists           */
 /*       234691 - Internal failure in compiler error ib SE001805    */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
@@ -45,7 +47,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
 /************DCL        VAR(&MEM)  TYPE(*CHAR) LEN(44)               * *S01117*/
@@ -160,7 +162,7 @@
  
 /**EXIT:********ENDPGM                                                * *S01117*/
 EXIT:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLACTGRP  ACTGRP(SE001805)                              /*234691*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*235546*/
              ENDPGM                                                   /*S01117*/

@@ -8,18 +8,20 @@
       *                                                               *
       *  SD0282 - Loan Type/Sub-Type                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG11548           Date 22Jun06               *
-      *  Prev Amend No. CLE042             Date 06Sep05               *
+      *  Prev Amend No. BUG11548           Date 22Jun06               *
+      *                 CLE042             Date 06Sep05               *
       *                 CER001  *CREATE    Date 25Apr05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG11548 - Error message is displayed when amending LTST     *
       *  CLE042 - Extended Loan Sub Type                              *
       *  CER001 - LUX Upgrade to MidasPlus                            *
@@ -1086,4 +1088,4 @@
       *
      C                   ENDSR
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

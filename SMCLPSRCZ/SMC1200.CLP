@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       SMC1200 - Restore PTF source                                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. BUG27240           Date 12Mar10              */
+/*                      BUG27240           Date 12Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CUP033             Date 18Sep06              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       BUG27240- Applied CPK029 file locking fix                   */
 /*       CPK029 - Stop lock on file.                                 */
@@ -55,7 +57,7 @@
              DCL        VAR(&RESULT) TYPE(*DEC) LEN(3)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /**********  DCLF       FILE(UPSVALJ0)  */                                         /*CUP033 CSC043*/
@@ -222,5 +224,5 @@ ABNOR:
              MONMSG     MSGID(CPF0000)
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

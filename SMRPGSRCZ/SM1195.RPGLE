@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Initialise SDFCTLPA and TABLETX details')
@@ -9,14 +9,15 @@
       *                                                               *
       *  SM1195 - Initialise file totals in SDFCTLPA / TABLETX        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSW037A            Date 02May05               *
-      *  Prev Amend No. CSD025             Date 11Jan05               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
       *                 CSW037             Date 15Dec04               *
       *                 CSW036             Date 15Dec04               *
       *                 CUP016  *CREATE    Date 01Apr03               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
       *  CSD025 - Customer De-Activation                              *
       *  CSW037 - Additional Field Data on MT300/MT320                *

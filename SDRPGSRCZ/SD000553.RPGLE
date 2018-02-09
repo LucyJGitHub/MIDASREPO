@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Normal Cust/NAHO Classfn Upd and Report')     *
@@ -10,10 +10,11 @@
       *                                                               *
       *  SD000553 - Normal Customer/NAHO Classification Upd and Rept  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD027334A          Date 23Sep14               *
-      *  Prev Amend No. MD027209B          Date 26Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027334A          Date 23Sep14               *
+      *                 MD027209B          Date 26Sep14               *
       *                 MD027209           Date 07Aug14               *
       *                 MD027033           Date 29May14               *
       *                 MD026854           Date 29May14               *
@@ -21,6 +22,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027334A- Validation on Mandatory Class Code removed        *
       *  MD027209B - F4-Print Report is not available in USIT and NCUP*
       *  MD027209 - F4-Print Report is not available in USIT and NCUP *

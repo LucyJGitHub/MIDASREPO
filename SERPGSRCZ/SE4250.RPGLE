@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Request of securities statement - Browse')
@@ -12,17 +12,19 @@
       *  Function:  This module manages a subfile that allows to work *
       *             with the Request of Statements.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CRE026             Date 24May06               *
+      *  Prev Amend No. CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. TDA035             Date 02Apr04               *
+      *                 TDA035             Date 02Apr04               *
       *                 CSE040   *CREATE   Date 19Feb03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
       *  CSE040 - Securities Statement Processing                     *
@@ -1017,4 +1019,4 @@
  
       *========================================================================*
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

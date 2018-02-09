@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCKOBJLCB - Kill Object Locks in COB                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD036791           Date 09Dec15              */
-/*       Prev Amend No. MD021351 *REWRITE  Date 23Jul13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD036791           Date 09Dec15              */
+/*                      MD021351           Date 23Jul13              */
 /*                      CCB023             Date 06Aug12              */
 /*                      CBF002             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD036791 - Failed Component SCKOBJLCB 00003                 */
 /*       MD021351 - Design for Kill object locks                     */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
@@ -37,7 +39,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&REPORT)
-
+ 
              DCL        VAR(&SYS) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
@@ -55,7 +57,7 @@
              DCL        VAR(&KOPTLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&KINPLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTQDLEN) TYPE(*DEC) LEN(5) VALUE(1)
-
+ 
              DCL        VAR(&LIBN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ZOGL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PFMT) TYPE(*CHAR) LEN(200)
@@ -63,22 +65,22 @@
 /*/COPY SDCPYSRC,SDSVALDCL                                           */
              DCL        VAR(&REPORT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PIMMED) TYPE(*CHAR) LEN(1) VALUE('N')
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYS)
-
+ 
              CHGVAR     VAR(&DMLIB) VALUE(&SYS *CAT 'DMLIB')
              CHGVAR     VAR(&DTALIB) VALUE(&SYS *CAT 'DTALIB')
              CHGVAR     VAR(&DPLIB) VALUE(&SYS *CAT 'DPLIB')
              CHGVAR     VAR(&SVALK1) VALUE('KillObjLockCoBRetry')
-
+ 
              CHGJOB     SWS(XXXXXX00)
-
+ 
              DLTF       FILE(QTEMP/OBJLCK)
              MONMSG     MSGID(CPF0000)
-
+ 
              CALL       PGM(AOSVALR0) PARM(&RSVALRTNC &SVALK1 &SVAL1 +
                           &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
                           &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
@@ -87,9 +89,9 @@
              IF         COND(&RSVALRTNC *NE '       ') THEN(GOTO +
                           CMDLBL(ABNOR))
              CHGVAR     VAR(&RETRYS) VALUE(&SVAL1)
-
+ 
 /** Terminate report distribution program */
-
+ 
              ALCOBJ     OBJ((FC0100 *DTAARA *EXCL)) WAIT(5)
              MONMSG     MSGID(CPF1002) EXEC(DO)
                 CALL       PGM(QSNDDTAQ) PARM('FCDTAQ' '*LIBL' +
@@ -99,105 +101,105 @@ RETRYFC:
                 MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(RETRYFC))
              ENDDO
              DLCOBJ     OBJ((FC0100 *DTAARA *EXCL))
-
+ 
 /** Check if objects in the 'DM','DTA','BF' libraries are locked */
-
+ 
              IF         COND(&REPORT *EQ 'N') THEN(DO)
-
+ 
                 CLRPFM     FILE(SCOBJLPD)
-
+ 
 /** DSPOBJD objects in DMLIB */
-
+ 
                 CALL       PGM(SCCOBJLCKR) PARM('*ALL' &DMLIB *FILE +
                              'OBJLCK' 'QTEMP' &PIMMED)
 /**********     CPYF       FROMFILE(QTEMP/DSPOBJD) +                     */             /*MD036791*/
 /**********                  TOFILE(&DPLIB/SCOBJLPD) MBROPT(*ADD)        */             /*MD036791*/
-
+ 
              CPYF       FROMFILE(QTEMP/DSPOBJD) +
                           TOFILE(&DPLIB/SCOBJLPD) MBROPT(*ADD) +
                           FMTOPT(*MAP *DROP)                                            /*MD036791*/
-
+ 
 /** DSPOBJD objects in DTALIB */
-
+ 
                 CALL       PGM(SCCOBJLCKR) PARM('*ALL' &DTALIB *FILE +
                              'OBJLCK' 'QTEMP' &PIMMED)
 /**********     CPYF       FROMFILE(QTEMP/DSPOBJD) +                     */             /*MD036791*/
 /**********                  TOFILE(&DPLIB/SCOBJLPD) MBROPT(*ADD)        */             /*MD036791*/
-
+ 
              CPYF       FROMFILE(QTEMP/DSPOBJD) +
                           TOFILE(&DPLIB/SCOBJLPD) MBROPT(*ADD) +
                           FMTOPT(*MAP *DROP)                                            /*MD036791*/
-
+ 
                 CHGVAR     VAR(&OPTN) VALUE('*FIRST ')
 LOOP:
                 CALL       PGM(AOBKLBR0) PARM(&PRTCD &OPTN &PFMT)
                 CHGVAR     VAR(&LIBN) VALUE(%SST(&PFMT 1 10))
                 CHGVAR     VAR(&ZOGL) VALUE(%SST(&PFMT 111 10))
-
+ 
                 IF         COND(&PRTCD *EQ '*EMPTY' *OR &PRTCD *EQ +
                              '*EOF' *OR &PRTCD *EQ '*NRF') THEN(DO)
                    CHGVAR     VAR(&OPTN) VALUE('*FREE  ')
                    CALL       PGM(AOBKLBR0) PARM(&PRTCD &OPTN &PFMT)
                    GOTO       CMDLBL(CONT)
                 ENDDO
-
+ 
                 IF         COND(&PRTCD *NE ' ') THEN(DO)
                    CHGVAR     VAR(&OPTN) VALUE('*FREE  ')
                    CALL       PGM(AOBKLBR0) PARM(&PRTCD &OPTN &PFMT)
                    GOTO       CMDLBL(ABNOR)
                 ENDDO
-
+ 
 /** Do check processing only for Zonal Libraries */
-
+ 
                 IF         COND(&ZOGL *EQ 'GLOBAL') +
                             THEN(GOTO CMDLBL(LOOP))
-
+ 
 /** For each record in schemas/libraries file, check for object locks */
-
+ 
                 CALL       PGM(SCCOBJLCKR) PARM('*ALL' &LIBN *FILE +
                              'OBJLCK' 'QTEMP' &PIMMED)
 /**********     CPYF       FROMFILE(QTEMP/DSPOBJD) +                     */             /*MD036791*/
 /**********                  TOFILE(&DPLIB/SCOBJLPD) MBROPT(*ADD)        */             /*MD036791*/
-
+ 
              CPYF       FROMFILE(QTEMP/DSPOBJD) +
                           TOFILE(&DPLIB/SCOBJLPD) MBROPT(*ADD) +
                           FMTOPT(*MAP *DROP)                                            /*MD036791*/
-
+ 
              ENDDO
-
+ 
 CONT:
              OVRDBF     FILE(DSPOBJD) TOFILE(SCOBJLPD)
              CALL       PGM(SCCOBJLCKJ)
-
+ 
              CHGVAR     VAR(&RETRIED) VALUE(0)
-
+ 
 RETRYKILL:
              CALL       PGM(SCKOBJLCOB) PARM(&REPORT)
-
+ 
 /** Check if locks have been released */
-
+ 
              IF         COND(&RETRYS > &RETRIED *OR &RETRYS = 0) +
                           THEN(DO)
                 RTVMBRD    FILE(QTEMP/OBJLCK) NBRCURRCD(&NBRCURRCD)
-
+ 
                 IF         COND(&RETRYS > &RETRIED *AND &NBRCURRCD > 0) +
                           THEN(DO)
                    CHGVAR     VAR(&RETRIED) VALUE(&RETRIED +1)
                    GOTO       CMDLBL(RETRYKILL)
                 ENDDO
-
+ 
              ENDDO
-
+ 
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                 GOTO       CMDLBL(END)
              ENDDO
-
+ 
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000)
-
+ 
 /** Abnormal termination */
-
+ 
              SNDPGMMSG  MSG('Kill Object Locks in COB ENDED ABNORMALLY') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000)

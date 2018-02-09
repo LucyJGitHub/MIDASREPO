@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Update of KYC Messages from Compliance Wa')
@@ -13,19 +13,21 @@
       *  Function:  This is an RPG program that will update the KYC   *
       *             status and details of the customer.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 05May06               *
-      *  Prev Amend No. BUG10603           Date 02Mar06               *
+      *  Prev Amend No. CSD027A            Date 05May06               *
+      *                 BUG10603           Date 02Mar06               *
       *                 BUG10603           Date 14Feb06               *
       *                 CSD028  *CREATE    Date 22Aug05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion Of Customer Number to Alpha (recompile) *
       *  BUG10603 - (Reopen) Compliance Alert Changes for KYC         *
 /*    *  BUG10603 - Change Control for KYC                            *

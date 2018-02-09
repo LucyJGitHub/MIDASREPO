@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
      H ALWNULL(*USRCTL)
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
@@ -17,10 +17,11 @@
       *                                                               *
       *  Component of: SFC00350                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CFB001             Date 12Nov14               *
-      *  Prev Amend No. AR805470           Date 27Jul11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFB001             Date 12Nov14               *
+      *                 AR805470           Date 27Jul11               *
       *                 262341             Date 22Oct09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFB001 - FusionBanking Midas Rebranding (Recompile)          *
       *  AR805470 - SF00350P1 - no header when no details to report.  *
       *             Applied GEMS 256313. (Child: AR805471)            *
@@ -1029,4 +1031,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

@@ -7,14 +7,15 @@
 /*                                                                  */
 /*         SEC02 - INPUT CYCLE PROCESSING                           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSD031             Date 10Apr06              */
-/*       Prev Amend No. CRE020             Date 20Jan04              */
+/*       Prev Amend No. CSD031             Date 10Apr06              */
+/*                      CRE020             Date 20Jan04              */
 /*                      CSC023             Date 02Feb04              */
 /*                      CGP001             Date 23May03              */
 /*                      213041             Date 09Dec02              */
@@ -69,6 +70,7 @@
 /*                        S01129             DATE  11/05/88         */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSD031 - Enhanced Centralised Static Data                   */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
@@ -150,7 +152,7 @@
              PGM        PARM(&PARM)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
              DCL        VAR(&PARM) TYPE(*CHAR) LEN(8)
@@ -741,5 +743,5 @@ ERR:                                                                            
 ENDPGM:      DLTOVR     *ALL
              CHGJOB     SWS(0XXXXXXX)                                                     /*CSD031*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

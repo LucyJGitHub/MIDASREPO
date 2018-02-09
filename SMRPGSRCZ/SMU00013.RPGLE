@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Bridge data correction for SEACKA')
@@ -13,14 +13,16 @@
       *            control fields from the contents of the redundant  *
       *            ones. It then sets those to zero.                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993             Date 26Jan10              *
-      *  Prev Amend No. B12646  *CREATE     Date 16Apr07              *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 B12646  *CREATE    Date 16Apr07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program BG12646R01.                        *
       *  B12646  - Cater for SEACKA file control length increase.     *

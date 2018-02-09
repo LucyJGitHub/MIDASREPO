@@ -7,10 +7,11 @@
 /*                                                                  */
 /*       SDCLRGL - CLEAR GENERAL LEDGER DAILY FILES                 */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CGL027            Date 04Apr17               */
-/*       Prev Amend No. MD031966          Date 27Jul15               */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL027             Date 04Apr17              */
+/*                      MD031966           Date 27Jul15              */
 /*                      CGL158            Date 20Aug14               */
 /*                      CSC056            Date 06Aug12               */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -54,6 +55,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL027 - Shadow Postings and Sufficient Funds Check        */
 /*       MD031966 - BFM GL3572P1 issue                              */
 /*       CGL158 - Nostro Sweeping Rules Maintenance                 */
@@ -109,7 +111,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,SCCLRGL011                                          */
              DCL        &MSG          TYPE(*CHAR)  LEN(75)
@@ -418,7 +420,7 @@
              CLRPFM     FILE(GETX2ZZ)                                                     /*CAP204*/
              ENDDO                                                                        /*CAP204*/
 /*/COPY OFCPYSRCZ,CGL158_006                                         */                   /*CGL158*/
-
+ 
 /**/                                                                                      /*CGL027*/
 /* Check if CGL027 is ON                                            */                    /*CGL027*/
 /**/                                                                                      /*CGL027*/
@@ -432,10 +434,10 @@
                 CLRPFM     FILE(SHDOUTTD)                                                 /*CGL027*/
              ENDDO                                                                        /*CGL027*/
 /**/                                                                                      /*CGL027*/
-
+ 
              SNDPGMMSG  TOMSGQ(MRUNQ) +
                                MSG('General Ledger Daily Files Cleared')
-
+ 
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM     /* END CL PGM */

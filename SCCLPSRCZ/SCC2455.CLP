@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC2455 - SAVE THE DATABASE AND RECEIVER SAVE FILES         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 259085             Date 27Jul12              */
-/*       Prev Amend No. 246515             Date 19Mar07              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 259085             Date 27Jul12              */
+/*                      246515             Date 19Mar07              */
 /*                      CSC033             Date 21May07              */
 /*                      B13662             Date 21May07              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -46,6 +47,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       259085 - COB Performance Improvement in M+.                 */
 /*       246515 - Not possible to answer message on MIDAS_SAVE job.  */
 /*                Do not save JRNIC. Allow option 7 to be taken when */
@@ -113,7 +115,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* File of journal receiver save file object descriptions */
@@ -216,7 +218,7 @@
 /* Copyright statement defination at runtime */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /*/COPY WNCPYSRC,SCC2455033                                          */
              SNDPGMMSG  MSG('Save of database and journal receiver +

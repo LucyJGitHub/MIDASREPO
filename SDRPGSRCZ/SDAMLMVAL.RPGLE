@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD AML trans. analysis mapping table validtn')   *
@@ -9,20 +9,22 @@
       *                                                               *
       *  SDAMLMVAL - AML Transaction Analysis Mapping Table Validation*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CLE042             Date 06Sep05               *
       *                 CDL038             Date 10May05               *
       *                 CSD017  *CREATE    Date 08Nov02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CLE042 - Extended Loan Sub Type (Recompile)                  *
@@ -463,7 +465,7 @@
       **--------------------------------------------------------------------------------------------
       ********************************************************************
 ** CPY@   **
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** WDealTab1
 ITIPTDTICILNCDCLDLC1C2BPBDTBDATACSBSBRTSRATRSCPIPDSIFLFTDPDTLPLTFPFSCXOPOTSWCPCCBIBONTRIROINNXIDILPS
 ** WDealTab2

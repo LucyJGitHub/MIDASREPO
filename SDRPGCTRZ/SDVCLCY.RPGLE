@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Clearing system code')               *
@@ -9,14 +9,16 @@
       *                                                               *
       *  SDVCLCY - Validate Clearing system code                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD022862           Date 17Oct13               *
-      *  Prev Amend No. MD022557           Date 02Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022862           Date 17Oct13               *
+      *                 MD022557           Date 02Oct13               *
       *                 CFT050  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022862 - LEI Code not accepted eventhough consists of first*
       *             18 uppercase character and last 2 numbers.        *
       *  MD022557 - Incorrect validation in MT3xx receiver party      *
@@ -274,7 +276,7 @@
       ********************************************************************
       ** Copyright must be defined for compile time array definition                      MD022862
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 **  Clearing system code
 ATAUCCESGRHKIEINITNZPLPTRUSWZA
 **  Clearing system code length

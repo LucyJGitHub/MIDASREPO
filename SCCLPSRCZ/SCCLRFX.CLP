@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SCCLRFX - CLEAR DRS FOREIGN EXCHANGE DAILY FILES            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01319        DATE 10OCT91                   */
-/*       PREV AMEND NO. S01343        DATE 15AUG91                   */
+/*       Prev Amend No. S01319             Date 10Oct91              */
+/*                      S01343             Date 15Aug91              */
 /*                      E18965        DATE 26JUL89                   */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01319 - Remove redundant processing   .                    */
 /*       S01343 - SC/RR/SD MODULE RENAME PROJECT.                    */
 /*                - SCCLRFX RENAMED FROM SDCLRFX.                    */
@@ -37,7 +39,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /** MONITOR FOR ERROR MESSAGES                                      **/
              MONMSG     MSGID(CPF0000 MCH0000 CPA0000)
@@ -60,5 +62,5 @@
              SNDPGMMSG  MSGID(FDM0354) MSGF(DRSMM) TOMSGQ(MRUNQ)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       CLP/SEC025 - Movements Status - Menu Option Control         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*      Last Amend No.  BUG11813           Date 04Aug06              */
-/*      Prev Amend No.  CSC022             Date 24Feb04              */
+/*       Prev Amend No. BUG11813           Date 04Aug06              */
+/*                      CSC022             Date 24Feb04              */
 /*                      CSE039   *CREATE   Date 27Feb03              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG11813 - Screen has no validation when status movement    */
 /*                  enquiry is selected                              */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
@@ -45,7 +47,7 @@
              DCL        VAR(&NoReply)    TYPE(*CHAR) LEN(1)
  
              DCL        VAR(&CpyFld)     TYPE(*CHAR) LEN(64) VALUE('(c) +
-                               Misys International Banking Systems Ltd. +
+                               Finastra International Limited +
                                2003')
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&TOLIB)  TYPE(*CHAR) LEN(10)
@@ -240,7 +242,7 @@
  
  EndPgm:
              CHGVAR     VAR(&CpyFld) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              IF         COND(&MLINK *NE 'Y') THEN(DO)
                 RMVLIBLE   LIB(MRDLNKOBJ)
                 MONMSG     MSGID(CPF0000)

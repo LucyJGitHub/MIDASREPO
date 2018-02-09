@@ -8,20 +8,22 @@
 /********SD0400C - CHECK CUSTOMER NOT ON EXTENDED SETTLEMENT        */
 /*       SDC0400 - CHECK CUSTOMER NOT ON EXTENDED SETTLEMENT        */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL029             Date 01Sep03              */
+/*       Prev Amend No. CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 063444             Date 25Feb94             */
+/*                      063444             Date 25Feb94              */
 /*                      RT0118             Date 28Jun91             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*       063444 - ADD NEW PARAMETER TO INPUT PARMS AND CALL TO      */
 /*                SD0400U.                                          */
@@ -40,7 +42,7 @@
 /**********  DCL        VAR(&PARMSB) TYPE(*CHAR) LEN(150) */                   /*063444*/ /*CGL029*/
              DCL        VAR(&PARMSB) TYPE(*CHAR) LEN(190)                                 /*CGL029*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*/COPY WNCPYSRC,SDC0400001                                          */
@@ -65,6 +67,6 @@
              CLOF SDEXSTPD
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

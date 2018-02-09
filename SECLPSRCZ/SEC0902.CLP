@@ -7,14 +7,15 @@
 /*                                                                  */
 /*       SEC0902 - UNREALISED PROFIT AND LOSS ANALYSIS              */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 224132             Date  22Dec03             */
-/*       Prev Amend No. CAS006             Date  21Jan03             */
+/*       Prev Amend No. 224132             Date 22Dec03              */
+/*                      CAS006             Date 21Jan03              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -25,6 +26,7 @@
 /*                      S01158             DATE  19/05/88           */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       224132 - Run Rprts with Price Format for Yield Based        */
 /*                Securities first.                                  */
 /*       CAS006 - Hedge Accounting Phase B                           */
@@ -48,7 +50,7 @@
 /*                                                               */   /*S01158*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
 /* S01179                                                              *S01179*/
@@ -218,5 +220,5 @@ ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
 /**/
 /*ENDPGM:******ENDPGM                                                * *S01117*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01117*/

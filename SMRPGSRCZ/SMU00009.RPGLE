@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Process CAR migration SDCSINPD - 02')         *
@@ -12,14 +12,16 @@
      ****Called By: SMUC00007******************************************         262664
       *  Called By: SMUC00213                                         *         262664
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. 262664             Date 11Nov09               *
-      *  Prev Amend No. B24416             Date 16Jun09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 262664             Date 11Nov09               *
+      *                 B24416             Date 16Jun09               *
       *                 CSM011  *CREATE    Date 08May09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  262664  - SMUC00007 is now redundant in GF. New program name *
       *            is SMUC00213.                                      *
       *  B24416 - Additional changes for join type.                   *

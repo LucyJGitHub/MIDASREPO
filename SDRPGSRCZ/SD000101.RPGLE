@@ -1,6 +1,6 @@
      H DEBUG
      H DFTACTGRP(*NO)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Customer Segmentation Group Report')          *
@@ -15,11 +15,13 @@
       *             Segmentation Group hierarchy including orphans    *
       *             customer segmentation code                        *
       *                                                               *
-      *  Last Amend No. AR819241           Date 24Aug11               *
-      *  Prev Amend No. CSD090  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR819241           Date 24Aug11               *
+      *                 CSD090  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR819241 - Customer Segmentation Code in SD000101P1 not      *
       *             displayed properly (Recompile)                    *
       *  CSD090 - Customer Segmentation and Overdraft                 *

@@ -9,9 +9,10 @@
 /*                                                                   */
 /*       SDC4100  - BTS COB control component                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -19,13 +20,14 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. 134498             DATE 12Nov99              */
+/*                      134498             Date 12Nov99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      068922             DATE 02APR94              */
 /*                      S01411             DATE 08APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       134498 - Clear BTS file before running component, whether   */
 /*                this is a restart or not, else may get duplicate   */
@@ -42,7 +44,7 @@
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,SDC4100001                                          */
 /* */
@@ -336,5 +338,5 @@
  
 /* */
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

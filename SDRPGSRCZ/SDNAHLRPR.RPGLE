@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Non-Account Holder - Repair')                 *
@@ -12,10 +12,11 @@
       *  Function:  This function allows invalid Non-A/C  details to  *
       *             be 'repaired' and applied to the Midas database.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD029805           Date 05Sep14               *
-      *  Prev Amend No. MD026550           Date 22May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029805           Date 05Sep14               *
+      *                 MD026550           Date 22May14               *
       *                 CGL132             Date 01May13               *
       *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029805 - GIIN number validation (Recompile)                *
       *  MD026550 - Require US TIN when Subject to Reporting is 'Y'   *
       *             for all new FATCA Customers/Non-Account Holders   *
@@ -2698,4 +2700,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Position Settlement Split for CSE023')        *
@@ -15,13 +15,14 @@
       *             groups or records for different  beneficial       *
       *             owners.                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 233071             Date 28Mar12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 233071             Date 28Mar12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 245798             Date 19Feb07               *
+      *                 245798             Date 19Feb07               *
       *                 236594             Date 17May05               *
       *                 CSD079             Date 05Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  233071 - Database error 106 in program AOTXBSR0 due to blank *
       *           tax basket.  Default tax basket with WK_TXBS only   *
       *           if it is not blank, otherwise should still use      *
@@ -2486,4 +2488,4 @@
       *
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

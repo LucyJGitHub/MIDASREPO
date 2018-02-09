@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       SDC6817 -  U.D.C.  FORMAT NAME COMBINATIONS.                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 053522             DATE 10JAN94              */
-/*       PREV AMEND NO. AUS009             DATE 22JUN92              */
+/*       Prev Amend No. 053522             Date 10Jan94              */
+/*                      AUS009             Date 22Jun92              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       053522 - Pgm should send msg to MRUNQ/MOPERQ, Not to *EXT.  */
 /*                Also, Database error should be handled.            */
 /*       AUS009 - AUSTRALIAN PRODUCT - USER DEFINED CONFIRMATIONS    */
@@ -34,7 +36,7 @@
              PGM        PARM(&RSEQ &RLVL &RENT)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01390*/
              DCL        VAR(&RLVL) TYPE(*CHAR) LEN(1)                 /*S01390*/
@@ -67,5 +69,5 @@ ABNOR:       SNDPGMMSG  MSG('Job terminated abnormally.        +
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)               /*053522*/
 ENDPGM:                                                              /*053522*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

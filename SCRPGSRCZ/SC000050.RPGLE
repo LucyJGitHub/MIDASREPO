@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys Internatinal Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SC Data replication i/c monitor')                *
@@ -9,18 +9,20 @@
       *                                                               *
       *  SC000050 - Data Replication I/C Monitor Program              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSC048             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSC048             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSC011  *CREATE    Date 18Sep01               *
+      *                 CSC011  *CREATE    Date 18Sep01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC048 - Journal Caching                                     *
       *  CSC011 - 24x7 Midas Availability                             *
       *                                                               *
@@ -983,7 +985,7 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  WQcmd
 CALL PGM(SCC000605) PARM(' ')
 SBMJOB CMD(CALL PGM(SCC000606 )) JOB(DRMONITOR ) JOBD(  XLIB/DRJOBD) JOBQ(  XLIB/DRJOBQ) OUTQ(*JOBD)

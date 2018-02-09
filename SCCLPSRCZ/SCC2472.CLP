@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       SCC2472 - Journal Unjournalled Data Queues                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG6546            Date 25Apr05              */
-/*       Prev Amend No. CSC018 *CREATE     Date 31May03              */
+/*       Prev Amend No. BUG6546            Date 25Apr05              */
+/*                      CSC018 *C *CREATE  Date 31May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG6546 - Check SCNJRNL2 in calling program SCC2469 and     */
 /*                 SCC2471. Remove RCVF loop from this program.      */
 /*               - Locking problem. Allocate object before trying    */
@@ -34,7 +36,7 @@
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&MSGCLR) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCLF       FILE(SCNJRNL2)
 /**********  DCLF       FILE(SCNJRNL2) */                                                /*BUG6546*/
@@ -104,7 +106,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,SCC2472END                                                                       */
  

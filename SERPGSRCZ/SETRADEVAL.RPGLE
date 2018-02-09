@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Validate extension file details (SWIFT)')     *
@@ -26,10 +26,11 @@
       *                                                               *
       *  Component of: SE1805 - Trade Extensions maintenance          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR596191           Date 19Aug14               *
-      *  Prev Amend No. AR573194           Date 09Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR596191           Date 19Aug14               *
+      *                 AR573194           Date 09Jul10               *
       *                 AR892580           Date 02Feb12               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR639840           Date 09Sep10               *
@@ -85,6 +86,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR596191 - Error on Safekeeping Account is issued even if    *
       *             a valid value is inserted                         *
       *  AR573194 - TRDN screen does not continue on deal cannot be   *
@@ -1996,7 +1998,7 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  VA0  - ALL NUMERIC CHARS
 0123456789
 **  VA01 - ALL ALPHABETIC CHARS                                                               184406

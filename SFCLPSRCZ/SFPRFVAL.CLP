@@ -8,14 +8,16 @@
 /*       CLLE/SFPRFVAL - This program validates whether the User     */
 /*                       Profile is a valid user or not              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BUG13780*Create    Date 23Apr07              */
+/*       Prev Amend No. BUG13780 *CREATE   Date 23Apr07              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG13780 - User Profile has no *USE authority to other      */
 /*                 profiles                                          */
 /*                                                                   */
@@ -26,7 +28,7 @@
 /* Copyright statement definition  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2007')
 /**/
 /* Initial Processing */

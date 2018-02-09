@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate variable range for system values')
@@ -9,17 +9,19 @@
       *                                                               *
       *  SD009595 - Validate Variable Ranges for a System Value.      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSC018  *CREATE    Date 25Jun03               *
-      *  Prev Amend No. XXXXXX             Date 00Xxx03               *
+      *  Prev Amend No. CSC018  *CREATE    Date 25Jun03               *
+      *                 XXXXXX             Date 00Xxx03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC018 - New program to validate a system value with a       *
       *           variable range.                                     *
       *                                                               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate entry for JRNCache system value')    *
@@ -9,13 +9,15 @@
       *                                                               *
       *  SD009511 - Midas SD Validate entry for JRNCache system value *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD023896           Date 06May14               *
-      *  Prev Amend No. CSC048  *CREATE    Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023896           Date 06May14               *
+      *                 CSC048  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023896 - Removed PRDID(5761SS1) parameter in DSPLICKEY so  *
       *             it will work on other OS version                  *
       *  CSC048 - Journal Caching                                     *

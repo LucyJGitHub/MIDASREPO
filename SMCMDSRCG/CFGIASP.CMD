@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       CFGIASP - Configure IASP System Values set up               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. BUG28037 *CREATE   Date 17Aug10              */
-/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG28037 *CREATE   Date 17Aug10              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG28037 - New command to set up IASP System Values.        */
 /*                                                                   */
 /*********************************************************************/

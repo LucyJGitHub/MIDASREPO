@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIA*: OVRDBF FILE(MESSAGES11) TOFILE(MEML11PD)                     *
 /*XBIB*: OVRDBF FILE(SETRANPDX) TOFILE(SETRANPD)                      *
@@ -16,14 +16,15 @@
       *             enquire on Transactions and then can see the      *
       *             Swift messages associated with that transaction   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027A            Date 17May06               *
       *                 CSE071             Date 19Jul05               *
       *                 CSW037A            Date 02May05               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027A - Conversion of cust. no. to alpha (post 103 build)  *
@@ -3182,4 +3184,4 @@ F3=Exit
 F3=Exit M=Messages T=Transaction S=Movement Status P=Security L=Linked trades
 F3=Exit F12=Previous M=Messages T=Transaction S=Movement Status P=Security
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

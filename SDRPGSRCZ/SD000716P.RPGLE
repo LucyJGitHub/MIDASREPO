@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD FATCA Customer Details Report')               *
@@ -12,10 +12,11 @@
       *  Function:  This is a new program to list the details of all  *
       *             FATCA Customer Details Report in the system.      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD041709           Date 28Sep16               *      
-      *  Prev Amend No. MD030151           Date 05Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD041709           Date 28Sep16               *
+      *                 MD030151           Date 05Sep14               *
       *                 MD030165           Date 03Sep14               *
       *                 MD027545           Date 01Aug14               *
       *                 MD027439           Date 18Jun14               *
@@ -24,8 +25,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD041709 - Component SDC000716 failure. Adjusted customer    *
-      *             counter to 10 numeric.                            *      
+      *             counter to 10 numeric.                            *
       *  MD030151 - Exceptions with JACM Update - The customer is not *
       *             exempt and flagged as joint account but there is  *
       *             no joint account members defined                  *
@@ -1596,4 +1598,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

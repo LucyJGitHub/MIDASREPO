@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Securities clients Validate & Update')        *
@@ -30,10 +30,11 @@
       *            the call to the Message Handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR1005480          Date 16Jul12               *
-      *  Prev Amend No. AR971184A          Date 22Jun12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1005480          Date 16Jul12               *
+      *                 AR971184A          Date 22Jun12               *
       *                 AR971184           Date 13May12               *
       *                 AR875962           Date 15Dec11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1005480 - Depot customer reference error                   *
       *  AR971184A- During Amend Front Ofc Id must be updated with the*
       *             new one                                           *
@@ -984,4 +986,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

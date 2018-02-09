@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       CONSQLD -  Consolidate SQL Scripts                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. AR1076132 *CREATE  DATE 18Feb13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1076132 *CREATE  Date 18Feb13              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1076132 - Automate SQL delivery deployment                */
 /*                                                                   */
 /*********************************************************************/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SC Open Month End SQL Statements')
@@ -9,16 +9,18 @@
       *                                                               *
       *  SC000106 - Open Month End SQL Statements                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSC024  *CREATE    Date 07Feb05               *
+      *  Prev Amend No. CSC024  *CREATE    Date 07Feb05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC024 - Open Month End                                      *
       *                                                               *
       *****************************************************************
@@ -199,7 +201,7 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005
 **  WrkArray
 OVRDBF FILE(SCOMETXT) MBR(OME) SHARE(*NO) SECURE(*YES)
 UPDATE T_LGSUBS SET STATUS = 'Active' WHERE CODE = 'OME' AND ZONE =

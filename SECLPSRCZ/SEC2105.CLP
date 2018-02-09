@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       SEC2105 - FRN/Mortgage Rate Change Generation Control       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 228542             Date 10Aug04              */
+/*       Prev Amend No. 228542             Date 10Aug04              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CSE031 *Create     Date 09Nov01              */
+/*                      CSE031 *C *CREATE  Date 09Nov01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       CSE031 - Coupon Fixing for Floating Rate Notes              */
 /*                                                                   */
@@ -28,7 +30,7 @@
 /* Declare Variables */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM)    TYPE(*CHAR) LEN(52)
              DCL        VAR(&PRESBS) TYPE(*CHAR) LEN(2)
@@ -205,6 +207,6 @@ ABNOR:
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

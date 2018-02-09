@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Normal Cust/NAHO Classfn Upd - Main')         *
@@ -11,10 +11,11 @@
       *                                                               *
       *  SD000551 - Normal Customer/NAHO Classification Update        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD039670           Date 26Jul16               *
-      *  Prev Amend No. MD030211A          Date 05Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *                 MD030211A          Date 05Sep14               *
       *                 MD030211           Date 01Sep14               *
       *                 MD027209           Date 07Aug14               *
       *                 MD027334           Date 12Aug14               *
@@ -24,6 +25,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039670 - FATCA Housekeeping program                        *
       *  MD030211A - F11 and F13 needs to be pressed twice            *
       *  MD030211 - F11 and F13 needs to be pressed twice             *

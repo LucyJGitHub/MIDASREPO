@@ -7,14 +7,15 @@
 /*                                                                  */
 /*         SEC3003 - BULK UPDATE                                    */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*         Last Amend No. 236125           DATE 26Sep05             */
-/*         Prev Amend No. 234440           DATE 03SEP99             */
+/*       Prev Amend No. 236125             Date 26Sep05              */
+/*                      234440             Date 03Sep99              */
 /*                        CSC023           Date 02Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                  */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       236125 - Add override for TRADSD                           */
 /*       234440 - add override ETCPOSL0 & L3                       */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
@@ -68,7 +70,7 @@
              PGM        PARM(&JOB &BLKREF &TRDREF &CAGT &BYSL)        /*CSE006*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
              DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
@@ -193,5 +195,5 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

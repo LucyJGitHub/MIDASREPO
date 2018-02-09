@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Validate WNTIME Transaction Time')
@@ -15,18 +15,20 @@
       *             If it is valid the 10A return code will be blank, *
       *             if it is not it will contain 'Error'              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG11570           Date 20Jun06               *
-      *  Prev Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. BUG11570           Date 20Jun06               *
+      *                 CER001             Date 25Apr05               *
       *                 ULX008  *CREATE    Date 23May00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG11570 - Transaction Time defaults to last user input      *
       *  CER001 - LUX Upgrade to MidasPlus                            *
       *  ULX008 - API Commissariat Aux Bourses (Funct. SEDPMV/SETRAD) *
@@ -246,4 +248,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

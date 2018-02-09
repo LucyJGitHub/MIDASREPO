@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Additional Customer Details Display')         *
@@ -12,10 +12,11 @@
       *  Function:  This module displays the SDACUSPD Transaction     *
       *             Details maintenance screen                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       *                 BUG24833           Date 09Jul09               *
       *                 BUG23640           Date 15May09               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
@@ -700,7 +702,7 @@
       ***Added*a*new*element*for*@FUNCTIONS*to*display*F22*key                    BUG23518 BUG23518A
       ** Added a new element in @FUNCTIONS to display F22 key in Repair                    BUG23518A
 ** CTDATA @CPY
-Misys International Banking Systems Ltd. 2004
+Finastra International Limited 2004
 ** CTDATA @Z0
 000000000000000000000000000000000000000000000000000000000000
 ** CTDATA @FUNCTIONS

@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       SCC2463 - Check and Correct Unjournalled Files              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG7935            Date 17Aug05              */
-/*       Prev Amend No. BUG7388            Date 31May05              */
+/*       Prev Amend No. BUG7935            Date 17Aug05              */
+/*                      BUG7388            Date 31May05              */
 /*                      BUG6546            Date 21Apr05              */
 /*                      CSC023             Date 02Feb04              */
 /*                      CSC018             Date 31May03              */
@@ -29,6 +30,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG7935 - Problem with BUG6546, CNAM and CSEQ must be       */
 /*                 received into the program                         */
 /*       BUG7388 - Do not wait until the submitted jobs              */
@@ -83,7 +85,7 @@
              DCL        VAR(&JRNDA6) TYPE(*CHAR) LEN(1)                                   /*CSC018*/
              DCL        VAR(&JRNDQ6) TYPE(*CHAR) LEN(1)                                   /*CSC018*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -396,7 +398,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,SCC2463END                                          */
  

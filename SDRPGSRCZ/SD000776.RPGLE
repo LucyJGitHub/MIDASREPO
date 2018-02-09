@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Customer Status Upd at Effective Date 2')     *
@@ -18,10 +18,11 @@
       *             later than or same as previous working date       *
       *             and earlier or same as current run date.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER069             Date 03Jul14               *
-      *  Prev Amend No. AR750273A          Date 20May11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER069             Date 03Jul14               *
+      *                 AR750273A          Date 20May11               *
       *  Prev Amend No. AR750273           Date 13May11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23797A          Date 16Jun09               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER069 - German Tax Enhancement                              *
       *  AR750273A - SDC000776 00001 failed (Child: AR750274)         *
       *  AR750273 - SDC000776 00001 failed (Child: AR750274)          *

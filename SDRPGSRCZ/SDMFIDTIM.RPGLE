@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Module to compute date and time based on parms')
@@ -16,16 +16,18 @@
       *                                                               *
       *  Called By: SD001005 - Midas SD Time Zone Maintenance         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG20932           Date 28Aug08               *
-      *  Prev Amend No. BUG19628           Date 29Jul08               *
+      *  Prev Amend No. BUG20932           Date 28Aug08               *
+      *                 BUG19628           Date 29Jul08               *
       *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG20932 - Wrong date reflected in 98E based on the time     *
       *             conversion                                        *
       *  BUG19628  - DST is being switched on even if start time is   *
@@ -744,4 +746,4 @@
      C                   ENDSR
       *
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2007
+(c) Finastra International Limited 2007

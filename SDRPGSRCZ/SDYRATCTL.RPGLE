@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Yield Rates Interface Controller')
@@ -12,14 +12,15 @@
       *  Function:  This Program Validates Yield Rates Input into     *
       *             the Midas database.                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAS008             Date 16Jun04               *
-      *  Prev Amend No. CAS006             Date 21Jan03               *
+      *  Prev Amend No. CAS008             Date 16Jun04               *
+      *                 CAS006             Date 21Jan03               *
       *                 CAS005             Date 16Dec02               *
       *                 208179             Date 05Aug02               *
       * Midas Release 4.01 -------------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAS008 - IAS 39 Enhancements                                 *
       *  CAS006 - Hedge Accounting Phase B (Recompile)                *
       *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
@@ -1222,4 +1224,4 @@
       **--------------------------------------------------------------------------------------------
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

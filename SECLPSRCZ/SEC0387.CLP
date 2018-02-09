@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       SEC0387 - SE Valid MDF Prices Received Today                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*       Phase:  I/C  on request                                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. 196570  *CREATE    Date 12Nov01              */
+/*       Prev Amend No. 196570  *CREATE    Date 12Nov01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       196570 - MDF Patch                                          */
 /*                                                                   */
 /*********************************************************************/
@@ -34,7 +36,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                      (c) Misys International Banking Systems Ltd.')
+                      (c) Finastra International Limited')
  
 /* Global monitor message                                          */
  
@@ -81,7 +83,7 @@
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys +
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra +
                           International Ltd.')
  
              ENDPGM

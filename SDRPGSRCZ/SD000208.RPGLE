@@ -11,15 +11,17 @@
       *  Function:  This program allows the user to maintain the      *
       *             profit centre default file.                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
       *  Note: Core amendments to this program must be applied        *
       *        via the core synon model.                              *
       *                                                               *
-      *  Last Amend No. CGL165  *CREATE    Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  HUT003 - Withholding Tax Enhancement                         *
       *                                                               *
       *****************************************************************
@@ -6119,7 +6121,7 @@ Module .............
 Product Type........
 Product Subtype.....
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015
 **CTDATA @CN#
 00001 Branch Code
 00002 Book Code

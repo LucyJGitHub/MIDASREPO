@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*OVR *  OVRDBF FILE(CLOANTEMP) TOFILE(CLOANCL) SHARE(*NO)            *
 /*STD *  RPGSQLBND                                                    *
@@ -15,11 +15,13 @@
       *  Function:  This program will correct LASQ field in CLOANCL   *
       *             file for PDCL Loan Fees                           *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD025112 *CREATE   Date 20Feb14               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD025112 *CREATE   Date 20Feb14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  MD025112 - Incorrect LASQ field of PDCL loan fees in         *

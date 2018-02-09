@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Private Banking migration - FXDEALPP')        *
@@ -9,9 +9,9 @@
       *                                                               *
       *  SMU00047 - Migrate FXDEALPP                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. CDL094             Date 11Jun14               *
       *                 CSW212             Date 03May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -20,7 +20,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CDL099 - Split Value Date (Recompile)                        *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CSW212 - SWIFT 2012 Changes (Recompile)                      *

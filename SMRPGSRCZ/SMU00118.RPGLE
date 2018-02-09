@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM CSW213 Initialisation Program')               *
@@ -10,16 +10,18 @@
       *  SMU00118 - Initialise SWIFT ISO Country Codes file and       *
       *             Country Codes Table                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD023678           Date 21Nov13               *
-      *  Prev Amend No. MD023120           Date 12Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023678           Date 21Nov13               *
+      *                 MD023120           Date 12Nov13               *
       *                 MD022852           Date 16Oct13               *
       *                 MD021816           Date 26Aug13               *
       *                 CSW213  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023678 - IBAN is incorrectly generated due to wrong        *
       *             BBAN Bank Length                                  *
       *  MD023120 - Re-run of ISO Country Code initialisation program *

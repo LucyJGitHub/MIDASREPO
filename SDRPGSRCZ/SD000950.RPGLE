@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD WLC Next Periodic Check Date Update')         *
@@ -12,12 +12,14 @@
       *  Function:  This module will update the Next Periodic Check   *
       *             Date of Functions for Watch List Checking         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD041172  *CREATE    Date 20Sep16             *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD041172 *CREATE   Date 20Sep16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD041172 - WLC Bulk Customer Watchlist Gap                   *
       *                                                               *
       *****************************************************************
@@ -37,9 +39,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FSDWLCCL0  UF   E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       ** Standard D-specs
       ** ================
@@ -53,51 +55,51 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
       ** DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** Midas Watch List Transaction Details File
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
-
+ 
       ** Fisrt DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** Fisrt DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** Standing Data Dataarea
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
-
+ 
       ** 24x7 Status Dataarea
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D @RUN            S              1
      D PRetCode        S              7
      D POption         S              7
-
+ 
       ** ZFREQB Parameters
      D ZFREQ           S              1
      D ZDAYNO          S              5  0
@@ -105,27 +107,27 @@
      D ZLOC            S              3
      D ZMDAY           S              2  0
      D PFuncType       S              8
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** Access WLC checking details by function code
-
+ 
      C     PFuncType     CHAIN     SDWLCCL0                           90
      C                   IF        *IN90 = '0'
-
+ 
       ** Set Last Periodic Check Date = Run date
-
+ 
      C                   EVAL      W1LPCD = BJRDNB
-
+ 
       ** Determine next periodic check date
-
+ 
      C                   EVAL      ZFREQ = W1PFRQ
      C                   EVAL      ZDAYNO = W1NPCD
      C                   EVAL      ZMDAY = W1PDYN
      C                   EVAL      ZCCY = BJLCCY
-
+ 
      C                   CALLB     'ZFREQB'
      C                   PARM                    ReturnCode
      C                   PARM                    ZFREQ
@@ -135,9 +137,9 @@
      C                   PARM                    ZMDAY
      C                   PARM                    BJDFIN
      C     SDGELR        PARM                    SDGELR
-
+ 
       ** Update the Next Periodic Check Date field in SDWLCCPD file
-
+ 
      C                   IF        ReturnCode = *BLANKS
      C                   EVAL      W1NPCD = ZDAYNO
      C                   UPDATE    SDWLCCD0
@@ -150,10 +152,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -165,19 +167,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PFuncType
-
+ 
       ** Access Bank Details
-
+ 
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBank        PARM      SDBank        DSFDY
-
+ 
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -185,9 +187,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -198,25 +200,25 @@
       *          This subroutine DUMPs the program just once.             *
       *                                                                   *
       *********************************************************************
-
+ 
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
-
+ 
      C                   CALLB     'DBERRCTL'
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2016
+(c) Finastra International Limited 2016

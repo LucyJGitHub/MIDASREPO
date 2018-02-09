@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Borrower Sector Class./BISTA')       *
@@ -12,16 +12,18 @@
       *  Function:  This module validates the field Borrower Sector   *
       *             Classification/BISTA                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. AR737976           Date 14Apr11               *
-      *  Prev Amend No. BUG26756           Date 16Nov09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR737976           Date 14Apr11               *
+      *                 BUG26756           Date 16Nov09               *
       *                 BUG26637           Date 03Nov09               *
       *                 BUG25957           Date 09Sep09               *
       *                 CER045  *CREATE    Date 20Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR737976 - Three (3) fields were not highlighted to reflect  *
       *             that these needs to be populated (Child: AR737977)*
       *  BUG26756 - Errors occurred in 'Borrower Sector Classification*
@@ -311,4 +313,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

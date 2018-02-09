@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Dummy system value validation')
@@ -9,21 +9,23 @@
       *                                                               *
       *  SD009552 - Dummy system value validation                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Note: This program is a dummy program to allow free format   *
       *        text to be entered into a system value.                *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSC018             Date 25Jun03               *
+      *  Prev Amend No. CSC018             Date 25Jun03               *
       * Midas Release 4.01.02 ----------------------------------------*
-      *  Prev Amend No. CSD013  *CREATE    Date 12Sep02               *
+      *                 CSD013  *CREATE    Date 12Sep02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC018 - High Availability Enhancements:                     *
       *           - Extend processing mode from 10 to 190.            *
       *  CSD013 - New program for the System Valuse Development.      *

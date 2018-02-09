@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SC PEA MQ message monitor')                      *
@@ -13,13 +13,15 @@
       *             PEA system and sends them to the Live System      *
       *             using Websphere MQ.                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR993055           Date 22Jun12               *
-      *  Prev Amend No. CSC054  *CREATE    Date 23Feb12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR993055           Date 22Jun12               *
+      *                 CSC054  *CREATE    Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR993055 - Status of Period End Adjustments system does not  *
       *             change to 'Restore Started' during restore        *
       *  CSC054 - Period End Adjustments                              *

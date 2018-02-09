@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       SDC1774 - Control Rebuild access paths                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC023             Date 02Feb04              */
-/*       Prev Amend No. CPK016             Date 29Aug03              */
+/*       Prev Amend No. CSC023             Date 02Feb04              */
+/*                      CPK016             Date 29Aug03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CPK014             Date 14Nov01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -30,6 +31,7 @@
 /*********************************************************************/
 /*       New program overview                                        */
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
 /*       CPK016 - Release 5 packaging.  Make data queue REBUILD      */
@@ -59,7 +61,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*           Declare variables                                       */
@@ -368,5 +370,5 @@ LOOP:        ALCOBJ     OBJ((SDC1772 *PGM *EXCL)) WAIT(300)
 END:         RCLRSC
              ENDPGM
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/

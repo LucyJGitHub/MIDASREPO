@@ -7,18 +7,20 @@
 /*                                                                  */
 /*       SEC6290 -  CUSTODY FEE SETTLEMENTS TOTALS REPORT           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01464            DATE 04APR94              */
+/*       Prev Amend No. S01464             Date 04Apr94              */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*   S01464 -  Safe Custody Fees                                    */
 /*                                                                  */
 /*********************************************************************/
@@ -29,7 +31,7 @@
              PGM        PARM(&MODE)                                   /*S01464*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(52)
              DCL       VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')
@@ -85,5 +87,5 @@
              ENDDO
 /* */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

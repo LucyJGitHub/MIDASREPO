@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Account Review Detail Default')               *
@@ -11,12 +11,14 @@
       *                                                               *
       *  Function:  This module retrieves customer details            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CSD092   *CREATE   Date 01May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD092  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD092 - Account Review                                      *
       *                                                               *
       *****************************************************************
@@ -149,4 +151,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

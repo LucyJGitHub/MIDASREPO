@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       SEC5540 - POOL POSITION SETTLEMENT UPDATE                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK009             Date 09Aug99              */
-/*       Prev Amend No. 119446             Date 18Jun97              */
+/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      119446             Date 18Jun97              */
 /*                      S01486     RS      Date 08NOV94              */
 /*                      058886             DATE 20JUL93              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
 /*       119446 - SEC5240 - Parameter mismatched in calling SE5240   */
@@ -36,7 +38,7 @@
 /*********** PGM        PARM(&USRID &BLK &RSEQ &RLVL &RENT) */ /*S01486 199446*/
              PGM        PARM(&USRID &BLK)                             /*119446*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
  
@@ -76,5 +78,5 @@
  
 /* ENDPGM:      ENDPGM                                             */ /*S01486*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01486*/

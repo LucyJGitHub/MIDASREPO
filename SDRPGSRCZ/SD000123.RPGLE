@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Generic Posting Interface Ctl Maintenance')   *
@@ -11,12 +11,14 @@
       *                                                               *
       *  Function:  This program maintains the Interface File Details *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CGL160  *CREATE    Date 10Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL160  *CREATE    Date 10Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL160 - Cheque Details Upload via Generic Posting Interface *
       *                                                               *
       *****************************************************************
@@ -2280,4 +2282,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

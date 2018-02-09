@@ -14,20 +14,22 @@
       *  Function:  This program copies a record to a holding file    *
       *             to make it available for auditing during COB.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAP084             Date 16Jul03               *
+      *  Prev Amend No. CAP084             Date 16Jul03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CSD003             Date 27OCT97               *
+      *                 CSD003             Date 27Oct97               *
       *                 122096  *CREATE    Date 22AUG97               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP084 - Wrapper project - convert to ILE                    *
       *  CSD003 - Synon Closedown Project (SD):                       *
       *           - Program removed from SD model.                    *
@@ -325,4 +327,4 @@
       *
       *================================================================
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

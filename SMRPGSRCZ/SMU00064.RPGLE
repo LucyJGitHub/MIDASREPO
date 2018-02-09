@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Build SEDEVD for reden. securities')
@@ -9,15 +9,17 @@
       *                                                               *
       *  SMU00064 - Crate missing intitial value records to SEDEVD    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *   Last Amend No. BG26993 *CREATE       Date 26Jan10           *
+      *  Prev Amend No. BG26993 *CREATE    Date 26Jan10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program SXXXX0101.                         *
       *                                                               *

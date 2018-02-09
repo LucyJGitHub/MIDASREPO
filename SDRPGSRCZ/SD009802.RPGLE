@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD MIC Code SubFile')                            *
@@ -16,15 +16,17 @@
       *  Called By: SDC009818 - MIDAS SD MiFID Subfile Menu Option    *
       *                         Controller                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD029814           Date 28Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029814           Date 28Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CSW208  *CREATE    Date 15Apr08               *
+      *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029814 - MIC Code Maintenance, Action invalid for user when*
       *             insertion. If Add, move 'I' to D0Opt.             *
       *  CSW208 - SWIFT 2008 Changes                                  *

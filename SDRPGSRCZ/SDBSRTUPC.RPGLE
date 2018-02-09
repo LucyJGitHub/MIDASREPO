@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Base rate codes update controller')
@@ -9,21 +9,23 @@
       *                                                               *
       *  SDBSRTUPC - SD BASE RATE CODES UPDATE CONTROLLER             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD012             Date 15Oct02               *
+      *  Prev Amend No. CSD012             Date 15Oct02               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. 201589             Date 03Jan02               *
+      *                 201589             Date 03Jan02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CAP038  *CREATE    Date 24Feb00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD012 - Standing Data Authorisation                         *
       *  201589 - Change to check a new locking dataarea SDBSRTLCK    *
       *           to determine whether this DBU is already active.    *
@@ -452,6 +454,6 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CMD
 OVRDBF FILE(SDAULGL0) TOFILE(SDAULGL0) SHARE(*NO)

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Securities trade - interface controller')     *
@@ -31,10 +31,11 @@
       *            the call to the message handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD035243           Date 29Jul15               *
-      *  Prev Amend No. AR596191           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035243           Date 29Jul15               *
+      *                 AR596191           Date 19Aug14               *
       *                 AR971184A          Date 22Jun12               *
       *                 AR971184           Date 28May12               *
       *                 CSF011A            Date 28Nov11               *
@@ -121,6 +122,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD035243 - Error message for Account with Institution        *
       *             Account is not properly displayed                 *
       *  AR596191 - Error on Safekeeping Account is issued even if    *
@@ -5128,4 +5130,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

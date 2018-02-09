@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*X*I****OVRDBF*FILE(CPYDTA)*TOFILE(UPOBJDTPD)*************************                     BUG27793
 /*STD *  RPGBASEBND                                                   *
@@ -11,16 +11,18 @@
       *  SM000017 - Remove records from CPYDTA that are not to be     *
       *             migrated.                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. BUG27793           Date 04Jun10               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. BUG27793           Date 04Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CSM010             Date 22Jun07               *
+      *                 CSM010             Date 22Jun07               *
       *                 CER001  *CREATE    Date 16Apr07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27793 - Make migration multi-streamed.                    *
       *  CSM010 - Applied by CER001.                                  *
       *  CER001 - MidasPlus 1.3 packaging.  Changes to migration.     *

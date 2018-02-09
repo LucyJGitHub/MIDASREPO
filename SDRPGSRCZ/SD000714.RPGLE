@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Exception Reporting COB Update')              *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SD000714 - Midas SD Exception Reporting COB Update           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD044164           Date 20Feb17               *
-      *  Prev Amend No. MD044160           Date 20Feb17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD044164           Date 20Feb17               *
+      *                 MD044160           Date 20Feb17               *
       *                 MD039670           Date 26Jul16               *
       *                 MD034071           Date 10Apr15               *
       *                 MD033501           Date 04Mar15               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD044164 - FATCA Exception 3 still present even if Customer  *
       *             Details comply w/ System Value FATCAUSTINBrthRqd  *
       *  MD044160 - FATCA exception initialization did not update     *
@@ -1714,4 +1716,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

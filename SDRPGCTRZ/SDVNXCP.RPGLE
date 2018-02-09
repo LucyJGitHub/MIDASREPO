@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Exception')                          *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SDVNXCP - Validate Exception of Non-account Holder           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD042697           Date 22Nov16               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042697           Date 22Nov16               *
+      *                 CGL154             Date 13Oct14               *
       *                 MD033660           Date 16Mar15               *
       *                 MD033414           Date 28Feb15               *
       *                 MD029839           Date 01Sep14               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042697 - Newly insert NAHO is not reflected                *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD033660 - Include FAINFC = 'A' on Due Diligence Check       *
@@ -1099,4 +1101,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

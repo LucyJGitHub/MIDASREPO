@@ -7,14 +7,16 @@
 /*                                                                   */
 /*       SDC0131 - Additional customer Details Report Prompt         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG23946           Date 18May09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG23946           Date 18May09              */
 /*                      CER047  *CREATE    Date 19May08              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG23946 - New field should be use correct char §           */
 /*                  (Recompile)                                      */
@@ -45,7 +47,7 @@
              DCL        VAR(&SORTS) TYPE(*CHAR) LEN(3)
              DCL        VAR(&WERRF) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                             Misys International Banking Systems Ltd. +
+                             Finastra International Limited +
                              2008')
              DCL        VAR(&MSGFLE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
@@ -57,8 +59,8 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
 /*                                                                   */
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems 2008')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2008')
 /*                                                                   */
 /* Set-off Database Error Switches                                   */
 /*                                                                   */

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c)Finastra International Limited 2012')
  **** *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Alpha Loan - Packed Fields Conversion')
@@ -17,18 +17,19 @@
       *                                                               *
       *  Called By:                                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c)Finastra International Limited 2012                       *
       *                                                               *
       *  Last Amend No. AR1070673          Date 20Jan13               *
       *  Prev Amend No. CLE148  *CREATE    Date 23Jul12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1070673 - ALR utility program should be re-runnable.       *
       *  CLE148 - Alpha Loan Reference                                *
       *                                                               *
       *****************************************************************
- 
+
      D WCount          S              3I 0 INZ                                             AR1070673
       *                                                                                    AR1070673
       ** Check if fields F9FRAA, F9LRAA and F9NALA are not blanks                          AR1070673
@@ -68,7 +69,7 @@
      C+    CASE WHEN LENGTH(TRIM(CHAR(F9NALN)))=5 THEN '0' ELSE ''
      C+    END END END END END,TRIM(CHAR(F9NALN))) END, F9NALN=0
      C/End-Exec
- 
+
       ** File GPLENOPD
      C/Exec SQL
      C+  UPDATE GPLENOPD
@@ -94,7 +95,7 @@
      C+    CASE WHEN LENGTH(TRIM(CHAR(F9NALN)))=5 THEN '0' ELSE ''
      C+    END END END END END,TRIM(CHAR(F9NALN))) END, F9NALN=0
      C/End-Exec
- 
+
       ** File GZSDLENOPD
      C/Exec SQL
      C+  UPDATE GZSDLENOPD
@@ -121,7 +122,7 @@
      C+    END END END END END,TRIM(CHAR(F9NALN))) END, F9NALN=0
      C/End-Exec
      C                   ENDIF                                                             AR1070673
- 
+
       ** If there's an SQL error, set on U7 and U8.
      C                   IF        SQLCOD < 0
      C                   EVAL      *INU7 = *ON

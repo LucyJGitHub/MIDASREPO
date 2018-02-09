@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Limit Utilisation Prompt')                    *
@@ -13,10 +13,11 @@
       *             criteria for the limit utilisation report to be   *
       *             printed.                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG24935           Date 17Jul09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG24935           Date 17Jul09               *
       *                 BUG24247           Date 09Jun09               *
       *                 BUG24574           Date 07Jul09               *
       *                 BUG24280           Date 10Jun09               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG24935 - Limit Utilisation Report shows a minus            *
       *             figure/incorrect Threshold Excess                 *
@@ -1243,4 +1245,4 @@
      C/EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

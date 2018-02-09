@@ -7,19 +7,21 @@
 /*                                                                  */
 /*       SEC0902P  UNREALISED P & L ANALYSIS RPT PROMPT             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend no. BG18886                 Date  20May08       */
+/*       Prev Amend No. BG18886            Date 20May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend no. S01117                  Date  17Jan91       */
+/*                      S01117             Date 17Jan91              */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  *  *E16600*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                        */
 /*       S01117 - MULTIBRANCHING - NEW PGM TO REPLACE SEC0902L      */
 /*                 AND SEC0902R                                     *  *E16600*/
@@ -32,7 +34,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM &RACT &RCMD)    /*S01117*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
              DCLF       FILE(SEC0902DF)
@@ -116,6 +118,6 @@
              ENDDO                                                    /*S01117*/
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01117*/
  

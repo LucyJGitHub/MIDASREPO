@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       SMC1075 - Allow entry of user name                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CUP034A            Date 02Nov07              */
-/*       Prev Amend No. CUP034 *REDUNDANT  Date 21Dec06              */
+/*       Prev Amend No. CUP034A            Date 02Nov07              */
+/*                      CUP034 *R          Date 21Dec06              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CSD013 *CREATE     Date 01Apr03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP034A - THis program was incorrectly made redundant.      */
 /*       CUP034 - MidasPlus user data migration.                     */
 /*       CSD013 - Midas users data maintenance                       */
@@ -32,7 +34,7 @@
              DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /* Global monitor message */
@@ -80,5 +82,5 @@ ABNOR:
  
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

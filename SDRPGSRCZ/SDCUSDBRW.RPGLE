@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*OVR *: OVRDBF FILE(SDCUSTLR) TOFILE(SDCUSTL0) SHARE(*NO)          : *
 /*STD *  RPGBASEMOD                                                   *
@@ -14,10 +14,11 @@
       *             One display a list of custom.for selection,       *
       *             the other picks off the selection made.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG23518           Date 30Mar09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23518           Date 30Mar09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG23518 - Produce Annual Tax Deducted Statement upon        *
       *             Customer Closure                                  *
@@ -2033,7 +2035,7 @@
       ********************************************************************
       ** @FTR changed to display the appropriate footer message                             BUG23518
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  @FTR
 A=Amend D=Delete E=Enquire F3=Main Menu F9='Add' F11=Toggle Front Office Id
 A=Amend D=Delete E=Enquire F3=Main Menu F9='Add' F11=Toggle Customer Shortname

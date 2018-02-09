@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Customer Status Changed Today Report')
@@ -14,14 +14,15 @@
       *                                                               *
       *  Called By: SDC1010P - Customer Status Changed Today          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD025A            Date 27Apr05               *
-      *  Prev Amend No. CSW037A            Date 02May05               *
+      *  Prev Amend No. CSD025A            Date 27Apr05               *
+      *                 CSW037A            Date 02May05               *
       *                 BUG6198            Date 04Apr05               *
       *                 CSD025             Date 11Jan05               *
       *                 CSW037             Date 15Dec04               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD025A- Inactive status                                     *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
       *  BUG6198- Cannot save new Details for CUSD (Recompile)        *

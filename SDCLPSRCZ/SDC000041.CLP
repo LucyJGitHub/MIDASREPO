@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       SDC000041 - Midas SD Initialisation program for CSW209      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CSW209  *CREATE    Date 01Apr09              */
+/*       Prev Amend No. CSW209  *CREATE    Date 01Apr09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSW209 - SWIFT 2009 Changes                                 */
 /*                                                                   */
 /*********************************************************************/
@@ -22,7 +24,7 @@
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global monitor message */
@@ -63,5 +65,5 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

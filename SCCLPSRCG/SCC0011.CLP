@@ -8,19 +8,21 @@
 /*      SCC0011 - RETRIEVE AND CENTRE MESSAGE TEXT FOR MIDAS         */
 /*                INFORMATION SCREEN.                                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*      LAST AMEND NO. E27199                DATE 12AUG91            */
-/*      PREV AMEND NO. E26961                DATE 05AUG91            */
+/*      PREV AMEND NO. E27199                DATE 12AUG91            */
+/*                     E26961                DATE 05AUG91            */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*      MD046248 - Finastra Rebranding                               */
 /*      E27199  -  Remove code which retrieves the default reply     */
 /*                 from DTAARA/MIDASMSG as this processing is now    */
 /*                 performed by the call to the Midas Information    */
@@ -60,7 +62,7 @@
 /*  COPYRIGHT STATEMENT VARIABLE  */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*  RETRIEVE DATA FROM DATA AREA  */
@@ -228,7 +230,7 @@
 /*  END OF PROGRAM PROCESSING  */
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              CHGDTAARA  DTAARA(MIDASMSG) VALUE(' ')
  

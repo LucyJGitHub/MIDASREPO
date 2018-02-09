@@ -1,5 +1,5 @@
      H DEBUG ALWNULL(*USRCTL)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Initialise PRAPID in T_GPPDCRSV')             *
@@ -12,12 +12,14 @@
       *  Function:  This program will initialise PRAPID field with    *
       *             0 value and set it to PRPDID                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD020087*CREATE    Date 30Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020087 *CREATE   Date 30Sep13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020087 - ABC Issue on Amendments on Several Write on       *
       *             Authorise APIs                                    *
       *                                                               *

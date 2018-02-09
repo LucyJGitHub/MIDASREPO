@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SCAUTOS - Reroute COB processing restart                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 102287             Date 24APR96              */
-/*       Prev Amend No. S01408             Date 07AUG95              */
+/*       Prev Amend No. 102287             Date 24Apr96              */
+/*                      S01408             Date 07Aug95              */
 /*                      S01463             Date 18APR95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       102287 - LDA does not exist when this pgm is called, so     */
 /*                create it                                          */
 /*       S01408 - Hooks moved to WNCPYSRC from SCCPYSRC:             */
@@ -39,7 +41,7 @@
 /*/COPY WNCPYSRC,SCAUTOSINT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -76,7 +78,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,SCAUTOSEND                                          */
  

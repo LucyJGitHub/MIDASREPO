@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Validate FTRetStatusOP and FTRetStatusIP sysvals')     *
@@ -10,12 +10,14 @@
       *  SD009586 - Validate FTRetStatusOP and FTRetStatusIP          *
       *             system values.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CFT158   *CREATE   Date 13Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT158  *CREATE    Date 13Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT158 - Return Status of Interfaced FT Payments             *
       *                                                               *
       *---------------------------------------------------------------*

@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SCC2465 - Journal Unjournalled Files                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG6546            Date 25Apr05              */
-/*       Prev Amend No. CSC018             Date 10Jun03              */
+/*       Prev Amend No. BUG6546            Date 25Apr05              */
+/*                      CSC018             Date 10Jun03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CCB009 *CREATE     Date 21Jun00              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG6546 - Check SCNJRNL0 in calling program SCC2464,        */
 /*                 Remove RCVF loop from this program.               */
 /*               - Locking problem. Allocate object before trying    */
@@ -38,7 +40,7 @@
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&MSGCLR) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**********  DCLF       FILE(SCNJRNPD) */                                                 /*CSC018*/
 /**********  DCLF       FILE(SCNJRNL0) */                                     /*CSC018*/ /*BUG6546*/
@@ -109,7 +111,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,SCC2465END                                          */
  

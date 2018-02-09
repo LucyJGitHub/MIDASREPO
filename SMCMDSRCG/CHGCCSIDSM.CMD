@@ -9,16 +9,18 @@
 /*                                                                   */
 /*       CHGCCSIDSM - Change CCSIDs for multiple libraries           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. MD020013           Date 11Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD020013           Date 11Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 256038             Date 06Aug08              */
+/*                      256038             Date 06Aug08              */
 /*                      BG18582  *CREATE   Date 10Apr08              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD020013 - Change the way that the job is submitted.        */
 /*       256038  - Change utility so that it will automatically do   */
 /*                 complete database.                                */

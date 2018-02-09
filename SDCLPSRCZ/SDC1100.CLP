@@ -7,18 +7,20 @@
 /*                                                                   */
 /*  SDC1100 - CL Component to Control Available Customer Number Rpt. */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  LAST AMEND NO. E27499                      DATE 10OCT91          */
+/*       Prev Amend No. E27499             Date 10Oct91              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  E27499 - New program to allow 1) input of customer number        */
 /*           range to report on. 2) type of report to produce.       */
 /*                                                                   */
@@ -34,7 +36,7 @@
              DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              CHGJOB     SWS(XXXXXX00)
@@ -54,6 +56,6 @@
              ENDDO
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

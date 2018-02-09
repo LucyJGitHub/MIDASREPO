@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       SDC4301  - SD BTS Monthly report (on request)               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -18,11 +19,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01411             DATE 27APR93              */
-/*       PREV AMEND NO.                    DATE                      */
+/*       Prev Amend No. S01411             Date 27Apr93              */
+/*                                         Date                      */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01411 - New program for BTS                                */
 /*                                                                   */
 /*********************************************************************/
@@ -40,7 +42,7 @@
              DCL        VAR(&STDT) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&ENDT) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,SDC4301001                                          */
 /* */
@@ -83,5 +85,5 @@
  
 /* */
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

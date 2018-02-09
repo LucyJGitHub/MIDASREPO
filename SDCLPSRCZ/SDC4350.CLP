@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       SDC4350 - SD Power of Attorney List                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPM005             Date 22Jul96              */
-/*       Prev Amend No. S01124             Date 17May94              */
+/*       Prev Amend No. CPM005             Date 22Jul96              */
+/*                      S01124             Date 17May94              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPM005 - Private Banking Phase II                           */
 /*                Focus Group Changes Upgraded to DBA                */
 /*       S01124 - PBFG/6 - Additional Customer Details               */
@@ -35,7 +37,7 @@
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(1)                 /*CPM005*/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*CPM005*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*********** RTVJOBA    TYPE(&TYPE)                                */ /*CPM005*/
@@ -99,5 +101,5 @@
 ENDTAG:      DMPCLPGM
 /***ENDPGM:* ENDPGM                                                */ /*CPM005*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*CPM005*/

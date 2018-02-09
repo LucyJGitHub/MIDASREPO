@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SMC1061 - Restore database                                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. AR886414           Date 05Jan12              */
-/*       Prev Amend No. CBF012             Date 04Jul11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR886414           Date 05Jan12              */
+/*                      CBF012             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR886414 - Creation of CBS, CBA and BF libraries in SMSETUPD*/
 /*                  not catered                                      */
 /*       CBF012 - BF Infrastructure: Upgradability                   */
@@ -82,7 +84,7 @@
              DCL        VAR(&DEVTYPE) TYPE(*CHAR) LEN(10)
 /**********  DCL        VAR(&XXTOXX) TYPE(*CHAR) LEN(4)                                */ /*CSM003*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCLF       FILE(UPGSVALJ0)                                                   /*CUP033*/
@@ -666,5 +668,5 @@ ABNOR:
              CHGJOB     SWS(XXXXXX11)
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

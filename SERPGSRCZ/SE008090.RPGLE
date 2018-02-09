@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Original Purchased Date set up on DPTMVD')    *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SE008090 - SE Original Purchased Date set up on DPTMVD       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. AR802256           Date 14Jul11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 AR802256           Date 14Jul11               *
       *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
       *                 CER048             Date 19May08               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  AR802256 - CGL031 switch off                                 *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -560,4 +562,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

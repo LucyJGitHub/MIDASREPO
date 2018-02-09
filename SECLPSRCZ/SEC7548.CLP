@@ -11,18 +11,20 @@
 /*                                                                   */
 /*       Calls :   SE7548 - Corporate Action Allocation Report Prog. */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 136928  *CREATE    Date 16JUN98              */
+/*       Prev Amend No. 136928  *CREATE    Date 16Jun98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  136928 - New Report created for CEU017, because the existing     */
 /*           report SE7534P1 and SE7534P2 is too detail to be        */
 /*           used as a quick check list.                             */
@@ -31,7 +33,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &PARM)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
@@ -83,5 +85,5 @@ ABNOR:       RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
              MONMSG        MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

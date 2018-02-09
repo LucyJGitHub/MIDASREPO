@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       SDC6814  -  CONFIRMATION FORMATS UPDATE.                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 060660             DATE 09DEC93              */
-/*       PREV AMEND NO. S01405             DATE 30NOV92              */
+/*       Prev Amend No. 060660             Date 09Dec93              */
+/*                      S01405             Date 30Nov92              */
 /*                      S01390             DATE 22JUN92              */
 /*                      AUS009             DATE 20DEC90              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       060660 - Correct base file name used.                       */
 /*       S01405 - User defined confirmations file names changed.     */
 /*       S01390 - Release 10 Changes for Australianisation           */
@@ -36,7 +38,7 @@
              DCL        VAR(&FMTTOUPD) TYPE(*CHAR) LEN(4)
              DCL        VAR(&FMTTOCOPY) TYPE(*CHAR) LEN(4)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* START S01405 */
              MONMSG     MSGID(CPF0000) EXEC( +
@@ -103,7 +105,7 @@
                           CHGJOB SWS(XXXXXX1X))
                   ENDDO
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RETURN
 /*                                                                  */
  ERROR:      CHGJOB     SWS(XXXXXXX1)

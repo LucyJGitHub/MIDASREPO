@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate GIIN Number')                        *
@@ -9,12 +9,14 @@
       *                                                               *
       *  SDVGIINN - Validate GIIN Owner                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD029805 *CREATE   Date 05Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029805 *CREATE   Date 05Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029805 - GIIN number validation                            *
       *                                                               *
       *****************************************************************
@@ -279,7 +281,7 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014
 **  AlphaEO - Array of alphabetic characters without letter 'O'
 ABCDEFGHIJKLMNPQRSTUVWXYZ
 **  AlphaNum - Array of alphabetic characters

@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC2477 - Monitor Global Journal                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. AR1082949          Date 20May13              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1082949          Date 20May13              */
+/*                      CCB020             Date 06Aug12              */
 /*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1082949 - GPJRN journal sequence is not resetting.        */
 /*                   Reset of the GPJRN journal sequence number.     */
 /*                   (Child: AR1082950).                             */
@@ -61,7 +63,7 @@
              DCL        VAR(&SVAL10SAV) TYPE(*CHAR) LEN(200)
              DCL        VAR(&SUPPUPD) TYPE(*CHAR) LEN(20)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
              DCL        VAR(&JNSEQ) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&SEQOPT) TYPE(*CHAR) LEN(6)
@@ -1106,6 +1108,6 @@ END:
 /*/COPY WNCPYSRC,SCC2477END                                                                       */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

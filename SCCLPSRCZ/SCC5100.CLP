@@ -7,15 +7,17 @@
 /*                                                                   */
 /*       SCC5100    -  INPUT CYCLE INITIATION DB SAVE (SAVF)         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. 249135             Date 13Jul07              */
-/*       Prev Amend No. CSC032  *Created   Date 03Apr07              */
+/*       Prev Amend No. 249135             Date 13Jul07              */
+/*                      CSC032  *CREATE    Date 03Apr07              */
 /*                      Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     249135 - Program Crashing during COB                          */
 /*     CSC032 - Exit programs for Midas save and restore.            */
 /*                                                                   */
@@ -26,7 +28,7 @@
  
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2007')
  
 /* Global monitor message */

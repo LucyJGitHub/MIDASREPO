@@ -7,15 +7,16 @@
 /*                                                                  */
 /*          SCC2457 - CLEAR ALL SAVE FILES                          */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*      (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CSC033            Date     21May07          */
+/*       Prev Amend No. CSC033            Date     21May07          */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Prev Amend No. 211730            Date     25Nov02          */
+/*                      211730            Date     25Nov02          */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      100498            DATE     24SEP97          */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       CSC033  - Include global libraries in database saves.      */
 /*       211730  - Clear DBdayDTA SAVF file as well. This save file */
 /*                 was created by CSC012 amendment in SCC2454 and   */
@@ -42,7 +44,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* File of journal receiver save file object descriptions */
@@ -79,7 +81,7 @@
 /* Copyright statement defination at runtime */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /**************************************************************/
 /*                                                            */

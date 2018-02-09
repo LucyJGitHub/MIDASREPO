@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Additional Customer Details 3 Display')          *
@@ -12,10 +12,11 @@
       *  Function:  This module displays the Additional Customer      *
       *             Details screen input function                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG26470           Date 19Oct09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26470           Date 19Oct09               *
       *                 BUG26353           Date 13Oct09               *
       *                 BUG25533           Date 19Aug09               *
       *                 CER045             Date 20Jul09               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26470 - "State Code" field is enabled during enquiry      *
       *             (Recompile)                                       *
@@ -499,6 +501,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 ** CTDATA @CPY
-Misys International Banking Systems Ltd. 2008
+Finastra International Limited 2008
 ** CTDATA ArrZ0
 000000000000000000000000000000000000000000000000000000000000

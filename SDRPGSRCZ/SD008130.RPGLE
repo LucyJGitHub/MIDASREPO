@@ -13,12 +13,13 @@
       *           Flat Tax amounts will be recalculated to reflect    *
       *           the change.                                         *
       *                                                               *
-      *  (c) Copyright Misys International Banking Systems Ltd 2010   *
+      *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
       *  Called From: SDC008150                                       *
       *                                                               *
-      *  Last Amend No. MD038025           Date 27Jul16               *
-      *  Prev Amend No. AR1084524          Date 13Feb13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038025           Date 27Jul16               *
+      *                 AR1084524          Date 13Feb13               *
       *                 CLE148             Date 23Jul12               *
       *                 AR873924A          Date 08Feb12               *
       *                 AR888911           Date 26Jan12               *
@@ -34,6 +35,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD038025 - Review AR875365 to only default ST rate if        *
       *             'number of month' is not zero.                    *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *
@@ -1170,4 +1172,4 @@
 **   ZMNM - MONTHS SHORT NAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Copyright Misys International Banking Systems Ltd. 2010
+(c) Copyright Finastra International Limited 2010

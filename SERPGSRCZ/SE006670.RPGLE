@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE EU Customer Position Backvaluation setup')    *
@@ -10,18 +10,19 @@
       *  SE006670 - EU TAX Customer Position - remove records due to  *
       *              back valuations                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
       *    This program deletes all records for a position that is    *
       *    after a backvaluation and writes the key details to        *
       *    temporary file ETCPOSTEMP so can be added back in          *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027A            Date 05May06               *
+      *                 CSD027A            Date 05May06               *
       *                 236125 (reopen)    Date 23Sep05               *
       *                 236125             Date 22Sep05               *
       *                 235546 (reopen)    Date 31Aug05               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027A - Conversion Of Customer Number to Alpha             *
       *  236125 - Reopen - change call of SEVTAXDATE from calling     *
@@ -451,4 +453,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD DST Maintenance')
@@ -13,12 +13,13 @@
       *  Function:  This program display the records from the         *
       *             DST Code file                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG21289           Date 13Oct08               *
-      *  Prev Amend No. BUG20628           Date 18Aug08               *
+      *  Prev Amend No. BUG21289           Date 13Oct08               *
+      *                 BUG20628           Date 18Aug08               *
       *                 BUG20226           Date 15Aug08               *
       *                 BUG20610           Date 11Aug08               *
       *                 BUG19524A          Date 07Jul08               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG21289 - Various Timezone and DST errors. Applied fixes    *
       *             21232, 21207, 21208, 20945A, 20945                *
       *             (Recompile)                                       *
@@ -3293,7 +3295,7 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008
 ** DSTMON
 010203040506070809101112
 ** DSTDAY

@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       SCC0260 -  Check Object                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. CRT003             DATE 23SEP96              */
-/*       PREV AMEND NO.                    DATE                      */
+/*       Prev Amend No. CRT003             Date 23Sep96              */
+/*                                         Date                      */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*      CRT003 - Cashier Interface.                                  */
 /*               Written for field validation in CI ICD.             */
 /*                                                                   */
@@ -34,7 +36,7 @@
              DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&AUT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
@@ -57,6 +59,6 @@
 /*/COPY WNCPYSRC,SCC0260END                                          */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

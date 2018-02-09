@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas Take on of Stamp Tax Customers')                 *
@@ -9,13 +9,15 @@
       *                                                               *
       *  SD008198 - Midas Take on of Stamp Tax Customers              *
       *                                                               *
-      *  (C) Copyright Misys International Banking Systems Ltd. 2010  *
+      *  (C) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. AR818226           Date 22Aug11               *
-      *  Prev Amend No. CER049  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR818226           Date 22Aug11               *
+      *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR818226 - Take-on Program SDCUSTQD not successful           *
       *  CER049 - Stamp Tax                                           *
       *                                                               *
@@ -126,4 +128,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd., 2010
+(C) Copyright Finastra International Limited 2010

@@ -7,16 +7,17 @@
 /*                                                                  */
 /*         SEC12 - EUCLID PROCESSING                                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01502             DATE 08JUL94              */
-/*       PREV AMEND NO. E32025             DATE 18NOV91              */
+/*       Prev Amend No. S01502             Date 08Jul94              */
+/*                      E32025             Date 18Nov91              */
 /*                      S01117                  DATE  10JAN91       */
 /*                      E23408                  DATE  06SEP90       */
 /*                      E16870                  DATE  08/03/89      */
@@ -25,6 +26,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01502 - BLI Telekurs Processing.  Recompiled due to        */
 /*                change in length of SESTAT, 133 long.              */
 /*       E32025 - Prevent the running of this pgm if Pay/Receive    */
@@ -45,7 +47,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
              DCL        VAR(&RPY) TYPE(*CHAR) LEN(1)
@@ -225,5 +227,5 @@ ABNORMAL:    SNDPGMMSG  MSG('PROGRAM SEC12 ENDED ABNORMALLY') +
 /**/
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

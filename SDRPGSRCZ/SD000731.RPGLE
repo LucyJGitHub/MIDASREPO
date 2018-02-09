@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD FATCA Indicia Search Tool Staging Module')    *
@@ -12,10 +12,11 @@
       *  Function:  This module updates all FATCA Customers with      *
       *             US Indicia                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039670           Date 26Jul16               *
-      *  Prev Amend No. MD034067           Date 13Jul15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *                 MD034067           Date 13Jul15               *
       *                 MD027682           Date 28Aug14               *
       *                 MD027669           Date 01Jul14               *
       *                 MD027498           Date 20Jun14               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039670 - FATCA Housekeeping program                        *
       *  MD034067 - Customer with joint account indicia is wrongly    *
       *             classified by the US indicia tool as without US   *
@@ -508,7 +510,7 @@
  
      C     SrValInput    BEGSR
  
-     C     *LOVAL        SETLL     SDFCLSL0                                                 
+     C     *LOVAL        SETLL     SDFCLSL0
       ** Loop though the Prompt input
      C                   DOU       %EOF(SDFCLSL0)
  

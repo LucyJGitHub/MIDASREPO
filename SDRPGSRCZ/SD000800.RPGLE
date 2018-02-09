@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Take-on program for SDCSSWPD')                *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SD000800 - Midas SD Take-on program for SDCSSWPD             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. CSW214             Date 02Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CSW214             Date 02Jun14               *
       *                 MD022764           Date 11Oct13               *
       *                 CFT050             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  MD022764 - CSW207 Initialisation must be taken into account  *
@@ -190,4 +192,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2007
+(c) Finastra International Limited 2007

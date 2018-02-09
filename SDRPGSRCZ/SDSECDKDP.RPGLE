@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Securities clients details key screen')
@@ -12,14 +12,15 @@
       *  Function:  This module displays the key screen of the        *
       *             securities clients details screen input function  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD037886A          Date 25May16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD037886A          Date 25May16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG2249            Date 04May04               *
+      *                 BUG2249            Date 04May04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
       *                 CAP039  *CREATE    Date 29Sep99               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD037886A - Unable to insert and amend security clients      *
       *              details (Recompile)                              *
       *  BUG2249 - F7/F8 should be disabled during insert operation.  *
@@ -39,12 +41,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FSDSECDKDF CF   E             WORKSTN
-
+ 
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
-
+ 
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -65,25 +67,25 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -91,68 +93,68 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D @EI             S              1    DIM(60)
-
+ 
      D SecDets       E DS                  EXTNAME(SDSECDPD)
       ** Security Details in screen format
-
+ 
      D OKSecDets     E DS                  EXTNAME(SDESECDPD)
       ** Security Details OK indicators
-
-
+ 
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, short data structure
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access Programs, long data structure
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -200,12 +202,12 @@
      C                   ADD       1             C
      C                   ADD       1             E
      C                   END
-
-
+ 
+ 
       ** Set up the customer reference to be used by the message handler
      C                   EVAL      TranRef = DDCSST
      C                   EVAL      ActionCode = 'I'
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
@@ -237,13 +239,13 @@
      C                   MOVE      *INKL         @INKL
       *
      C                   ENDSR
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
-
+ 
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -258,36 +260,36 @@
       * INPUT PARAMETERS :
       * Return code
      C                   PARM                    RetCodeIn
-
+ 
       * Customer Number / Shortname
      C                   PARM                    DDCSST
-
+ 
       ** Security Details in screen format
      C                   PARM                    SecDets
-
+ 
       ** Security Details OK indicators
      C                   PARM                    OKSecDets
-
+ 
       * ERRORS
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
-
+ 
       * OUTPUT PARAMETERS :
-
+ 
       * Function Keys
      C                   PARM                    @INKC             1
      C                   PARM                    @INKG             1
      C                   PARM                    @INKH             1
      C                   PARM                    @INKL             1
-
-
+ 
+ 
       ** Initialize program name
-
+ 
      C                   MOVEL     'SDSECDKDSP'  DBPGM
-
+ 
       ** Move user and workstation ID to screen fields.
-
+ 
      C                   MOVEL     PsUser        DDUSER
      C                   MOVEL     PsJobName     DDWID
       *
@@ -316,10 +318,10 @@
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SDCPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
-
-
+ 
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -351,6 +353,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 000000000000000000000000000000000000000000000000000000000000

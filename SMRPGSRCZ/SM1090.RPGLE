@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(NEWZOBRL1) TOFILE(SDBRCHL1)                      *
 /*STD *  RPGBASEBND                                                   *
@@ -15,18 +15,20 @@
       *            new branch codes. The branch codes must be unique  *
       *            in all zones.                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. CGP009             Date 22Dec04               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGP009             Date 22Dec04               *
       *                 CUP025  *CREATE    Date 05Jan04               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGP009 - Local Zone Time Difference (Recompile)              *
       *  CUP025 - Change branches utility                             *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD DST Code Prompt')
@@ -15,15 +15,17 @@
       *                                                               *
       *  Component of: SD001106P SD Daylight Saving Time Code Report  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG19929           Date 11Jul08               *
-      *  Prev Amend No. CSW208  *CREATE    Date 15Apr08               *
+      *  Prev Amend No. BUG19929           Date 11Jul08               *
+      *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG19929 - After typing "?" the selection screen of DST      *
       *             codes did not appear.                             *
       *  CSW208 - SWIFT 2008 Changes                                  *
@@ -532,4 +534,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

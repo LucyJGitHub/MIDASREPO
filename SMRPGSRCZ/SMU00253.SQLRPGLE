@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
  **** *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Alpha Loan - Upgrade Program')
@@ -24,10 +24,11 @@
       *             will be blank.                                    *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD045498           Date 01Jun17               *
-      *  Prev Amend No. MD040956           Date 01Sep16               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. MD045498           Date 01Jun17               *
+      *                 MD040956           Date 01Sep16               *
       *                 MD039358           Date 05May16               *
       *                 AR1085447D         Date 29Mar13               *
       *                 AR1085447          Date 06Feb13               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD045498 - Incorrect concatenation for leading blanks.       *
       *  MD040956 - SQL syntax incorrect.                             *
       *           - Incorrect files/fields referenced based on        *

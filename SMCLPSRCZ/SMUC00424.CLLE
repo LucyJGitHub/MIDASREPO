@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       SMUC00424 - Addition of integration libraries               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*       (c) Finastra International Limited 2015                     */
 /*                                                                   */
-/*       Last Amend No. MD-35839A*AMEND    Date 14Sep15              */
-/*       Prev Amend No. MD-35427 *CREATE   Date 14Aug15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD-35839A          Date 14Sep15              */
+/*                      MD-35427 *CREATE   Date 14Aug15              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD-35839A- Create SAVF for the new DI layer library (GD,DD) */
 /*                  and addtl fix for bridge for DI layer            */
 /*       MD-35427 - Data Interchange Layer                           */
 /*                                                                   */
 /*********************************************************************/
              PGM
-
+ 
              DCL        VAR(&ZPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&GPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&LAYER) TYPE(*CHAR) LEN(1)
@@ -41,17 +43,17 @@
              DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
              DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
-
+ 
 /*           DCLF       FILE(SMSETUPD)                  */                            /*MD035839A*/
              DCLF       FILE(SMSETUL0)                                                /*MD035839A*/
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           2015')
-
+ 
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
-
+ 
 /* Retrieve global and zone prefixes. */
              CHGVAR     VAR(&SVALK1) VALUE('BrgMidasSystemPrefix')
              CHGVAR     VAR(&SVALK2) VALUE('BrgMidasGlobalPrefix')
@@ -91,7 +93,7 @@
                    CHGVAR     VAR(&IASPGRP) VALUE(%SST(&SVAL2 1 10))
                 ENDDO
              ENDDO
-
+ 
 /* Set variables for library names. */
              CHGVAR     VAR(&DZLIB) VALUE(&ZPFX *TCAT 'DZLIB')
              CHGVAR     VAR(&GTALIB) VALUE(&GPFX *TCAT 'GTALIB')
@@ -99,7 +101,7 @@
              CHGVAR     VAR(&GBLIB) VALUE(&GPFX *TCAT 'GBLIB')
              CHGVAR     VAR(&OWNER) VALUE(&ZPFX *TCAT 'OWNER')
              CHGVAR     VAR(&AUTL) VALUE(&GPFX *TCAT 'DATABASE')
-
+ 
 /* If the libraries don't already exist then create them. */
              CHKOBJ     OBJ(&DBLIB) OBJTYPE(*LIB)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -115,7 +117,7 @@
                 CHGOBJOWN  OBJ(&DBLIB) OBJTYPE(*LIB) NEWOWN(&OWNER)
                 CHGLIB     LIB(&DBLIB) CRTAUT(&AUTL)
              ENDDO
-
+ 
              CHKOBJ     OBJ(&GBLIB) OBJTYPE(*LIB)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 IF         COND(&IASPGRP *EQ ' ') THEN(DO)
@@ -138,17 +140,17 @@ READNEXT:
              ENDDO
 /* Identify if the jobd is global or zone */
              CHGVAR     VAR(&LAYER) VALUE(%SST(&DFLIB 1 1))
-
+ 
              IF         COND(&DFTYPE *NE '*JOBD' *OR &DFSTS *NE +
                           ' ' *OR &LAYER *EQ 'G') THEN(DO)
                 GOTO       CMDLBL(READNEXT)
              ENDDO
-
+ 
              CHGVAR     VAR(&NEWLIBL) VALUE(' ')
              CHGVAR     VAR(&CMD) VALUE(' ')
              RTVJOBD    JOBD(&DFNAME) INLLIBL(&INLLIBL)
              CHGJOBD    JOBD(&DFNAME) INLLIBL(*NONE)
-
+ 
              CHGVAR     VAR(&STRPOS) VALUE(1)
 LOOP:
              CHGVAR     VAR(&LIB) VALUE(%SST(&INLLIBL &STRPOS 10))
@@ -158,7 +160,7 @@ LOOP:
                 CHGVAR     VAR(&STRPOS) VALUE(&STRPOS + 11)
                 GOTO       CMDLBL(LOOP)
              ENDDO
-
+ 
              IF         COND(&LIB *EQ ' ') THEN(DO)
                 GOTO       CMDLBL(CHANGE)
              ENDDO
@@ -174,25 +176,25 @@ LOOP:
                              *BCAT &GBLIB)
                 GOTO       CMDLBL(LOOP)
              ENDDO
-
+ 
              CHGVAR     VAR(&NEWLIBL) VALUE(&NEWLIBL *BCAT &LIB)
              CHGVAR     VAR(&STRPOS) VALUE(&STRPOS + 11)
              IF         COND(&STRPOS *LT 2750) THEN(DO)
                 GOTO       CMDLBL(LOOP)
              ENDDO
-
+ 
 CHANGE:
              CHGVAR     VAR(&CMD) VALUE('CHGJOBD JOBD(' *TCAT +
                           &DFNAME *TCAT ') INLLIBL(' *TCAT &NEWLIBL +
                           *TCAT ')')
              CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
-
+ 
              GOTO       CMDLBL(READNEXT)
-
+ 
              GOTO       CMDLBL(ENDPGM)
-
+ 
 ERROR:
              CHGJOB     SWS(XXXXXX11)
-
+ 
 ENDPGM:
              ENDPGM

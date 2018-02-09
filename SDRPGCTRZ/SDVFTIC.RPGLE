@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate FATCA Information Complete')         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SDVFTIC - Validate FATCA Information Complete                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD042805           Date 05Jun17               *
-      *  Prev Amend No. MD036356           Date 20Oct15               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. MD042805           Date 05Jun17               *
+      *                 MD036356           Date 20Oct15               *
       *                 MD035388           Date 20Oct15               *
       *                 MD029837A          Date 22Aug14               *
       *                 MD029837           Date 22Aug14               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042805  - FBM2.1SP10-FATCA US TIN mandatory - should be    *
       *              optional depending on FATCA customer type        *
       *  MD036356 - Multiple NAHO FATCA fields does not default values*
@@ -949,4 +951,4 @@
       /EJECT                                                                                MD042805
       *****************************************************************                     MD042805
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

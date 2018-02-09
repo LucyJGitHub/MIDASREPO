@@ -10,17 +10,19 @@
 /*                                                                   */
 /*       CVTBROPTN - Enter options for converting branches on files  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CUP033             Date 18Sep06              */
+/*       Prev Amend No. CUP033             Date 18Sep06              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CUP025 *CREATE     Date 29Jan04              */
+/*                      CUP025 *C *CREATE  Date 29Jan04              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP033 - Removal of System Value /COPYs.                    */
 /*       CUP025 - Change branches utility                            */
 /*                                                                   */

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate First Name')                         *
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVFIRS01 - Validate First Name                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD022651           Date 10Oct13               *
-      *  Prev Amend No. MD021510           Date 09Aug13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022651           Date 10Oct13               *
+      *                 MD021510           Date 09Aug13               *
       *                 AR978528           Date 21May12               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22667           Date 11Oct07               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022651 - Impossible to amend additional customer details   *
       *  MD021510 -  Account Owner/Family and Company Name/First Name *
       *              are being populated from Repair Queue even no    *
@@ -417,4 +419,4 @@ als  C                   MOVEL     'USR1660'     MsgIDXAr(Idx)
      C                   ENDSR
       ********************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate transaction type a system value')
@@ -10,14 +10,16 @@
       *  SD009566 - Validate a Midas System Value for the following:  *
       *             - A valid retal transaction type                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. 241786             Date 21Aug06               *
-      *  Prev Amend No. CGL047  *Create    Date 30Jun06               *
+      *  Prev Amend No. 241786             Date 21Aug06               *
+      *                 CGL047  *CREATE    Date 30Jun06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  241786 - Parameter defined incorrectly.                      *
       *  CGL047 - New program for the System Values Development.      *
       *                                                               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Initialise counter CCY amount fields')        *
@@ -9,15 +9,17 @@
       *                                                               *
       *  SMU00070 - Initialise the counter currency amount fields     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CAP208             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *   Prev Amend No. BG26993            Date 26Jan10              *
+      *                 BG26993            Date 26Jan10               *
       *                  111728 *CREATE     Date 29Feb00              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
       *    BG26993- Delivery of upgrade programs to core.             *
       *           - Renamed program S11172801.                        *

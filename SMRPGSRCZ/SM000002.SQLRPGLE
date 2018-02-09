@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
  **** *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Update GPCURRPD based on zone SDCURRPD')
@@ -14,9 +14,10 @@
       *                                                               *
       *  Called By:                                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
-      *  Last Amend No. CFB001             Date 12Nov14               *
-      *  Prev Amend No. CTP011             Date 10Jun10               *
+      *  (c) Finastra International Limited 2006                      *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CFB001             Date 12Nov14               *
+      *                 CTP011             Date 10Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebrandin                                *
       *  CFB001 - FuisonBanking Midas Rebranding                      *
       *  CTP011 - Bank Fusion Midas Rebranding                        *
       *  CPK025 - Packaging changes for MidasPlus 1.3.                *
@@ -69,7 +71,7 @@
      C+ T INNER JOIN GPICURRPD ON T.A6CYCD = CYCYCD WHERE NOT EXISTS
      C+ (SELECT GCCYCD FROM GPCURRPD WHERE A6CYCD = GCCYCD)
      C/End-Exec
- 
+
       *
       * If there's an SQL error, set on U7 and U8.
      C                   IF        SQLCOD < 0

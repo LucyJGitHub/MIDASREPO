@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate MQ queue manager')
@@ -9,14 +9,16 @@
       *                                                               *
       *  SD009625 - Validate MQ Queue Manager for existence           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 245310  *CREATE    Date 30Jan07               *
+      *  Prev Amend No. 245310  *CREATE    Date 30Jan07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  245310 - validate that the value supplied relates to a       *
       *           Websphere MQ Queue Manager that actually exists.    *
       *           Note that if this value is not set then most Midas  *

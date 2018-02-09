@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Outgoing Payment Ext. Sett. Instn. Rpt.')     *
@@ -10,13 +10,15 @@
       *  SD001247 - Midas SD Outgoing Payments - Extended Settlement  *
       *             Instructions Report                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR988376           Date 11Feb13               *
-      *  Prev Amend No. CFT045  *CREATE    Date 04Aug11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR988376           Date 11Feb13               *
+      *                 CFT045  *CREATE    Date 04Aug11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR988376 - Component SDC0602 ended in error (Child:AR988377) *
       *  CFT045 - Outgoing Payments - Extended Settlement Instructions*
       *                                                               *

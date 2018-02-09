@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate system value ProjectedDaysRetail')
@@ -11,18 +11,20 @@
       *             - System value is a number between 1 and 999 incl.*
       *             - System value is <= No of Days Forward.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CLE025             Date 20Oct03               *
-      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *  Prev Amend No. CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
       *                 CRE009  *CREATE    Date 12Sep02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE025 - Credit Lines                                        *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  CRE009 - Projected Account Movements for RE accounts         *

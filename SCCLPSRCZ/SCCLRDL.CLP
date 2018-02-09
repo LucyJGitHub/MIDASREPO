@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       SCCLRDL - CLEAR DAILY DEALING FILES                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. 193885             Date 17Sep01              */
+/*       Prev Amend No. 193885             Date 17Sep01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CDE002             Date 23May00              */
+/*                      CDE002             Date 23May00              */
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      CCM003             Date 02Feb01              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
@@ -37,6 +38,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   193885 - Trap message CPF7301 generated when trying to remove   */
 /*            a member from an empty HISTEAA file so that the        */
 /*            program could continue without MSGW interference.      */
@@ -78,7 +80,7 @@
              PGM
 /*                                                                            */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SCCLRDLMPS                                           /*S01408*/
@@ -199,5 +201,5 @@
              SNDPGMMSG  TOMSGQ(MRUNQ) MSG('Dealing Daily Files Cleared')
  ENDCLPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM     /* END CL PGM */

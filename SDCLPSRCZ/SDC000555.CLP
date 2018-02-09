@@ -7,12 +7,14 @@
 /*                                                                   */
 /*       SDC000555 - Midas SD Initialisation program for CGL132      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
-/*       Last Amend No. MD039642  *CREATE  Date 27Jul16              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD039642 *CREATE   Date 27Jul16              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD039642 - Switching Off CGL132 feature duplicate FATCA     */
 /*                    records                                        */
 /*                                                                   */
@@ -21,8 +23,8 @@
  
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Misys +
-                          International Banking Systems Ltd. 2016')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2016')
  
 /** Global monitor message */
  
@@ -61,5 +63,5 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

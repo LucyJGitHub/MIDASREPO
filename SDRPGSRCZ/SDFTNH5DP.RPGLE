@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD FATCA Non-A/c Holder details 5 screen')       *
@@ -12,15 +12,17 @@
       *  Function:  This module displays the fifth details screen     *
       *             of FATCA customer details screen input function   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD029805           Date 05Sep14               *
-      *  Prev Amend No. MD026537           Date 28Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029805           Date 05Sep14               *
+      *                 MD026537           Date 28Apr14               *
       *                 CGL133             Date 01May13               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029805 - GIIN number validation                            *
       *  MD026537 - Highlighted fields are different from the         *
       *             original fields that trigger the error messages   *
@@ -397,6 +399,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 ** @Z0
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

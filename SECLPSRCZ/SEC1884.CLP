@@ -9,18 +9,20 @@
 /*                                                                   */
 /*       CALLS :   SE1884 - Non-Fungible Trades with No Cert List    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01401             DATE 16JUN93              */
+/*       Prev Amend No. S01401             Date 16Jun93              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01401 - SWIFT Messages MT5xxs - New Program.               */
 /*                                                                   */
 /*********************************************************************/
@@ -31,7 +33,7 @@
              PGM PARM(&RSEQ &RLEV &RENT)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL (&RSEQ) TYPE(*CHAR) LEN(5)
@@ -65,5 +67,5 @@ ERROR:       IF (%SWITCH(XXXXXX11)) THEN(DO)
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

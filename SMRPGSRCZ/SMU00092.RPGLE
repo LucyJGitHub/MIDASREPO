@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Utility program to update GTEESZZ')
@@ -12,14 +12,16 @@
       *  Function:  This utility program counts the amount of records *
       *  in GTEESGT and updates the trailer record if it is wrong.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. 165426  *CREATE    Date 14Oct99               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 165426  *CREATE    Date 14Oct99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program S16542601.                         *
       *  165426  - Run this utility to update GTEESZZ when the fix is *

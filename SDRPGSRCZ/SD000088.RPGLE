@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Currency Mapping and upd of Equation Currency File')
@@ -14,15 +14,17 @@
       *  Called By: SDC000081 - Update Equation with consumer Banking *
       *                         Standing Data Details Control         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14132           Date 18Jun07               *
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *  Prev Amend No. BUG14132           Date 18Jun07               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG14132 - New Currency codes do not show when               *
       *             opening  Consumer accounts                        *
       *  CRE026 - Consumer Banking                                    *
@@ -481,4 +483,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

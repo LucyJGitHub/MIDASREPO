@@ -8,12 +8,14 @@
 /*                                                                   */
 /*       STRPEAFTP - Start DBIC FTP to PEA system                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. CSC054   *CREATE    Date 23Feb12             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC054  *CREATE    Date 23Feb12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC054 - Period End Adjustments                             */
 /*                                                                   */
 /*********************************************************************/

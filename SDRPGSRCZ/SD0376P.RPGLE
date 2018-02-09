@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Exemption codes details report')
@@ -16,21 +16,23 @@
       *             2.Audit List - Only the records w/ LCD = Rundate  *
       *                            will be printed.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGP001             Date 18Dec03               *
+      *  Prev Amend No. CGP001             Date 18Dec03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. 188774             Date 15Jan01               *
+      *                 188774             Date 15Jan01               *
       * Midas DBA 3.04 -----------------------------------------------*
       *                 CSE023  *CREATE    Date 12Jul00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGP001 - Global Processing (Recompile)                       *
       *  188774 - Target for numeric operation is too small to hold   *
       *           the result, write operation applied to closed       *
@@ -549,4 +551,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

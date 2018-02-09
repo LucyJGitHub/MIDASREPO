@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       SEC0801   HOLDINGS EXPOSURE REPORT                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG11913           Date 17Aug06              */
-/*       Prev Amend No. BUG11638           Date 29Jun06              */
+/*       Prev Amend No. BUG11913           Date 17Aug06              */
+/*                      BUG11638           Date 29Jun06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CAC005             Date 23Nov98              */
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*      BUG11913 - Open query error in BKPHDQF file because RSKC     */
 /*                 field has been changed from numeric to alpha.     */
 /*      BUG11638 - SEC0801 failed                                    */
@@ -71,7 +73,7 @@
              PGM        PARM(&RSEQ &RLEV &RENT &RPARM)                /*S01117*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
              DCL        VAR(&LEVEL) TYPE(*CHAR) LEN(1)
@@ -938,5 +940,5 @@
              RCLRSC
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

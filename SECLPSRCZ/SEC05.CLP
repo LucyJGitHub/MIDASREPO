@@ -7,21 +7,23 @@
 /*                                                                  */
 /*         SEC05 - INPUT CYCLE TERMINATION                          */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. CCB001             DATE 20APR95             */
-/*       PREV AMEND NO. S01401             DATE 16JUN93             */
+/*       Prev Amend No. CCB001             Date 20Apr95              */
+/*                      S01401             Date 16Jun93              */
 /*                      E28922             DATE 27SEP91             */
 /*                      S01117             DATE 07JAN91             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     CCB001 - Add ABNOR processing.                               */
 /*     S01401 - SWIFT Msgs MT5xxs - Generate SWIFT Confirmations :  */
 /*              Remove parms from SEC0304 since now mandatory.      */
@@ -35,7 +37,7 @@
              PGM                                                      /*E28922*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01117*/
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)                 /*S01117*/
@@ -74,6 +76,6 @@
  END:                                                                 /*CCB001*/
                                                                       /*CCB001*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                       /*CCB001*/
              ENDPGM

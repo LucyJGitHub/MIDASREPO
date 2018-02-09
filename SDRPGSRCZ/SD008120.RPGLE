@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Stamp Tax Indicators by Loan Type/Subtype')   *
@@ -9,13 +9,15 @@
       *                                                               *
       *  SD008120 - Stamp Tax Indicators by Loan Type/Sub Type        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR845644           Date 27Oct11               *
-      *  Prev Amend No. CER049  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR845644           Date 27Oct11               *
+      *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR845644 - No validation rules when setting up Stamp         *
       *             Tax Indicator                                     *
       *  CER049 - Stamp Tax                                           *

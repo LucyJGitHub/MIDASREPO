@@ -9,14 +9,15 @@
 /*       SDC0602 - PRODUCE S.DATA AUDIT LISTS AND UPDATE LIMIT CCY  *   LN0220*/
 /*                 EXCHANGE RATES                                   *   LN0220*/
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGL018             Date 29Oct02              */
+/*                      CGL018             Date 29Oct02              */
 /* Midas Release 4.01.03 --------------------------------------------*/
 /*                      177440             Date 06Jan03              */
 /* Midas Release 4.01.02 --------------------------------------------*/
@@ -40,6 +41,7 @@
 /*                    RT      Drop SD0310 for RT test               */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     CCB020 - COB Restructure - Secondary COB Infrastructure      */
 /*     CGL018 - Risk Weighted Assets                                */
 /*     177440 - Add ABNOR processing.                               */
@@ -81,7 +83,7 @@
 /**********  DCLDTAARA  DTAARA(MMOD)                                *  *S01179*/
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)               /*S01179*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)               /*LN0220*/
              DCL        VAR(&SEQNO) TYPE(*CHAR) LEN(5)                /*LN0220*/
@@ -115,7 +117,7 @@
                           CMDLBL(ABNOR))                              /*177440*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*                                                          *LN0381*/
 /* Microfich Module active = (&FMT 54) is 'Y'               *LN0381*/

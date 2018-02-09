@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Validate WNCABR CAB Reporting')
@@ -17,17 +17,19 @@
       *                                                               *
       *  Component of:  SP120CTYLX - CORE Lux Service Program         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CER001             Date 25Apr05               *
-      *  Prev Amend No. ULX008  *CREATE    Date 23May00               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX008  *CREATE    Date 23May00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER001 - LUX Upgrade to MidasPlus                            *
       *  ULX008 - API Commissariat Aux Bourses (Funct. SEDPMV/SETRAD) *
       *                                                               *
@@ -187,4 +189,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

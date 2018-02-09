@@ -8,14 +8,16 @@
       *                                                               *
       *  SD008117 - Stamp Tax Facility Type Defaults                  *
       *                                                               *
-      *  (c) Copyright Misys International Banking Systems Ltd 2010   *
+      *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. AR837609A          Date 15Nov11               *
-      *  Prev Amend No. AR837609           Date 09Nov11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR837609A          Date 15Nov11               *
+      *                 AR837609           Date 09Nov11               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR837609A - Update current fields during COB only.           *
       *  AR837609 - Update current fields during COB only.            *
       *  CER049 - Stamp Tax                                           *
@@ -986,7 +988,7 @@
 **   ZMNM - MONTHS SHORT NAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 ** CPY@
-(c) Copyright Misys International Banking Systems Ltd. 2010
+(c) Copyright Finastra International Limited 2010
 ** ErrorMsg
 The Current Stamp Tax Rate on Facility under 1 year
 The Current Stamp Tax Rate on Facility over 1 under 5 years

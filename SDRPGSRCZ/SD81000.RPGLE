@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Update Currency Clearing System File')
@@ -12,17 +12,19 @@
       *  Function:  This program will insert PLN currency in          *
       *             Currency Clearing System File(SDCCSYPD).          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSW206C            Date 19Sep06               *
-      *  Prev Amend No. CSW206  *CREATE    Date 03Jul06               *
+      *  Prev Amend No. CSW206C            Date 19Sep06               *
+      *                 CSW206  *CREATE    Date 03Jul06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW206C - Update Standing Data Controls(SDFCTLPA)            *
       *  CSW206 - SWIFT 2006 Standard Changes                         *
       *                                                               *

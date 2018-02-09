@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Annual Tax Deducted Statement')               *
@@ -12,10 +12,11 @@
       *  Function:  This module generates Annual Tax Deducted         *
       *             statement.                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR763011           Date 02Jun11               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -171,21 +173,21 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** SD Customer Income - Customer Number
      F***SDCSINL2  IF   E           K DISK    INFSR(*PSSR)                                  BUG25075
      F***SDCSINLI  IF   E           K DISK    INFSR(*PSSR)                        BUG25075 BUG26728A
      FSDCSINLK  IF   E           K DISK    INFSR(*PSSR)                                    BUG26728A
- 
+
       ** SD Customer Income - Non A/c Holder Reference
      FSDCSINL3  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDCSIND0:SDCSIND3)
- 
+
       ** SD Joint Account Members Audit List - Detail
      FSD000769P1O    E             PRINTER INFDS(SPOOL1)
      F                                     USROPN
      F                                     INFSR(*PSSR)
- 
+
       ** SD Joint Account Members Audit List - Audit
      FSD000769AUO    E             PRINTER INFDS(SPOOLU)
      F                                     USROPN
@@ -235,7 +237,7 @@
       ** Midas SD Joint Account Member Details                                              BUG26728
       *                                                                                     BUG26728
      FSDJACCL4  IF   E           K DISK                                                     BUG26728
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -244,10 +246,10 @@
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Local data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
       ** The following fields are defined in the external file:
@@ -257,25 +259,25 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Externally described DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Externally described DS for Customer Number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Externally described DS for Non A/c Holder Reference
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)
- 
+
       ** Externally described DS for SD Currency Codes
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Externally described DS for Location details                                       BUG24767
      D SDLOCN        E DS                  EXTNAME(SDLOCNPD)                                BUG24767
                                                                                             BUG24767
@@ -294,19 +296,19 @@
       ** First DS for Access Programs, short Data Structure                                   CER048
       *                                                                                       CER048
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CER048
- 
+
       ** File Information Data Structure for SD000763P1
      D SPOOL1          DS
      D   SFILE1               83     92
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** File Information Data Structure for SD000763AU
      D SPOOLU          DS
      D   SFILEU               83     92
      D   SFNUMU              123    124B 0
- 
+
       ** Input DS
      D PData           DS           100
      D  PClose                 1      1                                                     BUG23789
@@ -317,13 +319,13 @@
      D  PCustF                19     24                                                     BUG22797
      D  PCustT                25     30                                                     BUG22797
      D  PYear                 31     32A                                                    BUG24935
- 
+
       ** Interest Payt Date - variable for conversion
      D WIPDte          DS             8
      D  WIPYY                  3      4
      D  WIPMM                  5      6
      D  WIPDD                  7      8
- 
+
       ** Interest Payt Date - 6A format
      D WIPDte6         DS             6
      D  WIPChr1                1      2
@@ -336,7 +338,7 @@
      D  WInpd                  1      2                                                     BUG23514
      D  WInpm                  3      4                                                     BUG23514
      D  WInpy                  5      6                                                     BUG23514
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
@@ -349,34 +351,34 @@
      D PSARd           S              6
      D PCustNo         S             10
      D PCcy            S              3
- 
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D SEnty           S              3
      D ZSnum           S              6  0
      D ZSnumU          S              6  0
      D ZSerr           S              1
- 
+
       ** Parameters for ZSEDITF
      D PFld15          S             15  0
      D PDecs           S              1  0
      D PECode          S              1
      D PEChar          S              1
      D POut21          S             21
- 
+
       ** Parameter list fields
      D PLev            S              1
      D*PClose***       S              1A                                           BUG23518 BUG23789
      D PEnty           S              3
      D PACT            S              1
      D PCMD            S              1
- 
+
       ** Total for Currency
      D WTPAM           S             15  0
      D WTGIN           S             15  0
      D WTTXS           S             15  0
      D WTTXC           S             15  0
- 
+
       ** Total for Customer
      D WCPAM           S             15  0
      D WCGIN           S             15  0
@@ -384,7 +386,7 @@
      D WCTXC           S             15  0
      D WPAMS           S                   LIKE(TSPAMS)                                     AR763011
      D WPAMB           S                   LIKE(TSPAMB)                                     AR763011
- 
+
       ** Other fields used / Flags
      D WRun            S              1
      D WDecs           S              1  0
@@ -414,7 +416,7 @@
      D RqdLn1          S              3  0
      D DifLn1          S              4  0
      D WINRT           S             11S 7                                                  BUG24789
- 
+
      D WCcyFlg         S              1
      D WFirst          S              1
      D WRecFnd         S              1
@@ -490,9 +492,9 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Store input parameter tax year.
- 
+
      C                   MOVE      PTaxYR        WTaxYr
      C                   MOVE      PTaxYrF       WTaxYrF                                    BUG22797
      C                   MOVE      PTaxYrT       WTaxYrT                                    BUG22797
@@ -505,7 +507,7 @@
      C                   EVAL      WPrntCuTot = 'N'                                        BUG23518B
      C                   EVAL      WPrntCcTot = 'N'                                        BUG23518B
      C**********         EVAL      RTAXY = WTaxYr                                           BUG22797
- 
+
       ** Process Details normally when not mandatory run                                    BUG23518
       *                                                                                     BUG23518
      C                   IF        PClose = 'Y'                                             BUG23518
@@ -515,38 +517,38 @@
      C                   ELSE                                                               BUG23518
       *                                                                                     BUG23518
       ** Process customer details.
- 
+
      C                   EVAL      *IN02 = *ON
      C                   EXSR      SRProcess
- 
+
       ** Process non a/c holder details.
- 
+
      C                   EVAL      *IN02 = *OFF
      C                   EVAL      *IN03 = *ON
      C                   EXSR      SRProcess
       *                                                                                     BUG23518
      C                   ENDIF                                                              BUG23518
- 
+
       ** Print report trailer and audit report.
- 
+
      C                   EXSR      SREnd
- 
+
       ** Return.
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       *  SRProcess - Process Records                                  *
       *****************************************************************
      C     SRPRocess     BEGSR
- 
+
      C                   EVAL      WRecFnd = 'N'
      C                   EVAL      WFirst = 'Y'
      C                   EVAL      WLRecFnd = 'N'                                          BUG24280A
      C                   EVAL      WRec = 'N'                                              BUG24280A
- 
+
      C                   IF        *IN02 = *ON
      C******LOVAL        SETLL     SDCSINL2                                                 BUG25075
      C**********         READ      SDCSINL2                               01                BUG25075
@@ -555,32 +557,32 @@
      C     *LOVAL        SETLL     SDCSINLK                                                BUG26728A
      C                   READ      SDCSINLK                               01               BUG26728A
      C                   ENDIF
- 
+
      C                   IF        *IN03 = *ON
      C     *LOVAL        SETLL     SDCSINL3
      C                   READ      SDCSINL3                               01
      C                   ENDIF
- 
+
      C                   EVAL      WCcyFlg = 'Y'
      C                   EVAL      WCcy = TSSCCY
- 
+
      C                   EXSR      SRRefNum
       *                                                                                     BUG25075
      C                   MOVEL     *BLANKS       RefInst          34                        BUG25075
      C                   MOVEL     *BLANKS       RefModi           1                        BUG25075
      C                   Z-ADD     *ZEROS        RefAcod          10 0                      BUG25075
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   EVAL      WCNUM  = TSCUST                                         BUG26728A
      C                   EVAL      WRecFnd = 'N'                                            BUG22797
                                                                                             BUG22797
       ** Select record with status = 'T' (Taxable)
       ** and Tax Year (file) = Tax Year (input parameter)
- 
+
      C**********         IF        TSSTAT = 'T' AND                                         BUG22797
      C**********                   TSTAXY = WTaxYr                                          BUG22797
- 
+
      C                   SELECT                                                             BUG22797
                                                                                             BUG22797
       ** When Input is a specific year                                                      BUG22797
@@ -593,48 +595,48 @@
      C                   EVAL      *IN52 = *OFF                                             BUG23514
      C**********         EVAL      WRecFnd = 'Y'                                            BUG22797
      C                   EXSR      SrValCust                                                BUG22797
- 
+
       ** Check if there is a change on currency code
       ** If true, print total for currency
- 
+
      C**********         IF        TSSCCY <> WCcy                                           BUG22797
      C**********                   AND WFirst <> 'Y'                                        BUG22797
      C**********         EVAL      WCcyFlg = 'Y'                                            BUG22797
      C**********         EXSR      SRPrtCcyTot                                              BUG22797
      C**********         ENDIF                                                              BUG22797
- 
+
       ** Check if there is a change on customer no. / non a/c holder
       ** If true, print total for customer / non a/c holder
- 
+
      C**********         IF        *IN02 = *ON                                              BUG22797
      C**********         EVAL      WChkNo = %TRIM(TSCUST)                                   BUG22797
      C**********         ELSE                                                               BUG22797
      C**********         EVAL      WChkNo = %TRIM(TSNAHO)                                   BUG22797
      C**********         ENDIF                                                              BUG22797
- 
+
      C**********         IF        WChkNo <> WRefNo AND                                     BUG22797
      C**********                   WRefNo <> *BLANKS AND                                    BUG22797
      C**********                   WFirst <> 'Y'                                            BUG22797
- 
+
       ** Print total for currency if there is a change on
       ** customer no. / non a/c holder but no change on ccy code
- 
+
      C**********         IF        TSSCCY = WCcy                                            BUG22797
      C**********         EVAL      WCcyFlg = 'Y'                                            BUG22797
      C**********         EXSR      SRPrtCcyTot                                              BUG22797
      C**********         ENDIF                                                              BUG22797
- 
+
      C**********         EXSR      SRPrtCusTot                                              BUG22797
      C**********         ENDIF                                                              BUG22797
- 
+
      C**********         EXSR      SRStrFld                                                 BUG22797
      C**********         EVAL      WCcy = TSSCCY                                            BUG22797
      C**********         EXSR      SRRefNum                                                 BUG22797
- 
+
       ** Compute number of total records printed.
- 
+
      C**********         EVAL      WNoRec = WNoRec + 1                                      BUG22797
- 
+
      C**********         ENDIF                                                              BUG22797
       ** When Input is a period                                                             BUG22797
      C**********         WHEN      WTaxYrF <= TSTAXY AND                           BUG22797 BUG24280
@@ -652,23 +654,23 @@
      C                   EXSR      SRValCust                                                BUG22797
                                                                                             BUG22797
      C                   END                                                                BUG22797
- 
+
      C                   IF        *IN02 = *ON
      C**********         READ      SDCSINL2                               01                BUG25075
      C**********         READ      SDCSINLI                               01      BUG25075 BUG26728A
      C                   READ      SDCSINLK                               01               BUG26728A
      C                   ENDIF
- 
+
      C                   IF        *IN03 = *ON
      C                   READ      SDCSINL3                               01
      C                   ENDIF
- 
+
      C                   IF        WCust <> *BLANKS AND                                     BUG22797
      C                             TSCUST > WCust                                           BUG22797
      C                   EVAL      *IN01 = *ON                                              BUG22797
      C                   ENDIF                                                              BUG22797
      C                   ENDDO
- 
+
      C                   IF        WRecFnd = 'N' AND                                       BUG24280A
      C                             WLRecFnd = 'Y'                                          BUG24280A
      C                   EVAL      WRec = 'Y'                                              BUG24280A
@@ -682,7 +684,7 @@
      C                   EXSR      SRPrtCusTot
      C                   EVAL      WLRecFnd = 'N'                                          BUG24280A
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                BUG22797
@@ -784,14 +786,14 @@
       *  SRRefNum - Store Reference Number for Validation             *
       *****************************************************************
      C     SRRefNum      BEGSR
- 
+
      C                   IF        *IN02 = *ON
      C                   EVAL      WRefNo = %TRIM(TSCUST)
      C                   ELSE
      C                   EVAL      WRefNo = %TRIM(TSNAHO)
      C                   ENDIF
      C                   EVAL      WJOIN  = TSJOIN                                         BUG26728A
- 
+
      C                   EVAL      WRefYr = RTAXY                                           BUG22797
                                                                                             BUG22797
      C                   ENDSR
@@ -801,9 +803,9 @@
       *  SRStrFld - Store Report Fields                               *
       *****************************************************************
      C     SRStrFld      BEGSR
- 
+
       ** Beneficiary/Customer Number.
- 
+
      C                   EVAL      WLRecFnd = 'Y'                                          BUG24280A
      C**********         IF        TSJOIN <> 0                                      BUG26728A CER059
      C                   IF        TSJOIN <> *Blanks                                          CER059
@@ -813,9 +815,9 @@
      C                   MOVEL     TSCUST        PCustNo                                   BUG26728A
      C                   EVAL      RBENN = WChkNo
      C                   ENDIF                                                             BUG26728A
- 
+
       ** Customer Report Name and Report Town.
- 
+
      C                   IF        *IN02 = *ON
      C**********         CALL      'AOCUSTR0'                                                 236129
      C                   CALL      'AOCUSTR1'                                                 236129
@@ -826,9 +828,9 @@
      C                   PARM      *BLANKS       PKey
      C*****SDCUST        PARM      SDCUST        DSSDY                                        236129
      C     SDCUST        PARM      SDCUST        DSLDY                                        236129
- 
+
       ** Database error.
- 
+
      C**********         IF        PRtcd <> *Blanks                                           236129
      C                   IF        PRtcd <> *Blanks and BBCLST <> 'Y'                         236129
      C                             and BBDTDL = 0                                             237337
@@ -842,11 +844,11 @@
      C                   EVAL      RCRNM = BBCRNM
      C                   EVAL      RCRTN = BBCRTN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Non A/c Holder Report Name and Report Town.
- 
+
      C                   IF        *IN03 = *ON
      C                   CALL      'AONAHOR0'
      C                   PARM      *Blanks       PRtcd
@@ -854,9 +856,9 @@
      C                   PARM      TSNAHO        PCustNo
      C*****SDNAHO        PARM      SDNAHO        DSSDY                                      BUG24029
      C     SDNAHO        PARM      SDNAHO        DSLDY                                      BUG24029
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = PCustNo
@@ -869,17 +871,17 @@
      C                   EVAL      RCRTN = NHNATW
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Currency Code/Name
- 
+
      C                   EVAL      RSCCY = TSSCCY
- 
+
      C                   EVAL      WCcyEdt = TSSCCY
      C                   EXSR      SRGetCcyF
      C                   EVAL      RCYNM = A6CYNM
- 
+
       ** Interest Payment Date
- 
+
      C                   EVAL      WIPDte = TSIPDT
      C                   IF        BJDFIN = 'D'
      C                   EVAL      WIPChr1 = WIPDD
@@ -890,33 +892,33 @@
      C                   EVAL      WIPChr2 = WIPDD
      C                   EVAL      WIPChr3 = WIPYY
      C                   ENDIF
- 
+
      C                   EVAL      RIPDT = WIPDte6
- 
+
       ** Module Id
- 
+
      C                   EVAL      RMODI =  TSMODI
- 
+
       ** Transaction Type
- 
+
      C                   SELECT
      C                   WHEN      TSMODI = 'D'
      C                   MOVE      TSDLLN        WDlLN
      C                   EVAL      RTTYP = TSTRTP + ' ' + TSTRST +
      C                                     ' ' + WDlLN
- 
+
      C**********         WHEN      TSMODI = 'R'                                            BUG26728A
      C                   WHEN      TSMODI = 'G'                                            BUG26728A
      C                   MOVE      TSACOD        WACod
      C                   MOVE      TSACSQ        WAcSq
      C                   EVAL      RTTYP =  WACod + ' ' + WAcSq
- 
+
      C                   WHEN      TSMODI = 'S'
      C                   EVAL      RTTYP =  TSSESN + ' ' + TSETYP
      C                   ENDSL
- 
+
       ** Principal Amount
- 
+
      C                   EVAL      WCcyEdt = TSSCCY
      C                   IF        TSMODI  = 'G'                                            AR763011
      C                   EVAL      WPAMS  =  %ABS(TSPAMS)                                   AR763011
@@ -929,48 +931,48 @@
      C                   EVAL      PFld15 =  WPAMS                                          AR763011
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RPAMS
- 
+
      C**********         EVAL      WTPAM = WTPAM + TSPAMS                                   AR763011
      C                   EVAL      WTPAM = WTPAM + WPAMS                                    AR763011
      C**********         EVAL      WCPAM = WCPAM + TSPAMB                                   AR763011
      C                   EVAL      WCPAM = WCPAM + WPAMB                                    AR763011
- 
+
       ** Gross Interest Amount
- 
+
      C                   EVAL      WCcyEdt = TSSCCY
      C                   EVAL      PFLd15 =  TSGINS
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RGINS
- 
+
      C**********         IF        TSPAMS < 0                                      BUG23719 AR763011
      C**********         Z-SUB     TSGINS        TSGINS                            BUG23719 AR763011
      C**********         Z-SUB     TSGINB        TSGINB                            BUG23719 AR763011
      C**********         ENDIF                                                     BUG23719 AR763011
      C                   EVAL      WTGIN = WTGIN + TSGINS
      C                   EVAL      WCGIN = WCGIN + TSGINB
- 
+
       ** Tax Withheld at Source in Original Currency
- 
+
      C                   EVAL      WCcyEdt = TSSCCY
      C                   EVAL      PFLd15 =  TSTXSR
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RTXSR
- 
+
      C                   EVAL      WTTXS = WTTXS + TSTXSR
      C                   EVAL      WCTXS = WCTXS + TSTXSB
- 
+
       ** Exchage Rate
- 
+
      C                   EVAL      RXRST =  TSXRST
- 
+
       ** Tax Withheld at Source in Tax Currency
- 
+
      C                   EVAL      WTaxCcy = TSTXCY
      C                   EVAL      WCcyEdt = TSTXCY
      C                   EVAL      PFLd15 =  TSTXSC
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RTXSC
- 
+
      C                   EVAL      WTTXC = WTTXC + TSTXSC
       *                                                                                       CER054
      C                   IF        CER054 = 'Y'                                               CER054
@@ -988,13 +990,13 @@
      C                   EVAL      WCTXS = WCTXS + TSSTDB                                     CER048
      C                   EVAL      WTTXC = WTTXC + TSSTDT                                     CER048
      C                   ENDIF                                                                CER048
- 
+
       ** Print report
- 
+
      C                   EXSR      SRPrint
- 
+
       ** Clear report fields
- 
+
      C                   EVAL      RIPDT = *BLANKS
      C                   EVAL      RMODI = *BLANKS
      C                   EVAL      RTTYP = *BLANKS
@@ -1003,7 +1005,7 @@
      C                   EVAL      RTXSR = *BLANKS
      C                   EVAL      RTXSC = *BLANKS
      C                   EVAL      RXRST =  *ZERO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1011,39 +1013,39 @@
       *  SRPrint - Print Report                                       *
       *****************************************************************
      C     SRPrint       BEGSR
- 
+
      C                   IF        NOT %OPEN(SD000769P1)
      C                   OPEN      SD000769P1
- 
+
       ** Ensure Detail Spool File recorded by RCF
- 
+
      C                   EVAL      ZSnum = SFNUM1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       SEnty
      C                   PARM                    SFILE1
      C                   PARM                    ZSnum
      C                   PARM      *Blank        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      RqdLn1 = 1
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
       ** For initial print of details or overflow has occured, print the Header
       ** of the report.
- 
+
      C                   IF        DifLn1 <= RqdLn1 OR
      C                             WFirst = 'Y'
      C                   WRITE     HEADP1
@@ -1228,7 +1230,7 @@
      C                   EVAL      WFirst = 'N'                                             BUG25542
       *                                                                                     BUG25542
       ** Print currency code and name
- 
+
      C                   IF        WCcyFlg = 'Y'
      C                   EVAL      WCcyFlg = 'N'
      C                   EVAL      RqdLn1 = 3                                              BUG26728B
@@ -1258,11 +1260,11 @@
      C                   WRITE     HEADP1                                                     234291
      C                   WRITE     HEADP3                                                   BUG25542
      C                   ENDIF                                                                234291
- 
+
       ** Print report details
- 
+
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
       *****************************************************************                    BUG26728A
       /EJECT                                                                               BUG26728A
@@ -1340,57 +1342,57 @@
       *  SRPrtCcyTot - Print Total for Currency                       *
       *****************************************************************
      C     SRPrtCcyTot   BEGSR
- 
+
      C                   EVAL      RTCCY = RSCCY
      C                   EVAL      WCcyEdt = RSCCY
- 
+
       ** Convert total Principal Amount
- 
+
      C                   EVAL      PFLd15 =  WTPAM
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RTPAM
- 
+
       ** Convert total Gross Interest Amount
- 
+
      C                   EVAL      PFLd15 =  WTGIN
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RTGIN
- 
+
       ** Convert total Tax Withheld in Original Ccy
- 
+
      C                   EVAL      PFLd15 =  WTTXS
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RTTXS
- 
+
       ** Convert total Tax Withheld in Tax Ccy
- 
+
      C                   EVAL      WCcyEdt = WTaxCcy
      C                   EVAL      PFLd15 =  WTTXC
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RTTXC
- 
+
      C                   EVAL      RqdLn1 = 4
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
       ** Print the Header of the report if overflow has occurred
- 
+
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Print total for currency
- 
+
      C                   WRITE     TOTCCY
- 
+
       ** Clear totals
- 
+
      C                   EVAL      RSCCY = *BLANKS
      C                   EVAL      WTPAM = *ZERO
      C                   EVAL      WTGIN = *ZERO
      C                   EVAL      WTTXS = *ZERO
      C                   EVAL      WTTXC = *ZERO
      C                   EVAL      WPrntCcTot = 'Y'                                        BUG23518B
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1469,50 +1471,50 @@
       *  SRPrtCusTot - Print Total for Customer                       *
       *****************************************************************
      C     SRPrtCusTot   BEGSR
- 
+
      C                   EVAL      RCTCS = WRefNo
      C                   EVAL      PDecs = WDecs
- 
+
       ** Convert total Principal Amount
- 
+
      C                   EVAL      PFLd15 =  WCPAM
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RCPAM
- 
+
       ** Convert total Gross Interest Amount
- 
+
      C                   EVAL      PFLd15 =  WCGIN
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RCGIN
- 
+
       ** Convert total Tax Withheld in Original Ccy
- 
+
      C                   EVAL      PFLd15 =  WCTXS
      C                   EXSR      SRZSEditF
      C                   MOVE      POut21        RCTXS
- 
+
      C                   EVAL      RqdLn1 = 4
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
       ** For initial print of details or overflow has occured, print the Header
       ** of the report
- 
+
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write total for customer
- 
+
      C                   WRITE     TOTCUS
- 
+
       ** Clear totals
- 
+
      C                   EVAL      WCPAM = *ZERO
      C                   EVAL      WCGIN = *ZERO
      C                   EVAL      WCTXS = *ZERO
      C                   EVAL      WCTXC = *ZERO
      C                   EVAL      WPrntCuTot = 'Y'                                        BUG23518B
- 
+
      C                   IF        *IN02  = *ON                                            BUG26728A
                                                                                            BUG26728A
      C**********         IF        WJOIN  = 0                                       BUG26728A CER059
@@ -1544,7 +1546,7 @@
      C                   ELSE                                                              BUG26728A
      C                   EVAL      WFirst = 'Y'                                            BUG26728A
      C                   ENDIF                                                             BUG26728A
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1552,20 +1554,20 @@
       *  SRZSEditF - Convert numeric field                            *
       *****************************************************************
      C     SRZSEditF     BEGSR
- 
+
      C                   EXSR      SRGetCcyF
- 
+
      C                   EVAL      PECode = 'J'
      C                   EVAL      PEChar = *BLANKS
      C                   EVAL      POUT21 = *ZERO
- 
+
      C                   CALLB     'ZSEDITF'
      C                   PARM                    PFld15
      C                   PARM                    PDecs
      C                   PARM                    PECode
      C                   PARM                    PEChar
      C                   PARM                    POut21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1573,15 +1575,15 @@
       *  SRGetCcyF - Get Currency Format                              *
       *****************************************************************
      C     SRGetCcyF     BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      WCcyEdt       PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database error
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = WCcyEdt
@@ -1615,35 +1617,35 @@
       *  SREnd - Write Trailer in Report                              *
       *****************************************************************
      C     SREnd         BEGSR
- 
+
       ** Print detail report only if there are records to print
- 
+
      C                   IF        %OPEN(SD000769P1)
      C                   EVAL      RqdLn1 = 4
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out report trailer
- 
+
      C                   WRITE     TRAILP1
      C                   ENDIF
- 
+
       ** Write audit report
- 
+
      C                   EXSR      SRAudit
- 
+
       ** Close printer files
- 
+
      C                   IF        %OPEN(SD000769AU)
      C                   CLOSE     SD000769AU
      C                   ENDIF
- 
+
      C                   IF        %OPEN(SD000769P1)
      C                   CLOSE     SD000769P1
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1651,55 +1653,55 @@
       *  SRAudit - Write audit report                                 *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
      C                   IF        NOT %OPEN(SD000769AU)
      C                   OPEN      SD000769AU
- 
+
       ** Ensure Audit Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnumU = SFNUMU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       SEnty
      C                   PARM                    SFILEU
      C                   PARM                    ZSnumU
      C                   PARM      *Blank        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Print audit report if there is a DB error or no details to print
- 
+
      C                   IF        *INU7 = *ON OR WNoRec = 0
      C                   WRITE     HEADAU
- 
+
       ** Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ENDIF
- 
+
       ** No details to print.
- 
+
      C                   IF        WNoRec = 0
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1707,29 +1709,29 @@
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C**********         PARM                    PClose                            BUG23518 BUG23789
      C                   PARM                    PSeq
      C                   PARM                    PLev
      C                   PARM                    PEnty
      C                   PARM                    PData
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
       ** Database error
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = POptn
@@ -1738,17 +1740,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Retrieve base currency
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      BJCYCD        PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = BJCYCD
@@ -1759,7 +1761,7 @@
      C                   ELSE
      C                   EVAL      WDecs = A6NBDP
      C                   ENDIF
- 
+
       *                                                                                     BUG24767
       ** Access location code                                                               BUG24767
       *                                                                                     BUG24767
@@ -1826,7 +1828,7 @@
      C                   ENDIF                                                              BUG24767
                                                                                             BUG24767
       ** Report Work fields
- 
+
      C                   EVAL      RqdLn1 = 0
      C                   EVAL      DifLn1 = 0
      C                   EVAL      PRTLN1 = 0
@@ -2022,7 +2024,7 @@
       *           This subroutine DUMPs the program just once.        *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blank
      C                   EVAL      WRun = 'Y'
      C                   EVAL      *INU7 = *On
@@ -2031,11 +2033,11 @@
      C                   DUMP
      C                   EXSR      SRAudit
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2350,4 +2352,4 @@
      C                   ENDSR                                                                CER054
       *****************************************************************                       CER048
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

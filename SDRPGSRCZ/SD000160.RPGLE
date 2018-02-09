@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD IGA Country Update')                          *
@@ -15,14 +15,16 @@
       *             updates the FACTA customer sub-type and           *
       *             classification code                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD027251           Date 05Aug14               *
-      *  Prev Amend No. MD026854           Date 29May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027251           Date 05Aug14               *
+      *                 MD026854           Date 29May14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027251 - Previous Classification is not updated by FATCA   *
       *             IGA Tool during update mode                       *
       *             Applied Fix MD028213                              *
@@ -573,4 +575,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Customer Segmentation Report')                *
@@ -13,11 +13,13 @@
       *             in close of business showing details of retail    *
       *             accounts becoming effective today.                *
       *                                                               *
-      *  Last Amend No. AR820987           Date 30Aug11               *
-      *  Prev Amend No. CSD090  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR820987           Date 30Aug11               *
+      *                 CSD090  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR820987 - Other details values in Customer Segmentation     *
       *             List Report are not displayed                     *
       *  CSD090 - Customer Segmentation and Overdraft                 *

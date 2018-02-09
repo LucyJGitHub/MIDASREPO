@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Religious Affiliation Report')                *
@@ -13,14 +13,16 @@
       *  Function:  To generate German Church Tax  Religious          *
       *             Affiliation Code Reports.                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. AR784695           Date 04Jun11               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR784695           Date 04Jun11               *
+      *                 CER059             Date 19Jul10               *
       *                 CER054  *CREATE    Date 07Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR784695 - Religious Affiliation Codes Report has no title   *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER054 - German Features - Church Tax                        *
@@ -449,4 +451,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

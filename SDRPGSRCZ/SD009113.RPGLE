@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Collateral and Credit Lines ICD')
@@ -14,18 +14,20 @@
       *                                                               *
       *  Component of: SD009113                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG3644            Date 12Jul04               *
-      *  Prev Amend No. CGL014             Date 20Oct03               *
+      *  Prev Amend No. BUG3644            Date 12Jul04               *
+      *                 CGL014             Date 20Oct03               *
       *                 CLE025  *CREATE    Date 20Oct03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
       *  CGL014 - Collaterals Processing                              *
       *  CLE025 - Credit Lines                                        *

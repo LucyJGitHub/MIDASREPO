@@ -7,17 +7,19 @@
 /*                                                                  */
 /*          SCC2474 - Re-organise journal receiver reference file   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2004          */
+/*       (c) Finastra International Limited 2004                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 228542             Date 10Aug04             */
-/*       Prev Amend No. CSC020 *CREATE     Date 31Mar04             */
+/*       Prev Amend No. 228542             Date 10Aug04              */
+/*                      CSC020 *C *CREATE  Date 31Mar04              */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                        */
 /*       CSC020 - Journaling changes for MidasPlus.                 */
 /*                                                                  */
@@ -27,7 +29,7 @@
 /* Copyright statement definition  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)

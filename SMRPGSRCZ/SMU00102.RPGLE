@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Update SDNOSTPD A7OACN from A7OANN')
@@ -9,14 +9,16 @@
       *                                                               *
       *  SMU00102 - Update SDNOSTPD A7OACN from A7OANN                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. 210796  *CREATE    Date 09Jul03               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 210796  *CREATE    Date 09Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program S210796R01.                        *
       *  210796  - Update new extended 'Our a/c number at nostro'     *

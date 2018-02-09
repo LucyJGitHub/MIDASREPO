@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Additional Customer Details Enquiry')         *
@@ -12,10 +12,11 @@
       *  Function:  This is the enquiry function for                  *
       *             SD Additional Customer Details.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 CGL132             Date 01May13               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -69,8 +71,8 @@
       *  CGL031 - Taxation of Savings Income                          *
       *                                                               *
       *****************************************************************
-
-
+ 
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -82,81 +84,81 @@
       ** and the copyright array definition:
       /COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
       /COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
       /COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
       /COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
-
+ 
+ 
       ** Current Transaction Detail in File Format
      D CrMnFilFmt    E DS                  EXTNAME(SDACUSPD)
      D                                     PREFIX(C_)
-
+ 
       ** Current Transaction  Detail in Screen Format
      D CurTrnDets    E DS                  EXTNAME(SDACUDPD)
      D                                     PREFIX(@)
-
+ 
       ** Current Transaction Screen 5 Detail in Screen Format                                 CGL132
      D CurCustDet5   E DS                  EXTNAME(SDACU5DPD)                                 CGL132
      D                                     PREFIX(@)                                          CGL132
                                                                                               CGL132
       ** New Transaction Detail in File Format
      D NwMnFilFmt    E DS                  EXTNAME(SDVACUDPD)
-
+ 
       ** Error indicators
      D OKTrnDets     E DS                  EXTNAME(SDEACUDPD)
      D OKCustDets5   E DS                  EXTNAME(SDEACU5PD)                                 CGL132
-
+ 
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** External DS for SAR Detials
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
-
+ 
       ** First DS for Access Programs, short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** Second DS for access progrmas, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
      D SVALSCRN        DS           250                                                       CSD029
      D  DDDS01                 1     25                                                       CSD029
      D  DDDS02                26     50                                                       CSD029
@@ -183,93 +185,93 @@
       *                                                                                       CER034
       ** SDCUSTPD Midas SD Customer details in file format                                    CER034
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CER034
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
-
+ 
       ** Transaction Number
      D DDCUST          S              6A
-
+ 
       ** Transaction Number - OK
      D DDCUSTOK        S              1A
-
+ 
       ** Action Code
      D DDACTN          S              1A
-
+ 
       ** Action Code - OK
      D DDACTNOK        S              1A
-
+ 
       ** Build subfile
      D PBDSFL          S              1A
-
+ 
       ** Customer selected
      D PCUSEL          S              6A
-
+ 
       ** Whether position/select fields have been changed during key browse
      D KPosSelChg      S              1A
-
+ 
       ** error message reference
      D PERRMS          S              7A
-
+ 
       ** F3 Exit
      D PINKC           S              1A
-
+ 
       ** F7 Roll backwards
      D PINKG           S              1A
-
+ 
       ** F8 Roll forwards
      D PINKH           S              1A
-
+ 
       ** F9 Insert                                                                            233468
      D PINKI           S              1A                                                      233468
                                                                                               233468
       ** F12 Cancel
      D PINKL           S              1A
-
+ 
       ** Option selected
      D POPSEL          S              1A
-
+ 
       ** Read next browse
      D PRDNB           S              1A
-
+ 
       ** Read subfile
      D PRDSFL          S              1A
-
+ 
       ** Screen / function
      D @Scrn           S              1A
-
+ 
       ** Read next browse in key screen query browse subfile
      D KPRDNB          S              1A
-
+ 
       ** Query check in key screen customer number field
      D KEYQUERY        S              1A
-
+ 
       ** Mode of operation
      D MODEOFOP        S              6A
-
+ 
       ** Called from Customer Details or Midas menu
      D BrwQuery        S              1A
-
+ 
       ** Index of errors
      D Idx             S              3P 0
-
+ 
       ** Index of errors
      D WIdx            S              3P 0
-
+ 
       ** Timestamp for the transaction
      D TimeStamp       S               Z
-
+ 
       ** Parameters for Access Objects
      D PRtcd           S              7A
      D POptn           S              7A
      D PSard           S              6A                                                      CSD029
-
+ 
       ** Parameters for SDACUDDSP
      D PEKYFD          S              1A
      D PEDTFD          S              1A
@@ -280,21 +282,21 @@
      D PEPRTD          S              1A
      D PINKJ           S              1A                                                    BUG22672
      D PINKW           S              1A                                                    BUG23518
-
+ 
       ** Parameters for SDACUDBRW
      D PMultEntry      S              1A   INZ
-
+ 
       ** Indicator for second pass for option selected
      D P2Pass          S              1A   INZ
-
+ 
       ** Switchable features CGL032
      D CGL032          S              1A
      D CSD029          S              1A                                                      CSD029
      D CGL031          S              1A                                                      CSW207
-
+ 
       ** Index for error message
      D E               S              3  0
-
+ 
      D PAction         S              1A
      D PCust           S              6A
                                                                                               CSD029
@@ -322,43 +324,43 @@
      D WDspCCTX        S              1A                                                      CER034
      D PCallFrom       S              1A                                                      CER034
      D WPrvFlg         S              1A                                                   BUG22672A
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Build browse subfile record
-
+ 
      C                   IF        @Scrn = 'B'
      C                   EXSR      SRBldBrw
      C                   ENDIF
-
+ 
       ** Read next browse subfile record
-
+ 
      C                   IF        @Scrn = 'R'
      C                   EXSR      SRRdNBrw
      C                   ENDIF
-
+ 
       ** Do while screen: Transaction Detail Screen
-
+ 
      C                   Z-ADD     *ZERO         WIdx
      C                   DOW       @Scrn = 'P'
      C                   EXSR      SRScrn@p
@@ -429,7 +431,7 @@
      C                   ENDIF                                                             BUG22672A
       *                                                                                    BUG22672A
      C**********         ENDDO                                                                CER034
-
+ 
       ** Do while screen: Detail Screen 5                                                     CGL132
                                                                                               CGL132
      C                   Z-ADD     *ZERO         WIdx                                         CGL132
@@ -439,26 +441,26 @@
      C                   ENDDO                                                                CGL132
                                                                                               CGL132
       ** Terminate program
-
+ 
      C                   IF        @Scrn = 'T'
      C                   EVAL      *INLR = *ON
      C                   ENDIF
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
       * SRSfDs@p - Set Field Status on Detail Screen
       *****************************************************************
      C     SRSfDs@p      BEGSR
-
+ 
       ** Disable fields on detail screen, set PEDTFD = 'N'
-
+ 
      C                   EVAL      PEKYFD = 'N'
      C                   EVAL      PEDTFD = 'N'
-
+ 
      C                   EVAL      PEPRTD  = 'N'
      C                   EVAL      PCGL032 = 'N'
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -466,16 +468,16 @@
       * SRScrn@p - Process Detail Screen
       *****************************************************************
      C     SRScrn@p      BEGSR
-
+ 
       ** Set function key status on screen
-
+ 
      C                   EVAL      @DDACTN = DDACTN
      C                   EVAL      @DDCUST = DDCUST
-
+ 
       ** Write/Read Display Screen - Primary Details
-
+ 
      C                   CALLB     'SDACUDDSP'
-
+ 
       ** Input Parameters :
       ** Return code
      C                   PARM      *Blanks       RetCodeIn
@@ -487,28 +489,28 @@
      C                   PARM                    SDCUSDcall
       ** Set to 'Y' to indicate its from SDACUDENQ otherwise from SDACUDSIN
      C                   PARM      'Y'           PSDACUDENQ
-
+ 
       ** Errors
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
-
+ 
       ** Warning
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
-
+ 
       ** Enabled Key & Detail Fields
      C                   PARM                    PEKYFD
      C                   PARM                    PEDTFD
      C                   PARM      'N'           PEINKG
-
+ 
       ** Protected field due to CGL032
      C                   PARM                    PEPRTD
-
+ 
       ** Switchable feature CGL032
      C                   PARM                    PCGL032
-
+ 
       ** Output Parameters :
       ** Function Keys
      C                   PARM      '0'           PINKC
@@ -517,9 +519,9 @@
      C                   PARM      '0'           PINKL
      C                   PARM      '0'           PINKJ                                      BUG22672
      C                   PARM      '0'           PINKW                                      BUG23518
-
+ 
       ** Reset Errors
-
+ 
      C                   MOVE      *ALL'Y'       OKTrnDets
      C                   EVAL      FldNameArr = *Blanks
      C                   EVAL      MsgIdArr   = *Blanks
@@ -528,21 +530,21 @@
      C                   EVAL      WMsgIDArr  = *Blanks
      C                   EVAL      WMsgDtaArr = *Blanks
      C                   EVAL      WDspCCTX = 'Y'                                             CER034
-
-
+ 
+ 
       ** F3 - End Program
-
+ 
      C     PINKC         CASEQ     '1'           SREndp
-
+ 
       ** F12 - Cancel on Details Screen
-
+ 
      C     PINKL         CASEQ     '1'           SRCanc@p
-
+ 
       ** Enter to Details Screen
-
+ 
      C                   CAS                     SRVal@p
      C                   ENDCS
-
+ 
      C                   IF        @Scrn = 'P' and                                            CGL132
      C                             PINKL <> '1' and PINKC <> '1'                              CGL132
      C                   EVAL      @Scrn = '5'                                                CGL132
@@ -556,20 +558,20 @@
       *            (Enter is pressed)
       *****************************************************************
      C     SRVal@p       BEGSR
-
+ 
       ** If customer number is NOT OK
       ** Re-output screen with error message on it
-
+ 
      C                   IF        DDCUSTOK = 'N'
      C                   GOTO      EndSRVal@p
      C                   ENDIF
-
+ 
       ** If Enquire
-
+ 
      C                   IF        DDACTN = 'E'
       *                                                                                       CER034
      C                   IF        WDspScrn1 <> 'Y' AND WDspScrn2 <> 'Y'                      CER034
-
+ 
      C                   IF        PRDNB = 'Y'
      C                   EVAL      @Scrn = 'R'
      C                   ELSE
@@ -600,15 +602,15 @@
      C                   ELSE                                                              BUG22672A
      C                   EVAL      WDspCCTX = 'N'                                          BUG22672A
      C                   ENDIF                                                             BUG22672A
-
+ 
       ** Initialize error indicators as 'OK'
-
+ 
      C                   EVAL      Idx  = *ZERO
      C                   EVAL      WIdx = *ZERO
      C                   MOVE      *ALL'Y'       OKTrnDets
-
+ 
      C                   ENDIF
-
+ 
      C     EndSRVal@p    ENDSR
       *****************************************************************
       /EJECT
@@ -728,15 +730,15 @@
       * SRBldBrw - Build Browse Subfile
       *****************************************************************
      C     SRBldBrw      BEGSR
-
+ 
       ** Reset Read next browse subfile record
-
+ 
      C                   EVAL      PRDNB = *Blanks
-
+ 
       ** Build Browse subfile
-
+ 
      C                   CALLB     'SDACUDBRW'
-
+ 
       ** Input Parameters :
       ** Return Code
      C                   PARM      *Blanks       RetCodeIn
@@ -758,7 +760,7 @@
      C                   PARM      *Blanks       PMultEntry
       ** Indicator for second pass of option selected
      C                   PARM      *Blanks       P2Pass
-
+ 
       ** Output Parameters :
       ** Error Message
      C                   PARM      *Blanks       PERRMS
@@ -769,26 +771,26 @@
       ** Command Keys
      C                   PARM      '0'           PINKC
      C                   PARM      '0'           PINKI                                        233468
-
+ 
       ** If F3 taken in browse, End Program
-
+ 
      C                   IF        PINKC = '1'
      C                   EXSR      SREndp
      C                   GOTO      EndSRBldBrw
      C                   ENDIF
-
+ 
       ** If error message returned from browse, send it to detail screen
-
+ 
      C                   IF        PERRMS <> *Blanks
      C                   EXSR      SRSndM@p
      C                   GOTO      EndSRBldBrw
      C                   ENDIF
-
+ 
       ** Read next browse subfile record
-
+ 
      C                   EVAL      PRDNB = 'Y'
      C                   EVAL      @Scrn = 'R'
-
+ 
      C     EndSRBldBrw   ENDSR
       *****************************************************************
       /EJECT
@@ -796,11 +798,11 @@
       * SRRdNBrw - Read Next Browse Subfile Record
       *****************************************************************
      C     SRRdNBrw      BEGSR
-
+ 
       ** Read Next Subfile Record
-
+ 
      C                   CALLB     'SDACUDBRW'
-
+ 
       ** Input Parameters :
       ** Return Code
       ** Action Code
@@ -811,7 +813,7 @@
       ** Set to 'Y' to indicate its from SDACUDENQ
       ** For Multiple Entry
       ** Indicator for second pass of option selected
-
+ 
      C                   PARM      *Blanks       RetCodeIn
      C                   PARM                    DDACTN
      C                   PARM                    DDCUST
@@ -823,28 +825,28 @@
      C                   PARM      'Y'           PSDACUDENQ
      C                   PARM      *Blanks       PMultEntry
      C                   PARM      *Blanks       P2Pass
-
+ 
       ** Output Parameters :
       ** Error Message
       ** Option Selected
       ** Transaction Reference selected
       ** Command Keys
-
+ 
      C                   PARM      *Blanks       PERRMS
      C                   PARM      *Blanks       POPSEL
      C                   PARM      *Blanks       PCUSEL
      C                   PARM      '0'           PINKC
      C                   PARM      '0'           PINKI                                        233468
-
+ 
       ** If Transaction read from subfile
-
+ 
      C                   IF        PCUSEL <> *Blanks
-
+ 
       ** Retrieve Transaction Detail
-
+ 
      C                   EVAL      DDACTN = POPSEL
      C                   EVAL      DDCUST = PCUSEL
-
+ 
      C                   IF        DDACTN = 'E'                                             BUG15111
      C                   EXSR      SRRtvTrn
      C                   ELSE                                                               BUG15111
@@ -853,29 +855,29 @@
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'                               BUG15111
      C                   EVAL      MsgIDArr(Idx) = 'SDM0137'                                BUG15111
      C                   ENDIF                                                              BUG15111
-
+ 
       ** Stay on browse screen if there is an error on Transaction number
-
+ 
      C                   IF        DDCUSTOK = 'N' or
      C                             DDACTNOK = 'N'
      C                   EVAL      @Scrn = 'B'
      C                   GOTO      EndSRRdNBrw
      C                   ENDIF
-
+ 
       ** Convert Transaction Detail
-
+ 
      C                   EXSR      SRCvtTrn
      C                   EVAL      NwMnFilFmt = CrMnFilFmt
-
+ 
       ** Put Transaction Detail screen
-
+ 
      C                   EVAL      @Scrn = 'P'
      C                   EXSR      SRSfDs@p
-
+ 
      C                   ELSE
      C                   EXSR      SRInitial
      C                   ENDIF
-
+ 
      C     EndSRRdNBrw   ENDSR
       *****************************************************************
       /EJECT
@@ -883,11 +885,11 @@
       * SRRtvTrn - Retrieve Transaction Detail
       *****************************************************************
      C     SRRtvTrn      BEGSR
-
+ 
       ** Retrieve Transaction Detail
-
+ 
      C                   CALLB     'SDACUDRTV'
-
+ 
       ** INPUTS
       ** Return code
       ** Mode
@@ -896,7 +898,7 @@
       ** Front Office Transaction ID
       ** (Midas) Transaction number
       ** Set to 'Y' to indicate its from SDACUDENQ
-
+ 
      C                   PARM      *Blanks       RetCodeIn
      C                   PARM      '      '      ModeofOp
      C                   PARM      'S'           RespMode
@@ -904,20 +906,20 @@
      C                   PARM                    C_E5FRNT
      C                   PARM                    DDCUST
      C                   PARM      'Y'           PSDACUDENQ
-
+ 
       ** Outputs
       ** Transaction  Details in File Format
       ** OK - Action code
       ** OK - Transaction Number
       ** Error fields/message IDs/message data (arrays) from/to caller
-
+ 
      C                   PARM                    CrMnFilFmt
      C                   PARM      *Blanks       DDACTNOK
      C                   PARM      *Blanks       DDCUSTOK
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
-
+ 
       ** Array index (3P0) from/to caller
      C                   PARM      0             Idx
       *                                                                                       CER034
@@ -931,7 +933,7 @@
       *                                                                                       CER034
      C                   PARM                    WIdx                                         CER034
       *                                                                                       CER034
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -939,18 +941,18 @@
       * SRCvtTrn - Put a Transaction Detail on Screen
       *****************************************************************
      C     SRCvtTrn      BEGSR
-
+ 
       ** Call program to fill screen fields with data from SKTranFlPD
-
+ 
      C                   CALLB     'SDACUDCVT'
-
+ 
       ** Input Parameters:
       ** Return Code
       ** Additional Customer Details File Format
-
+ 
      C                   PARM      *Blanks       RetCodeIn
      C                   PARM                    CrMnFilFmt
-
+ 
       ** Output Parameters:
       ** Additional Customer Details Screen Format
      C                   PARM                    CurTrnDets
@@ -960,7 +962,7 @@
      C                   PARM                    CurCustDet2                                  CER034
      C                   PARM                    CurCustDet3                                  CER034
      C                   PARM                    CurCustDet5                                  CGL132
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -968,14 +970,14 @@
       * SRSndM@p - Send a Message to Detail Screen
       *****************************************************************
      C     SRSndM@p      BEGSR
-
+ 
       ** Add error message to array passed to detail screen
-
+ 
      C                   EVAL      E = 1
      C     *Blanks       LOOKUP    FldNameArr(E)                          99
      C                   EVAL      FldNameArr(E) = '*ANY'
      C                   EVAL      MsgIdArr(E)   = PERRMS
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -992,7 +994,7 @@
       *               of Tax                                          *
       *****************************************************************
      C     SRCallACTX    BEGSR
-
+ 
      C                   IF        @DDJATP = 'I' OR                                        BUG22672A
      C                             @DDJATP = 'Y'                                           BUG22672A
       *                                                                                    BUG22672A
@@ -1026,7 +1028,7 @@
      C                   ENDCS                                                             BUG22672A
       *                                                                                    BUG22672A
      C                   ENDIF                                                             BUG22672A
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1042,26 +1044,26 @@
       * SRInitial - Go to Intial Screen
       *****************************************************************
      C     SRInitial     BEGSR
-
+ 
       ** Reset Read Next Browse Subfile Record (if active)
-
+ 
      C                   EVAL      PRDNB  = *Blanks
      C                   EVAL      DDCUST = *Blanks
-
+ 
       ** Blank the screens
-
+ 
      C                   EVAL      CurTrnDets = *Blanks
-
+ 
       ** If you wish to go straight to the input screen and not the subfile,
       ** replace the 'B' with a 'K' to specify the key detail screen.
       ** Browse Screen
-
+ 
      C                   IF        SDCUSDcall = 'B'
      C                   EVAL      @Scrn = 'B'
      C                   ELSE
      C                   EVAL      @Scrn = 'T'
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CSD029
@@ -1580,29 +1582,29 @@
       * *INZSR - Initial Processing
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
       ** Parameters
      C     *ENTRY        PLIST
       ** Inputs
-
+ 
       ** Customer Number
      C                   PARM                    DDCUST
       ** Action Code
      C                   PARM                    DDACTN
-
+ 
       ** Initialize program name
-
+ 
      C                   EVAL      DBPGM = 'SDACUDENQ'
-
+ 
       ** Access Bank Details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** Database error
-
+ 
      C                   IF        PRtcd <> *Blanks
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE  = 901
@@ -1679,7 +1681,7 @@
      C                   ENDIF                                                                CSD029
                                                                                               CSD029
      C                   ENDIF                                                                CSD029
-
+ 
       ** Check if CGL031 is installed                                                         CSW207
      C                   CALL      'AOSARDR0'                                                 CSW207
      C                   PARM      *BLANKS       PRtcd                                        CSW207
@@ -1723,7 +1725,7 @@
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
       ** Go To Initial Screen
-
+ 
      C                   EVAL      SDCUSDcall = 'B'
      C                   EXSR      SRInitial
       *                                                                                       CER034
@@ -1918,9 +1920,9 @@
      C                   EVAL      WDspScrn2 = 'N'                                            CER034
       *                                                                                       CER034
      C                   ENDIF                                                                CER034
-
+ 
       ** Hook to enable non-core initial processing to be included
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1933,4 +1935,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Upgrade DTAARA LERSTS (to update LLSTRN)')
@@ -12,14 +12,16 @@
       *  Function:  This program updates field LLSTRN of dataarea     *
       *             LERSTS                                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. 142402 *Create     Date 10Nov98               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 142402 *C *CREATE  Date 10Nov98               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program S15817707.                         *
       *  142402  - Upgrade program to update dataarea LERSTS          *

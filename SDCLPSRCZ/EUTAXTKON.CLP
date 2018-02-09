@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       EUTAXTKON - EU TAX TAKE-ON PROGRAM                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD037022           Date 05Feb16              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD037022           Date 05Feb16              */
+/*                      CER059             Date 19Jul10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BUG16152           Date 20Feb08              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD037022 - Database Error encountered when Switching Off    */
 /*                  feature CGL031                                   */
 /*       CER059 - German Feature Upgrade to Delhi                    */
@@ -37,7 +39,7 @@
              PGM        PARM(&MODE)                                                       /*CSE028*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
  
@@ -105,5 +107,5 @@
              ENDDO
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

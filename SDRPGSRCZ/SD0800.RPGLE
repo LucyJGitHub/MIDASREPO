@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Authorised Booking Branches for Customers')
@@ -12,14 +12,15 @@
       *  Function:  This program displays a list of authorised        *
       *             booking Branches for Customer.                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL052             Date 02Dec15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL052             Date 02Dec15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 BUG7305            Date 24May05               *
       *                 CDL029A            Date 09May05               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL052 - Amend Washout Processing (Recompile)                *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -97,7 +99,7 @@
      F                                     SFILE(SD0800S0:@@RRN)
      F                                     INFSR(*PSSR)
       ** Midas SD Authorisation DL Adjustments Function Display
-
+ 
      FSDABBCL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     RENAME(SDABBCD0:SDABBCD1)
@@ -105,10 +107,10 @@
      FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Control File Update Index
-
+ 
      FSDABBCL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Authorised Booking Branches for Customers)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -127,65 +129,65 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                 CDL029A
      D XXDFAC        E                     EXTFLD(QQDFAC)                                    CDL029A
       ** EXTERNAL DS FOR CUSTOMER DETAILS                                                    CDL029A
                                                                                              CDL029A
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
-
+ 
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D PMODE           S              1
      D PRTCD           S              7
      D W#EROR          S              1
@@ -196,7 +198,7 @@
      D WKIPIN          S              1
      D W0NLR           S              1
      D WFNAM           S             10
-
+ 
      D W0RSF           S              1
      D WQA3N           S              3  0
      D WQB3N           S              3  0
@@ -210,12 +212,12 @@
      D @RUN            S              1
      D Wvalid          S              1
      D CPY2@           S             80
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       /EJECT
       *****************************************************************
      C
@@ -225,41 +227,41 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
-
+ 
       ** Main Program
-
+ 
      C                   DO        *HIVAL
-
+ 
       ** Clear messages from program message queue
       ** Initialise and load subfile page
      C                   EXSR      SRBuild
-
+ 
      C                   EVAL      W0RSF = 'N'
-
+ 
       ** Display screen until reload requested
-
+ 
      C     W0RSF         DOWEQ     'N'
-
+ 
       ** Display screen
      C                   EXSR      SRDisplay
-
+ 
       ** Process response
-
+ 
      C     *INKC         CASEQ     '1'           SREnd
-
+ 
      C     *INKE         CASEQ     '1'           SRReload
-
+ 
      C     *IN27         CASEQ     '1'           SRLoad
-
+ 
      C                   CAS                     SRProcess
      C                   ENDCS
-
+ 
      C                   ENDDO
-
+ 
      C                   ENDDO
       *****************************************************************
       /EJECT
@@ -271,36 +273,36 @@
       *             *PSSR                                             *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
       ** Set up copyright parameter
-
+ 
      C                   MOVEA     CPY@          CPY2@
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PRTCD
      C                   PARM                    PMODE
-
-
+ 
+ 
       ** Initialize program name
-
+ 
      C                   MOVEL     'SD0800'      DBPGM
-
+ 
       ** Move workstation ID to screen field
-
+ 
      C                   EVAL      ##PGMQ = PSProcName
      C                   EVAL      DDUSR  = PsUser
      C                   EVAL      DDWID  = PsJobName
-
+ 
       ** Initialise Subfile Control
-
+ 
      C                   MOVE      *BLANKS       DDCBRH
      C                   MOVE      *BLANKS       DDCUST                                      CDL029A
      C                   MOVE      *BLANKS       DDCSSN                                      BUG7305
      C                   MOVE      *BLANKS       DDBBRH
      C                   Z-ADD     13            WSFPG             3 0
-
+ 
       ** Access Bank Details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
@@ -313,21 +315,21 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Open files for update
-
+ 
      C                   OPEN      SD0800DF
       **  GET ZMUSER to access default branch
-
+ 
      C     *DTAARA       DEFINE                  ZMUSER
      C                   IN        ZMUSER
      C                   MOVEL     BRC           W0BRC             3                         BUG7305
      C                   UNLOCK    ZMUSER
-
+ 
       ** Set to *CHANGE mode
      C                   EVAL      W0PMD = 'CHG'
-
-
+ 
+ 
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -337,16 +339,16 @@
       * Calls    : QDCXLATE, SRLoad                                   *
       *****************************************************************
      C     SRBuild       BEGSR
-
+ 
       ** Initialise & load subfile page
-
+ 
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SD0800C0
      C                   EVAL      *IN80 = *OFF
      C                   EVAL      *IN81 = *OFF
-
+ 
       ** Reset Number of Records in Subfile
-
+ 
      C                   Z-ADD     0             WLRCD             4 0
       ** Position file
      C     KAUTH2        KLIST
@@ -358,7 +360,7 @@
      C                   KFLD                    DKCBRH
      C                   KFLD                    DKCUST                                      CDL029A
      C                   KFLD                    DKBBRH
-
+ 
      C     *LIKE         DEFINE    DKCBRH        WZCBRH
      C                   EVAL      WZCBRH = DKCBRH
      C     *LIKE         DEFINE    DKCUST        WZCUST                                      CDL029A
@@ -367,36 +369,36 @@
      C                   EVAL      WZCSSN = DKCSSN                                           BUG7305
      C     *LIKE         DEFINE    DKBBRH        WZBBRH
      C                   EVAL      WZBBRH = DKBBRH
-
+ 
       * If CHANGE mode, then position file:
      C     W0PMD         IFNE      'ADD'
       ** Save previous selector values
-
+ 
      C*****KAUTH1        SETLL     SDABBCL0                           82                     CDL029A
      C     *LOVAL        SETLL     SDABBCL0                           82                     CDL029A
      C  N82              READ      SDABBCL0                               82
      C                   ELSE
      C                   EVAL      *IN82 = *OFF
      C                   ENDIF
-
+ 
       ** Translate search mask for text field
-
+ 
      C     *LIKE         DEFINE    DKCBRH        WQCBRH
-
+ 
      C                   CALL      'QDCXLATE'
      C                   PARM      3             WQA5N             5 0
      C                   PARM      DKCBRH        WQCBRH
      C                   PARM      'QSYSTRNTBL'  WQB10X
      C                   PARM      'QSYS'        WQC10X           10
-
+ 
      C     *LIKE         DEFINE    DKBBRH        WQBBRH
-
+ 
      C                   CALL      'QDCXLATE'
      C                   PARM      3             WQA5N
      C                   PARM      DKBBRH        WQBBRH
      C                   PARM      'QSYSTRNTBL'  WQB10X
      C                   PARM      'QSYS'        WQC10X
-
+ 
      C     *LIKE         DEFINE    DKCUST        WQCUST                                      CDL029A
                                                                                              CDL029A
      C                   CALL      'QDCXLATE'                                                CDL029A
@@ -414,7 +416,7 @@
      C                   PARM      'QSYS'        WQC10X           10                         BUG7305
                                                                                              BUG7305
       ** Load subfile page
-
+ 
      C                   EXSR      SRLoad
       * If no records found, display error message
      C                   IF        *IN82 and @@RRN  = 0
@@ -423,7 +425,7 @@
      C                   EVAL      PZMsgFile = 'Y2USRMSG'
      C                   EXSR      SRZASNMS
      C                   END
-
+ 
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -433,28 +435,28 @@
       * Calls    : QCLSCAN                                            *
       *****************************************************************
      C     SRLoad        BEGSR
-
+ 
       ** Load subfile page but write empty page if add mode
-
+ 
      C                   EVAL      *IN94 = *OFF
-
+ 
       ** Re-establish fields in read-ahead record
-
+ 
      C                   IF        W0PMD <> 'ADD' and *IN27 and *IN82 = '0'
      C                   READP     SDABBCL0                               60
      C                   READ      SDABBCL0                               60
      C                   ENDIF
-
+ 
       ** Start at previous highest record in SFL
-
+ 
      C                   Z-ADD     WLRCD         @@RRN
      C                   Z-ADD     1             WRCTR             5 0
-
+ 
       ** Load next subfile page
-
+ 
      C     *IN82         DOWEQ     '0'
      C     WRCTR         ANDLE     WSFPG
-
+ 
       * Access Customer details                                                              BUG7305
      C                   CALLB     'AOCUSTR0'                                                BUG7305
      C                   PARM      *BLANKS       @RTCD                                       BUG7305
@@ -475,9 +477,9 @@
      C                   ADD       1             @@RRN
      C                   MOVEA     '00000'       *IN(30)
      C                   MOVEA     '0'           *IN(37)                                     CDL029A
-
+ 
       ** Protect fields during Enquiry Mode
-
+ 
      C                   IF        PMODE = 'E'
      C                   EVAL      *IN79 = *ON
      C                   EVAL      *IN78 = *ON
@@ -487,11 +489,11 @@
      C                   IF        W0PMD <> 'ADD' and PMODE = 'M'                            CDL029A
      C                   EVAL      *IN78 = *ON                                               CDL029A
      C                   ENDIF                                                               CDL029A
-
+ 
      C                   IF        (W0PMD <> 'ADD')
-
+ 
      C                   IF        DKCBRH <> *BLANKS
-
+ 
      C                   CALL      'QCLSCAN'
      C                   PARM                    CBRH
      C                   PARM      3             WQA3N
@@ -502,14 +504,14 @@
      C                   PARM      '1'           WQE1
      C                   PARM      '?'           WQF1
      C                   PARM                    WQG3N
-
+ 
      C                   IF        WQG3N < 1
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        DKBBRH <> *BLANKS
-
+ 
      C                   CALL      'QCLSCAN'
      C                   PARM                    BBRH
      C                   PARM      3             WQA3N
@@ -520,7 +522,7 @@
      C                   PARM      '1'           WQE1
      C                   PARM      '?'           WQF1
      C                   PARM                    WQG3N
-
+ 
      C                   IF        WQG3N < 1
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
@@ -561,30 +563,30 @@
      C                   EVAL      WSkipRec = 'Y'                                            BUG7305
      C                   ENDIF                                                               BUG7305
      C                   ENDIF                                                               BUG7305
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        WSkipRec = 'N'
-
+ 
       ** Clear subfile fields
-
+ 
      C                   EXSR      SRClrScrn
-
-
+ 
+ 
       ** If CHANGE mode, load subfile fields
      C                   IF        W0PMD <> 'ADD'
      C                   EXSR      SRMove
       ** Validate subfile record
      C                   EXSR      SRValidate
      C                   END
-
+ 
       ** Output to subfile
-
+ 
      C                   ADD       1             WRCTR                81
      C                   EVAL      *IN81 = *ON
-
+ 
       ** If SFLRCD invalid, note that errors present
-
+ 
      C                   IF        *IN83 and *IN40 = '0'
      C                   EVAL      *IN40 = *ON
      C                   ENDIF
@@ -596,23 +598,23 @@
      C                   EVAL      *IN89 = *OFF
      C                   EVAL      *IN79 = *OFF
      C                   ENDIF
-
+ 
      C                   WRITE     SD0800S0
-
+ 
      C                   ELSE
      C                   SUB       1             @@RRN
      C                   ENDIF
-
+ 
       ** End of File
-
+ 
      C     W0PMD         IFNE      'ADD'
      C                   READ      SDABBCL0                               82
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   Z-ADD     @@RRN         WLRCD
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -623,43 +625,43 @@
       *  Calls    :                                                   *
       *****************************************************************
      C     SRDisplay     BEGSR
-
+ 
       ** Set screen conditioning indicators
-
+ 
      C                   IF        W0PMD = 'ADD'
      C                   EVAL      *IN89 = *ON
      C                   ELSE
      C                   EVAL      *IN89 = *OFF
      C                   ENDIF
-
+ 
       ** PUTOVR unless conditioned fields change
-
+ 
      C                   EVAL      *IN86 = *ON
      C                   IF        *IN89 <> CAIN89 OR *IN81 <> CAIN81
      C                   EVAL      *IN86 = *OFF
      C                   ENDIF
-
+ 
      C                   EVAL      CAIN89 = *IN89
      C                   EVAL      CAIN81 = *IN81
-
+ 
       ** Display appropriate Header depending upon Mode whether it is
       ** Enquiry or Maintenance
-
+ 
      C                   IF        PMODE = 'E'
      C                   EVAL      *IN41 = *ON
      C                   EVAL      *IN79 = *ON
      C                   EVAL      *IN78 = *ON
      C                   ENDIF
-
+ 
      C                   TIME                    DDTIME
      C                   WRITE     SD0800C1
      C                   WRITE     SD0800F0
      C                   EXFMT     SD0800C0
-
+ 
       ** Clear messages from program message queue
-
+ 
      C                   CALL      'ZA0250'
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -670,9 +672,9 @@
       * Calls    : SRReload, Validateaction, SRSelection          *
       *****************************************************************
      C     SRProcess     BEGSR
-
+ 
       ** Change of position specified
-
+ 
      C     W0PMD         IFNE      'ADD'
      C                   IF        WZCBRH <> DKCBRH OR WZBBRH <> DKBBRH
      C*****                        OR WZCUST <> DKCUST                                CDL029ABUG7305
@@ -680,14 +682,14 @@
      C                   EXSR      SRReload
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** Quit if reload requested
-
+ 
      C     W0RSF         IFNE      'Y'
-
+ 
       **  Read the subfile for selected records
       **  Only process those for which the option field is blank.
-
+ 
      C                   IF        *IN81 = *ON
      C                   EVAL      WKIPIN = 'N'
       ** Process subfile records
@@ -695,14 +697,14 @@
      C                   IF        (*IN40 <> *ON) AND (WKIPIN = 'Y')
      C                   EXSR      SRUpdate
      C                   ENDIF
-
+ 
      C                   ENDIF
      C                   IF        *IN09 and *IN40 = '0'
      C                   EXSR      SRMode
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -715,11 +717,11 @@
       * Calls    : SRAction                                           *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRSubfileRec  BEGSR
-
+ 
       ** Process modified subfile record
-
+ 
      C                   READC     SD0800S0                               62
      C     *IN62         DOWEQ     '0'
      C                   EXSR      SRAction
@@ -734,7 +736,7 @@
      C                   UPDATE    SD0800S0
      C                   READC     SD0800S0                               62
      C                   ENDDO
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -746,12 +748,12 @@
       * Calls    : SRValidKey                                         *
       *****************************************************************
      C     SRAction      BEGSR
-
+ 
      C                   MOVEA     '00000'       *IN(30)
      C                   MOVE      '0'           *IN37                                       CDL029A
      C                   MOVE      '0'           *IN94
      C                   MOVE      '0'           *IN83
-
+ 
      C     W0PMD         IFEQ      'ADD'
      C                   MOVEL     'N'           W0NLR             1
      C     DDCBRH        IFEQ      *BLANKS
@@ -765,19 +767,19 @@
       ** If not null record, continue
      C     W0NLR         IFNE      'Y'
      C                   EVAL      WKIPIN = 'Y'
-
+ 
      C                   EVAL      *IN94 = *ON
-
+ 
      C                   EXSR      SRValidKey
-
+ 
       ** Seton Global Error Indicator if error exists
-
+ 
      C                   IF        *IN83 = *ON
      C                   EVAL      *IN40 = *ON
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -790,9 +792,9 @@
       * Calls    : SRZasnms, SRValidate                               *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRValidKey    BEGSR
-
+ 
       ** Validate Action Code
      C                   If        DDOPTN <> 'D' AND DDOPTN <> ' '
      C                             AND PMODE = 'M'
@@ -817,11 +819,11 @@
      C     BJSBRC        IFEQ      *BLANK
      C                   EXSR      ACSSEM
      C                   ENDIF
-
+ 
       ** Validate subfile record relations
-
+ 
      C                   EXSR      SRValidate
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -935,32 +937,32 @@
       * Calls    : SRDetail                                           *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRUpdate      BEGSR
-
+ 
       ** Initialise subfile reload flag
-
+ 
      C                   IF        W0PMD = 'ADD'
      C                   EVAL      W0RSF = 'Y'
      C                   ELSE
      C                   EVAL      W0RSF = 'N'
      C                   ENDIF
-
+ 
       ** Process all modified subfile records
-
+ 
      C                   READC     SD0800S0                               62
-
+ 
      C                   DOW       *IN62 = *OFF
      C                   EXSR      SRDetail
-
+ 
       ** Rollback any DBF changes if error occur
-
+ 
      C                   IF        W#EROR <> *BLANKS
      C                   ROLBK
      C                   ELSE
      C                   COMMIT
      C                   ENDIF
-
+ 
       ** Set screen conditioning indicators
      C                   IF        W0PMD = 'ADD'
      C                   EVAL      *IN89 = *ON
@@ -969,17 +971,17 @@
      C                   EVAL      *IN89 = *OFF
      C                   EVAL      *IN79 = *OFF
      C                   ENDIF
-
+ 
      C                   UPDATE    SD0800S0
      C                   READC     SD0800S0                               62
      C                   ENDDO
-
+ 
       ** Cancel reload if errors occur
-
+ 
      C                   IF        *IN40 = *ON
      C                   EVAL      W0RSF = 'N'
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -992,17 +994,17 @@
       * Calls    : SRAddReq, SRDelReq                                 *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRDetail      BEGSR
-
+ 
       ** Set off error indicators
-
+ 
      C                   MOVEA     '000'         *IN(32)
      C                   MOVEA     '0'           *IN(37)                                     CDL029A
      C                   EVAL      *IN83 = *OFF
-
+ 
       ** Process add request
-
+ 
      C                   IF        W0PMD = 'ADD'
      C                   MOVEL     'N'           W0NLR             1
      C     DDCBRH        IFEQ      *BLANKS
@@ -1014,20 +1016,20 @@
      C                   IF        W0NLR <> 'Y'
      C                   EXSR      SRAddReq
      C                   ENDIF
-
+ 
      C                   ELSE
-
+ 
       ** Process delete request
-
+ 
      C                   IF        DDOPTN = 'D'
      C                   EXSR      SRDelReq
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        *IN83 and *IN40 = *OFF
      C                   EVAL      *IN40 = *ON
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1040,15 +1042,15 @@
       * Calls    : SRWrite, SRTrailer                                 *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRAddReq      BEGSR
-
+ 
       ** Create New Authorised Booking Branch
-
+ 
      C                   EXSR      SRWrite
-
+ 
       ** Error detected
-
+ 
      C                   IF        W#EROR <> *BLANKS
      C                   MOVEA     '11'          *IN(33)
      C                   MOVEA     '1'           *IN(37)                                     CDL029A
@@ -1058,7 +1060,7 @@
      C                   EVAL      *IN94 = *OFF
      C                   EXSR      SRTrailer
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1071,11 +1073,11 @@
       * Calls    : SRDelete, SRMove, SRClrScrn,SRTrailer              *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRDelReq      BEGSR
-
+ 
      C                   EXSR      SRDelete
-
+ 
      C                   IF        W#EROR <> *BLANKS
       ** Delete unsuccessful
      C                   MOVEA     '11111'       *IN(30)
@@ -1087,12 +1089,12 @@
      C                   EXSR      SRTrailer
      C                   EXSR      SRClrScrn
      C                   EVAL      *IN94 = *OFF
-
+ 
       ** Reload subfile
-
+ 
      C                   EVAL      W0RSF = 'Y'
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1105,11 +1107,11 @@
       * Calls    : SRReload                                           *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRMode        BEGSR
-
+ 
       ** Switch between *ADD/*CHANGE modes
-
+ 
      C                   IF        W0PMD <> 'ADD'
      C                   EVAL      W0PMD = 'ADD'
      C                   EVAL      *IN78 = *OFF                                              CDL029A
@@ -1117,9 +1119,9 @@
      C                   EVAL      W0PMD = 'CHG'
      C                   EVAL      *IN78 = *ON                                               CDL029A
      C                   ENDIF
-
+ 
      C                   EXSR      SRReload
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1130,10 +1132,10 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRReload      BEGSR
-
+ 
       ** Request subfile reload
      C                   EVAL      W0RSF = 'Y'
-
+ 
      C                   IF        *IN05
      C                   MOVEA     '000'         *IN(32)
      C                   MOVE      '0'           *IN37                                       CDL029A
@@ -1144,7 +1146,7 @@
      C                   EVAL      DKCSSN= *Blanks                                           BUG7305
      C                   EVAL      DKBBRH = *Blanks
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       * SRDelete - Delete Unauthorised Records                        *
@@ -1153,9 +1155,9 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRDelete      BEGSR
-
+ 
      C                   EVAL      W#EROR = *BLANKS
-
+ 
       ** Delete record
      C     KAUTH2        CHAIN     SDABBCL1                           91
       *
@@ -1169,7 +1171,7 @@
      C                   EXSR      *PSSR
      C                   ELSE
      C                   DELETE    SDABBCL1
-
+ 
      C                   ENDIF
       *
      C                   ENDSR
@@ -1183,37 +1185,37 @@
       * Calls    : SRZasnms                                           *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRWrite       BEGSR
-
+ 
      C                   EVAL      W#EROR = *BLANKS
-
+ 
       ** Check for duplicate primary key
-
+ 
      C     KAUTH2        SETLL     SDABBCL1                               60
-
+ 
      C                   IF        *IN60
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      PZMsgID = 'USR9275'
      C                   EXSR      SRZasnms
       *
      C                   ELSE
-
+ 
      C                   EVAL      CBRH = DDCBRH
      C                   EVAL      ABCUST = DDCUST                                           CDL029A
      C                   EVAL      BBRH = DDBBRH
      C                   WRITE     SDABBCD1                             61
-
+ 
       ** Write error detected
-
+ 
      C                   IF        *IN61
      C                   EVAL      W#EROR = 'Y'
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       /EJECT
       *****************************************************************
       * ACSSES - ACCESS SECURITY CHECKING - SINGLE BRANCHING
@@ -1278,12 +1280,12 @@
       * Calls    : *PSSR                                              *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRTrailer     BEGSR
-
+ 
      C                   MOVEL     'SDABBCPD'    WFNAM
      C     WFNAM         CHAIN     SDFCTLL0                           50
-
+ 
      C                   IF        *IN50
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDFCTLPA'
@@ -1292,9 +1294,9 @@
      C                   MOVEL     '003'         DBASE
      C                   OUT       LDA
      C                   EXSR      *PSSR
-
+ 
      C                   ELSE
-
+ 
      C                   SELECT
      C     W0PMD         WHENEQ    'ADD'
      C                   ADD       1             AHNORC
@@ -1303,15 +1305,15 @@
      C                   ADD       1             AHNODL
      C                   SUB       1             AHNORC
      C                   ENDSL
-
+ 
      C                   ENDIF
-
+ 
      C                   UPDATE    @AHREAU
-
+ 
      C                   COMMIT
-
+ 
      C                   ENDSR
-
+ 
       /EJECT
       *****************************************************************
       /EJECT
@@ -1322,19 +1324,19 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SREnd         BEGSR
-
+ 
       ** Rollback any uncommitted DBF changes
-
+ 
      C                   ROLBK                                          60
-
+ 
       ** Terminate program
-
+ 
      C                   EVAL      *INLR = *ON
-
+ 
       ** Exit program
-
+ 
      C                   RETURN
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1345,17 +1347,17 @@
       * Calls    : ZA0340                                             *
       *****************************************************************
      C     SRZasnms      BEGSR
-
+ 
      C                   IF        PZMsgFile = *BLANKS
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   ENDIF
-
+ 
      C                   CALL      'ZA0340'
      C                   PARM                    PZMsgFile        10
      C                   PARM                    PZMsgID          10
-
+ 
      C                   EVAL      PZMsgFile = *BLANKS
-
+ 
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1370,18 +1372,18 @@
       *                                                               *
       *****************************************************************
      C     SRClrScrn     BEGSR
-
+ 
       ** Clear subfile fields
      C                   MOVE      *BLANK        DDOPTN
      C                   MOVEL     *BLANK        DDCBRH
      C                   MOVEL     *BLANK        DDCUST                                      CDL029A
      C                   MOVEL     *BLANK        DDCSSN                                      BUG7305
      C                   MOVEL     *BLANK        DDBBRH
-
+ 
       ** Initialise subfile record
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1394,20 +1396,20 @@
       *                                                               *
       *****************************************************************
      C     SRMove        BEGSR
-
+ 
       ** Move SDABBCY0 fields to subfile
-
+ 
      C                   MOVEL     CBRH          DDCBRH
      C                   MOVEL     ABCUST        DDCUST                                      CDL029A
      C     ABCUST        IFNE      *BLANKS                                                   BUG7305
      C                   MOVEL     BBCSSN        DDCSSN                                      BUG7305
      C                   ENDIF                                                               BUG7305
      C                   MOVEL     BBRH          DDBBRH
-
+ 
       ** Hold current record image for change detection
-
+ 
      C                   ENDSR
-
+ 
       /EJECT
       ********************************************************************
       ** Program, module and procedure names for database error processing
@@ -1418,4 +1420,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

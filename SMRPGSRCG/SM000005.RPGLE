@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*XBI *  OVRDBF FILE(SMC000054F) TOFILE(UPFDBATPD)                    *
 /*STD *  RPGBASEBND                                                   *
@@ -10,15 +10,17 @@
       *                                                               *
       *  SM000005 - Remove records for files that have set CCSIDs.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256038  *CREATE    Date 06Aug08               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Prev Amend No. 256038  *CREATE    Date 06Aug08               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256038 - New utility to change CCSIDs.                       *
       *                                                               *
       *****************************************************************

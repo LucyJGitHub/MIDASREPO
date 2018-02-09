@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       SMUC00403A - CL PROGRAM TO CALL PGM/UTRE0671                */
 /*                                                                   */
-/*       (C) Misys Banking Systems 2013                              */
+/*       (C) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD027435  *RENAMED Date 10Jun14              */
-/*       Prev Amend No. AR1055719 *CREATE  Date 25Nov13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD027435           Date 10Jun14              */
+/*                      AR1055719 *CREATE  Date 25Nov13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD027435 - UTCRE0671 renamed to SMUC00003A for upgrade      */
 /*                  program standards.                               */
 /*       AR1055719 - Wrong Retail Interest Rate. Created a utility   */
@@ -30,7 +32,7 @@
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys Banking Systems 2013')
+                          Finastra International Limited 2013')
  
 /* Global monitor message */
  
@@ -266,6 +268,6 @@
                           TOMSGQ(MOPERQ)                                                /*MD027435*/
              DMPCLPGM
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys Banking +
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
                           Systems 2013')
              ENDPGM

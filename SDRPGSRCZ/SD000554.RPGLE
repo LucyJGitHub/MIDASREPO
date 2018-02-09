@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD FATCA Exceptions by CUST/NAHO Report')        *
@@ -9,16 +9,18 @@
       *                                                               *
       *  SD000554 - FATCA Exceptions by Customers/NAHOs Report        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD042897           Date 29Nov16               *
-      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042897           Date 29Nov16               *
+      *                 MD039670           Date 26Jul16               *
       *                 MD039196           Date 21Jul16               *
       *                 MD025220           Date 03Feb14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042897 - Customer/Non-Account Holders with FATCA Exceptions*
       *             are not reported in FATCA Exceptions IC Report    *
       *  MD039670 - FATCA Housekeeping program                        *

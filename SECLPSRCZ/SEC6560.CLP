@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       SEC6560 - SE Files Setup                                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01496  *CREATE    DATE 21NOV94              */
+/*       Prev Amend No. S01496  *CREATE    Date 21Nov94              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01496 - Incorporation of Jyske Enhancements (New program)  */
 /*                                                                   */
 /*********************************************************************/
@@ -30,7 +32,7 @@
              PGM        PARM(&RTNCDE &IPMODE)                         /*S01496*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)               /*S01496*/
              DCL        VAR(&IPMODE) TYPE(*CHAR) LEN(1)               /*S01496*/
@@ -55,5 +57,5 @@ ABNOR:       SNDPGMMSG  MSG('Program SEC6560 ended ABNORMALLY') +
 /**/
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Reset BFSTRP in GPBRCFLDPD header w blank')
@@ -9,17 +9,19 @@
       *                                                               *
       *  SM1093  - Reset SMBRCFLDPD header records with blank.        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CUP025  *CREATE    Date 02Feb04               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CUP025  *CREATE    Date 02Feb04               *
+      *                                    Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP025 - Change branches utility                             *
       *                                                               *
       *****************************************************************

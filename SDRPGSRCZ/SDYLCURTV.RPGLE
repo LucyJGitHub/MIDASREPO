@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Yield Curves Details Retrieve')                        *
@@ -15,10 +15,11 @@
       *             the database. As it does so, it validates the     *
       *             action code and Yield Curves code.                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -40,18 +42,18 @@
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDYLDCL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDYLCUL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDYLDCD0:SDYLDFOI)
       * Yield Curves File by Front Office Id
- 
+
      FSDYLDRL1  IF   E           K DISK    INFSR(*PSSR)
      ** Yield Rates Master File Retrieval Index
      FGLTRANL0  IF   E           K DISK    INFSR(*PSSR)
@@ -84,7 +86,7 @@
      FSDTPSTL3  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FDDTSTPD:@TPSTL3)
      ** Deal and Loan Type/Sub-Type
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -96,91 +98,91 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DepotSn         S             10    DIM(10)
       ** Depot shortnames array
- 
+
      D DepotNo         S              6    DIM(10)
       ** Depot customer numbers array
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details ICD retrieval
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** External DS for Securities ICD Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs, long data structure
- 
+
      D TranFilFmt    E DS                  EXTNAME(SDYLDCPD)
       ** Transaction Details in File Format
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
+
      D ZMUSER          DS
      D  DBRN                  11     13
      D  BANK                  17     17
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -286,7 +288,7 @@
      C                             OKYLDC = 'N'
      C                   RETURN
      C                   ENDIF
- 
+
       * Return
      C                   RETURN
       *****************************************************************
@@ -367,10 +369,10 @@
       * RTVYLDC - Retrieve Yield Curve If Action Code 'A','E' OR 'D         '
       **********************************************************************
      C     RTVYLDC       BEGSR
- 
+
       * Access Yield Curves Code from the Yield Curve file
      C     DDYLDC        CHAIN     SDYLDCL1                           99
- 
+
       * Yield Curves details not found
      C                   IF        *IN99 = *ON
      C                   MOVEL     'N'           OKYLDC
@@ -378,7 +380,7 @@
      C                   MOVEL     'DDYLDC'      FldNameArr(Ix)
      C                   MOVEL     'USR7605'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C     EndRTV        ENDSR
       *****************************************************************
       /EJECT
@@ -450,7 +452,7 @@
       * VAL - VALIDATION OF ACTION CODE AND TRANSACTION NUMBER
       *****************************************************************
      C     VAL           BEGSR
- 
+
       * Action Code
       *  .. must be 'I','A','D' or 'E'
      C                   IF        DDACTN <> 'I' AND
@@ -470,7 +472,7 @@
      C                   MOVEL     'USR9158'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      C                   ENDIF
- 
+
      C     EVAL          ENDSR
       *****************************************************************
       /EJECT
@@ -478,7 +480,7 @@
       * VALACI - VALIDATION OF ACTION CODE 'I'
       *****************************************************************
      C     VALACI        BEGSR
- 
+
       *
       ** Access Yield Curve from the Yield Curve file
       *
@@ -501,15 +503,15 @@
       * VALACD - VALIDATION OF ACTION CODE 'D'
       *****************************************************************
      C     VALACD        BEGSR
- 
+
       *
- 
+
      ** Check if the Yield Curve is a live transaction (Deal or Loan)
      ** is linked to it
      C                   EXSR      SRDelete
- 
- 
- 
+
+
+
      C     EVALAD        ENDSR
       *****************************************************************
       /EJECT
@@ -628,13 +630,13 @@
       * INIT - Initial processing
       *****************************************************************
      C     INIT          BEGSR
- 
+
       * Clear Outputs
      C                   CLEAR                   TranFilFmt
      C                   EVAL      OKACTN = 'Y'
      C                   EVAL      OKYLDC = 'Y'
- 
- 
+
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -642,12 +644,12 @@
       * *INZSR - Initialisation
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       *
       ** Parameters
       *
      C     *ENTRY        PLIST
- 
+
       *
       ** Inputs
       *
@@ -727,14 +729,14 @@
      C                   EVAL      DBKEY = @OPTN                                 ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDAPI         PARM      SDAPI         DSFDY
       *
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
@@ -754,11 +756,11 @@
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       *  Note: if non-standard processing required, use the PSSR_ILENE
       *  subroutine
       ****************************************************************
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

@@ -9,14 +9,16 @@
       *  SD008160 - Stamp Tax Generate Records for Outgoing           *
       *             Payments Generated via STP                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd 2010             *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR1084524          Date 13Feb13               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1084524          Date 13Feb13               *
+      *                 CLE148             Date 23Jul12               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *
       *              (Recompile)                                      *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -351,4 +353,4 @@
       *
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

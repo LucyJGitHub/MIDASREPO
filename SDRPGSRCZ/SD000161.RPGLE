@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD FATCA High Value A/C Iden Report & Update')   *
@@ -19,10 +19,11 @@
       *             updates the high value indicator and              *
       *             classification for the customer.                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL154             Date 13Oct14               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -240,14 +242,14 @@
       *
       ** Extra Long Data Structure
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** File Information Data Structure for SD000161P1
      D SPOOL1          DS
      D  SFILE                 83     92
      D  SFNUM                123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** Data structure for GPAOSVALR0 string
      D SVal1           DS           200
      D  SVal13                 1      3
@@ -323,7 +325,7 @@
      D WWAMT           S             19  3
      D WWQOTC          S              1  0
      D WWSEQN          S              3S 0                                                  MD027624
- 
+
       ** Parameter variables for GPAOSVALR0 string
      D SValK1          S             20
      D SValK2          S             20
@@ -340,7 +342,7 @@
      D SVal9           S            200
      D SValK0          S             20
      D SVal10          S            200
- 
+
      D SVvlK1          S             20
      D SVvl1           S            200
      D SVvlK2          S             20
@@ -361,7 +363,7 @@
      D SVvl9           S            200
      D SVvlK0          S             20
      D SVvl10          S            200
- 
+
       ** Parameters for ZCONVZ1
      D ZAMTCI          S             15  0
      D ZEXCH           S             13P 8
@@ -371,7 +373,7 @@
      D ZCDPI           S              1  0
      D ZCDPO           S              1  0
      D ZAMTCO          S             15  0
- 
+
       ** Parameters for ZXRATE
      D ZRATE1          S             13P 8
      D ZMDI1           S              1
@@ -379,19 +381,19 @@
      D ZMDI2           S              1
      D ZRATEX          S             13P 8
      D ZMDIX           S              1
- 
+
       ** Parameters for ZSEDIT
      D ZFLD15          S             15  0
      D ZDECS           S              1  0
      D ZECODE          S              1
      D ZOUT21          S             21
- 
+
       ** Parameters for ZALIGN
      D ZALIGNOK        S              1
      D ZFIELD          S             16
      D ZADEC           S              1P 0
      D ZADIG           S              2P 0
- 
+
       ** Parameters for ZAPNUM
      D ZNOML           S             11  0
      D ZAVPR           S             15  8
@@ -404,7 +406,7 @@
      D ZVAL2           S             15  2
      D ZVAL3           S             15  3
      D ZI              S              1  0
- 
+
       ** Parameters for FFTVCL
      D FFNOC           S              5  0
      D FFTKDM          S              3  0
@@ -412,7 +414,7 @@
      D FFNOT1          S             16  3
      D FFTNVL          S             13  0
      D FFNOTK          S             13  0
- 
+
      D FFFP            DS            15
      D  FFPRIC                 1     15  8
      D  FFINTG                 1      7  0
@@ -426,13 +428,13 @@
      D  FFDCN4                 9     11  3
      D  FFDCN5                10     12  3
      D  FFDCN6                11     13  3
- 
+
       ** ZSFILE Parameters
      D ZSEQ            S              5
      D ZENTY           S              3
      D ZSERR           S              1
      D ZSNUM           S              6  0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -460,7 +462,7 @@
       *
      C                   IF        PMode <> 'F'
      C                   OPEN      SD000161P1
- 
+
      C                   Z-ADD     SFNUM         ZSNUM
      C                   CALL      'ZSFILE'
      C                   PARM      *BLANKS       ZSEQ
@@ -468,9 +470,9 @@
      C                   PARM                    SFILE
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** error during ZSFILE processing, return to calling program
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
@@ -591,7 +593,7 @@
      C                   IF        PMode <> 'F' AND WChange = 'Y'
      C                   EVAL      RqdLn1 = 2
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
      C                   IF        DifLn1 <= RqdLn1
      C                   EXSR      SRHeader
      C                   ENDIF
@@ -683,7 +685,7 @@
      C                   IF        PMode <> 'F' AND WChange = 'Y'
      C                   EVAL      RqdLn1 = 2
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
      C                   IF        DifLn1 <= RqdLn1
      C                   EXSR      SRHeader
      C                   ENDIF
@@ -753,7 +755,7 @@
      C                   EVAL      ZAMTCI = PCPL
      C                   EXSR      SRCvtAmount
      C                   ADD       ZAMTCO        WHvAm
- 
+
      C                   ENDIF
      C     WCust         READE     DEALSDCF                               80
      C                   ENDDO
@@ -1750,14 +1752,14 @@
       ** Setup Header fields
      C                   EVAL      RRRUNA = BJMRDT
      C                   EVAL      RRTITL = BJURPT
- 
+
       ** Check whether CSD092 is available
      C                   CALL      'AOSARDR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSD092'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtcd <> *Blanks
      C                   IF        PRtcd <> '*NRF'
      C     *LOCK         IN        LDA
@@ -1772,7 +1774,7 @@
      C                   ELSE
      C                   EVAL      CSD092 = 'Y'
      C                   ENDIF
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      SysVvl1       SVvlK1
@@ -1795,7 +1797,7 @@
      C                   PARM                    SVvl9
      C                   PARM                    SVvlK0
      C                   PARM                    SVvl10
- 
+
      C                   IF        PRtcd <> *Blanks  AND
      C                             PRtcd <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -1830,7 +1832,7 @@
      C                   PARM                    SVal9
      C                   PARM                    SValK0
      C                   PARM                    SVal10
- 
+
      C                   IF        PRtcd <> *Blanks  AND
      C                             PRtcd <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -1844,7 +1846,7 @@
       *
      C                   EVAL      PCurr = SVal13
      C                   EXSR      SRRtvCurr
- 
+
      C                   EVAL      ZADEC = A6NBDP
      C                   EVAL      ZADIG = 13
       *
@@ -1875,12 +1877,12 @@
      C                   EVAL      ZDECS = A6NBDP
      C                   EXSR      SRFmtAmount
      C                   MOVE      ZOUT21        XRLOWI
- 
+
       ** Trim all spaces on the left to left adjust the value
       ** on display
- 
+
      C                   EVAL      XRLOWI = %TRIML(XRLOWI)
- 
+
      C                   MOVE      ZOUT21        PLOWI
       *
       ** Low Value Threshold (Entity)
@@ -1888,12 +1890,12 @@
      C                   EVAL      ZDECS = A6NBDP
      C                   EXSR      SRFmtAmount
      C                   MOVE      ZOUT21        XRLOWE
- 
+
       ** Trim all spaces on the left to left adjust the value
       ** on display
- 
+
      C                   EVAL      XRLOWE = %TRIML(XRLOWE)
- 
+
      C                   MOVE      ZOUT21        PLOWE
       *
       ** High Value Threshold
@@ -1901,12 +1903,12 @@
      C                   EVAL      ZDECS = A6NBDP
      C                   EXSR      SRFmtAmount
      C                   MOVE      ZOUT21        XRHIGT
- 
+
       ** Trim all spaces on the left to left adjust the value
       ** on display
- 
+
      C                   EVAL      XRHIGT = %TRIML(XRHIGT)
- 
+
      C                   MOVE      ZOUT21        PHIGT
       *
       ** High Value Currency
@@ -1926,14 +1928,14 @@
      C     KSCSEP        KLIST
      C                   KFLD                    WWCSCN
      C                   KFLD                    WWCSSV
- 
+
      C     KPRIC         KLIST
      C                   KFLD                    KISTT
      C                   KFLD                    KYRNO
      C                   KFLD                    KMTHN
      C                   KFLD                    KPCAL
      C                   KFLD                    KSTRP
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1973,7 +1975,7 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 **  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
 00000001
 00000010

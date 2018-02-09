@@ -14,18 +14,20 @@
       *                                                               *
       *  Called By: SDC1493 - Transactions Awaiting Repair component  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGL029             Date 01Sep03               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. 196570  *CREATE    Date 12Nov01               *
+      *                 196570  *CREATE    Date 12Nov01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  196570 - Patch for Market Data Feed: enhanced MDF reporting  *
       *                                                               *
@@ -482,4 +484,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@ - Object copyright
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

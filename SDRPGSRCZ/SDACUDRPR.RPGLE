@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Invalid Additional Custmr Details Repair')    *
@@ -14,10 +14,11 @@
       *             details to be 'repaired' and applied to the       *
       *             Midas database.                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG25533           Date 19Aug09               *
       *                 CER045             Date 20Jul09               *
       *                 BUG24013           Date 15May09               *
@@ -39,6 +40,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *         - LT073: upgrade ACU3, ACU4, CUAH and CCTX to CUSD    *
@@ -2416,4 +2418,4 @@ rgc  C                   PARM      *Blanks       PSDACUDENQ
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

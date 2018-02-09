@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       SMC0030 - Copy JNSTAT                                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CUP037             Date 03Apr07              */
-/*       Prev Amend No. CUP034             Date 24Jan07              */
+/*       Prev Amend No. CUP037             Date 03Apr07              */
+/*                      CUP034             Date 24Jan07              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CUP033             Date 30Jun06              */
 /*                      CPK023             Date 25Nov05              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP037 - Update previous run date field in JNSTAT.          */
 /*       CUP034 - Reduce size of implementation library.             */
 /*       CUP033 - Removal of System Value /COPYs.                    */
@@ -50,7 +52,7 @@
 /**********  DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)                              */ /*CSM003*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
@@ -165,6 +167,6 @@ VALIDATE:                                                                       
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

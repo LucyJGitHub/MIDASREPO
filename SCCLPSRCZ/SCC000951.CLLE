@@ -7,44 +7,46 @@
 /*                                                                   */
 /*       SCC000951 - Midas SC Send Signal Message to Queue           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
-/*       Last Amend No. MD041172  *CREATE    Date 20Sep16            */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD041172 *CREATE   Date 20Sep16              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD041172 - WLC Bulk Customer Watchlist Gap                  */
 /*                                                                   */
 /*********************************************************************/
-
+ 
              PGM        PARM(&SQMGR &SQUEUE &MSG)
-
+ 
              DCL        VAR(&SQMGR) TYPE(*CHAR) LEN(20)
              DCL        VAR(&SQUEUE) TYPE(*CHAR) LEN(20)
              DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)
              DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
-
+ 
              DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(2000)
-
+ 
 /*/COPY SDCPYSRC,SDSVALDCL  */
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           Ltd. 2016')
-
+ 
 /** Global monitor message */
-
+ 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
              SNDPGMMSG  MSG('SCC000951 - Midas SC Send Signal +
                           Message to Queue') TOMSGQ(MRUNQ)
-
+ 
              CHGJOB     SWS(XXXXXX00)
-
+ 
 /** Get MQ Queue Manager and Queue Name */
-
+ 
              CALL       PGM(AOSVALR0) PARM(&RSVALRTNC   +
                           &SQMGR  &SVAL1                +
                           &SQUEUE &SVAL2                +
@@ -52,34 +54,34 @@
                           &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
                           &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
                           &SVALK9 &SVAL9 &SVALK10 &SVAL10)
-
+ 
 /** If there is an error finding any system value then end abnormally */
-
+ 
              IF         COND(&RSVALRTNC *NE '       ') THEN(GOTO +
                           CMDLBL(ABNOR))
-
+ 
              CHGVAR     VAR(&MQMGR) VALUE(%SST(&SVAL1 1 48))
              CHGVAR     VAR(&MQUEUE) VALUE(%SST(&SVAL2 1 48))
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRFX)
-
+ 
 /** Call ZAMSGTOMQ to send message */
-
+ 
              CALL       PGM(ZAMSGTOMQ) PARM(&RETURNCODE &PRFX +
                           &MQMGR &MQUEUE &MSG)
              MONMSG     MSGID(CPF0000 MCH0000)
-
+ 
 /** If there is an error sending the message then end abnormally */
-
+ 
              IF         COND(&RETURNCODE *NE '       ') THEN(GOTO +
                           CMDLBL(ABNOR))
-
+ 
              GOTO       CMDLBL(END)
-
+ 
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SCC000951 ended abnormally') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
-
+ 
 END:
              ENDPGM

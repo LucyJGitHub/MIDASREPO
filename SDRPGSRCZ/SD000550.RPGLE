@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD FATCA Classfn Codes Report Control')          *
@@ -12,15 +12,17 @@
       *  Function:  This is a new program to list the details of      *
       *             FATCA Classification Codes defined in the system  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD033502           Date 04Mar15               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033502           Date 04Mar15               *
+      *                 CGL154             Date 13Oct14               *
       *                 MD024613           Date 30Jan14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033502 - Component is in infinite loop                     *
       *  CGL154 - FATCA Reporting                                     *
       *  MD024613 - Fields for ICY and COB Reports for FATCA          *
@@ -687,4 +689,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

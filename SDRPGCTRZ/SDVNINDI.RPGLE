@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate FATCA Information Complete')         *
@@ -9,15 +9,17 @@
       *                                                               *
       *  SDVINDI - Validate FATCA Indicia                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD043147           Date 03Jan17               *
-      *  Prev Amend No. MD036489           Date 11Nov15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD043147           Date 03Jan17               *
+      *                 MD036489           Date 11Nov15               *
       *                 MD036460           Date 05Nov15               *
       *                 MD036356 *CREATE   Date 20Oct15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD043147 - US account authority holder indicia is not        *
       *             updated from insert like other US Indicia         *
       *             system values                                     *
@@ -27,14 +29,14 @@
       *             from Main NAHO/CRS Details                        *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FSDCTRYL5  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -42,38 +44,38 @@
       ** +--------------------------------------+
       **
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
      D/COPY ZACPYSRC,ERR_XARRYS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** Access the System Value
      D SVAL01          C                   CONST('FATCAUsTinBirthRqd')
      D SVAL02          C                   CONST('FATCADftCLsTakeon')
@@ -81,23 +83,23 @@
      DArrayMax         C                   CONST(999)
      D***IndiciaCount     C                   CONST(11)                                     MD043147
      DIndiciaCount     C                   CONST(12)                                        MD043147
-
+ 
       ** Run-time Array for Country Codes with FATCA Flag
      DCtryCodeArr      S              2    DIM(ArrayMax)
-
+ 
       ** Data Structure for AOSVALR0 string
      DSVAL1            DS           200
      DSVAL11                   1      1
-
+ 
       ** External data structure for ACUS
      D CuNAHOVald    E DS                  EXTNAME(SDVNAHLPD)
-
+ 
       ** External data structure for SARD
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
-
+ 
       ** External data structure for FTNH
      D CuFTNHScrn    E DS                  EXTNAME(SDFTNRPD)
-
+ 
       ** Data Structure for non-acct holder Indicia with Overrides
      DNahoIndOverDS    DS
      D  FNCISV                             LIKE(DDCISV)
@@ -128,12 +130,12 @@
      D***NahoOverideDS                  11A   OVERLAY(NahoIndOverDS:12)                     MD043147
      DNahoIndiciaDS                  12A   OVERLAY(NahoIndOverDS)                           MD043147
      DNahoOverideDS                  12A   OVERLAY(NahoIndOverDS:13)                        MD043147
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIx             S              3P 0
@@ -141,10 +143,10 @@
      D WSysOff         S              2S 0
      D WOvrOff         S              2S 0
      D Index           S              3S 0 INZ(1)
-
+ 
      D PHasIndicia     S              1A
      D PAINSF          S              1A                                                    MD036460
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -152,9 +154,9 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** Initialization
-
+ 
      C                   MOVE      *BLANK        ReturnCode
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
@@ -164,7 +166,7 @@
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             Idx
      C                   Z-ADD     0             WIx
-
+ 
      C                   EVAL      FNCISV = DDCISV
      C                   EVAL      FNTXSV = DDTXSV
      C                   EVAL      FNCDSV = DDCDSV
@@ -189,10 +191,10 @@
      C                   EVAL      FNIDOV = DDIDOV
      C                   EVAL      FNHMOV = DDHMOV
      C                   EVAL      FNAUOV = DDAUOV                                          MD043147
-
+ 
      C                   EVAL      PHasIndicia = 'N'
      C                   EVAL      KNAHO = NANAHO
-
+ 
       ** Do an initial check on the Indicia and Override
       ** Applicable for Amended non-account holder
      C**********         IF        DDACTI <> 'I'                                            MD036460
@@ -214,7 +216,7 @@
      C                   EVAL      PHasIndicia = 'Y'                                        MD036489
      C                   ENDIF                                                              MD036489
      C                   ENDIF
-
+ 
       ** Country of Domicile
      C                   IF        %LOOKUP(NACOLC:CtryCodeArr) <> 0
      C                             AND NACOLC <> *BLANKS
@@ -222,11 +224,11 @@
      C                   EVAL      PHasIndicia = 'Y'
      C                   EVAL      DDCDSV = 'Y'
      C                   ENDIF
-
+ 
      C                   IF        DDCDSV = ' '
      C                   EVAL      DDCDSV = 'N'
      C                   ENDIF
-
+ 
       ** This will allow the change of Indicia Values from 'Y' to 'N' during Insert
      C                   IF        %LOOKUP(NACOLC:CtryCodeArr) = 0
      C                             AND NACOLC <> *BLANKS
@@ -235,7 +237,7 @@
      C                             AND PAINSF = 'I'                                         MD036460
      C                   EVAL      DDCDSV = 'N'
      C                   ENDIF
-
+ 
       ** Check Country of Citizenship
      C                   IF        %LOOKUP(NACOCZ:CtryCodeArr) <> 0
      C                             AND NACOCZ <> *BLANKS
@@ -246,11 +248,11 @@
      C                   EVAL      PHasIndicia = 'Y'
      C                   EVAL      DDCISV = 'Y'
      C                   ENDIF
-
+ 
      C                   IF        DDCISV =  ' '
      C                   EVAL      DDCISV = 'N'
      C                   ENDIF
-
+ 
       ** This will allow the change of Indicia Values from 'Y' to 'N' during Insert
      C                   IF        %LOOKUP(NACOCZ:CtryCodeArr) = 0
      C                             AND NACOCZ <> *BLANKS
@@ -269,7 +271,7 @@
      C                             AND PAINSF = 'I'                                         MD036460
      C                   EVAL      DDCISV = 'N'
      C                   ENDIF
-
+ 
       ** Check Country of Birth
      C                   IF        %LOOKUP(NABTHC:CtryCodeArr) <> 0
      C                             AND NABTHC <> *BLANKS
@@ -277,11 +279,11 @@
      C                   EVAL      PHasIndicia = 'Y'
      C                   EVAL      DDCBSV = 'Y'
      C                   ENDIF
-
+ 
      C                   IF        DDCBSV =  ' '
      C                   EVAL      DDCBSV = 'N'
      C                   ENDIF
-
+ 
       ** This will allow the change of Indicia Values from 'Y' to 'N' during Insert
      C                   IF        %LOOKUP(NABTHC:CtryCodeArr) = 0
      C                             AND NABTHC <> *BLANKS
@@ -293,7 +295,7 @@
      C                             AND PAINSF = 'I'                                         MD036460
      C                   EVAL      DDCBSV = 'N'
      C                   ENDIF
-
+ 
       ** Check Identity Documents Issue
      C                   IF        %LOOKUP(NAISCT:CtryCodeArr) <> 0
      C                             AND NAISCT <> *BLANKS
@@ -301,11 +303,11 @@
      C                   EVAL      PHasIndicia = 'Y'
      C                   EVAL      DDIDSV = 'Y'
      C                   ENDIF
-
+ 
      C                   IF        DDIDSV =  ' '
      C                   EVAL      DDIDSV = 'N'
      C                   ENDIF
-
+ 
       ** This will allow the change of Indicia Values from 'Y' to 'N' during Insert
      C                   IF        %LOOKUP(NAISCT:CtryCodeArr) = 0
      C                             AND NAISCT <> *BLANKS
@@ -317,20 +319,20 @@
      C                             AND PAINSF = 'I'                                         MD036460
      C                   EVAL      DDIDSV = 'N'
      C                   ENDIF
-
+ 
       ** FATCA Details
-
+ 
      C                   IF        %LOOKUP(DDMAIL:CtryCodeArr) <> 0
      C                             AND DDMAIL <> *BLANKS
      C                             AND DDMCSV <> 'Y'
      C                   EVAL      PHasIndicia = 'Y'
      C                   EVAL      DDMCSV = 'Y'
      C                   ENDIF
-
+ 
      C                   IF        DDMCSV =  ' '
      C                   EVAL      DDMCSV = 'N'
      C                   ENDIF
-
+ 
       ** This will allow the change of Indicia Values from 'Y' to 'N' during Insert
      C                   IF        %LOOKUP(DDMAIL:CtryCodeArr) = 0
      C                             AND DDMAIL <> *BLANKS
@@ -342,18 +344,18 @@
      C                             AND PAINSF = 'I'                                         MD036460
      C                   EVAL      DDMCSV = 'N'
      C                   ENDIF
-
+ 
       ** Check Green Card
      C                   IF        DDGREC = 'Y'
      C                             AND DDGCSV <> 'Y'
      C                   EVAL      PHasIndicia = 'Y'
      C                   EVAL      DDGCSV = 'Y'
      C                   ENDIF
-
+ 
      C                   IF        DDGCSV =  ' '
      C                   EVAL      DDGCSV = 'N'
      C                   ENDIF
-
+ 
       ** This will allow the change of Indicia Values from 'Y' to 'N' during Insert
      C                   IF        DDGREC <> 'Y'
      C                             AND DDGCSV = 'Y'
@@ -361,18 +363,18 @@
      C**********                   AND DDACTI = 'I'                                         MD036460
      C                   EVAL      DDGCSV = 'N'
      C                   ENDIF
-
+ 
       ** Check Telephone Number
      C                   IF        DDPHNE = 'Y'
      C                             AND DDTESV <> 'Y'
      C                   EVAL      PHasIndicia = 'Y'
      C                   EVAL      DDTESV = 'Y'
      C                   ENDIF
-
+ 
      C                   IF        DDTESV =  ' '
      C                   EVAL      DDTESV = 'N'
      C                   ENDIF
-
+ 
       ** This will allow the change of Indicia Values from 'Y' to 'N' during Insert
      C                   IF        DDPHNE <> 'Y'
      C                             AND DDTESV = 'Y'
@@ -380,17 +382,17 @@
      C**********                   AND DDACTI = 'I'                                         MD036460
      C                   EVAL      DDTESV = 'N'
      C                   ENDIF
-
+ 
      C                   IF        DDTXSV <> 'Y'
      C                             AND DDUTIN <> *BLANKS
      C                   EVAL      PHasIndicia = 'Y'
      C                   EVAL      DDTXSV = 'Y'
      C                   ENDIF
-
+ 
      C                   IF        DDTXSV = ' '
      C                   EVAL      DDTXSV = 'N'
      C                   ENDIF
-
+ 
      C                   IF        DDJASV = ' '
      C                   EVAL      DDJASV = 'N'
      C                   ENDIF
@@ -398,15 +400,15 @@
      C                   IF        DDAUSV = ' '                                             MD043147
      C                   EVAL      DDAUSV = 'N'                                             MD043147
      C                   ENDIF                                                              MD043147
-
+ 
      C                   IF        DDHMSV = ' '
      C                   EVAL      DDHMSV = 'N'
      C                   ENDIF
-
+ 
      C                   IF        DDRPSV = ' '
      C                   EVAL      DDRPSV = 'N'
      C                   ENDIF
-
+ 
      C                   IF        DDTXSV = 'Y'
      C                             AND DDUTIN = *BLANKS
      C                             AND PAINSF = 'I'                                         MD036460
@@ -414,11 +416,11 @@
      C                   EVAL      PHasIndicia = 'N'
      C                   EVAL      DDTXSV = 'N'
      C                   ENDIF
-
+ 
       ** RETURN
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -430,17 +432,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SrChkIndicia  BEGSR
-
+ 
      C                   EVAL      WOvrOff = 1
       ** Check if any override flag has been set on
       ** If any has been set, this needs to get flagged as having indicia
      C                   IF        %SCAN('Y':NahoOverideDS) = 0
-
+ 
      C                   DOU       WOvrOff > IndiciaCount
      C                             OR  WOvrOff = 0
-
+ 
       ** Check any override as 'N' possibly invalidating
       ** system value Indicia
      C                   EVAL      WOvrOff =
@@ -460,16 +462,16 @@
      C                   IF        WOvrOff <> 0
      C                   EVAL      WOvrOff = WOvrOff + 1
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   ELSE
      C                   EVAL      PHasIndicia = 'Y'
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -477,34 +479,34 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** Return Code
      C                   PARM                    ReturnCode
-
+ 
      C                   PARM                    CuNAHOVald
      C                   PARM                    CuFTNHScrn
       ** Insert Flag                                                                        MD036460
      C                   PARM                    PAINSF                                     MD036460
-
+ 
       ** Output - Indicia Flag
      C                   PARM                    PHasIndicia
-
+ 
       ** Build FATCA Country Code array
      C     *LOVAL        SETLL     SDCTRYL5
      C                   READ      SDCTRYL5
-
+ 
      C                   DOW       NOT %EOF(SDCTRYL5)
      C                   EVAL      CtryCodeArr(Index) = A4CNCD
      C                   EVAL      Index = Index + 1
      C                   READ      SDCTRYL5
      C                   ENDDO
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -512,4 +514,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015

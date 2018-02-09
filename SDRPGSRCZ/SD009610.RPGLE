@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys Wholesale Banking Systems 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate Local Inst for a system value')
@@ -10,16 +10,18 @@
       *  SD009610 - Validate a Midas System Value for the following:  *
       *             A valid local institution code                    *
       *                                                               *
-      *  (c) Misys Wholesale Banking Systems 2006                     *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSC027 *Create     Date 27Feb06               *
+      *  Prev Amend No. CSC027 *Create     Date 27Feb06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL041  - Add VAT Details to DL Confirmations.               *
       *            Add a new Built in Function to test that the       *
       *            value entered is a valid Institution Code          *

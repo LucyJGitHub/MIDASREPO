@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE DPMV LUX Retrieve')
@@ -12,18 +12,20 @@
       *  Function:  This module retrieves a transaction from          *
       *             the database.                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG10520           Date 09Feb06               *
-      *  Prev Amend No. BUG10274           Date 07Feb06               *
+      *  Prev Amend No. BUG10520           Date 09Feb06               *
+      *                 BUG10274           Date 07Feb06               *
       *                 CER001  *CREATE    Date 25Apr05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG10520 - No data on screen upon authorisation.             *
       *  BUG10274 - DPWI/DPWO Inset Authorise                         *
       *             Confirmation Screen is not properly displayed     *
@@ -234,4 +236,4 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

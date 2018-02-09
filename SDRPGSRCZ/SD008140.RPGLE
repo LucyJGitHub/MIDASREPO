@@ -13,15 +13,17 @@
       *            returning Stamp Tax Rates, Stamp Tax Currencies    *
       *            and for Securities, the Security Charge Code.      *
       *                                                               *
-      *  (c) Copyright Misys International Banking Systems Ltd 2010   *
+      *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. AR853257           Date 04Nov11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR853257           Date 04Nov11               *
       *                 AR821972           Date 07Sep11               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  AR853257 - Account Keys for FT were not generated            *
 /*    *  AR821972 - Stamp tax on debit interest did not generate      *
@@ -612,4 +614,4 @@
 **   ZMNM - MONTHS SHORT NAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 ** CPY@
-(c) Copyright Misys International Banking Systems Ltd. 2010
+(c) Copyright Finastra International Limited 2010

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBI *  OVRDBF FILE(SMXLIBQT) TOFILE(QADSPOBJ)                       *
 /*S*D****RPGBASEBND****************************************************                       CUP042
@@ -12,10 +12,11 @@
       *  SM0025 - Check contents of XLIB                              *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CUP042             Date 07Nov14               *
-      *  Prev Amend No. CUP041             Date 04Jun14               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CUP042             Date 07Nov14               *
+      *                 CUP041             Date 04Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,17 +25,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP042 - Changes for Bridge deliverable data split           *
       *  CUP041 - New Bridge methodology to combine menu options      *
       *  CUP016 - Add implementation software to core.                *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** File containing list of objects in "from" XLIB.
      FSMXLIBQT  IF   E             DISK
      F***SMSETULG* IFE           K DISK                                                       CUP042

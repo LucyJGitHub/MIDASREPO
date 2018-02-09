@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Populate SESECSQD file from SDCUSTPD')
@@ -9,14 +9,16 @@
       *                                                               *
       *  SMU00065 - Populate SESECSQD file from SDCUSTPD              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No.BG26993             Date 26Jan10               *
-      *  Prev Amend No.BUG16570*CREATE     Date 06Mar08               *
+      *  Prev Amend No.BG26993             Date 26Jan10               *
+      *                BUG16570*CREATE     Date 06Mar08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993  - Delivery of upgrade programs to core.             *
       *           - Renamed program S016570R01.                       *
       *  BUG16570 - Could not find record where SECUSN=Customer       *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Trade SWIFT details defaulting')              *
@@ -14,10 +14,11 @@
       *              It is based on code from original Midas program  *
       *              SE1805, subroutines SRINZA & SRINZB.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1040921          Date 07Feb13               *
-      *  Prev Amend No. 263512             Date 12Jan10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1040921          Date 07Feb13               *
+      *                 263512             Date 12Jan10               *
       *                 AR580916           Date 22Jul10               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1040921 - Time of Trade will only be defaulted when        *
       *              passed value is blank. (Child:AR1040922)         *
       *  263512 - Settlement request being reverted to 'Y' when the   *
@@ -1408,4 +1410,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

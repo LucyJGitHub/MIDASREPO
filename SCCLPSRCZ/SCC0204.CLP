@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC0204 - Midas Sign On Calls                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD045731           Date 27Sep17              */
-/*       Prev Amend No. MD031644           Date 08Jan15              */
+/*       Last Amend No. MD046248           Date 05Feb18              */
+/*       Prev Amend No. MD045731           Date 27Sep17              */
+/*                      MD031644           Date 08Jan15              */
 /*                      CGL155             Date 21Mar14              */
 /*                      MD025679A          Date 12May14              */
 /*                      MD025679           Date 12May14              */
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD045731 - Restart batch job for MT94x if not active.       */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
 /*                  Status of Interfaced FT Payments). Unable        */
@@ -65,9 +67,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /*/COPY WNCPYSRC,SCC0204INT                                          */
- 
+
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
              DCL        VAR(&RETCDE) TYPE(*CHAR) LEN(10) VALUE(' ')                       /*240093*/
@@ -92,10 +94,9 @@
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                  /*BUG14349*/
              DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)                              /*CAP084*/
              DCL        VAR(&FRSTAT) TYPE(*CHAR) LEN(1)                                /*BUG27831A*/
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
-                          2003')
- 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2003')
+
              DCL        VAR(&DTAQPREF) TYPE(*CHAR) LEN(5)                               /*AR927362*/
              DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(10)                                  /*AR927362*/
              DCL        VAR(&ERMS) TYPE(*CHAR) LEN(50)                                  /*AR927362*/
@@ -109,7 +110,7 @@
              DCL        VAR(&NJOBS) TYPE(*CHAR) LEN(1)                                  /*AR927362*/
                                                                                         /*AR927362*/
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
 /** Retrieve data area MPHAS and check if input cycle */                                /*BUG14349*/
@@ -118,34 +119,34 @@
 /**********  IF         COND(&MPHAS *NE 'A') THEN(GOTO CMDLBL(END))           */ /*BUG14349 CCB020*/
              IF         COND(&MPHAS *NE 'A' *AND &MPHAS *NE 'G') +
                           THEN(GOTO CMDLBL(END))                                          /*CCB020*/
- 
+
              RTVJOBA    TYPE(&JOBTYPE)
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           TEXT('Midas SD Local data area')
              MONMSG     MSGID(CPF1023)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
- 
+
 /*/COPY WNCPYSRC,SCC0204MPS                                          */
                                                                                           /*CAP084*/
 /* Start commitment control */                                                            /*CAP084*/
                                                                                           /*CAP084*/
              CALL       PGM(SCCMTCTL) PARM('S' &RETURNCODE)                               /*CAP084*/
- 
+
 /* Submit the Technical Platform background job */
- 
+
                    CALL       PGM(SCC0103) PARM('TP')
- 
+
 /* Access PF/SDMMODPD to determine which modules are live */
- 
+
              CALL       PGM(AOMMODR0) PARM(&RTCD '*FIRST' &FMT)
- 
+
 /*  Database error handling  */
- 
+
              IF         COND(&RTCD *NE '       ') THEN(DO)
                 SNDPGMMSG  MSG('Database error on Midas modules +
                              file') TOMSGQ(MOPERQ MRUNQ)
- 
+
 /**Call*SCC0010*to*inform*user*that*an*error*has*occurred*************/                /*MD025679A*/
 /**********                                                                            /*MD025679A*/
 /**********     RTVMSG     MSGID(SCM0074) MSGF(MIDASMSG) +                             /*MD025679A*/
@@ -158,58 +159,58 @@
 /**********     CALL       PGM(SCC0010) PARM('SCC0102' 'ENTER' ' ')                    /*MD025679A*/
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /* If the Exposure Management module is present submit the EM jobs */
- 
+
                    IF         COND(%SST(&FMT 25 1) *EQ 'Y') THEN(CALL +
                                 PGM(SCC0103) PARM('EM'))
- 
+
 /* If the TI INTERFACE MODULE is present submit the TI job         */
- 
+
                    IF   COND(%SST(&FMT 103 1) *EQ 'Y') THEN(CALL +
                           PGM(SCC0103) PARM('TI'))
- 
+
 /* If the EXPORT DATA MODULE is present submit the ED job          */
- 
+
                    IF         COND(%SST(&FMT 99 1) *EQ 'Y') THEN(CALL +
                                 PGM(SCC0103) PARM('ED'))
- 
+
 /*    Check if Citydealer Interface feature is active.             */
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SAR) VALUE('CCM002')
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CITYDLR) VALUE('Y'))
- 
+
 /*    Check if CCRM - Limits is active (CDE001)                     */
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SAR) VALUE('CDE001')
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CDE001) VALUE('Y'))
- 
+
 /*    Check if Lending PC Interface switched on (CLE010) */
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SAR) VALUE('CLE010')
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CLE010) VALUE('Y'))
- 
+
 /*    Check if Automatic Trade Settlement is on (CSE039) */
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SAR) VALUE('CSE039')
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CSE039) VALUE('Y'))
- 
+
 /*    Check if Audit Reporting is on (CGP004) */                                          /*CGP004*/
                                                                                           /*CGP004*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CGP004*/
@@ -227,7 +228,7 @@
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CAP205*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CAP205) VALUE('Y'))                                        /*CAP205*/
- 
+
 /** Check if the FT Return Status feature is on */                                      /*MD031644*/
                                                                                         /*MD031644*/
              CHGVAR     VAR(&RTCD) VALUE('       ') /*MD031644*/
@@ -265,24 +266,24 @@
                           VAR(&CGL013) VALUE('Y'))                                      /*MD045731*/
 /**/                                                                                    /*MD045731*/
 /*/COPY WNCPYSRC,SCC0204001                                        */
- 
+
 /*    If Citydealer Interface feature is on, call SCC0103.          */
- 
+
                    IF         COND(&CITYDLR *EQ 'Y') THEN(CALL +
                                 PGM(SCC0103) PARM('CD'))
- 
+
 /*    If CCRM - Limits is active, submit Data Export job             */
- 
+
                    IF         COND(&CDE001 *EQ 'Y') THEN(CALL +
                                 PGM(SCC0103) PARM('DE'))
- 
+
 /*    If Lending PC Interface switched on (CLE010)                   */
- 
+
                    IF         COND(&CLE010 *EQ 'Y') THEN(CALL +
                                 PGM(SCC0103) PARM('LE'))
- 
+
 /*    If Automatic Trade Settlement is on (CSE039) */
- 
+
                    IF         COND(&CSE039 *EQ 'Y') THEN(CALL +
                                 PGM(SCC0103) PARM('SE'))
 /**/                                                                                    /*MD045731*/
@@ -290,7 +291,7 @@
 /**/                                                                                    /*MD045731*/
                    IF         COND(&CGL013 *EQ 'Y') THEN(CALL +
                                 PGM(SCC0103) PARM('MT'))                                /*MD045731*/
- 
+
 /* If APIs SF is on, create the API DUMP information data area.    */                     /*240093*/
                                                                                           /*240093*/
              IF        COND(&CAP002 *EQ 'Y') THEN(DO)                                     /*240093*/
@@ -380,29 +381,28 @@ NEXT:                                                                           
              IF         COND(&CGP004 *EQ 'Y') THEN(CALL +
                           PGM(GOC0300))                                                   /*CGP004*/
                                                                                           /*CGP004*/
- 
+
 /*/COPY WNCPYSRC,SCC0204MPE                                          */
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
 /*/COPY WNCPYSRC,SCC0204ERR                                          */
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              IF         COND(&JOBTYPE = '0') THEN(DO)
                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                             mmCnnnn ended abnormally - see job log') +
                             TOMSGQ(MOPERQ)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
 END:
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
- 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
+
 /*/COPY WNCPYSRC,SCC0204END                                          */
- 
+
              ENDPGM

@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       SDC1776 - Update SD1724 file with unique key & accpth data */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408             DATE 10MAY95              */
-/*       PREV AMEND NO. E29436             DATE  11OCT91            */
+/*       Prev Amend No. S01408             Date 10May95              */
+/*                      E29436             Date 11Oct91              */
 /*                      E24370             DATE  19JUL91            */
 /*                      S01337             DATE  17APR91            */
 /*                      E13205             DATE  14/02/89           */
@@ -24,6 +25,7 @@
 /********************************************************************/
 /*       New program overview                                       */
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - Addition of core hook SDC1776MPS                  */
 /*       E29436 - MOVE TO SCCLSRC FROM RR.                          */
 /*       E24370 - PF/ACCPTH WAS CREATED ALLOWING ONLY 13000 RCDS    */
@@ -40,7 +42,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*           Declare variables                                       */
@@ -129,5 +131,5 @@
 /**/
 END:         ENDPGM
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/

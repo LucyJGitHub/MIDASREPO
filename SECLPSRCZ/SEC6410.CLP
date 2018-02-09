@@ -7,17 +7,18 @@
 /*                                                                   */
 /*       CL/SEC6410 - Calculate Precious Metal Account Balances      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 096390             Date 09JUL96              */
-/*       Prev Amend No. 091522             Date 16AUG95              */
+/*       Prev Amend No. 096390             Date 09Jul96              */
+/*                      091522             Date 16Aug95              */
 /*                      S01464             Date 04APR94              */
 /*                      049421     BZ      DATE 19JAN93              */
 /*                      SESCS              DATE 28AUG92              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       096390 - Non-retail precious metal accounts were excluded   */
 /*                by B5737 - remove the check on account type 'R'.   */
 /*       091522 - Safe Custody Fees - Private Banking (CSE001)       */
@@ -41,7 +43,7 @@
              PGM        PARM(&ANWD)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /************DCL        VAR(&MEM) TYPE(*CHAR) LEN(52)                 /*S01464*/
@@ -185,5 +187,5 @@
  
 /***END:*********ENDPGM                                               /*S01464*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
           ENDPGM                                                      /*S01464*/

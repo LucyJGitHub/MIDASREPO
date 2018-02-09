@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Additional Customer Dbase Updte Contrller')   *
@@ -10,10 +10,11 @@
       *  SDACUDUPC - SD Additional Customers Database                 *
       *              Update Controller                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CER045             Date 20Jul09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
       *                 BUG24746           Date 02Jul09               *
       *                 BUG24013           Date 15May09               *
       *                 CER054             Date 07Apr09               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *         - LT073: upgrade ACU3, ACU4, CUAH and CCTX to CUSD    *
       *           (Recompile)                                         *
@@ -428,4 +430,4 @@
       ********************************************************************
       /EJECT
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

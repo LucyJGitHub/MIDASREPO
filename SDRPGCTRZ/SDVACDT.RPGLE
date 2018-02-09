@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Account Review Actual Date/Time')    *
@@ -9,15 +9,17 @@
       *                                                               *
       *  SDVACDT - Validate Account Review Actual Date/Time           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD026819           Date 26Jul14               *
-      *  Prev Amend No. MD026262           Date 28May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026819           Date 26Jul14               *
+      *                 MD026262           Date 28May14               *
       *                 MD026207           Date 07Apr14               *
       *                 CSD092   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026819 - Actual Time should be in HH:MM:SS format          *
       *  MD026262 - Invalid input for Actual Date, highlights both    *
       *             actual date and scheduled date                    *
@@ -389,4 +391,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

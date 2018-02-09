@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(TABBRCCVT) TOFILE(SMBRCCVTPD)                    *
 /*STD *  RPGBASEBND                                                   *
@@ -17,17 +17,19 @@
       *            output suspect fields records to SMSUSFLDPD if     *
       *            the option is 'Y'.                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. B18716             Date 12May08               *
+      *  Prev Amend No. B18716             Date 12May08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CUP025  *CREATE    Date 21Jan04               *
+      *                 CUP025  *CREATE    Date 21Jan04               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  B18716 - Array needs to be increased.                        *
       *  CUP025 - Change branches utility                             *
       *                                                               *

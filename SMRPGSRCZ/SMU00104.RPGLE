@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Update RSACMTPD field NRTC to 0 if blank')
@@ -9,14 +9,16 @@
       *                                                               *
       *  SMU000104 - Update field NRTC on RSACMTPD to blanks if 0     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. R10.5/xx           Date  1May02               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 R10.5/xx           Date  1May02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993  - Delivery of upgrade programs to core.             *
       *           - Renamed program X.5P0601.                         *
       *  R10.5/xx - Upgrade RSACMTPD when NRTC changed from numeric   *

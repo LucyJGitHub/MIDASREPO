@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate book code for a system value')       *
@@ -10,19 +10,21 @@
       *  SD009565 - Validate a Midas System Value for the following:  *
       *             - A valid book code                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR687793           Date 01Feb11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR687793           Date 01Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSC018             Date 25Jun03               *
+      *                 CSC018             Date 25Jun03               *
       * Midas Release 4.01.03 ----------------------------------------*
       *                 CSD013  *CREATE    Date 12Sep03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR687793 - Selecting a Book Code from list was saved as "?"  *
       *             (Child: AR687794)                                 *
       *  CSC018 - High Availability Enhancements:                     *

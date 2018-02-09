@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       SEC4310   - CSE039 Initialisation - add trigger to SEMVTSPD */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK020             Date 13Aug04              */
-/*       Prev Amend No. CSE039 *CREATE     Date 10Jul03              */
+/*       Prev Amend No. CPK020             Date 13Aug04              */
+/*                      CSE039 *C *CREATE  Date 10Jul03              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK020 - Adding command to SCMNTTRIG.                       */
 /*       CSE039 - Automatic Settlement of Trades                     */
 /*                                                                   */
@@ -28,7 +30,7 @@
              DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /**/
@@ -81,5 +83,5 @@
                           TOMSGQ(MOPERQ)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

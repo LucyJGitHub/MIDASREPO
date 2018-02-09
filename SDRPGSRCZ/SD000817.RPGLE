@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Interest Payment History Threshold Reset')    *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SD000817 - Midas SD Interest Payment History Threshold Reset *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER069             Date 03Jul14               *
-      *  Prev Amend No. AR750273A          Date 20May11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER069             Date 03Jul14               *
+      *                 AR750273A          Date 20May11               *
       *                 AR756585           Date 12May11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24249           Date 09Jun09               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER069 - German Tax Enhancement                              *
       *  AR750273A - SDC000817 00001 failed (Child: AR750274)         *
       *  AR756585 - SDC000817 00001 DBERR 001 in SDCUSTPD             *

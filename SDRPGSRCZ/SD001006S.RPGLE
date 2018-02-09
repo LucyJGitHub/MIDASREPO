@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Daylight Saving Time Code Selection')
@@ -12,16 +12,18 @@
       *  Function:  This program display the records from the         *
       *             DST Code File.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG21289           Date 13Oct08               *
-      *  Prev Amend No. BUG19780           Date 03Jul08               *
+      *  Prev Amend No. BUG21289           Date 13Oct08               *
+      *                 BUG19780           Date 03Jul08               *
       *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG21289 - Various Timezone and DST errors. Applied fix 21224*
       *  BUG21224 - DST Year selection field not functioning          *
       *  BUG19780 - System accepts non-alphanumeric value (ex: ?) in  *

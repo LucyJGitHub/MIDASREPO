@@ -8,10 +8,11 @@
       *                                                               *
       *  SD008113 - Stamp Tax Deal Type Defaults                      *
       *                                                               *
-      *  (c) Copyright Misys International Banking Systems Ltd 2010   *
+      *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. AR953821           Date 17Apr12               *
-      *  Prev Amend No. AR876472           Date 20Jan12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR953821           Date 17Apr12               *
+      *                 AR876472           Date 20Jan12               *
       *                 AR837609A          Date 15Nov11               *
       *                 AR837609           Date 09Nov11               *
       *                 AR823140           Date 01Sep11               *
@@ -19,6 +20,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR953821 - Stamp Tax Rates and Effective date should be      *
       *             enabled for Term Loans                            *
       *  AR876472 - Stamp Tax ICD Maintenance ; Stamp Tax rates and   *
@@ -1259,7 +1261,7 @@
 **   ZMNM - MONTHS SHORT NAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 ** CPY@
-(c) Copyright Misys International Banking Systems Ltd. 2010
+(c) Copyright Finastra International Limited 2010
 ** ErrorMsg
 The Current Stamp Tax Rate on Loan balances
 The Current Stamp Tax Rate on Interest

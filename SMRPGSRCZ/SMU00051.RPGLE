@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Update fields on TABTB36/SDSTRDPD')
@@ -12,14 +12,16 @@
       *  Function:  Set field AUTT on TABTB36 and BVAUTH on SDSTRDPD  *
       *             to '00'.                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. CPK026  *CREATE    Date 29Jan07               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 CPK026  *CREATE    Date 29Jan07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program CPK026R01.                         *
       *  CPK026  - Update fields om TABTB36 and SDSTRDPD.             *

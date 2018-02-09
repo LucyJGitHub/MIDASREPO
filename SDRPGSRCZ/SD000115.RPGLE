@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Authority Types Maintenance')                 *
@@ -9,14 +9,16 @@
       *                                                               *
       *  SD000115 - Midas Authority Types Maintenance                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. AR797240           Date 30Jun11               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR797240           Date 30Jun11               *
+      *                 CER059             Date 19Jul10               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR797240 - New standing data tables available in the         *
       *             maintenance menu are not available in the         *
       *             enquiry menu                                      *
@@ -986,6 +988,6 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008
 ** Array Check
  0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ

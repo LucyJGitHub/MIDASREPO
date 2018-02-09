@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Watch List Bulk Data Checking module (DL)')   *
@@ -13,10 +13,11 @@
       *  Function:  This module performs Compliance Checking on       *
       *             COB Processing.                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR702741           Date 02Feb11               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -85,12 +87,12 @@
       *  CSD015 - Midas Compliance Watch - Watch List Checking        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *
       ** Compliance Watch Hit List
       *
@@ -112,44 +114,44 @@
      FMMDELDPP  IF   E             DISK    USROPN INFSR(*PSSR)
      FMMDENALL  IF   E           K DISK    USROPN INFSR(*PSSR)
      F                                     PREFIX(HX:2)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structure. They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       *
       ** Max. no. of elements associated with the CE arrays
       *
      D ArrMax          C                   CONST(23)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       *
       ** XML Opening Tags for the Compliance Engine
       *
@@ -275,14 +277,14 @@
      D  PZDay                  1      2  0
      D  PZMonth                3      4  0
      D  PZYear                 5      6  0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       *
       ** Program Parameters
       *
@@ -399,7 +401,7 @@
      D WItr            S              1  0
      D*WSum*****       S              8  0                                                    CSD027
      D WSum            S             24A                                                      CSD027
- 
+
      D PRetCode        S              7A
      D PMsg            S            132A
      D PMsgId          S              7A
@@ -407,49 +409,49 @@
      D PMsgQ           S             10A
      D PSrvContext     S               *
      D WDBASE          S              3  0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +---------------- Start of Main Processing ------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Open OFAC server
- 
+
      C                   CALL      'SDOFACOP'
      C                   PARM      *BLANK        PRetCode
      C                   PARM                    PSrvContext
- 
+
       ** Error calling SDOFACOP
- 
+
      C                   IF        PRetCode <> *BLANK
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PRetCode = '*INIT  '
      C                   EVAL      WDBASE = 53
      C                   EVAL      PMsgId = 'USR9686'
      C                   EXSR      SRSndErr
- 
+
      C                   WHEN      PRetCode = '*OPEN  '
      C                   EVAL      WDBASE = 54
      C                   EVAL      PMsgID = 'USR9687'
      C                   EXSR      SRSndErr
- 
+
      C                   WHEN      PRetCode = '*NREADY'
      C                   EVAL      WDBASE = 55
      C                   EVAL      PMsgID = 'USR9688'
      C                   EXSR      SRSndErr
- 
+
      C                   ENDSL
- 
+
       ** Perform database error
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = WDBASE
      C                   EVAL      DBKEY = PRetCode
@@ -457,7 +459,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *
       ** Begin Database Checks
       ** =====================
@@ -755,9 +757,9 @@
      C                   EVAL      W1NPCD = PZNPCD
       *
      C                   UPDATE    SDWLCCD0
- 
+
       ** Close connection with the server
- 
+
      C                   CALL      'SDOFACCL'
      C                   PARM      *BLANK        PRetCode
      C                   PARM                    PSrvContext
@@ -1645,47 +1647,47 @@
      C                   PARM                    PSrvContext
      C                   PARM                    SDWLTD
      C                   PARM                    PFreeFmtStr
- 
+
       ** Error calling SDWLENGN
- 
+
      C                   IF        PRetCode <> *BLANK
      C                   SELECT
- 
+
      C                   WHEN      PRetCode = '*ERROR '
      C                   EVAL      WDBASE = 7
- 
+
      C                   WHEN      PRetCode = '*FOFEXE'
      C                   EVAL      WDBASE = 8
      C                   EVAL      PMsgId = 'USR9680'
      C                   EXSR      SRSndErr
- 
+
      C                   WHEN      PRetCode = '*SRVNAM'
      C                   EVAL      WDBASE = 9
      C                   EVAL      PMsgId = 'USR9681'
      C                   EXSR      SRSndErr
- 
+
      C                   WHEN      PRetCode = '*DBNAME'
      C                   EVAL      WDBASE = 10
      C                   EVAL      PMsgId = 'USR9682'
      C                   EXSR      SRSndErr
- 
+
      C                   WHEN      PRetCode = '*USRNAM'
      C                   EVAL      WDBASE = 11
      C                   EVAL      PMsgId = 'USR9683'
      C                   EXSR      SRSndErr
- 
+
      C                   WHEN      PRetCode = '*PASSWD'
      C                   EVAL      WDBASE = 12
      C                   EVAL      PMsgId = 'USR9684'
      C                   EXSR      SRSndErr
- 
+
      C                   OTHER
      C                   EVAL      PMsgId = 'USR9685'
      C                   EXSR      SRSndErr
      C                   ENDSL
- 
+
       ** Perform database error either of the following return code is true
- 
+
      C                   IF        PRetCode = '*ERROR ' OR
      C                             PRetCode = '*FOFEXE' OR
      C                             PRetCode = '*SRVNAM' OR
@@ -2180,7 +2182,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2188,18 +2190,18 @@
       * SRSndErr - Send error message to *SYSOPR                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSndErr      BEGSR
- 
+
      C                   CALLB     'ZAMSGTOMSQ'
      C                   PARM                    RetCodeOut
      C                   PARM      'SD000015'    PMsg
      C                   PARM                    PMsgId
      C                   PARM      'GBSDUSRMSG'  PMsgF
      C                   PARM      'MOPERQ    '  PMsgQ
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2357,7 +2359,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -2368,36 +2370,36 @@
       *          This subroutine DUMPs the program just once.             *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
       ** Close connection with the server
- 
+
      C                   CALL      'SDOFACCL'
      C                   PARM      *BLANK        PRetCode
      C                   PARM                    PSrvContext
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** CTDATA XOT - XML Opening Tags for the Compliance Engine.
 <Receipt Our Nostro>
 <Receipt Inter. Bank>

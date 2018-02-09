@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SDC8000 - SD Menu Option Control for SD Authorisation       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. CGL165             Date 17Feb15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL165             Date 17Feb15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG6431            Date 01Apr05              */
+/*                      BUG6431            Date 01Apr05              */
 /*                      BUG4654            Date 04Nov04              */
 /*                      BUG3362            Date 28Jul04              */
 /*                      CSD012  *Create    Date 15Oct02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL165 - Dual Withholding Tax (Recompile)                   */
 /*       BUG6431 - CDL031 Authorisation Log problems                 */
 /*       BUG4654 - Authorisation of Account input/amend/delete       */
@@ -36,7 +38,7 @@
  
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&NOREPLY) TYPE(*CHAR) LEN(1)
@@ -143,5 +145,5 @@ RUN:
              RCLRSC
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  END:        ENDPGM

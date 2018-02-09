@@ -8,10 +8,11 @@
 /*                                                                   */
 /*       SFC0932 - RESTRICTED ACCOUNTS SECURITY CONTROL - COB        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. AR1097217          Date 25Mar13              */
-/*       Prev Amend No. CCB023B            Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097217          Date 25Mar13              */
+/*                      CCB023B            Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1097217 - DBICDM in use                                   */
 /*       CCB023B - COB Restructure - Input Cycle Termination         */
 /*                 Restructuring                                     */
@@ -29,7 +31,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
              DCL  VAR(&SEQ)  TYPE(*CHAR)  LEN(5)
@@ -93,6 +95,6 @@ WAIT:          ALCOBJ     OBJ((DBICDM *FILE *EXCL)) WAIT(3)                     
                   MONMSG MSGID(CPF0000 MCH0000)
  
  END:        RCLRSC
-             CHGVAR     VAR(&MKICPY) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+             CHGVAR     VAR(&MKICPY) VALUE('(c) Finastra International +
+                          Limited 2005')
  ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Bulk trade input LUX screen')
@@ -13,19 +13,21 @@
       *                                                               *
       *  Called By: SE3002  - Review trades for bulk input            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. BUG10629           Date 21Feb06               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BUG10629           Date 21Feb06               *
       *                 BUG10589           Date 16Feb06               *
       *                 CER001  *CREATE    Date 11Aug05               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BUG10629 - Error msg for transaction time is missing         *
       *             (Recompile)                                       *
@@ -1112,4 +1114,4 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

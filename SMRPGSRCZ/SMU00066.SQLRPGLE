@@ -1,6 +1,6 @@
 /*******************************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c)Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Populate Customer Number Field')
@@ -10,14 +10,16 @@
       *                                                               *
       *  SMU00066 - Utility for populating Customer Number Field      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c)Finastra International Limited 2008                       *
       *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 01Jan10               *
-      *  Prev Amend No. BUG16705*CREATE    Date 05Mar08               *
+      *  Prev Amend No. BG26993            Date 01Jan10               *
+      *                 BUG16705*CREATE    Date 05Mar08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993  - Delivery of upgrade programs to core.             *
       *           - Renamed program S016705R01.                       *
       *  BUG16705 - The system should automatically generate customer *
@@ -31,7 +33,7 @@
       *
       ** Dynamic SQL statement work field
      D WSTRSQL         S           1000A   INZ(*BLANKS)
- 
+
      D KCNUM           S              6A
       *
       *****************************************************************
@@ -44,7 +46,7 @@
      C                   IN        CNLU
      C                   Eval      KCNUM = CNLU
      C     KCNUM         CHAIN     SDCUSTL0
- 
+
      C                   IF        %FOUND
      C                   EXSR      SRCMRK
      C                   EXSR      SRACUS
@@ -76,7 +78,7 @@
       *
       *
       ** Check for error in SQL execution
- 
+
      C                   IF        SQLCOD <> 0  And SQLCOD <> 100
      C                   MOVEL     'S016705'     DBPGM
      C                   MOVEL     'SDCMRKPD'    DBFILE
@@ -85,7 +87,7 @@
       *
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -99,9 +101,9 @@
      C                                        ''''+ BBCUST + '''' +
      C                                        ' WHERE E5CUST = ' +
      C                                        '''      '''
- 
+
       ** Execute command
- 
+
      C                   EXSR      POPRTN
       *
       ** Check for error in SQL execution
@@ -113,7 +115,7 @@
       *
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -141,7 +143,7 @@
       *
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -168,7 +170,7 @@
       *
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -194,7 +196,7 @@
       *
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -220,7 +222,7 @@
       *
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -246,7 +248,7 @@
       *
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -256,13 +258,13 @@
      C     POPRTN        BEGSR
       *
       * Prepare SQL statement
- 
+
      C/EXEC SQL
      C+ PREPARE S1 FROM :WSTRSQL
      C/END-EXEC
- 
+
       * Execute SQL statement
- 
+
      C/EXEC SQL
      C+ EXECUTE S1
      C/END-EXEC
@@ -290,6 +292,6 @@
      C                   ENDSR
       *
       *****************************************************************
- 
+
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c)Finastra International Limited 2008

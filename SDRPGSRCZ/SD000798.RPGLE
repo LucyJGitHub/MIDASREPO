@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas Limit Utilisation Report')                       *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SD000798 - Midas SD Limit Utilisation Report                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CER070             Date 25Nov14               *
       *                 CDL096             Date 22Sep14               *
       *                 CER069             Date 03Jul14               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -2109,7 +2111,7 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008
 **  ArrSet (30)  Auswahl/Steuerung  (Report Text)
 INDIVIDUAL CUSTOMER=          CUSTOMER:
 ACCOUNT OFFICER=              TAX TYPE=

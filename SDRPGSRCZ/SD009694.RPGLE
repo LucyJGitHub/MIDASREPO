@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate FATCA Effective Start Date')         *
@@ -9,14 +9,16 @@
       *                                                               *
       *  SD009694 - Validate FATCA effective start date               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD027632           Date 23Jul14               *
-      *  Prev Amend No. MD026489           Date 27Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027632           Date 23Jul14               *
+      *                 MD026489           Date 27Apr14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027632 - Several Zonal System Values Displays Multiple     *
       *             Error Messages on Invalid Input in some of        *
       *             Specific Fields. Apply Fix MD028114               *

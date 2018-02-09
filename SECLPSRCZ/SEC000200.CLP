@@ -7,12 +7,14 @@
 /*                                                                   */
 /*       CLP/SEC000200 - Midas Initialisation Program for CSW210     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. CSW210    *CREATE   Date 04May10             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSW210  *CREATE    Date 04May10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSW210 - Swift 2010 Changes                                 */
 /*                                                                   */
 /*********************************************************************/
@@ -24,7 +26,7 @@
              DCL        VAR(&RETCODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&RESMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2010')
              DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ERRCOD) TYPE(*DEC ) LEN(1)
@@ -103,7 +105,7 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd. 2010')
+                          Finastra International Limited 2010')
  
              ENDPGM
  

@@ -8,20 +8,22 @@
 /*     SDC2500 - Duplicate Midas files for use by CMG               */
 /*               software (this is a client SAR).                   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CSC056            Date 06Aug12               */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC056             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408            Date  10May95             */
+/*                      S01408             Date 10May95              */
 /*                      E40459            DATE  04JUN92             */
 /*                      S01371            DATE  10APR92             */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC056 - COB Restructure - SC COB Optimisation Phase 1     */
 /*       S01408 - Addition of core hook SDC2500MP1                  */
 /*       E40459 - S01362 put in a call to access program AOSARDR0,  */
@@ -46,7 +48,7 @@
 /*   Declare Variables    */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /**********  DCL        VAR(&SRTCD) TYPE(*CHAR) LEN(7)             */                     /*CSC056*/
@@ -167,6 +169,6 @@
 /**********  CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD)   */          /*E40459*/ /*CSC056*/
 /* */                                                                /*E40459*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                  /*E40459*/
 /**/

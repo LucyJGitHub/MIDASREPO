@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM CAP210 Migration Utility for STRANF File')    *
@@ -12,13 +12,15 @@
       *  Function:  This program provides transaction number to       *
       *             previous STRANF records                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD025682           Date 19Aug14               *
-      *  Prev Amend No. AR1096788 *CREATE  Date 18Mar13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025682           Date 19Aug14               *
+      *                 AR1096788 *CREATE  Date 18Mar13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025682 - STRANH needs updating else COB fails.             *
       *  AR1096788 - DLAA details should be written in core STRANF    *
       *              file instead of the new DLSTRANFPD file          *

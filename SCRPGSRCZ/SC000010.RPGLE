@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys Internatinal Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SC Check if Kill Object Lock has run')
@@ -11,16 +11,18 @@
       *             If so then the trigger maintenance program can    *
       *             be called.                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BG7613  *CREATE    Date 29Jun05               *
+      *  Prev Amend No. BG7613  *CREATE    Date 29Jun05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG7613 - File locks on re-opening IC                         *
       *                                                               *
       *****************************************************************
@@ -148,4 +150,4 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

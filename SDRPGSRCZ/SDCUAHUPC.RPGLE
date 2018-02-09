@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Customer/Authority Dbase Update Cntroller')   *
@@ -10,13 +10,15 @@
       *  SDCUAHUPC - SD Customer/Authority Holders Database Update    *
       *              Controller                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG26903 *CREATE   Date 15Jan10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26903 *CREATE   Date 15Jan10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26903 - Background job DBU_CUAH fails                     *
       *                                                               *
@@ -353,4 +355,4 @@
       /EJECT
       *****************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

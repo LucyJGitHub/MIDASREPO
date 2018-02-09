@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD FATCA Indicia Search Tool')                   *
@@ -14,10 +14,11 @@
       *             Indicia search. The tool runs in Information and  *
       *             Update modes.                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD025321           Date 16Sep14               *
-      *  Prev Amend No. MD027258           Date 05Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025321           Date 16Sep14               *
+      *                 MD027258           Date 05Aug14               *
       *                 MD027355A          Date 06Jun14               *
       *                 MD027360           Date 06Jun14               *
       *                 MD027172           Date 28May14               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025321 - Scroll Bar should be removed when there is only   *
       *             only 1 page of selection                          *
       *  MD027258 - Second screen becomes default on entry            *
@@ -1199,7 +1201,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 ** ##OV1
 ALCOBJ OBJ((SDFTCSPD *FILE *EXCL)) WAIT(10)
 ** ##OV2

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('MIDAS SD Network Transaction Code')                    *
@@ -12,13 +12,15 @@
       *  Function : This module validates *GVC Network transaction    *
       *             code for AWVGVCDefault system value.              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CGL152             Date 02Dec13               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL152             Date 02Dec13               *
+      *                 CER059             Date 19Jul10               *
       *                 CER044  *CREATE    Date 19May08               *
       *                                                               *
       *****************************************************************
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL152 - Include Transaction Type Identification Code on     *
       *           MT940/MT950 (Recompile)                             *
       *  CER059 - German Feature Upgrade to Delhi                     *

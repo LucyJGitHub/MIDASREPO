@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM MIACOB field text chg for zone')
@@ -13,12 +13,13 @@
       *             zone menu items files with MIACOB field as it is  *
       *             reused as Phase G restriction flag.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Last Amend No. AR1067493 *CREATE  Date 12Dec12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1067493 - COBOP Upgrade programs amendment                 *
       *                                                               *
       *****************************************************************
@@ -28,11 +29,11 @@
        EXEC SQL
         label on column SFMENUPD
         ( MIACOB text is 'Phase ''G'' Restricted?');
- 
+
        EXEC SQL
         label on column SFMENUPD
         ( MIACOB is 'Phs ''G'' Rstrct?');
- 
+
                  Return;
       /EJECT
        //-------------------------------------------------------------*

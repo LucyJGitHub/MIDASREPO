@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       RELEASELVL - Enter release level                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. AR875960           Date 20Dec11              */
-/*       Prev Amend No. BUG27791  *CREATE  Date 26May10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR875960           Date 20Dec11              */
+/*                      BUG27791 *CREATE   Date 26May10              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR875960 - Correction of Release Level to BFMidas 2.0       */
 /*       BUG27791 - Identify 'from' release more easily              */
 /*                                                                   */

@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SEC6780 - SE ER Gen Forward Events Cust/Book Allocation     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408             DATE 10MAY95              */
-/*       PREV AMEND NO. S01496             DATE 25OCT94              */
+/*       Prev Amend No. S01408             Date 10May95              */
+/*                      S01496             Date 25Oct94              */
 /*                      S10978             DATE 30APR93              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - Addition of core hook SEC6780MPS                   */
 /*       S01496 - Incorporation of Jyske Enhancements (S10978)       */
 /*       S10978 - JYSZRH: EARLY REDEMPTIONS                          */
@@ -35,7 +37,7 @@
  
 /* Declare PGM Variables */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
@@ -192,5 +194,5 @@
 /***ENDCLPGM:    ENDPGM                                            */ /*S01496*/
 ENDCLPGM:                                                             /*S01496*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01496*/

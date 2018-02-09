@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Populate AML Acc Holdings Details Import')    *
@@ -13,10 +13,11 @@
       *  Function:  This program will populate the AML Account        *
       *             holdings details import table.                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD033670           Date 23Jun15               *
-      *  Prev Amend No. MD032254           Date 23Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033670           Date 23Jun15               *
+      *                 MD032254           Date 23Jun15               *
       *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033670 - BNI SG Midas to SAM Interface File Duplicate Data *
       *  MD032254 - Customer not found. Used the Customer Branch      *
       *             instead of the Account Branch.                    *
@@ -250,4 +252,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

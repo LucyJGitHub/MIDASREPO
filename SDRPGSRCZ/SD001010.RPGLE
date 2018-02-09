@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Initialize Year in DST File')
@@ -12,15 +12,17 @@
       *  Function:  This program updates the DST File with the        *
       *             year coming from SDBANKPD                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG20220A          Date 25Jun08               *
-      *  Prev Amend No. BUG19113 *CREATE   Date 06Jun08               *
+      *  Prev Amend No. BUG20220A          Date 25Jun08               *
+      *                 BUG19113 *CREATE   Date 06Jun08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG20220A- Duplicate key error encountered in initialisation *
       *  BUG19113 - CSW208 Initialization pgm - SD001003              *
       *                                                               *
@@ -248,4 +250,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

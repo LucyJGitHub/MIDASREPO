@@ -7,19 +7,21 @@
 /*                                                                   */
 /*  SDC1101  - Available Customer Number Report Prompt.              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*  Last Amend No. BG12497                 Date 20Nov06              */
+/*       Prev Amend No. BG12497            Date 20Nov06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  Prev Amend No. E27499                      Dste 10Oct91          */
+/*                                         Date                      */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  BG12497 - Conversion Of Customer Number to Alpha                 */
 /*  E27499 - New program to allow 1) input of customer number        */
 /*           range to report on. 2) type of report to produce.       */
@@ -44,7 +46,7 @@
              DCL        VAR(&POSN5) TYPE(*CHAR) LEN(1)
              DCL        VAR(&POSN6) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCLF       FILE(SDC1101DF)
  
@@ -54,7 +56,7 @@
                           CMDLBL(ABNOR))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* Set-off Database Error Switches */
  

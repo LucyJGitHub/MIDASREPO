@@ -7,12 +7,13 @@
 /*                                                                   */
 /*  SFC0400 - SET UP MULTIBRANCHING DATA AREAS                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1072179          Date 13Feb13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1072179          Date 13Feb13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 247277             Date 24May07              */
+/*                      247277             Date 24May07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      BUG1699            Date 31Mar04              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1072179 - APISERVFL and APISERVMQ jobs on MSGW            */
 /*       247277 - Need to cater for native JDBC driver.              */
 /*       BUG1699 - Unable to recreate ZMUSER                         */
@@ -41,7 +43,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&ERRCOD) TYPE(*DEC) LEN(1)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)             /*E28090*/
@@ -131,6 +133,6 @@
  
  JUMP:       CALL       PGM(SF0400)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM:      ENDPGM

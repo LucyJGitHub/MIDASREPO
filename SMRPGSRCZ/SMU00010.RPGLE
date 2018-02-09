@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Initialise new field on EDBUTFPD')
@@ -9,16 +9,18 @@
       *                                                               *
       *  SMU00010 - Initialise new field on EDBUTFPD                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *   Last Amend No. BG26993               Date 26Jan10           *
-      *   Prev Amend No. CED002  *CREATE       Date 29Feb00           *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 CED002  *CREATE    Date 29Feb00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program CED00201.                          *
       *  CED002  - Created for Midas ED Enhancements                  *

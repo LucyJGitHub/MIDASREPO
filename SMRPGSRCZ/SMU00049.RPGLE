@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Add new SDBROKPD records if missing')
@@ -9,14 +9,16 @@
       *                                                               *
       *  SMU00049 - Add New SDBROKPD Records If Missing.              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. CPK016  *CREATE    Date 10Jun03               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 CPK016  *CREATE    Date 10Jun03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Rename program CPK016R01.                          *
       *  CPK016  - Preparation for Global Processing.                 *

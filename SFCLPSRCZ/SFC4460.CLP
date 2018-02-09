@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SFC4460 -  SESSION MANAGER                                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSF002             Date 11Aug03              */
+/*       Prev Amend No. CSF002             Date 11Aug03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01405             Date 03Dec92              */
+/*                      S01405             Date 03Dec92              */
 /*                      AUS025             Date 13Feb91              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSF002 - Global Processing                                  */
 /*                Remove the command which sets up SFC0600 as the    */
 /*                program to be called when Attention Key is pressed */
@@ -65,7 +67,7 @@
              DCL        VAR(&MSGFLIB)   TYPE(*CHAR) LEN(10)
              DCL        VAR(&ERRORSW)   TYPE(*LGL)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /************DCLF       FILE(SDC4460DF) */                            /*S01405*/
@@ -349,6 +351,6 @@ ERROR3:      RCVMSG MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
 /** Change value of &BISCPY to avoid error of its declaration.     */ /*S01405*/
 /* */                                                                 /*S01405*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */                                                                 /*S01405*/
 ENDPGM:      ENDPGM

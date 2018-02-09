@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SCC2453 - PROCESS NEXT WORKING DAY                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01495             DATE 01OCT94              */
-/*       PREV AMEND NO. 046763             DATE 07MAY93              */
+/*       Prev Amend No. S01495             Date 01Oct94              */
+/*                      046763             Date 07May93              */
 /*                      S01375                  03APR92              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01495 - COB Enhancements.                                  */
 /*       046763 - Check Input Cycle Initiation not AUTOCOB           */
 /*       S01375 - Auto COB amendments                                */
@@ -31,7 +33,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* File of on-request reports  */
@@ -50,7 +52,7 @@
 /* Copyright statement defination at runtime */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
              SNDPGMMSG  MSG('Process Auto COB next working day') +
                           TOMSGQ(MOPERQ)                             /*S01495*/

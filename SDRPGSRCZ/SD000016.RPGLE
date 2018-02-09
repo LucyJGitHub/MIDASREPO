@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Watch list bulk data checking module (FT)')   *
@@ -13,10 +13,11 @@
       *  Function:  This module will check all data per function code *
       *             for Funds Transfer                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CAP212             Date 15Sep14               *
-      *  Prev Amend No. AR702741           Date 02Feb11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP212             Date 15Sep14               *
+      *                 AR702741           Date 02Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API (Recompile)                  *
       *  AR702741 - Include location as parameter in ZFREQB to        *
       *             determine the next settlement date                *
@@ -2932,7 +2934,7 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 **  ArrWatch
 <Sender>
 </Sender>

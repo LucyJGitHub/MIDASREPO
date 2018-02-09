@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCMNTTRIG - Maintain Triggers                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. CCB022             Date 06Aug12              */
-/*       Prev Amend No. 261725             Date 27Jul12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB022             Date 06Aug12              */
+/*                      261725             Date 27Jul12              */
 /*                      AR725021           Date 14Mar11              */
 /*                      BUG27884           Date 08Jul10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB022 - COB Restructure - COB File Manager                 */
 /*       261725 - Added WRKOBJLCK command if file locking occurs.    */
 /*       AR725021 - Reversal of applied 243463 fix (Child: AR725022) */
@@ -108,7 +110,7 @@
  
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /* Global monitor message */
@@ -535,7 +537,7 @@ END:
              IF         COND(&ALCOBJERR = 'Y') THEN(CHGJOB +
                           SWS(XXXXXX11))                                                  /*244609*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)

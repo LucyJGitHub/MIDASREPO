@@ -11,10 +11,11 @@
       *  Function:  This program allows user to enquire/maintain      *
       *             the current setting of a System Value.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD042517           Date 18Nov16               *
-      *  Prev Amend No. AR994044           Date 26Jun12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042517           Date 18Nov16               *
+      *                 AR994044           Date 26Jun12               *
       *                 AR796650           Date 27Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP205             Date 23Mar10               *
@@ -33,6 +34,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042517 - Unknown error message displayed.  Display error   *
       *             message if #1EMSG is not blank.  This error       *
       *             manifested during CSD095CC1 testing.              *
@@ -1272,6 +1274,6 @@
       *================================================================
      O*
 ** CPY@     : Copyright notice for inclusion in all programs
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003
 ** PGM@     : Programs to call
 SDC009520

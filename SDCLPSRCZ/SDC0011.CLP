@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       SDC0011 - Midas     Client Details Enquiry Control          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK024             Date 12Apr06              */
+/*       Prev Amend No. CPK024             Date 12Apr06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             Date 28MAY96              */
+/*                      S01408             Date 28May96              */
 /*                      083833  *CREATE    Date 24FEB95              */
 /*                      Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK024 - Packaging of MPlus 1.2.1. Copy sources needed by   */
 /*                UTC0012.                                           */
 /*       S01408 - Core hook SDC0011002 added.                        */
@@ -38,7 +40,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Declare the variables to check the enhancements file */
@@ -159,7 +161,7 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /***COPY*SDCPYSRC,SDC0011END*                                        */                   /*CPK024*/
 /*/COPY WNCPYSRC,SDC0011END                                          */                   /*CPK024*/

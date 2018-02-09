@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       SEC0612E - POSITION SETTLEMENTS GENERATED REPORTS           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. CEU017             DATE 06MAY98              */
-/*       PREV AMEND NO. CSE007             DATE 03FEB98              */
+/*       PREV AMEND NO. CEU017             DATE 06MAY98              */
+/*                      CSE007             DATE 03FEB98              */
 /*                      S01496             DATE 24OCT94              */
 /*                      S01117             DATE 08JAN91              */
 /*                      E16870             DATE 08/03/89             */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CEU018 - Securities Redenomination Euro Changes             */
 /*       CSE007 - Corporate Actions                                  */
 /*       S01496 - Incorporation of Jyske Enhancements (S10978)       */
@@ -41,7 +43,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
              DCL        VAR(&LDA)     TYPE(*CHAR)  LEN(256)
@@ -207,5 +209,5 @@
  
 /*ENDPGM:******ENDPGM                                                * *S01117*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01117*/

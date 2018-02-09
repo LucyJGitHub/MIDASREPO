@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*X**A***OVRDBF*FILE(OBJLCK)*TOFILE(OBJECTLOCK)************************                      BUG6221
 /*XBIA*  OVRDBF FILE(OBJLCK) TOFILE(OBJECTLOCK) LVLCHK(*NO)           *                      BUG6221
@@ -11,10 +11,11 @@
       *                                                               *
       *  SCKOBJLCOB - Kill Object Locks in COB                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD024937           Date 07May14               *
-      *  Prev Amend No. MD021351           Date 06May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024937           Date 07May14               *
+      *                 MD021351           Date 06May14               *
       *                 AR584600           Date 10Jun13               *
       *                 CCB023             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024937 - SCKLEXTD works incorrectly in case file field     *
       *             contains symbol % in the first position           *
       *  MD021351 - Design for Kill object locks                      *

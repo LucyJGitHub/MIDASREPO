@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       SEC6440 - Safe Custody Fees Drop Off                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BUG14358           Date 16Jul07              */
-/*       Prev Amend No. BG13371            Date 14Feb07              */
+/*       Prev Amend No. BUG14358           Date 16Jul07              */
+/*                      BG13371            Date 14Feb07              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      236859             Date 10Aug04              */
 /*                      228542             Date 10Aug04              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG14358 - Reverse Fix 236859                               */
 /*       BG13371 - File name typo in CLRPFM                          */
 /*       236859 - DB Error CB0180, at 01, file CBAUDTL1, key SEC6440 */
@@ -39,7 +41,7 @@
              PGM PARM(&CNAM &CSEQ)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
@@ -260,5 +262,5 @@ ABNOR:
              ENDDO
 /**/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCMINIT -  STARTS OR RE-OPENS THE INPUT CYCLE               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020B            Date 06Aug12              */
-/*       Prev Amend No. CSD083             Date 27May10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020B            Date 06Aug12              */
+/*                      CSD083             Date 27May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      243665             Date 24Apr07              */
@@ -77,6 +78,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020B - COB Restructure - Secondary COB Infrastructure    */
 /*       CSD083 - Watch List Compliance Upgrade                      */
 /*       243665 - Reset MPHAS if error, don't fail if CB files locked*/
@@ -167,7 +169,7 @@
 /*/COPY WNCPYSRC,SCMINITINT                                   */      /*S01408*/
 /**/                                                                  /*S01408*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        &PRM01        TYPE(*CHAR)  LEN(8)
              DCL        &ERROR        TYPE(*CHAR)  LEN(1) VALUE('0')
@@ -1033,6 +1035,6 @@ ABNORMAL:
 /************RETURN****************************************************E14071*/
 RETURN:      RETURN                                                  /*E14071*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM     /* END CL PGM */
 /********************************************************************/

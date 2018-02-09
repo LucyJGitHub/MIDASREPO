@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Trade SWIFT details defaulting TRADSDX2')     *
@@ -10,14 +10,15 @@
       *  SETSWX2DFT - Securities Trade SWFIT Details Defaulting       *
       *               TRADSDX2                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSW206E            Date 24Aug06               *
+      *                 CSW206E            Date 24Aug06               *
       *                 CSW206D            Date 24Aug06               *
       *                 CSD031             Date 10Apr06               *
       *                 237295             Date 23Jan06               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes                                  *
       *  CSW206E - Change Control for SWIFT 2006 Standard Changes     *
       *  CSW206D - Change Control for SWIFT 2006 Standard Changes     *
@@ -579,4 +581,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

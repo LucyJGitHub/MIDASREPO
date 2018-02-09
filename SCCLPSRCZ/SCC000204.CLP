@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       SCC000204 - Midas Plus Sign On Submit background job        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD034158           Date 04Jun15              */
-/*       Prev Amend No. MD026169           Date 04Apr14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD034158           Date 04Jun15              */
+/*                      MD026169           Date 04Apr14              */
 /*                      MD025679A          Date 21Mar14              */
 /*                      MD025679           Date 13Mar14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD034158 - Job SCC007001 missing due to lock on SCBKJOBMON. */
 /*                  Deallocate SCBKJOBMON when MPHAS <> 'C'.         */
 /*       MD026169 - GO_ONL_OLP background job is processing          */
@@ -45,7 +47,7 @@
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
 /**********  DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2) */                     /*AR687098 MD025679*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2006')
  
 /* Allocate SCBKJOBMON */                                                               /*MD025679*/
@@ -86,7 +88,7 @@
              ENDDO
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              RCLACTGRP  ACTGRP(*ELIGIBLE)                                               /*MD026169*/
              MONMSG     MSGID(CPF0000)                                                  /*MD026169*/

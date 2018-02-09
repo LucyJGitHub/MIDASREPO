@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Commodity Details Maintenance')               *
@@ -11,14 +11,16 @@
       *                                                               *
       *  Function : This program maintains commodity details record   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CSW215             Date 06Apr15               *
       *                 CMG003  *CREATE    Date 04Oct12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016                                  *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  CMG003 - SWIFT MT600 Message Generation                      *
@@ -1741,4 +1743,4 @@ F3=Main Menu   F10=Delete   F12=Previous
 F3=Main Menu
 F3=Main Menu   F12=Previous
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

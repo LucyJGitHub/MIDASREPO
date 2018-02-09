@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Migrate Account Officers')
@@ -13,17 +13,19 @@
       *            SDACOFPD that are not in GPACOFXPD.  The user      *
       *            can amend the Global Account Officer ID only.      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 242534  *CREATE    Date 05Oct06               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Prev Amend No. 242534  *CREATE    Date 05Oct06               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  242534 - Migration of Account Officers.                      *
       *                                                               *
       *****************************************************************

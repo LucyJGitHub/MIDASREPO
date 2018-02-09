@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Initialise BBTICS and BBSWFI fields to N')
@@ -9,14 +9,16 @@
       *                                                               *
       *  SMU00059 - Initialise BBTICS for TI Interface.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BG26993            Date 26Jan10               *
-      *  Prev Amend No. CTI001 *CREATE     Date 29Feb00               *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 CTI001 *C *CREATE  Date 29Feb00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program CTI00101.                          *
       *  CTI001  - Midas-Trade Innovation Interface:                  *

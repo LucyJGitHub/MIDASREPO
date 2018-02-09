@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Tax Deducted Report - By Customer')           *
@@ -12,10 +12,11 @@
       *  Function:  This module generates Annual Tax Deducted         *
       *             statement.                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG24029           Date 20May09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG24029           Date 20May09               *
       *                 CER054             Date 07Apr09               *
       *                 BUG22580           Date 02Feb09               *
       *                 CER047             Date 19May08               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG24029 - COB Error RE3662 Database Error                   *
       *  CER054 - German Features - Church Tax (Recompile)            *
@@ -907,4 +909,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

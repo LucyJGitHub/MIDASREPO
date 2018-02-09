@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       SCC0430 - Replicate data for Switchable Feature             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG10771 *CREATE   Date 12Apr06              */
+/*       Prev Amend No. BUG10771 *CREATE   Date 12Apr06              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG10771 - Automatically replicate SFMENUPD to GZSFMENUPD   */
 /*                  and SCSARDPD to GZSCSARDPD.                      */
 /*                  Then call APCCRTNDFL                             */
@@ -25,7 +27,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c)  +
-                          Misys International Banking Systems Ltd.   +
+                          Finastra International Limited +
                           2006')
  
 /* Global monitor message */
@@ -50,6 +52,6 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

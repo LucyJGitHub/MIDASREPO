@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Hedging ICD Enquiry/Maintenance')
@@ -14,14 +14,15 @@
       *                                                               *
       *  Component of: SD000744                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. BUG10772           Date 07Mar06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG10772           Date 07Mar06               *
       *                 BUG9476            Date 11Dec05               *
       *                 235237             Date 28Jul05               *
       *                 CAS011             Date 16May05               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG10772 - Decimal-data on write to SDHEDGPD                 *
       *  BUG9476- Exclued Accrued Interest in Unrealized Profit and   *

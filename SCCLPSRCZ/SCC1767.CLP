@@ -7,10 +7,11 @@
 /*                                                                  */
 /*       SCC1767 - SAVE A MIDAS LIBRARY                             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR813190           Date 09Aug11              */
-/*       Prev Amend No. AR787620           Date 10Jun11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR813190           Date 09Aug11              */
+/*                      AR787620           Date 10Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CCB016             Date 31Oct07              */
 /*                      CSC039             Date 18Aug08              */
@@ -34,6 +35,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR813190 - Apply fix AR799678 (Child: AR813191)             */
 /*       AR799678 - ICIFINISH failed component at the live system    */
 /*                  IO. When saving files that may be in use by      */
@@ -86,7 +88,7 @@
 /*           Copyright statement definition                          */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   Declare variables                                              */
@@ -158,7 +160,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
              SNDPGMMSG  MSG('Save a Midas Library') TOMSGQ(MRUNQ)
 /**/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AP Start/End the API database updaters')         *
@@ -12,10 +12,11 @@
       *  Function:  This program prompts for specific database        *
       *             updaters to be started or ended.                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR1005781A         Date 19Dec12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. AR1005781          Date 19Dec12               *
+      *                 AR1005781          Date 19Dec12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1005781A - Start DB Updater jobs fails with parm mismatches*
       *             - Additional parameter added due to switching on  *
       *               of CSD087 (Profit Centre Default Matrix)        *
@@ -724,6 +726,6 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 **  ERR
 Valid values are 'Y' or 'N'

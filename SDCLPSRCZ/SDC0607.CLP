@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       SDC0607 - BASE RATES UPDATE                                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG3393            Date 24Jan04              */
+/*       Prev Amend No. BUG3393            Date 24Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Prev Amend No. 186713             Date 26Jan01              */
+/*                      186713             Date 26Jan01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      074135             Date 11Aug94              */
 /*                      S01267                  DATE  10MAY90       */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG3393 - Component fails with file SDBSHSP0 not found.     */
 /*       186713 - SD0600 calls MC0440 but no security copies        */
 /*                taken of MCACHRPD.                                */
@@ -49,7 +51,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*S01267*/
              DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10) +
                            VALUE('  DPLIB')                           /*186713*/
@@ -59,7 +61,7 @@
 /*   SET UP COPYRIGHT  */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/                                                                  /*S01267*/
 /*   SET OFF SWITCHES  */                                             /*S01267*/
 /**/                                                                  /*S01267*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Dealing/Standing Data Drop Process 2')        *
@@ -15,10 +15,11 @@
       *  Called By: SDC001321 - Midas SD Dealing/Standing Data Drop   *
       *                         Process 2                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CSW216             Date 14Mar16               *
       *                 CSW214             Date 25Nov14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD023877           Date 30Nov13               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
@@ -62,13 +64,13 @@
      D WDtype          S              2
      D WDelete         S              1
      D WRun            S              1
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ C-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      C                   EXSR      INIT
       *
       ** Read records in MGF300TR
@@ -135,19 +137,19 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
       ** Check to see that *PSSR has not already been called.
- 
+
      C                   IF        WRUN = *BLANK
      C                   EVAL      WRUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************

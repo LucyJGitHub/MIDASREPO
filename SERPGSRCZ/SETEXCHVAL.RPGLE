@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Trade Exchange Rates Validation')
@@ -9,20 +9,22 @@
       *                                                               *
       *  SETEXCHVAL - Trade Exchange Rates Validation                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGL029             Date 01Sep03               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend NO. 156689             Date 18Mar99               *
+      *                 156689             Date 18Mar99               *
       *                 CAP003  *CREATE    Date 28Jan98               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  156689 - ZASIGN To Recognize '.' or ',' as decimal separator *
       *  CAP003 - Conversion of SE inputs into modular structure to   *
@@ -702,7 +704,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** AP - Array of powers of 10.
 0000000001
 0000000010

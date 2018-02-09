@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       SDC1324  - Call to Reporting Structures Report Prompt.      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 053729             DATE 04AUG93              */
-/*       PREV AMEND NO. RT0159             DATE 25JUN91              */
+/*       Prev Amend No. 053729             Date 04Aug93              */
+/*                      RT0159             Date 25Jun91              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       053729 - Variable &PARAM should be set up with the report   */
 /*                parameter passed into the program, before calling  */
 /*                SD1324 with &PARAM as one of the passed parameters.*/
@@ -41,7 +43,7 @@
              DCL        VAR(&PARAM) TYPE(*CHAR) LEN(1)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* Global monitor message */
@@ -49,7 +51,7 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /* Set-off Database Error Switches */
 /**/

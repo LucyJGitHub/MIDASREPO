@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       JRNZONE - Journaling maintenance                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. BUG27134 *CREATE    Date 08Oct08             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27134 *CREATE    Date 08Oct08             */
 /*                      xxxxxx             Date                      */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27134- Command to start, reset or end journaling.        */
 /*                                                                   */
 /*********************************************************************/

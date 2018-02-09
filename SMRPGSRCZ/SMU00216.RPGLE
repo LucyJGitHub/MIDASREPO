@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Utility to delete records from FCPREQL0')              *
@@ -10,14 +10,16 @@
       *  SMU00216 - Utility to delete selected report name from       *
       *             FCPREQL0 and related files.                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. BUG27976           Date 18Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27976           Date 18Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG27092 *CREATE   Date 16Mar10               *
+      *                 BUG27092 *CREATE   Date 16Mar10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27976 - Error running SMUC00216 during implementation -   *
       *             upgrading an R4 system to BF                      *
       *  BUG27092 - Utility program to delete a specific report name  *

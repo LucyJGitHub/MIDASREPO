@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate Country of Domicile')                *
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVCNDI   - Validate Country of Domicile                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -61,59 +63,59 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       ** External DS for Bank Details                                                       BUG25531
      D SDBANK        E DS                  EXTNAME(SDBANKPD)                                BUG25531
-
+ 
       ** DS for access programs - short data structure                                      BUG25531
      D DSFDY         E DS                  EXTNAME(DSFDY)                                   BUG25531
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       *                                                                                     BUG25531
@@ -122,7 +124,7 @@
       ** Parameter for SDBANKPD                                                             BUG25531
      D WRtCd           S              7A                                                    BUG25531
      D WOptn           S              7A                                                    BUG25531
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -137,16 +139,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Initialization
-
+ 
      C                   MOVE      *BLANK        RetCodeIn
-
+ 
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
-
+ 
       *
       ** VALIDATION
       *
@@ -167,7 +169,7 @@
       ** VALIDATION - Country of Domicile
       *****************************************************************
      C     COLCV         BEGSR
-
+ 
       * Country of domicile must be entered
      C     DDCOLC        IFEQ      *BLANK
      C                   MOVE      'N'           DDCOLCOK
@@ -175,18 +177,18 @@
      C                   MOVEL     'DDCOLC'      FldNamXAr(Idx)
      C                   MOVEL     'USR0220'     MsgIdXAr(Idx)
      C                   ENDIF
-
+ 
       * and must be on file
      C     DDCOLC        IFNE      *BLANK
      C     DDCOLC        CHAIN     COUNTRIES                          90
-
+ 
      C     *IN90         IFEQ      '1'
      C                   MOVE      'N'           DDCOLCOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDCOLC'      FldNamXAr(Idx)
      C                   MOVEL     'USR0067'     MsgIdXAr(Idx)
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
       ** When changing customer from resident to non-resident, make sure that               BUG25531
@@ -209,7 +211,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -243,9 +245,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -253,4 +255,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

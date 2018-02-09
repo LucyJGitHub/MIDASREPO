@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       SCC1110 - Midas Leo Program Location Program                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO.  091885           DATE 19FEB96               */
-/*       PREV AMEND NO.  S01473           DATE 23SEP94               */
+/*       Prev Amend No. 091885             Date 19Feb96              */
+/*                      S01473             Date 23Sep94              */
 /*                       S01467           DATE 00XXX00               */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       091885 - If library does not exist, treat the same as tho'  */
 /*                object not found.                                  */
 /*       S01473 - Midas/Leo Integration (Phase 1) - Lending Interface*/
@@ -36,7 +38,7 @@
              PGM        PARM(&PGM &LIBL)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&LEOL) TYPE(*CHAR) LEN(275)
@@ -115,6 +117,6 @@ END:         CHGVAR     VAR(&LIBL) VALUE(&TEST)
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

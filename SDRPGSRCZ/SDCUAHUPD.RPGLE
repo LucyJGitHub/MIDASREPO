@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Additional Customer/Authority Holders Updt')     *
@@ -12,10 +12,11 @@
       *  Function:  This module updates the Customer/Authority        *
       *             Holders Details                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD026854           Date 29May14               *
-      *  Prev Amend No. MD026755           Date 16May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026854           Date 29May14               *
+      *                 MD026755           Date 16May14               *
       *                 MD026780           Date 08May14               *
       *                 CGL132             Date 01May13               *
       *                 CSD092             Date 01May13               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026854 - Alternative country of citizenship is missing in  *
       *             history of customer information                   *
       *  MD026755 - Unable to create customer Serious Midas Error on  *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD External Transaction Systems Report')
@@ -12,16 +12,18 @@
       *  Function:  This prints Ext. Transaction Systems in List mode *
       *             or Audit mode (today's changes only)              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG21254           Date 02Oct08               *
-      *  Prev Amend No. BUG20970           Date 03Aug08               *
+      *  Prev Amend No. BUG21254           Date 02Oct08               *
+      *                 BUG20970           Date 03Aug08               *
       *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG21254 - External System report - Heading is incorrect     *
       *             (Recompile)                                       *
       *  BUG20970 - Time format is missing in External System Report  *
@@ -307,4 +309,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

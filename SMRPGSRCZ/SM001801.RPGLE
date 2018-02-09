@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Update reporting codes SDACRCPD')
@@ -9,19 +9,21 @@
       *                                                               *
       *  SM001801 - Update Reporting codes on SDACRCPD                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CUP038             Date 13Jul07               *
+      *  Prev Amend No. CUP038             Date 13Jul07               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 243654             Date 18Jan07               *
+      *                 243654             Date 18Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CPK025             Date 17Aug06               *
       *                 CGL034  *CREATE    Date 15Sep04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP038 - Reporting codes should not be treated as account    *
       *           codes.  Just pad with leading zeros if not '*'.     *
       *           Reverse CPK025.                                     *

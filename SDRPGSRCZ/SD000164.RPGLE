@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Calculate Account Review Frequency')          *
@@ -13,12 +13,14 @@
       *             frequency and run day number to calculate and     *
       *             return schedule date                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD026502  *CREATE  Date 01May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026502 *CREATE   Date 01May14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026502 - Account review generated when a customer is       *
       *             tagged as high value account have incorrect       *
       *             scheduled date                                    *
@@ -250,7 +252,7 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014
 **   ZFMD  -  NUMBER OF DAYS IN THE MONTH
 312831303130313130313031
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN

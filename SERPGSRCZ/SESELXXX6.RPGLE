@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SE SECS - Initial - LU/ER Window')
@@ -12,14 +12,15 @@
       *  Function:  This program defaults extension detail for        *
       *             European reporting.                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 05May06               *
-      *  Prev Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. CSD027A            Date 05May06               *
+      *                 CER001             Date 25Apr05               *
       *                 ULX046  *CREATE    Date 17Oct02               *
       *                 207361             Date 10Jul02               *
       *                 169521             Date 29Dec00               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion Of Customer Number to Alpha (Recompile) *
       *  CER001 - LUX Upgrade to MidasPlus                            *
       *  207361 - Window not displayed anymore in Release 4           *

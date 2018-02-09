@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SDC1797 - SAVE MASTER LIBRARY AT INPUT CYCLE TERMINATION    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD030818           Date 24Nov14              */
-/*       Prev Amend No. MD030956           Date 09Oct14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD030818           Date 24Nov14              */
+/*                      MD030956           Date 09Oct14              */
 /*                      MD029775           Date 19Aug14              */
 /*                      CBF002             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -44,6 +45,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD030818 - TRMSAV ended abnormally due to missing DBIC     */
 /*                  save file. Renamed DBIC to DBICDM.              */
 /*       MD030956 - Additional changes to BFM-TI enhancement.       */
@@ -94,7 +96,7 @@
              PGM
 /************DCLF       FILE(T2PF)                                                /*BUG4848 CSC033*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   INITIAL PROCESSING                                             */
@@ -778,7 +780,7 @@ ABNOR:
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,SDC1797END                                        */ /*S01408*/
 /**/                                                                  /*S01408*/

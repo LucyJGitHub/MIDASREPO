@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Invalid securities repair')                   *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Component of: SESECSRPR                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. LLN022A            Date 03Jun15               *
-      *  Prev Amend No. LLN022             Date 03Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *                 LLN022             Date 03Jun15               *
       *                 AR996842           Date 11Feb13               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  LLN022 - BOE Upgrade to MidasPlus                            *
@@ -529,13 +531,13 @@
      D PSecsSel        S             10A
      D PFOTRANSEL      S             20A
      D PTMESTPSEL      S             26Z
-
+ 
      D PAmendOk        S              1A
      D PPrCpn          S              1A
      D PNMDP           S              1P 0
      D PVLDP           S              1P 0
      D PResetFld       S              1A
-
+ 
      D PReDsp          S              1A
      D PLCPN           S              6A
      D PNCD            S              6A
@@ -883,7 +885,7 @@
      C                   EVAL      PRDNB = 'Y'
      C                   EVAL      WSCRN = 'R'
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -990,19 +992,19 @@
       ** Id).  Otherwise, if not Insert and Midas security shortname is present,
       ** set Retrieve Mode to blank (Access using Midas security shortname).
      C     DDACTN        IFEQ      'I'
-
+ 
      C                   MOVEL     '*FRONT'      PMode
-
+ 
      C                   ELSE
-
+ 
      C     DDSESN        IFEQ      *BLANK
      C                   MOVEL     '*FRONT'      PMode
      C                   ELSE
      C                   MOVEL     *BLANKS       PMode
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   EXSR      SRRtvSecty
       *                                                                                       CER001
       ** Retrieve record in extension file if switchable is on                                CER001
@@ -1035,7 +1037,7 @@
       ** format.
      C                   IF        DDACTN <> 'I' AND
      C                             RECI <> *BLANK
-
+ 
      C                   EXSR      SRCvtSecty
       *
       ** Save security shortname retrieved from file.
@@ -1074,21 +1076,21 @@
       ** the replacement character must be replaced with the corresponding
       ** character from the original transaction.
      C                   IF        GHSUBS <> *BLANK
-
+ 
      C     GHSUBS        SCAN      NwSE1ScnFmt                            99
      C                   IF        *IN99 = *ON
      C                   MOVE      'Y'           WSUBSE1
      C                   ELSE
      C                   MOVE      'N'           WSUBSE1
      C                   ENDIF
-
+ 
      C     GHSUBS        SCAN      NwSE2ScnFmt                            99
      C                   IF        *IN99 = *ON
      C                   MOVE      'Y'           WSUBSE2
      C                   ELSE
      C                   MOVE      'N'           WSUBSE2
      C                   ENDIF
-
+ 
      C     GHSUBS        SCAN      NwSE3ScnFmt                            99
      C                   IF        *IN99 = *ON
      C                   MOVE      'Y'           WSUBSE3
@@ -1120,11 +1122,11 @@
       *
       ** Do data substitution.
      C                   EXSR      SRDtaSubs
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
       ** If errors exist for action code or security shortname,
@@ -1146,7 +1148,7 @@
       *
       ** Display 1st screen.
      C                   EVAL      WSCRN = '1'
-
+ 
      C     ERdNBrw       ENDSR
       *****************************************************************
       /EJECT
@@ -1311,7 +1313,7 @@
       ** F12 - cancel.  Read Next Subfile record or display
       ** Browse screen.
      C                   WHEN      PINKL = *ON
-
+ 
      C                   IF        PRDNB = 'Y'
      C                   EVAL      WSCRN = 'R'
      C                   ELSE
@@ -1359,9 +1361,9 @@
       *
       ** If Windows processing is on, display Window screen.
      C**********         IF        BGWDPR = 'Y'                                               218563
-
+ 
      C**********         EVAL      WSCRN = 'W'                                                218563
-
+ 
      C**********         ELSE                                                                 218563
       *
       ** If this has not been done yet, send security details
@@ -1382,11 +1384,11 @@
       *
       ** Process defaulting of 2nd screen details before going to 2nd screen.
      C                   EXSR      SRDefScn2
-
+ 
      C**********         ENDIF                                                                218563
-
+ 
      C                   ENDSL
-
+ 
      C     EScrn_1       ENDSR
       *****************************************************************
       /EJECT
@@ -1396,7 +1398,7 @@
       *                                                               *
       *****************************************************************
      C     SRDefScn1     BEGSR
-
+ 
      C                   CALLB     'SESECS1DT'
       *                             =========
       *
@@ -1417,7 +1419,7 @@
       *
       ** Securities screen 1 details retrieved from file - screen format
      C                   PARM                    NwSE1ScnFmt
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1431,7 +1433,7 @@
       ** If Action is Amend, validate whether non-amendable fields
       ** have been amended.
      C                   IF        DDACTN = 'A'
-
+ 
      C                   CALLB     'SESECS1MD'
       *                             =========
       ** INPUT
@@ -1603,7 +1605,7 @@
       *
       ** Redisplay screen indicator
      C                   PARM      'N'           PReDsp
-
+ 
      C                   EVAL      WRedisplay = *BLANK
       *
       ** If no errors occurred during validation of fields on 1st
@@ -1621,7 +1623,7 @@
      C                   EVAL      WIx =WIx + 1
      C                   ENDIF
      C                   ENDDO
-
+ 
      C                   IF        WRedisplay <> 'Y'
      C                   EXSR      SRResetErr
      C                   ENDIF
@@ -1637,9 +1639,9 @@
       **********                                                                              218563
       ***If*Windows*processing*is*on,*display*Window*screen.***********                       218563
      C**********         IF        BGWDPR = 'Y'                                               218563
-
+ 
      C**********         EVAL      WSCRN = 'W'                                                218563
-
+ 
      C**********         ELSE                                                                 218563
       *
       ** If this has not been done yet, send security details
@@ -1660,9 +1662,9 @@
       *
       ** Process defaulting of 2nd screen details before going to 2nd screen.
      C                   EXSR      SRDefScn2
-
+ 
      C**********         ENDIF                                                                218563
-
+ 
      C     EVal_1        ENDSR
       *****************************************************************
       /EJECT
@@ -1819,7 +1821,7 @@
       *
       ** Reset error fields.
      C                   EXSR      SRResetErr
-
+ 
      C                   SELECT
       *
       ** F3 - end program.
@@ -1912,11 +1914,11 @@
      C**********         IF        BGRKMG = 'Y' AND DDERPY ='Y'                               CAS006
      C**********         EVAL      DDISA2 = DDISA1                                            CAS006
      C**********         ENDIF                                                                CAS006
-
+ 
      C**********         ENDIF                                                                CAS006
-
+ 
      C                   ENDSL
-
+ 
      C     EScrn_2       ENDSR
       *****************************************************************
       /EJECT
@@ -1930,7 +1932,7 @@
       ** If Action is Amend, validate whether non-amendable fields
       ** have been amended.
      C                   IF        DDACTN = 'A'
-
+ 
      C                   CALLB     'SESECS2MD'
       *                             =========
       ** INPUT
@@ -2003,7 +2005,7 @@
       *
       ** Protect Coupon Rate/Inds Indicator
      C                   PARM                    PPrCpn
-
+ 
      C                   ENDIF
       *
       ** Validate Detail fields on 2nd screen.
@@ -2152,9 +2154,9 @@
       ** If no errors occurred during validation of fields on 2nd screen,
       ** check if there are warnings which have not been displayed yet.
      C                   IF        IDx = 0
-
+ 
      C                   Z-ADD     1             WIx
-
+ 
      C     WIx           DOWLE     WIDx
      C     WRedisplay    ANDEQ     *BLANK
      C                   IF        WMsgIdArr(WIx) <> WPrvWarnAr(WIx)
@@ -2163,11 +2165,11 @@
      C                   EVAL      WIx =WIx + 1
      C                   ENDIF
      C                   ENDDO
-
+ 
      C                   IF        WRedisplay <> 'Y'
      C                   EXSR      SRResetErr
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
       ** Redisplay 2nd screen if there are errors or if there
@@ -2217,14 +2219,14 @@
       *
       ***Display*3rd*screen.*******************************************                       CAS006
      C**********         EVAL      WSCRN = '3'                                                CAS006
-
+ 
      C**********         ELSE                                                                 CAS006
       *
       ***Else,*display*confirmation*screen.****************************                       CAS006
      C**********         EVAL      WSCRN = 'F'                                                CAS006
-
+ 
      C**********         ENDIF                                                                CAS006
-
+ 
      C     EVal_2        ENDSR
       *****************************************************************
       /EJECT
@@ -2234,7 +2236,7 @@
       *                                                               *
       *****************************************************************
      C     SRDefScn2     BEGSR
-
+ 
      C                   CALLB     'SESECS2DT'
       *                             =========
       *
@@ -2276,7 +2278,7 @@
       *
       ** Fields for display only
      C                   PARM                    POutFlds
-
+ 
      C                   ENDSR
       *****************************************************************                       CAS006
       /EJECT                                                                                  CAS006
@@ -2872,9 +2874,9 @@
      C                   ELSE
      C                   EVAL      WSCRN = 'B'
      C                   ENDIF
-
+ 
      C                   ENDSL
-
+ 
      C     EScrn_3       ENDSR
       *****************************************************************
       /EJECT
@@ -2888,7 +2890,7 @@
       ** If Action is Amend, validate whether non-amendable fields
       ** have been amended.
      C                   IF        DDACTN = 'A'
-
+ 
      C                   CALLB     'SESECS3MD'
       *                             =========
       ** INPUT
@@ -2940,7 +2942,7 @@
       *
       ** OK Amendments field
      C                   PARM                    PAmendOK
-
+ 
      C                   ENDIF
       *
       ** Validate Detail fields on 3rd screen.
@@ -3039,9 +3041,9 @@
       ** If no errors occurred during validation of fields on 3rd screen,
       ** check if there are warnings which have not been diplayed yet.
      C                   IF        IDx = 0
-
+ 
      C                   Z-ADD     1             WIx
-
+ 
      C     WIx           DOWLE     WIDx
      C     WRedisplay    ANDEQ     *BLANK
      C                   IF        WMsgIdArr(WIx) <> WPrvWarnAr(WIx)
@@ -3050,11 +3052,11 @@
      C                   EVAL      WIx =WIx + 1
      C                   ENDIF
      C                   ENDDO
-
+ 
      C                   IF        WRedisplay <> 'Y'
      C                   EXSR      SRResetErr
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
       ** Redisplay 3rd screen if there are errors or if there are
@@ -3077,7 +3079,7 @@
      C                   EVAL      WSCRN = 'F'
      C                   ENDIF                                                                218563
      C                   ENDIF                                                                CER001
-
+ 
      C     EVal_3        ENDSR
       *****************************************************************
       /EJECT                                                                                  CSE031
@@ -3538,7 +3540,7 @@
      C                   PARM      *BLANKS       PWRTN
      C*****              PARM                    PWSPARE                        CSE023
      C                   PARM      'Y'           PWSPARE                        CSE023
-
+ 
      C                   SELECT
       *
       ** F3 - end program.
@@ -3571,7 +3573,7 @@
       *
       ** Process defaulting of 2nd screen details before going to 2nd screen.
      C**********         EXSR      SRDefScn2                                                 BUG9531
-
+ 
       *                                                                                      BUG9531
       ** If Action code is insert or Amend and Option selected is 'U'                        BUG9531
       ** update the screen                                                                   BUG9531
@@ -3589,7 +3591,7 @@
      C                   ENDIF                                                               BUG9531
       *                                                                                      BUG9531
      C                   ENDSL
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3815,9 +3817,9 @@
       ** Enter key was pressed.  Update files.
      C                   OTHER
      C                   EVAL      WSCRN = 'U'
-
+ 
      C                   ENDSL
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3834,7 +3836,7 @@
       *
       ** Record id.
      C                   EVAL      S1RECI = 'D'
-
+ 
      C                   ELSE
       *
       ** Action is insert.
@@ -3889,7 +3891,7 @@
      C                   IF        S1ISSD = *ZEROS
      C                   Z-ADD     S1ITLD        S1ISSD
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
       ** Action is amend/insert.
@@ -3898,11 +3900,11 @@
       ** Date made complete.
       *
      C                   IF        ODDINCS = 'I'
-
+ 
      C                   IF        DDINCS = *BLANK OR DDINCS = 'C'
      C                   Z-ADD     BJRDNB        S1DCOM
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
       ** Security Full name -1 defaults to Report name if blanks.
@@ -3951,7 +3953,7 @@
      C                   EVAL      S1OIDI = #1OIDI                              CSE023
      C                   EVAL      S1APIE = #1APIE                              CSE023
      C                   ENDIF                                                  CSE023
-
+ 
      C                   ENDIF
       *
       ** Front Office Id.
@@ -4143,7 +4145,7 @@
      C                   ELSE
      C                   EVAL      WSCRN = 'B'
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4210,7 +4212,7 @@
       *                                                               *
       *****************************************************************
      C     SRRtvSecty    BEGSR
-
+ 
      C                   CALLB     'SESECSRTV'
       *                             =========
       *
@@ -4274,7 +4276,7 @@
       *
       ** Investment type details
      C                   PARM      *BLANKS       PINVTPD
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4284,7 +4286,7 @@
       *                                                               *
       *****************************************************************
      C     SRCvtSecty    BEGSR
-
+ 
      C                   CALLB     'SESECSCVT'
       *                             =========
       *
@@ -4398,7 +4400,7 @@
       ** Linked Maintenance Flag                                                              CSC011
                                                                                               CSC011
      C                   PARM                    PParmLink                                    CSC011
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4411,10 +4413,10 @@
       *
       ** Substitute the data for the various parts of the transaction.
      C                   IF        WSUBSE1 = 'Y'
-
+ 
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
-
+ 
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -4428,16 +4430,16 @@
       *
       ** Current Data
      C                   PARM      CrSE1ScnFmt   PCurData
-
+ 
      C                   MOVEL     PIncData      NwSE1ScnFmt
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        WSUBSE2 = 'Y'
-
+ 
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
-
+ 
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -4451,16 +4453,16 @@
       *
       ** Current Data
      C                   PARM      CrSE2ScnFmt   PCurData
-
+ 
      C                   MOVEL     PIncData      NwSE2ScnFmt
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        WSUBSE3 = 'Y'
-
+ 
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
-
+ 
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -4474,9 +4476,9 @@
       *
       ** Current Data
      C                   PARM      CrSE3ScnFmt   PCurData
-
+ 
      C                   MOVEL     PIncData      NwSE3ScnFmt
-
+ 
      C                   ENDIF
                                                                                               CAS006
      C                   IF        WSUBSE4 = 'Y'                                              CAS006
@@ -4524,7 +4526,7 @@
      C                   MOVEL     PIncData      NwSE5ScnFmt                                  CAS006
                                                                                               CAS006
      C                   ENDIF                                                                CAS006
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4562,7 +4564,7 @@
       ** Read security details validation error messages for
       ** 1st screen.
      C                   EVAL      KABFIELDID = 0
-
+ 
      C     ZATRNKD1      SETLL     ZATRNERRD0
      C     ZATRNKD0      READE     ZATRNERRD0                             99
       *
@@ -4571,7 +4573,7 @@
      C/COPY WNCPYSRC,SESECSRC03
      C                   DOW       *IN99 = *OFF AND
      C                             ABFIELDID <= WFldOffSet2
-
+ 
      C/COPY WNCPYSRC,SESECSRC06
       *                                                                                      LLN022A
       ** If BOE installed                                                                    LLN022A
@@ -4597,22 +4599,22 @@
      C                   MOVEL     ABFIELDNAM    FldNameArr(Ex)
      C                   MOVEL     ABMSGID       MsgIdArr(Ex)
      C                   ENDIF
-
+ 
      C                   Z-ADD     ABFIELDID     Fx
      C                   SUB       WFldOffset1   Fx
-
+ 
      C                   IF        Fx < 1 OR Fx > 60
      C                   Z-ADD     1             Fx
      C                   ENDIF
      C/COPY WNCPYSRC,SESECSRC04
-
+ 
      C                   MOVE      'N'           WEI(Fx)
      C/COPY WNCPYSRC,SESECSRC05
       *                                                                                      LLN022A
      C     SKIPPROC      TAG                                                                 LLN022A
       *                                                                                      LLN022A
      C     ZATRNKD0      READE     ZATRNERRD0                             99
-
+ 
      C                   ENDDO
       *
       ** Update error indicators using work array.
@@ -4624,7 +4626,7 @@
      C                   MOVEA     MsgIdArr      MsgIdAr1
      C                   MOVEA     MsgDtaArr     MsgDtaAr1
      C                   EVAL      ID1 = Ex
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4644,7 +4646,7 @@
       ** Read security details validation error messages for
       ** 2nd screen.
      C                   EVAL      KABFIELDID = WfldOffset2
-
+ 
      C     ZATRNKD1      SETLL     ZATRNERRD0
      C     ZATRNKD0      READE     ZATRNERRD0                             99
       *
@@ -4653,7 +4655,7 @@
      C                   DOW       *IN99 = *OFF AND
      C                             ABFIELDID > WFldOffSet2 AND
      C                             ABFIELDID <= WFldOffSet3
-
+ 
      C     ABMSGID       LOOKUP    MsgIdArr(1)                            98
       *
       ** If message already present in array, disregard it
@@ -4663,18 +4665,18 @@
      C                   MOVEL     ABFIELDNAM    FldNameArr(Ex)
      C                   MOVEL     ABMSGID       MsgIdArr(Ex)
      C                   ENDIF
-
+ 
      C                   Z-ADD     ABFIELDID     Fx
      C                   SUB       WFldOffset2   Fx
-
+ 
      C**********         IF        Fx < 1 OR Fx > 60                                          CAS006
      C                   IF        Fx < 1 OR Fx > 64                                          CAS006
      C                   Z-ADD     1             Fx
      C                   ENDIF
-
+ 
      C                   MOVE      'N'           WEI(Fx)
      C     ZATRNKD0      READE     ZATRNERRD0                             99
-
+ 
      C                   ENDDO
       *
       ** Update error indicators using work array.
@@ -4686,7 +4688,7 @@
      C                   MOVEA     MsgIdArr      MsgIdAr2
      C                   MOVEA     MsgDtaArr     MsgDtaAr2
      C                   EVAL      ID2 = Ex
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4706,7 +4708,7 @@
       ** Read security details validation error messages for
       ** 3rd screen.
      C                   EVAL      KABFIELDID = WfldOffset3
-
+ 
      C     ZATRNKD1      SETLL     ZATRNERRD0
      C     ZATRNKD0      READE     ZATRNERRD0                             99
       *
@@ -4715,7 +4717,7 @@
      C                   DOW       *IN99 = *OFF AND
      C                             ABFIELDID > WFldOffSet3
      C                             And ABFIELDID <= WFldOffSet4                               CER001
-
+ 
      C     ABMSGID       LOOKUP    MsgIdArr(1)                            98
       *
       ** If message already present in array, disregard it
@@ -4725,17 +4727,17 @@
      C                   MOVEL     ABFIELDNAM    FldNameArr(Ex)
      C                   MOVEL     ABMSGID       MsgIdArr(Ex)
      C                   ENDIF
-
+ 
      C                   Z-ADD     ABFIELDID     Fx
      C                   SUB       WFldOffset3   Fx
-
+ 
      C                   IF        Fx < 1 OR Fx > 60
      C                   Z-ADD     1             Fx
      C                   ENDIF
-
+ 
      C                   MOVE      'N'           WEI(Fx)
      C     ZATRNKD0      READE     ZATRNERRD0                             99
-
+ 
      C                   ENDDO
       *
       ** Update error indicators using work array.
@@ -4747,7 +4749,7 @@
      C                   MOVEA     MsgIdArr      MsgIdAr3
      C                   MOVEA     MsgDtaArr     MsgDtaAr3
      C                   EVAL      ID3 = Ex
-
+ 
      C                   ENDSR
       *****************************************************************                       CAS006
       /EJECT                                                                                  CAS006
@@ -4935,7 +4937,7 @@
      C                   ROLBK
      C                   EndIf                                                                CSC022
      C                   EVAL      WSCRN = 'T'
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4945,23 +4947,23 @@
       *                                                               *
       *****************************************************************
      C     SRResetErr    BEGSR
-
+ 
      C                   CLEAR                   FldNameArr
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   MsgDtaArr
      C                   CLEAR                   IDx
-
+ 
      C                   CLEAR                   WFldNamArr
      C                   CLEAR                   WMsgIdArr
      C                   CLEAR                   WMsgDtaArr
      C                   CLEAR                   WIDx
-
+ 
      C                   MOVE      *ALL'Y'       SEESEC1
      C                   MOVE      *ALL'Y'       SEESEC2
      C                   MOVE      *ALL'Y'       SEESEC3
      C                   MOVE      *ALL'Y'       SEESEC4                                      CAS006
      C                   MOVE      *ALL'Y'       SEESEC5                                      CAS006
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5047,7 +5049,7 @@
      C                   Z-ADD     5             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     PRTCD         IFEQ      *BLANK
      C                   EVAL      CSE005 = 'Y'
      C                   ELSE
@@ -5071,7 +5073,7 @@
      C                   Z-ADD     6             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     PRTCD         IFEQ      *BLANK
      C                   EVAL      CSE007 = 'Y'
      C                   ELSE
@@ -5095,7 +5097,7 @@
      C                   Z-ADD     7             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     PRTCD         IFEQ      *BLANK
      C                   EVAL      CSE011 = 'Y'
      C                   ELSE
@@ -5119,7 +5121,7 @@
      C                   Z-ADD     8             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     PRTCD         IFEQ      *BLANK
      C                   EVAL      CEU017 = 'Y'
      C                   ELSE
@@ -5143,7 +5145,7 @@
      C                   Z-ADD     9             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     PRTCD         IFEQ      *BLANK
      C                   EVAL      CEU018 = 'Y'
      C                   ELSE
@@ -5167,7 +5169,7 @@
      C                   Z-ADD     10            DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     PRTCD         IFEQ      *BLANK
      C                   EVAL      S01401 = 'Y'
      C                   ELSE
@@ -5191,7 +5193,7 @@
      C                   Z-ADD     11            DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     PRTCD         IFEQ      *BLANK
      C                   EVAL      S01511 = 'Y'
      C                   ELSE
@@ -5445,7 +5447,7 @@
      C                   PARM                    PFormat
      C                   PARM                    PField1
      C                   PARM                    PFieldNo
-
+ 
      C                   IF        RetCodeOut = *BLANKS
      C                   EVAL      WFldOffset1 = PFieldNo - 1
       *
@@ -5462,7 +5464,7 @@
      C                   PARM                    PFormat
      C                   PARM                    PField2
      C                   PARM                    PFieldNo
-
+ 
      C                   IF        RetCodeOut = *BLANKS
      C                   EVAL      WFldOffset2 = PFieldNo - 1
      C                   ENDIF
@@ -5475,7 +5477,7 @@
      C                   PARM                    PFormat
      C                   PARM                    PField3
      C                   PARM                    PFieldNo
-
+ 
      C                   IF        RetCodeOut = *BLANKS
      C                   EVAL      WFldOffset3 = PFieldNo - 1
      C                   ENDIF
@@ -5529,12 +5531,12 @@
      C     ZATRNKD0      KLIST
      C                   KFLD                    PFOTRANSEL
      C                   KFLD                    PTMESTPSEL
-
+ 
      C     ZATRNKD1      KLIST
      C                   KFLD                    PFOTRANSEL
      C                   KFLD                    PTMESTPSEL
      C                   KFLD                    KABFIELDID
-
+ 
      C     ZATRNKX0      KLIST
      C                   KFLD                    PTMESTPSEL
      C                   KFLD                    PFOTRANSEL
@@ -5724,4 +5726,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

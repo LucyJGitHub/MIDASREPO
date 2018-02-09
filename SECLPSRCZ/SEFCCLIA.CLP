@@ -6,23 +6,25 @@
 /*                                                                   */
 /*       SEFCCLIA - SE Build TDFF63 based on STSECPO for Telekurs    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSE067  *CREATE    Date 25Apr05              */
+/*       Prev Amend No. CSE067  *CREATE    Date 25Apr05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSE067 - Telekurs Interface Changes                         */
 /*                                                                   */
 /*********************************************************************/
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
@@ -171,6 +173,6 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              RMVLIBLE   LIB(TDFCLIICF)
  
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
              ENDPGM

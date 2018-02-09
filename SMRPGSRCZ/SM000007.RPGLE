@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*XBI *  OVRDBF FILE(TBLTXT) TOFILE(SMTBLXPD)                         *
 /*STD *  RPGBASEBND                                                   *
@@ -11,12 +11,13 @@
       *                                                               *
       *  SM000007 - Update trailers from 'from' release               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *   Last Amend No. MD025682              Date 19Aug14           *
-      *   Prev Amend No. MD020569              Date 28May13           *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025682           Date 19Aug14               *
+      *                 MD020569           Date 28May13               *
       *                  AR1089839             Date 19Feb13           *
       *                  AR988376B             Date 12Feb13           *
       *                  AR988376A             Date 12Feb13           *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025682 - Correct SDCMRKPD trailer failure in COB.          *
       *  MD020569 - SDC0602 seq 00001 has failed during COB run       *
       *  AR1089839 - COBOP and 2.1 source clashes                     *

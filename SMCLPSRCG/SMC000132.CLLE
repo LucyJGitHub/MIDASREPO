@@ -8,42 +8,44 @@
 /*                                                                   */
 /*       SMC000132 - Copy files from xTALIB to xMLIB                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD039374           Date 04May16              */
-/*       Prev Amend No. CPK030   *CREATE   Date 09Apr14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD039374           Date 04May16              */
+/*                      CPK030  *CREATE    Date 09Apr14              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD039374 - Correct DLTOVR as job SMC000132 ends on MSGW.    */
 /*       CPK030 - Clean up of deliverable data library.              */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&FMLIB &TOLIB &LAYER)
-
+ 
              DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
-
+ 
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7) VALUE(' ')
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
-
+ 
              DCLF       FILE(SMC000132F)
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           2014')
-
+ 
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
-
+ 
 /* Set status to ACTIVE. */
              CALL       PGM(SM000008) PARM('SMC000132' '*PGM' +
                           '*UPDATE' 'ACTIVE')
-
+ 
 /* Reset 'from' library name to xDTALIB. */
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
                 CHGVAR     VAR(&FMLIB) VALUE(%SST(&FMLIB 1 2) *TCAT +
@@ -53,13 +55,13 @@
                 CHGVAR     VAR(&FMLIB) VALUE(%SST(&FMLIB 1 2) *TCAT +
                              'DTALIB')
              ENDDO
-
+ 
 /* Check if from library exists; if it doesn't then skip processing. */
              CHKOBJ     OBJ(&FMLIB) OBJTYPE(*LIB)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 GOTO       CMDLBL(SUCCESS)
              ENDDO
-
+ 
 /* Create working files. */
              CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) NEWOBJ(SMC000132F)
@@ -68,7 +70,7 @@
              CPYF       FROMFILE(QTEMP/SMC000132O) +
                           TOFILE(QTEMP/SMC000132F) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)
-
+ 
 /* Call program to remove records for files not to be migrated. */
              OVRDBF     FILE(SMCPYDPD) TOFILE(QTEMP/SMC000132F) +
                           OVRSCOPE(*JOB)
@@ -83,19 +85,19 @@
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
 READNEXT:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(SUCCESS)
              ENDDO
-
+ 
 /* If the file does not exist in the 'to' library then do not process. */
              CHKOBJ     OBJ(&TOLIB/&ODOBNM) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 GOTO       CMDLBL(READNEXT)
              ENDDO
-
+ 
              CPYF       FROMFILE(&FMLIB/&ODOBNM) +
                           TOFILE(&TOLIB/&ODOBNM) FROMMBR(*ALL) +
                           TOMBR(*FROMMBR) MBROPT(*REPLACE) +
@@ -126,14 +128,14 @@ READNEXT:
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
-
+ 
              GOTO       CMDLBL(READNEXT)
-
+ 
 SUCCESS:
              CALL       PGM(SM000008) PARM('SMC000132' '*PGM' +
                           '*UPDATE' 'PASSED')
              GOTO       CMDLBL(ENDPGM)
-
+ 
 ERROR:
 /* Set status to FAILED. */
              CALL       PGM(SM000008) PARM('SMC000132' '*PGM' +
@@ -144,7 +146,7 @@ ERROR:
                              SMC000132.') MSGTYPE(*ESCAPE)
              ENDDO
              CHGVAR     VAR(&RECURSIVE) VALUE('Y')
-
+ 
 ERROR2:
  /* Receive escape error message. */
              RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +

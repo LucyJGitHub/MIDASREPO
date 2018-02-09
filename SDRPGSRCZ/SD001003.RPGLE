@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD CSW208 Initialisation Program 3')
@@ -12,18 +12,20 @@
       *  Function:  This module will project the next 2 years of      *
       *             DST with its future start date and end date.      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG20226           Date 15Aug08               *
-      *  Prev Amend No. BUG19758           Date 03Jul08               *
+      *  Prev Amend No. BUG20226           Date 15Aug08               *
+      *                 BUG19758           Date 03Jul08               *
       *                 BUG20220A          Date 25Jul08               *
       *                 BUG20220           Date 24Jul08               *
       *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG20226 - Database error occurred during "Copy" mode        *
       *             (Recompile)                                       *
       *  BUG19758 - Various errors                                    *
@@ -377,4 +379,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2007
+(c) Finastra International Limited 2007

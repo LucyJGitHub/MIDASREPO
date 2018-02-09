@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD MIC Code maintenance display file')
@@ -17,12 +17,13 @@
       *  Called By: SD009802 - MIDAS SD Market Identification Code    *
       *                         Subfile                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG20971           Date 03Sep08               *
-      *  Prev Amend No. BUG21093           Date 18Sep08               *
+      *  Prev Amend No. BUG20971           Date 03Sep08               *
+      *                 BUG21093           Date 18Sep08               *
       *                 BUG19910           Date 28Jul08               *
       *                 BUG19758           Date 03Jul08               *
       *                 BUG19525           Date 25Jun08               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG20971 - MIC Delete/SE Market is allowed                   *
       *  BUG21093 - Time Zone code is not accepted                    *
       *  BUG19910 - Amend message IDs                                 *

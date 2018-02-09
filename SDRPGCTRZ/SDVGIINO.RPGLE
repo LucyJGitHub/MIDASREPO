@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate GIIN Owner')                         *
@@ -9,14 +9,16 @@
       *                                                               *
       *  SDVGIINO - Validate GIIN Owner                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD027092           Date 29May14               *
-      *  Prev Amend No. MD027126           Date 29May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027092           Date 29May14               *
+      *                 MD027126           Date 29May14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027092 - GIIN Owner Value Keeps Surfacing even though it   *
       *             has been erased. Apply fix MD-25065               *
       *  MD027126 - Save blank value for GIIN Owner when needed       *
@@ -179,4 +181,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

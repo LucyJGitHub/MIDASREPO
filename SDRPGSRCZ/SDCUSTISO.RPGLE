@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Customer ISO7064 37,36 check')
@@ -15,19 +15,21 @@
       *             in the customer maintenance function meets user   *
       *             defined criteria                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 249076             Date 03Aug07               *
+      *  Prev Amend No. 249076             Date 03Aug07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG12345           Date 27Oct06               *
+      *                 BUG12345           Date 27Oct06               *
       *                 BUG11828           Date 13Aug06               *
       *                 CSD027  *CREATE    Date 11Jan06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  249076 - Enhance error message S270004 to show character     *
       *           and position that is not allowed in SDSVALPD.       *
       *  BUG12345 - U7 turns on upon call of SDCUSTISO                *

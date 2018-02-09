@@ -12,17 +12,19 @@
 /*                 library that the program resides in are both      */
 /*                 parameter driven using SD System Values.          */
 /*                                                                   */
-/*       (C) Copyright Misys Banking Systems 2006                    */
+/*       (C) Copyright Finastra International Limited 2006           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC027  *Create    Date 15Feb06              */
+/*       Prev Amend No. CSC027  *CREATE    Date 15Feb06              */
 /*------ Midas Plus 1.2 Base ----------------------------------------*/
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC027 - This extraction program runs in the Input Cycle    */
 /*                Initiation phase of the Midas COB. It is used      */
 /*                as an Entry Point to the COB and the library       */
@@ -35,7 +37,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          Copyright Misys Banking Systems 2006')
+                          Copyright Finastra International Limited 2016')
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
@@ -98,7 +100,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
  END:
-             CHGVAR     VAR(&CPYFLD) VALUE('Copyright Misys Banking    +
-                          Systems 2006')
+             CHGVAR     VAR(&CPYFLD) VALUE('Copyright Finastra +
+                          International Limited 2006')
  
              ENDPGM

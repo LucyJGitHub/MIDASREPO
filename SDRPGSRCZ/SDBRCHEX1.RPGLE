@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Branch Code - Setup PF/GPBRCHEXPD')           *
@@ -9,12 +9,14 @@
       *                                                               *
       *  SDBRCHEX1 - Midas SD Branch Code - Setup PF/GPBRCHEXPD       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR694360 *CREATE   Date 10Jan11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR694360 *CREATE   Date 10Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR694360 - Initialise GPBRCHEXPD. (Child: AR694361)          *
       *                                                               *
       *****************************************************************
@@ -105,4 +107,4 @@
      C                   ENDSR
      C****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas Take on of Stamp Tax Account Take on')           *
@@ -9,16 +9,18 @@
       *                                                               *
       *  SD008197 - Midas Take on of Stamp Tax Account Take on        *
       *                                                               *
-      *  (C) Copyright Misys International Banking Systems Ltd. 2010  *
+      *  (C) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. CRE095             Date 25Apr14               *
-      *  Prev Amend No. CRE090             Date 14Feb14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *                 CRE090             Date 14Feb14               *
       *                 AR899028           Date 25Jan12               *
       *                 AR847269           Date 09Nov11               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
       *  AR899028 - NOSTRO AMAD System errors occured; applied        *
@@ -204,4 +206,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd., 2010
+(C) Copyright Finastra International Limited 2010

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Securities clients details dbase update')     *
@@ -10,10 +10,11 @@
       *  SDSECDUPD - STANDING DATA SECURITY CUSTOMERS DETAILS         *
       *              DATABASE UPDATE                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR325335           Date 19May10               *
       *                 CER059             Date 19Jul10               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -68,14 +70,14 @@
       *  CAP039 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
-
-
+ 
+ 
      FSDSECSL1  UF A E           K DISK    COMMIT
       * Midas SD Securities Clients Details Master File
-
+ 
      FSDFCTLL0  UF A E           K DISK    COMMIT
       * Midas SD Standing Data Controls index
-
+ 
       ** Valid Customer Depository Reference file by Customer Number                          CSE022
      FSDVCSDRL2 IF   E           K DISK                                                       CSE022
                                                                                               CSE022
@@ -85,7 +87,7 @@
       ** Midas SD Additional Customer details update                                          CER034
       *                                                                                       CER034
      FSDACUSL0  UF   E           K DISK    COMMIT                                             CER034
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,12 +99,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -113,59 +115,59 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
-
+ 
       ** Timestamp for the transaction
      D TimeStamp       S               Z
-
+ 
      D ChkSecdFmt    E DS                  EXTNAME(SDSECSPD)
      D                                     PREFIX(CH)
       ** Rename fields for Timestamp checking
-
-
+ 
+ 
      D SDVSecd       E DS                  EXTNAME(SDVSECDPD)
      D                                     PREFIX(A_)
       ** Externally desc'd DS for valid Securities Clients Detail
-
-
+ 
+ 
      D OKSecDets     E DS                  EXTNAME(SDESECDPD)
       * Error indicators
-
-
+ 
+ 
      D B_SECDF       E DS                  EXTNAME(SDSECSPD)
      D                                     PREFIX(B_)
       **  Externally described DS for 'BEFORE UPDATE' securities
-
-
+ 
+ 
       **  Securities Clients Details File
      D SECDF         E DS                  EXTNAME(SDSECSPD)
-
-
+ 
+ 
       * Data Structures for use with access programs
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data structure for bank details
-
+ 
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       * Data structure for securities trading details
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for access programs, long data structure
-
+ 
      D DepotSn         S              7    DIM(10)
       ** Depot shortnames array
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC011
       ** External DS for SAR Details                                                          CSC011
                                                                                               CSC011
@@ -182,7 +184,7 @@
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
-
+ 
       ** Fields defined for Enhancement CSC011                                                CSC011
                                                                                               CSC011
      D CSC011          S              1A                                                      CSC011
@@ -236,7 +238,7 @@
      D    PBLCD             3061   3063P 0
       * I :  Type of Last Change
      D    PBTYLC            3064   3064
-
+ 
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -250,30 +252,30 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
-
-
+ 
+ 
      D @Timestamp      S             26Z
-
+ 
       ** Account sequence field (packed) for call to CLINTSE
      D WKACSN          S              2P 0
-
+ 
       /EJECT
       *****************************************************************
       *                                                               *
       * MAIN - MAIN BODY                                              *
       *                                                               *
       *****************************************************************
-
+ 
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
-
+ 
      C     @@RTCD        IFNE      *BLANKS
      C                   GOTO      EXIT
      C                   END
-
+ 
       ** INSERT, AMEND OR DELETE THE CUSTOMER
-
+ 
      C     A_SETYLC      CASEQ     'I'           INSERT
      C     A_SETYLC      CASEQ     'A'           AMEND
      C     A_SETYLC      CASEQ     'D'           DELETE
@@ -317,10 +319,10 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
      C                   ENDIF                                                                CSC011
-
+ 
       * EXIT FROM PROGRAM
      C     EXIT          TAG
-
+ 
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -330,15 +332,15 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
-
+ 
       ** Retrieve current Customer details
-
+ 
      C                   MOVE      A_SECUST      MidasTrNum        6
-
+ 
       ** CSST field is used to test blank customer select in RTV module
      C                   MOVEL     A_SECUST      DDCSST
-
-
+ 
+ 
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
@@ -364,7 +366,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       @@MODE
      C                   END
-
+ 
      C                   CALLB     'SDSECDRTV'
       * INPUTS
       *
@@ -404,16 +406,16 @@
       *
       ** Customer Shortname
      C                   PARM                    DDCSSN           10
-
+ 
       ** Customer Report Name
      C                   PARM                    DDCRNM           20
-
+ 
       ** Customer Report Town
      C                   PARM                    DDCRTN           10
-
+ 
       ** Depot Shortnames Array
      C                   PARM                    DepotSn
-
+ 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM      *BLANK        FldNameArr
      C                   PARM      *BLANK        MsgIdArr
@@ -424,29 +426,29 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
-
+ 
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
-
+ 
       ** Interactive mode:
-
+ 
      C     @TYPE         IFEQ      '1'
-
+ 
      C     CHBFTMST      IFNE      A_SETMES
      C                   MOVEL     '*RECUPD'     @@RTCD
      C                   END
-
+ 
       ** Batch mode:
      C                   ELSE
      C     DDACTNOK      IFEQ      'N'
      C     DDCUSTOK      OREQ      'N'
      C                   MOVEL     '*RECUPD'     @@RTCD
      C                   Z-ADD     1             C                 2 0
-
+ 
      C     C             DOWLE     ArrayMax
      C     FldNameArr(C) ANDNE     *BLANKS
      C                   MOVEL     *BLANKS       DBError          28
@@ -458,11 +460,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -472,27 +474,27 @@
       *                                                              *
       ****************************************************************
      C     INSERT        BEGSR
-
+ 
       ** Access Security Customer Details
-
+ 
      C     A_SECUST      CHAIN     SDSECSL1                           99
-
+ 
       ** Database error
-
+ 
      C     *IN99         IFEQ      '0'
      C                   MOVEL     A_SECUST      DBKEY
      C                   MOVEL     'SDSECSPD'    DBFILE                         ************
      C                   MOVEL     '901'         DBASE                          * DBERR 901*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
       ** Initialize Securities Clients Detail
-
+ 
      C                   CLEAR                   SECDF
-
+ 
       ** Store Old fields for comparisons
      C                   MOVEL(P)  SECDF         B_SECDF
-
+ 
       ** Set securities fields on insert
      C                   EVAL      BFCUST = A_SECUST
      C                   EVAL      BFACCD = A_SEACCD
@@ -555,7 +557,7 @@
      C                   EVAL      BFAFFM = A_SEAFFM                                          CSE042
      C                   EVAL      BFARST = A_SEARST                                          CSE042
      C                   EVAL      BFRREQ = A_SERREQ                                          CSE070
-
+ 
       ** Front Office ID
      C                   EVAL      BFFRNT=A_SEFRNT
       ** Associated Front Office ID
@@ -566,9 +568,9 @@
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
-
+ 
      C                   EVAL      BFTMST  = TimeStamp
-
+ 
       ** If CSC011 is installed, supply a Front Office ID for the                             CSC011
       ** transaction even if it originated from SIN module.                                   CSC011
                                                                                               CSC011
@@ -580,14 +582,14 @@
                                                                                               CSC011
       *
       ** Write new Securities Clients Detail
-
+ 
      C                   WRITE     @BFREDQ
-
+ 
      C                   Z-ADD     1             WUNORC            5 0          No of records
      C                   Z-ADD     *ZERO         WUNOAM            5 0          No of Amend
      C                   Z-ADD     *ZERO         WUNODL            5 0          No of delete
      C                   Z-ADD     1             WUNOIN            5 0          No of Insert
-
+ 
       * Change Standing Data Cont - Standing Data Controls  *
      C                   MOVEL     'SDSECSPD'    WFLNAME           8            No of delete
      C                   EXSR      CHGSDCTL
@@ -608,12 +610,12 @@
      C                   ENDIF                                                                CER034
       *                                                                                       CER034
      C                   ENDIF                                                                CER034
-
+ 
       * Update CLINTSE - Securitiy Details
-
+ 
       ** CLINTSE expects a packed seq field (file field is zoned)
      C                   EVAL      WKACSN = BFACSN
-
+ 
      C                   CALL      'CLINTSE'
      C                   PARM      *BLANK        @RTCD             7
      C                   PARM                    BFCUST            6
@@ -666,7 +668,7 @@
      C                   PARM                    BFASIN            1
      C                   PARM                    BJRDNB            5 0
      C                   PARM                    BFTYLC            1
-
+ 
       * Send message 'Unable to update'
      C     @RTCD         IFEQ      '*ERROR*'
      C                   MOVEL     *BLANK        DBKEY
@@ -693,8 +695,8 @@
      C                   ENDDO                                                                CSE022
                                                                                               CSE022
      C                   END
-
-
+ 
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -704,13 +706,13 @@
       *                                                              *
       ****************************************************************
      C     AMEND         BEGSR
-
+ 
       ** Access Securities Clients Detail record
-
+ 
      C     A_SECUST      CHAIN     SDSECSL1                           99
-
+ 
       ** Database error
-
+ 
      C     *IN99         IFEQ      '1'
      C**LH               MOVEL     A_SECUST      DBKEY
      C**LH               MOVEL     'SDSECSPD'    DBFILE                         ************
@@ -718,13 +720,13 @@
      C**LH               EXSR      SRERR                                        ************
      C                   EXSR      INSERT
      C                   ELSE
-
+ 
       ** Update 'BEFORE' status
-
+ 
      C                   MOVEL(P)  SECDF         B_SECDF
-
+ 
       ** Set Securities Clients Detail fields on amend
-
+ 
      C                   EVAL      BFCUST = A_SECUST
      C                   EVAL      BFACCD = A_SEACCD
      C                   EVAL      BFPCYC = A_SEPCYC
@@ -786,8 +788,8 @@
      C                   EVAL      BFAFFM = A_SEAFFM                                          CSE042
      C                   EVAL      BFARST = A_SEARST                                          CSE042
      C                   EVAL      BFRREQ = A_SERREQ                                          CSE070
-
-
+ 
+ 
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
@@ -796,29 +798,29 @@
      C                   EVAL      BFFRNT=A_SEFRNT                              CAP013
       ** Associated Front Office ID                                             CAP013
      C                   EVAL      BFAFRT=A_SEAFRT                              CAP013
-
+ 
       *
       ** UPDATE RECORD
-
+ 
      C                   UPDATE    @BFREDQ
-
-
+ 
+ 
       * USER: Processing after Data update
      C                   Z-ADD     *ZERO         WUNORC                         No of records
      C                   Z-ADD     1             WUNOAM                         No of Amend
      C                   Z-ADD     *ZERO         WUNOIN                         No of delete
      C                   Z-ADD     *ZERO         WUNODL                         No of Insert
-
+ 
       * Change Standing Data Cont - Standing Data Controls  *
      C                   MOVEL     'SDSECSPD'    WFLNAME           8            No of delete
      C                   EXSR      CHGSDCTL
-
-
+ 
+ 
       * Update CLINTSE - Securities Clients Details
-
+ 
       ** CLINTSE expects a packed seq field (file field is zoned)
      C                   EVAL      WKACSN = BFACSN
-
+ 
      C                   CALL      'CLINTSE'
      C                   PARM      *BLANK        @RTCD             7
      C                   PARM                    BFCUST            6
@@ -871,7 +873,7 @@
      C                   PARM                    BFASIN            1
      C                   PARM                    BJRDNB            5 0
      C                   PARM                    BFTYLC            1
-
+ 
       * Send message 'Unable to update'
      C     @RTCD         IFEQ      '*ERROR*'
      C                   MOVEL     *BLANK        DBKEY
@@ -913,9 +915,9 @@
      C                   ENDDO                                                                CSE022
                                                                                               CSE022
      C                   END
-
+ 
      C                   END
-
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -925,29 +927,29 @@
       *                                                              *
       ****************************************************************
      C     DELETE        BEGSR
-
+ 
       ** Access Security Customer Details
-
+ 
      C     A_SECUST      CHAIN     SDSECSL1                           99
-
+ 
       ** Database error
-
+ 
      C     *IN99         IFEQ      '1'
      C                   MOVEL     A_SECUST      DBKEY
      C                   MOVEL     'SDSECSPD'    DBFILE                         ************
      C                   MOVEL     '905'         DBASE                          * DBERR 905*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
       ** Update 'BEFORE' status
-
+ 
      C                   MOVEL(P)  SECDF         B_SECDF
-
-
+ 
+ 
       ** Delete record
-
+ 
      C                   DELETE    @BFREDQ
-
+ 
       * USER: Processing after Data update
      C                   MOVEL     SECDF         WUDELR
       * Write Deleted Record - SD Deleted Records File  *
@@ -968,7 +970,7 @@
      C                   MOVEL     WUDR12        PBDR12
      C                   MOVEL     BJRDNB        PBLCD
      C                   MOVEL     'D'           PBTYLC
-
+ 
      C                   CALL      'SD0520X'
      C                   PARM      *BLANK        @RTCD
      C                   PARM                    PBRC
@@ -980,7 +982,7 @@
      C                   MOVEL     '906'         DBASE                          * DBERR 906*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
      C                   Z-ADD     -1            WUNORC                         No of records
      C                   Z-ADD     *ZERO         WUNOAM                         No of Amend
      C                   Z-ADD     *ZERO         WUNOIN                         No of delete
@@ -1005,7 +1007,7 @@
      C                   ENDIF                                                                CER034
       *                                                                                       CER034
      C                   ENDIF                                                                CER034
-
+ 
      C                   MOVEL     'D'           BFTYLC
       * Update CLINTSE - Securities Clients Details
      C                   CALL      'CLINTSE'
@@ -1060,7 +1062,7 @@
      C                   PARM                    BFASIN            1
      C                   PARM                    BJRDNB            5 0
      C                   PARM                    BFTYLC            1
-
+ 
       * Send message 'Unable to update'
      C     @RTCD         IFEQ      '*ERROR*'
      C                   MOVEL     *BLANK        DBKEY
@@ -1084,7 +1086,7 @@
      C                   ENDDO                                                                CSE022
                                                                                               CSE022
      C                   END
-
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1094,7 +1096,7 @@
       *                                                               *
       *****************************************************************
      C     CHGSDCTL      BEGSR
-
+ 
      C                   MOVEL     *BLANK        W0RTN             7
       *
       * Move key fields to @AHREAU
@@ -1104,16 +1106,16 @@
      C     KLCHSN        KLIST
      C                   KFLD                    AHFLNM
      C     KLCHSN        CHAIN     @AHREAU                            90
-
+ 
       ** Database error
-
+ 
      C     *IN90         IFEQ      '1'
      C                   MOVEL     AHFLNM        DBKEY
      C                   MOVEL     'SDFCTLL0'    DBFILE                         ************
      C                   MOVEL     '908'         DBASE                          * DBERR 908*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
       * Adjust file counts according to current action
      C                   ADD       WUNORC        AHNORC
      C                   ADD       WUNOIN        AHNOIN
@@ -1136,15 +1138,15 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
-
+ 
+ 
       **  Program Parameters
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** Return Code
      C                   PARM                    @@RTCD            7
-
+ 
       ** Externally described DS for valid Securities Clients Detail
      C                   PARM                    SDVSECD
       *
@@ -1163,7 +1165,7 @@
      C                   MOVEL     '909'         DBASE                          * DBERR 909 *
      C                   EXSR      SRERR                                        *************
      C                   END
-
+ 
       ** Keylist for accessing SDCSDRL0.                                                      CSE022
                                                                                               CSE022
      C     KCnDpn        KLIST                                                                CSE022
@@ -1231,19 +1233,19 @@
       *                                                              *
       ****************************************************************
      C     SRERR         BEGSR
-
+ 
      C                   MOVEL     '*ERROR '     @@RTCD
      C                   MOVEL     'SDSECDUPD'   DBPGM            10
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
      C                   DUMP
-
+ 
       **  TERMINATE THE PROGRAM
-
+ 
      C                   RETURN
-
+ 
      C                   ENDSR
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

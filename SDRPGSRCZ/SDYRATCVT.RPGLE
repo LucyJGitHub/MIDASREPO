@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Yield Rates Convert')
@@ -12,12 +12,13 @@
       *  Function:  This module converts the fields of a Yield Rate   *
       *             Transaction Detail from file to screen format     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD030900           Date 26Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030900           Date 26Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CAS008             Date 16Jun04               *
       * Midas Release 4.01 -------------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD030900 - Display negative rates properly                   *
       *  CRE026 - Consumer Banking                                    *
       *  CAS008 - IAS 39 Enhancements                                 *
@@ -69,119 +71,119 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** Period Years Array
      D PYrAr           S              2    DIM(98)
-
+ 
       ** Period Month Array
      D PMnAr           S              2    DIM(98)
-
+ 
       ** Period Days Array
      D PDyAr           S              2    DIM(98)
-
+ 
       ** Maturity Date Array
      D PMatAr          S              5P 0 DIM(98)
-
+ 
       ** Discount Factor Array
      D PDisAr          S             13P 9 DIM(98)
-
+ 
       ** Rate Array
      D PRatAr          S             13P 9 DIM(98)
-
+ 
       ** Output Array for Rate
      D WRatAr          S             14    DIM(98)
-
+ 
       ** Output Parameter Array for Maturity Date and Discount Factor
      D MatDateArr      S              7    DIM(98)
      D DiscFacArr      S             14    DIM(98)
-
+ 
       ** Yield Rates Transaction Details in File Format
      D YRATFilFmt    E DS                  EXTNAME(SDVYRATPD)
-
+ 
       ** Yield Rates Transaction Details in Screen Format
      D YRATScnFmt    E DS                  EXTNAME(SDYRATPD)
-
+ 
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** External DS for switchable features                                                  CAS008
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS008
                                                                                               CAS008
       ** Yield Curves Master File
      D SDYLDC        E DS                  EXTNAME(SDYLDCPD)
      D                                     PREFIX(C_)
-
+ 
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** Second DS for Access Programs, Long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D WAction         S              1
-
+ 
      D A               S              4  0
      D B               S              4  0
      D C               S              4  0
      D D               S              4  0
-
+ 
      D WYRDta          S           2339
-
+ 
      D PRtCd           S              7
      D POptn           S              7
      D PSard           S              6                                                       CAS008
-
+ 
      D ZDayNo          S              5  0
      D ZDate           S              6  0
      D ZADate          S              7
-
+ 
      D ZField          S             16
      D ZADec           S              1  0
                                                                                               CAS008
       ** Switchable Features                                                                  CAS008
      D CAS008          S              1                                                       CAS008
      D WRKPDY          S              2  0                                                    CRE026
-
+ 
                                                                                             MD030900
       **                                                                                    MD030900
      DCharRate         S             14                                                     MD030900
@@ -192,23 +194,23 @@
       **************************************************************
       /EJECT
       **************************************************************
-
+ 
       ** Initialization
-
+ 
      C                   EXSR      SRInit
-
+ 
       ** Save file fields to an array
-
+ 
      C                   EXSR      SRSavArr
-
+ 
       ** Set screen fields
-
+ 
      C                   EXSR      SRScreen
-
+ 
       ** Return
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -220,9 +222,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRSavArr      BEGSR
-
+ 
      C                   EVAL      PMatAr(1) = FSMMDN01
      C                   EVAL      PMatAr(2) = FSMMDN02
      C                   EVAL      PMatAr(3) = FSMMDN03
@@ -321,7 +323,7 @@
      C                   EVAL      PMatAr(96) = FSMMDN96
      C                   EVAL      PMatAr(97) = FSMMDN97
      C                   EVAL      PMatAr(98) = FSMMDN98
-
+ 
      C                   EVAL      PDisAr(1) = FSDSCF01
      C                   EVAL      PDisAr(2) = FSDSCF02
      C                   EVAL      PDisAr(3) = FSDSCF03
@@ -420,7 +422,7 @@
      C                   EVAL      PDisAr(96) = FSDSCF96
      C                   EVAL      PDisAr(97) = FSDSCF97
      C                   EVAL      PDisAr(98) = FSDSCF98
-
+ 
      C                   IF        C_FSYLDT = 'D'
      C                   EVAL      PRatAr(1) = FSDSCF01
      C                   EVAL      PRatAr(2) = FSDSCF02
@@ -620,9 +622,9 @@
      C                   EVAL      PRatAr(97) = FSYRAT97
      C                   EVAL      PRatAr(98) = FSYRAT98
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -634,9 +636,9 @@
       * Calls: SRZDate2, SRZEdit, SRFmtRate                           *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRScreen      BEGSR
-
+ 
      C                   EVAL      #0YLDC = FSYLDC
      C                   EVAL      #0YCCY = FSYCCY
      C                   EVAL      #0YICM = FSYICM
@@ -648,44 +650,44 @@
      C                   ELSE                                                                 CRE026
      C                   MOVE      *BLANKS       #0SPDY                                       CRE026
      C                   ENDIF                                                                CAS008
-
+ 
      C                   EVAL      WYRDta = (%SUBST(YRATFilFmt:12:2328))
-
+ 
       ** Reset counters
-
+ 
      C                   EVAL      A = *ZERO
      C                   EVAL      B = *ZERO
      C                   EVAL      C = *ZERO
      C                   EVAL      D = *ZERO
-
+ 
      C                   EVAL      A = A + 1
      C                   EVAL      B = B + 4
      C                   EVAL      C = B + 2
      C                   EVAL      D = C + 2
-
+ 
       ** Format period years, months and days
-
+ 
      C                   DOW       A <= 98
-
+ 
      C                   EVAL      PYrAr(A) = (%SUBST(WYRDta:B:2))
      C                   EVAL      PMnAr(A) = (%SUBST(WYRDta:C:2))
      C                   EVAL      PDyAr(A) = (%SUBST(WYRDta:D:2))
-
+ 
      C                   EVAL      A = A + 1
      C                   EVAL      B = B + 23
      C                   EVAL      C = B + 2
      C                   EVAL      D = C + 2
-
+ 
      C                   ENDDO
-
+ 
       ** Move formatted year/month/days to screen fields
-
+ 
      C                   EVAL      A = 1
      C**********         EVAL      B = 12                                                     CAS008
      C                   EVAL      B = 14                                                     CAS008
-
+ 
       ** Period Years
-
+ 
      C                   DOW       A <= 98
      C                   IF        PRatAr(A) = *ZERO and A <> 1
      C                   EVAL      %SUBST(YRATScnFmt:B:2) = *BLANKS
@@ -695,13 +697,13 @@
      C                   EVAL      A = A + 1
      C                   EVAL      B = B + 20
      C                   ENDDO
-
+ 
       ** Period Months
-
+ 
      C                   EVAL      A = 1
      C**********         EVAL      B = 14                                                     CAS008
      C                   EVAL      B = 16                                                     CAS008
-
+ 
      C                   DOW       A <= 98
      C                   IF        PRatAr(A) = *ZERO and A <> 1
      C                   EVAL      %SUBST(YRATScnFmt:B:2) = *BLANKS
@@ -711,13 +713,13 @@
      C                   EVAL      A = A + 1
      C                   EVAL      B = B + 20
      C                   ENDDO
-
+ 
       ** Period Days
-
+ 
      C                   EVAL      A = 1
      C**********         EVAL      B = 16                                                     CAS008
      C                   EVAL      B = 18                                                     CAS008
-
+ 
      C                   DOW       A <= 98
      C                   IF        PRatAr(A) = *ZERO and A <> 1
      C                   EVAL      %SUBST(YRATScnFmt:B:2) = *BLANKS
@@ -727,13 +729,13 @@
      C                   EVAL      A = A + 1
      C                   EVAL      B = B + 20
      C                   ENDDO
-
+ 
       ** Format Maturity Date, Rate and Discount Factor
-
+ 
      C                   EVAL       A = 1
-
+ 
      C                   DOW       A <= 98
-
+ 
      C                   IF        PMatAr(A) = *ZERO
      C                   EVAL      MatDateArr(A) = *BLANKS
      C                   ELSE
@@ -741,7 +743,7 @@
      C                   EXSR      SRZDate2
      C                   MOVEL     ZADate        MatDateArr(A)
      C                   ENDIF
-
+ 
      C                   IF        PDisAr(A) = *ZERO
      C                   MOVEL     *BLANKS       DiscFacArr(A)
      C                   ELSE
@@ -750,7 +752,7 @@
      C                   EXSR      SRZEdit
      C                   MOVE      ZField        DiscFacArr(A)
      C                   ENDIF
-
+ 
      C                   IF        PRatAr(A) = *ZERO
      C                   MOVEL     *BLANKS       WRatAr(A)
      C                   ELSE
@@ -778,15 +780,15 @@
      C                   ENDIF                                                              MD030900
       *                                                                                     MD030900
      C                   ENDIF
-
+ 
      C                   EVAL      A = A + 1
-
+ 
      C                   ENDDO
-
+ 
      C                   EXSR      SRFmtRate
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -798,17 +800,17 @@
       * Calls: ZDate2                                                 *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRZDate2      BEGSR
-
+ 
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDayNo
      C                   PARM                    BJDFIN
      C                   PARM                    ZDate
      C                   PARM                    ZADate
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -820,15 +822,15 @@
       * Calls: ZEdit                                                  *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRZEdit       BEGSR
-
+ 
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZField
      C                   PARM      9             ZADec
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -840,9 +842,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRFmtRate     BEGSR
-
+ 
      C                   EVAL      #0YRAT01 = WRatAr(1)
      C                   EVAL      #0YRAT02 = WRatAr(2)
      C                   EVAL      #0YRAT03 = WRatAr(3)
@@ -941,9 +943,9 @@
      C                   EVAL      #0YRAT96 = WRatAr(96)
      C                   EVAL      #0YRAT97 = WRatAr(97)
      C                   EVAL      #0YRAT98 = WRatAr(98)
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -955,34 +957,34 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRInit        BEGSR
-
+ 
       ** Blank outputs (except for Action Code)
-
+ 
      C                   MOVEL     #0ACTN        WAction
      C                   MOVEL     *BLANK        YRATScnFmt
      C                   MOVEL     WAction       #0ACTN
-
+ 
       ** Access Yield Curves file to get Yield Curve Type
-
+ 
      C                   CALLB     'AOYLDCR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY    '    POptn
      C                   PARM                    FSYLDC
      C     SDYLDC        PARM      SDYLDC        DSSDY
-
+ 
       ** Database Error
-
+ 
      C                   IF        PRtCd <> *BLANK
      C                   EVAL      DBKEY = FSYLDC
      C                   EVAL      DBFILE = 'SDYLDCPD'
      C                   EVAL      DBASE = 901
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -994,42 +996,42 @@
       * Calls: AOBANKR0, *PSSR                                        *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
       **  Program Parameters
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** Input Parameters
       ** Return Code
       ** Yield Rates Transaction Details File Format
-
+ 
      C                   PARM                    RetCodeIn
      C                   PARM                    YRATFilFmt
-
+ 
       ** Output Parameters
       ** Yield Rates Transaction Details Screen Format
       ** Formatted Maturity Date Array
       ** Formatted Discount Factor Array
-
+ 
      C                   PARM                    YRATScnFmt
      C                   PARM                    MatDateArr
      C                   PARM                    DiscFacArr
-
+ 
       ** Initialize program name
-
+ 
      C                   EVAL      DBPGM = 'SDYRATCVT'
-
+ 
       ** Access Bank Details
-
+ 
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST  '    POptn
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** Database Error
-
+ 
      C                   IF        PRtCd <> *BLANK
      C                   EVAL      DBKEY = POptn
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -1059,9 +1061,9 @@
      C                   EVAL      CAS008 = 'Y'                                               CAS008
      C                   ENDIF                                                                CAS008
      C                   ENDIF                                                                CAS008
-
+ 
      C                   ENDSR
-
+ 
       ********************************************************************
       /EJECT
       ********************************************************************
@@ -1073,4 +1075,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Master Messages Reference Utility')
@@ -20,14 +20,16 @@
       *               be entered in the field.                        *
       *               The logical files will be updated.              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *     Last Amend No. BG26993            Date 26Jan10            *
-      *     Prev Amend No. 164663             Date 06Sep99            *
+      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 164663             Date 06Sep99               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *     BG26993 - Delivery of upgrade programs to core.           *
       *             - Renamed program S16466301.                      *
       *     164663  - Program amended for fix 164663.                 *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Time Zone Selection Screen')
@@ -12,17 +12,19 @@
       *  Function:  This program display the records from the         *
       *             Time Zone.                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG21289           Date 14Oct08               *
-      *  Prev Amend No. BUG19762           Date 03Jul08               *
+      *  Prev Amend No. BUG21289           Date 14Oct08               *
+      *                 BUG19762           Date 03Jul08               *
       *                 BUG19523           Date 26Jun08               *
       *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG21289 -  Various Timezone and DST errors. Applied fix     *
       *              21040                                            *
       *  BUG21040 -  Error on selection of delta time                 *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas Utility to convert CNUM from numeric to char')
@@ -9,13 +9,15 @@
       *                                                               *
       *  SMU00214 - Utility to convert CNUM from numeric to character *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG26488 *CREATE   Date 19Oct09               *
+      *  Prev Amend No. BUG26488 *CREATE   Date 19Oct09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG26488 - MMPTRMPD compiled with error - attributes are     *
       *             incompatible                                      *
       *                                                               *

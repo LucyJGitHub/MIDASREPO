@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate European Tax Status')                *
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDVTXST01 - Validate European Tax Status                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
       *                 CER069             Date 03Jul14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR743761           Date 16Apr11               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CER069 - German Tax Enhancement                              *
@@ -60,76 +62,76 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Additional Customer Details File - by Customer number
      FSDACUSL1  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** External data structure for access programs (long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** External DS for Country of Tax Codes
      D SDCTTX        E DS                  EXTNAME(SDCTTXPD)
-
+ 
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
                                                                                               CER069
       ** External DS for SAR Details                                                          CER069
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER069
-
+ 
       ** New Details in Screen Format
      D NwDlScnFmt    E DS                  EXTNAME(SDCCTXPD)
-
+ 
       ** New Details in File Format
      D NwDlFilFmt    E DS                  EXTNAME(SDVCCTXPD)
-
+ 
       ** Valid Customer Details                                                             AR740196
      D ValidCusd     E DS                  EXTNAME(SDVCUSDPD)                               AR740196
      D                                     PREFIX(A_)                                       AR740196
@@ -138,25 +140,25 @@
      D                                     PREFIX(B_)                                       AR740196
       ** Screen Error Indicator
      D OKFlags       E DS                  EXTNAME(SDECCTXPD)
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
-
+ 
       ** Work Variables
      D PRTCD           S              7A
      D POPTN           S              7A
@@ -169,7 +171,7 @@
                                                                                               232543
       ** Mode of Operation                                                                    232543
      D PModeOfOp       S              6A                                                      232543
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -177,18 +179,18 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Initialization
-
+ 
      C                   MOVE      *BLANK        RetCodeIn
-
+ 
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -198,11 +200,11 @@
      C                   EVAL      BBCOLC  = A_CUCOLC                                       AR740196
      C                   EVAL      E5JATP  = B_ADJATP                                       AR740196
      C                   ENDIF                                                              AR740196
-
+ 
       ** Retrieve account type.
-
+ 
      C     DDCUST        CHAIN     SDACUSL1                           01
-
+ 
      C                   IF        *IN01 = *ON
                                                                                               232543
       ** Customer not found in SIN mode, database error.                                      232543
@@ -235,27 +237,27 @@
      C                   ENDSL                                                                CER059
                                                                                               232543
      C                   ENDIF
-
+ 
       ** If entry is blank and account type is private individual, get default tax status.
-
+ 
      C                   IF        DDETXS = *BLANK AND
      C                             E5JATP = 'I'                                             AR740196
      C**********                   E5JATP = 'I'                                    AR738919 AR740196
      C**********                   E5JATP = 'I' AND                                AR738919 AR740196
      C**********                   PModeOfOp <> '*VU '                             AR738919 AR740196
      C                   IF        PModeOfOp <> '*VU '                                      AR740196
-
+ 
      C                   EVAL      PKEY = DDCUST
-
+ 
       ** Retrieve Country of Residence.
-
+ 
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM                    PKEY
      C                   PARM      *BLANKS       PKYST
      C     SDCUST        PARM      SDCUST        DSSDY
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C                   MOVEL     'SDCUSTPD'    DBFILE
      C                   MOVEL     PKEY          DBKEY
@@ -263,37 +265,37 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF                                                              AR740196
-
+ 
       ** Retrieve Default Tax Status using Country of Residence.
-
+ 
      C                   CALLB     'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      DDCTTX        PCTRT
      C                   PARM      BBCOLC        PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
-
+ 
      C                   IF        PRTCD = '*NRF'
-
+ 
       ** Retrieve Default Tax Status without Country of Residence.
-
+ 
      C                   CALLB     'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      DDCTTX        PCTRT
      C                   PARM      *BLANKS       PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      DDETXS = EWTXS1
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Determine if status is valid
-
+ 
      C                   IF        DDETXS = 'S' OR
      C                             DDETXS = 'D' OR
      C                             DDETXS = 'T' OR
@@ -302,13 +304,13 @@
      C                             DDETXS = 'E' OR
      C                             DDETXS = ' ' AND
      C                             E5JATP <> 'I'
-
+ 
      C                   EVAL      OKETXS = 'Y'
-
+ 
      C                   ELSE
-
+ 
       ** Status must be one of S/D/T/E
-
+ 
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDETXS'
      C                   IF        CER069 = 'Y'                                               CER069
@@ -318,9 +320,9 @@
      C                   ENDIF                                                                CER069
      C                   EVAL      OKETXS = 'N'
      C                   GOTO      EMAIN
-
+ 
      C                   ENDIF
-
+ 
       ** If Tax Status is Taxable, access record from Countries of Tax                        232543
       ** error if missing or has no Account Code and Tax Basket                               232543
                                                                                               232543
@@ -388,9 +390,9 @@
      C                   ENDIF                                                                232543
                                                                                               232543
       ** Return to calling program
-
+ 
      C                   EVAL      CTETXS = DDETXS
-
+ 
      C     EMAIN         TAG
      C                   RETURN
       *****************************************************************
@@ -401,19 +403,19 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** Input Parameters
       ** Return Code
      C                   PARM                    RetCodeIn
                                                                                               232543
       ** Mode of Operation                                                                    232543
      C                   PARM                    PModeOfOp                                    232543
-
+ 
       ** New Detail in Screen Format
      C                   PARM                    NwDlScnFmt
-
+ 
      C                   PARM                    ValidCusd                                  AR740196
      C                   PARM                    ValidCuad                                  AR740196
       ** Output Parameters
@@ -421,18 +423,18 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
-
+ 
       ** Screen Error Indicator
      C                   PARM                    OKFlags
-
+ 
       ** New Detail in File Format
      C                   PARM                    NwDlFilFmt
-
+ 
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
                                                                                               CER069
       ** Access SAR file to determine if CER069 is present.                                   CER069
@@ -458,7 +460,7 @@
      C                   IF        PRtCd = *BLANKS                                            CER069
      C                   EVAL      CER069 = 'Y'                                               CER069
      C                   ENDIF                                                                CER069
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -466,4 +468,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

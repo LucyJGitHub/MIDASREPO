@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Validate SSIDefault_Sec_Check')               *
@@ -9,12 +9,14 @@
       *  SD009598 - Midas SD Validate SSIDefault_Sec_Check            *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CSD095  *CREATE    Date 09Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD095  *CREATE    Date 09Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
       *                                                               *
       *****************************************************************

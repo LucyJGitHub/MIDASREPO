@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD
 /*EXI *  TEXT('Midas SE Market prices interface controller')          *
@@ -21,14 +21,15 @@
       *            or Invalid file and the call to the Message        *
       *            Handler will take place in this module.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 233235             Date 03Oct06               *
+      *                 233235             Date 03Oct06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL031             Date 05Jul04               *
       *                 CSE071             Date 19Jul05               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  233235 - Checking of switchable feature CGL031 was not done. *
       *           Note GEMS fix 233570 resolved an issue with 233235  *

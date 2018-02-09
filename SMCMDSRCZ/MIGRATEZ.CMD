@@ -9,16 +9,18 @@
 /*                                                                   */
 /*       MIGRATEZ - Migrate zone                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       Last Amend No. BUG27793           Date 04Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27793           Date 04Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. B18716             Date 06May08              */
+/*                      B18716             Date 06May08              */
 /*                      CUP038  *CREATE    Date 06Sep07              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27793 - Make migration muli-streamed..                   */
 /*       B18716 - Values are incorrect for MODE.                     */
 /*       CUP038 - Re-organise database migration.                    */

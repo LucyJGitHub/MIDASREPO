@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM CRE041 Migration Utility for RECUSHPA')       *
@@ -12,12 +12,14 @@
       *  Function:  This program migrates RECUSHPA to CUSEXCE         *
       *             and updates RECI to 'H'                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD019999  *CREATE  Date 11Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD019999 *CREATE   Date 11Apr13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD019999 - RECUSHPA Migration issue                          *
       *                                                               *
       *****************************************************************

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Addnl Cust. Validate Spouse/Husband Ref')     *
@@ -13,16 +13,18 @@
       *  Function:  This module validates the Spouse Reference        *
       *             entered on screen                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD025586           Date 23Mar14               *
-      *  Prev Amend No. AR786101           Date 09Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025586           Date 23Mar14               *
+      *                 AR786101           Date 09Jun11               *
       *                 AR744062           Date 14Apr11               *
       *                 CER059             Date 19Jul10               *
       *                 CER034  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025586 - Incorrect error message displayed when 'Spouse    *
       *             Reference' field is left blank                    *
       *  AR786101 - Error encountered due to closed customer          *

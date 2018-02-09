@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Time Zone Report Program')
@@ -17,16 +17,18 @@
       *             or for a specific year and/or for a specific time *
       *             zone in input cycle or close of business.         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG20625           Date 12Aug08               *
-      *  Prev Amend No. BUG19930           Date 14Jul08               *
+      *  Prev Amend No. BUG20625           Date 12Aug08               *
+      *                 BUG19930           Date 14Jul08               *
       *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG20625 - Wrong time format                                 *
       *  BUG19930 - After typing "?" the selection screen of time     *
       *             zone did not appear.                              *
@@ -1158,4 +1160,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

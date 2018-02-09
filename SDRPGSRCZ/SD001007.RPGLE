@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Daylight Savings Time Change Date')
@@ -13,17 +13,19 @@
       *             DSt rules specified in DST file is satisfied      *
       *             and will update start and end date.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG21195           Date 25Sep08               *
-      *  Prev Amend No. BUG21251           Date 03Oct08               *
+      *  Prev Amend No. BUG21195           Date 25Sep08               *
+      *                 BUG21251           Date 03Oct08               *
       *                 BUG20226           Date 15Aug08               *
       *                 CSW208  *CREATE    Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG21195 - COB - SCC0411-ZFINDDATE failed when called by     *
       *             SD001007                                          *
       *  BUG21251 - Branch details not changed at DST change date     *
@@ -800,4 +802,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2007
+(c) Finastra International Limited 2007

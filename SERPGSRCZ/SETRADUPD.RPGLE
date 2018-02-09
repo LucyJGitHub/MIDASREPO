@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Trade database update')                       *
@@ -9,10 +9,11 @@
       *                                                               *
       *  SETRADUPD - SECURITIES TRADES DATABASE UPDATE                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD020922           Date 26Jun13               *
-      *  Prev Amend No. AR1092084          Date 03Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020922           Date 26Jun13               *
+      *                 AR1092084          Date 03Apr13               *
       *                 AR632291           Date 24Aug10               *
       *                 CSW210             Date 04May10               *
       *                 CER059             Date 19Jul10               *
@@ -118,6 +119,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020922 - Serious Midas error encountered when authorising  *
       *             trade. Removed the condition of checking Trade &  *
       *             Book Position Reconcilable field (BVTBRC) as this *
@@ -7159,7 +7161,7 @@
       ** Corporate Action Flag        COAF
       ** Withholding tax              WHTX     YES                              CSE023
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** OPTAG - OPEN TAGS for XML                                                                  CSD015
 <Pay From>                                                                                    CSD015
 <Pay To>                                                                                      CSD015

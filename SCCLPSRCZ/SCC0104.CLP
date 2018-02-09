@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC0104 - Autostart Job Entry runs this program             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD031644           Date 08Jan15              */
-/*       Prev Amend No. AR1000912          Date 13Nov14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD031644           Date 08Jan15              */
+/*                      AR1000912          Date 13Nov14              */
 /*                      MD027386           Date 19Aug14              */
 /*                      CGL155             Date 21Mar14              */
 /*                      CCB020             Date 06Aug12              */
@@ -46,6 +47,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
 /*                  Status of Interfaced FT Payments). Unable        */
 /*                  to compile GP002900 due to zonal access.         */
@@ -104,7 +106,7 @@
 /*/COPY WNCPYSRC,SCC0104INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&TSTATUS) TYPE(*CHAR) LEN(8)
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
@@ -645,7 +647,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,SCC0104END                                          */
  
              ENDPGM

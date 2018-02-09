@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Validate SWIFT ID 2')                         *
@@ -9,20 +9,22 @@
       *                                                               *
       *  SDVSFI2  - Validate SWIFT ID 2                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  NOTE: This module is based over SDVSFID, any change to the   *
       *        latter may have to be applied to this module too.      *
       *                                                               *
-      *  Last Amend No. AR855391           Date 27Oct11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR855391           Date 27Oct11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSW036  *CREATE    Date 15Dec04               *
+      *                 CSW036  *CREATE    Date 15Dec04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR855391 - CUSD Overridable Errors not found in EN System    *
       *             (CSD091 - Overrideable Errors Configurability     *
       *             Enabler Phase 2)                                  *
@@ -332,4 +334,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

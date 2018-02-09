@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       SDC000801 - Midas SD Automated closure of Retail A/C        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD027217           Date 29May14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD027217           Date 29May14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSD023  *CREATE    Date 11Mar05              */
+/*                      CSD023  *CREATE    Date 11Mar05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD027217 - Not possible to authorize customer closure       */
 /*       CSD023 - Automatic Customer Account Closure                 */
 /*                                                                   */
@@ -29,7 +31,7 @@
              DCL        VAR(&CMTACTIVE) TYPE(*CHAR) LEN(1) VALUE('N')
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /* Global monitor message */
@@ -64,7 +66,7 @@
              MONMSG     MSGID(CPF0000)
              ENDDO
  
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
  
              ENDPGM

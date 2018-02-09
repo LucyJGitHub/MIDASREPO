@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SE Risk Weighted Asset Codes Maint.')
@@ -15,18 +15,20 @@
       *                                                               *
       *  Called By: SEC001300 - Securities Risk Weighted Asset Code   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG7029            Date 09Jun05               *
-      *  Prev Amend No. CSC022             Date 24Feb04               *
+      *  Prev Amend No. BUG7029            Date 09Jun05               *
+      *                 CSC022             Date 24Feb04               *
       *                 CGL018  *CREATE    Date 07Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG7029 - Ensure ZMUSER is re-checked on every call,         *
       *            move out of *INZSR.                                *
       *  CSC022 - Commitment Control Changes for MidasPlus            *

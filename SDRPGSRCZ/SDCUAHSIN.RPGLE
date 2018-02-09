@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Customer/Authority Holder Screen Input')      *
@@ -12,15 +12,17 @@
       *  Function:  This module will display the Customer/Authority   *
       *             Holders                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. BUG23774           Date 20Apr09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23774           Date 20Apr09               *
       *                 BUG22115           Date 13Jan09               *
       *                 CER034  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG23774 - Updates are not committed                         *
       *  BUG22115 - Customer/Authority Holder Link screen does not    *
@@ -1069,4 +1071,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 ** CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

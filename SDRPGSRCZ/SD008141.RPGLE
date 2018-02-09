@@ -13,14 +13,16 @@
       *            returning Stamp Tax Rates, Stamp Tax Currencies    *
       *            and for Securities, the Security Charge Code.      *
       *                                                               *
-      *  (c) Copyright Misys International Banking Systems Ltd 2010   *
+      *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. CLE075AP           Date 06Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE075AP           Date 06Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE075AP - COB Restructure - LE COB Optimisation Phase 1     *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CER049 - Stamp Tax                                           *
@@ -610,4 +612,4 @@
       ********************************************************************
       /EJECT
 ** CPY@
-(c) Copyright Misys International Banking Systems Ltd. 2010
+(c) Copyright Finastra International Limited 2010

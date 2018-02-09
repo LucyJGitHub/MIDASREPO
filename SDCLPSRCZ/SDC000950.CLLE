@@ -7,55 +7,57 @@
 /*                                                                   */
 /*       SDC000950 - Midas SD Send Trigger Message for WLC Batch     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2016           */
+/*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
-/*       Last Amend No. MD041172  *CREATE    Date 20Sep16            */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD041172 *CREATE   Date 20Sep16              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD041172 - WLC Bulk Customer Watchlist Gap                  */
 /*                                                                   */
 /*********************************************************************/
-
+ 
              PGM        PARM(&SQMGR &SQUEUE)
-
+ 
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&SQMGR) TYPE(*CHAR) LEN(20)
              DCL        VAR(&SQUEUE) TYPE(*CHAR) LEN(20)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(2000)
              DCLF       FILE(SDBANKPD) OPNID(F1)
              DCLF       FILE(SDWLCCPD) OPNID(F2)
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           Ltd. 2016')
-
+ 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
              SNDPGMMSG  MSG('SDC000950 - Midas SC Trigger Message for +
                           WLC Batch') TOMSGQ(MRUNQ)
-
+ 
              CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
                           DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
-
+ 
 /** Access bank details */
-
+ 
              RCVF       OPNID(F1)
-
+ 
 /** Access Functions for Watch List Checking file */
-
+ 
 CHECK:       RCVF       OPNID(F2)
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
-
+ 
              IF         COND(&F2_W1FUNC *EQ 'SDCUSD  ' *AND +
                           &F2_W1PFRQ *NE ' ' *AND &F2_W1NPCD *LE +
                           &F1_BJRDNB) THEN(DO)
-
+ 
 /** Rebuild WLC batch customer details table */
-
+ 
              CLRPFM     FILE(SDWLCTPD)
              SCRUNSQL   SQL('INSERT INTO SDWLCTPD +
                           (WLCUST,WLCNA1,WLCNA2,WLCNA3,WLCNA4,WLCSID,W+
@@ -65,9 +67,9 @@ CHECK:       RCVF       OPNID(F2)
                           E5CNA2,E5CNA3,E5CNA4,''N'' FROM SDCUSTPD +
                           JOIN SDACUSPD ON SDCUSTPD.BBCUST = +
                           SDACUSPD.E5CUST')
-
+ 
 /** Send trigger message to queue */
-
+ 
              CHGVAR     VAR(&MSG) VALUE('WLCCUSD')
              CALL       PGM(SCC000951) PARM(&SQMGR &SQUEUE &MSG)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -76,9 +78,9 @@ CHECK:       RCVF       OPNID(F2)
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
-
+ 
 /** Update WLC next periodic check date */
-
+ 
              CALL       PGM(SD000950) PARM(&F2_W1FUNC)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
@@ -87,15 +89,15 @@ CHECK:       RCVF       OPNID(F2)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
              GOTO       CMDLBL(END)
-
+ 
              ENDDO
              GOTO       CMDLBL(CHECK)
-
+ 
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SDC000950 ended abnormally') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
-
+ 
 END:
              ENDPGM

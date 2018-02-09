@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       SDC03 - TABLE FILE MAINTENANCE                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 099226             DATE 05FEB96              */
-/*       PREV AMEND NO. 087757             DATE 24OCT95              */
+/*       Prev Amend No. 099226             Date 05Feb96              */
+/*                      087757             Date 24Oct95              */
 /*                      S01413             DATE 13APR93              */
 /*                      RT0159             DATE 25JUN91              */
 /*                      E17785                  16AUG90              */
@@ -31,6 +32,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       099226 - Change 087757 has resulted in a subset of SD       */
 /*                functions being locked out with an 'in use by      */
 /*                by another user' message.                          */
@@ -55,7 +57,7 @@
 /*********************************************************************/
              PGM        PARM(&PRM01 &PRM02)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                            */
              DCL        &PRM01        TYPE(*CHAR)  LEN(8)
@@ -228,5 +230,5 @@
  /*                                                                 */
  ENDCLPGM:   RETURN
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM    /* END CL PGM */

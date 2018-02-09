@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Additional Cust/Aut Holders Validation')      *
@@ -12,10 +12,11 @@
       *  Function:  This module validates the Customer/Authority      *
       *             Holders Details function                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CGL132             Date 15Mar13               *
-      *  Prev Amend No. AR855391           Date 27Oct11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL132             Date 15Mar13               *
+      *                 AR855391           Date 27Oct11               *
       *                 CSD091             Date 04Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG25850           Date 03Sep09               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR855391 - CUSD Overridable Errors not found in EN System    *
       *  CSD091 - Overrideable Errors Configurability Enabler Phase 2 *
       *  CER059 - German Feature Upgrade to Delhi                     *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM API Configuration Initialisation')            *
@@ -15,14 +15,16 @@
       *  Called By: SMUC000215 - Midas SM API Configuration           *
       *                          Initialisation Control               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR808720           Date 03Aug11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR808720           Date 03Aug11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CAP204  *CREATE    Date 15Mar10               *
+      *                 CAP204  *CREATE    Date 15Mar10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR808720 - Program should not have commitment control.       *
       *  CAP204 - Teller Related APIs - Account Transfer              *
       *                                                               *

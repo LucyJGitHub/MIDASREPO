@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas Take on of Stamp Tax Position Settlement')       *
@@ -9,12 +9,14 @@
       *                                                               *
       *  SD008203 - Midas Take on of Stamp Tax Position Settlement    *
       *                                                               *
-      *  (C) Copyright Misys International Banking Systems Ltd. 2011  *
+      *  (C) Copyright Finastra International Limited 2011            *
       *                                                               *
-      *  Last Amend No. AR821877 *CREATE   Date 05Sep11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR821877 *CREATE   Date 05Sep11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR821877 - Component SEC1112 00001 failed                    *
       *                                                               *
       *****************************************************************
@@ -255,4 +257,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd., 2011
+(C) Copyright Finastra International Limited 2011

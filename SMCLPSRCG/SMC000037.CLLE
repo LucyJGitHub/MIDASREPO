@@ -7,7 +7,7 @@
 /*                                                                   */
 /*       SMC000037 - CPP for MIGRATEG                                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /* This program monitors for a large and specific set of messages    */
@@ -23,8 +23,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       Last Amend No. MD039374           Date 04May16              */
-/*       Prev Amend No. MD034724           Date 04Jun15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD039374           Date 04May16              */
+/*                      MD034724           Date 04Jun15              */
 /*                      CPK030             Date 09Apr14              */
 /*                      MD020016           Date 23Apr13              */
 /*                      AR1085447          Date 06Feb13              */
@@ -39,6 +40,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD039374 - Correct program name.                            */
 /*       MD034724 - Changes to the handling of UDF tables.           */
 /*       CPK030 - Additional processing for moved DTALIB files.      */
@@ -54,7 +56,7 @@
 /*********************************************************************/
              PGM        PARM(&FMLIB &TOLIB &CRT &RERUN &SYSPFX +
                           &EXCEPTION &THRESHOLD &JUMP)
-
+ 
              DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CRT) TYPE(*CHAR) LEN(4)
@@ -63,7 +65,7 @@
              DCL        VAR(&EXCEPTION) TYPE(*CHAR) LEN(362)
              DCL        VAR(&THRESHOLD) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&JUMP) TYPE(*DEC) LEN(2 0)
-
+ 
              DCL        VAR(&FMPFX) TYPE(*CHAR) LEN(2)                                    /*CUP006*/
              DCL        VAR(&TOPFX) TYPE(*CHAR) LEN(2)                                    /*CUP006*/
              DCL        VAR(&ORLVL) TYPE(*CHAR) LEN(22)
@@ -85,23 +87,23 @@
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
              DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80) +
                           VALUE('UPDATE SMCNUMPD SET CNUPDF =')
-
+ 
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7) VALUE(' ')
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1)
-
+ 
 /**********  DCLF       FILE(SMCPYDL0)                                                 */ /*CUP003*/
              DCLF       FILE(SMCPYDL2)                                                    /*CUP003*/
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           2007')
-
+ 
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
-
+ 
 /* Create source file for running SQL statements. */
              DLTF       FILE(QTEMP/RUNSQLSTM)
              MONMSG     MSGID(CPF0000)
@@ -112,7 +114,7 @@
                           file for SMC000038')
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
-
+ 
 /* Set temporary data area with &THRESHOLD and &JUMP values .... */
              CHGVAR     VAR(&THRESHOLDA) VALUE(&THRESHOLD)
              CHGVAR     VAR(&JUMPA) VALUE(&JUMP)
@@ -126,7 +128,7 @@
              CHGDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (23 2)) +
                           VALUE(&THRESHOLDA)
              CHGDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (25 2)) VALUE(&JUMPA)
-
+ 
 /* Work out whether special migration is required. */
              RTVDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (1 22)) RTNVAR(&ORLVL)
              IF         COND(%SST(&ORLVL 1 10) *EQ 'Midas     ') +
@@ -159,7 +161,7 @@
              IF         COND(&MODE *EQ ' ') THEN(DO)                                    /*MD020016*/
                 CHGVAR     VAR(&MODE) VALUE('*POSTAC')                                  /*MD020016*/
              ENDDO                                                                      /*MD020016*/
-
+ 
 /* If this is not a re-run then populate driving file. */
              IF         COND(&RERUN *EQ '*NO') THEN(DO)
                 DLTF       FILE(QTEMP/SMC000037O)
@@ -207,7 +209,7 @@
                              COMMIT(*NONE)
                 MONMSG     MSGID(SQL9010)
              ENDDO
-
+ 
 /* Check if any items have been specified on the exceptions list. */
              CHGVAR     VAR(&NOOFEXCPTB) VALUE(%SST(&EXCEPTION 1 2))
              CHGVAR     VAR(&NOOFEXCPTS) VALUE(%BIN(&NOOFEXCPTB))
@@ -230,13 +232,13 @@ EXCEPT:
                    GOTO       CMDLBL(EXCEPT)
                 ENDDO
              ENDDO
-
+ 
 READNEXT:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(EXTRA)
              ENDDO
-
+ 
 /* If this is a rerun then some records will have their status already updated */
 /*  so some of these can be ignored.  Those with a status of PASSED are        */
 /*  already excluded by the logical.                                           */
@@ -247,21 +249,21 @@ READNEXT:
              IF         COND(&ODDDAT *EQ 'UNIQUE') THEN(DO)                               /*CUP003*/
                 GOTO       CMDLBL(READNEXT)                                               /*CUP003*/
              ENDDO                                                                        /*CUP003*/
-
+ 
 /* If threshold has been breached then report. */
              RTVDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (27 1)) +
                           RTNVAR(&BREACH)
              IF         COND(&BREACH *EQ 'Y') THEN(DO)
                 GOTO       CMDLBL(BREACH)
              ENDDO
-
+ 
 /* Ignore record for temporary data area SMBRGMIGDA. */
              IF         COND(&ODOBNM *EQ 'SMBRGMIGDA') THEN(DO)
                 CALL       PGM(SM000008) PARM(&ODOBNM '*DTAARA' +
                              '*DELETE' ' ')
                 GOTO       CMDLBL(READNEXT)
              ENDDO
-
+ 
 /* If object not physical file, data area or data queue then just flag */
 /*  as "not found".                                                   */
 /**********  IF         COND(%SST(&ODOBAT 1 2) *NE 'PF' *AND &ODOBTP +                 */ /*CUP003*/
@@ -274,22 +276,22 @@ READNEXT:
                              'NFOUND')
                 GOTO       CMDLBL(READNEXT)
              ENDDO
-
+ 
  /* Update driving file that job is submitted. */
              CALL       PGM(SM000008) PARM(&ODOBNM &ODOBTP '*UPDATE' +
                           'SUBMIT')
-
+ 
 /* Submit job to copy data for each object. */
              SBMJOB     CMD(CALL PGM(SMC000042) PARM(&ODOBNM &ODOBTP +
                           &FMLIB &TOLIB &CRT &RERUN &MODE)) +
                           JOB(&ODOBNM) JOBD(SETUP) JOBQ(SMJOBQNM)
-
+ 
              GOTO       CMDLBL(READNEXT)
-
+ 
 EXTRA:
              CHGVAR     VAR(&FMPFX) VALUE(%SST(&FMLIB 1 2))                               /*CUP006*/
              CHGVAR     VAR(&TOPFX) VALUE(%SST(&TOLIB 1 2))                               /*CUP006*/
-
+ 
 /* Call program to handle UDF extension tables. */
 /* Check if option has already been run. */
 /**********  CALL       PGM(SM000008) PARM('UPC000310' '*PGM' +                      */ /*MD034724*/
@@ -310,7 +312,7 @@ EXTRA:
                 SBMJOB     CMD(CALL PGM(SM000075) PARM(&FMLIB &TOLIB)) +
                              JOB(SM000075) JOBD(SETUP) JOBQ(SMJOBQNM)                   /*MD034724*/
              ENDDO
-
+ 
 /* Call program to handle special migration processing. */                                /*CUP006*/
 /* Check if option has already been run. */                                               /*CUP006*/
              CALL       PGM(SM000008) PARM('SMC000075' '*PGM' +
@@ -323,7 +325,7 @@ EXTRA:
                 SBMJOB     CMD(CALL PGM(SMC000075) PARM(&FMPFX &TOPFX)) +
                              JOB(SMC000075) JOBD(SETUP) JOBQ(SMJOBQNM)                    /*CUP006*/
              ENDDO                                                                        /*CUP006*/
-
+ 
 /* Call program to copy files that have been moved out of deliverable data */             /*CPK030*/
 /*  library.                                                               */             /*CPK030*/
              CALL       PGM(SM000008) PARM('SMC000132' '*PGM' +
@@ -339,9 +341,9 @@ EXTRA:
                              '*GLOBAL')) JOB(SMC000132) JOBD(SETUP) +
                              JOBQ(SMJOBQNM)                                             /*MD039374*/
              ENDDO                                                                        /*CPK030*/
-
+ 
              GOTO       CMDLBL(ENDPGM)
-
+ 
 BREACH:
 /* Send specific message for breach of threshold. */
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('The +
@@ -349,7 +351,7 @@ BREACH:
                           breached.  The migration is halted.') +
                           MSGTYPE(*ESCAPE)
              GOTO       CMDLBL(ENDPGM)
-
+ 
 ERROR:
  /* Recursive error. */
              IF         COND(&RECURSIVE *EQ 'Y') THEN(DO)
@@ -365,6 +367,6 @@ ERROR2:
  /* Pass it back to calling program */
              SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
                           MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
-
+ 
 ENDPGM:
              ENDPGM

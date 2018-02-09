@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Customer details database update')            *
@@ -9,10 +9,11 @@
       *
       *  SDCUSDUPD - STANDING DATA CUSTOMERS DATABASE UPDATE          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD045218           Date 17Apr17               *
-      *  Prev Amend No. MD043029           Date 05Dec16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD045218           Date 17Apr17               *
+      *                 MD043029           Date 05Dec16               *
       *                 MD042407           Date 08Nov16               *
       *                 MD038401B          Date 05Oct16               *
       *                 CSW216             Date 14Mar16               *
@@ -132,6 +133,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD045218 - Account Review is not displayed in listview       *
       *  MD043029 - Serious Midas Error encountered during            *
       *             authorisation of CUSD amend                       *
@@ -290,7 +292,7 @@
       *  CAP034 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
-
+ 
      FSDALTNL1  IF   E           K DISK
       * Interest Payment File 6
      FINTPSL6   IF   E           K DISK    RENAME(INTPSDDF:INTPSLF6)
@@ -303,11 +305,11 @@
      F                                     PREFIX(C_)
       * RTV : Midas SD Customer marketing groups retrieval
      FSDCMRKL1  IF   E           K DISK
-
+ 
       * UPD : Midas SD Customer Details Master File
      FSDCUSTL0  UF A E           K DISK    COMMIT
      F/COPY WNCPYSRC,SDH00749
-
+ 
       ** UPD : Midas SD Customer Ext Details File                                             CGL132
      FSDCUSXL0  UF A E           K DISK    COMMIT                                             CGL132
      F                                     RENAME(SDCUSTX0:SDCUSTX1)                          CGL132
@@ -323,23 +325,23 @@
                                                                                               CGL132
       ** US Indicia Comment History                                                           CGL132
      FSDINCHL0  UF A E           K DISK    COMMIT                                             CGL132
-
+ 
       * UPD : Midas SD Alternate names and address
      FSDALTNL0  UF   E           K DISK    COMMIT
-
+ 
       * UPD : Midas SD Trade Innovation Customer Details
      FSDTICSL0  UF A E           K DISK    COMMIT
      F                                     USROPN
-
+ 
       * UPD : Midas SD Base Rate Tax Details
      FSDCBRTL1  UF A E           K DISK    COMMIT
      F                                     USROPN
      FPTYHSTPD  UF A E           K DISK    COMMIT
      F                                     USROPN
-
+ 
      F**LSDVEBRPTPDO    E             DISK
      F**L                                  RENAME(SDVBRPTPD0:SDVBRPTERR)
-
+ 
       * UPD : Midas SD Private Banking Details
      FSDPBDSL0  UF A E           K DISK    COMMIT
      F                                     PREFIX(D_)
@@ -373,7 +375,7 @@
                                                                                               CSD015
       ** Compliance Watch Hit List                                                            CSD015
      FSDCWHTL1  IF   E           K DISK                                                       CSD015
-
+ 
       ** UPD : Midas SD Global Customer X-Reference                                           CGP001
      FGPCUSTXL0 UF A E           K DISK    COMMIT                                             CGP001
      F                                     PREFIX(G_)                                         CGP001
@@ -456,12 +458,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -472,16 +474,16 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
-
+ 
       ** CSD023 fileds                                                                        CSD023
      D CSD023          S              1                                                       CSD023
      D CSD028          S              1                                                       CSD028
@@ -551,7 +553,7 @@
      D SysVal1         C                   'FATCADftCLsNewCustNH'                             CGL132
      D SysVal2         C                   'AcRevDftFreq'                                     CGL132
      D SysVal3         C                   'FATCACountryofTax'                                CGL132
-
+ 
      D ChkCusdFmt    E DS                  EXTNAME(SDCUSTPD)
       ** Rename fields for Timestamp checking
      D                                     PREFIX(CH)
@@ -562,7 +564,7 @@
       * Current Customer in File Format (Private Banking Details)
      D CPrbFilFmt    E DS                  EXTNAME(SDPBDSPD)
      D                                     PREFIX(CP_)
-
+ 
       ** TI Customer Details in File Format                                                  BUG4967
      D CuTIFilFmt    E DS                  EXTNAME(SDTICSPD)                                 BUG4967
      D                                     PREFIX(Z_)                                        BUG4967
@@ -572,7 +574,7 @@
      D                                     PREFIX(CG_)                                        CGP001
      D CrXcFilFmt    E DS                  EXTNAME(SDCUSTXC)                                  CGL132
      D                                     PREFIX(C_)                                         CGL132
-
+ 
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID CUSTOMER
      D SDVCUSD       E DS                  EXTNAME(SDVCUSDPD)
      D                                     PREFIX(A_)
@@ -594,24 +596,24 @@
       ** FATCA Customer Details in file format                                                CGL132
      D CuFaFilFmt    E DS                  EXTNAME(SDFTCSPD)                                  CGL132
      D                                     PREFIX(C_)                                         CGL132
-
+ 
      D SDECUSD       E DS                  EXTNAME(SDECUPRPD)
       * Error indicators
-
+ 
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR 'BEFORE UPDATE' CUSTOMER
      D B_CUSTD       E DS                  EXTNAME(SDCUSTPD)
      D                                     PREFIX(B_)
-
+ 
       **  CUSTOMERS FILE
      D CUSTDF        E DS                  EXTNAME(SDCUSTPD)
      D CUSTDF2       E DS                  EXTNAME(SDCUSTPD)                                  CGL132
      D                                     PREFIX(N_)                                         CGL132
-
-
+ 
+ 
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID BASE RATE TAX
      D SDVCUBR       E DS                  EXTNAME(SDVCUBRPD)
      D SDVCUBRsh               1    717                                                       CSD012
-
+ 
      D SDFTCS        E DS                  EXTNAME(SDFTCSPD)                                  CGL132
      D SDFTCS2       E DS                  EXTNAME(SDFTCSPD)                                  CGL132
      D                                     PREFIX(N_)                                         CGL132
@@ -628,7 +630,7 @@
                                                                                               CGL132
       **  BASE RATE TAX DETAILS FILE
      D SDCBRTF       E DS                  EXTNAME(SDCBRTPD)
-
+ 
       **  BRT PARTICIPATOR HISTORY FILE
      D SDPTYHSF      E DS                  EXTNAME(PTYHSTPD)
      D PTY_RECI      E                     EXTFLD(XRECI)
@@ -636,8 +638,8 @@
      D PTY_LCD       E                     EXTFLD(XLCD)
      D PTY_CHTP      E                     EXTFLD(XCHTP)
      D PTY_TNLU      E                     EXTFLD(XTNLU)
-
-
+ 
+ 
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID PRIVATE BANKING DET
      D SDVCUPB       E DS                  EXTNAME(SDVCUPBPD)
      D                                     PREFIX(A_)
@@ -665,40 +667,40 @@
       **  SWIFT Details shadow files                                                        BUG14969
      D SDVSWSH       E DS                  EXTNAME(SDSWSHPD)                                BUG14969
      D                                     PREFIX(T_)                                       BUG14969
-
+ 
       **  PRIVATE BANKING DETAILS FILE
      D*SDCPRBF       E DS                  EXTNAME(SDPBDSPD)
-
+ 
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       * DATA STRUCTURE FOR General Ledger Details
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR Midas Modules Details
-
+ 
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       * DATA STRUCTURE FOR SECURITIES TRADING DETAILS
-
+ 
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       * DATA STRUCTURE FOR PORTOLIO MANAGEMENT DETAILS
-
+ 
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
       * DATA STRUCTURE FOR SECURITIES CUSTOMER DETAILS
      D  OldAcntCode  E                     EXTFLD(QQACCD)                                     CGL029
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       * DATA STRUCTURE FOR CURRENCY DETAILS
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
-
+ 
       ** SD data area                                                                         CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
                                                                                               CSC011
@@ -931,7 +933,7 @@
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
-
+ 
       * Outward parameters
       * RCD : Midas SD Deleted records file retrieval
      D PBRC            DS          3064
@@ -967,7 +969,7 @@
      D    PBLCD             3061   3063P 0
       * I :  Type of Last Change
      D    PBTYLC            3064   3064
-
+ 
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -981,31 +983,31 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
-
+ 
      D @Timestamp      S             26Z
-
-
+ 
+ 
      D                 DS
      D TDATE                   1      6
      D TDAY                    1      2
      D TMONTH                  3      4
      D TYEAR                   5      6
-
+ 
      D                 DS
      D  DATE                   1      6
      D  DAY                    1      2  0
      D  MONTH                  3      4  0
      D  YEAR                   5      6  0
-
+ 
      D LFLG            S              1    DIM(10)
       ** Liable Flag Array
-
+ 
      D                 DS
       ** Effective dates array and DS
      D  EFFLDA                 1     30
      D  EFLD                   1     30P 0 INZ(0)
      D                                     DIM(10)                              EFFECT. DATE ARR
-
+ 
      D                 DS
       ** Liability change dates array and DS
      D  LCHGDA                 1     30
@@ -1061,7 +1063,7 @@
      D CGL132          S              1A                                                      CGL132
      D CGL133          S              1A                                                      CGL132
      D WWHVAC          S              1A                                                      CGL132
-
+ 
       ** Fields defined for Enhancement CSD012 used for SDAULGL3                              CSC011
      D FUNCD           C                   CONST('CUSTOMER DETAILS')                          CSD012
       ***Override*SDCDSHL0,*SDCBSHL0*&*SDPBSHL0****************************           CSD012 BUG3362
@@ -1171,11 +1173,11 @@
      D From_Cust       S              1A                                                      CSD079
      D WFIND           S              1A                                                      CSD079
      D ZDATE           S              6P 0                                                    CSD079
-
+ 
       *
      D/COPY WNCPYSRC,SDCUSDDD01
-
-
+ 
+ 
       ** Swift installed flag                                                                 CSW207
      D CSW207          S              1A                                                      CSW207
      D CFT050          S              1A                                                      CFT050
@@ -1206,18 +1208,18 @@
      D CTI006          S              1A                                                    MD030956
      D PCommitCUSD     S              1A                                                    MD043029
      D PCommitNAHL     S              1A                                                    MD043029
-
+ 
       /EJECT
      C*****************************************************************
      C*                                                               *
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
-
+ 
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
-
+ 
      C     @@RTCD        IFNE      *BLANKS
      C                   GOTO      EXIT
      C                   END
@@ -1731,10 +1733,10 @@
      C                   ENDIF                                                                CSD012
       *                                                                                       CSD012
      C                   ENDIF                                                                CSD012
-
+ 
       ** INSERT, AMEND OR DELETE THE CUSTOMER
       ** OR CLOSE OR RELEASE THE CUSTOMER                                                     CSD007
-
+ 
      C                   IF        ALSTAT = ' ' AND                                           CSD028
      C                             AUTHMD = 'X'                                               CSD028
      C                   MOVE      DACTN         A_CUTYLC                                     CSD028
@@ -1791,38 +1793,38 @@
      C**********         IF        PUpdYN = 'N'                                      CSD031 BUG13525
      C**********         RETURN                                                      CSD031 BUG13525
      C**********         ENDIF                                                       CSD031 BUG13525
-
+ 
       ** UPDATE BASE RATE TAX DETAILS FILE
       ** ONLY IF BRT OPTION FEATURE IS 'Y'
       **    AND IF A/C HOLDER TYPE IS 'I' OR 'J'
-
+ 
      C     A_CUTYLC      IFEQ      'I'
      C     A_CUTYLC      OREQ      'A'
      C     A_CUTYLC      OREQ      'D'
      C     A_CUTYLC      OREQ      'C'                                                        CSD007
      C     A_CUTYLC      OREQ      'R'                                                        CSD007
-
+ 
      C     S01383        IFEQ      'Y'
      C                   EXSR      UPDBRT
      C                   END
-
+ 
      C                   ENDIF
-
+ 
       ** UPDATE PRIVATE BANKING DETAILS FILE
       ** ONLY IF PRIVATE BANKING OPTION FEATURE IS 'Y'
-
+ 
      C     A_CUTYLC      IFEQ      'I'
      C     A_CUTYLC      OREQ      'A'
      C     A_CUTYLC      OREQ      'D'
      C     A_CUTYLC      OREQ      'C'                                                        CSD007
      C     A_CUTYLC      OREQ      'R'                                                        CSD007
-
+ 
      C     BGN4ST        IFEQ      'Y'
      C                   EXSR      UPDPRB
      C                   END
-
+ 
      C                   ENDIF
-
+ 
       ** UPDMID - Update Customer Marketing Details                                           CSD079
       ** ONLY IF CSD079 IS 'Y'                                                                CSD079
                                                                                               CSD079
@@ -2151,7 +2153,7 @@
      C/COPY WNCPYSRC,SDCUSDDC01
       * EXIT FROM PROGRAM
      C     EXIT          TAG
-
+ 
      C                   RETURN
      C****************************************************************
       /EJECT
@@ -2161,11 +2163,11 @@
      C*                                                               *
      C*****************************************************************
      C     CHKOTHUPD     BEGSR
-
+ 
       ** Retrieve current Customer details
-
+ 
      C                   MOVE      A_CUCUST      MidasTrNum        6
-
+ 
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
@@ -2213,7 +2215,7 @@
      C                   MOVE      New_CNUM      MidasTrNum                                   CSD021
      C                   MOVE      New_CNUM      BRCNUM                                      BUG1986
      C                   ENDIF                                                                CSD021
-
+ 
      C                   CALLB     'SDCUSDRTV'
       * INPUTS
       *
@@ -2355,29 +2357,29 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
-
+ 
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
-
+ 
       ** Interactive mode:
-
+ 
      C     @TYPE         IFEQ      '1'
-
+ 
      C     CHBBTMST      IFNE      A_CUTMST
      C                   MOVEL     '*RECUPD'     @@RTCD
      C                   END
-
+ 
       ** Batch mode:
      C                   ELSE
      C     DDACTNOK      IFEQ      'N'
      C     DDCUSNOK      OREQ      'N'
      C                   MOVEL     '*RECUPD'     @@RTCD
      C                   Z-ADD     1             C                 2 0
-
+ 
      C     C             DOWLE     ArrayMax
      C     FldNameArr(C) ANDNE     *BLANKS
      C                   MOVEL     *BLANKS       DBError          28
@@ -2389,11 +2391,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   END
-
+ 
      C                   END
-
+ 
      C                   END
-
+ 
      C                   ENDSR
       ****************************************************************                        CSD021
       /EJECT                                                                                  CSD021
@@ -2570,27 +2572,27 @@
      C*                                                              *
      C****************************************************************
      C     INSERT        BEGSR
-
+ 
       ** ACCESS CUSTOMER
-
+ 
      C     A_CUCUST      CHAIN     SDCUSTL0                           99
-
+ 
       ** DATABASE ERROR
-
+ 
      C     *IN99         IFEQ      '0'
      C                   MOVEL     A_CUCUST      DBKEY
      C                   MOVEL     'SDCUSTPD'    DBFILE                         ************
      C                   MOVEL     '001'         DBASE                          * DBERR 001*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
       ** INITIALIZE CUSTOMER
-
+ 
      C                   CLEAR                   CUSTDF
-
+ 
       ** Store Old fields for comparisons
      C                   MOVEL(P)  CUSTDF        B_CUSTD
-
+ 
       ** SET CUSTOMER FIELDS ON INSERT
      C                   EVAL      BBCUST=A_CUCUST
      C                   EVAL      BBCSSN=A_CUCSSN
@@ -2738,7 +2740,7 @@
      C                   EVAL      BBDEAC = A_CUDEAC                                          CSD025
      C                   EVAL      BBDEDT = A_CUDEDT                                          CSD025
      C                   ENDIF                                                                CSD025
-
+ 
       ** Front Office ID
      C                   EVAL      BBFRNT=A_CUFRNT
       ** Associated Front Office ID
@@ -2749,9 +2751,9 @@
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
-
+ 
      C                   EVAL      BBTMST  = TimeStamp
-
+ 
       ** If CSC011 is installed, supply a Front Office ID for the                             CSC011
       ** transaction even if it originated from SIN module.                                   CSC011
                                                                                               CSC011
@@ -2862,7 +2864,7 @@
      C**********         ENDIF                                                       CSW207 BUG15138
       *                                                                                       CSW207
       ** WRITE NEW CUSTOMER
-
+ 
      C                   WRITE     @BBREBG
      C**********         IF        CGL132 = 'Y'                                    MD030958 MD042407
       ** Write into extension file - SDCUSTXC                                                 CGL132
@@ -2896,7 +2898,7 @@
      C                   ENDIF                                                              MD026957
      C                   ENDIF                                                                CSD092
      C                   ENDIF                                                                CSD092
-
+ 
      C/COPY WNCPYSRC,SDH00752
       ** Update Global Customer X-Reference                                                   CGP001
                                                                                               CGP001
@@ -3283,7 +3285,7 @@
      C                   ENDIF                                                             MD026499A
      C                   ENDIF                                                                CGL132
      C                   ENDIF                                                                CGL132
-
+ 
       * Update CLINTCB - Client Details  *
      C                   CALL      'SDCLINT'
      C                   PARM      *BLANK        @RTCD
@@ -3335,7 +3337,7 @@
      C                   MOVEL     '002'         DBASE                          * DBERR 002*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
       * Update CLINTCC 2 - Client Details  *
      C                   CALL      'SDALTNA'
      C                   PARM      *BLANK        @RTCD
@@ -3356,7 +3358,7 @@
      C                   EXSR      SRERR                                        ************
      C                   END
       *
-
+ 
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -3366,13 +3368,13 @@
      C*                                                              *
      C****************************************************************
      C     AMEND         BEGSR
-
+ 
       ** ACCESS CUSTOMER DETAILS RECORD
-
+ 
      C     A_CUCUST      CHAIN     SDCUSTL0                           99
-
+ 
       ** DATABASE ERROR
-
+ 
      C     *IN99         IFEQ      '1'
      C     CSD028        ANDEQ     'N'                                                        CSD028
      C     CSD028        OREQ      'Y'                                                        CSD028
@@ -3398,7 +3400,7 @@
      C                   END                                                                  CSD028
      C                   EVAL      CUSTDF = SDVCDSH                                           CSD028
      C                   ENDIF                                                                CSD028
-
+ 
       ** UPDATE 'BEFORE' STATUS
                                                                                               CGL132
       ** DATABASE ERROR                                                                       CGL132
@@ -3413,7 +3415,7 @@
      C                   MOVEL     '004'         DBASE                          * DBERR 004*  CGL132
      C                   EXSR      SRERR                                        ************  CGL132
      C                   ENDIF                                                                CGL132
-
+ 
      C                   MOVEL(P)  CUSTDF        B_CUSTD
                                                                                 185595
       ** Check if change of customer branch                                     185595
@@ -3425,9 +3427,9 @@
      C                   EVAL      *IN20='0'                                    185595
      C                   END                                                    185595
      C/COPY WNCPYSRC,SDCUSDDC04
-
+ 
       ** SET CUSTOMER FIELDS ON AMEND
-
+ 
       * CASE: DB1.Customer Swift Id NE PAR.Customer Swift Id
      C     BBCSID        IFNE      A_CUCSID
      C                   CALL      'SD0012U'                            91
@@ -3682,7 +3684,7 @@
      C                   EVAL      BBDEAC = A_CUDEAC                                          CSD025
      C                   EVAL      BBDEDT = A_CUDEDT                                          CSD025
      C                   ENDIF                                                                CSD025
-
+ 
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
@@ -3845,7 +3847,7 @@
      C**********         ENDIF                                                       CSW207 BUG15138
       *                                                                                       CSW207
       ** UPDATE RECORD
-
+ 
      C                   IF        CSD028 = 'Y' AND PTransType = 'AUTH'                       CSD028
      C                                          AND AUTHMD     = *BLANKS                      CSD028
      C                   UPDATE    SDCDSHD0                                                   CSD028
@@ -3885,14 +3887,14 @@
      C                   ENDIF                                                              MD026957
      C                   ENDIF                                                                CSD092
      C                   ENDIF                                                                CSD092
-
+ 
      C/COPY WNCPYSRC,SDH00753
       ** Update Global Customer X-Reference                                                   CGP001
                                                                                               CGP001
      C                   IF        CGP001 = 'Y'                                               CGP001
      C                   EXSR      SRUpdGlbID                                                 CGP001
      C                   ENDIF                                                                CGP001
-
+ 
       **If*Midas/TI*Interface*is*on****************************************                  BUG3362
       **AND*TI*Flag*is*'Y'*then********************************************                  BUG3362
       *****change*the*TI*Flag*and*update*SDTICSPD*to*generate**************                  BUG3362
@@ -4551,8 +4553,8 @@
                                                                                             MD026499
      C                   ENDIF                                                                CGL132
      C                   ENDIF                                                                CGL132
-
-
+ 
+ 
       * Update CLINTCB - Client Details  *
      C                   CALL      'SDCLINT'
      C                   PARM      *BLANK        @RTCD             7
@@ -4604,7 +4606,7 @@
      C                   MOVEL     '011'         DBASE                          * DBERR 011*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
       * Update CLINTCC 2 - Client Details  *
      C                   CALL      'SDALTNA'
      C                   PARM      *BLANK        @RTCD             7
@@ -4653,36 +4655,36 @@
      C*                                                              *
      C****************************************************************
      C     DELETE        BEGSR
-
+ 
       ** ACCESS CUSTOMER
-
+ 
      C     A_CUCUST      CHAIN     SDCUSTL0                           99
-
+ 
       ** DATABASE ERROR
-
+ 
      C     *IN99         IFEQ      '1'
      C                   MOVEL     A_CUCUST      DBKEY
      C                   MOVEL     'SDCUSTPD'    DBFILE                         ************
      C                   MOVEL     '013'         DBASE                          * DBERR 013*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
       ** UPDATE 'BEFORE' STATUS
-
+ 
      C                   MOVEL(P)  CUSTDF        B_CUSTD
-
+ 
       ** SET CUSTOMER FIELDS ON DELETE
-
+ 
      C                   EVAL      BBLCD=BJRDNB
      C                   EVAL      BBDTDL=BJRDNB
      C                   EVAL      BBTYLC='D'
-
+ 
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
-
+ 
      C                   EVAL      BBTMST = TimeStamp
-
+ 
       ** Front Office ID                                                        CAP013
      C                   EVAL      BBFRNT=A_CUFRNT                              CAP013
       ** Associated Front Office ID                                             CAP013
@@ -4711,7 +4713,7 @@
      C                   ENDIF                                                                CSW207
       *                                                                                       CSW207
       ** UPDATE RECORD
-
+ 
      C                   UPDATE    @BBREBG
                                                                                               CGL132
      C                   IF        CGL132 = 'Y'                                               CGL132
@@ -4758,7 +4760,7 @@
      C                   ENDIF                                                              MD026957
      C                   ENDIF                                                                CSD092
      C                   ENDIF                                                                CSD092
-
+ 
       * USER: Processing after Data update
      C                   MOVEL     CUSTDF        WUDELR
       * Write Deleted Record - SD Deleted Records File  *
@@ -4779,7 +4781,7 @@
      C                   MOVEL     WUDR12        PBDR12
      C                   MOVEL     BJRDNB        PBLCD
      C                   MOVEL     'D'           PBTYLC
-
+ 
      C                   CALL      'SD0520X'
      C                   PARM      *BLANK        @RTCD
      C                   PARM                    PBRC
@@ -4791,7 +4793,7 @@
      C                   MOVEL     '014'         DBASE                          * DBERR 014*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
      C                   Z-ADD     -1            WUNORC                         No of records
      C                   Z-ADD     *ZERO         WUNOAM                         No of Amend
      C                   Z-ADD     *ZERO         WUNOIN                         No of delete
@@ -4799,7 +4801,7 @@
       * Change Standing Data Cont - Standing Data Controls  *
      C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete
      C                   EXSR      SNCHRC
-
+ 
      C                   EXSR      UPDTID                                                    BUG3362
       *                                                                                      BUG3362
      C                   MOVEL     'D'           BBTYLC
@@ -4854,7 +4856,7 @@
      C                   MOVEL     '015'         DBASE                          * DBERR 015*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
       * Update CLINTCC 2 - Client Details  *
      C                   CALL      'SDALTNA'
      C                   PARM      *BLANK        @RTCD
@@ -4877,7 +4879,7 @@
       *
       * Check/Tag records - Alternate Names & Address  *
      C                   EXSR      SRRVGN
-
+ 
       *
      C                   ENDSR
      C****************************************************************
@@ -5109,7 +5111,7 @@
      C*                                                               *
      C*****************************************************************
      C     SNCHRC        BEGSR
-
+ 
      C                   MOVEL     *BLANK        W0RTN             7
       *
       * Move key fields to @AHREAU
@@ -5119,16 +5121,16 @@
      C     KLCHSN        KLIST
      C                   KFLD                    AHFLNM
      C     KLCHSN        CHAIN     @AHREAU                            90
-
+ 
       ** DATABASE ERROR
-
+ 
      C     *IN90         IFEQ      '1'
      C                   MOVEL     AHFLNM        DBKEY
      C                   MOVEL     'SDFCTLL0'    DBFILE                         ************
      C                   MOVEL     '017'         DBASE                          * DBERR 017*
      C                   EXSR      SRERR                                        ************
      C                   END
-
+ 
       * USER: Processing after Data read
      C                   ADD       AHNORC        WUNORC
      C                   ADD       AHNOIN        WUNOIN
@@ -5152,7 +5154,7 @@
      C*                                                               *
      C*****************************************************************
      C     SORVGN        BEGSR
-
+ 
       * Define keylist
      C     KRSSO         KLIST
      C                   KFLD                    D7CUST
@@ -5160,9 +5162,9 @@
       * Move fields to key list
      C                   MOVEL     BBCUST        D7CUST
      C     KRSSO         CHAIN     @D7REJB                            90
-
+ 
       ** DATABASE ERROR
-
+ 
      C     *IN90         IFEQ      '1'
       * USER: Processing if Data record not found
      C                   MOVEL     *BLANK        WUGPC1            4
@@ -5172,7 +5174,7 @@
      C                   MOVEL     *BLANK        WUGPC5            4
      C                   GOTO      SOEXIT
      C                   END
-
+ 
       * USER: Process Data record
       * PAR = DB1 By name
      C     *IN90         IFEQ      '0'
@@ -5182,7 +5184,7 @@
      C                   MOVEL     D7GPC4        WUGPC4
      C                   MOVEL     D7GPC5        WUGPC5
      C                   END
-
+ 
       *
      C     SOEXIT        ENDSR
      C*****************************************************************
@@ -5193,7 +5195,7 @@
      C*                                                               *
      C*****************************************************************
      C     SRRVGN        BEGSR
-
+ 
      C                   MOVEL     *BLANK        W0RTN             7
       * Define keylist
      C     KPSSR         KLIST
@@ -5206,7 +5208,7 @@
      C                   MOVEL     *BLANK        BCADCD
      C     KPSSR         SETLL     SDALTNL1
      C     KRSSR         READE     SDALTNL1                               90
-
+ 
      C     *IN90         IFEQ      '1'
      C                   MOVEL     'USR0083'     W0RTN
      C                   END
@@ -5236,13 +5238,13 @@
      C                   MOVEL     BBCUST        BCCUST
      C                   MOVEL     *BLANK        BCADCD
      C     KLCHSS        CHAIN     SDALTNL0                           90
-
+ 
       ** DATABASE ERROR
      C     *IN90         IFEQ      '1'
      C                   MOVEL     'Y2U0009'     W0RTN
      C                   GOTO      SSEXIT
      C                   END
-
+ 
       * Move non-key fields to @BCREDD
      C                   Z-ADD     BJRDNB        BCLCD
      C                   MOVEL     'D'           BCTYLC
@@ -5290,15 +5292,15 @@
      C*                                                                  *
      C********************************************************************
      C     UPDBRT        BEGSR
-
+ 
      C     PTYKEY        KLIST
      C                   KFLD                    XCNUM
      C                   KFLD                    PTYSQN
-
+ 
       ** ACCESS CUSTOMER BASE RATE TAX DETAILS
-
+ 
      C     BRCNUM        CHAIN     SDCBRTL1                           98
-
+ 
       * Note file values for participant BRT
      C                   MOVE      H1BRTL        OLDBR1            1
      C                   MOVE      H2BRTL        OLDBR2            1
@@ -5307,11 +5309,11 @@
      C                   MOVE      H5BRTL        OLDBR5            1
      C                   MOVE      *BLANK        OLDBRT            1
      C                   MOVE      *BLANK        NEWBRT            1
-
+ 
       ** DATABASE ERROR
       ** IF INSERT, BUT RECORD PRESENT ALREADY
       ** OR IF NOT INSERT, BUT NO RECORD FOUND
-
+ 
       ** Skip validation if the customer came from the acceptance file.                       CSD031
                                                                                               CSD031
      C**********         IF        PAccMde <> 'A'                                    CSD031 BUG13525
@@ -5326,9 +5328,9 @@
      C                   EXSR      SRERR                                        ************
      C                   END
      C**********         ENDIF                                                       CSD031 BUG13525
-
+ 
       ** Update with details from valid BRT DETAILS record
-
+ 
       ** SET SDCBRTPD FIELDS
      C                   EVAL      XRECI=BRRECI
      C                   EVAL      XCNUM=BRCNUM
@@ -5345,7 +5347,7 @@
      C                   EVAL      H1NINO=BR1NIN
      C                   EVAL      H1DOB= BR1DOB
      C                   EVAL      H1SEQN=BR1SQN
-
+ 
      C                   EVAL      H2TITL=BR2TIT
      C                   EVAL      H2NAME=BR2NAM
      C                   EVAL      H2INIT=BR2INI
@@ -5358,7 +5360,7 @@
      C                   EVAL      H2NINO=BR2NIN
      C                   EVAL      H2DOB=BR2DOB
      C                   EVAL      H2SEQN=BR2SQN
-
+ 
      C                   EVAL      H3TITL=BR3TIT
      C                   EVAL      H3NAME=BR3NAM
      C                   EVAL      H3INIT=BR3INI
@@ -5371,7 +5373,7 @@
      C                   EVAL      H3NINO=BR3NIN
      C                   EVAL      H3DOB=BR3DOB
      C                   EVAL      H3SEQN=BR3SQN
-
+ 
      C                   EVAL      H4TITL=BR4TIT
      C                   EVAL      H4NAME=BR4NAM
      C                   EVAL      H4INIT=BR4INI
@@ -5384,7 +5386,7 @@
      C                   EVAL      H4NINO=BR4NIN
      C                   EVAL      H4DOB=BR4DOB
      C                   EVAL      H4SEQN=BR4SQN
-
+ 
      C                   EVAL      H5TITL=BR5TIT
      C                   EVAL      H5NAME=BR5NAM
      C                   EVAL      H5INIT=BR5INI
@@ -5397,7 +5399,7 @@
      C                   EVAL      H5NINO=BR5NIN
      C                   EVAL      H5DOB=BR5DOB
      C                   EVAL      H5SEQN=BR5SQN
-
+ 
      C                   EVAL      TAXIND=BRTXIN
      C                   EVAL      PSTR=BRPSTR                                                CRE007
      C                   EVAL      NXASQN=BRNASQ
@@ -5405,7 +5407,7 @@
      C                   EVAL      XLCD=BRXLCD
      C                   EVAL      XCHTP=BRCHTP
      C                   EVAL      XTNLU=0
-
+ 
       *
       * Update or write record in SDCBRTPD
       *
@@ -5414,31 +5416,31 @@
      C                   ELSE
      C                   UPDATE    SDCBRTD0
      C                   ENDIF
-
-
+ 
+ 
       ** Update BRT Particpator History file
       ** With details from valid BRT Participator History file
-
+ 
      C     ACTN          IFNE      'I'
      C     ACTN          ANDNE     'A'
      C                   GOTO      EndUPDBRT
      C                   ENDIF
-
+ 
      C     BRAHLT        IFNE      'I'
      C     BRAHLT        ANDNE     'J'
      C     BRAHLT        ANDNE     'R'                                                        201011
      C                   GOTO      EndUPDBRT
      C                   ENDIF
-
+ 
      C                   EVAL      XCNUM=BRCNUM
-
+ 
      C     BR1NAM        IFNE      *BLANK
-
+ 
      C                   EVAL      PTYSQN=BR1SQN
-
+ 
       ** Access BRT participator history details
      C     PTYKEY        CHAIN     PTYHSTPD                           94
-
+ 
       ** Set PTYHSTPD fields
      C                   EVAL      XRECI=BRRECI
      C                   EVAL      XCNUM=BRCNUM
@@ -5459,7 +5461,7 @@
      C                   EVAL      XLCD=BRXLCD
      C                   EVAL      XCHTP=BRCHTP
      C                   EVAL      XTNLU=*ZERO
-
+ 
       *
       * Update or write record in PTYHSTPD
      C     *IN94         IFEQ      '0'
@@ -5496,14 +5498,14 @@
      C                   ENDIF
       *
      C                   ENDIF
-
+ 
      C     BR2NAM        IFNE      *BLANK
-
+ 
      C                   EVAL      PTYSQN=BR2SQN
-
+ 
       ** Access BRT participator history details
      C     PTYKEY        CHAIN     PTYHSTPD                           94
-
+ 
       ** Set PTYHSTPD fields
      C                   EVAL      XRECI=BRRECI
      C                   EVAL      XCNUM=BRCNUM
@@ -5524,7 +5526,7 @@
      C                   EVAL      XLCD=BRXLCD
      C                   EVAL      XCHTP=BRCHTP
      C                   EVAL      XTNLU=BRTNLU
-
+ 
       *
       * Update or write record in PTYHSTPD
      C     *IN94         IFEQ      '0'
@@ -5561,14 +5563,14 @@
      C                   ENDIF
       *
      C                   ENDIF
-
+ 
      C     BR3NAM        IFNE      *BLANK
-
+ 
      C                   EVAL      PTYSQN=BR3SQN
-
+ 
       ** Access BRT participator history details
      C     PTYKEY        CHAIN     PTYHSTPD                           94
-
+ 
       ** Set PTYHSTPD fields
      C                   EVAL      XRECI=BRRECI
      C                   EVAL      XCNUM=BRCNUM
@@ -5589,7 +5591,7 @@
      C                   EVAL      XLCD=BRXLCD
      C                   EVAL      XCHTP=BRCHTP
      C                   EVAL      XTNLU=BRTNLU
-
+ 
       *
       * Update or write record in PTYHSTPD
      C     *IN94         IFEQ      '0'
@@ -5626,14 +5628,14 @@
      C                   ENDIF
       *
      C                   ENDIF
-
+ 
      C     BR4NAM        IFNE      *BLANK
-
+ 
      C                   EVAL      PTYSQN=BR4SQN
-
+ 
       ** Access BRT participator history details
      C     PTYKEY        CHAIN     PTYHSTPD                           94
-
+ 
       ** Set PTYHSTPD fields
      C                   EVAL      XRECI=BRRECI
      C                   EVAL      XCNUM=BRCNUM
@@ -5654,7 +5656,7 @@
      C                   EVAL      XLCD=BRXLCD
      C                   EVAL      XCHTP=BRCHTP
      C                   EVAL      XTNLU=BRTNLU
-
+ 
       *
       * Update or write record in PTYHSTPD
      C     *IN94         IFEQ      '0'
@@ -5691,14 +5693,14 @@
      C                   ENDIF
       *
      C                   ENDIF
-
+ 
      C     BR5NAM        IFNE      *BLANK
-
+ 
      C                   EVAL      PTYSQN=BR5SQN
-
+ 
       ** Access BRT participator history details
      C     PTYKEY        CHAIN     PTYHSTPD                           94
-
+ 
       ** Set PTYHSTPD fields
      C                   EVAL      XRECI=BRRECI
      C                   EVAL      XCNUM=BRCNUM
@@ -5719,7 +5721,7 @@
      C                   EVAL      XLCD=BRXLCD
      C                   EVAL      XCHTP=BRCHTP
      C                   EVAL      XTNLU=BRTNLU
-
+ 
       *
       * Update or write record in PTYHSTPD
      C     *IN94         IFEQ      '0'
@@ -5756,7 +5758,7 @@
      C                   ENDIF
       *
      C                   ENDIF
-
+ 
       *
      C     EndUPDBRT     ENDSR
      C****************************************************************
@@ -6028,7 +6030,7 @@
      C                   END
       *
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -6037,7 +6039,7 @@
       *           ON THE BRT LIABLE FLAG FOR THE PARTICIPANT.         *
       *****************************************************************
      C     BRTFL         BEGSR
-
+ 
      C**  SET DEFAULT EFFECTIVE DATE TO APRIL 6TH OF CURRENT TAX YEAR
      C**
      C                   Z-ADD     APR6CY        EFF               5 0
@@ -6100,7 +6102,7 @@
      C**
      C                   END
      C**
-
+ 
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -6110,7 +6112,7 @@
       *                                                                  *
       ********************************************************************
      C     UPDPRB        BEGSR
-
+ 
      C     ACTN          IFEQ      'D'
      C                   MOVE      'C'           A_PBRECI
      C                   ELSE
@@ -6119,15 +6121,15 @@
      C                   MOVE      BJRDNB        A_PBLCHD
      C                   MOVE      ACTN          A_PBCHTP
      C                   MOVE      A_CUCUST      A_PBCNUM
-
+ 
       ** ACCESS PRIVATE BANKING CUSTOMER DETAILS
-
+ 
      C     A_PBCNUM      CHAIN     SDPBDSL0                           98
-
+ 
       ** DATABASE ERROR
       ** IF INSERT, BUT RECORD PRESENT ALREADY
       ** OR IF NOT INSERT, BUT NO RECORD FOUND
-
+ 
       ** Skip validation if the customer came from the acceptance file.                       CSD031
                                                                                               CSD031
      C**********         IF        PAccMde <> 'A'                                    CSD031 BUG13525
@@ -6141,11 +6143,11 @@
      C                   EXSR      SRERR                                        ************
      C                   END
      C**********         ENDIF                                                       CSD031 BUG13525
-
+ 
       ** Update with details from valid Private Banking record
-
+ 
       ** SET SDPBDSPD FIELDS
-
+ 
      C                   EVAL      D_PBCNUM = A_PBCNUM
      C                   EVAL      D_PBRECI = A_PBRECI
      C                   EVAL      D_PBHOLD = A_PBHOLD
@@ -6162,7 +6164,7 @@
                                                                                 185595
      C***20*****         EVAL      D_PBTMES = BBTMST                                   185595 202931
      C                   EVAL      D_PBTMES = BBTMST                                          202931
-
+ 
      C                   EVAL      D_PBFRNT = A_PBFRNT                                      AR971184
      C                   EVAL      D_PBAFRT = A_PBAFRT                                      AR971184
      C                   EVAL      D_PBAFRT = A_PBAFRT                                      AR971184
@@ -6183,7 +6185,7 @@
      C                   ELSE
      C                   UPDATE    SDPBDSD0
      C                   ENDIF
-
+ 
       *
      C     EndUPDPRB     ENDSR
      C****************************************************************
@@ -7213,13 +7215,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE1        BEGSR
-
+ 
      C                   CALLB     'ZDATE1'
      C                   PARM                    ZDATEA            6
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7229,13 +7231,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
-
+ 
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATEB            6 0
      C                   PARM                    ZADATE            7
-
+ 
      C                   ENDSR
       *****************************************************************
      C*                                                              *
@@ -9627,7 +9629,7 @@
                                                                                            AR1086546
       *****************************************************************                    AR1086546
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CMD1                                                                                       CSD012
 OVRDBF FILE(SDCDSHL0) TOFILE(SDCDSHL0) SHARE(*NO)                                             CSD012
 ** CMD2                                                                                       CSD012

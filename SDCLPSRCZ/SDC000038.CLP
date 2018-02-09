@@ -8,17 +8,19 @@
 /*       SDC000038 - Initialisation program for CDL031               */                  /*BUG6730*/
 /********SDC000028 - Initialisation program for CDL031****************/                  /*BUG6730*/
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG6730            Date 04May05              */
-/*       Prev Amend No. CDL031  *CREATE    Date 07Dec04              */
+/*       Prev Amend No. BUG6730            Date 04May05              */
+/*                      CDL031  *CREATE    Date 07Dec04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG6730 - Renamed SDC000028 into SDC000038                  */
 /*       CDL031 - Effective Date on Extended SSI                     */
 /*                                                                   */
@@ -28,7 +30,7 @@
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /* Global monitor message */
@@ -85,5 +87,5 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

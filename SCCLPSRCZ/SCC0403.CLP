@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC0403 - I/C Termination Clear Up                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1089863          Date 19Feb13              */
-/*       Prev Amend No. CCB023             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1089863          Date 19Feb13              */
+/*                      CCB023             Date 06Aug12              */
 /*                      AR823326           Date 24Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -39,6 +40,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1089863 - Merging issues of 2.0 and 2.1 releases          */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
 /*                Restructuring                                      */
@@ -70,7 +72,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /**  Initial processing                                              */
@@ -405,5 +407,5 @@
 /**/
  ENDPGM:     MONMSG     MSGID(CPF0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

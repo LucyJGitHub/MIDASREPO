@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       SCC0700 - REOPEN I/C FROM I/C Termination                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD031644           Date 08Jan15              */
-/*       Prev Amend No. CGL155             Date 21Mar14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD031644           Date 08Jan15              */
+/*                      CGL155             Date 21Mar14              */
 /*                      MD022112           Date 05Sep13              */
 /*                      CSC048             Date 06Aug12              */
 /*                      CCB022             Date 06Aug12              */
@@ -48,6 +49,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
 /*                  Status of Interfaced FT Payments). Unable        */
 /*                  to compile GP002900 due to zonal access.         */
@@ -97,7 +99,7 @@
 /*/COPY WNCPYSRC,SCC0700INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
@@ -568,6 +570,6 @@ BYPASS:
 /**********  ENDDO                                                   */            /*092729 CSC048*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

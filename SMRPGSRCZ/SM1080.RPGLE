@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Migrate Items from MITEM to SFMENUPD')        *
@@ -20,18 +20,20 @@
       *                                                               *
       *  Called By: SMC1080                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR936709           Date 19Mar12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR936709           Date 19Mar12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPK019             Date 06Jul04               *
+      *                 CPK019             Date 06Jul04               *
       *                 CSF002  *CREATE    Date 25Sep03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR936709 - Replacement file for UPSARIPD.                    *
       *  CPK019 - Post-implementation changes.                        *
       *  CSF002 - Global Processing changes for SPF.                  *

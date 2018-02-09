@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD FATCA Due Diligence Action Extract')          *
@@ -14,14 +14,16 @@
       *             Diligence Action Report for both Customer and     *
       *             Non-Account Holder                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD042946           Date 01Dec16               *
-      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042946           Date 01Dec16               *
+      *                 MD039670           Date 26Jul16               *
       *                 CGL154   *CREATE   Date 13Oct14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD042946 - Input Cycle Due Diligence Action Report is not    *
       *             generated (Recompile)                             *
       *  MD039670 - FATCA Housekeeping program                        *
@@ -682,4 +684,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

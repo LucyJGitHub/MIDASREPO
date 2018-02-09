@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Default Classification of Expiry Date Report')         *
@@ -14,16 +14,18 @@
       *             Default Classification of New Customers and New   *
       *             non-account Holders Expiry Date Report            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD041709           Date 28Sep16               *
-      *  Prev Amend No. MD027474           Date 11Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD041709           Date 28Sep16               *
+      *                 MD027474           Date 11Jun14               *
       *                 MD027483           Date 16Jun14               *
       *                 MD024592           Date 28Jan14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD041709 - Component SDC000715 failure. Adjusted customer    *
       *             counter to 10 numeric.                            *
       *  MD027474 - Report is not arranged by Expiry Date (CUAP/NAHO) *
@@ -1039,4 +1041,4 @@
      C                   ENDSR                                                              MD027483
       *****************************************************************                     MD027483
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

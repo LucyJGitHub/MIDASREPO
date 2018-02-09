@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Validate Documentation Received')
@@ -10,18 +10,20 @@
       *                                                               *
       *  SDVDCRC - Validate Documentation Received                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
       *    /COPY, Customer Withholding Tax API amendments             *
       *    must not be applied to this source.                        *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG13608           Date 21Mar07               *
-      *  Prev Amend No. CSD079  *CREATE    Date 05Feb07               *
+      *  Prev Amend No. BUG13608           Date 21Mar07               *
+      *                 CSD079  *CREATE    Date 05Feb07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG13608 - MidasPlus error occurred when validating Customer *
       *             Withholding tax details                           *
       *  CSD079 - Enhanced Customer Maintenance API                   *
@@ -281,4 +283,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

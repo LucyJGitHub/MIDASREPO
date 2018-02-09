@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Yield Curve Type 'Z' to 'S'')
@@ -12,16 +12,18 @@
       *  Function: Read through Yield Curve master file and change    *
       *            all yield type = 'Z' to 'S'.                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CRE026             Date 24May06               *
+      *  Prev Amend No. CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 228390  *CREATE    Date 14Jul04               *
+      *                 228390  *CREATE    Date 14Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  228390 - Introduce a new yield curve type 'S' (for swap      *
       *           rates) which will apply the formula currently being *
@@ -125,4 +127,4 @@
      C                   ENDSR
       *****************************************************************
 ** WCPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
